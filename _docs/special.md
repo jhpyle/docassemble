@@ -195,10 +195,11 @@ If you want to use the [multi-user interview feature], you need to set
 "initial" code block.
 
 When `multi_user` is set to `True`, **docassemble** will not encrypt
-the interview answers on the server.  This is necessary so that
-different people can access the same interview.  When interview
-answers are encrypted (which is the default), only the user who
-started the interview can access the interview answers.
+the interview answers (the [interview session dictionary]).  This is
+necessary so that different people can access the same interview
+session.  When the interview answers are encrypted (which is the
+default), only the user who started the interview session can access
+the [interview session dictionary].
 
 Setting `multi_user` to `True` will reduce [security] somewhat, but it
 is necessary for allowing the [multi-user interview feature] and for
@@ -319,3 +320,4 @@ There are some built-in variable names with special meaning:
 [event]: {{ site.baseurl }}/docs/background.html
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
 [API]: {{ site.baseurl }}/docs/api.html
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored

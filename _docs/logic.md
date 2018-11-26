@@ -6,7 +6,7 @@ short_title: Interview Logic
 
 # <a name="intro"></a>Introduction
 
-Unlike other guided interview systems, in which the interview author
+Unlike other guided interview systems, in which the interview developer
 maps out a decision tree or flowchart to indicate which questions
 should be asked and in which order, **docassemble** implicitly figures
 out what questions to ask and when to ask them.
@@ -116,7 +116,7 @@ Here is what happens in this interview:
 
 By making only the final screen `mandatory`, this interview takes
 advantage of **docassemble**'s feature for automatically satifying
-prerequisites.  The author simply needs to provide a collection of
+prerequisites.  The developer simply needs to provide a collection of
 questions, in any order, and **docassemble** will figure out if and
 when to ask those questions, depending on what is necessary during any
 given interview.
@@ -144,10 +144,10 @@ Here is what happens in this version of the interview:
 The approach of marking everything as `mandatory` bypasses
 **docassemble**'s process of automatically satisfying prerequisites.
 
-When interview authors first start using **docassemble**, they tend to
+When interview developers first start using **docassemble**, they tend to
 use the approach of marking all questions as `mandatory` and listing
 them one after another.  For simple, linear interviews, this approach
-is attractive; it gives the author tight control over the interview
+is attractive; it gives the developer tight control over the interview
 flow.
 
 But what if there are questions that only need to be asked in certain
@@ -164,10 +164,10 @@ any flowchart that can accommodate every possible path of a
 complicated interview would look like a plate of spaghetti.
 
 The automatic satisfaction of prerequisites is a powerful feature of
-**docassemble**.  It allows interview authors to build any level of
-complexity into their interviews.  It frees the author from having to
+**docassemble**.  It allows interview developers to build any level of
+complexity into their interviews.  It frees the developer from having to
 envision all of the possible paths that could lead to the endpoint of
-an interview.  This allows the interview author to concentrate on the
+an interview.  This allows the interview developer to concentrate on the
 substance of the interview's end goal rather than the process of
 gathering the information.
 
@@ -184,11 +184,11 @@ your interview asks "How are you doing?" as the first question, rather
 than "What is your favorite color?"
 
 One approach to change the order of questions is to use the
-[`need` directive] (explained in more detail [below](#need)):
+[`need` specifier] (explained in more detail [below](#need)):
 
 {% include side-by-side.html demo="with-mandatory-tweak-a" %}
 
-In this example, the [`need` directive] effectively tells
+In this example, the [`need` specifier] effectively tells
 **docassemble** that before **docassemble** tries to present the "Your
 favorite color is . . ." screen to the user, it needs to make sure
 that the variables `how_doing` and `favorite_color` are defined.  It
@@ -219,8 +219,8 @@ definition of `peaches`, so it will ask a question to gather it.  Then
 it will find that it does not know the definition of `pears`, so it
 will ask a question to gather it.
 
-The following subsections explain in detail the `mandatory` directive
-and other directives that control interview flow.
+The following subsections explain in detail the `mandatory` specifier
+and other specifiers that control interview flow.
 
 Before you move on, however, there are two important things to know
 about how **docassemble** satisfies prerequisites.
@@ -229,7 +229,7 @@ First, remember that **docassemble** asks questions when a variable
 that is _undefined_.  In the above example, if `fruits` had already
 been defined, **docassemble** would not have run the [`code`] block;
 it would have proceeded to display the final screen.  There are some
-exceptions to this.  The [`reconsider`] directive
+exceptions to this.  The [`reconsider`] specifier
 [discussed below](#reconsider) is one such exception; the
 [`force_ask()`] function is another.
 
@@ -273,7 +273,7 @@ In this case, [Python] will not "need" the value of `apples` unless
 the number of peaches and pears exceeds 113,121, so the mention of
 `apples` does not necessarily trigger the asking of a question.
 
-# <a name="directives"></a>Directives that control interview logic
+# <a name="specifiers"></a>Specifiers that control interview logic
 
 ## <a name="mandatory"></a>`mandatory`
 
@@ -331,7 +331,7 @@ sets: user_will_not_sit_down
 Here, the single `mandatory` block contains simple [Python] code that
 contains the entire logic of the interview.
 
-If a `mandatory` directive is not present within a block, it is as
+If a `mandatory` specifier is not present within a block, it is as
 though `mandatory` was set to `False`.
 
 The value of `mandatory` can be a [Python] expression.  If it is a
@@ -385,29 +385,29 @@ true or false value.
 
 ## <a name="need"></a>`need`
 
-The `need` directive allows you to manually specify the prerequisites
+The `need` specifier allows you to manually specify the prerequisites
 of a [`question`] or [`code`] block.  This can be helpful for tweaking
 the order in which questions are asked.
 
-{% include side-by-side.html demo="need-directive" %}
+{% include side-by-side.html demo="need-specifier" %}
 
 In this example, the ordinary course of the interview logic would ask
 "What is your favorite animal?" as the first question.  However,
 everyone knows that the first question you should ask of a child is
-"How old are you?"  The `need` directive indicates that before
+"How old are you?"  The `need` specifier indicates that before
 **docassemble** should even try to present the "Thank you for that
 information" screen, it should ensure that `number_of_years_old` old
 is defined, then ensure that `favorite_animal`, and then try to
 present the screen.
 
-The variables listed in a `need` directive do not have to actually be
+The variables listed in a `need` specifier do not have to actually be
 used by the question.  Also, if your question uses variables that are
 not mentioned in the `need` list, **docassemble** will still pursue
 definitions of those variables.
 
 ## <a name="reconsider"></a>`reconsider`
 
-The `reconsider` directive can only be used on [`code`] blocks.
+The `reconsider` specifier can only be used on [`code`] blocks.
 
 If `reconsider` is set to `True`, then **docassemble** will always
 "reconsider" the values of any of the variables set by the `code`
@@ -624,9 +624,9 @@ continue to maintain.
 
 For example, if someone else has developed interview questions that
 determine a user's eligibility for food stamps, you can incorporate by
-reference that author's [YAML] file into an interview that assesses
+reference that developer's [YAML] file into an interview that assesses
 whether a user is maximizing his or her public benefits.  When the law
-about food stamps changes, that author will be responsible for
+about food stamps changes, that developer will be responsible for
 updating his or her [YAML] file; your interview will not need to
 change.  This allows for a division of labor.  All you will need to do
 is make sure that the **docassemble** [package] containing the food
@@ -917,8 +917,8 @@ function], depending on a computational coin flip.
 
 The use of `'exit'` in the [`command()`] function is important here
 because it will cause this brief interview session to be deleted from
-the list of interviews, since its sole purpose is to redirect the
-user.
+the user's list of interview sessions, since its sole purpose is to
+redirect the user.
 
 An interview like this might also log some data for purposes of
 collecting metrics, perhaps using [Redis].  In the interviews being
@@ -980,7 +980,7 @@ track information about the user: information that is permanent is
 stored in the `user_global` object, and information that is temporary
 is stored in the `user` object.
 
-Note that the interview author only uses the object `user` when
+Note that the interview developer only uses the object `user` when
 writing [`question`]s that refer to characteristics of the user.  The
 following [`code`] blocks assert that information about the `user`'s
 name and age should by defined by reference to attributes of the
@@ -1018,16 +1018,16 @@ forget others.
   from your [`mandatory`] interview logic, so that other people can
   incorporate your questions without having to edit your work.  Your
   main interview file would consist only of:
-    * A [`metadata`] statement saying who you are and what your interview
+    * A [`metadata`] block saying who you are and what your interview
     is for;
-	* A statement to [`include`] your file of questions;
+	* A block to [`include`] your file of questions;
 	* Any [`interview help`] blocks;
 	* A [`default role`] block, if you use [roles];
 	* Any [`initial`] code;
 	* Your [`mandatory`] code or questions that set your interview in motion.
 * [`include`] other people's question files directly from their
   **docassemble** packages, rather than by copying other people's
-  files into your package.  That way, when the other authors make
+  files into your package.  That way, when the other developers make
   improvements to their questions, you can gain the benefit of those
   improvements automatically.
 * Don't invent your own scheme for variable names; follow conventions
@@ -1035,7 +1035,7 @@ forget others.
 * If other people are including your questions and code, avoid
   changing your variable names unnecessarily, or else you will "break"
   other people's interviews.  This does limit your autonomy somewhat,
-  but the benefits for the community of interview authors more than
+  but the benefits for the community of interview developers more than
   make up for the loss of autonomy.
 
 [roles]: {{ site.baseurl }}/docs/roles.html
@@ -1075,7 +1075,7 @@ forget others.
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
-[`need` directive]: #need
+[`need` specifier]: #need
 [`reconsider`]: #reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence

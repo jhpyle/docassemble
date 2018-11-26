@@ -14,8 +14,8 @@ questions of a user.
 of these variables may be incorporated into the the text of [questions],
 or into the text of [documents].
 
-The interview can ask different questions of the user depending on
-what the answers to earlier questions were.
+The interview can ask users different questions depending on what the
+answers to earlier questions were.
 
 # <a name="simple interview"></a>The contents of an interview file
 
@@ -103,40 +103,43 @@ you can write.  These blocks are explained in the following sections:
   an effect on whole interview.
 * [Question Blocks] - Explains the basics of the [`question`] block, which presents a
   screen to the user (which usually asks a question but does not need to).
-* [Setting Variables] - Explains how to use collect information from users
+* [Setting Variables] - Explains how to collect information from users
   using `question` blocks.
 * [Question Modifiers] - Explains ways you can enhance questions with
-special features, for example by adding help text or icons.
-* [Templates] - Explains `template` blocks, which allow you to assign
-  text to a variable and then include it by reference in a question or
-  document.
+  special features, for example by adding help text or icons.
 * [Code] - Explains `code` blocks, which are like `question`s except
   that instead of presenting something to the user, they run [Python]
   code that defines variables or does other things that computer code
   can do.
 * [Interview Logic] - Explains [`mandatory`] and [`initial`] blocks and how
-  **docassemble** processes your interview.
+  **docassemble** processes your interview [YAML] to produce an interview.
+* [Markup] - Explains how to change the formatting of text in
+  **docassemble**.
+* [Templates] - Explains `template` blocks, which allow you to assign
+  text to a variable and then include it by reference in a question or
+  document.
+* [Documents] - Explains how to assemble documents in PDF and RTF
+  format based on the user's answers to the interview questions.
 * [Objects] - Explains the use of Python objects to simplify the way
   information is organized.
-* [Markup] - Explains how to change the formatting of text in **docassemble**.
+* [Groups] - Explains how to gather information into special variables
+  that contain zero or more items representing a group of some sort.
 * [Functions] - Explains how to use special [Python] functions to
   simplify and generalize the way questions are asked.
-* [Documents] - Explains how to offer your users documents in PDF and
-  RTF format based on the user's answers to the interview questions.
-* [Roles] - Explains **docassemble**'s features for multi-user interviews.
+* [Legal Applications] - Explains some special objects types that are
+  useful for interviews created by legal practitioners.
+* [Special Variables] - Describes variables that have special properties
 * [Reserved Names] - Lists the variable names you aren't allowed to use
   because they would conflict with the functionality of
   **docassemble** and [Python].
-* [Special Variables] - Describes variables that have special properties
-* [Errors] - Explains some common error messages and how to avoid them.
 
 # <a name="invocation"></a>How you run a **docassemble** interview
 
 Users start an interview by going to its URL, which is the
-`/interview` path on your server with the `i` URL parameter set to the
+`/interview` path on your site with the `i` URL parameter set to the
 name of the interview.
 
-For example, the [demo interview], which is hosted on the server
+For example, the [demo interview], which is hosted on the site
 `demo.docassemble.org`, can be accessed with this URL.
 
 [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
@@ -147,24 +150,24 @@ Here, the interview file name is
 and then within that package, look for the file `questions.yml`
 located in the subdirectory `data/questions`.
 
-You can make your own [packages] and then install them on your server.
-If the name of your server is `interview.example.com`, the name of
-your package is `docassemble.mypackage`, and the name of your
-interview file is `myinterview.yml`, your users can access the
-interview at:
+You can make your own [packages] and then install them on your site.
+If the name of your site is `interview.example.com`, the name of your
+package is `docassemble.mypackage`, and the name of your interview
+file is `myinterview.yml`, your users can access the interview at:
 
 > https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
 Note that while you are using an interview, the URL in the location
 bar will change.  It will end with `#page1`, then `#page2`, then
 `#page3`, etc., as the interview progresses.  These tags have no
-effect except to allow the user to click the browser's back button in
-order to go back one screen.
+effect and the page number has no particular meaning; these tags exist
+for the sole purpose of enabling the user to click the browser's back
+button in order to go back one screen.
 
 If you want to use **docassemble** to give users a list of interviews
 from which to choose, there is also a special page of the site,
 located at `/list`, which displays a [list of interviews] available on
-your server.
+your site.
 
 > https://interview.example.com/list
 
@@ -194,7 +197,7 @@ If you don't have a [`root redirect url`] set, the user will be
 redirected to `/interview` and will start the interview indicated by
 the [`default interview`] configuration directive.
 
-This can be useful when you have one primary interview on your server
+This can be useful when you have one primary interview on your site
 and you want users to be able to start it by visiting an easy-to-type
 URL such as:
 
@@ -248,7 +251,7 @@ starts interacting with it.
 The **docassemble** web application uses browser cookies to keep track
 of the user's current interview session.  If the user starts an
 interview, then navigates to a different page, and then navigates to
-`/interview` on the **docassemble** server with no URL parameters, or
+`/interview` on the **docassemble** site with no URL parameters, or
 with an `i` parameter that is the same as the `i` parameter of the
 current interview session, the user will be redirected to where they left
 off in the previous session.
@@ -261,15 +264,16 @@ interview will start at the beginning, even if the user had just been
 in a session of the same interview.  The prior session, if any, is
 preserved.
 
-If you add `&reset=1` to the end of an interview URL, this will have
-the same effect as `&new_session=1`, but if the user had just been in
-a session with the same interview, that session will be deleted.
-In this cirumstance, adding `&reset=1` is like a "restart" operation.
+If you add `&reset=1` to the end of an `/interview` URL, this will
+have the same effect as `&new_session=1`, but if the user had just
+been in a session with the same interview, that session will be
+deleted.  In this cirumstance, adding `&reset=1` is like a "restart"
+operation.
 
 If the user is in interview session, and then clicks a link to an
 interview with a different `i` parameter, this has the same effect as
-if `&new_session=1` had been added; a fresh interview will always be
-started.
+if `&new_session=1` had been added; a fresh interview session will
+always be started.
 
 For other session restarting options, see the `'restart'` and
 `'new_session'` options for the [`url_of()`] and [`command()`]
@@ -281,7 +285,7 @@ When a user starts a new interview, a new "variable store" is created.
 A variable store is a [Python dictionary] containing the names of the
 variables that get defined during the course of the interview, such as
 `favorite_animal` in the example interview above.  The variable store
-is saved on the **docassemble** server.
+is saved in **docassemble**'s database.
 
 **docassemble** keeps a copy of the variable store for every step of
 the interview.  If the user presses the **docassemble** back button
@@ -303,13 +307,13 @@ user will be logged in and will immediately be directed back to the
 interview they had been using, and they will immediately pick up where
 they left off.
 
-If a logged-inuser leaves an interview without completing it, closes
+If a logged-in user leaves an interview without completing it, closes
 their browser, then opens their browser at a later time, and visits
-the interview link again, they will start a new interview session.  If
-they then log in using the menu in the corner, they will be directed
-to the `/interviews` page, where they will see two interview sessions
-listed, including their original session and the session they just
-started.
+the interview link again, they will start a new session for the
+interview indicated by the `i` parameter.  If they then log in using
+the menu in the corner, they will be directed to the `/interviews`
+page, where they will see two interview sessions listed, including
+their original session and the session they just started.
 
 If your users will only ever need to use a single session of an
 interview, you might want to change the code of your interview so that
@@ -344,7 +348,7 @@ For other exiting options, see the `'exit'`, `'leave'`, `'logout'`, and
 `'exit_logout'` options for the [`url_of()`] and [`command()`]
 functions.
 
-# <a name="htauthor"></a>How to author your own interviews
+# <a name="htdevelop"></a>How to develop your own interviews
 
 To write and test your own interviews, you will need:
 
@@ -353,7 +357,7 @@ To write and test your own interviews, you will need:
    where the privileges of the account have been upgraded to
    "developer" or "admin."
 
-There are three ways to author your own interviews:
+There are three ways to develop your own interviews:
 
 1. When logged in, go to the "Playground" from the menu in the upper
    right hand corner.  The [playground] allows you to quickly edit and
@@ -370,10 +374,10 @@ There are three ways to author your own interviews:
 # <a name="yaml"></a>Brief introduction to YAML
 
 **docassemble** interviews are written in [YAML] format, rather than
-assembled using a [graphical user interface], because once authors
+assembled using a [graphical user interface], because once developers
 have climbed the **docassemble** learning curve, the text format is
 ideal for managing the complexity of advanced interviews, since it
-allows authors to copy-and-paste, search-and-replace, and organize
+allows developers to copy-and-paste, search-and-replace, and organize
 text into multiple files.  [YAML] was chosen as the format because it
 is the cleanest-looking of data formats that are both machine-readable
 and human-readable.
@@ -412,7 +416,7 @@ and definitions.  More generally, it associates "keys" with "values."
 [YAML] interprets lines of text and figures out whether you are
 talking about a list or a dictionary depending on what punctuation you
 use.  If it sees a hyphen, it thinks you are talking about a list.  If
-it sees a color, it things you are talking about a dictionary.
+it sees a color, it thinks you are talking about a dictionary.
 
 Lists and dictionaries can be combined.  You can have a dictionary of
 lists and a list of dictionaries.  If I wanted to express the to-do
@@ -535,8 +539,8 @@ are writing.
 The following values in [YAML] are special:
 
 * `null`, `Null`, `NULL` -- these become `None` in [Python]
-* `True`, `True`, `TRUE` -- these become `True` in [Python]
-* `False`, `False`, `FALSE` -- these become `False` in [Python]
+* `true`, `True`, `TRUE` -- these become `True` in [Python]
+* `false`, `False`, `FALSE` -- these become `False` in [Python]
 * numbers such as `54`, `3.14` -- these become numbers in [Python]
 
 These values will not be interpreted as literal pieces of text, but as
@@ -580,7 +584,7 @@ You can write:
 {% endhighlight %}
 
 Both mean the same thing.  You might want to use this technique if
-your labels in a [`fields`] directive are long.  For example, instead
+your labels in a [`fields`] specifier are long.  For example, instead
 of writing:
 
 {% highlight yaml %}
@@ -634,6 +638,7 @@ For more information about [YAML], see the [YAML specification].
 [Code]: {{ site.baseurl }}/docs/code.html
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
 [Objects]: {{ site.baseurl }}/docs/objects.html
+[Groups]: {{ site.baseurl }}/docs/groups.html
 [Markup]: {{ site.baseurl }}/docs/markup.html
 [Functions]: {{ site.baseurl }}/docs/functions.html
 [Documents]: {{ site.baseurl }}/docs/documents.html
@@ -665,3 +670,5 @@ For more information about [YAML], see the [YAML specification].
 [configurable]: {{ site.baseurl }}/docs/config.html#customization
 [`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
 [special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
+[Legal Applications]: {{ site.baseurl }}/docs/legal.html
+[`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url

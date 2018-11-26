@@ -22,7 +22,7 @@ metadata:
 ---
 {% endhighlight %}
 
-A `metadata` block contains information about the [YAML] file, such as
+A `metadata` block contains information about the interview, such as
 the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
@@ -39,8 +39,8 @@ If a `tab title` is provided, it will be displayed as the title
 of the browser tab.  Otherwise, the `title` will be used.
 
 If a `subtitle` is provided, it will be displayed as the subtitle of
-the interview in the "Interviews" list available to a logged-in user
-at `/interviews`.
+the interview in the "Interviews" list available to a logged-in
+user at `/interviews`.
 
 These titles can be overridden using the [`set_title()` function].
 
@@ -50,7 +50,7 @@ modify other aspects of the navigation bar.
 <a name="exit link"></a>If an `exit link` is provided, the behavior of
 the "Exit" link can be modified.  (The "Exit" menu option is displayed
 when the [`show login` configuration directive] is set to `False` or
-the [`show login` metadata directive] in an interview is set to
+the [`show login` metadata specifier] in an interview is set to
 `False`.)  The value can be either `exit` or `leave.` If it is `exit`,
 then when the user clicks the link, they will be logged out (if they
 are logged in) and their interview answers will be deleted from the
@@ -66,12 +66,12 @@ translated into different languages.
 
 If you set `unlisted: True` for an interview that has an entry in the
 [`dispatch`] list in your [configuration], the interview will be
-exempted from display in the interview list available at `/list`.  For
-more information about this, see the documentation for the
+exempted from display in the list of interviews available at `/list`.
+For more information about this, see the documentation for the
 [`dispatch`] configuration directive.
 
 <a name="pre"></a><a name="submit"></a><a name="post"></a>The
-[`metadata`] block also accepts the directives `pre`, `submit`, and
+[`metadata`] block also accepts the specifiers `pre`, `submit`, and
 `post`.  You can use these to provide raw [HTML] that will be inserted
 into the page before the [`question`] heading, before the buttons, and
 after the buttons, respectively.  You can also set server-wide
@@ -79,7 +79,7 @@ defaults for these values using the [`main page pre`], [`main page
 submit`], and [`main page post`] directives in the [Configuration].
 You can also customize these values with the [`set_title()`] function.
 
-<a name="error help">The [`metadata`] block also accepts the directive
+<a name="error help">The [`metadata`] block also accepts the specifier
 `error help`.  This is [Markdown]-formatted text that will be included
 on any error screen that appears to the user during the interview.
 You can also provide this text on a server-wide basis using the
@@ -87,7 +87,7 @@ You can also provide this text on a server-wide basis using the
 
 {% include side-by-side.html demo="error-help" %}
 
-<a name="show login">The [`metadata`] block also accepts the directive
+<a name="show login">The [`metadata`] block also accepts the specifier
 `show login`, which can be `true` or `false`.  This controls whether
 the user sees a "Sign in or sign up to save answers" link in the upper
 right-hand corner during the interview.  If `show login` is not
@@ -116,11 +116,11 @@ will find the above `objects` block and process it.  It will define
 `user.case` as an instance of the object class `Case`.
 
 The use of objects in **docassemble** interviews is highly encouraged.
-However, the objects you use as variables in your interview [YAML] files
-need to inherit from the class `DAObject`.  Otherwise, **docassemble**
-might not be able to find the appopriate [`code` blocks] or questions
-necessary to define them.  This is because of the way **docassemble**
-keeps track of the names of variables.
+However, the objects you use as variables need to inherit from the
+class `DAObject`.  Otherwise, **docassemble** might not be able to
+find the appopriate [`code` blocks] or questions necessary to define
+them.  This is because of the way **docassemble** keeps track of the
+names of variables.
 
 A code block like this would effectively do the same thing as the
 `objects` block above:
@@ -182,9 +182,9 @@ include:
 ---
 {% endhighlight %}
 
-The `include` statement incorporates the questions in another [YAML]
+The `include` block incorporates the questions in another [YAML]
 file, almost as if the contents of the other [YAML] file appeared in
-place of the `include` statement.  When the `include`d file is parsed,
+place of the `include` block.  When the `include`d file is parsed,
 files referenced within it will be assumed to be located in the
 `include`d file's package.
 
@@ -239,7 +239,7 @@ assigns names to icon files, so that you can refer to icons by a name
 of your choosing rather than by the name of the image file.
 
 For information on how to use the icons you have defined in an `image
-sets` block, see `decoration` in the [modifiers] section, `buttons`
+sets` block, see `decoration` in the [question modifiers] section, `buttons`
 in the [setting variables] section, and "Inserting inline icons" in
 the [markup] section.
 
@@ -271,7 +271,7 @@ image sets:
 
 # <a name="mods"></a>Python modules
 
-## <a name="imports"></a>Importing module itself: `imports`
+## <a name="imports"></a>Importing the module itself: `imports`
 
 {% highlight yaml %}
 ---
@@ -290,7 +290,7 @@ import datetime
 import us
 {% endhighlight %}
 
-## <a name="modules"></a>Importing all names: `modules`
+## <a name="modules"></a>Importing all names in a module: `modules`
 
 {% highlight yaml %}
 ---
@@ -394,7 +394,7 @@ can manually specify the order of blocks:
 {% include side-by-side.html demo="supersede-order" %}
 
 Another way to override the order in which blocks will be tried is by
-using the [`id` and `supersedes`] modifiers.
+using the [`id` and `supersedes`] question modifiers.
 
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
@@ -423,7 +423,7 @@ whether in curly brackets or not, use `auto terms`.
 
 {% include side-by-side.html demo="auto-terms" %}
 
-You can also use `terms` and `auto terms` as [modifiers], in which
+You can also use `terms` and `auto terms` as [question modifiers], in which
 case the terms will apply only to the question, not to the interview
 as a whole.
 
@@ -528,9 +528,9 @@ interview help:
 ---
 {% endhighlight %}
 
-You can also add video to help text using the `video` declaration.
+You can also add video to help text using the `video` specifier.
 
-See the [modifiers] section for an explanation of how audio and video
+See the [question modifiers] section for an explanation of how audio and video
 file references work.
 
 You can also provide a `label` as part of the `interview help`.  This
@@ -608,17 +608,17 @@ code: |
 {% endhighlight %}
 
 If your interview uses the [roles] feature for multi-user interviews,
-the `default role` statement will define what role or roles will be
+the `default role` specifier will define what role or roles will be
 required for any question that does not contain an explicit `role`
-statement.
+specifier.
 
 When you use the [roles] feature, you need to have some way of telling
 your interview logic what the role of the interviewee is.
 
 If you include `code` within the same block as your `default role`
-statement, that code will be executed every time the interview logic
+specifier, that code will be executed every time the interview logic
 is processed, as if it was marked as `initial`.  For this reason, any
-`default role` statement that contains code should be placed earlier
+`default role` specifier that contains code should be placed earlier
 in the interview file than and `mandatory` questions or [`code` blocks].
 
 In the example above, the interview has two roles: "client" and
@@ -647,11 +647,11 @@ purpose of this is to save typing; otherwise you would have to set the
 [`language` modifier] for each question.  Note that this does not extend to
 questions in [`include`]d files.
 
-If your interview only supports one language, it is not necessary to
-(and probably not a good idea to) set a `default language`.
+If your interview only uses one language, it is not necessary to (and
+probably not a good idea to) set a `default language`.
 
 See [language support] for more information about how to create
-multi-lingual interviews.  See [modifiers] for information about the
+multi-lingual interviews.  See [question modifiers] for information about the
 `language` setting of a question.
 
 # <a name="machine learning storage"></a>Machine learning training data
@@ -662,7 +662,7 @@ particular interview in the particular [package] in which the
 interview resides.
 
 If you would like your interview to share training data with another
-interview, you can use the `machine learning storage` directive to
+interview, you can use the `machine learning storage` specifier to
 point to the training data of another interview.
 
 For example, suppose you have developed an interview called
@@ -749,8 +749,8 @@ directive] is `True`, so the "Source" link is normally shown.  Setting
 
 ## <a name="centered"></a>Whether interview is centered
 
-If you do not want your interview to be centered on the screen, set
-`centered` to `False`.
+If you do not want your interview questions to be centered on the
+screen, set `centered` to `False`.
 
 {% include side-by-side.html demo="centered" %}
 
@@ -845,9 +845,9 @@ when question-specific help is available.
 
 By default, the menu in the corner provides logged-in users with the
 ability to edit their "Profile" and the ability to go to "My
-Interviews," which is a list of interview sessions that have been
-started.  If you want to disable these links, you can use the `hide
-standard menu` directive:
+Interviews," which is a list of interview sessions they have started.
+If you want to disable these links, you can use the `hide standard
+menu` specifier:
 
 {% highlight yaml %}
 features:
@@ -995,7 +995,7 @@ To make this change at a global level, see the
 As explained more fully in the [tables] section, if you include a
 [table] in an [`attachment`] and the table is too wide, or not wide
 enough, you can change the default character width of tables from 65
-to some other value using the `table width` directive within the
+to some other value using the `table width` specifier within the
 `features` block.
 
 {% highlight yaml %}
@@ -1033,7 +1033,7 @@ The setting can also be made on a per-attachment basis by setting the
 If your users upload digital photos into your interviews, the uploads
 may take a long time.  Images can be reduced in size before they are
 uploaded.  To require by default for all uploads in your interview,
-set `maximum image size` in the `features` block for your interview.
+set `maximum image size` in the `features` block of your interview.
 
 {% include side-by-side.html demo="upload-max-image-size-features" %}
 
@@ -1127,7 +1127,7 @@ features:
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
 [multiple languages]: {{ site.baseurl }}/docs/language.html
-[modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[question modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [setting variables]: {{ site.baseurl }}/docs/fields.html
 [objects]: {{ site.baseurl }}/docs/objects.html
@@ -1216,6 +1216,6 @@ features:
 [`debug` directive]: {{ site.baseurl}}/docs/config.html#debug
 [Markdown]: https://daringfireball.net/projects/markdown/
 [`back button`]: {{ site.baseurl}}/docs/modifiers.html#back button
-[`show login` metadata directive]: #show login
+[`show login` metadata specifier]: #show login
 [`show login`]: {{ site.baseurl}}/docs/config.html#show login
 [`reconsider()`]: {{ site.baseurl}}/docs/functions.html#reconsider

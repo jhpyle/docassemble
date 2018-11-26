@@ -39,13 +39,13 @@ to make your audio files accessible to the greatest number of users,
 then if you provide static audio files, you should include files in
 both `mp3` and `ogg` format.
 
-For example, if your `audio` declaration points to a file, such as
+For example, if your `audio` specifier points to a file, such as
 `nyc_question.mp3`, then your interview package should contain a file
 called `nyc_question.mp3` in the `data/static` directory.  If you also
 include an OGG version of this audio file, called `nyc_question.ogg`,
 in the same directory, then **docassemble** will make both files
 available to the user, and the user's browser will use whichever file
-works.  In your `audio` declaration, you can refer to either the `mp3`
+works.  In your `audio` specifier, you can refer to either the `mp3`
 or the `ogg` file.
 
 Or, if your `mp3` and `ogg` alternatives are located in different
@@ -92,7 +92,7 @@ automatic text-to-speech features.
 
 # <a name="video"></a>Including `video`
 
-The `video` declaration is just like the [`audio`](#audio) declaration
+The `video` specifier is just like the [`audio`](#audio) specifier
 except that it displays a video instead of an audio file.
 
 {% highlight yaml %}
@@ -118,7 +118,7 @@ system.  Currently, **docassemble** can handle videos uploaded in
 another type of video, **docassemble**'s source code can probably be
 modified to support that video type.
 
-You can also use the `video` declaration to embed [YouTube] and
+You can also use the `video` specifier to embed [YouTube] and
 [Vimeo] videos.  For example, if you want to embed a [YouTube] video
 and the URL for the video is
 `https://www.youtube.com/watch?v=9bZkp7q19f0` or
@@ -147,7 +147,7 @@ video: [VIMEO 96044910]
 
 This would generate an error because [YAML] thinks square brackets
 indicate a list of items, not plain text.  If you want to write the
-declaration on one line, write `video: "[VIMEO 96044910]"`.
+specifier on one line, write `video: "[VIMEO 96044910]"`.
 
 `[YOUTUBE ...]` and `[VIMEO ...]` assume that the aspect ratio of the
 vide is 16:9.  If the aspect ratio of the video is 4:3, you can use
@@ -161,7 +161,7 @@ that the aspect ratio is 16:9 by using `[YOUTUBE16:9 ...]` or
 
 In the web app, users can use the navigation bar to toggle between the
 "Question" tab and the "Help" tab.  The contents of the "Help" tab
-consist of the contents of any `help` statements in the question being
+consist of the contents of any `help` specifiers in the question being
 presented, followed by the contents of any `interview help` blocks
 contained within the interview.
 
@@ -169,13 +169,13 @@ You can add audio to your help text:
 
 {% include side-by-side.html demo="help-damages-audio" %}
 
-You can also add video to help text using the `video` declaration.
+You can also add video to help text using the `video` specifier.
 
 When [`interview help`] is available but question-specific `help` is
 not available, the help tab is merely labeled "Help."  When
 question-specific help is available, the help tab is bright yellow and
 is marked with a star.  If you want the label to be something other
-than "Help", you can add a `label` inside the `help` statement:
+than "Help", you can add a `label` inside the `help` specifier:
 
 {% include side-by-side.html demo="help-damages-label" %}
 
@@ -311,7 +311,7 @@ Normally, **docassemble** allows the user to click the back button to
 get back to earlier steps in the interview.  Sometimes, it is
 necessary to prevent the user from doing so.
 
-If you add a `prevent going back` directive to a [`question`], the web
+If you add a `prevent going back` specifier to a [`question`], the web
 app will not offer the user a back button while showing the question.
 
 {% include side-by-side.html demo="prevent-going-back" %}
@@ -388,7 +388,7 @@ fields:
 ---
 {% endhighlight %}
 
-**docassemble**'s [language support] allows a single interview to asks
+**docassemble**'s [language support] allows a single interview to ask
 questions different ways depending on the user's language.  You can
 write questions in different languages that set the same variables.
 **docassemble** will use whatever question matches the active
@@ -426,7 +426,7 @@ appears in [`signature`] questions.
 {% include side-by-side.html demo="generic-object" %}
 
 `generic object` is a very powerful feature in **docassemble** that
-allows authors to express questions in general terms.
+allows interview developers to express questions in general terms.
 
 The above example will cause **docassemble** to ask "Does Sally Smith
 like cats?" if the interview logic calls for `neighbor.likes_cats` and
@@ -563,7 +563,7 @@ reload.
 # <a name="id"></a>Tag a block with a unique id
 
 In some situations, you may need to tag a block in your interview with
-a unique ID.  You can use the `id` directive to do so.
+a unique ID.  You can use the `id` specifier to do so.
 
 {% highlight yaml %}
 ---
@@ -574,7 +574,7 @@ code: |
 ---
 {% endhighlight %}
 
-In the absence of an `id` directive, **docassemble** would refer to a
+In the absence of an `id` specifier, **docassemble** would refer to a
 block like this with a name like `Question_3` (if this block was the
 third block in the interview).  But with `id` set to `initialize`,
 **docassemble** will internally refer to this block with the ID
@@ -583,7 +583,7 @@ third block in the interview).  But with `id` set to `initialize`,
 In most cases, your blocks do not need to have unique IDs.  However,
 there are some features in **docassemble**, such as the
 [changing order of precedence](#precedence) feature discussed
-[below](#precedence), which use `id` directives.
+[below](#precedence), which use `id` specifiers.
 
 Also, in some situations, it can be important to tag your interview
 blocks with a unique name that does not change when the blocks in the
@@ -698,11 +698,11 @@ If you wanted the first question to be asked instead, you could
 rearrange the order of questions, but what if you wanted to keep the
 order the same?
 
-One alternative is to use the `id` and `supersedes` directives:
+One alternative is to use the `id` and `supersedes` specifiers:
 
 {% include side-by-side.html demo="supersede" %}
 
-In this example, the `id` and `supersedes` directives tell the
+In this example, the `id` and `supersedes` specifiers tell the
 interview that the first question takes precedence over the second.
 
 Another way of changing the order of precedence is to use the
@@ -747,12 +747,12 @@ asked.
 
 By default, **docassemble** looks at every block in your interview and
 automatically discerns what variables each block is capable of
-setting.  Then, when it is running the interview, if it encounters an
-undefined variable it goes through all the blocks that are capable of
-defining the variable.  As discussed above, if there are multiple
-blocks that are capable of defining a variable, it tries the ones that
-are later in the file first, unless an [`order` initial block] or a
-[`supersedes` modifier] alters that order.
+setting.  Then, when it is evaluating the interview logic, if it
+encounters an undefined variable it goes through all the blocks that
+are capable of defining the variable.  As discussed above, if there
+are multiple blocks that are capable of defining a variable, it tries
+the ones that are later in the file first, unless an [`order` initial
+block] or a [`supersedes` modifier] alters that order.
 
 Sometimes, however, a block that **docassemble** tries to use to
 define a variable is one that you don't **docassemble** to even
@@ -770,15 +770,15 @@ For example, in this interview, the intention is that:
 
 {% include side-by-side.html demo="scan-for-variables-original" %}
 
-However, this interview does something the author did not intend: when
-it goes looking for a definition for `best_color`, the first thing it
-does is run the [`mandatory`] code block that depends on
-`time_of_day`.  So the first question that gets asked is
-`time_of_day`, not `best_color`.  "Ugh!" the author thinks, "that's
+However, this interview does something the interview developer did not
+intend: when it goes looking for a definition for `best_color`, the
+first thing it does is run the [`mandatory`] code block that depends
+on `time_of_day`.  So the first question that gets asked is
+`time_of_day`, not `best_color`.  "Ugh!" the developer thinks, "that's
 not what I wanted!  I only wanted that mandatory code block to be run
 later in the interview."
 
-To fix this problem, the author can modify the code block with 
+To fix this problem, the developer can modify the code block with 
 `scan for variables: False`:
 
 {% include side-by-side.html demo="scan-for-variables" %}
@@ -855,7 +855,7 @@ code: |
 # <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
-the end user, you can use a `comment` statement.  It will be ignored
+the end user, you can use a `comment` specifier.  It will be ignored
 by **docassemble**, so it can contain any valid [YAML].
 
 {% include side-by-side.html demo="comment-weather" %}

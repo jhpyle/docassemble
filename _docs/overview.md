@@ -4,7 +4,7 @@ title: Documentation overview
 short_title: Overview
 ---
 
-# <a name="sections"></a>Sections of the documentation relating to interview authoring
+# <a name="sections"></a>Sections of the documentation relating to interview development
 
 **docassemble** is a platform for creating mobile-friendly web
 applications called [Interviews] that ask one question at a time in
@@ -14,10 +14,10 @@ submission of an application, or something else.  Run the
 [Demonstration] to get an idea for what **docassemble** applications
 look like.
 
-For a quick introduction to **docassemble** authoring, look at the
+For a quick introduction to **docassemble** interview development, look at the
 [Hello World] tutorial.
 
-Authors write interviews in [YAML] format, a plain-text format that is
+Developers write interviews in [YAML] format, a plain-text format that is
 human-readable but also machine-readable.
 
 An interview consists of multiple "blocks."  Blocks are pieces of text
@@ -109,16 +109,15 @@ If you need to make an interview available in more than one language,
 **docassemble**'s [Language Support] features can help you manage
 translations.
 
-Authors will invariably make mistakes and encounter [Errors].
+Developers will invariably make mistakes and encounter [Errors].
 **docassemble** tries to provide helpful error messages in the browser
 or in logs stored on the server.
 
-**docassemble**'s authoring system was built on the model of the
-open-source software development community.  Interviews can be bundled
-into [Packages], which can be shared on [GitHub] or moved between
-servers as ZIP files.
+**docassemble** was built on the model of the open-source software
+development community.  Interviews can be bundled into [Packages],
+which can be shared on [GitHub] or moved between servers as ZIP files.
 
-Authors can prototype and test their interviews in the browser, using
+Developers can prototype and test their interviews in the browser, using
 the "interview developers' [Playground]."
 
 The mobile-friendly web interface is the primary way that users will
@@ -135,7 +134,7 @@ the operator's actual phone number.
 
 # <a name="othersections"></a>Other sections of the documentation
 
-Authors should focus on the creative aspects of interview writing and
+Developers should focus on the creative aspects of interview writing and
 not have to worry about how the **docassemble** software is made
 available to users on the internet.
 

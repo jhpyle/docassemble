@@ -919,7 +919,7 @@ will see a "GitHub" button in the [packages folder] of the
 [Playground].  Pressing this button will push a [commit] to [GitHub]
 representing the current state of the code of the package.
 
-In order for interview authors to be able to connect their accounts in
+In order for interview developers to be able to connect their accounts in
 this way, you will need to register your **docassemble** server as an
 "OAuth application" on [GitHub]:
 
@@ -932,15 +932,15 @@ this way, you will need to register your **docassemble** server as an
   active.
 * Press the "Register a new application" button.
 * Enter an "Application name" that describes your **docassemble**
-  server.  Interview authors will see this application name when [GitHub]
+  server.  Interview developers will see this application name when [GitHub]
   asks them if they wish to grant your server access to their [GitHub]
   account.
 * Under "Homepage URL," enter the URL of your **docassemble** server.
-* If you want, enter an "Application description."  Interview authors will see
+* If you want, enter an "Application description."  Interview developers will see
   this when [GitHub] asks them if they wish to grant your server
   access to their [GitHub] account.
 * Under "Authorization callback URL," enter the URL for your server
-  followed by `/github_oauth_callback`.  So, if interview authors
+  followed by `/github_oauth_callback`.  So, if interview developers
   access the [Playground] at
   `https://docassemble.example.com/playground`, the callback URL will
   be `https://docassemble.example.com/github_oauth_callback`.  This
@@ -959,7 +959,7 @@ The server will restart after you change the [configuration].  Then,
 when you go to your "Profile," you should see a "GitHub integration"
 link.
 
-When interview authors click this link and they choose to associate
+When interview developers click this link and they choose to associate
 their [GitHub] account with their account on your **docassemble**
 server, **docassemble** stores an access token in [Redis] for the
 user.  This allows **docassemble** to authenticate with the [GitHub

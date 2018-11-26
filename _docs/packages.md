@@ -36,7 +36,7 @@ packages (e.g., `docassemble.missourifamilylaw`).
 # <a name="playground"></a>Using the Playground to make packages
 
 One of the features of the **docassemble** web application is the
-[Playground], a browser-based development platform for authoring and
+[Playground], a browser-based development platform for developing and
 testing interviews.  This is a "sandbox" in which you can make changes
 to an interview and immediately test the effect of those changes.  You
 can use the [Playground] to create a variety of resources (interview

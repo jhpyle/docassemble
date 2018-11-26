@@ -108,12 +108,12 @@ typical **docassemble** package, these templates are files in the
 `data/templates` subdirectory.  In the Playground, they are stored in
 the "Templates" folder.  For more information about the different
 types of template files that can be provided as options to the
-[`attachments`] directive, see [documents].
+[`attachments`] specifier, see [documents].
 
 For example, you can write [Markdown] text in a separate text file
 called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
-file: small_claims_complaint.md` within an [`attachments`] directive.
+file: small_claims_complaint.md` within an [`attachments`] specifier.
 
 {% include scroll-image.html image="playground-templates-page-clipped.png" %}
 
@@ -166,7 +166,7 @@ Python classes and functions.
 The best way to incorporate your module into your interview is to use
 Python's notation for "relative imports."  For example, if your module
 file is called `fruit.py`, you would import the module's resources by
-writing a [`modules`] statement:
+writing a [`modules`] block:
 
 {% highlight yaml %}
 ---
@@ -312,20 +312,20 @@ The area lists the following types of names (which are color-coded):
 
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
-  [`modules`] statement.  Variables in light blue are
+  [`modules`] block.  Variables in light blue are
   **docassemble**'s [special variables].  Variables in orange are
   variables that exist in the interview but may not be in use -- at
   least, **docassemble**'s automatic process was not able to detect
   that the variables were used.  This can be helpful for removing
   obsolete questions from your interview.
 * Functions: functions that are available because they have been
-  included in the Python namespace through a [`modules`] statement.
+  included in the Python namespace through a [`modules`] block.
 * Classes: classes that are available because they have been
-  included in the Python namespace through a [`modules`] statement.
+  included in the Python namespace through a [`modules`] block.
 * Modules defined: modules that are available because they have been
-  included in the Python namespace through a [`import`] statement.
+  included in the Python namespace through a [`imports`] block.
 * Modules available in Playground: modules that are available to be
-  included with [`modules`] or [`import`] because they exist in the
+  included with [`modules`] or [`imports`] because they exist in the
   [modules] folder of the Playground.
 * Templates: template files available in the [Templates folder] of the
   Playground.
@@ -450,7 +450,7 @@ for testing but:
 * You want to use a full-featured text editor like [Emacs],
   [Notepad++], or [Sublime Text] to edit your [YAML] and [Markdown]
   files.
-* You make frequent changes to .docx or .pdf file templates, and you
+* You make frequent changes to DOCX or PDF file templates, and you
   find it cumbersome to have to manually upload the documents each
   time you make a change.
 
@@ -548,7 +548,7 @@ appear in the [Static folder] of the Playground, but it will not
 disappear from the [Templates folder] of the Playground.
 
 Note that this synchronization feature does not work with
-[Google Docs]; it will not convert a [Google Docs] file to a .docx
+[Google Docs]; it will not convert a [Google Docs] file to a DOCX
 file, for example.
 
 Keep in mind that Google Drive is not instantaneous.  If you make
@@ -576,7 +576,7 @@ feature described in the previous section, except it works with
 Microsoft's [OneDrive].
 
 An advantage of [OneDrive] is that you can use [Word Online] to edit a
-.docx file for a document assembly template, and store it in the
+DOCX file for a document assembly template, and store it in the
 "templates" folder of your [OneDrive], and then use it with [`docx
 template file`] from an interview in your Playground.  The editing of
 both the [YAML] file and the Word file can all take place within the
@@ -682,8 +682,8 @@ area.  There is an upload button ![upload button]({{ site.baseurl
 upper-right-hand corner that will upload the document you are editing
 to the [Templates folder] of the Playground.  After the upload, it
 will refresh the sidebar.  This can be helpful because if the
-interview you are working on uses the .docx template you are editing,
-the variables that you are referencing in the .docx file will be
+interview you are working on uses the DOCX template you are editing,
+the variables that you are referencing in the DOCX file will be
 reflected in the sidebar.
 
 ### <a name="word addin autocomplete"></a>Autocomplete
@@ -701,7 +701,7 @@ are also available).
 ### <a name="word addin jinja2"></a>Assistance with using Jinja2
 
 If you scroll to the bottom of the sidebar, you will see a brief
-explanation of [Jinja2], the templating language that is used in .docx
+explanation of [Jinja2], the templating language that is used in DOCX
 template files.
 
 # <a name="infiniteloops"></a>Recovering from infinite loops
@@ -754,7 +754,7 @@ Then the editing screen will load.
 [documents]: {{ site.baseurl }}/docs/documents.html
 [`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
-[`import`]: {{ site.baseurl }}/docs/initial.html#import
+[`imports`]: {{ site.baseurl }}/docs/initial.html#imports
 [`images`]: {{ site.baseurl }}/docs/initial.html#images
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [namespace package]: https://www.python.org/dev/peps/pep-0420/

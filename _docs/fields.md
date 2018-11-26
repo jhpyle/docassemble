@@ -4,10 +4,14 @@ title: Setting variables (and doing other things) with questions
 short_title: Setting Variables
 ---
 
-To instruct **docassemble** to store user input in a variable in
+To instruct **docassemble** to store user input that it receives in
 response to a [question], you need to include in your [`question`] a
-[variable name](#variable names) within a directive that indicates how
-you would like **docassemble** to ask for the value of the variable.
+[variable name](#variable names) to hold the information.  You also
+need to indicate what type of variable it is (e.g., text, a date, a
+number), and how you want to ask for the input (e.g., with a label).
+
+This section explains the many ways that variables can be populated
+using [`question`]s.
 
 # <a name="variable names"></a>A note about variable names
 
@@ -68,9 +72,9 @@ cannot use because they conflict with built-in names that [Python] and
 
 ## <a name="yesornoquestions"></a>Yes or no questions
 
-### <a name="yesno"></a><a name="noyes"></a>The `yesno` and `noyes` statements
+### <a name="yesno"></a><a name="noyes"></a>`yesno` and `noyes`
 
-The `yesno` statement causes a question to set a boolean (true/false)
+`yesno` causes a question to set a boolean (true/false)
 variable when answered.
 
 {% include side-by-side.html demo="yesno" %}
@@ -79,7 +83,7 @@ In the example above, the web app will present "Yes" and "No" buttons
 and will set `over_eighteen` to `True` if "Yes" is pressed, and
 `False` if "No" is pressed.
 
-The `noyes` statement is just like `yesno`, except that "Yes" means
+`noyes` is just like `yesno`, except that "Yes" means
 `False` and "No" means `True`.
 
 {% include side-by-side.html demo="noyes" %}
@@ -89,21 +93,21 @@ other fields; to make screens like that, use [`fields`] below.
 
 ### <a name="yesnomaybe"></a><a name="noyesmaybe"></a>`yesnomaybe` or `noyesmaybe`
 
-These statements are just like `yesno` and `noyes`, except that they
-offer a third choice, "I don't know."  If the user selects "I don't
-know," the variable is set to `None`, which is a special
-[Python constant] that represents the absence of a value.
+These are just like `yesno` and `noyes`, except that they offer a
+third choice, "I don't know."  If the user selects "I don't know," the
+variable is set to `None`, which is a special [Python constant] that
+represents the absence of a value.
 
 {% include side-by-side.html demo="yesnomaybe" %}
 
 ## <a name="field with buttons"></a>Multiple choice buttons
 
-A [`question`] block with a `buttons` statement will set the variable
+A [`question`] block with `buttons` will set the variable
 identified in `field` to a particular value depending on which of the
 buttons the user presses.
 
-The `buttons` statement must always refer to a [YAML] list, so that
-**docassemble** knows the order of the buttons.
+`buttons` must always refer to a list, so that **docassemble** knows
+the order of the buttons.
 
 If an item under `buttons` is a [YAML] key-value pair (written in the
 form of `- key: value`), then the key will be the button label that the
@@ -185,7 +189,7 @@ You can also provide help text for a radio button using `help`:
 
 {% include side-by-side.html demo="choices-with-help" %}
 
-These modifications can also be specified when building a list of
+These customizations can also be specified when building a list of
 choices using code:
 
 {% include side-by-side.html demo="choices-from-code" %}
@@ -281,8 +285,7 @@ indicated by `field` will be set to `True`.
 
 # <a name="fields"></a>Setting multiple variables with one screen
 
-The `fields` statement is used to present the user with a list of
-fields.
+`fields` is used to present the user with a list of fields.
 
 {% include side-by-side.html demo="text-field-example" %}
 
@@ -291,13 +294,13 @@ of one or more key/value pairs.  One of these keys
 ([typically](#label)) is the label the user sees, where the value
 associated with the key is the name of the variable that will store
 the user-provided information for that field.  The other key/value
-pairs in the item (if any) are modifiers that allow you to customize
-how the field is displayed to the user.
+pairs in the item (if any) allow you to modify how the field is
+displayed to the user.
 
-These modifiers are distinguished from label/variable pairs based on
-the key; if the key is uses one of the names listed below, it will be
-treated as a modifier; if it is anything else, it will be treated as a
-label.
+These field modifiers are distinguished from label/variable pairs
+based on the key; if the key is uses one of the names listed below, it
+will be treated as a field modifier; if it is anything else, it will
+be treated as a label.
 
 # <a name="data types"></a><a name="input types"></a>Data types and input types in [`fields`]
 
@@ -349,8 +352,8 @@ to use. The possible values of [`input type`] are:
 * [`radio`](#radio)
 * [`combobox`](#combobox)
 
-The following subsections describe the available [`datatype`]s and [`input
-type`]s that you can assign to a field within a [`fields`] directive.
+The following subsections describe the available [`datatype`]s and
+[`input type`]s that you can assign to a field within [`fields`].
 
 ## <a name="plaintext"></a>Plain text
 
@@ -381,11 +384,10 @@ input box depends on the browser.
 Validation is applied to ensure that the date can be parsed by
 [`dateutil.parser.parse`].
 
-Starting with version 0.2.23, the variable resulting from 
-`datatype: date` is a special [Python] object of the class
-[`DADateTime`], which is a subclass of the standard [Python] class
-[`datetime.datetime`].  So if the name of the date variable is
-`date_of_filing`, then you can do things like:
+The variable resulting from `datatype: date` is a special [Python]
+object of the class [`DADateTime`], which is a subclass of the
+standard [Python] class [`datetime.datetime`].  So if the name of the
+date variable is `date_of_filing`, then you can do things like:
 
 {% include side-by-side.html demo="date-demo" %}
 
@@ -395,12 +397,6 @@ the [`DADateTime`] object will be set to midnight of the date.  If you
 want a [`DADateTime`] with a time other than midnight, you can use the
 [`.replace_time()`] or [`.replace()`] methods of [`DADateTime`] to
 generate a new object with the same date but a different time.
-
-Before version 0.2.23, however, the variable that results from
-`datatype: date` is simply a plain text string.  This means you will
-need to use the [`as_datetime()`] function to convert this string to
-an object if you want to be able to use the comparison operators `<`
-and `>`.
 
 For more information about working with date variables, see
 the documentation for the [date functions].  These functions are
@@ -481,7 +477,7 @@ should be a valid numeric value.
 
 {% include side-by-side.html demo="number-field" %}
 
-You can use the optional modifier `step` to limit the number to a
+You can use the optional field modifier `step` to limit the number to a
 certain number of decimal places and to control the way the browser
 widget controls work:
 
@@ -807,7 +803,7 @@ From the user's perspective, `datatype: ml` works just like `datatype:
 text` (which is the default if no `datatype` is indicated), and
 `datatype: mlarea` works just like `datatype: area`.
 
-From the interview author's perspective, however, the variable that is
+From the interview developer's perspective, however, the variable that is
 set is not a piece of text, but an object representing a
 classification of the user's input, based on a machine learning model
 that is "trained" to classify user input.
@@ -870,7 +866,7 @@ You can guide users as to how they should fill out a text field by
 showing greyed-out text in a text box that disappears when the user
 starts typing in the information.  In HTML, this text is known as the
 [placeholder].  You can set this text for a text field by setting
-`hint`.  You can use [Mako] templates.
+`hint`.  You can use [Mako] templates within `hint`s.
 
 {% include side-by-side.html demo="text-hint" %}
 
@@ -881,27 +877,27 @@ element within a [`fields`] question.
 ## <a name="help"></a>`help`
 
 You can provide contextual help to the user regarding the meaning of a
-field using the `help` modifier.  The label will be green to indicate
-that it can be clicked on, and the value of `help` will appear on the
-screen when the user clicks the green text.  You can use [Mako]
-templates.
+field using the `help` field modifier.  The label will be green to
+indicate that it can be clicked on, and the value of `help` will
+appear on the screen when the user clicks the green text.  You can use
+[Mako] templates within `help` text.
 
 {% include side-by-side.html demo="text-help" %}
 
 ## <a name="default"></a>`default`
 
 You can provide a default value to a field using `default`.  You can
-also use [Mako] templates.
+use [Mako] templates in `default` text.
 
 {% include side-by-side.html demo="text-default" %}
 
 ## <a name="choices"></a>`choices`
 
-The `choices` modifier is used with multiple-choice fields.  It must
-refer to a list of possible options.  Can be a list of key/value pairs
-(key is what the variable will be set to; value is the label seen by
-the user) or a list of plain text items (in which case the label and
-the variable value are the same).
+The `choices` field modifier is used with multiple-choice fields.  It
+must refer to a list of possible options.  Can be a list of key/value
+pairs (key is what the variable will be set to; value is the label
+seen by the user) or a list of plain text items (in which case the
+label and the variable value are the same).
 
 {% include side-by-side.html demo="fields-choices" %}
 
@@ -1011,9 +1007,9 @@ list.
 
 ## <a name="show if"></a>`show if`
 
-You can use the `show if` modifier if you want the field to be hidden
-under certain conditions.  There are three methods of using `show if`,
-which have different syntax.
+You can use the `show if` field modifier if you want the field to be
+hidden under certain conditions.  There are three methods of using
+`show if`, which have different syntax.
 
 Using the first method, the field will appear or disappear in the web
 browser depending on the value of another field in the [`fields`] list.
@@ -1036,8 +1032,8 @@ will be hidden.
 
 {% include side-by-side.html demo="showif-boolean" %}
 
-If a `show if` statement refers to a variable that is itself hidden by a
-`show if`, then the condition is considered to be false.
+If `show if` refers to a variable that is itself hidden by a `show
+if`, then the condition is considered to be false.
 
 {% include side-by-side.html demo="showif-nested" %}
 
@@ -1126,9 +1122,9 @@ the text appears along with the other fields:
 
 {% include side-by-side.html demo="note" %}
 
-However, if the `note` is used as a modifier for a field, the note
-will appear to the right of field on wide screens.  On small screens,
-the note will appear after the field:
+However, if the `note` is used as a field modifier, the note will
+appear to the right of field on wide screens.  On small screens, the
+note will appear after the field:
 
 {% include side-by-side.html demo="side-note" %}
 
@@ -1139,12 +1135,12 @@ overlap on the screen.  Therefore, make sure to keep your notes short.
 
 ## <a name="html"></a>`html`
 
-The `html` directive is like [`note`](#note), except the format is
-expected to be raw [HTML].  It can be used in combination with the
-[`css`] and [`script`] modifiers.
+`html` is like [`note`](#note), except the format is expected to be
+raw [HTML].  It can be used in combination with the [`css`] and
+[`script`] question modifiers.
 
-If the `html` is by itself as its own "field" in the list of `fields`,
-the HTML will appear along with the other fields:
+If `html` is by itself as its own "field" in the list of `fields`, the
+HTML will appear along with the other fields:
 
 {% include side-by-side.html demo="html" %}
 
@@ -1223,11 +1219,10 @@ adding the following to the definition of a field:
 {% include side-by-side.html demo="minlength" %}
 
 <a name="validate"></a>You can also use [Python] code to validate an
-input field.  To do so, add a `validate` directive to the field
-description that refers to the name of a [function] that returns
-`True` (or something that [Python] considers "true") if the value is
-valid, and `False` (or something that [Python] considers "not true")
-if the value is invalid.
+input field.  To do so, add a `validate` field modifier that refers to
+the name of a [function] that returns `True` (or something that
+[Python] considers "true") if the value is valid, and `False` (or
+something that [Python] considers "not true") if the value is invalid.
 
 {% include demo-side-by-side.html demo="validation-test" %}
 
@@ -1277,8 +1272,8 @@ see if the value does not validate.  If 4 does divide the input value
 by a whole number, the function returns `True`, which indicates that
 the input is valid.
 
-Note that the `validate` modifier is not available for use with fields
-having `datatype: checkboxes`.  (However, note that you can use
+Note that the `validate` field modifier is not available for use with
+fields having `datatype: checkboxes`.  (However, note that you can use
 [`minlength`] and [`maxlength`] to require a certain number of
 checkboxes to be checked when [`none of the above`] is disabled.)
 
@@ -1287,7 +1282,7 @@ can only test for characteristics inherent in the variable being
 validated; they cannot compare the variable to other variables.
 
 <a name="validation code"></a>You can get around this restriction
-using the `validation code` modifier.
+using `validation code`.
 
 {% include demo-side-by-side.html demo="validation-code" %}
 
@@ -1424,8 +1419,8 @@ The label of an embedded field is used as the [tooltip] of the field.
 <a name="inline width"></a>When you are using embedded fields, you can
 add the field modifier `inline width` to change the initial width of
 the field.  For example, if you include `inline width: 15em`, the
-[CSS] will be altered so that the field is 15em wide.  This modifier
-has no effect when embedded fields are not being used.
+[CSS] will be altered so that the field is 15em wide.  This field
+modifier has no effect when embedded fields are not being used.
 
 ## <a name="fields code"></a>Generating fields with code
 
@@ -1559,9 +1554,9 @@ Users can upload files, and the files are stored as a variable in
 
 {% include side-by-side.html demo="upload" %}
 
-Note that this question uses the [`fields`] statement, which is
-explained in more detail [above](#fields).  Specifically, it uses the
-[`file`](#file) data type.
+Note that this question uses [`fields`], which is explained in more
+detail [above](#fields).  Specifically, it uses the [`file`](#file)
+data type.
 
 When set, the variable `user_picture` will be a special [object] of
 type [`DAFileList`].  For more information about how to make use of
@@ -1569,7 +1564,7 @@ uploaded files, see [inserting images].
 
 ## <a name="signature"></a>Gathering the user's signature into a file variable
 
-The `signature` directive presents a special screen in which the user
+The `signature` block presents a special screen in which the user
 can sign his or her name with the trackpad or other pointing device.
 
 {% include side-by-side.html demo="signature" %}
@@ -1605,7 +1600,7 @@ yesno: user_signature_verified
 {% endhighlight %}
 
 Signatures can be also be inserted into assembled [documents] in the
-same way.  They can also be inserted into [.docx fill-in forms] and
+same way.  They can also be inserted into [DOCX fill-in forms] and
 [PDF fill-in forms].
 
 On a small screen, users need as much of the screen as possible to
@@ -1646,7 +1641,7 @@ variables](#index variables).
 ## <a name="generic"></a>The `generic object` modifier
 
 The [`generic object` modifier] is explained more fully in the
-[section on modifiers], but here is an example:
+[section on question modifiers], but here is an example:
 
 {% include side-by-side.html demo="generic-object" %}
 
@@ -1716,13 +1711,13 @@ letting **docassemble** choose which block to use.
 
 ## <a name="event"></a>Performing special actions requested by the user
 
-In **docassemble**, you can allow users to click links or menu items
-that take the user to a special screen that the user would not
-ordinarily encounter in the course of the interview.  You can create
-such a screen using the `event` statement.
+You can allow users to click links or menu items that take the user to
+a special screen that the user would not ordinarily encounter in the
+course of the interview.  You can create such a screen using an
+`event` specifier.
 
-An `event` statement acts just like [`sets`]: it advertises to
-**docassemble** that the question will potentially define a variable.
+An `event` specifier acts just like [`sets`]: it advertises that the
+question will potentially define a variable.
 
 In the following example, the variable `show_date` is never defined;
 it is simply sought.  The [`task_not_yet_performed()`] function is
@@ -1730,7 +1725,7 @@ used to make sure that the dialog box only appears once.
 
 {% include side-by-side.html demo="dialog-box" %}
 
-The `event` statement is important if you use the [roles] feature to
+The `event` specifier is important if you use the [roles] feature to
 conduct multi-user interviews.
 
 {% include side-by-side.html demo="event-role-event" %}
@@ -1748,21 +1743,24 @@ this scenario, a `role_event` will be triggered.  When this happens,
 defines the variable `role_event`, and it will find the example
 question above.
 
-This directive can also be used to create screens that the user can
-reach from the menu or from hyperlinks embedded in question text.  For
+`event` can also be used to create screens that the user can reach
+from the menu or from hyperlinks embedded in question text.  For
 information and examples, see [url_action()], [process_action()],
 [action_menu_item()], and [menu_items].
 
 ## <a name="review"></a>Creating a special screen where the user can review his or her answers
 
-A `review` block allows interview authors to provide a screen where
-users can review and edit their answers.  Typically, the user will get
-to this screen by selecting an option from the web app menu (e.g.,
-"Review Answers"), or by clicking on a hyperlink within `subquestion`
-text (e.g., "to review the answers you have provided so far, click
-here").
+The `review` specifier allows interview developers to create a
+`review` screen.  A `review` screen is type of `question` that allows
+users to review and edit their answers, whether the user is part of the
+way through the interview or all the way through the interview.
+Typically, the user will get to this screen by selecting an option
+from the web app menu (e.g., "Review Answers"), or by clicking on a
+hyperlink within `subquestion` text (e.g., "to review the answers you
+have provided so far, click here").
 
-Here is an example of a `review` block that is launched from the menu:
+Here is an example of a `review` screen that is launched from the
+menu:
 
 {% include side-by-side.html demo="review-1" %}
 
@@ -1773,74 +1771,75 @@ calling [`force_ask()`] on `'fruit'` or running an [action] on
 will be used.  After the user edits the value of the variable, the
 user will return to the `review` screen again.
 
-Note that the `review` block does not show a link for "Favorite
+Note that the `review` screen does not show a link for "Favorite
 fungus" because the variable `fungi` has not been defined yet.
-However, once `fungi` is defined, the `review` block would show it.
+However, once `fungi` is defined, the `review` screen would show it.
 
 This behavior is different from the typical behavior of
 **docassemble** blocks.  Normally, referring to a variable that has
 not yet been defined will trigger the asking of a question that will
-define that variable.  In the `review` block, however, the presence of
+define that variable.  In the `review` screen, however, the presence of
 an undefined variable simply causes the item to be omitted from the
 display.
 
 For more information about adding menu items, see the sections on
 [special variables] and [functions].
 
-In the above example, note that the `review` screen is tagged with
-`event: review_answers`.  For more information about how [`event`]s
-work, [see above](#event).  The interview will show this screen
-whenever it seeks out the definition of the variable `review_answers`.
-Since the screen is displayed based on an [`event`], it can be called as
-many times during your interview as the user likes.  Depending on
-which variables have been defined, the user will see different things.
+In the above example, note that the `question` with the `review`
+specifier is tagged with `event: review_answers`.  For more
+information about how [`event`]s work, [see above](#event).  The
+interview will show this screen whenever it seeks out the definition
+of the variable `review_answers`.  Since the screen is displayed based
+on an [`event`], it can be called as many times during the interview
+session as the user likes.  Depending on which variables have been
+defined, the user will see different things.
 
 ### <a name="review customization"></a>Customizing the display of `review` options
 
-You can provide the user with a review of answers and buttons that the
-user can press to revisit an answer:
+You can provide the user with a list of answers the user has provided
+with buttons that the user can press to revisit an answer:
 
 {% include side-by-side.html demo="review-2" %}
 
-In addition, the `review` block, like the [`fields`] block, allows you
+The `review` specifier, like the [`fields`] specifier, allows you
 to use `note` and `html` entries.
 
-If these are modified with the optional `show if` modifier, they will
-only be displayed if the variable referenced by the `show if` modifier
-has been defined.  In addition, if any of these entries refer to a
-variable that has not been defined yet, they will be omitted.
+If these are modified with the optional `show if` field modifier, they
+will only be displayed if the variable referenced by the `show if`
+field modifier has been defined.  In addition, if any of these entries
+refer to a variable that has not been defined yet, they will be
+omitted.
 
 {% include side-by-side.html demo="review-3" %}
 
-If you include `note` and `html` as modifiers of an item under
-`review`, the text will appear to the right of the item on wide
-screens.  On small screens, the HTML will appear after the item.
+If you include `note` and `html` as modifiers of an item under the
+`review` specifier, the text will appear to the right of the item on
+wide screens.  On small screens, the HTML will appear after the item.
 
 {% include side-by-side.html demo="review-side-note" %}
 
-The `review` block allows you to add `help` text to an entry, in
-which case the text is shown underneath the hyperlink.  If this text
-expects a variable to be defined that has not actually been defined,
-the item will not be shown.  Note: this is not available with the
-`button` display format.
+You can add `help` text to an item, in which case the text is shown
+underneath the hyperlink.  If this text expects a variable to be
+defined that has not actually been defined, the item will not be
+shown.  Note: this is not available with the `button` display format.
 
 {% include side-by-side.html demo="review-4" %}
 
 By referring to a list of variables instead of a single variable, you
 can indicate that more than one variable should be sought.  The fields
-mentioned will not appear on the review screen until all have been
+mentioned will not appear on the `review` screen until all have been
 gathered.
 
 {% include side-by-side.html demo="review-5" %}
 
 If there is a follow-up question that might need to come after the
 changing of a variable, you can list the follow-up variable in the
-`fields` under the directive `follow up`.
+`fields` under `follow up`.
 
 {% include side-by-side.html demo="review-conditional" %}
 
 You will need to tag the follow-up question with an [`if`] modifier;
-in order for the `review` block to skip the field when it is not
+in order for the `review` screen to skip the field when it is not
 required, it needs to find no [`question`]s that will define the
 variable.  If the follow-up question is set up in this way, you can
 list its variable under `follow up`, and **docassemble** will ask the
@@ -1857,8 +1856,8 @@ directly by asking the user a question.  Thus, if the user changes the
 answers to these underlying questions, you may want your interview to
 recompute the values of these variables.  This recalculation does not
 happen automatically; however, you can cause it to happen in your
-`review` block by including `recompute` in the list of variables to be
-re-asked.
+`review` screen by including `recompute` in the list of variables to
+be re-asked.
 
 {% include side-by-side.html demo="review-7" %}
 
@@ -1892,8 +1891,8 @@ assume that clicking the link didn't do anything, and the app is
 broken.
 
 There are two other special commands that you can use in a list of
-variables in a `review` block: `set` and `undefine`.  The following
-interview illustrates `set`:
+variables in a `review` item: `set` and `undefine`.  The following
+example illustrates `set`:
 
 {% include side-by-side.html demo="review-8" %}
 
@@ -1914,11 +1913,12 @@ In the above interview, the `set` command sets `address.geolocated` to
 the [`.geolocate()`] method is run again by the `code` block, then the
 [`.geolocate()`] method will actually geolocate the new address.
 
-### <a name="review field"></a>Placing a review block within the interview logic
+### <a name="review field"></a>Placing a `review` screen within the interview logic
 
-In the examples above, the `review` block is identified with an
-`event` like `event: review_answers`, meaning that the variable
-`review_answers` does not actually get defined, though it gets sought.
+In the examples above, the `question` containing the `review`
+specifier is identified with an `event` specifier like `event:
+review_answers`, meaning that the variable `review_answers` does not
+actually get defined, though it gets sought.
 
 As a result, a `review` screen identified with an `event` can only be
 shown when triggered by a user action (e.g., clicking a link,
@@ -1942,13 +1942,13 @@ screen is shown.
 
 ### <a name="skip undefined"></a>Ensuring variables are defined first
 
-By default, when a `review` block encounters and undefined variable,
+By default, when a `review` screen encounters and undefined variable,
 it does not seek out its definition.  This is so you can have a single
-review block that is used throughout your interview (or a section of
-your interview), where the user only sees that fields that have
-already been asked about.
+`review` screen that is used throughout an interview (or a section of
+an interview), where the user only sees that fields that have already
+been asked about.
 
-If you would like to use the functionality of a `review` block, but
+If you would like to use the functionality of a `review` screen, but
 you want all the variables to be defined first, set `skip undefined`
 to `False`:
 
@@ -1960,13 +1960,13 @@ review:
   ...
 {% endhighlight %}
 
-This enables you to use tables in your `review` block.  Ordinarily,
+This enables you to use tables in your `review` screen.  Ordinarily,
 tables are always undefined (so that their contents always reflect the
-current state of the list, so a `review` block would never display them.
+current state of the list, so a `review` screen would never display them.
 
 ### <a name="resume button label"></a>Customizing the Resume button
 
-By default, the `review` block puts a "Resume" button at the bottom of
+By default, the `review` screen puts a "Resume" button at the bottom of
 the screen.  If you want the label on the button to be something other
 than the word "Resume," add a `resume button label` modifier.
 
@@ -1976,10 +1976,10 @@ However, if `review` is used with `field`, a "Continue" button is
 used.  The "Continue" button can be customized using the modifier
 [`continue button label`].
 
-### <a name="review auto"></a>Why can't `review` blocks be automatically generated?
+### <a name="review auto"></a>Why can't `review` screens be automatically generated?
 
-The list of variables to display to the user in a `review` block needs
-to be specified by the interview author.  There are several reasons
+The list of variables to display to the user in a `review` screen needs
+to be specified by the interview developer.  There are several reasons
 why this needs to be done manually as opposed to automatically:
 
 1. Variables in your interview may be interdependent.  You do not
@@ -1991,9 +1991,9 @@ why this needs to be done manually as opposed to automatically:
    want the user to be able to go back and set his or her age to 30,
    at least not without a reconsideration of the definition of
    `eligible_for_medicare`.  Therefore, it is important that the
-   interview author control what the user can edit.
+   interview developer control what the user can edit.
 2. A list of answers already provided might not be user-friendly
-   unless the interview author presents it in a logically organized
+   unless the interview developer presents it in a logically organized
    fashion.  The order in which the questions were asked is not
    necessarily the most logical way to present the information for
    editing.
@@ -2060,11 +2060,11 @@ why this needs to be done manually as opposed to automatically:
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[.docx fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature docx
+[DOCX fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature docx
 [PDF fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature
 [documents]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
-[section on modifiers]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[section on question modifiers]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [objects section]: {{ site.baseurl }}/docs/objects.html
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict

@@ -266,6 +266,48 @@ inherently unordered.  The keys are sorted is this fashion so that
 the order of the rows in a table does not change every time the table
 appears on the screen.
 
+## <a name="export"></a>Exporting tables to Excel and other formats
+
+You can call the `export()` method on a `table` to get a [`DAFile`]
+representation of the table.
+
+For example, this interview provides a Microsoft Excel .xlsx file
+representation of a table:
+
+{% include side-by-side.html demo="table-export" %}
+
+This function uses the [`pandas`] module to export to various formats.
+
+The `export()` method takes a filename, which is parsed to determine
+the file format you want to use.  This can also be provided as the
+`filename` keyword parameter.  If you omit the filename, you can
+indicate the file format using the `file_format` keyword parameter.
+The default file format is `'xlsx'`.  The valid file formats include
+`csv`, `xlsx`, and `json`.
+
+The `title` keyword parameter indicates the name of the data set.
+This is used as the name of the Microsoft Excel sheet.
+
+When the `xlsx` format is used, you can set the `freeze_panes` keyword
+parameter to `False` to turn off the Microsoft Excel "freeze panes"
+feature.
+
+Here are some examples of usage:
+
+* `fruit_table.export('fruit.xlsx')`: returns a Microsoft Excel file
+  called `fruit.xlsx`.
+* `fruit_table.export('fruit.xlsx', title='Fruits')`: returns a Microsoft Excel file
+  called `fruit.xlsx` where the sheet is named "Fruits".
+* `fruit_table.export('fruit.xlsx', title='Fruits', freeze_panes=False)`: returns a Microsoft Excel file
+  called `fruit.xlsx` where the sheet is named "Fruits" and the
+  "freeze panes" feature is turned off.
+* `fruit_table.export('fruit.csv')`: returns a comma-separated values
+  file called `fruit.csv`.
+* `fruit_table.export(file_format='csv')`: returns a comma-separated values
+  file called `file.csv`.
+* `fruit_table.export()`: returns a Microsoft Excel file called
+  `file.xlsx`.
+
 ## <a name="groups edit"></a>Using tables to edit groups
 
 You can use a `table` to provide the user with an interface for
@@ -276,6 +318,7 @@ editing an already-gathered [`DAList`] or [`DADict`].
 For more information about this feature, see the section on [editing
 an already-gathered list] in the section on [groups].
 
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [editing an already-gathered list]: {{ site.baseurl }}/docs/groups.html#editing
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [`table width`]: {{ site.baseurl }}/docs/initial.html#table width
@@ -305,7 +348,7 @@ an already-gathered list] in the section on [groups].
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
-[`DADict`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`Thing`]:  {{ site.baseurl }}/docs/objects.html#Thing
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
@@ -313,3 +356,4 @@ an already-gathered list] in the section on [groups].
 [`label` and `field`]: {{ site.baseurl }}/docs/fields.html#label
 [fill-in forms]: {{ site.baseurl }}/docs/documents.html#fill-in forms
 [customization of document formatting]: {{ site.baseurl }}/docs/documents.html#customization
+[`pandas`]: https://pandas.pydata.org/pandas-docs/stable/index.html

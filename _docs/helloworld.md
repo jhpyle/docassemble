@@ -136,7 +136,7 @@ Note that the order in which the [question] and [code] blocks appear
 does not determine the order in which questions are asked.  This is
 because **docassemble** only asks questions as needed and when needed.
 The path of this interview is driven by the single [`mandatory`]
-question.  In order to say "Hello, \_\_\_\_\_\_", the **docassemble** needs to
+question.  In order to say "Hello, \_\_\_\_\_\_", **docassemble** needs to
 know what `planet` is, so it asks the question "What is your planet's
 name?"  Then, in order to say "I surmise that you have no more than
 \_\_\_\_ inhabitants," **docassemble** needs to know what
@@ -200,14 +200,14 @@ fields:
 
 This creates a document "from scratch" that is available in PDF or RTF
 format.  The content of the document is contained in the `content`
-directive within the [`attachment`] directive.
+specifier within the [`attachment`] specifier.
 
 Let's also try modifying this interview to use a [DOCX template] in
 order to generate a document that will be available to the user in PDF
 or DOCX format.
 
 To do this, first open a word processing application capable of saving
-files in .docx format (e.g., [Microsoft Word]).  Create a file that
+files in DOCX format (e.g., [Microsoft Word]).  Create a file that
 looks like the following:
 
 ![Word file]({{ site.baseurl }}/img/hello_planet.png){: .maybe-full-width }
@@ -218,10 +218,10 @@ inserted an image.  The important thing is that the variable names
 `planet` and `inhabitant_count` are spelled correctly and are enclosed
 in double curly brackets.
 
-Save the file as a .docx file (e.g., `hello_planet.docx`).
+Save the file as a DOCX file (e.g., `hello_planet.docx`).
 
-Now you need to make this .docx file available to your interview by
-putting the .docx file in the [Templates] folder of your [Playground].
+Now you need to make this DOCX file available to your interview by
+putting the DOCX file in the [Templates] folder of your [Playground].
 
 To do this, go to the Folders menu and select "Templates."
 
@@ -231,9 +231,9 @@ Then, go to "Upload a template file" and click "Browse."
 
 ![Upload a template file]({{ site.baseurl }}/img/playground-files-upload-template.png)
 
-Locate your .docx file on your computer and select it.  Then click "Upload."
+Locate your DOCX file on your computer and select it.  Then click "Upload."
 
-Now you should see the .docx file listed as one of your Templates.
+Now you should see the DOCX file listed as one of your Templates.
 
 ![Template list]({{ site.baseurl }}/img/playground-files-template-listing.png)
 
@@ -243,10 +243,10 @@ Then, click ![Back]({{ site.baseurl
 }}/img/playground-button-back-to-playground-bottom.png) to go back to the
 main page of the [Playground].
 
-Now you need to edit the interview so that it uses the .docx file.
+Now you need to edit the interview so that it uses the DOCX file.
 
 In the block with the `attachment`, replace the `content`
-directive with a [`docx template file`] directive that references the
+specifier with a [`docx template file`] specifier that references the
 file you uploaded.  The interview should look like this:
 
 {% highlight yaml %}
@@ -374,10 +374,10 @@ right-click on the "<i class="glyphicon glyphicon-link"
 aria-hidden="true"></i> Share" button and copy the URL to your
 clipboard.  You can share this URL with other people, or bookmark it
 in your browser.  When people visit this URL, they will start an
-interview.  (Note that this only works if the server you are using is
-accessible to the user's device; if you are using a personal computer,
-your computer's firewall might prevent other people from accessing
-you).
+interview session.  (Note that this only works if the server you are
+using is accessible to the user's device; if you are using a personal
+computer, your computer's firewall might prevent other people from
+accessing you).
 
 # <a name="packaging"></a>Packaging your interview
 
@@ -459,7 +459,7 @@ Previously, the URL to your interview ended with something like
 "bleeding edge" version of your interview as it exists in the
 [Playground].  The link that ends with
 `?i=docassemble.helloworld:data/questions/hello.yml` is a link to the
-snapshot that you installed.  This will be a "stable" version of your
+snapshot that you installed.  This will be the "stable" version of your
 interview.
 
 You can then continue to make changes to the [Playground] version,
@@ -467,7 +467,7 @@ while your users are using the snapshot that you installed.  When you
 have made further modifications and you have a new version you want to
 make available again, you can just click the "Install" button again.
 
-For serious deployments of interviews, [it is recommended] that you use
+For serious deployment of interviews, [it is recommended] that you use
 separate "development" and "production" servers.
 
 Another thing you can do from the "Packages" folder is click the
@@ -501,7 +501,7 @@ you try this yourself on a package called `docassemble.helloworld`,
 you will probably get an error because package names on [PyPI] are
 unique and the `docassemble.helloworld` package has already been
 uploaded (by me!).  However, these instructions will work if you adapt
-them to a unique package of your own.
+them to a package name of your own invention.
 
 First, you need to create a username and password on [PyPI].
 

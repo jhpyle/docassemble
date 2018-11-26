@@ -1,9 +1,9 @@
 - title: Tutorial
   docs:
     - helloworld
-- title: Authoring
+- title: Authoring guide
   docs:
-    - authoring
+    - overview
     - interviews
     - initial
     - questions

@@ -305,7 +305,7 @@ interview.  If the interview is called `predict-happy-sad.yml` and it
 is part of the `docassemble.demo` package, **docassemble** will see if
 there are any models in the database with a name that begins with
 `docassemble.demo:data/sources/ml-predict-happy-sad.json`.  Or, if the
-[`machine learning storage`] directive is set, **docassemble** will
+[`machine learning storage`] specifier is set, **docassemble** will
 use that name instead.  If no models are found, **docassemble** will
 read the [JSON] file and import into its database the training data
 for the models found in the file.
@@ -485,10 +485,10 @@ located under the "Global" category.
 
 # <a name="lowerlevel"></a>Lower-level interface
 
-If you are an advanced interview author and you want to be able to
+If you are an advanced interview developer and you want to be able to
 control **docassemble**'s machine learning system more directly, you
 can follow the steps in this section and the following sections.  Most
-authors, however, will be able to use machine learning with the `ml`
+developers, however, will be able to use machine learning with the `ml`
 and `mlarea` data types, as described in the
 [previous section](#howtouse).
 
@@ -724,7 +724,7 @@ of the data set to be used for training and/or prediction.  Assuming
 that the above code exists in the interview `alphabet.yml` in the
 `docassemble.demo` package, the `group_id` will be set to
 `docassemble.demo:data/sources/ml-alphabet.json:abc`.  See the
-[`machine learning storage`] directive for information about modifying
+[`machine learning storage`] specifier for information about modifying
 this value.
 
 It is also possible to set the `group_id` to an explicit value.  You

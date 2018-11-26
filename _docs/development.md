@@ -35,8 +35,8 @@ circumstances when you will need to backtrack or restart your
 interview to see changes, for example if you change a [`mandatory`]
 block that your interview has already processed.)
 
-If you are using [.docx templates] and you are making frequent changes
-to your .docx template, you may find it cumbersome to repetitively
+If you are using [DOCX templates] and you are making frequent changes
+to your DOCX template, you may find it cumbersome to repetitively
 save and upload the template.  You can make this process faster by
 configuring [Google Drive integration].  That way, you can see all of
 the files in your [Playground] in your Google Drive folder on your
@@ -834,7 +834,7 @@ some variation on them may be helpful.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [extension package]: {{ site.baseurl }}/docs/packages.html
 [Docker Hub]: https://hub.docker.com/
-[documentation]: {{ site.baseurl }}/docs/authoring.html
+[documentation]: {{ site.baseurl }}/docs/overview.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [examples area]: {{ site.baseurl }}/docs/playground.html#examples
@@ -843,7 +843,7 @@ some variation on them may be helpful.
 [S3]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [Docker volume]: {{ site.baseurl }}/docs/docker.html#persistent
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[.docx templates]: {{ site.baseurl }}/docs/documents.html#docx template file
+[DOCX templates]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Google Drive integration]: {{ site.baseurl }}/docs/playground.html#google drive
 [Markdown]: https://daringfireball.net/projects/markdown/
 [PyPI page]: https://pypi.python.org/pypi/docassemble.webapp/

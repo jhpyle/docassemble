@@ -112,8 +112,8 @@ law" area of expertise.
 
 ![monitor-roles]({{ site.baseurl }}/img/monitor-roles.png){: .maybe-full-width }
 
-When an interview author uses [`set_live_help_status()`] to enable the chat
-feature, the author indicates which "partner roles," or areas of
+When an interview developer uses [`set_live_help_status()`] to enable the chat
+feature, the developer indicates which "partner roles," or areas of
 expertise, are required for the interview.  One interview may indicate
 "estates" as a partner role, while another may indicate "family law."
 This is the source of the "roles" that the operator sees on the
@@ -137,13 +137,13 @@ Once a phone number is set, the operator can use the
 ## <a name="sessions"></a>List of sessions
 
 Under "Sessions," the operator will see a list of active interviews
-where the interview author has used [`set_live_help_status()`] to enable
+where the interview developer has used [`set_live_help_status()`] to enable
 the user and the operator to communicate.
 
 Active sessions for interviews where [`set_live_help_status()`] has not
 been run will be invisible.
 
-(It is important for interview authors to inform users that operators
+(It is important for interview developers to inform users that operators
 may be monitoring their session.  Interview logic can be used to run
 [`set_live_help_status()`] only if and only when the user has consented to
 monitoring by an operator.)
@@ -216,7 +216,7 @@ changes.  Clicking ![monitor-button-stop-observing]({{ site.baseurl }}/img/monit
 will hide the operator's view of the user's screen.
 
 Users do not receive any kind of notification when an operator starts
-viewing their screen.  It is up to the interview author to inform the
+viewing their screen.  It is up to the interview developer to inform the
 user that an operator might be watching.  This can be done before
 [`set_live_help_status()`] is called, or at the same time.
 
@@ -269,9 +269,9 @@ allow an operator to join an interview from the [monitor].
 The operator will join the interview with his or her own user
 identity, rather than with the identity of the user.  This means that
 the view the operator sees is not necessarily the same as the view
-the user sees.  Interview authors can (and probably should) create a
+the user sees.  Interview developers can (and probably should) create a
 special "back door" into the interview specifically for operators.
-For example, the interview author could write the following into the
+For example, the interview developer could write the following into the
 interview:
 
 {% include side-by-side.html demo="join" image="join-example.png" %}
@@ -289,7 +289,7 @@ and chat with one or more chat partners.
 
 ## Controlling the live chat system from an interview
 
-Interview authors control the [live chat] system from an interview.
+Interview developers control the [live chat] system from an interview.
 They specify whether or not the user should have the option of using
 [live chat], and the types of people with whom the user should
 be able to chat.
@@ -348,7 +348,7 @@ You can set `partner_roles` to either a list of roles
 If you use multiple values, an operator who selects any one of roles
 will be connected with clients.  (That is, they are connected by "or"
 rather than "and.")  The values themselves are up to the interview
-author.  When a user is using the interview, the [monitor] will see a
+developer.  When a user is using the interview, the [monitor] will see a
 list of the partner roles requested and will be able to select the
 roles for which they wish to make themselves available to chat.  The
 partner roles are case sensitive.
@@ -357,7 +357,7 @@ Note that these "partner role" names are separate and distinct from
 the names of [privileges] of user accounts and the names of "roles" in
 [multi-user interviews].  The names of [privileges] need to be set up
 by an administrator on the [Privileges List].  The names of "roles" in
-[multi-user interviews] are controlled by interview authors using the
+[multi-user interviews] are controlled by interview developers using the
 special variables [`role`] and [`role_needed`] and the
 [`role` modifier].  Although you may use common names among these
 systems (e.g., "advocate,") the three systems are independent.

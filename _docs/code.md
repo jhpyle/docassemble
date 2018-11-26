@@ -4,31 +4,31 @@ title: Code questions
 short_title: Code
 ---
 
-**docassemble** allows interview authors to use [Python], a general
+**docassemble** allows interview developers to use [Python], a general
 purpose programming language, to control the direction of interviews
 and do things with user input.  It is not necessary to use [Python]
-code in an interview, but it is an extremely powerful tool.
+code when developing an interview, but it is an extremely powerful tool.
 
-[Python] appears in **docassemble** in a number of ways:
+[Python] appears in **docassemble** interviews in a number of ways:
 
-* Every [variable name] in **docassemble** is a [Python] variable,
-  whether authors realize it or not.  The value of the variable might
-  be text (e.g., `"123 Main Street"`), a number (e.g., `42`), a
+* Every [variable name] in an interview is a [Python] variable,
+  whether developers realize it or not.  The value of the variable
+  might be text (e.g., `"123 Main Street"`), a number (e.g., `42`), a
   special value that has meaning in [Python] (e.g. `True`, `False`,
   and `None`), a [group] (e.g., a [list], [dictionary], or [set]), an
   [object], or an attribute of an [object].
-* Authors can use [`code`] blocks to set variables using [Python]
+* Developers can use [`code`] blocks to set variables using [Python]
   code, which may act upon user input.
 * [Python] code can be embedded within [`question`]s, for example to
   generate a list of choices in a multiple-choice list.
-* The [Mako] templating system, which authors can use to format
+* The [Mako] templating system, which developers can use to format
   [questions] and [documents], is based on [Python], and allows
-  authors to embed [Python] statements within templates.  There are
+  developers to embed [Python] statements within templates.  There are
   slight syntax differences between [Mako] and [Python].  For example,
   [Mako] requires that if/then/else logic statements be closed with an
   `endif` statement.
 
-# <a name="python"></a> An introduction to coding in Python
+# <a name="python"></a>An introduction to coding in Python
 
 As general purpose programming languages go, [Python] is relatively
 user-friendly and readable.  Python programmers don't need to worry
@@ -41,8 +41,7 @@ Here is some very simple [Python] code:
 {% include side-by-side.html demo="code-example-01" %}
 
 This code sets the variable `answer` to 2 + 2.  The code is contained
-in a **docassemble** [`code`] block, which is explained
-[below](#code).
+in a [`code`] block, which is explained [below](#code).
 
 Here is a more complicated example:
 
@@ -176,7 +175,7 @@ has not been defined yet, **docassemble** can pose the question to the
 user and the user's answer to the question may provide a definition
 for that variable.
 
-For example, this [`question`] block:
+For example:
 
 {% highlight yaml %}
 ---
@@ -186,7 +185,8 @@ fields:
 ---
 {% endhighlight %}
 
-asks the user to type in the name of the best fruit ever.
+This [`question`] asks the user to type in the name of the best fruit
+ever.
 
 The value of variables like `best_fruit_ever` can also be retrieved by
 running Python code contained within `code` blocks:
@@ -282,14 +282,14 @@ You can change the way `code` blocks work by adding modifiers:
 * <span></span>[`reconsider`]: If `reconsider` is set to `True`, then
   **docassemble** will always "reconsider" the values of any of the
   variables set by the `code` block.  That is, every time the
-  interview is assembled (every time the screen loads) **docassemble**
+  interview logic is evaluated (every time the screen loads) **docassemble**
   will forget about the value of any of the variables set by the
   `code` block.
 * <span></span>[`initial`]: If `initial` is set to `True`, then **docassemble**
-  will run the code every time the interview is assembled (every time
+  will run the code every time the interview logic is evaluated (every time
   the screen loads).
 * <span></span>[`mandatory`]: If `mandatory` is set to `True`, then
-  **docassemble** will run the code when the interview is assembled,
+  **docassemble** will run the code when the interview logic is evaluated,
   except that once the code runs through all the way, **docassemble**
   will remember that the `code` block was successfully run, and it will
   not re-run it again, as it does with `initial` code.

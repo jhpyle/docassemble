@@ -23,7 +23,7 @@ For example:
   suggest a resolution based on the answers of both parties.
 
 Multi-user interviews are implemented through the [user login] feature
-and three authoring features that were introduced in other sections:
+and three features that were introduced in other sections:
 
 * <span></span>[`role` modifier]: designates certain questions as being answerable
   only by a particular user (or group of users).

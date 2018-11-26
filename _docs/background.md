@@ -16,7 +16,7 @@ screens."  The process goes like this:
 4. The server sends a new screen back to the user's device.
 5. The user sees the new screen.
 
-You may find this process too limiting for you as an interview author
+You may find this process too limiting for you as an interview developer
 if you want your [code] to run at other times.
 
 For example:
@@ -71,7 +71,7 @@ such as code that looks up information in an on-line database, the
 screen will take a long time to load and the user may think that the
 application has "crashed" when it is actually just working normally.
 
-To get around this problem, **docassemble** allows interview authors
+To get around this problem, **docassemble** allows interview developers
 to run code in "background processes."  While the user is answering
 other questions, or looking at a user-friendly screen that instructs
 the user to wait, the **docassemble** server can be hard at work
@@ -767,7 +767,7 @@ input elements.  If you call `background_response()` with a
 parameter, the fields on the screen will be populated with the values
 indicated in the dictionary.  The keys of the dictionary should be
 variable names currently displaying on the screen (e.g., as they are
-defined in the [`fields`] directive).  The values of the dictionary
+defined in the [`fields`] specifier).  The values of the dictionary
 should be the values that you want the fields to have.  For example:
 
 {% include side-by-side.html demo="ajax-calc" %}

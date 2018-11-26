@@ -44,7 +44,7 @@ For a narrative version of the sections of the documentation, see the [Overview]
 {% endfor %}
 </ul>
 
-[Overview]: {{ site.baseurl }}/docs/authoring.html
+[Overview]: {{ site.baseurl }}/docs/overview.html
 [demonstration]: {{ site.baseurl }}/demo.html
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [demonstration page]: {{ site.baseurl}}/demo.html

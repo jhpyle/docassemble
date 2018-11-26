@@ -5,8 +5,8 @@ short_title: Markup
 ---
 
 **docassemble** allows you to format your text using [Markdown] and to
-use [Mako] to make your documents "smart."  These [mark up] methods
-are available for use in [`question`] text, field labels, [`interview
+use [Mako] to make your text "smart."  These [mark up] methods are
+available for use in [`question`] text, field labels, [`interview
 help`] text, the content of [documents], and other text elements.
 
 # <a name="markdown"></a>Markdown
@@ -14,23 +14,23 @@ help`] text, the content of [documents], and other text elements.
 The syntax of [Markdown] is explained well
 [elsewhere](https://daringfireball.net/projects/markdown/).
 
-When generating [documents], **docassemble** uses [Pandoc] to convert
-your [Markdown] to PDF, RTF, and HTML.  (Unless you are using
-[Microsoft Word templates], in which case you will use the [Jinja2]
-templating language in the Word document.)
+When generating [documents] from [Markdown], **docassemble** uses
+[Pandoc] to convert [Markdown] to PDF, RTF, and HTML.  (Unless you are
+using [Microsoft Word templates], in which case you will use the
+[Jinja2] templating language in the Word document.)
 
 Here are some examples of things you can do with Markdown.
 
 {% include side-by-side.html demo="markdown-demo" %}
 
 All of these types of markup will format text in questions as well as
-text in assembled (with the exception of the `!` image insertion
-command, which does not work within PDF and RTF documents).
+text in assembled documents (with the exception of the `!` image
+insertion command, which does not work within PDF and RTF documents).
 
 # <a name="mako"></a>Using Mako for logic and generated text
 
 **docassemble** uses a templating system called [Mako] to allow
-authors to insert variables and code into questions and documents.
+developers to insert variables and code into questions and documents.
 
 You can insert the values of variables into question text using [Mako]'s
 `${ ... }` syntax.
@@ -130,7 +130,7 @@ In **docassemble**, this will not work as intended.  Instead, you
 would use the [`defined()` function]:
 
 {% highlight text %}
-% if defined('some_variable'):
+% if not defined('some_variable'):
 ...
 % endif
 {% endhighlight %}
@@ -239,7 +239,8 @@ not in documents.
 
 # <a name="audio and video"></a>Inserting audio and video
 
-In addition to using the [`audio`] and [`video`]<span></span> [modifiers], you can
+In addition to using the [`audio`] and [`video`]<span></span>
+[question modifiers], you can
 insert audio and video into your [Mako] text in questions.
 
 {% include side-by-side.html demo="audio-upload" %}
@@ -285,7 +286,7 @@ video: |
 ---
 {% endhighlight %}
 
-See [modifiers] for more information about including audio and video.
+See [question modifiers] for more information about including audio and video.
 
 # <a name="qr"></a>Inserting QR codes
 
@@ -328,7 +329,7 @@ The behavior when you insert a PDF file depends on the context:
 
 When you insert a word processing file, the file will be converted to
 PDF and inserted into the document the way a PDF file is inserted.
-However, if you include a .docx file inside a .docx file created using
+However, if you include a DOCX file inside a DOCX file created using
 [`docx template file`], the result is like that of calling
 [`include_docx_template()`].
 
@@ -340,9 +341,7 @@ Tables can be inserted in the format known as [PHP Markdown Extra].
 
 If you want to construct a table based on information in a list, the
 best practice is to collect the list information into an [object] and
-then use the [`table` block] to create a template for the table.  See
-the documentation of that block in the [documents] section for more
-information.
+then use the [`table` block] to create a template for the table.
 
 If you want to write tables in [Markdown] manually, note that the
 alignment characters do not have do be perfectly aligned from row to
@@ -406,7 +405,7 @@ information about this feature, see the section on
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [document]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
-[modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[question modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML

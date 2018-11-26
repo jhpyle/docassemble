@@ -791,7 +791,7 @@ already been gathered.  Here is an example.
 
 This works using two features:
 
-1. The `edit` directive on the [`table`] block, which adds an
+1. The `edit` specifier on the [`table`] block, which adds an
    "Actions" column to the table and indicates which screens should be
    shown when the user clicks the "Edit" button.  First a screen will
    be shown that asks for the the attribute `.name.first`.  Then a
@@ -825,7 +825,7 @@ The line `need: person.table` is important here.  An item in a
 `review` list will not be shown if it contains any undefined
 variables.  The presence of an undefined variable in a `review` list
 item will not cause **docassemble** to seek a definition of that
-variable (unless the directive `skip undefined: False` is used).
+variable (unless the specifier `skip undefined: False` is used).
 Therefore, if you want a `review` item containing a `table` to be
 displayed, you need to make sure that the variable representing the
 `table` gets defined by the time that you want the table to be
@@ -859,7 +859,7 @@ is longer than a certain length, you can give the [`DAList`] or
 {% include side-by-side.html demo="table-dict-edit-minimum-number" %}
 
 If you want specific items to be protected against editing and/or
-deletion, you can set a `read only` directive:
+deletion, you can set a `read only` specifier:
 
 {% include side-by-side.html demo="table-read-only" %}
 
@@ -898,8 +898,8 @@ print total
 This code "loops" through the elements of `numbers` and computes the
 total amount.  At the end, `14` is printed.
 
-For loops based on [`DAList`], [`DADict`], and [`DASet`] objects can be included in
-**docassemble** templates using the `for`/`endfor` [Mako] statement:
+For loops based on [`DAList`], [`DADict`], and [`DASet`] objects can
+be included in textual content using the `for`/`endfor` [Mako] statement:
 
 {% include side-by-side.html demo="for_fruit" %}
 

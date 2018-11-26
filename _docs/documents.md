@@ -1,10 +1,10 @@
 ---
 layout: docs
-title: Attaching documents to questions
+title: Assembling documents
 short_title: Documents
 ---
 
-# <a name="attachment"></a><a name="attachments"></a>The `attachments` statement
+# <a name="attachment"></a><a name="attachments"></a>The `attachments` specifier
 
 The `attachments` block (which can also be written `attachment`)
 creates documents that users can download and/or e-mail.
@@ -172,7 +172,7 @@ which is described [below](#docx template file).
 ## <a name="content file"></a>Reading Markdown content from separate files
 
 If the content of your document is lengthy and you would rather not
-type it into the interview [YAML] file as a `content` directive within
+type it into the interview [YAML] file as a `content` specifier within
 an `attachments` block, you can import the content from a separate
 file using `content file`:
 
@@ -435,8 +435,8 @@ options to [`attachment`]:
 
 Filenames are assumed to reside in the `data/templates` directory
 within the package in which the interview [YAML] file is located.  You
-can specify filenames in other packages by referring to the package
-name.  For example:
+can specify filenames in other packages by including a reference to a
+package and directory.  For example:
 
 {% highlight yaml %}
 template file: docassemble.demo:data/templates/MyTemplate.tex
@@ -496,7 +496,7 @@ added using [Adobe Acrobat Pro] or a similar application),
 **docassemble** can fill in the fields of the PDF file using
 information from an interview and provide the user with a copy of that
 PDF file with the fields filled in.  To do this, use the
-[`attachments`] statement as above, but instead of providing `content`
+[`attachments`] specifier as above, but instead of providing `content`
 or `content file`, provide a `pdf template file` and a dictionary of
 `fields`.
 
@@ -525,13 +525,13 @@ correspond _exactly_ with the names of the fields in the PDF file.
 Luckiliy, there is [a tool] that will help you extract the literal
 field names from a PDF file.
 
-Note: if your PDF document has many fields, it is strongly recommended
-that you use [Adobe Acrobat Pro] to give each field a concise,
-meaningful, and accurate field name (as well as a helpful tooltip).
-[Adobe Acrobat Pro] has a feature for automatically assigning names to
+If your PDF document has many fields, it is strongly recommended that
+you use [Adobe Acrobat Pro] to give each field a concise, meaningful,
+and accurate field name (as well as a helpful tooltip).  [Adobe
+Acrobat Pro] has a feature for automatically assigning names to
 fields, but this tool often assigns incorrect names.  You should go
 through this process _before_ you [generate] the `attachment`
-statement for filling fields in the PDF file.
+specifier for filling fields in the PDF file.
 
 While it is legal for a PDF file to contain more than one field with
 the same name, please note that **docassemble** is unable to populate
@@ -563,7 +563,7 @@ forms in a `pdf template file` can be edited by the user; the fill-in
 form boxes will still exist in the resulting document.
 
 If you want to prevent users from editing the forms created through
-`pdf template file`, set the `editable` directive to `False`.  For
+`pdf template file`, set the `editable` specifier to `False`.  For
 example:
 
 {% include side-by-side.html demo="pdf-fill-not-editable" %}
@@ -626,7 +626,7 @@ quote the value.
 
 ## <a name="docx template file"></a>Filling DOCX templates
 
-You can fill in fields in .docx template files by referring to a `docx
+You can fill in fields in DOCX template files by referring to a `docx
 template file`.
 
 {% include side-by-side.html demo="docx-template" %}
@@ -637,11 +637,11 @@ apply formatting.  **docassemble** will simply "fill in the blanks."
 [using `docx` as one of the `valid formats`], described
 [above](#docx).  When you use that method, you assemble a document
 from scratch by writing [Markdown] text that is then converted to
-.docx format.)
+DOCX format.)
 
 The file referenced with `docx template file` is assumed to reside in
 the `data/templates` directory of your package, unless a specific
-package name is specified.  For example, you could refer to a .docx
+package name is specified.  For example, you could refer to a DOCX
 file in another package by writing:
 
 {% highlight yaml %}
@@ -655,11 +655,11 @@ following text:
 
 The `docx template file` feature relies heavily on the [Python]
 package known as [`python-docx-template`].  This package uses the
-[Jinja2] templating system to indicate fields in the .docx file.
+[Jinja2] templating system to indicate fields in the DOCX file.
 [Jinja2] is different from the [Mako] templating system, which
-**docassemble** uses primarily.
+**docassemble** primarily uses.
 
-When you work on .docx templates, be careful not to confuse the rules
+When you work on DOCX templates, be careful not to confuse the rules
 of these two templating formats.  The biggest difference between the
 formats is that [Mako] uses the syntax `${ variable_name }`, while
 [Jinja2] uses the syntax `{% raw %}{{ variable_name }}{% endraw %}`.
@@ -684,7 +684,7 @@ You may wish to distribute your property to your
 
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
-being used inside of a .docx file.  The standard [Jinja2] way of
+being used inside of a DOCX file.  The standard [Jinja2] way of
 writing a "for loop" is:
 
 {% highlight text %}
@@ -693,7 +693,7 @@ writing a "for loop" is:
 {% endfor %}{% endraw %}
 {% endhighlight %}
 
-In a .docx template, however, this will result in extraneous line
+In a DOCX template, however, this will result in extraneous line
 breaks.  You can avoid this by writing:
 
 {% highlight text %}
@@ -702,9 +702,9 @@ breaks.  You can avoid this by writing:
 {%p endfor %}{% endraw %}
 {% endhighlight %}
 
-The `p` indicates that the paragraph containing the 
+The `p` modifier indicates that the paragraph containing the 
 `{% raw %}{%p ... %}{% endraw %}` statement should be removed from 
-the document.  When you edit the spacing of paragraphs in your .docx
+the document.  When you edit the spacing of paragraphs in your DOCX
 file, you need to edit the paragraph spacing of paragraphs that do
 _not_ contain `{% raw %}{%p ... %}{% endraw %}` statements.  You may
 need to change both the spacing after a paragraph and the spacing
@@ -712,7 +712,7 @@ before a paragraph in order to get the results you want.  Other
 modifiers besides `p` include `tr` for table rows and `tc` for table
 columns.
 
-If you have a bulleted or numbered list in a .docx template and you want
+If you have a bulleted or numbered list in a DOCX template and you want
 to display an item in the list conditionally (using an if .. endif statement),
 you should use the  `{% raw %}{%p if ... %}{% endraw %}` syntax. Place 
 the `{% raw %}{%p if ... %}{% endraw %}` and
@@ -722,7 +722,7 @@ as the `{% raw %}{%p if... %}{% endraw %}` line, you may get an error about
 a missing `endif` statement, since the `p` modifier could cause the 
 `endif` statement to be deleted before it is processed.
 
-The following code in a .docx template:
+The following code in a DOCX template:
 
 > 1. {% raw %}{% if my_var == 'A' %}{% endraw %}The variable is A.{% raw %}{% endif %}{% endraw %}
 > 2. item2
@@ -752,7 +752,7 @@ Jinja2 in this paragraph, but don't actually include this paragraph in
 the assembled document."
 
 You will need to do something similar when using [tables](#docx
-tables) in your .docx file.  For example, when using a "for" loop over
+tables) in your DOCX file.  For example, when using a "for" loop over
 the rows of a table, you would include two extra rows:
 
 | Name                                               | Age                                             |
@@ -779,16 +779,16 @@ The `tc` prefix in `{% raw %}{%tc ... %}{% endraw %}` means "process
 the Jinja2 in this table cell, but don't actually include this table
 cell in the row."
 
-For more information about tables in .docx files, see the [subsection
+For more information about tables in DOCX files, see the [subsection
 on tables](#docx tables) below.
 
-<a name="signature docx"></a>Images can be inserted into .docx files.
+<a name="signature docx"></a>Images can be inserted into DOCX files.
 This is illustrated in the example above: the variable
 `user.signature` is a graphics image (an image of the user's signature
 created with the [`signature` block]).  You can insert [`DAFile`],
-[`DAFileList`], and [`DAStaticFile`] objects into .docx files in a
+[`DAFileList`], and [`DAStaticFile`] objects into DOCX files in a
 similar way.  (See [`include_docx_template()`] below for instructions
-on inserting other .docx files inside a .docx file.)  If you insert a
+on inserting other DOCX files inside a DOCX file.)  If you insert a
 PDF file, it will be converted into a series of page images.  If you
 insert a text file, the raw text will be included.  You can also use
 the `[FILE ...]` markup syntax to [insert an image].  Do not mix image
@@ -797,17 +797,17 @@ references with other text inside of a single field (e.g., by writing
 references need to be by themselves inside of fields.
 
 When you use `docx template file`, the user is provided with both a
-PDF file and a .docx file.  The PDF file is generated by converting
-the .docx file to PDF format using [LibreOffice].  To suppress the
+PDF file and a DOCX file.  The PDF file is generated by converting
+the DOCX file to PDF format using [LibreOffice].  To suppress the
 creation of the PDF version, you can add a [`valid formats`]
-directive.
+specifier.
 
 Note that you cannot use [Markdown] formatting syntax in text that you
-insert into a .docx file.  If you do, it will pass through literally.
-Apply all of your formatting in the .docx template file.
+insert into a DOCX file.  If you do, it will pass through literally.
+Apply all of your formatting in the DOCX template file.
 
 Here is an example that demonstrates how to use [`DAList`] and [`DADict`]
-[objects] in a .docx template and using [Jinja2] templating code.
+[objects] in a DOCX template and using [Jinja2] templating code.
 
 {% include side-by-side.html demo="docx-jinja2-demo" %}
 
@@ -815,16 +815,16 @@ The `docx-jinja2-demo.docx` file looks like this:
 
 ![docx jinja2 source]({{ site.baseurl }}/img/docx-jinja2-demo.png){: .maybe-full-width }
 
-For more information on using [Jinja2] in .docx templates, see the
+For more information on using [Jinja2] in DOCX templates, see the
 documentation of [`python-docx-template`].
 
 The section below on [using code to find a template file] explains how
 you can use code to determine what template file to use with `docx
 template file`.
 
-### <a name="include_docx_template"></a>Inserting other .docx files into .docx templates
+### <a name="include_docx_template"></a>Inserting other DOCX files into DOCX templates
 
-You can include the paragraphs of a .docx file inside of your .docx
+You can include the paragraphs of a DOCX file inside of your DOCX
 template.
 
 ![include_docx_template]({{ site.baseurl }}/img/include_docx_template.png)
@@ -835,7 +835,7 @@ more information.  Note that it is important to use the `p` form of
 
 > {% raw %}{{p include_docx_template('sub_document.docx') }}{% endraw %}
 
-If you have a .docx file in the form of a [`DAFile`] or [`DAFileList`]
+If you have a DOCX file in the form of a [`DAFile`] or [`DAFileList`]
 object, then you can do:
 
 > {% raw %}{{p include_docx_template(the_file) }}{% endraw %}
@@ -844,11 +844,11 @@ or just
 
 > {% raw %}{{p the_file }}{% endraw %}
 
-### <a name="docx tables"></a>Inserting tables into .docx templates
+### <a name="docx tables"></a>Inserting tables into DOCX templates
 
-You can assemble tables in a .docx template using a [Jinja2] "for loop."
+You can assemble tables in a DOCX template using a [Jinja2] "for loop."
 
-Here is an example.  The .docx template looks like this:
+Here is an example.  The DOCX template looks like this:
 
 ![table template source]({{ site.baseurl }}/img/table_template.png){: .maybe-full-width }
 
@@ -863,7 +863,7 @@ will look something like this:
 In this example, each row corresponds to an item in a [Python dict]
 called `seeds_of_fruit`.  Here is an example of an interview that
 gathers items into a [`DADict`] called `seeds_of_fruit` and provides
-the .docx file.
+the DOCX file.
 
 {% include side-by-side.html demo="docx-template-table" %}
 
@@ -871,13 +871,13 @@ For more information about gathering items into a [`DADict`] object,
 see the [Dictionary] subsection of the [Groups] section of the
 documentation.
 
-Your .docx tables can also loop over the columns of a table.
+Your DOCX tables can also loop over the columns of a table.
 
 ![table columns template source]({{ site.baseurl }}/img/docx-table-columns-template.png){: .maybe-full-width }
 
 ![table columns template result]({{ site.baseurl }}/img/docx-table-columns-assembled.png){: .maybe-full-width }
 
-The following example, which uses the template [docx-table-columns.docx],
+The following interview, which uses the template [docx-table-columns.docx],
 illustrates this.
 
 {% include side-by-side.html demo="docx-table-columns" %}
@@ -885,10 +885,10 @@ illustrates this.
 ### <a name="particfields"></a>Passing values only for particular fields
 
 By default, all of the variables in your interview will be available
-in the .docx template.  If you do not want this, perhaps because your
-.docx template uses a different variable naming convention, you can
-use the `fields` directive to indicate a mapping between the fields in
-the .docx template and the values that you want to be filled in.  This
+in the DOCX template.  If you do not want this, perhaps because your
+DOCX template uses a different variable naming convention, you can
+use the `fields` specifier to indicate a mapping between the fields in
+the DOCX template and the values that you want to be filled in.  This
 operates much like the [PDF fill-in fields](#pdf template file)
 feature.
 
@@ -900,18 +900,18 @@ ingredients:
 
 {% include side-by-side.html demo="docx-recipe" %}
 
-In your .docx file, you will need to use appropriate [Jinja2] syntax
+In your DOCX file, you will need to use appropriate [Jinja2] syntax
 in order to process the list of ingredients.  Here is an example of a
-.docx file that uses the above data structure:
+DOCX file that uses the above data structure:
 
 ![recipe template source]({{ site.baseurl }}/img/recipe_template.png){: .maybe-full-width }
 
-For more information on using [Jinja2] in .docx templates, see the
+For more information on using [Jinja2] in DOCX templates, see the
 documentation of [`python-docx-template`].
 
 ## <a name="template code"></a>Passing values using code
 
-When you use the `fields` directive with [`pdf template file`], you
+When you use the `fields` specifier with [`pdf template file`], you
 have to use [Mako] in order to pass the values of interview variables
 to the template.  For example, suppose you have a PDF file with these
 fields:
@@ -923,19 +923,19 @@ You can use an interview like this to populate the fields:
 {% include side-by-side.html demo="fruit-template-alt-1" %}
 
 However, this is a bit punctuation-heavy and repetitive.  As an
-alternative, you can use the `field variables` directive to list the
+alternative, you can use the `field variables` specifier to list the
 variables you want to pass:
 
 {% include side-by-side.html demo="fruit-template-alt-2" %}
 
 This will have the same effect.
 
-The `field variables` directive only works when your variable in the
+The `field variables` specifier only works when your variable in the
 template has the same name as the variable in your interview, and when
 you do not need to perform any transformations on the variable before
 passing it to the template.
 
-The `field variables` directive, and other directives described in
+The `field variables` specifier, and other specifiers described in
 this subsection, work both with [`pdf template file`] and
 [`docx template file`].  But note that since the
 [.docx assembly process](#docx template file) by default accesses all
@@ -954,12 +954,12 @@ code:
 {% include side-by-side.html demo="pdf-template-alt-1" %}
 
 You can achieve the same result with less punctuation by using the
-`field code` directive:
+`field code` specifier:
 
 {% include side-by-side.html demo="pdf-template-alt-2" %}
 
 There is still another way of passing values to a template: you can
-include a `code` directive that contains [Python] code that evaluates
+include a `code` specifier that contains [Python] code that evaluates
 to a [Python dict] in which the keys are the names of variables in the
 template, and the values are the values you want those variables to
 have.  For example:
@@ -987,9 +987,9 @@ needs to know the value of `letter_variables`, that value will be
 "reconsidered"---treated as undefined---and the code above will be
 re-run in order to obtain a fresh definition of `letter_variables`.
 
-The `fields`, `field variables`, and `field code` directives are not
+The `fields`, `field variables`, and `field code` specifiers are not
 mutually exclusive.  When they are used together, they supplement each
-other.  (In .docx templates, however, the fields do not supplement the
+other.  (In DOCX templates, however, the fields do not supplement the
 values of variables in the interview dictionary; if you use `fields`,
 `field variables`, and `field code`, **docassemble** will not use the
 interview dictionary as a whole.)
@@ -1000,8 +1000,8 @@ template file) that uses `code` to supplement the values of `fields`:
 {% include side-by-side.html demo="pdf-fill-code" %}
 
 Like the [Mako] tag `${ ... }`, the `fields`, `field variables`, and
-`field code` directives will convert the values of your variables to a
-format suitable for printing.  If you are using the .docx template
+`field code` specifiers will convert the values of your variables to a
+format suitable for printing.  If you are using the DOCX template
 format and you only use the `{% raw %}{{ ... }}{% endraw %}` syntax in
 your template, this will always be appropriate.  But if you want to
 use "for loops" and other features of [Jinja2] when passing variables
@@ -1035,23 +1035,23 @@ variables`.  In other cases, you will need to manually format your
 numbers, for example by writing something like `${ '%.3f' %
 ounces_of_gold }`.
 
-### <a name="raw field variables"></a>Turning off automatic conversion of .docx variables
+### <a name="raw field variables"></a>Turning off automatic conversion of DOCX variables
 
-Normally, all values that you transfer to a .docx template using
+Normally, all values that you transfer to a DOCX template using
 `fields`, `field variables`, and `field code` are converted so that
-they display appropriately in your .docx file.  For example, if the
+they display appropriately in your DOCX file.  For example, if the
 value is a [`DAFile`] graphics image, it will be converted so that it
-displays in the .docx file as an image.  Or, if the value contains
+displays in the DOCX file as an image.  Or, if the value contains
 [document markup] codes that indicate line breaks, these will display
-as actual line breaks in the .docx file, rather than as codes like
+as actual line breaks in the DOCX file, rather than as codes like
 `[BR]`.
 
-However, if your .docx file uses [Jinja2] templating to do complicated
+However, if your DOCX file uses [Jinja2] templating to do complicated
 things like for loops, this conversion might cause problems.
 
 For example, suppose you have a variable `vegetable_list` that is
 defined as a [`DAList`] with items `['potatoes', 'beets']`, and you
-pass it to a .docx template as follows.
+pass it to a DOCX template as follows.
 
 {% highlight yaml %}
 event: document_shown
@@ -1114,28 +1114,48 @@ attachment:
     - vegetable_list
 {% endhighlight %}
 
-Now, the `vegetable_list` variable in the .docx template will be a
+Now, the `vegetable_list` variable in the DOCX template will be a
 real list that [Jinja2] can process.  The output will be what you expected:
 
 > Don't forget to bring potatoes!
 > Don't forget to bring beets!
 
 The conversion to text is also done if you use `field code` or `code`
-to pass variables to a .docx template.  In order to pass variables in
+to pass variables to a DOCX template.  In order to pass variables in
 "raw" form using `field code` or `code`, you can wrap the code in the
 [`raw()`] function.  For more information, see the
 [documentation for the `raw()` function].
 
 ## <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
 
-When logged in to **docassemble** as a developer, you can go to
+When logged in to your server as a developer, you can go to
 "Utilities" from the menu and, under "Get list of fields from PDF/DOCX
 template," you can upload a [PDF](#pdf template file) or [DOCX](#docx
 template file) file that has fillable fields in it.  **docassemble**
 will scan the file, identify its fields, and present you with the
-[YAML] text of a question that uses that file as a
-[`pdf template file`] or a [`docx template file`] with a list of
-`fields`.
+[YAML] text of a question that uses that file as a [`pdf template
+file`] or a [`docx template file`] with a list of `fields`.
+
+The following example output is from the [sample-form.pdf] template
+referenced earlier:
+
+{% highlight yaml %}
+---
+question: Here is your document.
+event: some_event
+attachment:
+  - name: sample-form
+    filename: sample-form
+    pdf template file: sample-form.pdf
+    fields:
+      - "Your Name": something
+      - "Your Organization": something
+      - "Apple Checkbox": No
+      - "Orange Checkbox": No
+      - "Pear Checkbox": No
+      - "Toast Checkbox": No
+---
+{% endhighlight %}
 
 # <a name="variable name"></a>Saving documents as variables
 
@@ -1152,10 +1172,10 @@ a `variable name` key to an attachment.  For example:
 {% include side-by-side.html demo="document-variable-name" %}
 
 You can also assemble a document and save it to a variable without
-presenting it to the user in this manner.  You do not need to use
-[`attachments`] with a [`question`]; it can stand on its own, and it
-will be evaluated when **docassemble** needs the definition of the
-variable indicated by `variable name`.
+presenting it to the user.  You do not need to use [`attachments`]
+with a [`question`]; it can stand on its own, and it will be evaluated
+when **docassemble** needs the definition of the variable indicated by
+a `variable name` within the [`attachments`] block.
 
 The following example creates a PDF file and an RTF file containing
 the message "Hello, world!" and offers the files as hyperlinks.
@@ -1170,9 +1190,9 @@ object of type [`DAFile`].  In the above example, the variable
 `my_file.rtf` will be the RTF [`DAFile`].  A [`DAFile`] has the
 following attributes:
 
-* `filename`: the path to the file on the filesystem;
-* `mimetype`: the MIME type of the file;
-* `extension`: the file extension (e.g., `pdf` or `rtf`); and
+* `filename`: the path to the file on the filesystem
+* `mimetype`: the MIME type of the file
+* `extension`: the file extension (e.g., `pdf` or `rtf`)
 * `number`: the internal integer number used by **docassemble** to
   keep track of documents stored in the system
 
@@ -1239,11 +1259,11 @@ name).  The expression can return:
 # <a name="display"></a>Alternative ways of displaying documents
 
 There are alternatives to using [`attachment`] or [`attachment code`]
-for displaying assembled files to the user.  If you use
-[`variable name`] to create a [`DAFileCollection`] object that
-represents the assembled file, you can use this variable to provide
-the file to the user in the context of a [`question`] in a number of
-different ways:
+for displaying assembled files to the user.  If you use [`variable
+name`] within an [`attachment`] to create a [`DAFileCollection`]
+object that represents the assembled file, you can use this variable
+to provide the file to the user in the context of a [`question`] in a
+number of different ways:
 
 {% include side-by-side.html demo="document-links" %}
 
@@ -1253,7 +1273,7 @@ objects.
 If a [`DAFile`] is inserted into a template 
 (e.g., with `${ complaint }`), and the [`DAFile`] is a PDF, a shrunken
 image of the first page is shown.  If the [`DAFile`] is an RTF or a
-.docx file, a link is shown.
+DOCX file, a link is shown.
 
 If a [`DAFileCollection`] object is inserted into a template, each
 file type is inserted.  If you use [`valid formats`] to limit the file
@@ -1262,7 +1282,7 @@ example:
 
 {% include side-by-side.html demo="document-links-limited" %}
 
-# <a name="update references"></a>Using tables of contents and other references in .docx files
+# <a name="update references"></a>Using tables of contents and other references in DOCX files
 
 If you are using `docx template file` and your template file uses a
 table of contents or other page references that will change depending
@@ -1322,7 +1342,7 @@ an English language document, you may find that a word or two in the
 English language document has been translated into Spanish.  (E.g.,
 this can happen if your document template uses [linguistic functions]
 from [`docassemble.base.util`]).  You can remedy this by defining a
-`language` for the document.
+`language` for the `attachment`.
 
 {% include side-by-side.html demo="document-language" %}
 
@@ -1350,8 +1370,9 @@ For more information about this feature, see the documentation for the
 # <a name="enable emailing"></a>Enabling the e-mailing of documents
 
 Most internet service providers block e-mail communications as part of
-their efforts to combat [spam], so when you install **docassemble**,
-the e-mail feature probably will not work.
+their efforts to combat [spam], so when you first set up your
+**docassemble** server, the e-mail feature will probably not work "out
+of the box."
 
 As a result, in most cases you will need to edit your [Configuration]
 in order for e-mailing to work.  The easiest and most effective way to

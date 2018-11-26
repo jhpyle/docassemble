@@ -168,7 +168,7 @@ and look for a [`question`] or [`code`] block that offers to define
 `fruit.seeds`.  Or, if that does not work, it will look for a
 [`generic object`] block that offers to define `x.seeds` for a `DAObject`.
 
-From the interview author's perspective, `DAObject`s can be treated
+From the interview developer's perspective, `DAObject`s can be treated
 like ordinary [Python objects] in most ways, but there are exceptions.
 
 An important characteristic of all [`DAObject`]s is that they have
@@ -502,7 +502,7 @@ This will result in the following five questions being asked:
 
 <a name="DAList.appendObject"></a>The `DAList` operates like a [list]
 in [Python], but it also has some special methods.  When adding a new
-item to the list, you should use the **docassemble**-specific method
+item to the list, you should use the **docassemble**-specific 
 `appendObject()` method.  This method is similar to the
 `initializeAttribute()` method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
@@ -702,7 +702,7 @@ Other methods available on a `DAList` are:
 * <a name="DAList.item_actions"></a><a
   name="DADict.item_actions"></a>`item_actions()` - returns HTML for "Edit" and
   "Delete" buttons.  This method is primarily used internally; there
-  are directives of the [`table`] that control it.  It takes two
+  are specifiers for the [`table`] that control it.  It takes two
   positional parameters: the item itself (`the_group[the_index]`) and
   its index (`the_index`).  It also accepts optional keyword
   parameters.  If `edit` is false, the edit button is not shown.  If
@@ -973,8 +973,8 @@ has the following attributes:
 * `mimetype`: the MIME type of the file.
 * `extension`: the file extension (e.g., `pdf` or `rtf`).
 * `number`: the internal integer number used by **docassemble** to
-  keep track of documents stored in the system.  (You will likely never need to
-  use this.)
+  keep track of documents stored on a site.  (You will likely never
+  need to use this.)
 * `ok`: this is `True` if the `number` has been defined, and is
   otherwise `False`.  (You will likely never need to use this,
   either.)
@@ -1005,10 +1005,10 @@ file directly in whatever way you want.  However, the `DAFile` object
 has a number of built-in methods for doing common things with files,
 so it is a good idea to use the methods whenever possible.
 
-While the `DAFile` object is saved in your interview dictionary like
-any other variable, the content of the file may be stored on
-[Amazon S3], [Azure blob storage], or the file system, depending on
-the server's configuration.  The path you obtain from
+While the `DAFile` object is saved in your [interview session
+dictionary] like any other variable, the content of the file may be
+stored on [Amazon S3], [Azure blob storage], or the file system,
+depending on the server's configuration.  The path you obtain from
 [`.path()`](#DAFile.path) might be different from one screen of your
 interview to another.  You should not save the path to a variable and
 expect to be able to use that variable across screens of the
@@ -1110,7 +1110,7 @@ allows you to set two characteristics of the uploaded document:
   have the `DAFile` object itself, or have a URL to the file obtained
   from [`.url_for()`](#DAFile.url_for).  You will need to set the
   `private` attribute to `False` if you want other sessions or other
-  people to be able to access the file.  For example, you might store
+  users to be able to access the file.  For example, you might store
   a [`DAFile`] object in [storage] and retrieve it within other
   interviews at a later time.  The contents of the file will not be
   accessible unless you set `private` to `False`.
@@ -1520,7 +1520,7 @@ In most circumstances, it is not necessary to use a `DALink` to
 represent a [hyperlink] because you can use [Markdown] to indicate a
 hyperlink.  However, when you are creating a document from a [`docx
 template file`], [Markdown] syntax is not available.  When a `DALink`
-object is used within a [`docx template file`], an actual .docx
+object is used within a [`docx template file`], an actual DOCX
 hyperlink is inserted into the document.
 
 {% include side-by-side.html demo="dalink" %}
@@ -1879,11 +1879,11 @@ service = apiclient.discovery.build('translate', 'v2', http=http)
 {% endhighlight %}
 
 Note that while the `api` object can safely persist in your users'
-interview answers, a variable like `service` cannot be [pickled], so
-if you store it in your interview file, you will get an error.
-Ideally, you should always use Python modules for functions that access APIs,
-so that there is no danger of an error if **docassemble** tries to
-pickle an object that cannot be pickled.
+[interview session dictionary], a variable like `service` cannot be
+[pickled], so if you store it in your interview file, you will get an
+error.  Ideally, you should always use Python modules for functions
+that access APIs, so that there is no danger of an error if
+**docassemble** tries to pickle an object that cannot be pickled.
 
 The second category of methods is for [Google Cloud packages] like
 [`google.cloud.storage`] and [`google.cloud.translate`].  If a Google
@@ -2430,7 +2430,7 @@ of the parties in a bullet-point list:
 
 {% include side-by-side.html demo="lastfirst" %}
 
-In this template, the author does not need to worry about which
+In this template, the developer does not need to worry about which
 parties are companies and which parties are individuals; the name will
 be listed in the bullet-point list in an appropriate way.  For
 individuals, the last name will come first, but for non-individuals,
@@ -3192,7 +3192,7 @@ current package."  You could also have written
 long as the interview file is in the same package as the module.
 
 By the way, there is way to write the `summary()` method that is more
-friendly to other interview authors:
+friendly to other interview developers:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -3203,7 +3203,7 @@ class Recipe(DAObject):
         return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
 {% endhighlight %}
 
-If you use the [`word()`] function in this way, interview authors will
+If you use the [`word()`] function in this way, interview developers will
 be able to translate the "cooking" interview from English to another
 language without having to edit your code.  All they would need to do
 is include the words `Ingredients` and `Instructions` in a translation
@@ -3338,8 +3338,8 @@ code: |
 
 This would be effective at changing the `temperature_type` variable
 because the `modules` block loads all the names from
-`docassemble.cooking.objects` into the variable store of the
-interview, including `temperature_type`.
+`docassemble.cooking.objects` into the [namespace] of the interview,
+including `temperature_type`.
 
 However, this is not [thread-safe] and it will not work correctly 100%
 of the time.  If your server is under heavy load, users might randomly
@@ -3426,11 +3426,10 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-We added an `__all__` statement so that interviews can a `module`
-block including `docassemble.cooking.objects` does not clutter the
-variable store with extraneous names like `threading`.  We also added
-functions for setting and retrieving the value of the "temperature
-type."
+We added an `__all__` statement so that a `module` block including
+`docassemble.cooking.objects` does not clutter the [namespace] with
+extraneous names like `threading`.  We also added functions for
+setting and retrieving the value of the "temperature type."
 
 The temperature type is now an attribute of the object `this_thread`,
 which is an instance of `threading.local`.  This attribute needs to be
@@ -3897,3 +3896,5 @@ of the original [`DADateTime`] object.  See
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
 [Python book]: http://shop.oreilly.com/product/0636920028154.do
 [list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
+[namespace]: https://docs.python.org/2.7/tutorial/classes.html#python-scopes-and-namespaces

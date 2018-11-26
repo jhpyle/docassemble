@@ -32,8 +32,8 @@ modules:
 {% endhighlight %}
 
 Unless otherwise instructed, you can assume that all of the functions
-discussed in this section are available in interviews when you include
-this [`modules`] block.
+discussed in this section are available if and when you include this
+[`modules`] block.
 
 # <a name="functions"></a>Functions for working with variable values
 
@@ -150,11 +150,11 @@ chance to run again until the next time the screen loads.
 
 ## <a name="re_run_logic"></a>re_run_logic()
 
-The `re_run_logic()` function causes code to stop executing and causesa
-the interview logic to restart from the beginning.  You might want to
-use this in cases when, after you make changes to variables, you want
-the [`initial`] and not-yet-completed [`mandatory`] blocks to be
-re-run in light of the changes you made.
+The `re_run_logic()` function causes code to stop executing and causes
+the interview logic to be evaluated from the beginning.  You might
+want to use this in cases when, after you make changes to variables,
+you want the [`initial`] and not-yet-completed [`mandatory`] blocks to
+be re-run in light of the changes you made.
 
 If you use this, be careful that you do not create an infinite loop.
 When the blocks are re-run, the result should not be encountering the
@@ -193,7 +193,7 @@ variables if the variables are not already defined.  Note that with
 
 For example, this [`mandatory`] code block expresses [interview logic]
 requiring that the user first be shown a splash screen and then be
-asked questions necessary to get to the end of the intererview.
+asked questions necessary to get to the end of the interview.
 
 {% highlight yaml %}
 ---
@@ -288,8 +288,7 @@ The second and subsequent arguments to `force_ask()` can specify
 [actions] with arguments.  If an argument to `force_ask()` is a
 [Python dictionary] with keys `action` and `arguments`, the specified
 action will be run.  (Internally, **docassemble** is using the
-[actions] mechanism to cause the interview to ask these subsequent
-questions.)
+[actions] mechanism to force the interview to ask these questions.)
 
 ## <a name="force_gather"></a>force_gather()
 
@@ -413,7 +412,7 @@ accesses the values of `main_menu_selection` and
 
 If you want to gather information about what screens your user visited
 or did not visit, you can use prerequisites to do so.  Here is an
-example that uses the [`need` directive] to run a code block when a
+example that uses the [`need` specifier] to run a code block when a
 user selects a menu item.
 
 {% include side-by-side.html demo="dispatch-track" %}
@@ -425,8 +424,8 @@ visited a page, you could do:
 
 ## <a name="all_variables"></a>all_variables()
 
-The `all_variables()` function returns all of the variables in the
-interview in the form of a simplified [Python dictionary].
+The `all_variables()` function returns all of the variables defined in
+the interview session as a simplified [Python dictionary].
 
 {% include side-by-side.html demo="all_variables" %}
 
@@ -436,15 +435,15 @@ dictionary].  Each [`datetime`] or [`DADateTime`] object is converted
 to its `isoformat()`.  Other objects are converted to `None`.
 
 If you want the raw [Python] dictionary, you can call
-`all_variables(simplify=False)`.  However, you should never
-save the result of this function to your interview, because then your
-interview dictionary will double in size.
+`all_variables(simplify=False)`.  However, you should never save the
+result of this function as a variable in the interview session,
+because then the interview answers will double in size.
 
 **docassemble** keeps a dictionary called `_internal` in the interview
 variables and uses it for a variety of internal purposes.  By default,
 it is not included in the output of [`all_variables()`].  If you want
 `_internal` to be included, set the optional keyword parameter
-`include_internal` to `True`.  This has parameter has no effect when
+`include_internal` to `True`.  This parameter has no effect when
 `simplify` is `False`.
 
 The [`all_variables()`] function also has three special behaviors:
@@ -460,7 +459,8 @@ The [`all_variables()`] function also has three special behaviors:
   here is not updated to take into account changes made
   programmatically by the [`set_title()`] function.
 * `all_variables(special='tags')` will return a [Python set]
-  containing the current set of [tags] defined on the interview.
+  containing the current set of [tags] defined for the interview
+  session.
 
 # <a name="special responses"></a>Functions for special responses
 
@@ -504,7 +504,7 @@ The optional keyword arguments influence the appearance of the screen:
 
 ## <a name="response"></a>response()
 
-The `response()` command allows the interview author to use code to
+The `response()` command allows the interview developer to use code to
 send a special HTTP response.  Instead of seeing a new **docassemble**
 screen, the user will see raw content as an HTTP response, or be
 redirected to another web site.  As soon as **docassemble** runs the
@@ -620,7 +620,7 @@ own front end to **docassemble**.
 
 The `variables_as_json()` function acts like [`response()`] in the
 example above, except that is returns all of the variables in the
-interview dictionary in [JSON] format.
+[interview session dictionary] in [JSON] format.
 
 {% include side-by-side.html demo="variables_as_json" %}
 
@@ -634,7 +634,7 @@ includes internal variables in the output.
 
 {% include side-by-side.html demo="exit" %}
 
-The `command()` function allows the interview author to trigger an
+The `command()` function allows the interview developer to trigger an
 exit from the interview using code, rather than having the user click
 an `exit`, `restart`, `leave` or `signin` button.
 
@@ -672,7 +672,7 @@ the string as [JSON], and returns the object represented by the
 [JSON].
 
 This is an advanced function that is used by software developers to
-integrate other systems with docassemble.
+integrate other systems with **docassemble**.
 
 ## <a name="plain"></a><a name="bold"></a><a name="italic"></a>plain(), bold(), and italic()
 
@@ -865,7 +865,7 @@ When the user clicks one of the links, the interview will load as
 usual (much as if the user refreshed the web browser page).  The only
 difference is that **docassemble** sees the additional information
 stored in the URL and makes that information available to the
-interview.
+interview logic.
 
 In the above example, when the user clicks on the link generated by
 `url_action('lucky_color')`, the interview will load as normal.
@@ -933,9 +933,9 @@ code: |
 
 Note that these links will only work for the current user, whose
 access credentials are stored in a cookie in his or her browser.  It
-is possible for actions on the interview to be run by a "third party."
-For information on how to do this, see [`interview_url_action()`] and
-[scheduled tasks].
+is possible for actions to be run by a "third party."  For information
+on how to do this, see [`interview_url_action()`] and [scheduled
+tasks].
 
 ## <a name="action_menu_item"></a>action_menu_item()
 
@@ -1144,7 +1144,7 @@ The `url_of()` function also has a few special uses.
 
 The `url_ask()` function is like [`url_action()`], except instead
 of accepting a single action name and optional arguments, it accepts a
-single data structure, which is treated like the `fields` directive
+single data structure, which is treated like the `fields` specifier
 inside an item of a [`review`] block.  It returns a URL that will
 result in the asking of certain [`question`]s when the user visits it.
 
@@ -1300,7 +1300,7 @@ This function is integrated with other classes in
 * `subject` expects text, or `None`.  Will set the subject of the e-mail.
 * `template` expects a [`DATemplate`] object, or `None`.  These
   templates can be created in an interview file using the `template`
-  directive.  If this [keyword argument] is supplied, both the plain
+  specifier.  If this [keyword argument] is supplied, both the plain
   text and [HTML] contents of the e-mail will be set by converting the
   [Markdown] text of the template into [HTML] and by converting the
   [HTML] to plain text (using [html2text]).  In addition, the subject
@@ -1338,17 +1338,17 @@ Here is an example of sending an attachment via e-mail:
 
 {% include side-by-side.html demo="send-email-with-attachment" %}
 
-Sending e-mail can be slow.  If you call `send_email()` from within an
-interview, the user might have to look at a spinner.  In order to
-provide a better experience to users, you may wish to call
+Sending e-mail can be slow.  If you call `send_email()` from within
+your interview logic, the user might have to look at a spinner.  In
+order to provide a better experience to users, you may wish to call
 `send_email()` from within a [background process].
 
 ## <a name="interview_email"></a>interview_email()
 
 The `interview_email()` function returns an e-mail address that the
 user can use to send a message to the interview.  For more information
-about how users can send e-mails to interviews, see the documentation
-for the [e-mail to interview] feature.
+about how users can send e-mails to interview sessions, see the
+documentation for the [e-mail to interview] feature.
 
 If the [`incoming mail domain`] directive in your [configuration] is
 `help.example.com`, then `interview_email()` will return something
@@ -1357,21 +1357,20 @@ like `kgjeir@help.example.com`.
 The address returned by `interview_email()` is a unique random
 sequence of six lowercase letters.  If any e-mails are received at
 this e-mail address, **docassemble** will associate them with the
-user's interview session and the e-mails can be retrieved with
-[`get_emails()`].
+user's session and the e-mails can be retrieved with [`get_emails()`].
 
 The result returned by `interview_email()` will be unique to the
-interview session.  Every time your interview calls
-`interview_email()`, the same e-mail address will be returned.
+session.  Every time your interview calls `interview_email()`, the
+same e-mail address will be returned.
 
-You can also associate more than one e-mail address with the interview
-session, if you wish.  For example, in a litigation application, you
-may want to have one e-mail address for receiving evidence from the
-client and another address for corresponding with opposing counsel.
-You can obtain these different e-mail addresses using the optional
-keyword argument `key`.  For example,
-`interview_email(key='evidence')` and `interview_email(key='opposing
-counsel')` will return different unique addresses.
+You can also associate more than one e-mail address with the session,
+if you wish.  For example, in a litigation application, you may want
+to have one e-mail address for receiving evidence from the client and
+another address for corresponding with opposing counsel.  You can
+obtain these different e-mail addresses using the optional keyword
+argument `key`.  For example, `interview_email(key='evidence')` and
+`interview_email(key='opposing counsel')` will return different unique
+addresses.
 
 If you are using a `key` to get an e-mail address, you can also
 set the optional keyword argument `index` to an integer.  For example,
@@ -1384,8 +1383,8 @@ counsel', index=2)`, etc.
 
 The `get_emails()` function returns a [list] of objects representing
 e-mail addresses generated with [`interview_email()`].  For more
-information about how users can send e-mails to interviews, see the
-documentation for the [e-mail to interview] feature.
+information about how users can send e-mails to interview sessions,
+see the documentation for the [e-mail to interview] feature.
 
 Each object in the [list] returned by `get_emails()` has the following
 attributes:
@@ -1486,9 +1485,9 @@ processing the request.
 In addition, the result will expire 24 hours after the last time
 [Twilio] reported a change in the status of the fax sending.  Thus, if
 you want to ensure that the outcome of a fax sending gets recorded in
-the interview dictionary, you should launch a [`background_action()`]
-that polls the status, or set up a [scheduled task] that checks in
-hourly.
+the [interview session dictionary], you should launch a
+[`background_action()`] that polls the status, or set up a [scheduled
+task] that checks in hourly.
 
 # <a name="geofunctions"></a>Geographic functions
 
@@ -1706,7 +1705,7 @@ interview, but you do not want to have to pass a lot of variables to
 every function you call, you can use "global" variables.
 
 You set "global" variables in **docassemble** by calling [`set_info()`]
-and your retrieve them by calling [`get_info()`].  Note that
+and you retrieve them by calling [`get_info()`].  Note that
 **docassemble** will forget the values of these variables every time
 the screen loads, so you will have to make sure they are set by
 setting them in [`initial`] code, which runs every time the screen
@@ -1856,9 +1855,9 @@ who is not logged in could access the interview.
 The [`command()`] function redirects the browser to the given `url`.
 You could set the `url` to the result of `url_of('login')`, but then
 when the user logs in, the user will not be redirected back to the
-same interview again.  Thus the `next` parameter is set to a URL for
-the interview.  The URL returned by [`interview_url()`] takes the user
-back to the original interview session.
+same interview session.  Thus the `next` parameter is set to a URL for
+the session.  The URL returned by [`interview_url()`] takes the user
+back to the original session.
 
 ## <a name="user_privileges"></a>user_privileges()
 
@@ -1953,8 +1952,8 @@ For more information about titles, see the documentation for the
 ## <a name="session_tags"></a>session_tags()
 
 Every interview and interview session can be "tagged" with "tags."  If
-you include a `tags` directive in your interview's [`metadata`], and
-the `tags` directive is a [list], then you will define the tags for
+you include a `tags` specifier in your interview's [`metadata`], and
+the `tags` specifier is a [list], then you will define the tags for
 the interview itself.  These tags can be seen on the
 [list of available interviews] that can be started (`/list`) and on
 the list of saved interviews that can be resumed (`/interviews`).
@@ -2019,8 +2018,7 @@ returned:
 # <a name="langlocale"></a>Language and locale functions()
 
 These functions access and change the active language and locale.  See
-[language support] for more information about these features of
-**docassemble**.
+[language support] for more information about these features.
 
 ## <a name="get_language"></a>get_language()
 
@@ -2133,10 +2131,10 @@ user on the same server may cause **docassemble** to run
 If you want to host different interviews that use different locale
 settings on the same server (e.g., to format a numbers as 1,000,000 in
 one interview, but 1.000.000 in another), you will need to make sure
-you run the **docassemble** web server in a multi-process,
-single-thread configuration.  (See [installation] for instructions on
-how to do that.)  Then you would need to begin each interview with
-[`initial`] code such as:
+you run the **docassemble** web server in a multi-process, single-thread
+configuration.  (See [installation] for instructions on how to do
+that.)  Then you would need to begin each interview with [`initial`]
+code such as:
 
 {% highlight yaml %}
 ---
@@ -2152,14 +2150,14 @@ code: |
 # <a name="time"></a>Access time functions
 
 Internally, **docassemble** keeps track of the last time the interview
-was accessed.  The following functions retrieve information about
-access times.  These functions are particularly useful in
+session was accessed.  The following functions retrieve information
+about access times.  These functions are particularly useful in
 [scheduled tasks].
 
 ## <a name="start_time"></a>start_time()
 
 `start_time()` returns a [`DADateTime`] object representing the time
-the interview was started.
+the interview session was started.
 
 The time is expressed in the [UTC] time zone.  If you would
 like to localize the time to a particular time zone, you can set the
@@ -2167,9 +2165,9 @@ optional keyword parameter `timezone` (e.g., to `'America/New_York'`).
 
 ## <a name="last_access_time"></a>last_access_time()
 
-`last_access_time()` returns a [`DADateTime`] object containing the last
-time the interview was accessed by a user other than the special
-[cron user].
+`last_access_time()` returns a [`DADateTime`] object containing the
+last time the interview session was accessed by a user other than the
+special [cron user].
 
 The time is expressed in the [UTC] time zone.  (Note: before version
 0.2.27, the object returned was a [UTC] datetime without a time zone;
@@ -2183,20 +2181,20 @@ this case, the function will return the latest access time by any user
 holding one of the [roles].
 
 * `last_access_time('client')`: returns the last time a user with the
-  role of `client` accessed the interview.
+  role of `client` accessed the interview session.
 * `last_access_time('advocate')`: returns the last time a user with
-  the role of `advocate` accessed the interview.
+  the role of `advocate` accessed the interview session.
 * `last_access_time(['advocate', 'admin'])`: returns the last time a
-  user with the role of `advocate` or `admin` accessed the interview.
+  user with the role of `advocate` or `admin` accessed the interview session.
 
-By default, `last_access_time()` will ignore interview access by the
+By default, `last_access_time()` will ignore session access by the
 [cron user].  However, if you do not wish to ignore access by the
 [cron user], you can call `last_access_time()` with the optional
 keyword argument `include_cron` equal to `True`:
 
 * `last_access_time(include_cron=True)`: returns the last time any
   user, including the [cron user] if applicable, accessed the
-  interview.
+  session.
 
 The `last_access_time()` function takes an optional keyword argument
 `timezone`.  If `timezone` is provided (e.g.,
@@ -2228,9 +2226,9 @@ current time and the last access time.
 ## <a name="returning_user"></a>returning_user()
 
 The function [`returning_user()`] returns `True` if the user has not
-accessed the interview in at least six hours, and otherwise returns
-`False`.  To use a different time limit, you can set one of the
-optional keyword arguments.
+accessed the interview session in at least six hours, and otherwise
+returns `False`.  To use a different time limit, you can set one of
+the optional keyword arguments.
 
 * `returning_user(minutes=5)`
 * `returning_user(hours=1)`
@@ -2533,11 +2531,11 @@ determine the applicable country.
 # <a name="tasks"></a>Functions for tracking tasks
 
 These are helpful functions for keeping track of whether certain tasks
-have been performed.  For example, if your interview sends an e-mail
-to the user about something, but you want to avoid sending the e-mail
-more than once, you can give the "task" a name and use these functions
-in your code to make sure your interview only sends the e-mail if it
-has never been successfuly sent before.
+have been performed.  For example, if your interview logic sends an
+e-mail to the user about something, but you want to avoid sending the
+e-mail more than once, you can give the "task" a name and use these
+functions in your code to make sure your interview logic only sends
+the e-mail if it has never been successfuly sent before.
 
 Instead of using these functions, you could use your own variables to
 keep track of whether tasks have been carried out or not.  These
@@ -2621,9 +2619,9 @@ In your own [Python] code you may wish to use `word()` to help make
 your code multi-lingual.
 
 It is not a good idea to call
-`docassemble.base.util.update_word_collection()` in interviews.  You
-can use it in [Python] modules, but keep in mind that the changes you
-make will have global effect within the [WSGI] process.  If other
+`docassemble.base.util.update_word_collection()` from your interview.
+You can use it in [Python] modules, but keep in mind that the changes
+you make will have global effect within the [WSGI] process.  If other
 interviews on the server define the same word translations for the
 same language using `docassemble.base.util.update_word_collection()`,
 the module that happened to load last will win, and the results could
@@ -3105,43 +3103,44 @@ of the variable is only returned if the variable is defined.
 
 ## <a name="interview_list"></a>interview_list()
 
-If the current user is logged in, [`interview_list()`] returns a list of
-dictionaries indicating information about the user's interview
+If the current user is logged in, [`interview_list()`] returns a list
+of dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
 available at `/interviews`.  In addition, the optional keyword
 parameter `user_id` can be used (by a user with `admin` privileges) to
-get information about interviews owned by other people.
+get information about sessions owned by other people.
 
 In the list of dictionaries returned by the function, the keys of each
 dictionary are:
 
-* `dict`: the interview dictionary for the session.
+* `dict`: the [interview session dictionary] for the session.
 * `email`: the e-mail address of the logged-in user associated with the
-  interview, if any.
-* `user_id`: the user ID of the logged-in user associated with the interview, if
-  any.
+  session, if any.
+* `user_id`: the user ID of the logged-in user associated with the
+  session, if any.
 * `temp_user_id`: the temporary user ID of the anonymous user
-  associated with the interview, if the user was not logged in.  (Note
-  that these IDs do not correspond in any way with the IDs of
-  logged-in users.)
+  associated with the session, if the user was not logged
+  in.  (Note that these IDs do not correspond in any way with the IDs
+  of logged-in users.)
 * `filename`: the filename of the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
 * `metadata`: the metadata of the interview as a dictionary.
-* `modtime`: the modification time of the interview, in text format,
+* `modtime`: the modification time of the session, in text format,
   formatted to the user's time zone.
-* `session`: the session ID of the session.
-* `starttime`: the start time of the interview, in text format,
-  formatted to the user's time zone.
-* `title`: the [title](#get_title) of the interview.
-* `subtitle`: the [subtitle](#get_title) of the interview.
-* `utc_modtime`: the modification time of the interview, in [UTC].
-* `utc_starttime`: the start time of the interview, in [UTC].
+* `session`: the ID of the session.
+* `starttime`: the start time of the session, in text
+  format, formatted to the user's time zone.
+* `title`: the [title](#get_title) of the session.
+* `subtitle`: the [subtitle](#get_title) of the session.
+* `utc_modtime`: the modification time of the session, in [UTC].
+* `utc_starttime`: the start time of the session, in [UTC].
 * `valid`: whether the interview session can be resumed.  This will be
   `False` if there is an error with the interview that prevents it
-  from being resumed, or the interview is not able to be decrypted.
+  from being resumed, or the [interview session dictionary] is not able
+  to be decrypted.
 
 The following question will display a list of the titles of each
-interview session associated with the current user:
+session associated with the current user:
 
 {% highlight yaml %}
 question: Sessions
@@ -3163,8 +3162,8 @@ subquestion: |
 {% endhighlight %}
 
 If the current user has `admin` privileges, the optional keyword
-argument `user_id` can be used to retrieve a list of interview
-sessions belonging to another user:
+argument `user_id` can be used to retrieve a list of sessions
+belonging to another user:
 
 {% highlight yaml %}
 question: Sessions John has started
@@ -3185,12 +3184,12 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-Since the information about each interview could include the interview
-dictionary, to avoid storing all of this information in your own
-dictionary, it is a good idea to avoid keeping interview information
-around when you are done using it.  For example, this interview runs
-`del` to ensure that the variable `info` is not left over when the for
-loop completes its work:
+Since the information about each session could include the interview
+session dictionary, to avoid storing all of this information in your
+own dictionary, it is a good idea to avoid keeping interview
+information around when you are done using it.  For example, this
+interview runs `del` to ensure that the variable `info` is not left
+over when the for loop completes its work:
 
 {% highlight yaml %}
 code: |
@@ -3205,32 +3204,30 @@ The [`interview_list()`] function takes an optional keyword argument
 included even if there is an error that would prevent the session from
 being resumed.  By default, `exclude_invalid` is `True`, meaning that
 sessions will only be included if they can be resumed.  You can check
-whether as session can be resumed by checking the value of the `valid`
-key.  The most common reason for an interview not to be `valid` is
-that the current user does not have an encryption key that decrypts
-the interview answers; so an interview belonging to someone else might
-be not `valid` for you, but `valid` for the user who started that
-interview.
+whether a session can be resumed by checking the value of the `valid`
+key.  The most common reason for a session not to be `valid` is that
+the current user does not have an encryption key that decrypts the
+interview answers; so a session belonging to someone else might be not
+`valid` for you, but it would be `valid` for the user who started that
+session.
 
-You can also use [`interview_list()`] to delete interview sessions.  If
-you set the optional keyword parameter `action` to `'delete_all'`, all
-of the user's interview sessions will be deleted.  You can delete a
-particular session by setting `action` to `'delete'`, with optional
-keyword parameter `filename` set to the filename of the session's
-interview, and optional keyword parameter `session` set to the session
-ID of the session.
+You can also use [`interview_list()`] to delete sessions.  If you set
+the optional keyword parameter `action` to `'delete_all'`, all of the
+user's sessions will be deleted.  You can delete a particular session
+by setting `action` to `'delete'`, with optional keyword parameter
+`filename` set to the filename of the session's interview, and
+optional keyword parameter `session` set to the ID of the session.
 
 This function can be useful in interviews that replace the standard
-list of user sessions.  See the [`session list interview`]
-configuration directive for more information.
+list of sessions.  See the [`session list interview`] configuration
+directive for more information.
 
-Note that more than one user can be associated with any given
-interview session.  Unless server-side encryption prevents it, any
-user who has the session ID of a session can join that interview by
-visiting a URL with the `i` and `session` parameters set.  This will
-associate the user with the interview session.  Thus, if an interview
-session has been joined by more than one user, it will show up
-multiple times in the list returned by
+Note that more than one user can be associated with any given session.
+Unless server-side encryption prevents it, any user who has the
+session ID of a session can join that interview by visiting a URL with
+the `i` and `session` parameters set.  This will associate the user
+with the session.  Thus, if a session has been joined by more than one
+user, it will show up multiple times in the list returned by
 `interview_list(user_id='all')`.
 
 For [API] versions of this function, see [`/api/interviews`],
@@ -3410,30 +3407,30 @@ protected because it is encrypted.  But if the decryption key is
 stored on the server in an accessible place, then the information
 would no longer be protected, since someone who found the decryption
 key could decrypt the data.  Thus, you would not want to store the
-result of [`get_user_secret()`] in the interview dictionary of an
-interview that sets [`multi_user`] to `True`.  Also, even if your
-interview answers are encrypted, it is still a good idea to avoid
-storing passwords or decryption keys in an interview dictionary.
+result of [`get_user_secret()`] in the [interview session dictionary] of
+an interview that sets [`multi_user`] to `True`.  Also, even if your
+interview answers are encrypted, it is still a good idea to
+avoid storing passwords or decryption keys in an interview session
+dictionary.
 
 For an [API] version of this function, see [`/api/secret`].
 
 ## <a name="get_session_variables"></a>get_session_variables()
 
-The [`get_session_variables()`] function retrieves the interview
-dictionary for an interview.  It has two required arguments: an
-interview filename (e.g.,
-`'docassemble.demo:data/questions/questions.yml'`), a session ID
-(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition, it can
-take a third argument, an encryption key for decrypting the interview
-answers.  If the interview is encrypted, the third argument is
-required.
+The [`get_session_variables()`] function retrieves the dictionary for
+an interview session.  It has two required arguments: an interview
+filename (e.g., `'docassemble.demo:data/questions/questions.yml'`), a
+session ID (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition,
+it can take a third argument, an encryption key for decrypting the
+interview answers.  If the interview is encrypted, the third argument
+is required.
 
 To get the interview filename for the current interview, and the
 session ID for the current interview session, you can use the
 [`user_info()`] function.
 
-However, note that if you want to get the interview dictionary for the
-current interview, you can simply use the [`all_variables()`]
+However, note that if you want to get the dictionary for the current
+interview session, you can simply use the [`all_variables()`]
 function.
 
 To obtain an encryption key, you can use [`get_user_secret()`].
@@ -3454,7 +3451,7 @@ For an [API] version of this function, see the [GET method of `/api/session`].
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
-to any interview dictionary.  It has three required arguments: an
+to any [interview session dictionary].  It has three required arguments: an
 interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
@@ -3470,7 +3467,8 @@ vars = {"defense['latches']": False, "client.phone_number": "202-555-3434"}
 set_session_variables(filename, session_id, vars, secret)
 {% endhighlight %}
 
-Then the following statements will be executed in the interview dictionary:
+Then the following statements will be executed in the interview
+session dictionary:
 
 {% highlight python %}
 defense['latches'] = False
@@ -3478,15 +3476,15 @@ client.phone_number = u'202-555-3434'
 {% endhighlight %}
 
 Note that if you pass [`DAFile`], [`DAFileList`], or
-[`DAFileCollection`] objects from one interview to another, the other
-interview will not be able to read the files unless the
+[`DAFileCollection`] objects from one interview session to another,
+the other interview will not be able to read the files unless the
 [`.set_attributes()`] method has been used to either change the
-`session` and `filename` to match the destination interview, or the
-`private` attribute has been set to `False`.  Note that if the
-`session` and `filename` are changed, then the first interview will no
-longer be able to access the file.  Note also that if `private` is set
-to `False`, then the file will be accessible on the internet from a
-URL.
+`session` and `filename` to match the destination interview session,
+or the `private` attribute has been set to `False`.  Note that if the
+`session` and `filename` are changed, then the first interview session
+will no longer be able to access the file.  Note also that if
+`private` is set to `False`, then the file will be accessible on the
+internet from a URL.
 
 For an [API] version of this function, see the [POST method of `/api/session`].
 
@@ -3496,7 +3494,7 @@ The [`go_back_in_session()`] function causes the effect of clicking
 the "back" button in an interview session.  It has two required
 arguments: the interview filename and the session ID.  It also accepts
 an optional keyword argument `secret`, which is the encryption key to
-use to decrypt the interview dictionary, if it is encrypted.
+use to decrypt the [interview session dictionary], if it is encrypted.
 
 {% highlight python %}
 go_back_in_session(filename, session_id, secret)
@@ -3734,7 +3732,7 @@ If there is one [YAML] "[document]" and it is something other than an
 There is an optional keyword argument `name` that will be used to set
 the [`.instanceName`] attribute of the resulting object.  If you do
 not pass a `name` parameter, the object/data structure returned by
-`objects_from_file()` will still be readable, not but it will not be
+`objects_from_file()` will still be readable, but it will not be
 writable by **docassemble** questions.
 
 Note that there is an [initial block] called [`objects from file`]
@@ -3804,7 +3802,7 @@ items:
 {% endhighlight %}
 
 Note the inclusion of `module: .fish` along with each `object`
-directive.  This indicates that the `Halibut` and `Food` classes are
+specifier.  This indicates that the `Halibut` and `Food` classes are
 defined in the module `.fish`.
 
 The following interview will import these two `Halibut` objects into
@@ -4355,8 +4353,8 @@ subsequent user screens may be handled by different servers.
 
 If you want a file that persists from request to request, you should
 store its contents to a [`DAFile`] object.  When a [`DAFile`] object
-is assigned to an interview variable, you can reliably obtain the file
-path by calling the [`.path()`] method on the variable.
+is assigned to a variable, you can reliably obtain the file path by
+calling the [`.path()`] method on the variable.
 
 The `path_and_mimetype()` function can be used along with the
 [`.set_mimetype()`] and [`.copy_into()`] methods of the [`DAFile`]
@@ -4549,9 +4547,8 @@ notifications like this.
 
 ## <a name="encode_name"></a>encode_name()
 
-In the [HTML] of the web interface, input elements for
-**docassemble** variables are base64-encoded versions of the [Python]
-variable names.
+In the [HTML] of the web interface, input elements for variables are
+base64-encoded versions of the [Python] variable names.
 
 The `encode_name()` function converts a variable name to base64
 encoding.
@@ -4628,7 +4625,7 @@ This function is integrated with other classes in
   of the message.  Markdown will be converted to plain text.
 * `template` expects a [`DATemplate`] object, or `None`.  These
   templates can be created in an interview file using the `template`
-  directive.  The "subject" of the template, if provided, will be the first
+  specifier.  The "subject" of the template, if provided, will be the first
   line of the message.
 * `task` expects the name of a [task].  If this argument is provided,
   and if sending the text message is successful, the task will be
@@ -4726,9 +4723,9 @@ works:
   will have the same identity as the user who was using the interview
   when the call to `initiate_sms_session()` was made.
 * `new` - this controls whether the [SMS] user will join an ongoing
-  interview or start a fresh interview.  Set this to `True` if you
-  want the [SMS] user to start a fresh interview.  If `new` is not
-  specified, the [SMS] user will join the interview that was ongoing
+  interview session or start a fresh session.  Set this to `True` if
+  you want the [SMS] user to start a fresh session.  If `new` is not
+  specified, the [SMS] user will join the session that was ongoing
   when the call to `initiate_sms_session()` was made.
 * `send` - this controls whether the invitation message should be sent
   or not.  If `send` is not specified, the message will be sent.  Set
@@ -4736,8 +4733,8 @@ works:
   `False`, the [SMS] session will still be created.  The fact that the
   session is created means that if an [SMS] message is received from
   the given phone number, the [SMS] user will receive a response as if
-  the interview had already been started.  The user's initial message
-  will not be interpreted as a choice of an interview from the
+  the interview session had already been started.  The user's initial
+  message will not be interpreted as a choice of an interview from the
   `dispatch` section of the [`twilio`] configuration.
 * `config` - this controls which [Twilio] phone number is used for
   communication.  You would only need to use this if you have more
@@ -4747,13 +4744,12 @@ works:
 If you are not using `new=True`, note that there may be a delay
 between the time the message is sent to the [SMS] user and the time
 the [SMS] user sees the message and responds.  The [SMS] user will
-join the interview at whatever state the interview is in at the time
-the [SMS] user responds.  **docassemble** does not make a
+join the interview at whatever state the interview session is in at
+the time the [SMS] user responds.  **docassemble** does not make a
 copy of the interview state when the call to `initiate_sms_session()`
 is made.
 
-Here is an example interview that solicits input into the interview
-through [SMS].
+Here is an example interview that solicits input through [SMS].
 
 {% highlight yaml %}
 modules:
@@ -4816,8 +4812,8 @@ terminate_sms_session("202-555-1212")
 After the above code executes, then if a message is received from
 202-555-1212, it will be treated as a selection of an interview from
 the `dispatch` section of the [`twilio`] configuration.  If the [SMS]
-user had been in the middle of an interview, the user will not be able
-to get back to the interview.
+user had been in the middle of an interview session, the user will not
+be able to get back to that session again.
 
 # <a name="storage"></a>Storing data
 
@@ -4829,7 +4825,7 @@ The [background processes] feature of **docassemble** depends on a
 [Redis] server being available.  The server is also used to facilitate
 [live chat].
 
-Interview authors may want to make use of the [Redis] server for
+Interview developers may want to make use of the [Redis] server for
 purposes of storing information across users of a particular
 interview, keeping usage statistics, or other purposes.
 
@@ -5054,15 +5050,15 @@ First, the code deletes any existing records under `user_key`, and
 then stores the `user` object.  This means that even if the interview
 session started off by retrieving `user` from storage, it will save a
 new copy of the `user` object to storage.  Thus, the interview can
-make changes to the `user` object of necessary, and those changes will
+make changes to the `user` object if necessary, and those changes will
 be saved.
 
-Just for fun, this interview also uses [`set_title()`] and
-[`session_tags()`] to change the title and tags of the interview, so
-that when the user goes to "My Interviews," the user will see a
-different title and different tags based on their interview answers.
-Using a technique like this might help your users in case your users
-want to resume their interview session.
+This interview also uses [`set_title()`] and [`session_tags()`] to
+change the title and tags of the interview, so that when the user goes
+to "My Interviews," the user will see a different title and different
+tags based on their interview answers.  Using a technique like this
+might help your users in case your users want to resume their
+interview session.
 
 Now, suppose you have a variety of interviews, all of which relate to
 the same topic (e.g., workers compensation).  If any one of these
@@ -5213,13 +5209,13 @@ This assumes the [`db`] configuration refers to a [PostgreSQL]
 database.  If you connect to the database with the credentials from
 [`db`], you have the power to create and drop tables.
 
-# <a name="docx"></a>Functions for working with .docx templates
+# <a name="docx"></a>Functions for working with DOCX templates
 
 ## <a name="include_docx_template"></a>include_docx_template()
 
 The `include_docx_template()` function can be called from within a
-[.docx template file] in order to include the contents of another
-.docx file within the template being assembled.
+[DOCX template file] in order to include the contents of another
+DOCX file within the template being assembled.
 
 {% include demo-side-by-side.html demo="subdocument" %}
 
@@ -5233,7 +5229,7 @@ The file [`sub_document.docx`] looks like this:
 
 Note that it is important to use the `p` form of [Jinja2] markup, or
 else the contents of the included document will not be visible.  The
-template tax must also be by itself on a line, and the
+template text must also be by itself on a line, and the
 `include_docx_template()` function must be by itself within a [Jinja2]
 `p` tag, and not combined with the `+` operator with any other text.
 
@@ -5245,7 +5241,7 @@ filename reference, such as
 
 The `include_docx_template()` function also accepts optional keyword
 parameters.  These values become variables that you can use in
-[Jinja2] inside the .docx file you are including.  This can be useful
+[Jinja2] inside the DOCX file you are including.  This can be useful
 if you have a "sub-document" that you want to include multiple times,
 but you want to use different variable values each time you include
 the "sub-document."
@@ -5303,25 +5299,25 @@ accidentally creating an infinite loop of document inclusion.)
 ## <a name="raw"></a>raw()
 
 This function is only used in the context of an [`attachments`] block
-that uses a [`docx template file`] and values are passed to the .docx
+that uses a [`docx template file`] and values are passed to the DOCX
 template using the `code` or `field code` methods.
 
-Normally, all values that you transfer to a .docx template with `code`
+Normally, all values that you transfer to a DOCX template with `code`
 or `field code` are converted so that they display appropriately in
-your .docx file.  For example, if the value is a [`DAFile`] graphics
-image, it will be displayed in the .docx file as an image.  Or, if the
+your DOCX file.  For example, if the value is a [`DAFile`] graphics
+image, it will be displayed in the DOCX file as an image.  Or, if the
 value contains [document markup] codes that indicate line breaks,
-these will display as actual line breaks in the .docx file, rather
+these will display as actual line breaks in the DOCX file, rather
 than as codes like `[BR]`.
 
-However, if your .docx file uses advanced template features, such as
+However, if your DOCX file uses advanced template features, such as
 for loops, this conversion might cause problems for you.  By passing a
 value `val` as `raw(val)`, you will ensure that the template sees the
 original value of `val`, not a converted value.
 
 For example, suppose you have a variable `fruit_list` that is defined
 as a [`DAList`] with items `['apples', 'oranges']`, and you pass it to
-a .docx template as follows.
+a DOCX template as follows.
 
 {% highlight yaml %}
 event: document_shown
@@ -5380,17 +5376,17 @@ attachment:
     list_of_fruit: raw(fruit_list)
 {% endhighlight %}
 
-Now, the resulting .docx file will contain:
+Now, the resulting DOCX file will contain:
 
 > Don't forget to bring apples!
 > Don't forget to bring oranges!
 
-Note that another way to pass "raw" values to a .docx template is to
+Note that another way to pass "raw" values to a DOCX template is to
 use a list of [`raw field variables`].
 
 Moreover, the easiest way to pass "raw" values is to omit `field`,
 `field code`, `field variables`, `code`, and `raw field variables`
-entirely, so that your .docx file is [assembled] using your full set
+entirely, so that your DOCX file is [assembled] using your full set
 of interview variables.
 
 # <a name="yourown"></a>Writing your own functions
@@ -5459,7 +5455,7 @@ modules:
 ---
 {% endhighlight %}
 
-## <a name="jinja2"></a>A caveat regardings functions called from docx templates
+## <a name="jinja2"></a>A caveat regarding functions called from docx templates
 
 If you write your own functions and they are called from markup inside
 `docx template file` functions, beware that [Jinja2] will send your
@@ -5675,7 +5671,7 @@ browser-side code in your interviews using [`script`], [`html`], and
 [`css`] elements within a [`fields`] block, or you can put
 [JavaScript] and [CSS]<span></span> [static files] in your [packages]
 and bring them into your interview using the [`javascript`] and
-[`css`]({{ site.baseurl }}/docs/initial.html) directives within a
+[`css`]({{ site.baseurl }}/docs/initial.html) specifiers within a
 [`features`] block.
 
 The following [JavaScript] functions are available for your use in
@@ -5796,7 +5792,7 @@ writing any [JavaScript] code; see the [`check in` feature].
 If you would like to work with all of the variables in the interview
 in your [JavaScript] code, you can do so with the
 `get_interview_variables()` function, which sends an [Ajax] call to
-the server to retrieve the contents of the interview dictionary.
+the server to retrieve the contents of the [interview session dictionary].
 
 The function takes a single argument, which is the callback function.
 The callback function is given one parameter, which is an object
@@ -5808,7 +5804,7 @@ otherwise.
   variables in the format produced by [`all_variables()`].
 * `i`: the current interview [YAML] file.
 * `uid`: the current session ID.
-* `encrypted`: whether the interview dictionary is encrypted.
+* `encrypted`: whether the [interview session dictionary] is encrypted.
 * `steps`: the number of steps taken so far in the interview.
 
 {% highlight javascript %}
@@ -6125,7 +6121,7 @@ $(document).on('daPageLoad', function(){
 [`indent()`]: #indent
 [del statement]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
 [multiple-choice question]: {{ site.baseurl }}/docs/fields.html#field with buttons
-[`need` directive]: {{ site.baseurl }}/docs/logic.html#need
+[`need` specifier]: {{ site.baseurl }}/docs/logic.html#need
 [PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [`yesno()`]: #yesno
 [Unicode Technical Standard #35]: https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
@@ -6166,7 +6162,7 @@ $(document).on('daPageLoad', function(){
 [`password`]: {{ site.baseurl }}/docs/documents.html#password
 [status callback values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-callback
 [fax status values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-values
-[.docx template file]: {{ site.baseurl }}/docs/documents.html#docx template file
+[DOCX template file]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Jinja2]: http://jinja.pocoo.org/docs/2.9/
 [`/api/list`]: {{ site.baseurl }}/docs/api.html#list
 [`/api/interviews`]: {{ site.baseurl }}/docs/api.html#interviews
@@ -6249,3 +6245,4 @@ $(document).on('daPageLoad', function(){
 [Font Awesome]: https://fontawesome.com
 [mermaid]: https://github.com/mermaidjs/mermaid.cli
 [template]: {{ site.baseurl }}/docs/template.html#template
+[interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
