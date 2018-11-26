@@ -23,6 +23,8 @@ import time
 import stat
 import copy
 import random
+#import tablib
+import pandas
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
 
@@ -2651,6 +2653,13 @@ def table_safe(text):
         text = '  ' + text + '  '
     return text
 
+def export_safe(text):
+    if isinstance(text, DAObject):
+        text = unicode(text)
+    if isinstance(text, DAEmpty):
+        text = None
+    return text
+
 def text_of_table(table_info, orig_user_dict, temp_vars):
     table_content = "\n"
     user_dict = copy.copy(orig_user_dict)
@@ -2773,6 +2782,65 @@ class DALazyTableTemplate(DALazyTemplate):
         if not hasattr(self, 'table_info'):
             raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
         return text_of_table(self.table_info, self.user_dict, self.temp_vars)
+    def export(self, filename=None, file_format=None, title=None, freeze_panes=True):
+        if file_format is None:
+            if filename is not None:
+                base_filename, file_format = os.path.splitext(filename)
+                file_format = re.sub(r'^\.', '', file_format)
+            else:
+                file_format = 'xlsx'
+        if file_format not in ('json', 'xlsx', 'csv'):
+            raise Exception("export: unsupported file format")
+        header_output, contents = self.header_and_contents()
+        df = pandas.DataFrame.from_records(contents, columns=header_output)
+        outfile = DAFile()
+        outfile.set_random_instance_name()
+        if filename is not None:
+            outfile.initialize(filename=filename, extension=file_format)
+        else:
+            outfile.initialize(extension=file_format)
+        if file_format == 'xlsx':
+            if freeze_panes:
+                freeze_panes = (1, 0)
+            else:
+                freeze_panes = None
+            writer = pandas.ExcelWriter(outfile.path(),
+                                        engine='xlsxwriter',
+                                        options={'remove_timezone': True})
+            df.to_excel(writer, sheet_name=title, index=False, freeze_panes=freeze_panes)
+            writer.save()
+        elif file_format == 'csv':
+            df.to_csv(outfile.path(), index=False)
+        elif file_format == 'json':
+            df.to_json(outfile.path(), orient='records')
+        outfile.commit()
+        outfile.retrieve()
+        return outfile
+    def header_and_contents(self):
+        user_dict = copy.copy(self.user_dict)
+        user_dict.update(self.temp_vars)
+        header_output = [export_safe(x.text(user_dict)) for x in self.table_info.header]
+        the_iterable = eval(self.table_info.row, user_dict)
+        if not hasattr(the_iterable, '__iter__'):
+            raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
+        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+            the_iterable = the_iterable.complete_elements()
+        contents = list()
+        if hasattr(the_iterable, 'iteritems') and callable(the_iterable.iteritems):
+            for key in sorted(the_iterable):
+                user_dict['row_item'] = the_iterable[key]
+                user_dict['row_index'] = key
+                contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
+        else:
+            indexno = 0
+            for item in the_iterable:
+                user_dict['row_item'] = item
+                user_dict['row_index'] = indexno
+                contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
+                indexno += 1
+        user_dict.pop('row_item', None)
+        user_dict.pop('row_index', None)
+        return header_output, contents
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including

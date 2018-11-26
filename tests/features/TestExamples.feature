@@ -3024,8 +3024,8 @@ Feature: Example interviews
     And I should see the phrase "Your enemy is the Empire."
     And I should see the phrase "Your opponent is the Empire."
 
-  Scenario: Test the interview "Need directive"
-    Given I start the interview "docassemble.base:data/questions/examples/need-directive.yml"
+  Scenario: Test the interview "Need specifier"
+    Given I start the interview "docassemble.base:data/questions/examples/need-specifier.yml"
     Then I should see the phrase "How old are you?"
     And I set "Age in years" to "23"
     And I click the button "Continue"

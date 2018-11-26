@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.16] - 2018-11-26
+### Added
+- The `export()` method of tables.
+
 ## [0.3.15] - 2018-11-26
 ### Added
 - The `overlay_pdf()` function.
@@ -7,7 +11,8 @@
 ## [0.3.14] - 2018-11-25
 ### Added
 - The `.filter()` method of the `DAList` class.
-- The `mmdc()` function for generating diagrams and flowcharts with mermaid.
+- The `mmdc()` function for generating diagrams and flowcharts with
+  mermaid.  Requires system upgrade.
 
 ## [0.3.13] - 2018-11-23
 ### Added
