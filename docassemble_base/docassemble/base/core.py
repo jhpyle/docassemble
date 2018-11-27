@@ -196,11 +196,15 @@ class DAObject(object):
         if thename is not None:
             self.has_nonrandom_instance_name = True
         else:
-            frame = inspect.stack()[1][0]
+            stack = inspect.stack()
+            frame = stack[1][0]
             the_names = frame.f_code.co_names
-            #sys.stderr.write("co_name is " + str(frame.f_code.co_names) + "\n")
+            #logmessage("co_name is " + str(frame.f_code.co_names))
             if len(the_names) == 2:
                 thename = the_names[1]
+                self.has_nonrandom_instance_name = True
+            elif len(the_names) == 1 and len(stack) > 2 and len(stack[2][0].f_code.co_names) == 2:
+                thename = stack[2][0].f_code.co_names[1]
                 self.has_nonrandom_instance_name = True
             else:
                 thename = get_unique_name()
