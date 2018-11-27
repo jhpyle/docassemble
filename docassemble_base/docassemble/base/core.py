@@ -1770,7 +1770,7 @@ class DADict(DAObject):
         else:
             message = word(unicode(message))
         if url_only:
-            return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
+            return docassemble.base.functions.url_action('_da_dict_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + unicode(message) + '</a>'
 
 class DASet(DAObject):
