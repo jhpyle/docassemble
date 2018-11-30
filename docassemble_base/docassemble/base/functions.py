@@ -3278,10 +3278,10 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return(codecs.decode(var, 'base64').decode('utf8'))
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
-        if user_id == 'all':
+        if user_id == 'all' or session is not None:
             user_id = None
         elif user_id is None:
             user_id = this_thread.current_info['user']['the_user_id']
@@ -3291,7 +3291,7 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
             raise DAError("interview_list: invalid action")
         if action == 'delete' and (filename is None or session is None):
             raise DAError("interview_list: a filename and session must be provided when delete is the action.")
-        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session)
+        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict)
     return None
 
 def interview_menu():

@@ -59,6 +59,17 @@ def user_list():
     for user in db.session.query(UserModel).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
+        role_names = [y.name for y in user.roles]
+        if 'admin' in role_names:
+            high_priv = 'admin'
+        elif 'developer' in role_names:
+            high_priv = 'developer'
+        elif 'advocate' in role_names:
+            high_priv = 'advocate'
+        elif 'trainer' in role_names:
+            high_priv = 'trainer'
+        else:
+            high_priv = 'user'
         name_string = ''
         if user.first_name:
             name_string += str(user.first_name) + " "
@@ -75,7 +86,7 @@ def user_list():
             is_active = True
         else:
             is_active = False
-        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id))
+        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
     return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
@@ -142,7 +153,8 @@ def edit_user_profile_page(id):
         form.uses_mfa.data = False
     else:
         form.uses_mfa.data = True
-    if request.method == 'POST' and form.validate():
+    admin_id = Role.query.filter_by(name='admin').first().id
+    if request.method == 'POST' and form.validate(user.id, admin_id):
         form.populate_obj(user)
         roles_to_remove = list()
         the_role_id = list()
@@ -154,15 +166,12 @@ def edit_user_profile_page(id):
             if role.id in form.role_id.data:
                 user.roles.append(role)
                 the_role_id.append(role.id)
-
         db.session.commit()
-
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
-
     form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note)
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id))
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required

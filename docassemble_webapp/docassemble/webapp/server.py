@@ -1024,7 +1024,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
             else:
                 return(the_file.url_for(**url_properties))
     file_reference = str(file_reference)
-    if re.search(r'^http', file_reference):
+    if re.search(r'^https?://', file_reference) or file_reference.startswith('/'):
         return(file_reference)
     if file_reference in ('login', 'signin'):
         remove_question_package(kwargs)
@@ -16345,22 +16345,58 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         the_timezone = pytz.timezone(get_default_timezone())
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     if user_id is not None:
-        if filename is not None:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+        if include_dict:
+            if filename is not None:
+                if session is not None:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename, UserDictKeys.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+                else:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            else:
+                if session is not None:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+                else:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
         else:
-            interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno)
+            if filename is not None:
+                if session is not None:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename, UserDictKeys.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno)
+                else:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno)
+            else:
+                if session is not None:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id, UserDictKeys.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno)
+                else:
+                    interview_query = db.session.query(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDict.modtime, UserModel.email).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(UserDictKeys.user_id == user_id).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno)
     else:
-        if filename is not None:
-            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
+        if include_dict:
+            if filename is not None:
+                if session is not None:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename, UserDict.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDict.modtime, UserModel.email)
+                else:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDict.modtime, UserModel.email)
+            else:
+                if session is not None:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.key == session).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserModel.email, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDict.modtime, UserModel.email)
+                else:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserModel.email, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDict.modtime, UserModel.email)
         else:
-            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserModel.email).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserModel.email)
+            if filename is not None:
+                if session is not None:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename, UserDict.key == session).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.modtime, UserModel.email)
+                else:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.filename == filename).group_by(UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDictKeys.indexno, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.modtime, UserModel.email)
+            else:
+                if session is not None:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).filter(UserDict.key == session).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDictKeys.indexno, UserModel.email, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.modtime, UserModel.email)
+                else:
+                    interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDictKeys.indexno, UserModel.email, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.modtime, UserModel.email)
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
         #logmessage("filename is " + str(interview_info.filename) + " " + str(interview_info.key))
         if session is not None and interview_info.key != session:
             continue
-        if interview_info.dictionary is None:
+        if include_dict and interview_info.dictionary is None:
             continue
         interview_title = dict()
         is_valid = True
@@ -16375,53 +16411,69 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             interview_valid = False
             is_valid = False
         #logmessage("Found old interview with title " + interview_title)
-        if interview_info.encrypted:
-            try:
-                dictionary = decrypt_dictionary(interview_info.dictionary, secret)
-            except Exception as the_err:
-                if exclude_invalid:
-                    continue
+        if include_dict:
+            if interview_info.encrypted:
                 try:
-                    logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
-                except:
-                    logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__))
-                dictionary = fresh_dictionary()
-                dictionary['_internal']['starttime'] = None
-                dictionary['_internal']['modtime'] = None
-                is_valid = False
-        else:
-            dictionary = unpack_dictionary(interview_info.dictionary)
-        if type(dictionary) is not dict:
-            logmessage("user_interviews: found a dictionary that was not a dictionary")
-            continue
+                    dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+                except Exception as the_err:
+                    if exclude_invalid:
+                        continue
+                    try:
+                        logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
+                    except:
+                        logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__))
+                    dictionary = fresh_dictionary()
+                    dictionary['_internal']['starttime'] = None
+                    dictionary['_internal']['modtime'] = None
+                    is_valid = False
+            else:
+                dictionary = unpack_dictionary(interview_info.dictionary)
+            if type(dictionary) is not dict:
+                logmessage("user_interviews: found a dictionary that was not a dictionary")
+                continue
         if is_valid:
-            interview_title = interview.get_title(dictionary)
+            if include_dict:
+                interview_title = interview.get_title(dictionary)
+                tags = interview.get_tags(dictionary)
+            else:
+                interview_title = interview.get_title(dict(_internal=dict()))
+                tags = interview.get_tags(dict(_internal=dict()))
             metadata = copy.deepcopy(interview.consolidated_metadata)
-            tags = interview.get_tags(dictionary)
         elif interview_valid:
             interview_title = interview.get_title(dict(_internal=dict()))
             metadata = copy.deepcopy(interview.consolidated_metadata)
-            tags = interview.get_tags(dictionary)
-            if 'full' not in interview_title:
-                interview_title['full'] = word("Interview answers cannot be decrypted")
+            if include_dict:
+                tags = interview.get_tags(dictionary)
+                if 'full' not in interview_title:
+                    interview_title['full'] = word("Interview answers cannot be decrypted")
+                else:
+                    interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
             else:
-                interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
+                tags = interview.get_tags(dict(_internal=dict()))
+                if 'full' not in interview_title:
+                    interview_title['full'] = word('Unknown')
         else:
             interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
             metadata = dict()
             tags = set()
-        if dictionary['_internal']['starttime']:
-            utc_starttime = dictionary['_internal']['starttime']
-            starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
+        if include_dict:
+            if dictionary['_internal']['starttime']:
+                utc_starttime = dictionary['_internal']['starttime']
+                starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
+            else:
+                utc_starttime = None
+                starttime = ''
+            if dictionary['_internal']['modtime']:
+                utc_modtime = dictionary['_internal']['modtime']
+                modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
+            else:
+                utc_modtime = None
+                modtime = ''
         else:
             utc_starttime = None
             starttime = ''
-        if dictionary['_internal']['modtime']:
-            utc_modtime = dictionary['_internal']['modtime']
-            modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
-        else:
-            utc_modtime = None
-            modtime = ''
+            utc_modtime = interview_info.modtime
+            modtime = nice_date_from_utc(interview_info.modtime, timezone=the_timezone)
         if tag is not None and tag not in tags:
             continue
         out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info.email, 'user_id': interview_info.user_id, 'temp_user_id': interview_info.temp_user_id}

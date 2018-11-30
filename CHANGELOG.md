@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.3.17] - 2018-11-29
+### Added
+- The `.show(editable=True)` option for tables.
+- The `include_dict` option for `interview_list()`.
+- The `formatted_unit()` method for `Address`.
+### Changed
+- Icons on the User List page highlighting users with special
+  privileges.
+- Admin users cannot take away their own admin privilege.
+- Admin users cannot disable their own accounts.
+### Fixed
+- Validation error messages in admin pages were black when they should
+  have been red.
+- Typo in `.add_action()` method for `DADict()`.
+- Error during `.export()` because `pandas` erroneously requires a
+  nanosecond attribute in dates.
+- Error in `instanceName` guessing in the context of a function.
+
 ## [0.3.16] - 2018-11-26
 ### Added
 - The `export()` method of tables.

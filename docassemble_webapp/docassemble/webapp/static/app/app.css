@@ -1373,6 +1373,10 @@ blockquote.limheight {
     color: #a94442;
 }
 
+.help-block {
+    color: #a94442;
+}
+
 div.danavnested {
     padding-left: 20px;
 }

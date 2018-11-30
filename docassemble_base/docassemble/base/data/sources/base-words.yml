@@ -137,6 +137,7 @@
 "Error reading JSON file from package.  File did not exist.": Null
 "Error reading JSON file.  Not a valid JSON file.": Null
 "Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
+"ERROR: you cannot insert a table into a .docx document": Null
 "Every Two Weeks": Null
 "Existing module files": Null
 "Existing source files": Null
@@ -588,6 +589,7 @@
 "You cannot log in this way.": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
+"You cannot take away your own admin privilege.": Null
 "You cannot type more than": Null
 "You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null

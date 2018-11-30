@@ -786,15 +786,9 @@ class Address(DAObject):
             else:
                 output += unicode(self.address)
             if include_unit:
-                if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                    if re.search(r'^[0-9]', self.unit):
-                        output += ", " + word("Unit", language=language) + " " + unicode(self.unit)
-                    else:
-                        output += ", " + unicode(self.unit)
-                elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                    output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
-                elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                    output += ", " + word("Room", language=language) + " " + unicode(self.room)
+                the_unit = self.formatted_unit(language=language)
+                if the_unit != '':
+                    output += ", " + the_unit
             output += ", "
         #if hasattr(self, 'sublocality') and self.sublocality:
         #    output += unicode(self.sublocality) + ", "
@@ -1014,16 +1008,9 @@ class Address(DAObject):
                 output += unicode(self.street_number) + " " + unicode(self.street) + line_breaker
             else:
                 output += unicode(self.address) + line_breaker
-            if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit)):
-                    output += word("Unit", language=language) + " "
-                output += unicode(self.unit) + line_breaker
-            elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                output += word("Floor", language=language) + " " + unicode(self.floor) + line_breaker
-            elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                output += word("Room", language=language) + " " + unicode(self.room) + line_breaker
-        #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += unicode(self.sublocality) + line_breaker
+            the_unit = self.formatted_unit(language=language)
+            if the_unit != '':
+                output += the_unit + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             output += unicode(self.sublocality_level_1) + line_breaker
         output += unicode(self.city)
@@ -1034,6 +1021,23 @@ class Address(DAObject):
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + unicode(self.postal_code)
         return(output)
+    def formatted_unit(self, language=None, require=False):
+        """Returns the unit, formatted appropriately"""
+        if not hasattr(self, 'unit') and not hasattr(self, 'floor') and not hasattr(self, 'room'):
+            if require:
+                self.unit
+            else:
+                return ''
+        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit), flags=re.IGNORECASE):
+                return word("Unit", language=language) + " " + unicode(self.unit)
+            else:
+                return unicode(self.unit)
+        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+            return word("Floor", language=language) + " " + unicode(self.floor)
+        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+            return word("Room", language=language) + " " + unicode(self.room)
+        return ''
     def line_one(self, language=None):
         """Returns the first line of the address, including the unit 
         number if there is one."""
@@ -1043,12 +1047,9 @@ class Address(DAObject):
             output += unicode(self.street_number) + " " + unicode(self.street)
         else:
             output = unicode(self.address)
-        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            output += ", " + unicode(self.unit)
-        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-            output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
-        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-            output += ", " + word("Room", language=language) + " " + unicode(self.room)
+        the_unit = self.formatted_unit(language=language)
+        if the_unit != '':
+            output += ", " + the_unit
         return(output)
     def line_two(self, language=None):
         """Returns the second line of the address, including the city,

@@ -2664,12 +2664,14 @@ def export_safe(text):
         text = None
     return text
 
-def text_of_table(table_info, orig_user_dict, temp_vars):
+def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     table_content = "\n"
     user_dict = copy.copy(orig_user_dict)
     user_dict.update(temp_vars)
     #logmessage("i is " + unicode(user_dict['i']))
     header_output = [table_safe(x.text(user_dict)) for x in table_info.header]
+    if table_info.is_editable and not editable:
+        header_output.pop()
     the_iterable = eval(table_info.row, user_dict)
     if not hasattr(the_iterable, '__iter__'):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
@@ -2688,6 +2690,9 @@ def text_of_table(table_info, orig_user_dict, temp_vars):
             user_dict['row_index'] = indexno
             contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
             indexno += 1
+    if table_info.is_editable and not editable:
+        for cols in contents:
+            cols.pop()
     user_dict.pop('row_item', None)
     user_dict.pop('row_index', None)
     max_chars = [0 for x in header_output]
@@ -2781,6 +2786,15 @@ class DALazyTemplate(DAObject):
 
 class DALazyTableTemplate(DALazyTemplate):
     """The class used for tables."""
+    def show(self, **kwargs):
+        """Displays the contents of the table."""
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            return word("ERROR: you cannot insert a table into a .docx document")
+        if kwargs.get('editable', True):
+            return unicode(self.content)
+        if not hasattr(self, 'table_info'):
+            raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
+        return text_of_table(self.table_info, self.user_dict, self.temp_vars, editable=False)
     @property
     def content(self):
         if not hasattr(self, 'table_info'):
@@ -2824,6 +2838,8 @@ class DALazyTableTemplate(DALazyTemplate):
         user_dict = copy.copy(self.user_dict)
         user_dict.update(self.temp_vars)
         header_output = [export_safe(x.text(user_dict)) for x in self.table_info.header]
+        if table_info.is_editable:
+            header_output.pop()
         the_iterable = eval(self.table_info.row, user_dict)
         if not hasattr(the_iterable, '__iter__'):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
@@ -2842,6 +2858,9 @@ class DALazyTableTemplate(DALazyTemplate):
                 user_dict['row_index'] = indexno
                 contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
                 indexno += 1
+        if table_info.is_editable:
+            for cols in contents:
+                cols.pop()
         user_dict.pop('row_item', None)
         user_dict.pop('row_index', None)
         return header_output, contents

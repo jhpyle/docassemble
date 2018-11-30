@@ -7,6 +7,7 @@ from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
+from flask_login import current_user
 
 try:
     import ldap
@@ -143,6 +144,15 @@ class EditUserProfileForm(UserProfileForm):
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
+    def validate(self, user_id, admin_id):
+        rv = UserProfileForm.validate(self)
+        if not rv:
+            return False
+        if current_user.id == user_id:
+            if admin_id not in self.role_id.data:
+                self.role_id.errors.append(word('You cannot take away your own admin privilege.'))
+                return False
+        return True
 
 class PhoneUserProfileForm(UserProfileForm):
     def validate(self):
