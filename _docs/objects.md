@@ -239,6 +239,66 @@ This will work as intended:
 
 {% include side-by-side.html demo="branch-no-error" %}
 
+You also need to be careful about intrinsic names if you [write your
+own functions].  For example, assume you wrote a [Python module]
+containing:
+
+{% highlight python %}
+from docassemble.base.util import DAList, Thing
+
+def build_list():
+    the_list = DAList(object_type=Thing)
+    for indexno in range(4):
+        the_list.appendObject()
+    return the_list
+{% endhighlight %}
+
+Assume you then created some lists in your interview:
+
+{% highlight yaml %}
+code: |
+  list_of_fruits = build_list()
+  list_of_vegetables = build_list()
+{% endhighlight %}
+
+The problem here is that the `list_of_fruits` and `list_of_vegetables`
+objects, as well as their subobjects, will not have the right
+intrinsic names.
+
+Another potential problem is that **docassemble**'s method for
+determining the name of a variable when you write statements like `foo
+= DAObject()` is fragile, and under certain circumstances it can fail,
+and it will fall back to giving the object a random instrinsic name.
+To avoid this problem, you can always set the intrinsic name of an
+object at the time you create it by passing the intrinsic name you
+want to use as the first parameter.
+
+Thus, you can do:
+
+{% highlight python %}
+def build_list(list_name):
+    the_list = DAList(list_name, object_type=Thing)
+    for indexno in range(4):
+        the_list.appendObject()
+    return the_list
+{% endhighlight %}
+
+And then this will work:
+
+{% highlight yaml %}
+code: |
+  list_of_fruits = build_list('list_of_fruits')
+  list_of_vegetables = build_list('list_of_vegetables')
+{% endhighlight %}
+
+The requirement of making sure your objects are aware of their names
+is inconvenient, but necessary.  [Python] has no built-in system by
+which a variable can know its own name.  In **docassemble**, it is
+necessary for objects to know their own names so that when your
+interview logic refers to an undefined object attribute, list element,
+or dictionary key, **docassemble** knows what [`question`] or [`code`]
+block to use to obtain a definition of the undefined variable.
+
 One of the useful things about `DAObject`s is that you can write
 [`generic object`] questions that work in a wide variety of
 circumstances because the questions can use the variable name itself
@@ -2506,6 +2566,17 @@ If you refer to an address in a [Mako] template, it returns `.block()`.
 <a name="Address.block"></a> The `.block()` method returns a formatted
 address.  The attribute `city` is needed.
 
+<a name="Address.formatted_unit"></a> The `.formatted_unit()` method
+returns the `.unit` attribute (or the `.floor` or `.room`) attributes,
+formatted appropriately.  For example, if the `unit` attribute is
+`'2000'`, this will return `'Unit 2000'`.  But if the `unit` attribute
+is `'Suite 2000'`, this method will return `'Suite 2000'`.  By
+default, if the `.unit` attribute is not defined, this method will
+return `''`.  However, if it is called as
+`.formatted_unit(require=True)` and neither `.unit` nor `.floor` nor
+`.room` is defined, it will seek the definition of the `unit`
+attribute.
+
 <a name="Address.geolocate"></a> The `.geolocate()` method determines
 the latitude and longitude of the address and stores it in the
 attribute `location`, which is a [`LatitudeLongitude`] object.  It
@@ -3898,3 +3969,4 @@ of the original [`DADateTime`] object.  See
 [list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [namespace]: https://docs.python.org/2.7/tutorial/classes.html#python-scopes-and-namespaces
+[write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown

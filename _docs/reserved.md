@@ -49,6 +49,8 @@ experience errors or unexpected results.
 * <span></span>[`url_args`]: a dictionary available to interview code that contains
   values encoded in the URL with which the interview was initially
   loaded.
+* <span></span>[`user_dict`]: if you use this as a name in an
+  interview, your interview will not behave properly.
 * <span></span>[`allow_cron`]: a [special variable] that is used as
   part of the [scheduled tasks] system.
 * <span></span>[`x`]: used as a reference to the underlying object when

@@ -14,8 +14,8 @@ For example:
 
 Functions allow you to do a lot of different things in
 **docassemble**.  This section explains the standard **docassemble**
-functions.  If you know how to write [Python] code, you can write your
-own functions and include them in your interview using a [`modules`]
+functions.  If you know how to write [Python] code, you can [write your
+own functions] and include them in your interview using a [`modules`]
 block.
 
 # <a name="howtouse"></a>How to use functions
@@ -3199,6 +3199,9 @@ code: |
     del info
 {% endhighlight %}
 
+You can also refrain from obtaining the interview session dictionary
+by setting the optional keyword parameter `include_dict` to `False`.
+
 The [`interview_list()`] function takes an optional keyword argument
 `exclude_invalid`.  If this is set to `False`, a session will be
 included even if there is an error that would prevent the session from
@@ -6246,3 +6249,4 @@ $(document).on('daPageLoad', function(){
 [mermaid]: https://github.com/mermaidjs/mermaid.cli
 [template]: {{ site.baseurl }}/docs/template.html#template
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
+[write your own functions]: #yourown

@@ -539,7 +539,11 @@ page after login: profile
 In this example, the user will be directed to the "Profile" page after
 logging in.  See the documentation for the [`url_of()`] function to
 see what names to use for each page of the web site.  (The name you
-give is effectively passed to [`url_of()`].)
+give is effectively passed to [`url_of()`].)  Instead of passing the
+name of a page of a web site, you can also pass a URL beginning with
+`http://` or `https://`, or a path beginning with `/`, such as
+`/start/taxes`, in which case the user will be taken to that page on
+the server.
 
 You can also set up different pages for users with different
 [privileges]:
