@@ -8694,13 +8694,13 @@ def index():
             #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
             if question_type not in interview_status.screen_reader_text:
                 continue
-            phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+            phrase = to_text(interview_status.screen_reader_text[question_type])
             #logmessage("Phrase is " + repr(phrase))
             if encrypted:
                 the_phrase = encrypt_phrase(phrase, secret)
             else:
                 the_phrase = pack_phrase(phrase)
-            the_hash = MD5Hash(data=phrase).hexdigest()
+            the_hash = MD5Hash(data=phrase.encode('utf8')).hexdigest()
             content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
             existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
             if existing_entry:
@@ -8708,6 +8708,7 @@ def index():
                     existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
                 else:
                     existing_phrase = unpack_phrase(existing_entry.phrase)
+                #logmessage("phrase is " + phrase.__class__.__name__ + " and existing phrase is " + existing_phrase.__class__.__name__)
                 if phrase != existing_phrase:
                     logmessage("index: the phrase changed; updating it")
                     existing_entry.phrase = the_phrase
@@ -8988,7 +8989,7 @@ def speak_file():
             url = voicerss_config.get('url', "https://api.voicerss.org/")
             #logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
-            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
+            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase.encode('utf-8'), hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("speak_file: calling " + " ".join(call_array))
@@ -13401,7 +13402,7 @@ def playground_files():
         after_text = None
     elif (section == "sources"):
         header = word("Source Files")
-        description = 'Add files here that you want to make available to your interview code, such as word translation files and training data for machine learning.'
+        description = 'Add files here that you want to use as a data source in your interview code, such as word translation files and training data for machine learning.  For Python source code, see the Modules folder.'
         upload_header = word("Upload a source file")
         list_header = word("Existing source files")
         edit_header = word('Edit source files')

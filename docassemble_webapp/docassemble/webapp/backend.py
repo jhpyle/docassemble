@@ -319,6 +319,8 @@ def encrypt_phrase(phrase, secret):
     return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
 
 def pack_phrase(phrase):
+    if isinstance(phrase, unicode):
+        phrase = phrase.encode('utf8')
     return codecs.encode(phrase, 'base64').decode()
 
 def decrypt_phrase(phrase_string, secret):
@@ -326,7 +328,7 @@ def decrypt_phrase(phrase_string, secret):
     return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf8')
 
 def unpack_phrase(phrase_string):
-    return codecs.decode(phrase_string, 'base64')
+    return codecs.decode(phrase_string, 'base64').decode('utf8')
 
 def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("40\n")
