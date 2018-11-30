@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.3.17] - 2018-11-29
+## [0.3.17] - 2018-11-30
 ### Added
 - The `.show(editable=True)` option for tables.
 - The `include_dict` option for `interview_list()`.
