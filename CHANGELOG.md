@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.18] - 2018-11-30
+### Fixed
+- Unicode error in text to speech engine.
+
 ## [0.3.17] - 2018-11-30
 ### Added
 - The `.show(editable=True)` option for tables.
