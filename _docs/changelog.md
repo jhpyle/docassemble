@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.18](https://github.com/jhpyle/docassemble/releases/tag/v0.3.18) - 2018-11-30
+
+### Fixed
+- Unicode error in text to speech engine.
+
 ## [0.3.17](https://github.com/jhpyle/docassemble/releases/tag/v0.3.17) - 2018-11-30
 
 ### Added
