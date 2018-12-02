@@ -744,6 +744,42 @@ class DANav(object):
         self.past.add(section)
         return True
 
+    def section_ids(self, language=None):
+        """Returns a list of section names or section IDs."""
+        the_sections = self.get_sections(language=language)
+        all_ids = list()
+        for x in the_sections:
+            subitems = None
+            if type(x) is dict:
+                if len(x) == 2 and 'subsections' in x:
+                    for key, val in x.iteritems():
+                        if key == 'subsections':
+                            subitems = val
+                        else:
+                            all_ids.append(key)
+                elif len(x) == 1:
+                    the_key = x.keys()[0]
+                    value = x[the_key]
+                    if type(value) is list:
+                        subitems = value
+                    all_ids.append(the_key)
+                else:
+                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    continue
+            else:
+                all_ids.append(unicode(x))
+            if subitems:
+                for y in subitems:
+                    if type(y) is dict:
+                        if len(y) == 1:
+                            all_ids.append(y.keys()[0])
+                        else:
+                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            continue
+                    else:
+                        all_ids.append(unicode(y))
+        return all_ids
+
     def get_section(self, display=False, language=None):
         """Returns the current section of the navigation."""
         current_section = self.current
@@ -806,7 +842,7 @@ class DANav(object):
         if sections is None:
             sections = []
         self.sections[language] = sections
-        self.past = set()
+        #self.past = set()
 
     def get_sections(self, language=None):
         """Returns the sections of the navigation as a list."""

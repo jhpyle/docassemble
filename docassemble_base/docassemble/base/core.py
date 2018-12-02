@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
+from collections import OrderedDict
 import re
 import os
 import codecs
@@ -26,7 +27,7 @@ import random
 #import tablib
 import pandas
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
 
 unique_names = set()
 
@@ -1079,7 +1080,7 @@ class DAList(DAObject):
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
     def init(self, *pargs, **kwargs):
-        self.elements = dict()
+        self.elements = self._new_elements()
         self.auto_gather = True
         self.ask_number = False
         self.minimum_number = None
@@ -1162,7 +1163,7 @@ class DADict(DAObject):
             else:
                 the_list.append(parg)
         if len(the_list) == 0:
-            for key, value in sorted(self.elements.iteritems()):
+            for key, value in self._sorted_elements_iteritems():
                 if value is not False:
                     return False
             self._trigger_gather()
@@ -1170,7 +1171,7 @@ class DADict(DAObject):
         for key in the_list:
             if key not in self.elements:
                 return False
-        for key, value in sorted(self.elements.iteritems()):
+        for key, value in self._sorted_elements_iteritems():
             if key in the_list:
                 if value is not False:
                     return False
@@ -1201,7 +1202,7 @@ class DADict(DAObject):
             else:
                 the_list.append(parg)
         if len(the_list) == 0:
-            for key, value in sorted(self.elements.iteritems()):
+            for key, value in self._sorted_elements_iteritems():
                 if value is not True:
                     return False
             self._trigger_gather()
@@ -1209,7 +1210,7 @@ class DADict(DAObject):
         for key in the_list:
             if key not in self.elements:
                 return False
-        for key, value in sorted(self.elements.iteritems()):
+        for key, value in self._sorted_elements_iteritems():
             if key in the_list:
                 if value is not True:
                     return False
@@ -1220,10 +1221,14 @@ class DADict(DAObject):
         return True
     def true_values(self):
         """Returns the keys for which the corresponding value is True."""
-        return DAList(elements=[key for key, value in sorted(self.iteritems()) if value is True])
+        return DAList(elements=[key for key, value in self._sorted_iteritems() if value is True])
     def false_values(self):
         """Returns the keys for which the corresponding value is False."""
-        return DAList(elements=[key for key, value in sorted(self.iteritems()) if value is False])
+        return DAList(elements=[key for key, value in self._sorted_iteritems() if value is False])
+    def _sorted_iteritems(self):
+        return sorted(self.iteritems())
+    def _sorted_elements_iteritems(self):
+        return sorted(self.elements.iteritems())
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.
@@ -1423,9 +1428,13 @@ class DADict(DAObject):
                     continue
             items[key] = val
         return items
+    def _sorted_keys(self):
+        return sorted(self.keys())
+    def _sorted_elements_keys(self):
+        return sorted(self.elements.keys())
     def _validate(self, item_object_type, complete_attribute, keys=None):
         if keys is None:
-            keys = sorted(self.elements.keys())
+            keys = self._sorted_elements_keys()
         else:
             keys = [key for key in keys if key in self.elements]
         if self.ask_object_type:
@@ -1465,10 +1474,6 @@ class DADict(DAObject):
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         self._validate(item_object_type, complete_attribute, keys=keys)
-        # for elem in sorted(self.elements.values()):
-        #     str(elem)
-        #     if item_object_type is not None and complete_attribute is not None:
-        #         getattr(elem, complete_attribute)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -1521,12 +1526,16 @@ class DADict(DAObject):
             self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
+    def _sorted_elements_values(self):
+        return sorted(self.elements.values())
+    def _sorted_values(self):
+        return sorted(self.values())
     def _new_item_init_callback(self):
         if hasattr(self, 'new_item_name'):
             delattr(self, 'new_item_name')
         if hasattr(self, 'new_item_value'):
             delattr(self, 'new_item_value')
-        for elem in sorted(self.elements.values()):
+        for elem in self._sorted_elements_values():
             if self.object_type is not None and self.complete_attribute is not None:
                 getattr(elem, self.complete_attribute)
             else:
@@ -1536,7 +1545,7 @@ class DADict(DAObject):
         """Returns the keys of the list, separated by commas, with 
         "and" before the last key."""
         self._trigger_gather()
-        return comma_and_list(sorted(self.elements.keys()), **kwargs)
+        return comma_and_list(self._sorted_elements_keys(), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
             if self.object_type is None:
@@ -1555,7 +1564,7 @@ class DADict(DAObject):
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
         self._trigger_gather()
-        return sorted(self.elements.keys())
+        return self._sorted_elements_keys()
     def values(self):
         """Returns the values of the dictionary as a Python list."""
         self._trigger_gather()
@@ -1776,7 +1785,26 @@ class DADict(DAObject):
         if url_only:
             return docassemble.base.functions.url_action('_da_dict_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + unicode(message) + '</a>'
+    def _new_elements(self):
+        return dict()
 
+class DAOrderedDict(DADict):
+    """A base class for objects that behave like Python OrderedDicts."""
+    def _new_elements(self):
+        return OrderedDict()
+    def _sorted_iteritems(self):
+        return self.iteritems()
+    def _sorted_elements_iteritems(self):
+        return self.elements.iteritems()
+    def _sorted_keys(self):
+        return self.keys()
+    def _sorted_elements_keys(self):
+        return self.elements.keys()
+    def _sorted_values(self):
+        return self.elements.values()
+    def _sorted_elements_values(self):
+        return self.elements.values()
+    
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
     def init(self, *pargs, **kwargs):

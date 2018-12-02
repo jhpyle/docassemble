@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.3.19] - 2018-12-02
+### Added
+- The `DAOrderedDict` class.
+### Changed
+- Protections against adding non-modules to Modules folder.
+- Keep memory of visited sections when the available sections change.
+### Fixed
+- Visiting `/user/sign-in` or `/user/register` while being signed in
+  will now redirect to the `auto resume interview`, if any.
+
 ## [0.3.18] - 2018-11-30
 ### Fixed
 - Unicode error in text to speech engine.

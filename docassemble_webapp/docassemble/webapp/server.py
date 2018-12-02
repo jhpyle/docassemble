@@ -246,6 +246,12 @@ def custom_register():
     safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        if safe_next == url_for(user_manager.after_login_endpoint):
+            url_parts = list(urlparse.urlparse(safe_next))
+            query = dict(urlparse.parse_qsl(url_parts[4]))
+            query.update(dict(from_login=1))
+            url_parts[4] = urllib.urlencode(query)
+            safe_next = urlparse.urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
 
     # Initialize form
@@ -422,6 +428,12 @@ def custom_login():
     safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        if safe_next == url_for(user_manager.after_login_endpoint):
+            url_parts = list(urlparse.urlparse(safe_next))
+            query = dict(urlparse.parse_qsl(url_parts[4]))
+            query.update(dict(from_login=1))
+            url_parts[4] = urllib.urlencode(query)
+            safe_next = urlparse.urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
 
     login_form = user_manager.login_form(request.form)
@@ -758,6 +770,7 @@ import docassemble.base.ocr
 from jinja2.exceptions import TemplateError
 import uuid
 from bs4 import BeautifulSoup
+import collections
 
 import importlib
 modules_to_import = daconfig.get('preloaded modules', None)
@@ -1884,7 +1897,8 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         #logmessage("new_key is: " + str(new_key))
         #logmessage("seen sections are: " + str(seen))
         #logmessage("nav past sections are: " + repr(nav.past))
-        if len(nav.past.difference(seen)) or new_key in nav.past or the_title in nav.past:
+        relevant_past = nav.past.intersection(set(nav.section_ids()))
+        if len(relevant_past.difference(seen)) or new_key in nav.past or the_title in nav.past:
             seen_more = True
         else:
             seen_more = False
@@ -13267,6 +13281,10 @@ def playground_files():
                 for up_file in the_files:
                     try:
                         filename = secure_filename(up_file.filename)
+                        extension, mimetype = get_ext_and_mimetype(filename)
+                        if section == 'modules' and extension != 'py':
+                            flash(word("Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders."), 'error')
+                            return redirect(url_for('playground_files', section=section))
                         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
                         the_file = filename
                         filename = os.path.join(area.directory, filename)
@@ -13275,6 +13293,7 @@ def playground_files():
                             r.incr(key)
                         area.finalize()
                         if section == 'modules':
+                            flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
                             return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                     except Exception as errMess:
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
@@ -13293,6 +13312,8 @@ def playground_files():
                     flash(word("File not found: ") + the_file, "error")            
         if formtwo.submit.data and formtwo.file_content.data:
             if the_file != '':
+                if section == 'modules' and not re.search(r'\.py$', the_file):
+                    the_file = re.sub(r'\..*', '', the_file) + '.py'
                 if formtwo.original_file_name.data and formtwo.original_file_name.data != the_file:
                     old_filename = os.path.join(area.directory, formtwo.original_file_name.data)
                     if os.path.isfile(old_filename):
@@ -13314,6 +13335,7 @@ def playground_files():
                 flash_message = flash_as_html(str(the_file) + ' ' + word('was saved at') + ' ' + the_time + '.', message_type='success', is_ajax=is_ajax)
                 if section == 'modules':
                     #restart_all()
+                    flash(word('Since you changed a Python module, the server needs to restart in order to load your module.'), 'info')
                     return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                 if is_ajax:
                     return jsonify(success=True, flash_message=flash_message)
@@ -16533,7 +16555,7 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
-    if request.args.get('post_restart', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
+    if request.args.get('post_restart', False) or request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
         next_page = page_after_login()
         if next_page is None:
             logmessage("Invalid page " + unicode(next_page))
@@ -16550,7 +16572,7 @@ def interview_list():
     else:
         exclude_invalid = True
     resume_interview = request.args.get('resume', None)
-    if resume_interview is None and daconfig.get('auto resume interview', None) is not None and re.search(r'user/(register|sign-in)', str(request.referrer)):
+    if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
     if resume_interview is not None:
         interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid, filename=resume_interview)

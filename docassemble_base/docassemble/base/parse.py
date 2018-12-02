@@ -37,6 +37,7 @@ from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
+from collections import OrderedDict
 from types import CodeType, NoneType
 
 debug = True
@@ -5397,7 +5398,11 @@ def process_selections(data, manual=False, exclude=None):
                 if entry not in to_exclude:
                     result.append(dict(key=unicode(entry), label=unicode(entry)))
     elif isinstance(data, dict) or (hasattr(data, 'elements') and isinstance(data.elements, dict)):
-        for key, value in sorted(data.items(), key=operator.itemgetter(1)):
+        if isinstance(data, OrderedDict) or (hasattr(data, 'elements') and isinstance(data.elements, OrderedDict)):
+            the_items = data.items()
+        else:
+            the_items = sorted(data.items(), key=operator.itemgetter(1))
+        for key, value in the_items:
             if key not in to_exclude:
                 if isinstance(value, (str, unicode, bool, int, float)):
                     result.append(dict(key=key, label=value))
