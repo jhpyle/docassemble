@@ -564,29 +564,37 @@ def last_access_minutes(*pargs, **kwargs):
     delta = last_access_delta(*pargs, **kwargs) 
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
-def last_access_time(*pargs, **kwargs):
-    """Returns the last time the interview was accessed, as a 
-    DADateTime object."""
-    include_cron = kwargs.get('include_cron', False)
+def last_access_time(include_roles=None, exclude_roles=None, include_cron=False, timezone=None):
+    """Returns the last time the interview was accessed, as a DADateTime object."""
     max_time = None
-    roles = None
-    if len(pargs) > 0:
-        roles = pargs[0]
-        if type(roles) is not list:
-            roles = [roles]
-        if 'cron' in roles:
-            include_cron = True    
+    if include_roles is not None:
+        if not isinstance(include_roles, (list, tuple, dict)):
+            if isinstance(include_roles, DAObject) and hasattr(include_roles, 'elements'):
+                include_roles = include_roles.elements
+            else:
+                include_roles = [include_roles]
+        if 'cron' in include_roles:
+            include_cron = True
+    if exclude_roles is not None:
+        if not isinstance(exclude_roles, (list, tuple, dict)):
+            if isinstance(exclude_roles, DAObject) and hasattr(exclude_roles, 'elements'):
+                exclude_roles = exclude_roles.elements
+            else:
+                exclude_roles = [exclude_roles]
+    else:
+        exclude_roles = list()
     lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].iteritems():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
-                if include_cron is False:
-                    if role.name == 'cron':
-                        continue
-                if roles is None or role in roles:
+                if (include_cron is False and role.name == 'cron') or role.name in exclude_roles:
+                    continue
+                if include_roles is None or role.name in include_roles:
                     if max_time is None or max_time < access_time:
                         max_time = access_time
-    timezone = kwargs.get('timezone', None)
+                        break
+    if max_time is None:
+        return None
     if timezone is not None:
         return dd(pytz.utc.localize(max_time).astimezone(pytz.timezone(timezone)))
     else:

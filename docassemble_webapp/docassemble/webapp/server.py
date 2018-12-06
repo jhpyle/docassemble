@@ -1160,7 +1160,7 @@ def user_id_dict():
         output[user.id] = user
     anon = FakeUser()
     anon_role = FakeRole()
-    anon_role.name = word('anonymous')
+    anon_role.name = 'anonymous'
     anon.roles = [anon_role]
     anon.id = -1
     anon.firstname = 'Anonymous'
@@ -1320,9 +1320,12 @@ def substitute_secret(oldsecret, newsecret, user=None):
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
         changed = False
         for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-            phrase = decrypt_phrase(record.phrase, oldsecret)
-            record.phrase = encrypt_phrase(phrase, newsecret)
-            changed = True
+            try:
+                phrase = decrypt_phrase(record.phrase, oldsecret)
+                record.phrase = encrypt_phrase(phrase, newsecret)
+                changed = True
+            except:
+                pass
         if changed:
             db.session.commit()
         # changed = False
@@ -6097,8 +6100,7 @@ def index():
             #steps += 1
     if interview_status.question.question_type == "exit":
         manual_checkout()
-        if interview_status.question.question_type == "exit":
-            reset_user_dict(user_code, yaml_filename)
+        reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview()
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
@@ -7630,7 +7632,8 @@ def index():
       function daCheckin(){
         //console.log("daCheckin");
         daCheckingIn += 1;
-        if (daCheckingIn > 1 && !(daCheckingIn % 3)){
+        //if (daCheckingIn > 1 && !(daCheckingIn % 3)){
+        if (daCheckingIn > 1){
           //console.log("daCheckin: request already pending, not re-sending");
           return;
         }
@@ -16575,7 +16578,7 @@ def interview_list():
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
     if resume_interview is not None:
-        interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=exclude_invalid, filename=resume_interview)
+        interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dictionary=True)
         if len(interviews):
             return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list='1'))
         return redirect(url_for('index', i=resume_interview, from_list='1'))

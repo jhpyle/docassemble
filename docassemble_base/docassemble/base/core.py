@@ -1260,6 +1260,7 @@ class DADict(DAObject):
             new_obj_parameters[key] = val
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
         self.elements[entry] = newobject
+        self.there_are_any = True
         return newobject
     def new(self, *pargs, **kwargs):
         """Initializes new dictionary entries.  Each entry is set to a
@@ -1569,7 +1570,7 @@ class DADict(DAObject):
         """Returns the values of the dictionary as a Python list."""
         self._trigger_gather()
         return self.elements.values()
-    def update(*pargs, **kwargs):
+    def update(self, *pargs, **kwargs):
         """Updates the dictionary with the keys and values of another dictionary"""
         if len(pargs) > 0:
             other_dict = pargs[0]
@@ -1596,7 +1597,7 @@ class DADict(DAObject):
     def copy(self):
         """Returns a copy of the dictionary."""
         return self.elements.copy()
-    def has_key(key):
+    def has_key(self, key):
         """Returns True if key is in the dictionary."""
         return self.elements.has_key(key)
     def item(self, key):

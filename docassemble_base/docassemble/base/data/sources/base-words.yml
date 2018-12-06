@@ -15,7 +15,6 @@
 "and": Null
 "An e-mail address is required.": Null
 "A new docassemble system version is available.  If you are using Docker, install a new Docker image.": Null
-"anonymous": Null
 "Anonymous": Null
 "anonymous visitor": Null
 "API Keys": Null
@@ -408,12 +407,15 @@
 "Sign in with your mobile phone": Null
 "Sign Out": Null
 "Sign Your Name": Null
+"Since you changed a Python module, the server needs to restart in order to load your module.": Null
+"Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
 "skip": Null
 "SMS": Null
 "SMS version": Null
 "Social ID": Null
 "something": Null
 "Sorry, no help is available for this question.": Null
+"Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders.": Null
 "Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders.": Null
 "Sorry, that package name does not exist in the playground": Null
 "Sorry, that package name is already in use by someone else": Null
