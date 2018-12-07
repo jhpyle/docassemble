@@ -16583,7 +16583,7 @@ def interview_list():
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
     if resume_interview is not None:
-        interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dictionary=True)
+        interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dict=True)
         if len(interviews):
             return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list='1'))
         return redirect(url_for('index', i=resume_interview, from_list='1'))
