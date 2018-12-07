@@ -2780,17 +2780,23 @@ class DALazyTemplate(DAObject):
     def subject(self):
         if not hasattr(self, 'source_subject'):
             raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
-        return self.source_subject.text(self.user_dict).rstrip()
+        user_dict = copy.copy(self.user_dict)
+        user_dict.update(self.temp_vars)
+        return self.source_subject.text(user_dict).rstrip()
     @property
     def content(self):
         if not hasattr(self, 'source_content'):
             raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
-        return self.source_content.text(self.user_dict).rstrip()
+        user_dict = copy.copy(self.user_dict)
+        user_dict.update(self.temp_vars)
+        return self.source_content.text(user_dict).rstrip()
     @property
     def decorations(self):
         if not hasattr(self, 'source_decorations'):
             raise LazyNameError("name '" + unicode(self.instanceName) + "' is not defined")
-        return [dec.text(self.user_dict).rstrip for dec in self.source_decorations]
+        user_dict = copy.copy(self.user_dict)
+        user_dict.update(self.temp_vars)
+        return [dec.text(user_dict).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':

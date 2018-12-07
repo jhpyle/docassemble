@@ -7278,11 +7278,16 @@ def index():
           daChatRoles = data.livehelp.roles;
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
+          //console.log("daProcessAjax: pushing " + daSteps);
+          if (daSteps > history.state.steps){
+            history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
+          }
+          else{
+            history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+          }
           daAllowGoingBack = data.allow_going_back;
           daQuestionID = data.id;
           daMessageLog = data.message_log;
-          //console.log("daProcessAjax: pushing " + daSteps);
-          history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
           daInitialize(doScroll);
           var tempDiv = document.createElement('div');
           tempDiv.innerHTML = data.extra_scripts;

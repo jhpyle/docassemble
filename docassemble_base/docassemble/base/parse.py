@@ -4950,6 +4950,13 @@ class Interview:
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "template":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        temp_vars = dict()
+                        if is_generic:
+                            if the_x != 'None':
+                                temp_vars['x'] = user_dict['x']
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         if question.target is not None:
                             return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
                         string = "import docassemble.base.core"
@@ -4977,6 +4984,7 @@ class Interview:
                         the_object.source_subject = question.subcontent
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
                         the_object.user_dict = user_dict
+                        the_object.temp_vars = temp_vars
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
