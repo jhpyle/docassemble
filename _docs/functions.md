@@ -2176,16 +2176,21 @@ would like to localize the time to a particular time zone, you can set
 the optional keyword parameter `timezone` (e.g., to
 `'America/New_York'`).
 
-Optionally, a role name or a list of role names can be provided.  In
+Optionally, a privilege name or a list of privilege names can be provided.  In
 this case, the function will return the latest access time by any user
-holding one of the [roles].
+holding one of the [privileges].
 
 * `last_access_time('client')`: returns the last time a user with the
-  role of `client` accessed the interview session.
+  privilege of `client` accessed the interview session.
 * `last_access_time('advocate')`: returns the last time a user with
-  the role of `advocate` accessed the interview session.
+  the privilege of `advocate` accessed the interview session.
 * `last_access_time(['advocate', 'admin'])`: returns the last time a
-  user with the role of `advocate` or `admin` accessed the interview session.
+  user with the privilege of `advocate` or `admin` accessed the interview session.
+
+The first argument can also be written as a keyword parameter
+`include_privileges`:
+
+* `last_access_time(include_privileges='client')`: same as `last_access_time('client')`.
 
 By default, `last_access_time()` will ignore session access by the
 [cron user].  However, if you do not wish to ignore access by the
@@ -2195,6 +2200,14 @@ keyword argument `include_cron` equal to `True`:
 * `last_access_time(include_cron=True)`: returns the last time any
   user, including the [cron user] if applicable, accessed the
   session.
+
+You can also provide a list of privileges you want the method to ignore,
+using the `exclude_privileges` keyword parameter.  This can be useful
+because users can have multiple privileges.
+
+* `last_access_time(include_privileges='advocate',
+  exclude_privileges=['developer'])`: returns the last time a user who is
+  an `advocate` but not a `developer` accessed the interview.
 
 The `last_access_time()` function takes an optional keyword argument
 `timezone`.  If `timezone` is provided (e.g.,
@@ -3292,7 +3305,7 @@ each dictionary has the following keys:
  - `language`: user's language code.
  - `last_name`: user's last name.
  - `organization`: user's organization 
- - `roles`: a [Python list] of the user's privileges (e.g., `'admin'`,
+ - `privileges`: a [Python list] of the user's privileges (e.g., `'admin'`,
    `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.

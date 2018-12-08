@@ -4,6 +4,26 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.20](https://github.com/jhpyle/docassemble/releases/tag/v0.3.20) - 2018-12-08
+
+### Added
+- The `exclude_privileges` keyword parameter of the
+  `last_access_time()` function and related functions.
+
+### Changed
+- The `/api/user_list` API method and the `get_user_list()` function
+  now return a user's privileges under a dictionary key called
+  `privileges`.  Previously the key `roles` was used.
+
+### Fixed
+- The `update()` and `has_key()` methods of `DADict` did not work.
+- Multiple `template`s on a screen using iterators did not work
+  correctly.
+- Browser back button sometimes required two clicks to go back one
+  step.
+- Unhelpful error when uploading invalid file type to Wizard.
+- Temporary PDF files accumulating in `/tmp`.
+
 ## [0.3.19](https://github.com/jhpyle/docassemble/releases/tag/v0.3.19) - 2018-12-02
 
 ### Added

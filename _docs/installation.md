@@ -977,15 +977,26 @@ the [configuration] as the value of [`appname`] (which defaults to
 
 ## <a name="email"></a>Setting up e-mail sending
 
-If you plan to use the [roles] feature or the [`send_email()`]
-function, you will need an [SMTP] server.
+If you plan to use the [`send_email()`] function or any other feature
+that uses e-mail, you will need to set up some way to send e-mails.
 
-While it is easy to deploy an [SMTP] server, most cloud providers
-block outgoing [SMTP] connections.  As a result, you may have to use a
-special service to send e-mail, such as [Amazon SES], [SendGrid]
-(which is particularly easy to set up if you host on
-[Microsoft Azure]), [MailChimp], [Mailgun], and [Google Apps].  To set
-up e-mail sending, see the [`mail`] directive in the [configuration].
+Traditionally, e-mail has been sent through [SMTP] servers.  While it
+is easy to deploy an [SMTP] server on a machine, most cloud providers
+block outgoing [SMTP] connections as a way to limit spam.  As a
+result, you will probably have to use a special service to send e-mail
+through [SMTP], such as [Amazon SES], [SendGrid] (which is
+particularly easy to set up if you host on [Microsoft Azure]),
+[MailChimp], [Mailgun], and [Google Apps].
+
+You can also send e-mail without using [SMTP].  If you have a
+[Mailgun] account, you can use the [Mailgun API] from **docassemble**
+to send mail.  This avoids many of the problems with [SMTP].  For
+instructions on sending e-mail this way, see the documentation for the
+[`mailgun api`] directive in the [configuration].
+
+However, if you want to send e-mail using [SMTP], you can use the
+[`mail`] directive in the [configuration] to point **docassemble** to
+an [SMTP] server.
 
 If you have a Google account, you can use a Gmail [SMTP] server by
 setting the following in your [configuration]:
@@ -995,51 +1006,23 @@ mail:
   server: smtp.gmail.com
   username: yourgoogleusername
   password: yourgooglepassword
-  use_ssl: True
+  use tls: True
   port: 465
   default_sender: '"Administrator" <no-reply@example.com>'
 {% endhighlight %}
 
-Note that for this to work, you will need to go into your Google
-settings and set "Allow less secure apps" to "ON."
+For this to work, you will need to go into your [Google settings] and
+set "Allow less secure apps" to "ON."
 
-You can also use the [Amazon SES] service to send e-mail.  When you
-set it up, you will be given a username, password, and server.  In the
-**docassemble** configuration, you would write something like this:
+Other [SMTP] services include [Amazon SES], [SendGrid], [Mailgun]
+(which offers both [SMTP] and API-based sending methods), and
+[MailChimp].  It is also possible to use an [SMTP] server from [Google
+Apps] if you have a [G Suite] account.
 
-{% highlight yaml %}
-mail:
-  username: WJYAKIBAJVIFYAETTC3G
-  password: At6Cz2BH8Tx1zqPp0j3XhzlhbRnYsmBx7WwoItL9N5GU
-  server: email-smtp.us-east-1.amazonaws.com
-  default_sender: '"Example Inc." <no-reply@example.com>'
-{% endhighlight %}
-
-In order to send e-mail through [Amazon SES], you will need to verify
-your domain.  Among other things, this involves editing your [DNS]
-configuration to add a [TXT record] for the host `_amazonses`.
-
-To ensure that e-mails from your application are not blocked by spam
-filters, you should also add a [TXT record] with [SPF] information for
-your domain, indicating that [Amazon SES] is authorized to send e-mail
-for your domain:
-
-{% highlight text %}
-v=spf1 mx include:amazonses.com ~all
-{% endhighlight %}
-
-Initially, [Amazon SES] puts your account in a "sandbox" that allows
-you to send e-mails only to addresses you manually verify.  To get out
-of this "sandbox," you need to [submit a support request] describing
-your use case and your policies for dealing with reply e-mails.
-
-Instead of using [Amazon SES], you could use a third party mail
-service like [SendGrid], [Mailgun], or [MailChimp].  Note that in order
-to minimize the chances that e-mail you send from these services will
-be flagged as spam, you will need to spend some time configuring
-[SPF] records, [DKIM] records, [reverse DNS], and the like.  It is also
-possible to use an [SMTP] server from [Google Apps] if you have a
-[G Suite] account.
+In order to minimize the chances that e-mail you send from these
+services will be flagged as spam, you will need to spend some time
+configuring [SPF] records, [DKIM] records, [reverse DNS], and the
+like.
 
 # <a name="start"></a>Start the server and background processes
 
@@ -1477,6 +1460,7 @@ All of these system administration headaches can be avoided by
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
 [configuration]: {{ site.baseurl }}/docs/config.html
+[Configuration]: {{ site.baseurl }}/docs/config.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
@@ -1611,3 +1595,5 @@ All of these system administration headaches can be avoided by
 [Microsoft Application Registration Portal]: https://apps.dev.microsoft.com
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [OneDrive APIs]: https://onedrive.live.com/about/en-us/
+[`mailgun api`]: {{ site.baseurl }}/docs/config.html#mailgun api
+[Google settings]: https://support.google.com/accounts/answer/6010255

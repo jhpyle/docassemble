@@ -504,7 +504,7 @@ Response on success: [204]
 Body of response: empty.
 
 This API, which is available only to administrators, allows you to
-delete interviews from the system, even all of them.  The filters
+delete interview sessions from the system, even all of them.  The filters
 `tag`, `i`, and `session` are cumulatively applied (as if connected
 with "and").  If you include no filters, all of the interview
 sessions, regardless of user, are deleted.
@@ -526,7 +526,7 @@ Required privileges: none.
 This works just like the [`/api/interviews`], except it only returns
 interviews belonging to the owner of the API.
 
-## <a name="user_interviews_delete"></a>Delete interviews of the user
+## <a name="user_interviews_delete"></a>Delete interview sessions of the user
 
 Description: Deletes interview sessions stored on the system that were
 started by the owner of the API key.
