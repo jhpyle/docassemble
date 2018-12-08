@@ -564,32 +564,32 @@ def last_access_minutes(*pargs, **kwargs):
     delta = last_access_delta(*pargs, **kwargs) 
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
-def last_access_time(include_roles=None, exclude_roles=None, include_cron=False, timezone=None):
+def last_access_time(include_privileges=None, exclude_privileges=None, include_cron=False, timezone=None):
     """Returns the last time the interview was accessed, as a DADateTime object."""
     max_time = None
-    if include_roles is not None:
-        if not isinstance(include_roles, (list, tuple, dict)):
-            if isinstance(include_roles, DAObject) and hasattr(include_roles, 'elements'):
-                include_roles = include_roles.elements
+    if include_privileges is not None:
+        if not isinstance(include_privileges, (list, tuple, dict)):
+            if isinstance(include_privileges, DAObject) and hasattr(include_privileges, 'elements'):
+                include_privileges = include_privileges.elements
             else:
-                include_roles = [include_roles]
-        if 'cron' in include_roles:
+                include_privileges = [include_privileges]
+        if 'cron' in include_privileges:
             include_cron = True
-    if exclude_roles is not None:
-        if not isinstance(exclude_roles, (list, tuple, dict)):
-            if isinstance(exclude_roles, DAObject) and hasattr(exclude_roles, 'elements'):
-                exclude_roles = exclude_roles.elements
+    if exclude_privileges is not None:
+        if not isinstance(exclude_privileges, (list, tuple, dict)):
+            if isinstance(exclude_privileges, DAObject) and hasattr(exclude_privileges, 'elements'):
+                exclude_privileges = exclude_privileges.elements
             else:
-                exclude_roles = [exclude_roles]
+                exclude_privileges = [exclude_privileges]
     else:
-        exclude_roles = list()
+        exclude_privileges = list()
     lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].iteritems():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
-                if (include_cron is False and role.name == 'cron') or role.name in exclude_roles:
+                if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
                     continue
-                if include_roles is None or role.name in include_roles:
+                if include_privileges is None or role.name in include_privileges:
                     if max_time is None or max_time < access_time:
                         max_time = access_time
                         break
@@ -1506,6 +1506,12 @@ class Value(DAObject):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.amount())
+    def __float__(self):
+        return float(self.amount())
+    def __int__(self):
+        return int(self.__float__())
+    def __long__(self):
+        return long(self.__float__())
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""

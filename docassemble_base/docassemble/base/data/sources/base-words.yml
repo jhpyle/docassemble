@@ -124,7 +124,7 @@
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
 "Enter an ISO-639-1 language code (e.g., es, fr, it)": Null
-"Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
+"Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
 "Error: interview not found and answers could not be decrypted": Null

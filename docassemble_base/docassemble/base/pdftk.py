@@ -214,7 +214,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             else:
                 dpp = dppy
             extent_x, extent_y = xone*dpp+width, yone*dpp+height
-            overlay_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
+            overlay_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
             args = ["convert", temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
             result = call(args)
             if result == 1:
@@ -323,7 +323,7 @@ def get_passwords(password):
 def pdf_encrypt(filename, password):
     #logmessage("pdf_encrypt: running; password is " + repr(password))
     (owner_password, user_password) = get_passwords(password)
-    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     if owner_password == user_password:
         commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
     else:
@@ -543,7 +543,7 @@ def replicate_js_and_calculations(template_filename, original_filename, password
 
 def flatten_pdf(filename):
     #logmessage("flatten_pdf: running")
-    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
     #logmessage("Arguments are " + str(subprocess_arguments))
     result = call(subprocess_arguments)

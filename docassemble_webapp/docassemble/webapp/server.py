@@ -13604,7 +13604,7 @@ def pull_playground_package():
     elif 'pypi' in request.args:
         form.pypi.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
     form.github_branch.choices = list()
-    description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.")
+    description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.")
     branch = request.args.get('branch')
     extra_js = """
     <script>
@@ -17737,9 +17737,9 @@ def get_user_list(include_inactive=False):
         the_users = UserModel.query.filter_by(active=True).order_by(UserModel.id).all()
     user_list = list()
     for user in the_users:
-        user_info = dict(roles=[])
+        user_info = dict(privileges=[])
         for role in user.roles:
-            user_info['roles'].append(role.name)
+            user_info['privileges'].append(role.name)
         for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             user_info[attrib] = getattr(user, attrib)
         if include_inactive:
