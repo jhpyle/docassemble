@@ -18444,6 +18444,14 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         except Exception as err:
             release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary")
+    try:
+        the_section = user_dict['nav'].get_section()
+        the_section_display = user_dict['nav'].get_section(display=True)
+        the_sections = user_dict['nav'].get_sections()
+    except:
+        the_section = None
+        the_section_display = None
+        the_sections = list()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     ci = current_info(yaml=yaml_filename, req=request)
     ci['session'] = session_id
@@ -18515,7 +18523,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         allow_going_back = True
     else:
         allow_going_back = False
-    data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log())
+    data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
     data.update(interview_status.as_data(encode=False))
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
