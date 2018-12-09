@@ -18511,7 +18511,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
-    if interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1:
+    if interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1):
         allow_going_back = True
     else:
         allow_going_back = False

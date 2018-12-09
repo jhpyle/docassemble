@@ -1612,7 +1612,7 @@ class Question:
         elif 'null response' in data:
             self.content = TextObject('null')
             self.question_type = 'response'
-        if 'response' in data or 'binaryresponse' in data or 'all_variables' in data:
+        if 'response' in data or 'binaryresponse' in data or 'all_variables' or 'null response' in data:
             if 'include_internal' in data:
                 self.include_internal = data['include_internal']
             if 'content type' in data:

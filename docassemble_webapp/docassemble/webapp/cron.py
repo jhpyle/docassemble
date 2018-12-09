@@ -118,12 +118,12 @@ def run_cron(cron_type):
                                     pass
                                 save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                 release_lock(item['key'], item['filename'])
-                            elif interview_status.question.question_type == "response" and interview_status.question.questionText == 'null':
+                            elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
                                 sys.stderr.write("Cron null response\n")
                                 release_lock(item['key'], item['filename'])
                             else:
                                 # sys.stderr.write("  Saving where type is " + str(cron_type_to_use) + "\n")
-                                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
+                                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                 release_lock(item['key'], item['filename'])
                                 if interview_status.question.question_type == "response":
                                     if hasattr(interview_status.question, 'all_variables'):
