@@ -18436,7 +18436,7 @@ def api_session_question():
         return data['response']
     return jsonify(**data)    
 
-def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None):
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
         try:
@@ -18469,7 +18469,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         raise Exception("Failure to assemble interview: " + str(e))
     docassemble.base.functions.set_language(old_language)
     if use_lock:
-        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
+        if save:
+            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
         release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):

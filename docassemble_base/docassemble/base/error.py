@@ -197,7 +197,7 @@ class BackgroundResponseActionError(Exception):
 
 class ResponseError(Exception):
     def __init__(self, *pargs, **kwargs):
-        if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs):
+        if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs or 'null' in kwargs):
             self.response = "Empty Response"
         if len(pargs) > 0:
             self.response = pargs[0];
@@ -209,6 +209,8 @@ class ResponseError(Exception):
             self.filename = kwargs['file'];
         elif 'url' in kwargs:
             self.url = kwargs['url'];
+        elif 'null' in kwargs:
+            self.nullresponse = kwargs['null'];
         if 'all_variables' in kwargs:
             self.all_variables = kwargs['all_variables'];
             if 'include_internal' in kwargs:

@@ -1609,6 +1609,9 @@ class Question:
         elif 'redirect url' in data:
             self.question_type = 'redirect'
             self.content = TextObject(definitions + unicode(data['redirect url']), names_used=self.mako_names)
+        elif 'null response' in data:
+            self.content = TextObject('null')
+            self.question_type = 'response'
         if 'response' in data or 'binaryresponse' in data or 'all_variables' in data:
             if 'include_internal' in data:
                 self.include_internal = data['include_internal']
@@ -4626,6 +4629,8 @@ class Interview:
                             question_data['include_internal'] = qError.include_internal
                         question_data['content type'] = 'application/json'
                         question_data['all_variables'] = True
+                    elif hasattr(qError, 'nullresponse') and qError.nullresponse:
+                        question_data['null response'] = qError.nullresponse
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
                     # new_interview = copy.deepcopy(self)
@@ -5190,6 +5195,8 @@ class Interview:
                         question_data['include_internal'] = qError.include_internal
                     question_data['content type'] = 'application/json'
                     question_data['all_variables'] = True
+                elif hasattr(qError, 'nullresponse') and qError.nullresponse:
+                    question_data['null response'] = qError.nullresponse
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
                 new_interview_source = InterviewSourceString(content='')
