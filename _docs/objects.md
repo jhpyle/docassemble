@@ -386,12 +386,16 @@ It is necessary to modify the [`code`] block with [`sets`] because
 **docassemble** needs help figuring out that the code block
 offers to define `fish.best_friend`.
 
+The `initializeAttribute()` method returns the object it just
+initialized.
+
 <a name="DAObject.reInitializeAttribute"></a>The
 [`initializeAttribute()`] method will have no effect if the attribute
 is already defined.  If you want to force the setting of an attribute
 in situations when the attribute is already defined, use
 `reInitializeAttribute()` instead of [`initializeAttribute()`], and it
-will overwrite the attribute.
+will overwrite the attribute.  The `reInitializeAttribute()` method
+returns the object it just reinitialized.
 
 Another way to define object attributes is to use the [`objects`]
 block.
@@ -566,7 +570,8 @@ item to the list, you should use the **docassemble**-specific
 `appendObject()` method.  This method is similar to the
 `initializeAttribute()` method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
-[`Individual`] and adds it to the list.  In the example above, the
+[`Individual`] and adds it to the list.  The `.appendObject()` method
+returns the object it creates.  In the example above, the
 first such object is the fourth item in the list, which means that the
 intrinsic name of the new object is `recipient[3]`.  The result of
 [`using()`] can be used in place of the name of a class.used as the

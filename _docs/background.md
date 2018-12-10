@@ -950,6 +950,31 @@ the [`date_difference()`] function.  If at least 20 days have passed,
 the e-mail is sent.  The [`send_email()`] function marks the "task" as
 "performed" if the e-mail successfully sends.
 
+The [`response()`] function is necessary to indicate that the task has
+finished.  If this is not included, the interview logic will be
+evaluated after the [`code`] block finishes.  In some cases, this will
+be what you want, but in most cases this is not what you want.
+
+In the context of the web application, the [`response()`] function
+stops code execution and returns an HTTP response to the browser, but
+in the context of a scheduled task, it merely stops code execution.
+If you pass text to [`response()`], the text will be printed to the
+output.
+
+By default, any changes made to the interview answers will be saved.
+Thus, your scheduled task can affect what the user sees in the web
+application.  However, if your code does not change the answers, or
+you do not need the answers to be saved, you can call
+`response(null=True)`.  This will tell **docassemble** not to save the
+answers.  Doing this can help conserve system resources.  This
+behavior of the [`response()`] function only works in the context of
+scheduled tasks.
+
+If you are using [Docker] and you want to access the log of output of
+scheduled tasks, use [`docker exec`] to enter the container and look
+at the file `/var/spool/mail/mail`.  The log consists of e-mail
+messages.  You can also view these messages using the `mail` command.
+
 ## <a name="enabling"></a>Enabling scheduled tasks
 
 Scheduled tasks need to be triggered by some external source.
@@ -1380,3 +1405,4 @@ privileges and user identity of the [cron user].
 [MX record]: https://en.wikipedia.org/wiki/MX_record
 [port 25]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 [change]: https://developer.mozilla.org/en-US/docs/Web/Events/change
+[`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/

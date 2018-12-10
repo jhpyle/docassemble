@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.21](https://github.com/jhpyle/docassemble/releases/tag/v0.3.21) - 2018-12-10
+
+### Added
+- The `object labeler` option in `fields`.
+
 ## [0.3.20](https://github.com/jhpyle/docassemble/releases/tag/v0.3.20) - 2018-12-08
 
 ### Added

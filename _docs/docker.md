@@ -1701,6 +1701,7 @@ line), as the containers depend on the images.
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [`docker rmi`]: https://docs.docker.com/engine/reference/commandline/rmi/
+[`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/

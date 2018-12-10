@@ -1235,7 +1235,7 @@ def is_multiple_of_four(x):
 {% endhighlight %}
 
 This [Python] code is in the [`validationfuncs.py`] file.  The
-`modules` block includes this code.  The function returns `True` if 4
+[`modules`] block includes this code.  The function returns `True` if 4
 divides the input value into a whole number
 
 The error message that the user will see is a generic error message,
@@ -1353,9 +1353,9 @@ would not be able to do that.  Instead, you would want
 as you would refer to `client.birthdate`.
 
 You can accomplish this by setting [`datatype`] to `object` within a
-[`fields`] list, where the [`choices`](#choices) are the names of the objects from
-which to choose.  (Optionally, you can set a `default` value, which is
-also the name of a variable.)
+[`fields`] list, where the [`choices`](#choices) are the names of the
+objects from which to choose.  (Optionally, you can set a `default`
+value, which is also the name of a variable.)
 
 For example:
 
@@ -1397,6 +1397,45 @@ as `case.parties()` or `case.all_known_people()`.
 The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
 the [`datatype`] to `object_radio`.
+
+<a name="object labeler"></a>By default, the objects listed in the
+user interface are labeled by their textual representations.  For
+example, if the object in a `choices` list is an [`Individual`], the
+label for the object will be the textual representation for an
+[`Individual`], which is the individual's name.  To use an alternate
+label, provide a `object labeler`.  The `object labeler` must be a
+Python expression that evaluates to a function.
+
+For example:
+
+{% highlight yaml %}
+question: Who is the villain?
+fields:
+  - The villain is: villain
+    datatype: object
+    default: antagonist
+    object labeler: |
+      lambda y: y.nickname
+    choices:
+      - protagonist
+      - antagonist
+{% endhighlight %}
+
+In this case, the `protagonist` and the `antagonist` will be labeled
+using the `nickname` attribute.  The `object labeler` in this example
+is a Python [lambda function], which is a shorthand way of creating a
+function.  You could also used a named function, if you wrote one in a
+module.  For example, suppose you had some code in a module that
+defined the function `my_labeling_function`:
+
+{% highlight python %}
+def my_labeling_function(obj):
+    return obj.nickname
+{% endhighlight %}
+
+Suppose also that you imported this function into your interview using
+a [`modules`] block.  Then, in your `fields` item you could simply
+write `object labeler: my_labeling_function`.
 
 ## <a name="embed"></a>Embedding fields within a paragraph
 
@@ -2129,13 +2168,15 @@ why this needs to be done manually as opposed to automatically:
 [`minlength`]: #minlength
 [`maxlength`]: #maxlength
 [`none of the above`]: #none of the above
-[`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
+[`forget_result_of()`]: {{ site.baseurl }}/docs/functions.html#forget_result_of
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
 [`if`]: {{ site.baseurl }}/docs/modifiers.html#if
-[`template`]: {{ site.baseurl}}/docs/template.html#template
-[`table`]: {{ site.baseurl}}/docs/template.html#table
-[`attachment`]: {{ site.baseurl}}/docs/documents.html#attachment
-[`objects`]: {{ site.baseurl}}/docs/initial.html#objects
-[`objects from file`]: {{ site.baseurl}}/docs/initial.html#objects from file
-[`data`]: {{ site.baseurl}}/docs/initial.html#data
-[`data from code`]: {{ site.baseurl}}/docs/initial.html#data from code
+[`template`]: {{ site.baseurl }}/docs/template.html#template
+[`table`]: {{ site.baseurl }}/docs/template.html#table
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
+[`data`]: {{ site.baseurl }}/docs/initial.html#data
+[`data from code`]: {{ site.baseurl }}/docs/initial.html#data from code
+[lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
