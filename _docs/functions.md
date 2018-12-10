@@ -3105,10 +3105,10 @@ string (`''`), supply a third argument:
 The `showifdef()` function is like `showif()`, except that the value
 of the variable is only returned if the variable is defined.
 
-* `showif('favorite_fruit')` returns the value of the
+* `showifdef('favorite_fruit')` returns the value of the
   variable `favorite_fruit` if the variable `favorite_fruit` is
   defined, and otherwise returns empty text.
-* `showif('favorite_fruit', 'no fruit')` returns the value of the
+* `showifdef('favorite_fruit', 'no fruit')` returns the value of the
   variable `favorite_fruit` if the variable `favorite_fruit` is
   defined, and otherwise returns the text `no fruit`.
 

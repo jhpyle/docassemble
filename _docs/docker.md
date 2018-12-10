@@ -878,6 +878,12 @@ Ultimately, the better [data storage] solution is to use cloud storage
    recreate virtual machines at will, without ever having to worry
    about copying your data on and off the machines.
 
+However, you can get around the second problem by using [`docker
+volume create`] to put your Docker volume on a separate drive.  That
+way, you could remove the virtual machine that runs the application,
+along with its primary drive, without affecting the drive with the
+**docassemble** data.
+
 # <a name="multi server arrangement"></a>Multi-server arrangement
 
 ## Services on different machines
@@ -1708,6 +1714,7 @@ line), as the containers depend on the images.
 [`docker pull`]: https://docs.docker.com/engine/reference/commandline/pull/
 [`docker volume`]: https://docs.docker.com/engine/reference/commandline/volume/
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
+[`docker volume create`]: https://docs.docker.com/engine/reference/commandline/volume_create/
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
