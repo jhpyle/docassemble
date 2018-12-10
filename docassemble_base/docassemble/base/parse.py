@@ -15,6 +15,7 @@ import string
 import os
 import os.path
 import sys
+import types
 import urllib
 import httplib2
 import datetime
@@ -695,6 +696,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
+        if 'object_labeler' in data:
+            self.object_labeler = data['object_labeler']
         if 'extras' in data:
             self.extras = data['extras']
         if 'selections' in data:
@@ -2046,6 +2049,8 @@ class Question:
                             continue
                         if 'datatype' in field and field['datatype'] in ('radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
+                        if 'object labeler' in field and ('datatype' not in field or not field['datatype'].startswith('object')):
+                            raise DAError("An object labeler can only be used with an object data type")
                         if 'note' in field and 'html' in field:
                             raise DAError("You cannot include both note and html in a field." + self.idebug(data))
                         for key in field:
@@ -2071,6 +2076,9 @@ class Question:
                                 self.find_fields_in(field[key])
                             elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
                                 field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
+                                self.find_fields_in(field[key])
+                            elif key == 'object labeler':
+                                field_info['object_labeler'] = {'compute': compile(unicode(field[key]), '<object labeler code>', 'eval'), 'sourcecode': unicode(field[key])}
                                 self.find_fields_in(field[key])
                             elif key == 'required':
                                 if isinstance(field[key], bool):
@@ -2279,7 +2287,10 @@ class Question:
                                 default_list.append('_DAOBJECTDEFAULTDA')
                             if len(default_list):
                                 select_list.append('default=[' + ", ".join(default_list) + ']')
-                            source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
+                            if 'object_labeler' in field_info:
+                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ", object_labeler=_DAOBJECTLABELER)"
+                            else:
+                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
                             #logmessage("source_code is " + source_code)
                             field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
@@ -3181,6 +3192,13 @@ class Question:
                     # multiple choice field in choices
                     if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
                         exec("import docassemble.base.core", user_dict)
+                    if hasattr(field, 'object_labeler'):
+                        labeler_func = eval(field.object_labeler['compute'], user_dict)
+                        if not isinstance(labeler_func, types.FunctionType):
+                            raise DAError("The object labeler was not a function")
+                        user_dict['_DAOBJECTLABELER'] = labeler_func
+                    else:
+                        labeler_func = None
                     to_compute = field.selections['compute']
                     if field.datatype == 'object_checkboxes':
                         default_exists = False
@@ -3202,6 +3220,8 @@ class Question:
                         selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
                     if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
                         del user_dict['_DAOBJECTDEFAULTDA']
+                    if labeler_func is not None:
+                        del user_dict['_DAOBJECTLABELER']
                     if len(selectcompute[field.number]) > 0:
                         only_empty_fields_exist = False
                     else:

@@ -333,10 +333,11 @@ class DAObject(object):
         for key, val in kwargs.iteritems():
             new_object_parameters[key] = val
         if name in self.__dict__:
-            return
+            return getattr(self, name)
         else:
             object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **new_object_parameters))
             self.attrList.append(name)
+        return getattr(self, name)
     def reInitializeAttribute(self, *pargs, **kwargs):
         """Redefines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
@@ -355,9 +356,10 @@ class DAObject(object):
             new_object_parameters[key] = val
         object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **new_object_parameters))
         if name in self.__dict__:
-            return
+            return getattr(self, name)
         else:
             self.attrList.append(name)
+        return getattr(self, name)
     def attribute_defined(self, name):
         """Returns True or False depending on whether the given attribute is defined."""
         return hasattr(self, name)
@@ -389,7 +391,7 @@ class DAObject(object):
         if len(pargs) == 0:
             raise Exception("alternative: attribute must be provided")
         attribute = pargs[0]
-        value = self.getattr(self, attribute)
+        value = getattr(self, attribute)
         if value in kwargs:
             return kwargs[value]
         if '_default' in kwargs:
@@ -2903,6 +2905,10 @@ class DALazyTableTemplate(DALazyTemplate):
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
     as code in a multiple-choice field."""
+    if 'object_labeler' in kwargs:
+        object_labeler = lambda x: unicode(kwargs['object_labeler'](x))
+    else:
+        object_labeler = unicode
     to_exclude = set()
     if 'exclude' in kwargs:
         setify(kwargs['exclude'], to_exclude)
@@ -2926,7 +2932,7 @@ def selections(*pargs, **kwargs):
                     default_value = True
                 else:
                     default_value = False
-                output.append({myb64quote(subarg.instanceName): unicode(subarg), 'default': default_value})
+                output.append({myb64quote(subarg.instanceName): object_labeler(subarg), 'default': default_value})
                 seen.add(subarg)
     return output
 

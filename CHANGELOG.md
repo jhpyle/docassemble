@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.21] - 2018-12-10
+### Added
+- The `object labeler` option in `fields`.
+
 ## [0.3.20] - 2018-12-08
 ### Added
 - The `exclude_privileges` keyword parameter of the
