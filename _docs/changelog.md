@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.22](https://github.com/jhpyle/docassemble/releases/tag/v0.3.22) - 2018-12-14
+
+### Added
+- Insertion of PDF files into DOCX files.
+- Links in Playground sidebar to source code on GitHub.
+
+### Changed
+- Data representation of a question now includes plain attachment file
+  numbers.
+
+### Fixed
+- Not all thread local variables were reset before request.
+- Unicode error when exporting README.
+- Azure Blob storage missing content type.
+
 ## [0.3.21](https://github.com/jhpyle/docassemble/releases/tag/v0.3.21) - 2018-12-10
 
 ### Added
