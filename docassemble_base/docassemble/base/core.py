@@ -2409,12 +2409,19 @@ class DAFile(DAObject):
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             else:
+                if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
+                    return self._pdf_pages(width)
                 return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
                 return(u'[FILE ' + unicode(self.number) + u', ' + unicode(width) + u']')
             else:
                 return(u'[FILE ' + unicode(self.number) + u']')
+    def _pdf_pages(self, width):
+        file_info = server.file_finder(self.number, question=docassemble.base.functions.this_thread.current_question)
+        if 'path' not in file_info:
+            return ''
+        return docassemble.base.file_docx.pdf_pages(file_info, width)
     def url_for(self, **kwargs):
         """Returns a URL to the file."""
         return server.url_finder(self, **kwargs)
@@ -2550,12 +2557,22 @@ class DAStaticFile(DAObject):
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             else:
+                if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
+                    return self._pdf_pages(width)
                 return docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
                 return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
             else:
                 return('[FILE ' + str(self.filename) + ']')
+    def _pdf_pages(self, width):
+        file_info = dict()
+        pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
+        file_info['fullpath'] = pdf_file.name
+        file_info['extension'] = 'pdf'
+        file_info['path'] = os.path.splitext(pdf_file.name)[0]
+        shutil.copyfile(self.path(), pdf_file.name)
+        return docassemble.base.file_docx.pdf_pages(file_info, width)
     def slurp(self, auto_decode=True):
         """Returns the contents of the file."""
         the_path = self.path()

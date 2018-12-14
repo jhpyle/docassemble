@@ -2459,8 +2459,9 @@ def noquote(string):
 
 def infobutton(title):
     docstring = ''
+    parts = list()
     if 'doc' in title_documentation[title]:
-        docstring += noquote(title_documentation[title]['doc']) + "<br>"
+        docstring += noquote(title_documentation[title]['doc'])
     if 'url' in title_documentation[title]:
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
     return '&nbsp;<a tabindex="0" class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
@@ -2560,7 +2561,39 @@ def get_ml_info(varname, default_package, default_file):
         the_file = default_file
         the_varname = varname
     return (the_package, the_file, the_varname)
-        
+
+pg_code_cache = dict()
+
+def source_code_url(the_name, datatype=None):
+    if datatype == 'module':
+        if not the_name.__file__:
+            logmessage("Nothing for module " + the_name)
+            return None
+        source_file = re.sub(r'\.pyc$', r'.py', the_name.__file__)
+        line_number = 1
+    elif datatype == 'class':
+        try:
+            source_file = inspect.getsourcefile(the_name)
+            line_number = inspect.findsource(the_name)[1]
+        except:
+            logmessage("Nothing for class " + the_name)
+            return None
+    elif hasattr(the_name, '__code__'):
+        source_file = the_name.__code__.co_filename
+        line_number = the_name.__code__.co_firstlineno
+    else:
+        logmessage("Nothing for " + the_name)
+        return None
+    source_file = re.sub(r'.*/site-packages/', '', source_file)
+    m = re.search(r'^docassemble/(base|webapp|demo)/', source_file)
+    if m:
+        output = 'https://github.com/jhpyle/docassemble/blob/master/docassemble_' + m.group(1) + '/' + source_file
+        if line_number == 1:
+            return output
+        return output + '#L' + str(line_number)
+    logmessage("no match for " + str(source_file))
+    return None
+
 def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
@@ -2638,21 +2671,27 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
+            if val not in pg_code_cache:
+                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
+            name_info[val] = pg_code_cache[val]
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
+            if val not in pg_code_cache:
+                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
+            name_info[val] = pg_code_cache[val]
         elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
-            bases = list()
-            for x in list(user_dict[val].__bases__):
-                if x.__name__ != 'DAObject':
-                    bases.append(x.__name__)
-            methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
-            method_list = list()
-            for name, value in methods:
-                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
+            if val not in pg_code_cache:
+                bases = list()
+                for x in list(user_dict[val].__bases__):
+                    if x.__name__ != 'DAObject':
+                        bases.append(x.__name__)
+                methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
+                method_list = list()
+                for name, value in methods:
+                    method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
+                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
+            name_info[val] = pg_code_cache[val]
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
@@ -2798,6 +2837,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['methods'] = list()
                     for method_item in name_info[var]['methods']:
                         method_info = dict(name=method_item['name'], to_insert=method_item['insert'], tag=method_item['tag'])
+                        if 'git' in method_item:
+                            method_info['git'] = method_item['git']
                         if method_item['doc']:
                             method_info['doc_content'] = method_item['doc']
                             method_info['doc_title'] = word_documentation
@@ -2882,7 +2923,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             elif var in interview.mlfields:
                 content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                if 'git' in name_info[var] and name_info[var]['git']:
+                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                else:
+                    git_link = ''
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
             if var in interview.mlfields:
                 if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
                     (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
@@ -2904,7 +2949,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                if 'git' in name_info[var] and name_info[var]['git']:
+                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                else:
+                    git_link = ''
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
@@ -2914,15 +2963,23 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + '"><i class="fas fa-info-circle"></i></a>'
+                if 'git' in name_info[var] and name_info[var]['git']:
+                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                else:
+                    git_link = ''
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
             if len(name_info[var]['methods']):
                 content += '&nbsp;<a tabindex="0" class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
+                    if 'git' in method_info and method_info['git']:
+                        git_link = noquote("<a class='float-right' target='_blank' href='" + method_info['git'] + "'><i class='fas fa-code'></i></a>")
+                    else:
+                        git_link = ''
                     content += '<tr><td><a tabindex="0" data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     #vocab_dict[method_info['name']] = method_info['insert']
                     if method_info['doc']:
-                        content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="fas fa-info-circle"></i></a>'
+                        content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + git_link + '"><i class="fas fa-info-circle"></i></a>'
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
@@ -2932,7 +2989,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
             if name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + '"><i class="fas fa-info-circle"></i></a>'
+                if 'git' in name_info[var] and name_info[var]['git']:
+                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                else:
+                    git_link = ''
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + git_link + '"><i class="fas fa-info-circle"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'

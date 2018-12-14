@@ -2,8 +2,10 @@ import datetime
 import os
 import time
 import pytz
+import mimetypes
 from azure.storage.blob import BlockBlobService
 from azure.storage.blob import BlobPermissions
+from azure.storage.blob import ContentSettings
 
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
@@ -58,7 +60,14 @@ class azurekey(object):
         secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
-        self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename)
+        if hasattr(self, 'content_type') and self.content_type is not None:
+            mimetype = self.content_type
+        else:
+            mimetype, encoding = mimetypes.guess_type(filename)
+        if mimetype is not None:
+            self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename, content_settings=ContentSettings(content_type=mimetype))
+        else:
+            self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename)
         self.get_properties()
         secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))

@@ -420,13 +420,15 @@ class InterviewStatus(object):
             if self.current_info['user']['is_authenticated'] and self.current_info['user']['email']:
                 result['default_email'] = self.current_info['user']['email']
             for attachment in self.attachments:
-                the_attachment = dict(url=dict())
+                the_attachment = dict(url=dict(), number=dict(), filename_with_extension=dict())
                 for key in ('valid_formats', 'filename', 'name', 'description', 'content', 'markdown'):
                     if key in attachment:
                         if attachment[key]:
                             the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
                     the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format[the_format])
+                    the_attachment['number'][the_format] = attachment['file'][the_format]
+                    the_attachment['filename_with_extension'][the_format] = attachment['filename'] + '.' + extension_of_doc_format[the_format]
                 result['attachments'].append(the_attachment)
         for field in self.question.fields:
             the_field = dict()

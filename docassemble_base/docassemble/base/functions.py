@@ -1276,6 +1276,11 @@ class ThreadVariables(threading.local):
     message_log = list()
     misc = dict()
     prevent_going_back = False
+    current_info = dict()
+    current_package = None
+    current_question = None
+    internal = dict()
+    current_variable = list()
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -1586,6 +1591,8 @@ def reset_local_variables():
     this_thread.country = server.default_country
     this_thread.locale = server.default_locale
     this_thread.session_id = None
+    this_thread.interview = None
+    this_thread.interview_status = None
     this_thread.evaluation_context = None
     this_thread.gathering_mode = dict()
     this_thread.global_vars = GenericObject()
@@ -1595,6 +1602,11 @@ def reset_local_variables():
     this_thread.saved_files = dict()
     this_thread.message_log = list()
     this_thread.misc = dict()
+    this_thread.current_info = dict()
+    this_thread.current_package = None
+    this_thread.current_question = None
+    this_thread.internal = dict()
+    this_thread.current_variable = list()
     this_thread.prevent_going_back = False
 
 def prevent_going_back():
