@@ -2463,7 +2463,7 @@ def infobutton(title):
     if 'doc' in title_documentation[title]:
         docstring += noquote(title_documentation[title]['doc'])
     if 'url' in title_documentation[title]:
-        docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
+        docstring += "<br><a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
     return '&nbsp;<a tabindex="0" class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
@@ -2566,11 +2566,14 @@ pg_code_cache = dict()
 
 def source_code_url(the_name, datatype=None):
     if datatype == 'module':
-        if not the_name.__file__:
-            logmessage("Nothing for module " + the_name)
+        try:
+            if (not hasattr(the_name, '__path__')) or (not the_name.__path__):
+                logmessage("Nothing for module " + the_name)
+                return None
+            source_file = re.sub(r'\.pyc$', r'.py', the_name.__path__[0])
+            line_number = 1
+        except:
             return None
-        source_file = re.sub(r'\.pyc$', r'.py', the_name.__file__)
-        line_number = 1
     elif datatype == 'class':
         try:
             source_file = inspect.getsourcefile(the_name)
@@ -2673,12 +2676,12 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             functions.add(val)
             if val not in pg_code_cache:
                 pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
-            name_info[val] = pg_code_cache[val]
+            name_info[val] = copy.copy(pg_code_cache[val])
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
             if val not in pg_code_cache:
                 pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
-            name_info[val] = pg_code_cache[val]
+            name_info[val] = copy.copy(pg_code_cache[val])
         elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
             if val not in pg_code_cache:
@@ -2691,7 +2694,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 for name, value in methods:
                     method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
                 pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
-            name_info[val] = pg_code_cache[val]
+            name_info[val] = copy.copy(pg_code_cache[val])
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
