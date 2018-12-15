@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.23](https://github.com/jhpyle/docassemble/releases/tag/v0.3.23) - 2018-12-15
+
+### Added
+- The `get_question_data()` function.
+
+### Fixed
+- Error from Playground sidebar for interviews using `imports`.
+
 ## [0.3.22](https://github.com/jhpyle/docassemble/releases/tag/v0.3.22) - 2018-12-14
 
 ### Added
