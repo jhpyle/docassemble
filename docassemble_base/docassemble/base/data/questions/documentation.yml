@@ -486,3 +486,4 @@ action_button_html: "https://docassemble.org/docs/functions.html#action_button_h
 url_ask: "https://docassemble.org/docs/functions.html#url_ask"
 mmdc: "https://docassemble.org/docs/functions.html#mmdc"
 overlay_pdf: "https://docassemble.org/docs/functions.html#overlay_pdf"
+get_question_data: "https://docassemble.org/docs/functions.html#get_question_data"

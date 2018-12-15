@@ -18527,7 +18527,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
         if use_lock:
-            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
+            #save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
             release_lock(session_id, yaml_filename)
         docassemble.base.functions.set_language(old_language)
         return dict(questionType='undefined_variable', variable=err.variable, message_log=docassemble.base.functions.get_message_log())
@@ -18580,6 +18580,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
+    if steps is None:
+        steps = user_dict['_internal']['steps']
     if interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1):
         allow_going_back = True
     else:
@@ -19389,7 +19391,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf,
                                          fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,
-                                         fg_make_pdf_for_word_path=fg_make_pdf_for_word_path)
+                                         fg_make_pdf_for_word_path=fg_make_pdf_for_word_path,
+                                         get_question_data=get_question_data)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)
