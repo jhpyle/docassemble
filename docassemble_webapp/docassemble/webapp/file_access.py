@@ -20,7 +20,7 @@ import docassemble.base.config
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
-def url_if_exists(file_reference):
+def url_if_exists(file_reference, **kwargs):
     parts = file_reference.split(":")
     if len(parts) == 2:
         if cloud:
@@ -37,7 +37,10 @@ def url_if_exists(file_reference):
                 key = str(section) + '/' + str(user_id) + '/' + filename
                 cloud_key = cloud.get_key(key)
                 if cloud_key.does_exist:
-                    return cloud_key.generate_url(3600, display_filename=filename)
+                    if not kwargs.get('inline', False):
+                        return cloud_key.generate_url(3600, display_filename=filename)
+                    else:
+                        return cloud_key.generate_url(3600)
                 return None
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):

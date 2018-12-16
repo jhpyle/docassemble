@@ -1025,7 +1025,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         file_number = file_reference.number
         if privileged or can_access_file_number(file_number):
             url_properties = dict()
-            if hasattr(file_reference, 'filename') and len(file_reference.filename):
+            if hasattr(file_reference, 'filename') and len(file_reference.filename) and not kwargs.get('inline', False):
                 url_properties['display_filename'] = file_reference.filename
             if hasattr(file_reference, 'extension'):
                 url_properties['ext'] = file_reference.extension
@@ -1145,7 +1145,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
         parts[1] = re.sub(r'^data/[^/]+/', '', parts[1])
-        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn)
+        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **kwargs)
         # if reference_exists(parts[0] + ':data/static/' + parts[1]):
         #     url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
         # else:
