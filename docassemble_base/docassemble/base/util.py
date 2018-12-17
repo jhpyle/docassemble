@@ -329,7 +329,25 @@ class DateTimeDelta(object):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return unicode(quantity_noun(output.days, word('day')))
+        return unicode(self.describe())
+    def describe(self, **kwargs):
+        specificity = kwargs.get('specificity', None)
+        output = list()
+        diff = dateutil.relativedelta.relativedelta(self.end, self.start)
+        if diff.years != 0:
+            output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years))))
+        if diff.months != 0 and specificity != 'year':
+            output.append((abs(diff.months), noun_plural(word('month'), abs(diff.months))))
+        if diff.days != 0 and specificity not in ('year', 'month'):
+            output.append((abs(diff.days), noun_plural(word('day'), abs(diff.days))))
+        if kwargs.get('nice', True):
+            return_value = comma_and_list(["%s %s" % (nice_number(y[0]), y[1]) for y in output])
+            if kwargs.get('capitalize', False):
+                return capitalize(return_value)
+            else:
+                return return_value
+        else:
+            return comma_and_list(["%d %s" % y for y in output])
 
 class DADateTime(datetime.datetime):
     def format(self, format='long', language=None):
@@ -452,6 +470,8 @@ def date_difference(starting=None, ending=None, timezone=None):
         ending = pytz.timezone(timezone).localize(ending)
     delta = ending - starting
     output = DateTimeDelta()
+    output.start = starting
+    output.end = ending
     output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
     output.days = delta.days + (delta.seconds / 86400.0)
     output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)

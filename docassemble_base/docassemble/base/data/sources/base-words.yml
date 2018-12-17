@@ -82,6 +82,7 @@
 "Create Package": Null
 "Current": Null
 "day": Null
+"days": Null
 "Decorations": Null
 "Defined in": Null
 "definitions of words": Null
@@ -245,6 +246,7 @@
 "Modules defined": Null
 "Modules": Null
 "Monitor": Null
+"month": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "My Interviews": Null
@@ -582,6 +584,7 @@
 "We were unable to submit your request.": Null
 "Would you like to reconfigure two-factor authentication?": Null
 "x": Null
+"year": Null
 "yes": Null
 "Yes": Null
 "y": Null
