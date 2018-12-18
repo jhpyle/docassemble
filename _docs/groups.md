@@ -880,6 +880,15 @@ the "Edit" button will not be shown.  If the value of the key
 
 {% include side-by-side.html demo="table-read-only-2" %}
 
+<a name="editable"></a>If you have a `table` definition that includes
+editable elements (i.e. `edit`, `delete buttons`), but you want to
+present the table with the editing features in some contexts, but
+without the editing features in other contexts, you can include the
+table by calling the method `.show()` with `editable=False` to hide
+the editing features.
+
+{% include side-by-side.html demo="edit-list-non-editable" %}
+
 # <a name="for loop"></a>For loop
 
 In computer programming, a "for loop" allows you to do something

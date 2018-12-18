@@ -2476,6 +2476,19 @@ before the calculation takes place.  You can supply the optional
 keyword argument `timezone` (e.g., `'America/New_York'`) to use a
 different time zone.
 
+The object returned by `date_difference()` has a method
+`.describe()`.  If you set 
+`z = date_difference(starting='1/1/2014', ending='4/3/2015')`, then:
+
+* `z.describe()` returns `one year, three months, and one day`.
+* `z.describe(capitalize=True)` returns `One year, three months, and one day`.
+* `z.describe(specificity='year')` returns `one year`.
+* `z.describe(specificity='month')` returns `one year and three months`.
+* `z.describe(nice=False)` returns `1 year, 3 months, and 1 day`
+
+If you reduce the resulting object to text, this has the effect of
+running `.describe()` on the object.
+
 ## <a name="date_interval"></a>date_interval()
 
 {% include side-by-side.html demo="date-interval" %}

@@ -1421,6 +1421,10 @@
   question: All done
   subquestion: |
     Your favorite color is ${ favorite_color }.
+"command": |-
+  mandatory: True
+  code: |
+    command('exit', url="https://google.com")
 "comment": |-
   question: Do you like turnips?
   yesno: likes_turnips
@@ -2642,6 +2646,16 @@
   \ person_del\ncode: |\n  person.remove(value(action_argument('item')))\n---\nevent:\
   \ person_add\ncode: |\n  person.appendObject()\n  person.reset_gathered()\n  person.there_is_another\
   \ = False"
+"edit-list-non-editable": |-
+  mandatory: true
+  question: |
+    Thank you for your answers!
+  subquestion: |
+    ${ person.table.show(editable=False) }
+
+    You can
+    [edit your answers](${ url_action('review_interview') })
+    if you want.
 "email-field": |-
   question: |
     What is your e-mail address?
@@ -9729,6 +9743,13 @@
   fields:
     - Life Story: target_variable
       datatype: area
+"text-box-field-rows": |-
+  question: |
+    Tell me the story of your life.
+  fields:
+    - Life Story: target_variable
+      datatype: area
+      rows: 10
 "text-default": |-
   question: |
     What are your favorite things to eat?

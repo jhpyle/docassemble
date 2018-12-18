@@ -367,6 +367,12 @@ specify it unless you want to.
 
 {% include side-by-side.html demo="text-box-field" %}
 
+You can change the number of rows in the text area using the `rows` specifier:
+
+{% include side-by-side.html demo="text-box-field-rows" %}
+
+The default number of rows is four.
+
 ## <a name="password"></a>Passwords
 
 <a name="password"></a>`datatype: password` provides an input box

@@ -1158,6 +1158,15 @@ in 60 seconds.
 
 {% include side-by-side.html demo="dafile-url-for-temporary" %}
 
+If you are using cloud storage, then the URLs will point directly to
+the cloud provider rather than to your server.  (This has important
+performance benefits.)  The links are long and technical because they
+contain access codes.  By default, if a user clicks on a link, the URL
+will open as an attachment, and the user may be prompted to download
+the file or open it in an application; it will not open in the
+browser.  If you would like the links to open in the browser, add
+the keyword parameter `inline=True` to `.url_for()`.
+
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
 necessary because if **docassemble** is configured to use [Amazon S3]
