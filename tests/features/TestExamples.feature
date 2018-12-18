@@ -4552,6 +4552,14 @@ Feature: Example interviews
     Then I should see the phrase "Result of question"
     And I should see the phrase "I was born in a bayou."
 
+  Scenario: Test the interview "Text box rows"
+    Given I start the interview "docassemble.base:data/questions/examples/text-box-field-rows.yml"
+    Then I should see the phrase "Tell me the story of your life."
+    And I set "Life Story" to "I was born in a bayou."
+    And I click the button "Continue"
+    Then I should see the phrase "Result of question"
+    And I should see the phrase "I was born in a bayou."
+
   Scenario: Test the interview "Default value with Mako"
     Given I start the interview "docassemble.base:data/questions/examples/text-default.yml"
     Then I should see the phrase "What are your favorite things to eat?"

@@ -7424,6 +7424,7 @@ def index():
           },
           dataType: 'json'
         });
+        daSpinnerTimeout = setTimeout(showSpinner, 1000);
         e.preventDefault();
         return false;
       }

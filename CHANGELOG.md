@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.3.24] - 2018-12-17
+### Added
+- The `inline` keyword parameter for the `url_for()` method.
+- The `describe()` method of the output of `data_difference()`.
+### Changed
+- The result of `date_difference()` when reduced to text now runs the
+  `describe()` method instead of stating the number of days.
+- The `space_to_underscore()` function now uses
+  `werkzeug.secure_filename()` and replaces more than just non-ASCII
+  characters and spaces.
+### Fixed
+- Error in `.export()` method of tables.
+
 ## [0.3.23] - 2018-12-15
 ### Added
 - The `get_question_data()` function.
@@ -55,7 +68,7 @@
 
 ## [0.3.17] - 2018-11-30
 ### Added
-- The `.show(editable=True)` option for tables.
+- The `.show(editable=False)` option for tables.
 - The `include_dict` option for `interview_list()`.
 - The `formatted_unit()` method for `Address`.
 ### Changed

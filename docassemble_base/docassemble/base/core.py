@@ -2892,7 +2892,7 @@ class DALazyTableTemplate(DALazyTemplate):
         user_dict = copy.copy(self.user_dict)
         user_dict.update(self.temp_vars)
         header_output = [export_safe(x.text(user_dict)) for x in self.table_info.header]
-        if table_info.is_editable:
+        if self.table_info.is_editable:
             header_output.pop()
         the_iterable = eval(self.table_info.row, user_dict)
         if not hasattr(the_iterable, '__iter__'):
@@ -2912,7 +2912,7 @@ class DALazyTableTemplate(DALazyTemplate):
                 user_dict['row_index'] = indexno
                 contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
                 indexno += 1
-        if table_info.is_editable:
+        if self.table_info.is_editable:
             for cols in contents:
                 cols.pop()
         user_dict.pop('row_item', None)

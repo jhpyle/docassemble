@@ -2134,7 +2134,11 @@ def input_for(status, field, wide=False, embedded=False):
         elif field.datatype in ['area', 'mlarea']:
             if embedded:
                 output += '<span class="embed-area-wrapper">'
-            output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
+            if 'rows' in status.extras and field.number in status.extras['rows']:
+                rows = noquote(unicode(status.extras['rows'][field.number]))
+            else:
+                rows = '"4"'
+            output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows=' + rows + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
             if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                 output += defaultvalue
             output += '</textarea>'

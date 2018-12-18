@@ -698,6 +698,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
+        if 'rows' in data:
+            self.rows = data['rows']
         if 'object_labeler' in data:
             self.object_labeler = data['object_labeler']
         if 'extras' in data:
@@ -2076,6 +2078,9 @@ class Question:
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
+                            elif 'datatype' in field and field['datatype'] == 'area' and key == 'rows':
+                                field_info['rows'] = {'compute': compile(unicode(field[key]), '<rows code>', 'eval'), 'sourcecode': unicode(field[key])}
+                                self.find_fields_in(field[key])
                             elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
                                 field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
                                 self.find_fields_in(field[key])
@@ -2681,7 +2686,7 @@ class Question:
         
     def find_fields_in(self, code):
         myvisitor = myvisitnode()
-        t = ast.parse(code)
+        t = ast.parse(unicode(code))
         myvisitor.visit(t)
         predefines = set(globals().keys()) | set(locals().keys())
         if self.scan_for_variables:
@@ -3338,6 +3343,10 @@ class Question:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
                 if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
+                if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
+                    if 'rows' not in extras:
+                        extras['rows'] = dict()
+                    extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
                 if hasattr(field, 'validate'):
                     the_func = eval(field.validate['compute'], user_dict)
                     try:
