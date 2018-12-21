@@ -8,7 +8,7 @@ short_title: Change Log
 
 ### Added
 - The `inline` keyword parameter for the `url_for()` method.
-- The `describe()` method of the output of `data_difference()`.
+- The `describe()` method of the output of `date_difference()`.
 
 ### Changed
 - The result of `date_difference()` when reduced to text now runs the
