@@ -15089,12 +15089,18 @@ def playground_page():
                     try:
                         trash_gd_file('questions', form.playground_name.data)
                     except Exception as the_err:
-                        logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
+                        try:
+                            logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
+                        except:
+                            logmessage("playground_page: unable to delete file on Google Drive.")
                 if use_od:
                     try:
                         trash_od_file('questions', form.playground_name.data)
                     except Exception as the_err:
-                        logmessage("playground_page: unable to delete file on OneDrive.  " + str(the_err))
+                        try:
+                            logmessage("playground_page: unable to delete file on OneDrive.  " + str(the_err))
+                        except:
+                            logmessage("playground_page: unable to delete file on OneDrive.")
                 if 'variablefile' in session and (session['variablefile'] == the_file or session['variablefile'] == form.playground_name.data):
                     del session['variablefile']
                 return redirect(url_for('playground_page'))
