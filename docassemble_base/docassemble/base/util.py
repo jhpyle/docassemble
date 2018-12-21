@@ -23,7 +23,7 @@ from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import markdown_to_html, to_text
+from docassemble.base.filter import markdown_to_html, to_text, ensure_valid_filename
 
 #file_finder, url_finder, da_send_mail
 

@@ -15,6 +15,7 @@ import types
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
 import docassemble.base.functions
+import docassemble.base.filter
 import docassemble.base.file_docx
 from docassemble.webapp.files import SavedFile
 from docassemble.base.error import LazyNameError, DAError
@@ -2214,6 +2215,7 @@ class DAFile(DAObject):
                 self.filename = kwargs.get('filename', 'file.' + self.extension)
             else:
                 self.filename = kwargs.get('filename', 'file.txt')
+        docassemble.base.filter.ensure_valid_filename(self.filename)
         if not hasattr(self, 'number'):
             yaml_filename = None
             uid = None

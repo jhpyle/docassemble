@@ -2568,7 +2568,7 @@ def source_code_url(the_name, datatype=None):
     if datatype == 'module':
         try:
             if (not hasattr(the_name, '__path__')) or (not the_name.__path__):
-                logmessage("Nothing for module " + the_name)
+                #logmessage("Nothing for module " + the_name)
                 return None
             source_file = re.sub(r'\.pyc$', r'.py', the_name.__path__[0])
             line_number = 1
@@ -2579,13 +2579,13 @@ def source_code_url(the_name, datatype=None):
             source_file = inspect.getsourcefile(the_name)
             line_number = inspect.findsource(the_name)[1]
         except:
-            logmessage("Nothing for class " + the_name)
+            #logmessage("Nothing for class " + the_name)
             return None
     elif hasattr(the_name, '__code__'):
         source_file = the_name.__code__.co_filename
         line_number = the_name.__code__.co_firstlineno
     else:
-        logmessage("Nothing for " + the_name)
+        #logmessage("Nothing for " + the_name)
         return None
     source_file = re.sub(r'.*/site-packages/', '', source_file)
     m = re.search(r'^docassemble/(base|webapp|demo)/', source_file)
@@ -2594,7 +2594,7 @@ def source_code_url(the_name, datatype=None):
         if line_number == 1:
             return output
         return output + '#L' + str(line_number)
-    logmessage("no match for " + str(source_file))
+    #logmessage("no match for " + str(source_file))
     return None
 
 def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False):

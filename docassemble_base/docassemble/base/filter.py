@@ -1554,3 +1554,12 @@ def qr_include_docx_template(match):
     the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
     im.save(the_image.name)
     return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+
+def ensure_valid_filename(filename):
+    m = re.search(r'[\\/\&\`:;,~\'\"\*\?\<\>\|]', filename)
+    if m:
+        raise Exception("Filename contained invalid character " + repr(m.group(1)))
+    for char in filename:
+        if ord(char) < 32 or ord(char) >= 127:
+            raise Exception("Filename contained invalid character " + repr(char))
+    return True

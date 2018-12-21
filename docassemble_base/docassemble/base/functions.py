@@ -2245,7 +2245,7 @@ def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 
 def space_to_underscore(a):
-    """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
+    """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
     return werkzeug.secure_filename(unicode(a).encode('ascii', errors='ignore'))
 
 def message(*pargs, **kwargs):
@@ -3508,11 +3508,17 @@ def re_run_logic():
 
 def reconsider(*pargs):
     """Ensures that the value of one or more variables is freshly calculated."""
-    if 'reconsidered' not in this_thread.misc:
-        this_thread.misc['reconsidered'] = set()
+    if 'reconsidered_undefined' not in this_thread.misc:
+        this_thread.misc['reconsidered_undefined'] = set()
+    if 'reconsidered_sought' not in this_thread.misc:
+        this_thread.misc['reconsidered_sought'] = set()
     for var in pargs:
-        if var in this_thread.misc['reconsidered']:
+        if var in this_thread.misc['reconsidered_undefined']:
             continue
         undefine(var)
-        this_thread.misc['reconsidered'].add(var)
+        this_thread.misc['reconsidered_undefined'].add(var)
+    for var in pargs:
+        if var in this_thread.misc['reconsidered_sought']:
+            continue
         value(var)
+        this_thread.misc['reconsidered_sought'].add(var)

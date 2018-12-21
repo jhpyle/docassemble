@@ -2637,13 +2637,13 @@ class Question:
         if len(iterators):
             for indexno in range(len(iterators)):
                 exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
-        if self.need is not None:
-            for need_code in self.need:
-                exec(need_code, user_dict)
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
             docassemble.base.functions.reconsider(*self.reconsider)
+        if self.need is not None:
+            for need_code in self.need:
+                exec(need_code, user_dict)
     def recursive_data_from_code(self, target):
         if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
             new_dict = dict()
@@ -3507,12 +3507,15 @@ class Question:
                 user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict()))
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined, 
     def processed_attachments(self, user_dict, **kwargs):
+        use_cache = kwargs.get('use_cache', True)
+        if self.compute_attachment is not None:
+            use_cache = False
         seeking_var = kwargs.get('seeking_var', '__novar')
         steps = user_dict['_internal'].get('steps', -1)
-        # logmessage("processed_attachments: steps is " + str(steps))
-        if self.interview.cache_documents and hasattr(self, 'name') and self.name + '__SEEKING__' + seeking_var in user_dict['_internal']['doc_cache']:
+        #logmessage("processed_attachments: steps is " + str(steps))
+        if use_cache and self.interview.cache_documents and hasattr(self, 'name') and self.name + '__SEEKING__' + seeking_var in user_dict['_internal']['doc_cache']:
             if steps in user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var]:
-            #logmessage("processed_attachments: result was in document cache")
+                #logmessage("processed_attachments: result was in document cache")
                 return user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps]
             user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var].clear()
         result_list = list()
@@ -5065,7 +5068,8 @@ class Interview:
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        attachment_text = question.processed_attachments(user_dict, seeking_var=origMissingVariable)
+                        #logmessage("original missing variable is " + origMissingVariable)
+                        attachment_text = question.processed_attachments(user_dict, seeking_var=origMissingVariable, use_cache=False)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         try:
@@ -5074,6 +5078,7 @@ class Interview:
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
+                            logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
                             continue
                     if question.question_type in ["code", "event_code"]:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)

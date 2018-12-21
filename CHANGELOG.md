@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.3.25] - 2018-12-20
+### Changed
+- Exception raised if unsafe filename used for a `DAFile`.
+### Fixed
+- Problem with caching of stand-alone `attachment` blocks.
+
 ## [0.3.24] - 2018-12-17
 ### Added
 - The `inline` keyword parameter for the `url_for()` method.
