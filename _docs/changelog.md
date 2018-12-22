@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.26](https://github.com/jhpyle/docassemble/releases/tag/v0.3.26) - 2018-12-21
+
+### Changed
+- Reverted `reconsider()` to 0.3.24 version.
+
+## [0.3.25](https://github.com/jhpyle/docassemble/releases/tag/v0.3.25) - 2018-12-20
+
+### Changed
+- Exception raised if unsafe filename used for a `DAFile`.
+
+### Fixed
+- Problem with caching of stand-alone `attachment` blocks.
+
 ## [0.3.24](https://github.com/jhpyle/docassemble/releases/tag/v0.3.24) - 2018-12-17
 
 ### Added
