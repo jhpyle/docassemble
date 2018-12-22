@@ -3508,17 +3508,11 @@ def re_run_logic():
 
 def reconsider(*pargs):
     """Ensures that the value of one or more variables is freshly calculated."""
-    if 'reconsidered_undefined' not in this_thread.misc:
-        this_thread.misc['reconsidered_undefined'] = set()
-    if 'reconsidered_sought' not in this_thread.misc:
-        this_thread.misc['reconsidered_sought'] = set()
+    if 'reconsidered' not in this_thread.misc:
+        this_thread.misc['reconsidered'] = set()
     for var in pargs:
-        if var in this_thread.misc['reconsidered_undefined']:
+        if var in this_thread.misc['reconsidered']:
             continue
         undefine(var)
-        this_thread.misc['reconsidered_undefined'].add(var)
-    for var in pargs:
-        if var in this_thread.misc['reconsidered_sought']:
-            continue
+        this_thread.misc['reconsidered'].add(var)
         value(var)
-        this_thread.misc['reconsidered_sought'].add(var)

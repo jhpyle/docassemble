@@ -1823,7 +1823,7 @@ class DASet(DAObject):
             del kwargs['elements']
         return super(DASet, self).init(*pargs, **kwargs)
     def filter(self, *pargs, **kwargs):
-        """Returns a filtered version of the list containing only items with particular values of attributes."""
+        """Returns a filtered version of the set containing only items with particular values of attributes."""
         self._trigger_gather()
         new_elements = set()
         for item in self.elements:

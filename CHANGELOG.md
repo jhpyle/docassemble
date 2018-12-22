@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.26] - 2018-12-21
+### Changed
+- Reverted `reconsider()` to 0.3.24 version.
+
 ## [0.3.25] - 2018-12-20
 ### Changed
 - Exception raised if unsafe filename used for a `DAFile`.
