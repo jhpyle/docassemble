@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.27](https://github.com/jhpyle/docassemble/releases/tag/v0.3.27) - 2018-12-24
+
+### Changed
+- Table edit attribute names treated as "follow up" actions.
+
 ## [0.3.26](https://github.com/jhpyle/docassemble/releases/tag/v0.3.26) - 2018-12-21
 
 ### Changed
@@ -21,7 +26,7 @@ short_title: Change Log
 
 ### Added
 - The `inline` keyword parameter for the `url_for()` method.
-- The `describe()` method of the output of `data_difference()`.
+- The `describe()` method of the output of `date_difference()`.
 
 ### Changed
 - The result of `date_difference()` when reduced to text now runs the
