@@ -44,8 +44,9 @@ class ForcedNameError(NameError):
         if len(the_args) == 0:
             raise DAError("ForcedNameError must have at least one argument")
         if type(the_args[0]) is dict:
-            self.name = the_args[0]['action']
-            self.arguments = the_args[0]['arguments']
+            if 'action' in the_args[0] and (len(the_args[0]) == 1 or 'arguments' in the_args[0]):
+                self.name = the_args[0]['action']
+                self.arguments = the_args[0].get('arguments', dict())
         else:
             self.name = the_args[0]
             self.arguments = None
@@ -57,33 +58,33 @@ class ForcedNameError(NameError):
             arg = the_args.pop(0)
             if type(arg) is dict:
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
-                    self.next_action.append(arg)
+                    self.set_action(arg)
                 elif len(arg) == 1 and ('undefine' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:
                         if type(arg['set']) is not list:
-                            raise DAError("force_ask: the set statement must refer to a list.  " + repr(data))
+                            raise DAError("force_ask: the set statement must refer to a list.")
                         clean_list = []
                         for the_dict in arg['set']:
                             if type(the_dict) is not dict:
-                                raise DAError("force_ask: a set command must refer to a list of dicts.  " + repr(data))
+                                raise DAError("force_ask: a set command must refer to a list of dicts.")
                             for the_var, the_val in the_dict.iteritems():
                                 if not isinstance(the_var, basestring):
-                                    raise DAError("force_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
+                                    raise DAError("force_ask: a set command must refer to a list of dicts with keys as variable names.  ")
                                 the_var_stripped = the_var.strip()
                             if invalid_variable_name(the_var_stripped):
-                                raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
+                                raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + ".")
                             clean_list.append([the_var_stripped, the_val])
-                        self.next_action.append(dict(action='_da_set', arguments=dict(variables=clean_list)))
+                        self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list)))
                     if 'follow up' in arg:
                         if type(arg['follow up']) is not list:
-                            raise DAError("force_ask: the follow up statement must refer to a list.  " + repr(data))
+                            raise DAError("force_ask: the follow up statement must refer to a list.")
                         for var in arg['follow up']:
                             if type(var) not in (str, unicode):
-                                raise DAError("force_ask: invalid variable name in follow up " + command + ".  " + repr(data))
+                                raise DAError("force_ask: invalid variable name " + repr(var) + " in follow up.")
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
-                            self.next_action.append(dict(action=var, arguments=dict()))
+                            self.set_action(dict(action=var, arguments=dict()))
                     for command in ('undefine', 'recompute'):
                         if command not in arg:
                             continue
@@ -99,11 +100,19 @@ class ForcedNameError(NameError):
                             clean_list.append(undef_saveas)
                         self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
                         if command == 'recompute':
-                            self.next_action.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
+                            self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
-                self.next_action.append(dict(action=arg, arguments=dict()))
+                self.set_action(dict(action=arg, arguments=dict()))
+    def set_action(self, data):
+        if not hasattr(self, 'name'):
+            if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
+                self.name = data['action']
+                self.arguments = data.get('arguments', dict())
+            else:
+                raise DAError("force_ask: invalid parameter " + repr(data))
+        self.next_action.append(data)
 
 class DAErrorNoEndpoint(DAError):
     pass

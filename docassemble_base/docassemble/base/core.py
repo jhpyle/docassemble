@@ -1033,16 +1033,16 @@ class DAList(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
-            items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
+            items = [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
             if self.complete_attribute is not None:
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
-            return docassemble.base.functions.url_action('_da_dict_edit', items=items)
+            return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
-            return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
+            return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
     def add_action(self, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a list"""
@@ -1743,7 +1743,8 @@ class DADict(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
-            items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
+            items = [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            #items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
             if self.complete_attribute is not None:
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '

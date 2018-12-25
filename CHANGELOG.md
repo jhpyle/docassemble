@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.27] - 2018-12-24
+### Changed
+- Table edit attribute names treated as "follow up" actions.
+
 ## [0.3.26] - 2018-12-21
 ### Changed
 - Reverted `reconsider()` to 0.3.24 version.
@@ -13,7 +17,7 @@
 ## [0.3.24] - 2018-12-17
 ### Added
 - The `inline` keyword parameter for the `url_for()` method.
-- The `describe()` method of the output of `data_difference()`.
+- The `describe()` method of the output of `date_difference()`.
 ### Changed
 - The result of `date_difference()` when reduced to text now runs the
   `describe()` method instead of stating the number of days.
