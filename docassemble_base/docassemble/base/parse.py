@@ -698,6 +698,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
+        if 'accept' in data:
+            self.accept = data['accept']
         if 'rows' in data:
             self.rows = data['rows']
         if 'object_labeler' in data:
@@ -2084,6 +2086,9 @@ class Question:
                             elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
                                 field_info['max_image_size'] = {'compute': compile(unicode(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': unicode(field[key])}
                                 self.find_fields_in(field[key])
+                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'accept':
+                                field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
+                                self.find_fields_in(field[key])
                             elif key == 'object labeler':
                                 field_info['object_labeler'] = {'compute': compile(unicode(field[key]), '<object labeler code>', 'eval'), 'sourcecode': unicode(field[key])}
                                 self.find_fields_in(field[key])
@@ -3343,6 +3348,8 @@ class Question:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
                 if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
+                if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                    extras['accept'] = eval(field.accept['compute'], user_dict)
                 if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
                     if 'rows' not in extras:
                         extras['rows'] = dict()

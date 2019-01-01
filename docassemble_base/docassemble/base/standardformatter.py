@@ -2084,17 +2084,25 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 multipleflag = ''
             if field.datatype == 'camera':
-                accept = ' accept="image/*" capture="camera"'
+                accept = ' accept="image/*"'
+                capture = ' capture="camera"'
             elif field.datatype == 'user':
                 accept = ' accept="image/*" capture="user"'
+                capture = ' capture="environment"'
             elif field.datatype == 'environment':
-                accept = ' accept="image/*" capture="environment"'
+                accept = ' accept="image/*"'
+                capture = ' capture="environment"'
             elif field.datatype == 'camcorder':
-                accept = ' accept="video/*" capture="camcorder"'
+                accept = ' accept="video/*"'
+                capture = '  capture="camcorder"'
             elif field.datatype == 'microphone':
-                accept = ' accept="audio/*" capture="microphone"'
+                accept = ' accept="audio/*"'
+                capture = ' capture="microphone"'
             else:
                 accept = ''
+                capture = ''
+            if 'accept' in status.extras:
+                accept = ' accept="' + status.extras['accept'] + '"'
             maximagesize = ''
             if 'max_image_size' in status.extras:
                 if status.extras['max_image_size']:

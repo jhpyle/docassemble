@@ -764,7 +764,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_packa
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.webapp.backend
 import docassemble.base.util
-from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict
+from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict, DAList
 from user_agents import parse as ua_parse
 import docassemble.base.ocr
 from jinja2.exceptions import TemplateError
@@ -8647,6 +8647,7 @@ def index():
         } catch (e) {}
         return false;
       }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      $.extend($.validator.messages, {accept: """ + json.dumps(word("Please upload a file with a valid file format.")) + """});
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -17879,9 +17880,11 @@ def api_user():
     elif request.method == 'POST':
         post_data = request.form.copy()
         info = dict()
-        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
+        if 'password' in info and not current_user.has_role('admin'):
+            return jsonify_with_status("You must have admin privileges to change a password.", 403)
         set_user_info(user_id=current_user.id, **info)
         return ('', 204)
 
@@ -17898,6 +17901,40 @@ def api_user_privileges():
         return jsonify_with_status('User not found', 404)
     if request.method == 'GET':
         return jsonify(user_info['privileges'])
+
+@app.route('/api/user/new', methods=['POST'])
+@csrf.exempt
+def api_create_user():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.form.copy()
+    if 'email' not in post_data:
+        return jsonify_with_status("An e-mail address must be supplied.", 400)
+    if 'password' not in post_data:
+        return jsonify_with_status("A password must be supplied.", 400)
+    info = dict()
+    for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+        if key in post_data:
+            info[key] = post_data[key]
+    try:
+        role_list = json.loads(post_data.get('privileges', '[]'))
+    except:
+        role_list = [post_data['privileges']]
+    if not isinstance(role_list, list):
+        if not isinstance(role_list, basestring):
+            return jsonify_with_status("List of privileges must be a string or a list.", 400)
+        role_list = [role_list]
+    valid_role_names = set()
+    for r in Role.query.filter(Role.name != 'cron').order_by('id'):
+        valid_role_names.add(r.name)
+    for role_name in role_list:
+        if role_name not in valid_role_names:
+            return jsonify_with_status("Invalid privilege name.  " + role_name + " is not an existing privilege.", 400)
+    try:
+        user_id = create_user(post_data['email'], post_data['password'], role_list, info)
+    except Exception as err:
+        return jsonify_with_status(str(err), 400)
+    return jsonify_with_status(dict(user_id=user_id), 200)
 
 @app.route('/api/user/<user_id>', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
@@ -17922,10 +17959,15 @@ def api_user_by_id(user_id):
     elif request.method == 'POST':
         post_data = request.form.copy()
         info = dict()
-        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
-        set_user_info(user_id=user_id, **info)
+        if 'password' in info and not current_user.has_role('admin'):
+            return jsonify_with_status("You must have admin privileges to change a password.", 403)
+        try:
+            set_user_info(user_id=user_id, **info)
+        except Exception as err:
+            return jsonify_with_status(str(err), 400)
         return ('', 204)
 
 @app.route('/api/privileges', methods=['GET', 'DELETE', 'POST'])
@@ -18071,7 +18113,67 @@ def remove_user_privilege(user_id, privilege):
         raise Exception("The user did not already have that privilege.")
     user.roles.remove(role_to_remove)
     db.session.commit()
-    
+
+def create_user(email, password, privileges=None, info=None):
+    if current_user.is_anonymous:
+        raise Exception("You cannot call create_user() unless you are logged in")
+    if not (current_user.has_role('admin')):
+        raise Exception("You cannot call create_user() unless you are an administrator")
+    role_dict = dict()
+    if privileges is None:
+        privileges = list()
+    if isinstance(privileges, DAList):
+        info = info.elements
+    if not isinstance(privileges, list):
+        if not isinstance(privileges, basestring):
+            raise Exception("The privileges parameter to create_user() must be a list or a string.")
+        privileges = [privileges]
+    if info is None:
+        info = dict()
+    if isinstance(info, DADict):
+        info = info.elements
+    if not isinstance(info, dict):
+        raise Exception("The info parameter to create_user() must be a dictionary.")
+    user, user_email = app.user_manager.find_user_by_email(email)
+    if user:
+        raise Exception("That e-mail address is already being used.")
+    user_auth = UserAuthModel(password=app.user_manager.hash_password(password))
+    while True:
+        new_social = 'local$' + random_alphanumeric(32)
+        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        if existing_user:
+            continue
+        break
+    the_user = UserModel(
+        active=True,
+        nickname=re.sub(r'@.*', '', email),
+        social_id=new_social,
+        email=email,
+        user_auth=user_auth,
+        first_name=info.get('first_name', ''),
+        last_name=info.get('last_name', ''),
+        country=info.get('country', ''),
+        subdivisionfirst=info.get('subdivisionfirst', ''),
+        subdivisionsecond=info.get('subdivisionsecond', ''),
+        subdivisionthird=info.get('subdivisionthird', ''),
+        organization=info.get('organization', ''),
+        timezone=info.get('timezone', ''),
+        language=info.get('language', ''),
+        confirmed_at = datetime.datetime.now()
+    )
+    num_roles = 0
+    for role in Role.query.filter(Role.name != 'cron').order_by('id'):
+        if role.name in privileges:
+            the_user.roles.append(role)
+        num_roles +=1
+    if num_roles == 0:
+        user_role = Role.query.filter_by(name='user').first()
+        the_user.roles.append(user_role)
+    db.session.add(user_auth)
+    db.session.add(the_user)
+    db.session.commit()
+    return the_user.id
+
 def set_user_info(**kwargs):
     if current_user.is_anonymous:
         raise Exception("You cannot call set_user_info() unless you are logged in")
@@ -18091,6 +18193,10 @@ def set_user_info(**kwargs):
     for key, val in kwargs.iteritems():
         if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             setattr(user, key, val)
+    if 'password' in kwargs:
+        if not (current_user.has_role('admin')):
+            raise Exception("You cannot call set_user_info() with a password unless you are an administrator.")
+        user.user_auth.password = app.user_manager.hash_password(kwargs['password'])
     if 'active' in kwargs:
         if type(kwargs['active']) is not bool:
             raise Exception("The active parameter must be True or False")
@@ -19398,6 +19504,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          remove_privilege=remove_privilege,
                                          add_user_privilege=add_user_privilege,
                                          remove_user_privilege=remove_user_privilege,
+                                         create_user=create_user,
                                          file_set_attributes=file_set_attributes,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf,
                                          fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,

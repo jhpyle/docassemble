@@ -470,6 +470,7 @@ go_back_in_session: "https://docassemble.org/docs/functions.html#go_back_in_sess
 set_session_variables: "https://docassemble.org/docs/functions.html#set_session_variables"
 get_session_variables: "https://docassemble.org/docs/functions.html#get_session_variables"
 get_user_secret: "https://docassemble.org/docs/functions.html#get_user_secret"
+create_user: "https://docassemble.org/docs/functions.html#create_user"
 set_user_info: "https://docassemble.org/docs/functions.html#set_user_info"
 get_user_info: "https://docassemble.org/docs/functions.html#get_user_info"
 get_user_list: "https://docassemble.org/docs/functions.html#get_user_list"
