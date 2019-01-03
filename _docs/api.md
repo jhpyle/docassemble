@@ -81,7 +81,70 @@ if r.status_code != 200:
 interviews = json.loads(r.text)
 {% endhighlight %}
 
+To make a [POST] request using [cURL], use standard form data to send the API key and other parameters:
+
+{% highlight bash %}
+curl -d key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT -d first_name=John -d last_name=Smith http://localhost/api/user
+{% endhighlight %}
+
+{% highlight python %}
+import requests
+api_key = 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'
+r = requests.get("http://localhost/api/user", data={'key': api_key, 'first_name': 'John', 'last_name': 'Smith'})
+if r.status_code != 204:
+    raise Exception("Unable to set user information")
+{% endhighlight %}
+
 # <a name="functions"></a>Available API functions
+
+## <a name="user_new"></a>Create a new user
+
+Description: Creates a user with a given e-mail address and password.
+
+Path: `/api/user/new`
+
+Method: [POST]
+
+Parameters:
+
+ - `key`: the API key.
+ - `email`: the user's e-mail address.
+ - `password`: the user's password.
+ - `privileges` (optional): a JSON array of user privileges (e.g.,
+   `['developer', 'trainer']`), or a string containing a single
+   privilege (e.g., `'advocate'`).  If not specified, the new user
+   will have a single privilege, `user`.
+ - `first_name` (optional): the user's first name.
+ - `last_name` (optional): the user's last name.
+ - `country` (optional): the user's country code (e.g., `US`).
+ - `subdivisionfirst` (optional): the user's state.
+ - `subdivisionsecond` (optional): the user's county.
+ - `subdivisionthird` (optional): the user's municipality.
+ - `organization` (optional): the user's organization 
+ - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
+ - `language` (optional): the user's language code (e.g., `en`).
+
+Required privileges: `admin`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate, or if
+   the owner of the API key lacks `admin` privileges.
+ - [400] "An e-mail address must be supplied." if the `email`
+   parameter is missing.
+ - [400] "A password must be supplied." if the `password` parameter is
+   missing.
+ - [400] "List of privileges must be a string or a list." if the list
+   of privileges could not be parsed.
+ - [400] "Invalid privilege name." if a privilege did not exist in the
+   system.
+ - [400] "That e-mail address is already being used." if another user
+   is already using the given `email`.
+ 
+Response on success: [200]
+
+Body of response: a [JSON] object with the following key:
+
+ - `user_id`: the user ID of the user created.
 
 ## <a name="user_list"></a>List of users
 
@@ -180,9 +243,16 @@ Form data:
  - `organization` (optional): the user's organization 
  - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
  - `language` (optional): the user's language code (e.g., `en`).
+ - `password` (optional): the user's password.
+
+Required privileges: None, except that only users with `admin`
+privileges can use the API to change a password.
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
+ - [403] "You must have admin privileges to change a password." if the
+   `password` parameter is included but the owner of the API lacks
+   administrator privileges.
 
 Response on success: [204]
 
@@ -281,13 +351,19 @@ Form data:
  - `subdivisionfirst` (optional): user's state.
  - `subdivisionsecond` (optional): user's county.
  - `subdivisionthird` (optional): user's municipality.
- - `timezone` (optional): user's time zone (e.g. `'America/New_York'`).
+ - `timezone` (optional): user's time zone
+   (e.g. `'America/New_York'`).
+ - `password` (optional): the user's password.
 
 Required privileges: `admin`, or `user_id` is the same as the user ID
-of the API owner.
+of the API owner.  Only users with `admin` privileges can use the API
+to change a password.
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
+ - [403] "You must have admin privileges to change a password." if the
+   `password` parameter is included but the owner of the API lacks
+   administrator privileges.
  - [400] "User ID must be an integer" if the user_id parameter cannot be
    interpreted as an integer.
  - [400] "Error obtaining user information" if there was a problem

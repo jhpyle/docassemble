@@ -532,6 +532,12 @@ necessary information about the uploaded files.
 
 {% include side-by-side.html demo="upload-multiple" %}
 
+<a name="accept"></a>If you want to limit uploads to particular file
+types, you can use `accept` to specify [Python] code that returns a
+custom [accept] attribute.
+
+{% include side-by-side.html demo="upload-accept" %}
+
 <a name="maximum image size"></a>If your users upload digital photos
 into your interviews, the uploads may take a long time.  You can
 configure an upload field so that images are reduced in size before
@@ -2186,3 +2192,4 @@ why this needs to be done manually as opposed to automatically:
 [`data from code`]: {{ site.baseurl }}/docs/initial.html#data from code
 [lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept

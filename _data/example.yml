@@ -9887,6 +9887,14 @@
 "upload": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
   \ user_picture\n    datatype: file\n---\nquestion: |\n  You're so adorable, Fran\xE7\
   ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True"
+"upload-accept": |-
+  question: |
+    Please upload a JPEG or PNG of yourself.
+  fields:
+    - Picture: user_picture
+      datatype: file
+      accept: |
+        "image/jpeg, image/png"
 "upload-max-image-size": |-
   question: |
     Please upload a picture of yourself.

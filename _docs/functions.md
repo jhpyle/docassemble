@@ -1861,7 +1861,7 @@ back to the original session.
 
 ## <a name="user_privileges"></a>user_privileges()
 
-The `user_privileges()` function returns the user's privileges as a
+The `user_privileges()` function returns the user's [privileges] as a
 list.  If the user is not logged in, the result is `['user']`.  If the
 user is a "user" as well as a "customer," the result is
 `['user', 'customer']`.  If the interview is running a
@@ -1870,11 +1870,11 @@ user is a "user" as well as a "customer," the result is
 ## <a name="user_has_privilege"></a>user_has_privilege()
 
 The `user_has_privilege()` function returns `True` if the user has any
-of the given privileges, and `False` otherwise.  For example, if the
-user has the privilege of "customer," `user_has_privilege('customer')`
+of the given [privileges], and `False` otherwise.  For example, if the
+user has the [privilege] of "customer," `user_has_privilege('customer')`
 will return `True`.  A list can also be provided, in which case `True`
-will be returned if the user has any of the given privileges.  For
-example, if the user has the privilege of "developer",
+will be returned if the user has any of the given [privileges].  For
+example, if the user has the [privilege] of "developer",
 `user_has_privilege(['developer', 'admin'])` will return `True`.
 
 ## <a name="user_info"></a>user_info()
@@ -2176,7 +2176,7 @@ would like to localize the time to a particular time zone, you can set
 the optional keyword parameter `timezone` (e.g., to
 `'America/New_York'`).
 
-Optionally, a privilege name or a list of privilege names can be provided.  In
+Optionally, a [privilege] name or a list of [privilege] names can be provided.  In
 this case, the function will return the latest access time by any user
 holding one of the [privileges].
 
@@ -2201,9 +2201,9 @@ keyword argument `include_cron` equal to `True`:
   user, including the [cron user] if applicable, accessed the
   session.
 
-You can also provide a list of privileges you want the method to ignore,
+You can also provide a list of [privileges] you want the method to ignore,
 using the `exclude_privileges` keyword parameter.  This can be useful
-because users can have multiple privileges.
+because users can have multiple [privileges].
 
 * `last_access_time(include_privileges='advocate',
   exclude_privileges=['developer'])`: returns the last time a user who is
@@ -3133,7 +3133,7 @@ If the current user is logged in, [`interview_list()`] returns a list
 of dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
 available at `/interviews`.  In addition, the optional keyword
-parameter `user_id` can be used (by a user with `admin` privileges) to
+parameter `user_id` can be used (by a user with `admin` [privileges]) to
 get information about sessions owned by other people.
 
 In the list of dictionaries returned by the function, the keys of each
@@ -3187,7 +3187,7 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-If the current user has `admin` privileges, the optional keyword
+If the current user has `admin` [privileges], the optional keyword
 argument `user_id` can be used to retrieve a list of sessions
 belonging to another user:
 
@@ -3299,6 +3299,46 @@ configuration directive for more information.
 
 For an [API] version of this function, see [`/api/list`].
 
+## <a name="create_user"></a>create_user()
+
+The [`create_user()`] function creates a new user account on the
+system.
+
+{% highlight python %}
+new_user_id = create_user('testuser@example.com', 'xxxsecretxxx')
+{% endhighlight %}
+
+This will create an account with the e-mail address `testuser@example.com`
+and the password `xxxsecretxxx`.  The variable `new_user_id` will be
+set to the user ID of the newly-created account.
+
+Only users with [privileges] of `admin` can use this function.
+
+The [`create_user()`] function also accepts an optional keyword
+parameter `privileges`, which can be set to the name of a [privilege]
+(e.g., `'advocate'`) or a list of [privileges] (e.g., `['advocate',
+'trainer']`).
+
+The function also accepts an optional keyword parameter `info`, which
+is expected to be a dictionary containing information about the new
+user.  The `info` dictionary can contain any of the following keys:
+
+ - `country`: user's country code.
+ - `first_name`: user's first name.
+ - `language`: user's language code.
+ - `last_name`: user's last name.
+ - `organization`: user's organization 
+ - `subdivisionfirst`: user's state.
+ - `subdivisionsecond`: user's county.
+ - `subdivisionthird`: user's municipality.
+ - `language` the user's language (an [ISO-639-1] code).
+ - `timezone`: user's time zone (e.g. `'America/New_York'`).
+ 
+To set this information after the user account is created, use
+[`set_user_info()`].
+
+For an [API] version of this function, see [`/api/user/new`].
+
 ## <a name="get_user_list"></a>get_user_list()
 
 The [`get_user_list()`] function returns a list of registered users on
@@ -3318,7 +3358,7 @@ each dictionary has the following keys:
  - `language`: user's language code.
  - `last_name`: user's last name.
  - `organization`: user's organization 
- - `privileges`: a [Python list] of the user's privileges (e.g., `'admin'`,
+ - `privileges`: a [Python list] of the user's [privileges] (e.g., `'admin'`,
    `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
@@ -3339,7 +3379,7 @@ an argument (e.g., `get_user_info(email='jsmith@example.com')`, in
 which case it returns information about the user with that user ID or
 e-mail address.  If no user is found, `None` is returned.
 
-Only users with `admin` privileges can see information about other
+Only users with `admin` [privileges] can see information about other
 users.
 
 This function will only work if the user running the interview that
@@ -3366,6 +3406,7 @@ are optional:
  - `subdivisionthird`: user's municipality.
  - `language` the user's language (an [ISO-639-1] code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
+ - `password`: user's password.
 
 The current user's profile will be updated with the values of the
 parameters.  Note that the `user_id` and `email` attributes cannot be
@@ -3373,7 +3414,8 @@ changed using this function; these attributes are used only for
 selecting the user whose information is going to be changed.
 
 This function will only work if the user running the interview that
-calls the function is logged in.
+calls the function is logged in.  Only users with `admin` [privileges]
+can change passwords with this function.
 
 Here is an example of a code block that updates the name of the user:
 
@@ -3384,26 +3426,26 @@ code: |
 {% endhighlight %}
 
 If the user running the interview that calls the function has `admin`
-privileges, then the function can be used to change the profiles of
+[privileges], then the function can be used to change the profiles of
 other users.  A user account can be indicated by the inclusion of an
 additional keyword parameter, `user_id` or `email`, that identifies
 the user whose profile should be changed.
 
 For example, the following [Python] code, when run by a user with
-`admin` privileges, will change the "organization" setting of the user
+`admin` [privileges], will change the "organization" setting of the user
 `jsmith@example.com`:
 
 {% highlight python %}
 set_user_info(email='jsmith@example.com', organization='Example, Inc.')
 {% endhighlight %}
 
-Users with `admin` privileges can disable user accounts by setting the
+Users with `admin` [privileges] can disable user accounts by setting the
 `active` keyword parameter to `False` (or enable a disabled account by
 setting `active` to `True`.
 
-In addition, users with `admin` privileges can change the privileges
+In addition, users with `admin` [privileges] can change the [privileges]
 of a user by setting the `privileges` keyword parameter to the list of
-privilege names that the user should have.
+[privilege] names that the user should have.
 
 {% highlight python %}
 set_user_info(user_id=22, privileges=['user', 'trainer'])
@@ -3534,16 +3576,16 @@ For an [API] version of this function, see the [POST method of `/api/session/bac
 ## <a name="manage_privileges"></a>manage_privileges()
 
 The [`manage_privileges()`] function allows a user with `admin`
-privileges to list, add, or remove privilege types from the list of
-existing privileges.
+[privileges] to list, add, or remove [privilege] types from the list of
+existing [privileges].
 
-* `manage_privileges('list')` returns the list of existing privilege
+* `manage_privileges('list')` returns the list of existing [privilege]
   types as an alphabetically sorted list.
-* `manage_privileges('add', 'supervisor')` adds a privilege called
-  `supervisor` to the list of existing privilege types.
-* `manage_privileges('remove', 'supervisor')` removes the privilege called
-  `supervisor` from the list of existing privilege types.  Moreover,
-  if any users have the privilege, the privilege is taken away from
+* `manage_privileges('add', 'supervisor')` adds a [privilege] called
+  `supervisor` to the list of existing [privilege] types.
+* `manage_privileges('remove', 'supervisor')` removes the [privilege] called
+  `supervisor` from the list of existing [privilege] types.  Moreover,
+  if any users have the [privilege], the [privilege] is taken away from
   the users.
 
 For an [API] version of this function, see [`/api/privileges`].
@@ -6199,6 +6241,7 @@ $(document).on('daPageLoad', function(){
 [`/api/user/<user_id>/interviews`]: {{ site.baseurl }}/docs/api.html#user_user_id_interviews
 [`/api/user_list`]: {{ site.baseurl }}/docs/api.html#user_list
 [`/api/user`]: {{ site.baseurl }}/docs/api.html#user
+[`/api/user/new`]: {{ site.baseurl }}/docs/api.html#user_new
 [`/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id
 [POST method of `/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id_post
 [DELETE method of `/api/user/<user_id>`]: {{ site.baseurl }}/docs/api.html#user_user_id_delete
@@ -6276,3 +6319,6 @@ $(document).on('daPageLoad', function(){
 [template]: {{ site.baseurl }}/docs/template.html#template
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [write your own functions]: #yourown
+[`create_user()`]: #create_user
+[privileges]: {{ site.baseurl }}/docs/users.html
+[privilege]: {{ site.baseurl }}/docs/users.html

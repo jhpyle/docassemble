@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.28](https://github.com/jhpyle/docassemble/releases/tag/v0.3.28) - 2018-12-31
+
+### Added
+- The `accept` specifier for `datatype: file` fields.
+- The `create_user()` function.
+- The `/api/user/new` endpoint.
+
 ## [0.3.27](https://github.com/jhpyle/docassemble/releases/tag/v0.3.27) - 2018-12-24
 
 ### Changed
