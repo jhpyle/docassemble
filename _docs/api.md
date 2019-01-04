@@ -851,6 +851,12 @@ Form data:
    if the interview uses server-side encryption.
  - `variables` (optional): a [JSON] object where the keys are variable
    names and the values are the values those variables should have.
+ - `question_name` (optional): if set to the name of a question (which
+   you can obtain from the `questionName` attribute of a question), it
+   will mark the question as having been answered.  This is necessary
+   only if you are setting variables in response to a [`mandatory`]
+   question (which you can determine from the `mandatory` attribute of
+   a question).
  - `question` (optional): if set to `0`, then the interview is not
    evaluated after the variables are set and the current question in
    the interview is not returned in response to the request.  You may
@@ -1328,3 +1334,4 @@ function.
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`del`]: https://docs.python.org/2.0/ref/del.html
 [Playground]: {{ site.baseurl }}/docs/playground.html
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory

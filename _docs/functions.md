@@ -3557,6 +3557,14 @@ will no longer be able to access the file.  Note also that if
 `private` is set to `False`, then the file will be accessible on the
 internet from a URL.
 
+This function has an optional keyword parameter `question_name`.  If
+you set `question_name` to the name of a question (which you can
+obtain from the `questionName` attribute of question data), the
+question will be marked as answered.  It is only necessary to specify
+a `question_name` when setting variables to get past a [`mandatory`]
+question.  You can tell if a question is [`mandatory`] by checking for
+a `mandatory` attribute in the question data.
+
 For an [API] version of this function, see the [POST method of `/api/session`].
 
 ## <a name="go_back_in_session"></a>go_back_in_session()
