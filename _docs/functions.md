@@ -3522,14 +3522,15 @@ For an [API] version of this function, see the [GET method of `/api/session`].
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
-to any [interview session dictionary].  It has three required arguments: an
-interview filename (e.g.,
+to any [interview session dictionary].  It has three required
+parameters: an interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
 dictionary] containing the variables you want to set.  In addition, it
-can take a fourth argument, an encryption key for decrypting the
-interview answers.  If the interview is encrypted, the fourth argument
-is required.
+can take a fourth parameter, an encryption key for decrypting the
+interview answers.  (The fourth parameter can also be specified as the
+keyword argument `secret`).  If the interview is encrypted, the fourth
+parameter is required.
 
 For example, if you run this:
 
@@ -3558,21 +3559,46 @@ will no longer be able to access the file.  Note also that if
 internet from a URL.
 
 This function has an optional keyword parameter `question_name`.  If
-you set `question_name` to the name of a question (which you can
-obtain from the `questionName` attribute of question data), the
-question will be marked as answered.  It is only necessary to specify
-a `question_name` when setting variables to get past a [`mandatory`]
-question.  You can tell if a question is [`mandatory`] by checking for
-a `mandatory` attribute in the question data.
+you set `question_name` to the ID of a question in the interview, the
+question will be marked as answered.  You can obtain the ID of a
+question from the `questionName` attribute in the question data using
+[`get_question_data()`] or the [`/api/session/question`] API method.
+It is only necessary to specify a `question_name` when you are setting
+a variable for purposes of answering a [`mandatory`] question.  You
+can tell if a question is [`mandatory`] by checking for the presence
+of the attribute `mandatory` in the question data.
 
-For an [API] version of this function, see the [POST method of `/api/session`].
+For an [API] version of this function, see the [POST method of
+`/api/session`].
+
+## <a name="get_question_data"></a>get_question_data()
+
+The `get_question_data()` function returns data about the current
+question of an interview session.  It has two required parameters: an
+interview filename (e.g.,
+`'docassemble.demo:data/questions/questions.yml'`) and a session ID
+(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  If the interview
+session is encrypted, you must supply a third parameter (or the
+keyword parameter `secret`) containing the encryption key for
+decrypting the interview answers.
+
+The function returns a [Python dictionary] containing information
+about the question.  The format of the dictionary varies by question
+type.
+
+You should only use this function to access the question data for an
+interview other than the current interview.  If you try to access the
+current question in a session from within that session, there may be
+an error or a long delay.
+
+For an [API] version of this function, see the [`/api/session/question`].
 
 ## <a name="go_back_in_session"></a>go_back_in_session()
 
 The [`go_back_in_session()`] function causes the effect of clicking
 the "back" button in an interview session.  It has two required
-arguments: the interview filename and the session ID.  It also accepts
-an optional keyword argument `secret`, which is the encryption key to
+parameters: the interview filename and the session ID.  It also accepts
+an optional keyword parameter `secret`, which is the encryption key to
 use to decrypt the [interview session dictionary], if it is encrypted.
 
 {% highlight python %}
@@ -3603,7 +3629,7 @@ For an [API] version of this function, see [`/api/privileges`].
 ## <a name="validation_error"></a>validation_error()
 
 <a name="DAValidationError"></a>The `validation_error()` function
-takes an error message as an argument and [`raise`]s a
+takes an error message as a parameter and [`raise`]s a
 `DAValidationError` exception with that error message.  This means
 that any code that follows the call to `validation_error()` will not
 be executed.
@@ -6270,6 +6296,7 @@ $(document).on('daPageLoad', function(){
 [`manage_privileges()`]: #manage_privileges
 [Google Drive synchronization]: {{ site.baseurl }}/docs/playground.html#google drive
 [`/api/privileges`]: {{ site.baseurl }}/docs/api.html#privileges
+[`/api/session/question`]: {{ site.baseurl }}/docs/api.html#session_question
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 [`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety

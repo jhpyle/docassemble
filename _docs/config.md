@@ -816,8 +816,8 @@ line.  Then add the following two lines to your configuration,
 corresponding to the above two lines:
 
 {% highlight yaml %}
-favicon mask color: #698aa7
-favicon theme color: #83b3dd
+favicon mask color: "#698aa7"
+favicon theme color: "#83b3dd"
 {% endhighlight %}
 
 If you do not specify `favicon mask color` or `favicon theme color`,
