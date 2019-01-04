@@ -18230,7 +18230,7 @@ def api_get_secret():
     if username is None or password is None:
         return jsonify_with_status("A username and password must be supplied", 400)
     try:
-        secret = get_secret(username, password)
+        secret = get_secret(str(username), str(password))
     except Exception as err:
         return jsonify_with_status(str(err), 403)
     return jsonify(secret)
@@ -18345,6 +18345,7 @@ def api_session():
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
         secret = str(post_data.get('secret', None))
+        question_name = post_data.get('question_name', None)
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
@@ -18394,7 +18395,7 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)            
         if data is None:
@@ -18495,7 +18496,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     #release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None):
     #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -18515,6 +18516,12 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
             exec(unicode(key) + ' = ' + val, user_dict)
+    if question_name is not None:
+        interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        if question_name in interview.questions_by_name:
+            interview.questions_by_name[question_name].mark_as_answered(user_dict)
+        else:
+            raise Exception("Problem marking question as completed")
     if del_variables is not None:
         try:
             for key in del_variables:

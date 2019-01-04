@@ -393,6 +393,8 @@ class InterviewStatus(object):
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
         result['questionType'] = self.question.question_type
+        if self.question.is_mandatory or self.question.mandatory_code is not None:
+            result['mandatory'] = True
         if hasattr(self.question, 'name'):
             result['_question_name'] = self.question.name
         result['_tracker'] = self.tracker

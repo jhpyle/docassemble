@@ -3408,11 +3408,11 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     """Returns the interview dictionary for the given interview session."""
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot set variables in the current interview session")
-    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables)
+    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables, question_name=question_name)
 
 def get_question_data(yaml_filename, session_id, secret=None):
     """Returns data about the current question for the given interview session."""

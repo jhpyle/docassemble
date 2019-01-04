@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.3.29] - 2019-01-03
+### Added
+- The `question_name` option for the `/api/session` POST api and the
+  `set_session_variables()` function.
+### Fixed
+- Unicode error from `/api/secret`.
+
 ## [0.3.28] - 2018-12-31
 ### Added
 - The `accept` specifier for `datatype: file` fields.
