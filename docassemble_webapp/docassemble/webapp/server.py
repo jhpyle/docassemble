@@ -3538,6 +3538,39 @@ def load_user(id):
 #     #     logmessage("post_login: no newsecret")
 #     return response
 
+@app.route('/user/autologin', methods=['GET'])
+def auto_login():
+    if 'key' not in request.args or len(request.args['key']) != 40:
+        abort(403)
+    code = str(request.args['key'][16:40])
+    decryption_key = str(request.args['key'][0:16])
+    the_key = 'da:auto_login:' + code
+    info_text = r.get(the_key)
+    if info_text is None:
+        abort(403)
+    r.delete(the_key)
+    try:
+        info = json.loads(decrypt_phrase(info_text, decryption_key))
+    except:
+        abort(403)
+    user = UserModel.query.filter_by(id=info['user_id']).first()
+    if not user:
+        abort(403)
+    login_user(user, remember=False)
+    if 'i' in info:
+        url_info = dict(i=info['i'])
+        if 'url_args' in info:
+            url_info.update(info['url_args'])
+        next_url = url_for('index', **url_info)
+    elif 'next' in info:
+        url_info = info.get('url_args', dict())
+        next_url = get_url_from_file_reference(info['next'], **url_info)
+    else:
+        next_url = url_for('interview_list')
+    response = redirect(next_url)
+    response.set_cookie('secret', info['secret'])
+    return response
+
 @app.route('/headers', methods=['POST', 'GET'])
 @csrf.exempt
 def show_headers():
@@ -17908,10 +17941,11 @@ def api_create_user():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.form.copy()
-    if 'email' not in post_data:
+    if 'email' in post_data and 'username' not in post_data: # temporary
+        post_data['username'] = post_data['email']
+        del post_data['email']
+    if 'username' not in post_data:
         return jsonify_with_status("An e-mail address must be supplied.", 400)
-    if 'password' not in post_data:
-        return jsonify_with_status("A password must be supplied.", 400)
     info = dict()
     for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
         if key in post_data:
@@ -17930,11 +17964,30 @@ def api_create_user():
     for role_name in role_list:
         if role_name not in valid_role_names:
             return jsonify_with_status("Invalid privilege name.  " + role_name + " is not an existing privilege.", 400)
+    password = post_data.get('password', random_alphanumeric(10))
+    if len(password) < 4 or len(password) > 254:
+        return jsonify_with_status("Password too short or too long", 400)
     try:
-        user_id = create_user(post_data['email'], post_data['password'], role_list, info)
+        password = str(password)
+        user_id = create_user(post_data['username'], password, role_list, info)
     except Exception as err:
         return jsonify_with_status(str(err), 400)
-    return jsonify_with_status(dict(user_id=user_id), 200)
+    return jsonify_with_status(dict(user_id=user_id, password=password), 200)
+
+@app.route('/api/user_info', methods=['GET'])
+def api_user_info():
+    if not api_verify(request, roles=['admin', 'advocate']):
+        return jsonify_with_status("Access denied.", 403)
+    if 'username' not in request.args:
+        return jsonify_with_status("An e-mail address must be supplied.", 400)
+    try:
+        user_info = get_user_info(email=request.args['username'])
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status("User not found.", 404)
+    if request.method == 'GET':
+        return jsonify(user_info)
 
 @app.route('/api/user/<user_id>', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
@@ -18119,6 +18172,9 @@ def create_user(email, password, privileges=None, info=None):
         raise Exception("You cannot call create_user() unless you are logged in")
     if not (current_user.has_role('admin')):
         raise Exception("You cannot call create_user() unless you are an administrator")
+    if len(password) < 4 or len(password) > 254:
+        raise Exception("Password too short or too long")
+    password = str(password)
     role_dict = dict()
     if privileges is None:
         privileges = list()
@@ -18807,7 +18863,53 @@ def api_session_action():
         return response_to_send
     else:
         return ('', 204)
-    
+
+@app.route('/api/login_url', methods=['POST'])
+@csrf.exempt
+def api_login_url():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.form.copy()
+    username = post_data.get('username', None)
+    password = post_data.get('password', None)
+    if username is None or password is None:
+        return jsonify_with_status("A username and password must be supplied", 400)
+    try:
+        secret = get_secret(str(username), str(password))
+    except Exception as err:
+        return jsonify_with_status(str(err), 403)
+    if 'url_args' in post_data:
+        try:
+            url_args = json.loads(post_data['url_args'])
+            assert isinstance(url_args, dict)
+        except:
+            return jsonify_with_status("Malformed URL arguments", 400)
+    else:
+        url_args = dict()
+    user = UserModel.query.filter_by(active=True, email=username).first()
+    info = dict(user_id=user.id, secret=secret)
+    if 'next' in post_data:
+        try:
+            path = get_url_from_file_reference(post_data['next'])
+            assert isinstance(path, basestring)
+            assert not path.startswith('javascript')
+        except:
+            return jsonify_with_status("Unknown path for next", 400)
+    for key in ['i', 'next']:
+        if key in post_data:
+            info[key] = post_data[key]
+    if len(url_args):
+        info['url_args'] = url_args
+    code = random_string(24)
+    encryption_key = random_string(16)
+    encrypted_text = encrypt_phrase(json.dumps(info), encryption_key)
+    the_key = 'da:auto_login:' + code
+    pipe = r.pipeline()
+    pipe.set(the_key, encrypted_text)
+    pipe.expire(the_key, 15)
+    pipe.execute()
+    return jsonify(url_for('auto_login', key=encryption_key + code, _external=True))
+
 @app.route('/api/list', methods=['GET'])
 def api_list():
     if not api_verify(request):
