@@ -108,8 +108,9 @@ Method: [POST]
 Parameters:
 
  - `key`: the API key.
- - `email`: the user's e-mail address.
- - `password`: the user's password.
+ - `username`: the user's e-mail address.
+ - `password` (optional): the user's password.  If a password is not
+   supplied, a random password will be generated.
  - `privileges` (optional): a JSON array of user privileges (e.g.,
    `['developer', 'trainer']`), or a string containing a single
    privilege (e.g., `'advocate'`).  If not specified, the new user
@@ -129,7 +130,7 @@ Required privileges: `admin`
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate, or if
    the owner of the API key lacks `admin` privileges.
- - [400] "An e-mail address must be supplied." if the `email`
+ - [400] "An e-mail address must be supplied." if the `username`
    parameter is missing.
  - [400] "A password must be supplied." if the `password` parameter is
    missing.
@@ -138,13 +139,16 @@ Responses on failure:
  - [400] "Invalid privilege name." if a privilege did not exist in the
    system.
  - [400] "That e-mail address is already being used." if another user
-   is already using the given `email`.
+   is already using the given `username`.
+ - [400] "Password too short or too long" if the password has fewer than
+   four or more than 254 characters.
  
 Response on success: [200]
 
-Body of response: a [JSON] object with the following key:
+Body of response: a [JSON] object with the following keys:
 
- - `user_id`: the user ID of the user created.
+ - `user_id`: the user ID of the new user.
+ - `password`: the password of the new user.
 
 ## <a name="user_list"></a>List of users
 
@@ -174,6 +178,48 @@ Body of response: a [JSON] list of objects with the following keys:
 
  - `active`: whether the user is active.  This is only included if the
    `include_inactive` parameter is set.
+ - `country`: user's country code.
+ - `email`: user's e-mail address.
+ - `first_name`: user's first name.
+ - `id`: the integer ID of the user. 
+ - `language`: user's language code.
+ - `last_name`: user's last name.
+ - `organization`: user's organization.
+ - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
+ - `subdivisionfirst`: user's state.
+ - `subdivisionsecond`: user's county.
+ - `subdivisionthird`: user's municipality.
+ - `timezone`: user's time zone (e.g. `'America/New_York'`).
+
+## <a name="user_retrieve"></a>Retrieve user information by username
+
+Path: `/api/user_info`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key.
+ - `username`: the e-mail address of the user.
+
+Required privileges:
+ - `admin` or
+ - `advocate`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+ - [400] "An e-mail address must be supplied." if the `username`
+   parameter was missing
+ - [400] "Error obtaining user information" if there was a problem
+   getting user information.
+ - [404] "User not found" if the user ID did not exist.
+
+Response on success: [200]
+
+Body of response: a [JSON] object with the following keys:
+
+ - `active`: whether the user is active.
  - `country`: user's country code.
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
@@ -705,7 +751,6 @@ where each object has the following keys:
 - `tags`: an array of tags, from the [interview `metadata`].
 - `title`: the title of the interview, from the [interview `metadata`].
 
-
 ## <a name="secret"></a>Obtain a decryption key for a user
 
 Description: Given a username and password, provides a key that can be
@@ -737,6 +782,57 @@ Responses on failure:
 Response on success: [200]
 
 Body of response: a [JSON] string containing the decryption key.
+
+## <a name="login_url"></a>Obtain a temporary URL for logging a user in
+
+Description: Returns a temporary URL, to which a user can be
+redirected, which will log the user in without the user needing to
+enter a username or password.
+
+Path: `/api/login_url`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key.
+ - `username`: the user name of the user.
+ - `password`: the password of the user.
+ - `i` (optional): the filename of an interview to which the user will
+   be redirected after they log in.  E.g.,
+   `docassemble.demo:data/questions/questions.yml`.
+ - `url_args` (optional): a [JSON] object containing additional URL
+   arguments that should be included in the URL to which the user is
+   directed after they log in.
+ - `next` (optional): if the user should be directed after login to a
+   page that is not an interview, you can omit `i` and instead set
+   this parameter to a value like `playground` (for the [Playground])
+   or `config` (for the [Configuration] page).  For a list of all
+   possible values, see the documentation for [`url_of()`].  If
+   `url_args` are supplied, these will be included in the resulting
+   URL.
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "A username and password must be supplied" if the username
+   and/or password is not provided.
+ - [403] "Username not known" if the user did not exist on the system.
+ - [403] "Secret will not be supplied because two factor authentication
+   is enabled"
+ - [403] "Password not set" if the password could not be obtained.
+ - [403] "Incorrect password" if the password did not match the password
+   on the server.
+ - [400] "Malformed URL arguments" if `url_args` are supplied and are
+   not a [JSON] object.
+ - [400] "Unknown path for next" if the path provided to `next` could
+   not be recognized.
+
+Response on success: [200]
+
+Body of response: a [JSON]-formatted URL.  It will be in a format like
+`https://docassemble.example.com/user/autologin?key=EaypzffGGDbmiBpjqkASSLCtFWPpbiCFqMNlEbti`.
+The code will expire in 15 seconds, so it is only useful if you
+immediately redirect a user to the URL after you obtain the URL.
 
 ## <a name="session_new"></a>Start an interview
 
@@ -1335,3 +1431,5 @@ function.
 [`del`]: https://docs.python.org/2.0/ref/del.html
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[Redis]: http://redis.io/

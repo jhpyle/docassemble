@@ -4,11 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.30](https://github.com/jhpyle/docassemble/releases/tag/v0.3.30) - 2019-01-05
+
+### Added
+- The `/api/login_url` API endpoint.
+- The `/api/user_info` API endpoint.
+
+### Changed
+- The `/api/user/new` API endpoint will now create a random password
+  if a password is not provided.
+
+### Fixed
+- The `/api/user/new` API endpoint used `email` when the correct
+  parameter is `username`.
+
 ## [0.3.29](https://github.com/jhpyle/docassemble/releases/tag/v0.3.29) - 2019-01-03
 
 ### Added
-- The `question_name` option for the `/api/session` POST api and the
-  `set_session_variables()` function.
+- The `question_name` option for the POST method of the `/api/session`
+  API endpoint and the `set_session_variables()` function.
 
 ### Fixed
 - Unicode error from `/api/secret`.

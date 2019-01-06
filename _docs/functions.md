@@ -1137,6 +1137,16 @@ The `url_of()` function also has a few special uses.
   interviews defined in the [`dispatch`] directive of the [Configuration].
 * `url_of('config')` returns a URL to the [Configuration] page.
 * `url_of('playground')` returns a URL to the [Playground].
+* `url_of('playgroundtemplate')` returns a URL to the Templates folder
+  of the [Playground].
+* `url_of('playgroundstatic')` returns a URL to the Static folder of
+  the [Playground].
+* `url_of('playgroundsources')` returns a URL to the Sources folder of
+  the [Playground].
+* `url_of('playgroundmodules')` returns a URL to the Modules folder of
+  the [Playground].
+* `url_of('playgroundpackages')` returns a URL to the Packages folder
+  of the [Playground].
 * `url_of('configuration')` returns a URL to the [Configuration] page.
 * `url_of('root')` returns the root URL of your server.
 
