@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.3.31] - 2019-01-11
+### Changed
+- Additional information added to data representation of question.
+### Fixed
+- Package update process was not detecting missing packages.
+
 ## [0.3.30] - 2019-01-05
 ### Added
 - The `/api/login_url` API endpoint.

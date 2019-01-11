@@ -364,8 +364,10 @@ class InterviewStatus(object):
         for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = getattr(self, param).rstrip()
-        for param in ('rightText', 'underText'):
-            if param in self.extras:
+        if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
+            result['menu_items'] = self.extras['menu_items']
+        for param in ('rightText', 'underText', 'back_button_label', 'css', 'script'):
+            if param in self.extras and isinstance(self.extras[param], basestring):
                 result[param] = self.extras[param].rstrip()
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
@@ -404,6 +406,10 @@ class InterviewStatus(object):
             result['_varnames'] = safeid(json.dumps(self.varnames))
         if len(self.question.fields) > 0:
             result['fields'] = list()
+        if hasattr(self.question, 'review_saveas'):
+            result['question_variable_name'] = self.question.review_saveas
+        if hasattr(self.question, 'fields_saveas'):
+            result['question_variable_name'] = self.question.fields_saveas
         if self.decorations is not None:
             for decoration in self.decorations:
                 if 'image' in decoration:
@@ -448,8 +454,8 @@ class InterviewStatus(object):
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width'):
-                if hasattr(field, 'extras') and key in field.extras and key in self.extras:
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept'):
+                if key in self.extras and field.number in self.extras[key]:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
                 the_field['embedded'] = True
@@ -468,6 +474,8 @@ class InterviewStatus(object):
             the_field['active'] = self.extras['ok'][field.number]
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
+            if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
+                the_field['max_image_size'] = self.extras['max_image_size']
             if hasattr(field, 'extras'):
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     the_field['ml_info'] = dict()
@@ -477,8 +485,10 @@ class InterviewStatus(object):
                         the_field['ml_info']['train'] = self.extras['ml_train'][field.number]
                 if 'show_if_var' in field.extras and 'show_if_val' in self.extras:
                     the_field['show_if_sign'] = field.extras['show_if_sign']
-                    the_field['show_if_var'] = field.extras['show_if_var']
+                    the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
+                if 'show_if_js' in self.extras:
+                    the_field['show_if_js'] = field.extras['show_if_js']
             if hasattr(field, 'datatype'):
                 if field.datatype == 'note' and 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]
@@ -496,6 +506,8 @@ class InterviewStatus(object):
                 the_field['maybe_label'] = self.question.maybe()
         if len(self.attributions):
             result['attributions'] = [x.rstrip() for x in self.attributions]
+        if 'track_location' in self.extras and self.extras['track_location']:
+            result['track_location'] = True
         return result
     def get_choices(self, field):
         question = self.question

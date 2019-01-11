@@ -704,9 +704,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 side_note_parent = ''
             if not status.extras['ok'][field.number]:
                 continue
-            if hasattr(field, 'extras'):
-                if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
-                    status.extra_scripts.append(status.extras['script'][field.number])
+            #if hasattr(field, 'extras'):
+            #    if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
+            #        status.extra_scripts.append(status.extras['script'][field.number])
                 # if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
                 #     status.extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
