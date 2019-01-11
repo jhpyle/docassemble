@@ -1,10 +1,10 @@
 FROM debian:stretch
 
-RUN DEBIAN_FRONTEND=noninteractive bash -ce 'echo -e "deb http://deb.debian.org/debian stretch main contrib\ndeb http://deb.debian.org/debian stretch-updates main\ndeb http://security.debian.org/debian-security stretch/updates main\ndeb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list && \
+RUN DEBIAN_FRONTEND=noninteractive bash -c 'echo -e "deb http://deb.debian.org/debian stretch main contrib\ndeb http://deb.debian.org/debian stretch-updates main\ndeb http://security.debian.org/debian-security stretch/updates main\ndeb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list && \
     apt-get -y update'
 
 RUN DEBIAN_FRONTEND=noninteractive bash -c " \
-    apt-get -q -y install \
+	until apt-get -q -y install \
         apt-utils \
         tzdata \
         python \
@@ -157,7 +157,7 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c " \
         fonts-ebgaramond-extra \
         ttf-liberation \
         fonts-liberation; \
-    sleep 5; \
+    do sleep 5; done; \
     apt-get -q -y install -t \
         stretch-backports \
         libreoffice; \
@@ -228,7 +228,7 @@ RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
     cp /tmp/docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble && \
     cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf && \
     update-exim4.conf && \
-    bash -ce "chown www-data.www-data /usr/share/docassemble/config && \
+    bash -c "chown www-data.www-data /usr/share/docassemble/config && \
         chown www-data.www-data /usr/share/docassemble/config/config.yml.dist /usr/share/docassemble/webapp/docassemble.wsgi && \
         chown -R www-data.www-data /tmp/docassemble /usr/share/docassemble/local /usr/share/docassemble/log /usr/share/docassemble/files && \
         chmod ogu+r /usr/share/docassemble/config/config.yml.dist && \
@@ -277,15 +277,15 @@ RUN rm -rf /tmp/docassemble && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen && \
     update-locale LANG=en_US.UTF-8 && \
-        a2dismod ssl; \
-        a2enmod wsgi; \
-        a2enmod rewrite; \
-        a2enmod xsendfile; \
-        a2enmod proxy; \
-        a2enmod proxy_http; \
-        a2enmod proxy_wstunnel; \
-        a2enmod headers; \
-        a2enconf docassemble; \
+    a2dismod ssl; \
+    a2enmod wsgi; \
+    a2enmod rewrite; \
+    a2enmod xsendfile; \
+    a2enmod proxy; \
+    a2enmod proxy_http; \
+    a2enmod proxy_wstunnel; \
+    a2enmod headers; \
+    a2enconf docassemble; \
     echo 'export TERM=xterm' >> /etc/bash.bashrc
 
 
