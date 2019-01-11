@@ -107,7 +107,12 @@ def check_for_updates(doing_startup=False):
         else:
             new_version_needed = False
         #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
-        if package.id not in installs or package.version > installs[package.id].version or new_version_needed:
+        # Check for missing local packages
+        if (package.name not in here_already) and (package.id in installs):
+            package_missing = True
+        else:
+            package_missing = False
+        if package.id not in installs or package.version > installs[package.id].version or new_version_needed or package_missing:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9\n")
