@@ -111,6 +111,7 @@ def include_docx_template(template_file, **kwargs):
 def add_to_rt(tpl, rt, parsed):
     list_tab = False
     block_tab = False
+    ordered_list = 0
     while (len(list(parsed)) > 0):
         html_names =    {
             'em': False,
@@ -143,7 +144,11 @@ def add_to_rt(tpl, rt, parsed):
             if (html_out == '\n'):
                 list_tab = True
             elif (list_tab == True):
-                rt.add('\t- ')
+                if (html_names['ol']):
+                    ordered_list += 1
+                    rt.add('\t' + str(ordered_list) + '. ')
+                else:
+                    rt.add('\t- ')
                 list_tab = False
         else:
             list_tab = False
