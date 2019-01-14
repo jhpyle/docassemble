@@ -5,11 +5,6 @@ attachments|dictionary|text||
 attachments|question|integer||
 attachments|filename|text||
 attachments|encrypted|boolean||true
-install|id|integer||nextval('install_id_seq'::regclass)
-install|hostname|text||
-install|version|integer||
-install|packageversion|text||
-install|package_id|integer||
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
 chatlog|filename|text||
 chatlog|key|character varying|250|
@@ -21,6 +16,11 @@ chatlog|temp_owner_id|integer||
 chatlog|open_to_peer|boolean||false
 chatlog|encrypted|boolean||true
 chatlog|modtime|timestamp without time zone||
+install|id|integer||nextval('install_id_seq'::regclass)
+install|hostname|text||
+install|version|integer||
+install|packageversion|text||
+install|package_id|integer||
 email|id|integer||nextval('email_id_seq'::regclass)
 email|short|character varying|250|
 email|all_addr|text||
@@ -102,9 +102,6 @@ uploads|filename|text||
 uploads|yamlfile|text||
 uploads|private|boolean||true
 uploads|persistent|boolean||false
-user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
-user_roles|user_id|integer||
-user_roles|role_id|integer||
 user|id|integer||nextval('user_id_seq'::regclass)
 user|social_id|character varying|255|
 user|nickname|character varying|255|
@@ -134,6 +131,9 @@ user_invite|email|character varying|255|
 user_invite|role_id|integer||
 user_invite|invited_by_user_id|integer||
 user_invite|token|character varying|100|''::character varying
+user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
+user_roles|user_id|integer||
+user_roles|role_id|integer||
 userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
 userdict|filename|text||
 userdict|key|character varying|250|

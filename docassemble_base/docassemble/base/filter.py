@@ -920,7 +920,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
         if the_url is None:
             return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img alt="" class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -938,7 +938,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 title = ' title="' + file_info['filename'] + '"'
             else:
                 title = ''
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img alt=' + json.dumps(word("Thumbnail image of document")) + ' class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + unicode(file_info['pages']) + " " + word('pages') + ")"
             return(output)

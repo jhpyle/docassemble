@@ -1290,9 +1290,9 @@ class Question:
                     else:
                         raise DAError("Each item in the 'images' section needs to be a dictionary, not a list." + self.idebug(data))
                 if 'attribution' in image_set:
-                    if isinstance(image_set['attribution'], (dict, list, set)):
+                    if not isinstance(image_set['attribution'], basestring):
                         raise DAError("An attribution in an 'image set' section cannot be a dictionary or a list." + self.idebug(data))
-                    attribution = image_set['attribution']
+                    attribution = re.sub(r'\n', ' ', image_set['attribution'].strip())
                 else:
                     attribution = None
                 if 'images' in image_set:

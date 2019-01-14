@@ -17,6 +17,7 @@
 "A new docassemble system version is available.  If you are using Docker, install a new Docker image.": Null
 "Anonymous": Null
 "anonymous visitor": Null
+"Answer here": Null
 "API Keys": Null
 "Apply": Null
 "App": Null
@@ -29,6 +30,8 @@
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
+"Attachment": Null
+"Attachments": Null
 "A user with that e-mail has already registered": Null
 "Authentication failed.": Null
 "Authentication": Null
@@ -50,9 +53,11 @@
 "Change": Null
 "Change Password": Null
 "characters": Null
+"Chat message you want to send": Null
 "Check at least one option, or check": Null
 "Checkboxes:": Null
 "Check box": Null
+"Check if applicable": Null
 "Choices:": Null
 "Classes": Null
 "Clear": Null
@@ -94,6 +99,7 @@
 "Description": Null
 "Developer Access": Null
 "Disable": Null
+"Display the menu": Null
 "Docassemble Office Add-in": Null
 "Docassemble Playground": Null
 "Documentation": Null
@@ -488,6 +494,7 @@
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null
 "This package was originally pulled from": Null
+"Thumbnail image of document": Null
 "Time Zone": Null
 "t": Null
 "to proceed.": Null
@@ -596,7 +603,6 @@
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
 "You cannot take away your own admin privilege.": Null
 "You cannot type more than": Null
-"You can press the following button:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
 "You can type menu1, etc. to select a menu item": Null
@@ -639,7 +645,6 @@
 "Your account has been disabled.": Null
 "Your account has not been enabled.": Null
 "Your account no longer uses two-factor authentication.": Null
-"Your choices are:": Null
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null

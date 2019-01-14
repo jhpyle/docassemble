@@ -2086,11 +2086,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon text-muted backbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></button></form></span>
+        <form style="display: inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted backbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
 """
         else:
             navbar += """\
-        <form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"></form>
+        <form style="display: inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     navbar += """\
         <a id="pagetitle" class="navbar-brand pointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
@@ -2122,7 +2122,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a tabindex="0" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
     navbar += """
         <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
-          <span class="navbar-toggler-icon"></span>
+          <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
         </button>
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="navbar-nav ml-auto">
@@ -6613,9 +6613,9 @@ def index():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
             $("#flash .alert-success").hide(300, function(){
@@ -7240,7 +7240,7 @@ def index():
         }
         if (do_iframe_upload){
           $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
           $("#dabody").append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
@@ -7285,7 +7285,7 @@ def index():
         }
         if (newFileList.length > 0){
           $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
           $("#dabody").append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
@@ -7607,9 +7607,9 @@ def index():
               var command = data.commands[i];
               if (command.extra == 'flash'){
                 if (!$("#flash").length){
-                  $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+                  $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
                 }
-                $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + command.value + '</div>');
+                $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + command.value + '<\/div>');
                 //console.log("command is " + command.value);
               }
               else if (command.extra == 'refresh'){
@@ -7687,10 +7687,10 @@ def index():
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '</span>');
+              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
             }
             else{
-              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '</span>');
+              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
             }
             $("#peerMessage").removeClass("invisible");
           }
@@ -7699,10 +7699,10 @@ def index():
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             if (data.help_available == 1){
-              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '</span>');
+              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
             }
             else{
-              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '</span>');
+              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
             }
             $("#peerHelpMessage").removeClass("invisible");
           }
@@ -7785,7 +7785,7 @@ def index():
       }
       function showSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"></i></span></div></div></div></div>').appendTo("#dabody");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo("#dabody");
         }
         else{
           var newSpan = document.createElement('span');
@@ -7805,7 +7805,9 @@ def index():
       }
       function adjustInputWidth(e){
         var contents = $(this).val();
-        contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
+        var leftBracket = new RegExp('<', 'g');
+        var rightBracket = new RegExp('>', 'g');
+        contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
         $("#dawidth").css('background-color', $("#dabody").css('background-color'));
@@ -8802,7 +8804,7 @@ def index():
                                           ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
                                           ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
                                           ('Readability Consensus', textstat.text_standard(phrase))]
-        readability_report = ''
+        readability_report = '<h3>Readability</h3>'
         for question_type in ('question', 'help'):
             if question_type in readability:
                 readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
@@ -8880,9 +8882,10 @@ def index():
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="attributions">\n'
         output += '        <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
-            output += '        <div><attribution><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True) + '</small></attribution></div>\n'
+            output += '        <div><p><cite><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True, trim=True) + '</small></cite></p></div>\n'
         output += '      </div>' + "\n"
     if debug_mode:
+        output += '      <h2 class="sr-only">Information for developers</h2>\n'
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="readability">' + readability_report + '</div>'
@@ -9561,7 +9564,9 @@ def observer():
       }
       function adjustInputWidth(e){
         var contents = $(this).val();
-        contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
+        var leftBracket = new RegExp('<', 'g');
+        var rightBracket = new RegExp('>', 'g');
+        contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
         $("#dawidth").css('background-color', $("#dabody").css('background-color'));
@@ -9579,9 +9584,9 @@ def observer():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
             $("#flash .alert-success").hide(300, function(){
@@ -10495,7 +10500,7 @@ def monitor():
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
               $(theChatArea).addClass('monitor-chat-area invisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-secondary" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled=""><span class="input-group-btn"><button class="btn btn-secondary" type="button" disabled=""><span>""" + word("Send") + """<\/span><\/button><\/span><\/div><\/div><\/div><\/form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
                   //console.log("I am the submitter and I am submitting " + key);
@@ -11390,7 +11395,7 @@ def update_package():
       function get_branches(){
         var elem = $("#gitbranch");
         elem.empty();
-        var opt = $("<option></option>");
+        var opt = $("<option><\/option>");
         opt.attr("value", "").text("Not applicable");
         elem.append(opt);
         var github_url = $("#giturl").val();
@@ -11405,7 +11410,7 @@ def update_package():
             if (n > 0){
               elem.empty();
               for (var i = 0; i < n; i++){
-                opt = $("<option></option>");
+                opt = $("<option><\/option>");
                 opt.attr("value", data.result[i].name).text(data.result[i].name);
                 if (data.result[i].name == default_branch){
                   opt.prop('selected', true);
@@ -13579,7 +13584,7 @@ def playground_files():
           $("#flash").html(data.flash_message);
         }
         else{
-          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
+          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '<\/div>');
         }
       }
       function scrollBottom(){
@@ -13711,7 +13716,7 @@ def pull_playground_package():
       function get_branches(){
         var elem = $("#github_branch");
         elem.empty();
-        var opt = $("<option></option>");
+        var opt = $("<option><\/option>");
         opt.attr("value", "").text("Not applicable");
         elem.append(opt);
         var github_url = $("#github_url").val();
@@ -13726,7 +13731,7 @@ def pull_playground_package():
             if (n > 0){
               elem.empty();
               for (var i = 0; i < n; i++){
-                opt = $("<option></option>");
+                opt = $("<option><\/option>");
                 opt.attr("value", data.result[i].name).text(data.result[i].name);
                 if (data.result[i].name == default_branch){
                   opt.prop('selected', true);
@@ -15592,9 +15597,9 @@ def server_error(the_error):
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>');
+        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
             $("#flash .alert-success").hide(300, function(){
