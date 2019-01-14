@@ -9,11 +9,11 @@ Since **docassemble** is a web application, for many people the
 hardest part about using it is figuring out how to deploy it on the
 internet.
 
-The easiest way to deploy **docassemble** is to use [Docassemble
-Toolkit], a hosting and support service provided by
-[Community.lawyer], a Public Benefit Corporation based in Brookyln,
-New York.  [Community.lawyer] also offers [Law Guides], an
-app-creation service powered by **docassemble**.
+The easiest way to use **docassemble** is through a
+**docassemble-based** third-party service that provides interview
+development tools and hosting services.  Existing providers include
+[Community.lawyer] and [HelpSelf Legal].  (A third provider, [Clerical
+Platform], is currently available in beta mode.)
 
 If you want to deploy **docassemble** yourself, the easiest way is to
 install it using [Docker] on whatever machine you wish to use.
@@ -21,20 +21,23 @@ install it using [Docker] on whatever machine you wish to use.
 the cloud (or [clusters] of them).  If you want very fine-grained
 control, you can [install] it without using Docker.
 
+If you are interested in hiring someone to develop an interview for
+you, you can propose a project in the #questions channel of the [Slack
+group].  Consultants who are available for projects include:
+
+* [Lemma Legal Consulting]
+
 Since **docassemble** is free software, there are no fees for using
 it, but hosting a server on the internet will cost money (between $10
 and $300 per month depending on what your performance, availability,
 and support needs are).
 
-Another way to deploy **docassemble** interviews is by using [HelpSelf
-Legal], a service that allows you to create **docassemble** interviews
-without writing code directly.
-
+[Lemma Legal Consulting]: https://lemmalegal.com
 [clusters]: {{ site.baseurl }}/docs/scalability.html 
-[Docassemble Toolkit]: https://community.lawyer/docassemble
 [Community.lawyer]: https://community.lawyer/
 [install]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Amazon Web Services]: https://aws.amazon.com
 [HelpSelf Legal]: https://www.helpselflegal.com/
-[Law Guides]: https://community.lawyer/lawguides
+[Clerical Platform]: http://clerical.ai/
+[Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg

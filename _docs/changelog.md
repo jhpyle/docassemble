@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.31](https://github.com/jhpyle/docassemble/releases/tag/v0.3.31) - 2019-01-14
+
+### Changed
+- Additional information added to data representation of question.
+- HTML more standards-compliant for accessibility.
+
+### Fixed
+- Package update process was not detecting missing packages.
+- The watchdog's process terminations were causing unnecessary
+  internal server errors under high system load, mistaking a busy
+  Apache process for an out-of-control Apache process.  The threshold
+  has been adjusted.  The change will only take effect after a `docker
+  stop` and `docker start`.  Alternatively, `docker exec` into the
+  container and run `supervisorctl restart watchdog`.
+
 ## [0.3.30](https://github.com/jhpyle/docassemble/releases/tag/v0.3.30) - 2019-01-05
 
 ### Added

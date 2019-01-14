@@ -231,8 +231,7 @@ To enable the use of [Azure blob storage] as a means of
 [data storage], you will need to run the following:
 
 {% highlight bash %}
-sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs
-10
+sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 wget -qO- https://deb.nodesource.com/setup_6.x | sudo bash -
 sudo apt-get -y install nodejs
 sudo npm install -g azure-storage-cmd

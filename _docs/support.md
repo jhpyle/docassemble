@@ -17,21 +17,11 @@ mailing list is much less active than the [Slack] group, but it will
 allow you to receive important announcements if you don't check the
 [Slack group] every day.
 
-# Help with deployment
+# Help with deployment and development
 
-Since **docassemble** is a web application, for many people the
-hardest part about using it is figuring out how to deploy it on the
-internet.
-
-If deployment is a barrier, you can use the [Docassemble Toolkit], a
-hosting and support service provided by [Community.lawyer], a Public
-Benefit Corporation based in Brookyln, New York.  [Community.lawyer]
-also offers [Law Guides], an app-creation service powered by
-**docassemble**.
-
-One way to deploy **docassemble** interviews is by using [HelpSelf
-Legal], a service that allows you to create **docassemble** interviews
-without writing code directly.
+If deploying a web app and writing "code" are barriers, there are
+[third party providers] who provide platforms based on **docassemble**
+and offer "no code" tools for deployment and development.
 
 # Tutorials
 
@@ -69,8 +59,5 @@ is a good idea to ask a question about the error message first.
 [Quinten Steenhuis]: https://www.nonprofittechy.com/blog/
 [Rina Padua]: https://github.com/Rinapadua
 [Greater Boston Legal Services]: https://www.gbls.org/
-[Docassemble Toolkit]: https://community.lawyer/docassemble
-[Community.lawyer]: https://community.lawyer/
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
-[Law Guides]: https://community.lawyer/lawguides
-[HelpSelf Legal]: https://www.helpselflegal.com/
+[third party providers]: {{ site.baseurl }}/deploy.html

@@ -30,12 +30,9 @@ As much as [Docker] simplifies the process of installing
 **docassemble**, it takes some time to understand the concepts behind
 "running," "stopping," and "starting" containers.  If you are not
 familiar with [Docker] or with hosting web applications, and you want
-to get up and running fast, you may want to use [Docassemble Toolkit],
-a support service provided by [Community.lawyer], a Public Benefit
-Corporation based in Brookyln, New York.  [Docassemble Toolkit]
-provides an encrypted **docassemble** server hosted on [Amazon Web
-Services].  This saves you from needing to figure out [Docker], [Let's
-Encrypt], etc.
+to get up and running fast, you may want to use one of the [third
+party providers] that provide **docassemble**-based interview
+development platforms.
 
 [Docker] can also be used to deploy even the most complex
 **docassemble** installations.  For example, Amazon's [EC2 Container
@@ -1749,8 +1746,6 @@ line), as the containers depend on the images.
 [installation]: {{ site.baseurl }}/docs/installation.html
 [e-mailing the interview]: {{ site.baseurl }}/docs/background.html#email
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[Docassemble Toolkit]: https://community.lawyer/docassemble
-[Community.lawyer]: https://community.lawyer/
 [virtual machine]: https://en.wikipedia.org/wiki/Virtual_machine
 [upgrading]: #upgrading
 [`Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
@@ -1761,3 +1756,4 @@ line), as the containers depend on the images.
 [debugging subsection]: {{ site.baseurl }}/docs/installation.html#debug
 [Traefik]: https://traefik.io/
 [Flask]: http://flask.pocoo.org/
+[third party providers]: {{ site.baseurl }}/deploy.html
