@@ -1,0 +1,19 @@
+metadata:
+  title: Upload specific file types
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/fields.html#accept"
+---
+question: |
+  Please upload a JPEG or PNG of yourself.
+fields:
+  - Picture: user_picture
+    datatype: file
+    accept: |
+      "image/jpeg, image/png"
+---
+question: |
+  You're so adorable!
+subquestion: |
+  ${ user_picture }
+mandatory: True

@@ -250,8 +250,8 @@ DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 # echo "15"
 
 if [ ! -f $DA_CONFIG_FILE ]; then
-    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
-        -e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
+    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@'
+    -e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
         -e 's/{{DBUSER}}/'"${DBUSER:-docassemble}"'/' \
         -e 's#{{DBPASSWORD}}#'"${DBPASSWORD:-abc123}"'#' \
         -e 's/{{DBHOST}}/'"${DBHOST:-null}"'/' \
@@ -266,6 +266,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
         -e 's/{{AZUREACCOUNTNAME}}/'"${AZUREACCOUNTNAME:-null}"'/' \
         -e 's@{{AZUREACCOUNTKEY}}@'"${AZUREACCOUNTKEY:-null}"'@' \
         -e 's/{{AZURECONTAINER}}/'"${AZURECONTAINER:-null}"'/' \
+        -e 's/{{DABACKUPDAYS}}/'"${DABACKUPDAYS:-14}"'/' \
         -e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \

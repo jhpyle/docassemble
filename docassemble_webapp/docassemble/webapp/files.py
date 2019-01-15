@@ -589,33 +589,33 @@ machine learning training files, and other source files.
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
     with open(os.path.join(packagedir, 'README.md'), 'w') as the_file:
-        the_file.write(readme)
+        the_file.write(readme.encode('utf8'))
     os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'LICENSE'), 'w') as the_file:
-        the_file.write(licensetext)
+        the_file.write(licensetext.encode('utf8'))
     os.utime(os.path.join(packagedir, 'LICENSE'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'setup.py'), 'w') as the_file:
-        the_file.write(setuppy)
+        the_file.write(setuppy.encode('utf8'))
     os.utime(os.path.join(packagedir, 'setup.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
-        the_file.write(setupcfg)
+        the_file.write(setupcfg.encode('utf8'))
     os.utime(os.path.join(packagedir, 'setup.cfg'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'MANIFEST.in'), 'w') as the_file:
-        the_file.write(manifestin)
+        the_file.write(manifestin.encode('utf8'))
     os.utime(os.path.join(packagedir, 'MANIFEST.in'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
-        the_file.write(initpy)
+        the_file.write(initpy.encode('utf8'))
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w') as the_file:
         the_file.write('')
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'w') as the_file:
-        the_file.write(templatereadme)
+        the_file.write(templatereadme.encode('utf8'))
     os.utime(os.path.join(templatesdir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(staticdir, 'README.md'), 'w') as the_file:
-        the_file.write(staticreadme)
+        the_file.write(staticreadme.encode('utf8'))
     os.utime(os.path.join(staticdir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(sourcesdir, 'README.md'), 'w') as the_file:
-        the_file.write(sourcesreadme)
+        the_file.write(sourcesreadme.encode('utf8'))
     os.utime(os.path.join(sourcesdir, 'README.md'), (info['modtime'], info['modtime']))
     return directory

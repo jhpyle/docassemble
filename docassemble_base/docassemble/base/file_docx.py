@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import os
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
@@ -10,6 +11,9 @@ from types import NoneType
 from docassemble.base.logger import logmessage
 from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
+import pyPdf
+
+DEFAULT_PAGE_WIDTH = '6.5in'
 
 def image_for_docx(fileref, question, tpl, width=None):
     if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile'):
@@ -89,7 +93,7 @@ def include_docx_template(template_file, **kwargs):
         template_path = template_file.path()
     else:
         template_path = package_template_filename(template_file, package=this_thread.current_package)
-    sd = this_thread.docx_template.new_subdoc()
+    sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
     sd.subdocx._part = sd.docx._part
     first_paragraph = sd.subdocx.paragraphs[0]
@@ -99,12 +103,15 @@ def include_docx_template(template_file, **kwargs):
         else:
             the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
         first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
-    this_thread.docx_include_count += 1
+    if 'docx_include_count' not in this_thread.misc:
+        this_thread.misc['docx_include_count'] = 0
+    this_thread.misc['docx_include_count'] += 1
     return sd
 
 def add_to_rt(tpl, rt, parsed):
     list_tab = False
     block_tab = False
+    ordered_list = 0
     while (len(list(parsed)) > 0):
         html_names =    {
             'em': False,
@@ -137,7 +144,11 @@ def add_to_rt(tpl, rt, parsed):
             if (html_out == '\n'):
                 list_tab = True
             elif (list_tab == True):
-                rt.add('\t- ')
+                if (html_names['ol']):
+                    ordered_list += 1
+                    rt.add('\t' + str(ordered_list) + '. ')
+                else:
+                    rt.add('\t- ')
                 list_tab = False
         else:
             list_tab = False
@@ -235,3 +246,38 @@ def markdown_to_docx(text, tpl):
     html_parsed = html_linear_parse(soup)
     rt = add_to_rt(tpl, rt, html_parsed)
     return rt
+
+def pdf_pages(file_info, width):
+    output = ''
+    if width is None:
+        width = DEFAULT_PAGE_WIDTH
+    if not os.path.isfile(file_info['path'] + '.pdf'):
+        if file_info['extension'] in ('rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
+            server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
+    if 'pages' not in file_info:
+        try:
+            reader = pyPdf.PdfFileReader(open(file_info['path'] + '.pdf'))
+            file_info['pages'] = reader.getNumPages()
+        except:
+            file_info['pages'] = 1
+    max_pages = 1 + int(file_info['pages'])
+    formatter = '%0' + unicode(len(unicode(max_pages))) + 'd'
+    for page in range(1, max_pages):
+        page_file = dict()
+        test_path = file_info['path'] + 'page-in-progress'
+        if os.path.isfile(test_path):
+            while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
+                if not os.path.isfile(test_path):
+                    break
+                time.sleep(1)
+        page_file['extension'] = 'png'
+        page_file['path'] = file_info['path'] + 'page-' + formatter % page
+        page_file['fullpath'] = page_file['path'] + '.png'
+        if not os.path.isfile(page_file['fullpath']):
+            server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
+        if os.path.isfile(page_file['fullpath']):
+            output += unicode(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+        else:
+            output += "[Error including page image]"
+        output += ' '
+    return(output)

@@ -179,7 +179,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
     #logmessage("Arguments are " + str(subprocess_arguments))
-    if editable:
+    if editable or len(images):
         subprocess_arguments.append('need_appearances')
     else:
         subprocess_arguments.append('flatten')
@@ -214,7 +214,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             else:
                 dpp = dppy
             extent_x, extent_y = xone*dpp+width, yone*dpp+height
-            overlay_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False)
+            overlay_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
             args = ["convert", temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
             result = call(args)
             if result == 1:
@@ -252,6 +252,8 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
             for item in image_todo:
                 item['overlay_stream'].close()
+    if (not editable) and len(images):
+        flatten_pdf(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if editable:
@@ -321,7 +323,7 @@ def get_passwords(password):
 def pdf_encrypt(filename, password):
     #logmessage("pdf_encrypt: running; password is " + repr(password))
     (owner_password, user_password) = get_passwords(password)
-    outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+    outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     if owner_password == user_password:
         commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
     else:
@@ -538,3 +540,46 @@ def replicate_js_and_calculations(template_filename, original_filename, password
     writer.write(outfile)
     outfile.flush()
     shutil.move(outfile.name, original_filename)
+
+def flatten_pdf(filename):
+    #logmessage("flatten_pdf: running")
+    outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
+    subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
+    #logmessage("Arguments are " + str(subprocess_arguments))
+    result = call(subprocess_arguments)
+    if result != 0:
+        logmessage("Failed to flatten PDF form " + str(template))
+        raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
+    commands = []
+    shutil.move(outfile.name, filename)
+
+def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None, logo_page=None, only=None):
+    main_pdf = pypdf.PdfFileReader(main_file)
+    logo_pdf = pypdf.PdfFileReader(logo_file)
+    output_pdf = pypdf.PdfFileWriter()
+    if first_page is None or first_page < 1:
+        first_page = 1
+    if last_page is None or last_page < 1:
+        last_page = main_pdf.getNumPages()
+    if first_page > main_pdf.getNumPages():
+        first_page = main_pdf.getNumPages()
+    if last_page < first_page:
+        last_page = first_page
+    if logo_page is None or logo_page < 1:
+        logo_page = 1
+    if logo_page > logo_pdf.getNumPages():
+        logo_page = logo_pdf.getNumPages()
+    for page_no in range(first_page - 1, last_page):
+        if only == 'even':
+            if page_no % 2 == 0:
+                continue
+        elif only == 'odd':
+            if page_no % 2 != 0:
+                continue
+        page = main_pdf.getPage(page_no)
+        page.mergePage(logo_pdf.getPage(logo_page - 1))
+    for page_no in range(main_pdf.getNumPages()):
+        page = main_pdf.getPage(page_no)
+        output_pdf.addPage(page)
+    with open(out_file, 'wb') as fp:
+        output_pdf.write(fp)

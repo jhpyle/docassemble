@@ -1,0 +1,58 @@
+metadata:
+  title: Reconsidering computed values
+  short title: Reconsider
+  documentation: "https://docassemble.org/docs/functions.html#reconsider"
+  example start: 5
+  example end: 9
+---
+modules:
+  - docassemble.base.util
+---
+question: How many cats do you have?
+fields:
+  - Cats: number_of_cats
+    datatype: integer
+---
+question: How many dogs do you really have?
+fields:
+  - Dogs: number_of_dogs
+    datatype: integer
+continue button field: ask_dogs_again
+---
+question: How many dogs do you have?
+fields:
+  - Dogs: number_of_dogs
+    datatype: integer
+---
+code: |
+  number_of_pets = number_of_cats + number_of_dogs
+---
+question: |
+  You have
+  ${ nice_number(number_of_pets) }
+  pets.
+subquestion: |
+  However, I do not think
+  you have been totally honest.
+field: interim_report
+---
+question: |
+  Do you want a goldfish?
+yesno: wants_goldfish
+---
+event: final_report
+question: |
+  You really have
+  ${ nice_number(number_of_pets) }
+  pets.
+subquestion: |
+  % if wants_goldfish:
+  You would rather have a goldfish.
+  % endif
+---
+mandatory: True
+code: |
+  interim_report
+  ask_dogs_again
+  reconsider('number_of_pets')
+  final_report

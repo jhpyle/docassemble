@@ -40,7 +40,7 @@ else:
 if dbhost is not None:
     alchemy_connect_string += '@' + dbhost
     if dbport is not None:
-        alchemy_connect_string += ':' + dbport
+        alchemy_connect_string += ':' + unicode(dbport)
 else:
     alchemy_connect_string += '@'
 if not dbprefix.startswith('oracle'):

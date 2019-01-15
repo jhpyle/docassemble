@@ -7,6 +7,7 @@ from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
+from flask_login import current_user
 
 try:
     import ldap
@@ -64,6 +65,8 @@ class MySignInForm(LoginForm):
             from flask import current_app
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
+            if user is None:
+                return False
             if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
                 self.email.errors = list(self.email.errors)
                 if user.social_id.startswith('google$'):
@@ -134,12 +137,22 @@ class UserProfileForm(FlaskForm):
     pypi_password = StringField(word('PyPI Password'), widget=PasswordInput(hide_value=False))
     confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))
 
 class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
+    def validate(self, user_id, admin_id):
+        rv = UserProfileForm.validate(self)
+        if not rv:
+            return False
+        if current_user.id == user_id:
+            if admin_id not in self.role_id.data:
+                self.role_id.errors.append(word('You cannot take away your own admin privilege.'))
+                return False
+        return True
 
 class PhoneUserProfileForm(UserProfileForm):
     def validate(self):

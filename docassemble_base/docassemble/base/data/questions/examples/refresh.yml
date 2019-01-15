@@ -1,15 +1,19 @@
 metadata:
   title: Refresh button
   example start: 2
-  example end: 2
+  example end: 3
   documentation: "https://docassemble.org/docs/questions.html#refresh"
 ---
 modules:
   - docassemble.base.util
 ---
+mandatory: True
+code: |
+  tell_time
+---
+event: tell_time
 question: |
   The current time is
   ${ current_datetime().format_time() }.
 buttons:
   - Tell me again: refresh
-mandatory: True

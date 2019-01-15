@@ -19,6 +19,7 @@
   <thead>
     <tr>
       <th scope="col">#</th>
+      <th scope="col">&nbsp;</th>
       <th scope="col">{{ word('E-mail') }}</th>
       <th scope="col">{{ word('Name') }}</th>
       <th scope="col" style="text-align:right;">Actions</th>
@@ -29,11 +30,31 @@
     <tr>
       {%- if user_info['active'] %}
       <td>{{ user_info['id'] }}</td>
+      {%- else %}
+      <td class="text-danger">{{ user_info['id'] }}</td>
+      {%- endif %}
+      <td>
+      {%- if user_info['active'] %}
+        {%- if user_info['high_priv'] == 'advocate' %}
+      <i class="fas fa-user-circle" title="{{ word('Advocate privilege') }}"></i>
+        {%- elif user_info['high_priv'] == 'admin' %}
+      <i class="fas fa-cog" title="{{ word('Administrator privilege') }}"></i>
+        {%- elif user_info['high_priv'] == 'developer' %}
+      <i class="fas fa-code" title="{{ word('Developer privilege') }}"></i>
+        {%- elif user_info['high_priv'] == 'trainer' %}
+      <i class="fas fa-comment" title="{{ word('Trainer privilege') }}"></i>
+        {%- else %}
+      &nbsp;
+        {%- endif %}
+      </td>
+      {%- else %}
+      <i class="fas fa-ban text-danger" title="{{ word('Account disabled') }}"></i>
+      {%- endif %}      
+      {%- if user_info['active'] %}
       <td>{{ user_info['email'] }}</td>
       <td>{{ user_info['name'] }}</td>
       {%- else %}
-      <td class="text-danger">{{ user_info['id'] }}</td>
-      <td class="text-danger">{{ user_info['email'] }} ({{ word('account disabled') }})</td>
+      <td class="text-danger">{{ user_info['email'] }}</td>
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
       <td style="text-align:right;"><a class="btn btn-success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>

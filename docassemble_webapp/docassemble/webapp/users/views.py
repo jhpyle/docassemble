@@ -59,6 +59,17 @@ def user_list():
     for user in db.session.query(UserModel).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
+        role_names = [y.name for y in user.roles]
+        if 'admin' in role_names:
+            high_priv = 'admin'
+        elif 'developer' in role_names:
+            high_priv = 'developer'
+        elif 'advocate' in role_names:
+            high_priv = 'advocate'
+        elif 'trainer' in role_names:
+            high_priv = 'trainer'
+        else:
+            high_priv = 'user'
         name_string = ''
         if user.first_name:
             name_string += str(user.first_name) + " "
@@ -75,7 +86,7 @@ def user_list():
             is_active = True
         else:
             is_active = False
-        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id))
+        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
     return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
@@ -108,7 +119,7 @@ def delete_privilege(id):
 @roles_required('admin')
 def edit_user_profile_page(id):
     user = UserModel.query.filter_by(id=id).first()
-    the_tz = (user.timezone if user.timezone else get_default_timezone())
+    the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None:
         abort(404)
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
@@ -125,16 +136,25 @@ def edit_user_profile_page(id):
     if len(the_role_id) == 0:
         the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, obj=user, role_id=the_role_id)
-    form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+    if request.method == 'POST' and form.cancel.data:
+        flash(word('The user profile was not changed.'), 'success')
+        return redirect(url_for('user_list'))
+    if user.social_id.startswith('local$'):
+        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+        privileges_note = None
+    else:
+        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
+        privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
-    if str(form.timezone.data) == 'None':
+    if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
     if user.otp_secret is None:
         form.uses_mfa.data = False
     else:
         form.uses_mfa.data = True
-    if request.method == 'POST' and form.validate():
+    admin_id = Role.query.filter_by(name='admin').first().id
+    if request.method == 'POST' and form.validate(user.id, admin_id):
         form.populate_obj(user)
         roles_to_remove = list()
         the_role_id = list()
@@ -146,15 +166,12 @@ def edit_user_profile_page(id):
             if role.id in form.role_id.data:
                 user.roles.append(role)
                 the_role_id.append(role.id)
-
         db.session.commit()
-
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
-
     form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature)
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id))
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
@@ -177,14 +194,14 @@ def add_privilege():
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():
-    the_tz = (current_user.timezone if current_user.timezone else get_default_timezone())
+    the_tz = current_user.timezone if current_user.timezone else get_default_timezone()
     if current_user.social_id and current_user.social_id.startswith('phone$'):
         form = PhoneUserProfileForm(request.form, obj=current_user)
     else:
         form = UserProfileForm(request.form, obj=current_user)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
-    if str(form.timezone.data) == 'None':
+    if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
     if request.method == 'POST' and form.validate():
         form.populate_obj(current_user)

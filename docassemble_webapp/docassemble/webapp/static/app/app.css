@@ -1373,6 +1373,10 @@ blockquote.limheight {
     color: #a94442;
 }
 
+.help-block {
+    color: #a94442;
+}
+
 div.danavnested {
     padding-left: 20px;
 }
@@ -1513,6 +1517,14 @@ div.danavdiv {
 
 a.danavlink {
     cursor: text;
+    position: relative;
+    outline: none;
+}
+
+a.danavlink .toggler {
+    position: absolute;
+    left: 0;
+    cursor: pointer;
 }
 
 .ul-toggle {

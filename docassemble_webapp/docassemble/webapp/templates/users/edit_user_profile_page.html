@@ -6,18 +6,28 @@
 <h1>{{ word('Edit User Profile') }}</h1>
 
 {%- if form.uses_mfa.data %}
-<a class="btn btn-primary btn-md btn-block" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
+<div class="row">
+  <div class="col text-right mb-1">
+    <a class="btn btn-secondary" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
+  </div>
+</div>
 {%- endif %}
-{%- if form.confirmed_at.data is not none %}
-<a class="btn btn-primary btn-md btn-block" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
+{%- if (not is_self) and form.confirmed_at.data is not none %}
+<div class="row">
+  <div class="col text-right">
+    <a class="btn btn-secondary" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
+  </div>
+</div>
 {%- endif %}
 
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
     
+{%- if not is_self %}
     {{ render_checkbox_field(form.active) }}
+{%- endif %}
 
-    {{ render_multiselect_field(form.role_id) }}
+    {{ render_multiselect_field(form.role_id, undernote=privileges_note) }}
 
     {{ render_field(form.email, tabindex=235) }}
 
@@ -42,6 +52,7 @@
     <br>
     <div class="form-actions">
       {{ render_submit_field(form.submit, tabindex=330) }}
+      {{ render_submit_field(form.cancel, tabindex=340, class="btn btn-warning " + config['BUTTON_CLASS']) }}
     </div>
 </form>
 

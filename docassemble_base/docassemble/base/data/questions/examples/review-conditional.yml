@@ -1,0 +1,58 @@
+metadata:
+  title: Review answers
+  short title: Review
+  example start: 2
+  example end: 5
+  documentation: "https://docassemble.org/docs/fields.html#review"
+---  
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your favorite fruit?
+field: favorite_fruit
+choices:
+  - Apple
+  - Orange
+  - Pear
+  - Peach
+---
+if: |
+  favorite_fruit == 'Apple'
+question: |
+  What is your favorite apple?
+fields:
+  - Favorite apple variety: favorite_apple
+---
+question: |
+  Result
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }.
+  
+  % if favorite_fruit == 'Apple':
+  Your favorite apple is ${ favorite_apple }.
+  % endif
+field: results_shown
+---
+question: |
+  Please review the results.
+review:
+  - label: Edit
+    fields:
+      - favorite_fruit
+      - follow up:
+        - favorite_apple
+    button: |
+      Your favorite fruit is ${ favorite_fruit }.
+      
+      % if favorite_fruit == 'Apple':
+      Your favorite apple is ${ favorite_apple }.
+      % endif
+field: results_reviewed
+---
+mandatory: True
+need:
+  - results_shown
+  - results_reviewed
+question: |
+  Thank you for your time.

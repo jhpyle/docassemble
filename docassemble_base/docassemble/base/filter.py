@@ -920,7 +920,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
         if the_url is None:
             return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img alt="" class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -938,7 +938,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 title = ' title="' + file_info['filename'] + '"'
             else:
                 title = ''
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img alt=' + json.dumps(word("Thumbnail image of document")) + ' class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + unicode(file_info['pages']) + " " + word('pages') + ")"
             return(output)
@@ -1534,11 +1534,11 @@ def image_include_docx_template(match, question=None):
                 if file_info['mimetype'] == 'text/plain':
                     return contents
                 else:
-                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.docx_template)
+                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.misc.get('docx_template', None))
             if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return unicode(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
             else:
-                return unicode(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.docx_template, width=width))
+                return unicode(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
     return '[reference to file that could not be found]'
 
 def qr_include_docx_template(match):
@@ -1553,4 +1553,13 @@ def qr_include_docx_template(match):
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
     im.save(the_image.name)
-    return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.docx_template, width=width))
+    return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+
+def ensure_valid_filename(filename):
+    m = re.search(r'[\\/\&\`:;,~\'\"\*\?\<\>\|]', filename)
+    if m:
+        raise Exception("Filename contained invalid character " + repr(m.group(1)))
+    for char in filename:
+        if ord(char) < 32 or ord(char) >= 127:
+            raise Exception("Filename contained invalid character " + repr(char))
+    return True

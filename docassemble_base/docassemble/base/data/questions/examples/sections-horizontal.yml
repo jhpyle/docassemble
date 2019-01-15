@@ -105,6 +105,7 @@ question: |
 fields:
   - Favorite vegetable: favorite_vegetable
 ---
+progress: 100
 mandatory: True
 question: Thank you.
 subquestion: |

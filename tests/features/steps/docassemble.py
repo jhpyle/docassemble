@@ -118,10 +118,16 @@ def click_button(step, button_name):
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
         success = True
     except:
        pass
+    if not success:
+        try:
+            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+            success = True
+        except:
+            pass
     if not success:
        for elem in world.browser.find_elements_by_xpath('//a[text()="' + button_name + '"]'):
            try:
@@ -139,10 +145,16 @@ def click_button_post(step, choice):
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
         success = True
     except:
         pass
+    if not success:
+        try:
+            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+            success = True
+        except:
+            pass
     if not success:
         for elem in world.browser.find_elements_by_xpath('//a[text()="' + button_name + '"]'):
             try:
@@ -362,7 +374,18 @@ def url_of_page(step, url):
 @step('I exit by clicking "([^"]+)"')
 def exit_button(step, button_name):
     do_wait()
-    world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+    success = False
+    try:
+        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
+        success = True
+    except:
+        pass
+    if not success:
+        try:
+            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+            success = True
+        except:
+            pass
     time.sleep(1.0)
 
 @step('I save a screenshot to "([^"]+)"')

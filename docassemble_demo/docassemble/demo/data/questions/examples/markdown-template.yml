@@ -36,6 +36,14 @@ content: |
   * Peach
   * Pear
 
+  Here is a nested bullet list:
+
+  * Apple
+      * Fuji
+      * Red Delicious
+  * Peach
+  * Pear
+
   Here is a numbered list:
 
   1. Nutmeg

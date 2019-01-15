@@ -84,6 +84,21 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if 'page after login' in daconfig:
+        if isinstance(daconfig['page after login'], basestring):
+            daconfig['page after login'] = [{'*': daconfig['page after login']}]
+        if isinstance(daconfig['page after login'], dict):
+            daconfig['page after login'] = [daconfig['page after login']]
+        page_after_login = []
+        if isinstance(daconfig['page after login'], list):
+            for item in daconfig['page after login']:
+                if isinstance(item, dict):
+                    for key, val in item.iteritems():
+                        if isinstance(key, basestring) and isinstance(val, basestring):
+                            page_after_login.append((key, val))
+        daconfig['page after login'] = page_after_login
+    else:
+        daconfig['page after login'] = []
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
         sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
         del daconfig['keymap']
@@ -215,12 +230,26 @@ def load(**kwargs):
             daconfig['api privileges'] = ['admin', 'developer']
     else:
         daconfig['api privileges'] = ['admin', 'developer']
-    if 'two factor authentication privileges' in daconfig:
-        if type(daconfig['two factor authentication privileges']) is not list:
-            sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
-            daconfig['two factor authentication privileges'] = ['admin', 'developer']
+    if 'two factor authentication' in daconfig:
+        if type(daconfig['two factor authentication']) is bool:
+            daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
+        if type(daconfig['two factor authentication']) is not dict:
+            daconfig['two factor authentication'] = dict()
     else:
-        daconfig['two factor authentication privileges'] = ['admin', 'developer']
+        daconfig['two factor authentication'] = dict(enable=False)
+    if 'allowed for' in daconfig['two factor authentication']:
+        if type(daconfig['two factor authentication']['allowed for']) is not list:
+            sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+            daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
+    else:
+        if 'two factor authentication privileges' in daconfig:
+            if type(daconfig['two factor authentication privileges']) is list:
+                daconfig['two factor authentication']['allowed for'] = daconfig['two factor authentication privileges']
+            else:
+                sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+                daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
+        else:
+            daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     if 'email confirmation privileges' in daconfig:
         if type(daconfig['email confirmation privileges']) is not list:
             sys.stderr.write("email confirmation privileges must be in the form of a list\n")

@@ -32,10 +32,11 @@ import pycountry
 import random
 from user_agents import parse as ua_parse
 import phonenumbers
+import werkzeug
 from jinja2.runtime import Undefined
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data']
 
 # debug = False
 # default_dialect = 'us'
@@ -89,13 +90,15 @@ def get_current_variable():
 
 def reset_context():
     this_thread.evaluation_context = None
-    this_thread.docx_include_count = 0
-    this_thread.docx_template = None
+    if 'docx_include_count' in this_thread.misc:
+        del this_thread.misc['docx_include_count']
+    if 'docx_template' in this_thread.misc:
+        del this_thread.misc['docx_template']
 
 def set_context(new_context, template=None):
     this_thread.evaluation_context = new_context
-    this_thread.docx_include_count = 0
-    this_thread.docx_template = template
+    this_thread.misc['docx_include_count'] = 0
+    this_thread.misc['docx_template'] = template
 
 def set_current_variable(var):
     #logmessage("set_current_variable: " + str(var))
@@ -123,13 +126,13 @@ def wrap_up(user_dict):
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
-    while len(this_thread.template_vars):
-        saveas = this_thread.template_vars.pop()
-        #logmessage('wrap_up: deleting ' + saveas)
-        try:
-            exec('del ' + saveas, user_dict)
-        except:
-            pass
+    # while len(this_thread.template_vars):
+    #     saveas = this_thread.template_vars.pop()
+    #     #logmessage('wrap_up: deleting ' + saveas)
+    #     try:
+    #         exec('del ' + saveas, user_dict)
+    #     except:
+    #         pass
     # while len(this_thread.temporary_resources):
     #     the_resource = this_thread.temporary_resources.pop()
     #     if os.path.isdir(the_resource):
@@ -726,9 +729,10 @@ class DANav(object):
         self.past = set()
         self.sections = None
         self.current = None
+        self.progressive = True
 
     def __unicode__(self):
-        return self.show_sections(style='inline')
+        return self.show_sections()
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -740,6 +744,42 @@ class DANav(object):
         self.current = section
         self.past.add(section)
         return True
+
+    def section_ids(self, language=None):
+        """Returns a list of section names or section IDs."""
+        the_sections = self.get_sections(language=language)
+        all_ids = list()
+        for x in the_sections:
+            subitems = None
+            if type(x) is dict:
+                if len(x) == 2 and 'subsections' in x:
+                    for key, val in x.iteritems():
+                        if key == 'subsections':
+                            subitems = val
+                        else:
+                            all_ids.append(key)
+                elif len(x) == 1:
+                    the_key = x.keys()[0]
+                    value = x[the_key]
+                    if type(value) is list:
+                        subitems = value
+                    all_ids.append(the_key)
+                else:
+                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    continue
+            else:
+                all_ids.append(unicode(x))
+            if subitems:
+                for y in subitems:
+                    if type(y) is dict:
+                        if len(y) == 1:
+                            all_ids.append(y.keys()[0])
+                        else:
+                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            continue
+                    else:
+                        all_ids.append(unicode(y))
+        return all_ids
 
     def get_section(self, display=False, language=None):
         """Returns the current section of the navigation."""
@@ -803,7 +843,7 @@ class DANav(object):
         if sections is None:
             sections = []
         self.sections[language] = sections
-        self.past = set()
+        #self.past = set()
 
     def get_sections(self, language=None):
         """Returns the sections of the navigation as a list."""
@@ -813,37 +853,35 @@ class DANav(object):
             language = '*'
         return self.sections.get(language, list())
 
-    def show_sections(self, style=None, show_links=False):
+    def show_sections(self, style='inline', show_links=True):
         """Returns the sections of the navigation as HTML."""
         if style == "inline":
-            the_class = 'dainline'
+            the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'
             a_class = "btn btn-secondary danavlink "
         else:
-            the_class = ''
+            the_class = 'danavlinks'
             interior_class = None
             a_class = None
-        #if this_thread.interview_status is not None and the_js is not None:
-        #   this_thread.interview_status.extra_scripts.append(the_js) 
         return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
 
 word_collection = {
     'es': {
-        'Continue': 'Continuar',
-        'Help': 'Ayuda',
-        'Sign in': 'Registrarse',
-        'Sign in or sign up to save answers': 'Inicie sesión o regístrese para guardar las respuestas',
-        'Question': 'Interrogación',
-        'save_as_multiple': 'The document is available in the following formats:',
-        'save_as_singular': 'The document is available in the following format:',
-        'pdf_message': 'for printing; requires Adobe Reader or similar application',
-        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': 'for editing; requires Microsoft Word or compatible application',
-        'tex_message': 'for debugging PDF output',
-        'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.',
-        'Yes': 'Sí',
-        'No': 'No'
+        'Continue': u'Continuar',
+        'Help': u'Ayuda',
+        'Sign in': u'Registrarse',
+        'Sign in or sign up to save answers': u'Inicie sesión o regístrese para guardar las respuestas',
+        'Question': u'Interrogación',
+        'save_as_multiple': u'The document is available in the following formats:',
+        'save_as_singular': u'The document is available in the following format:',
+        'pdf_message': u'for printing; requires Adobe Reader or similar application',
+        'rtf_message': u'for editing; requires Microsoft Word, Wordpad, or similar application',
+        'docx_message': u'for editing; requires Microsoft Word or compatible application',
+        'tex_message': u'for debugging PDF output',
+        'attachment_message_plural': u'The following documents have been created for you.',
+        'attachment_message_singular': u'The following document has been created for you.',
+        'Yes': u'Sí',
+        'No': u'No'
         },
     'en': {
         'and': "and",
@@ -974,7 +1012,6 @@ server.chat_partners_available = null_func
 server.absolute_filename = null_func
 server.save_numbered_file = null_func
 server.send_mail = null_func
-server.absolute_filename = null_func
 server.file_finder = null_func
 server.url_finder = null_func
 server.user_id_dict = null_func
@@ -1240,6 +1277,11 @@ class ThreadVariables(threading.local):
     message_log = list()
     misc = dict()
     prevent_going_back = False
+    current_info = dict()
+    current_package = None
+    current_question = None
+    internal = dict()
+    current_variable = list()
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -1457,7 +1499,7 @@ def word(the_word, **kwargs):
     elif the_word is None:
         the_word = "I don't know"
     try:
-        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word].decode('utf8')
+        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
         the_word = unicode(the_word)
     if kwargs.get('capitalize', False):
@@ -1546,15 +1588,27 @@ def get_default_timezone():
 
 def reset_local_variables():
     this_thread.language = server.default_language
+    this_thread.dialect = server.default_dialect
+    this_thread.country = server.default_country
     this_thread.locale = server.default_locale
-    this_thread.prevent_going_back = False
+    this_thread.session_id = None
+    this_thread.interview = None
+    this_thread.interview_status = None
+    this_thread.evaluation_context = None
     this_thread.gathering_mode = dict()
+    this_thread.global_vars = GenericObject()
     this_thread.current_variable = list()
-    this_thread.open_files = set()
     this_thread.template_vars = list()
+    this_thread.open_files = set()
     this_thread.saved_files = dict()
     this_thread.message_log = list()
-    this_thread.global_vars = GenericObject()
+    this_thread.misc = dict()
+    this_thread.current_info = dict()
+    this_thread.current_package = None
+    this_thread.current_question = None
+    this_thread.internal = dict()
+    this_thread.current_variable = list()
+    this_thread.prevent_going_back = False
 
 def prevent_going_back():
     """Instructs docassemble to disable the user's back button, so that the user cannot
@@ -1940,7 +1994,7 @@ def noun_singular_en(*pargs, **kwargs):
 
 def indefinite_article_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.en.article(pargs[0].lower()) + " " + unicode(pargs[0])
+    output = pattern.en.article(unicode(pargs[0]).lower()) + " " + unicode(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2191,8 +2245,8 @@ def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 
 def space_to_underscore(a):
-    """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
-    return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
+    """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
+    return werkzeug.secure_filename(unicode(a).encode('ascii', errors='ignore'))
 
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message."""
@@ -2322,7 +2376,10 @@ def package_template_filename(the_file, **kwargs):
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            return(server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+            abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            if abs_file is None:
+                return None
+            return(abs_file.path)
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
@@ -2350,9 +2407,15 @@ def package_data_filename(the_file):
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                return(server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+                abs_file = server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+                if abs_file is None:
+                    return None
+                return(abs_file.path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            return(server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1])).path)
+            abs_file = server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            if abs_file is None:
+                return None
+            return(abs_file.path)
         try:
             result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
@@ -2430,15 +2493,32 @@ def process_action():
                 #logmessage("process_action: adding " + event_info['action'] + " to current_info")
                 this_thread.current_info.update(event_info)
                 if event_info['action'].startswith('_da_'):
+                    #logmessage("process_action: forcing a re-run")
                     raise ForcedReRun()
                 else:
+                    #logmessage("process_action: forcing a nameerror")
+                    this_thread.misc['forgive_missing_question'] = [event_info['action']] #restore
                     force_ask_nameerror(event_info['action'])
+                    #logmessage("process_action: done with trying")
+        #logmessage("process_action: returning")
+        if 'forgive_missing_question' in this_thread.misc:
+            del this_thread.misc['forgive_missing_question']
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
     #logmessage("process_action: action is " + the_action)
     del this_thread.current_info['action']
-    if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+    #if the_action == '_da_follow_up' and 'action' in this_thread.current_info['arguments']:
+    #    this_thread.misc['forgive_missing_question'] = True
+    #    #logmessage("Asking for " + this_thread.current_info['arguments']['action'])
+    #    the_action = this_thread.current_info['arguments']['action']
+    if the_action == '_da_priority_action' and 'action' in this_thread.current_info['arguments']:
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = []
+        the_action = this_thread.current_info['arguments']['action']
+    elif the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+        this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['variables'] #restore
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
@@ -2450,6 +2530,15 @@ def process_action():
             this_thread.internal['event_stack'][unique_id].pop(0)
         #logmessage("forcing nameerror on " + this_thread.current_info['arguments']['variables'][0])
         force_ask_nameerror(this_thread.current_info['arguments']['variables'][0])
+    elif the_action == '_da_define' and 'variables' in this_thread.current_info['arguments']:
+        for variable_name in this_thread.current_info['arguments']['variables']:
+            if variable_name not in this_thread.internal['gather']:
+                this_thread.internal['gather'].append(variable_name)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
+            #logmessage("popped the da_compute")
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
     elif the_action == '_da_set':
         for the_args in this_thread.current_info['arguments']['variables']:
             #logmessage("defining " + repr(the_args))
@@ -2474,11 +2563,18 @@ def process_action():
     elif the_action == '_da_list_remove':
         if 'action_item' in this_thread.current_info and 'action_list' in this_thread.current_info:
             try:
-                this_thread.current_info['action_list'].remove(this_thread.current_info['action_item'])
+                this_thread.current_info['action_list'].pop(this_thread.current_info['action_item'])
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + unicode(err))
         raise ForcedReRun()
-    elif the_action == '_da_list_edit' and 'items' in this_thread.current_info['arguments']:
+    elif the_action == '_da_dict_remove':
+        if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
+            try:
+                this_thread.current_info['action_dict'].pop(this_thread.current_info['action_item'])
+            except Exception as err:
+                logmessage("process_action: _da_dict_remove error: " + unicode(err))
+        raise ForcedReRun()
+    elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action == '_da_list_complete' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
@@ -2487,10 +2583,19 @@ def process_action():
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
         raise ForcedReRun()
+    elif the_action == '_da_dict_complete' and 'action_dict' in this_thread.current_info:
+        #logmessage("_da_dict_complete")
+        the_dict = this_thread.current_info['action_dict']
+        the_dict._validate(the_dict.object_type, the_dict.complete_attribute)
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['dict'] == the_dict.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
         the_list.appendObject()
         the_list.reset_gathered()
+        the_list.there_are_any = True
         the_list.there_is_another = False
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
@@ -2504,6 +2609,23 @@ def process_action():
         this_thread.current_info.update(the_action)
         raise ForcedReRun()
         #the_list._validate(the_list.object_type, the_list.complete_attribute)
+    elif the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:
+        #logmessage("_da_dict_add")
+        the_dict = this_thread.current_info['action_dict']
+        the_dict.reset_gathered()
+        the_dict.there_are_any = True
+        the_dict.there_is_another = True
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' not in this_thread.internal:
+            this_thread.internal['event_stack'] = dict()
+        if unique_id not in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = list()
+        if len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['dict'] == the_dict.instanceName:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        the_action = dict(action='_da_dict_complete', arguments=dict(dict=the_dict.instanceName))
+        this_thread.internal['event_stack'][unique_id].insert(0, the_action)
+        this_thread.current_info.update(the_action)
+        raise ForcedReRun()
     elif the_action == 'need':
         for key in ['variable', 'variables']:
             if key in this_thread.current_info['arguments']:
@@ -2521,8 +2643,11 @@ def process_action():
             else:
                 #logmessage("process_action: doing a gather2: " + variable_name)
                 force_ask_nameerror(variable_name)
+        if 'forgive_missing_question' in this_thread.misc:
+            del this_thread.misc['forgive_missing_question']
         return
     #logmessage("process_action: calling force_ask")
+    this_thread.misc['forgive_missing_question'] = [the_action] #restore
     force_ask(the_action)
 
 def url_action(action, **kwargs):
@@ -2766,7 +2891,8 @@ def value(var):
     cum_variable = ''
     for elem in components:
         if elem[0] == 'name':
-            cum_variable += elem[1]
+            if cum_variable == '':
+                cum_variable = elem[1]
             continue
         elif elem[0] == 'attr':
             to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
@@ -2776,10 +2902,18 @@ def value(var):
                 the_index = eval(elem[1], the_user_dict)
             except:
                 force_ask(var, persistent=False)
-            if type(the_index) == int:
-                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+            try:
+                the_cum_variable = eval(cum_variable, the_user_dict)
+            except:
+                force_ask(var, persistent=False)
+            if hasattr(the_cum_variable, 'instanceName') and hasattr(the_cum_variable, 'elements'):
+                cum_variable_elements = cum_variable + '.elements'
             else:
-                to_eval = elem[1] + " in " + cum_variable
+                cum_variable_elements = cum_variable
+            if type(the_index) == int:
+                to_eval = 'len(' + cum_variable_elements + ') > ' + str(the_index)
+            else:
+                to_eval = elem[1] + " in " + cum_variable_elements
             cum_variable += '[' + elem[1] + ']'
         try:
             result = eval(to_eval, the_user_dict)
@@ -2991,6 +3125,10 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, DAObject):
         new_dict = dict()
         new_dict['_class'] = type_name(the_object)
+        if the_object.__class__.__name__ == 'DALazyTemplate' or the_object.__class__.__name__ == 'DALazyTableTemplate':
+            if hasattr(the_object, 'instanceName'):
+                new_dict['instanceName'] = the_object.instanceName
+            return new_dict
         for key, data in the_object.__dict__.iteritems():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
@@ -3189,10 +3327,10 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return(codecs.decode(var, 'base64').decode('utf8'))
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
-        if user_id == 'all':
+        if user_id == 'all' or session is not None:
             user_id = None
         elif user_id is None:
             user_id = this_thread.current_info['user']['the_user_id']
@@ -3202,7 +3340,7 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
             raise DAError("interview_list: invalid action")
         if action == 'delete' and (filename is None or session is None):
             raise DAError("interview_list: a filename and session must be provided when delete is the action.")
-        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session)
+        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict)
     return None
 
 def interview_menu():
@@ -3255,6 +3393,10 @@ def set_user_info(**kwargs):
             if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
                 this_thread.current_info['user'][key] = val
 
+def create_user(email, password, privileges=None, info=None):
+    """Creates a user account with the given e-mail and password, returning the user ID of the new account."""
+    return server.create_user(email, password, privileges=privileges, info=info)
+
 def get_user_secret(username, password):
     """Tests the username and password and if they are valid, returns the
     decryption key for the user account.
@@ -3266,11 +3408,15 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     """Returns the interview dictionary for the given interview session."""
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot set variables in the current interview session")
-    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables)
+    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables, question_name=question_name)
+
+def get_question_data(yaml_filename, session_id, secret=None):
+    """Returns data about the current question for the given interview session."""
+    return server.get_question_data(yaml_filename, session_id, secret)
 
 def go_back_in_session(yaml_filename, session_id, secret=None):
     """Goes back one step in an interview session."""
@@ -3363,3 +3509,14 @@ def forget_result_of(*pargs):
 def re_run_logic():
     """Run the interview logic from the beginning."""
     raise ForcedReRun()
+
+def reconsider(*pargs):
+    """Ensures that the value of one or more variables is freshly calculated."""
+    if 'reconsidered' not in this_thread.misc:
+        this_thread.misc['reconsidered'] = set()
+    for var in pargs:
+        if var in this_thread.misc['reconsidered']:
+            continue
+        undefine(var)
+        this_thread.misc['reconsidered'].add(var)
+        value(var)

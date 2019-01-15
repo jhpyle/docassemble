@@ -5,6 +5,7 @@ from sqlalchemy import or_, and_
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 import numpy as np
 import re
 import random
@@ -522,7 +523,8 @@ class RandomForestMachineLearner(MachineLearner):
         df = pd.DataFrame([indep_to_use])
         for key, val in indep_to_use.iteritems():
             if learners[self.group_id]['indep_type'][key] is unicode:
-                df[key] = pd.Series(df[key]).astype('category', categories=learners[self.group_id]['indep_categories'][key])
+                #df[key] = pd.Series(df[key]).astype('category', categories=learners[self.group_id]['indep_categories'][key])
+                df[key] = pd.Series(df[key]).astype(CategoricalDtype(learners[self.group_id]['indep_categories'][key]))
         df = pd.get_dummies(df, dummy_na=True)
         pred = learners[self.group_id]['learner'].predict_proba(df)
         indexno = 0

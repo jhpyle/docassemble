@@ -15,11 +15,12 @@ objects:
 ---
 mandatory: True
 code: |
+  recipient.clear()
   recipient.append(trustee)
   recipient.append(beneficiary)
   recipient.append(grantor)
-  recipient.append(Individual())
-  recipient.append(Individual())
+  recipient.appendObject(Individual)
+  recipient.appendObject(Individual)
   recipient.gathered = True
 ---
 mandatory: True

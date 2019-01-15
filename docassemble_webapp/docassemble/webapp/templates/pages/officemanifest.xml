@@ -74,7 +74,7 @@
             </bt:Images>
             <bt:Urls>
                 <bt:Url id="DA.Taskpane.Url" DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
-                <bt:Url id="DA.GetStarted.LearnMoreUrl" DefaultValue="https://docassemble.org/docs/officeaddin.html" />
+                <bt:Url id="DA.GetStarted.LearnMoreUrl" DefaultValue="https://docassemble.org/docs/playground.html#word%20addin" />
                 <bt:Url id="DA.DesktopFunctionFile.Url" DefaultValue="{{ url_for('playground_office_functionfile', _external=True) }}" />
             </bt:Urls>
             <bt:ShortStrings>

@@ -6,6 +6,7 @@ metadata:
 ---
 mandatory: True
 code: |
+  the_task
   if the_task.ready():
     final_screen
   else:

@@ -2,7 +2,7 @@ metadata:
   title: Initial code
   documentation: "https://docassemble.org/docs/logic.html#initial"
   example start: 2
-  example start: 3
+  example end: 3
 ---
 mandatory: True
 code: |
