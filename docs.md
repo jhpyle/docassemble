@@ -31,7 +31,7 @@ interview you can click "Source" in the navigation bar to toggle
 display of the source code for the question and an explanation of the
 path **docassemble** took to decide to ask that question.
 
-### Table of Contents
+## Table of Contents
 
 For a narrative version of the sections of the documentation, see the [Overview].
 

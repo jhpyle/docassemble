@@ -6,11 +6,11 @@
 {{ example }}
 {% endhighlight %}
       <div class="dafull" title="See the full code sample">
-        <a href="{{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/{{ include.demo }}.yml" target="_blank"><i class="fas fa-ellipsis-h"></i></a>
+        <a href="{{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/{{ include.demo }}.yml" title="Open on GitHub" target="_blank"><span class="sr-only">GitHub</span><i class="fas fa-ellipsis-h"></i></a>
       </div>
     </div>
   </div>
   <div class="col-md-6">
-    <a href="{% if include.path %}{{ site.baseurl }}{{ include.path }}{% else %}{{ site.demourl }}/interview?i=docassemble.demo:data/questions/examples/{{ include.demo }}.yml&reset=1{% endif %}" target="_blank"><img class="example" alt="{{ include.demo }}" title="Click to try this interview" src="{{ site.baseurl }}/img/{% if include.image %}{{ include.image }}{% else %}examples/{{ include.demo }}.png{% endif %}"></a>
+    <a href="{% if include.path %}{{ site.baseurl }}{{ include.path }}{% else %}{{ site.demourl }}/interview?i=docassemble.demo:data/questions/examples/{{ include.demo }}.yml&reset=1{% endif %}" target="_blank" title="Click to try this interview"><img class="example" alt="Screenshot of {{ include.demo }} example" src="{{ site.baseurl }}/img/{% if include.image %}{{ include.image }}{% else %}examples/{{ include.demo }}.png{% endif %}"></a>
   </div>
 </div>
