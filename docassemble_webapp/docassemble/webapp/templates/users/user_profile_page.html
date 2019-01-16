@@ -19,25 +19,25 @@
           </div>
           <form action="" method="POST" role="form">
             {{ form.hidden_tag() }}
-            {{ render_field(form.first_name, tabindex=240) }}
-            {{ render_field(form.last_name, tabindex=250) }}
+            {{ render_field(form.first_name) }}
+            {{ render_field(form.last_name) }}
             {%- if current_user.social_id and current_user.social_id.startswith('phone$') %}
-            {{ render_field(form.email, tabindex=255) }}
+            {{ render_field(form.email) }}
             {%- endif %}
             {%- if (not current_user.is_anonymous) and current_user.has_roles(['admin', 'developer']) %}
-            {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
-            {{ render_field(form.subdivisionfirst, tabindex=270) }}
-            {{ render_field(form.subdivisionsecond, tabindex=280) }}
-            {{ render_field(form.subdivisionthird, tabindex=290) }}
-            {{ render_field(form.organization, tabindex=300) }}
-            {{ render_field(form.language, tabindex=310) }}
-            {{ render_field(form.timezone, tabindex=320) }}
-            {{ render_field(form.pypi_username, tabindex=322) }}
-            {{ render_field(form.pypi_password, tabindex=324) }}
+            {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
+            {{ render_field(form.subdivisionfirst) }}
+            {{ render_field(form.subdivisionsecond) }}
+            {{ render_field(form.subdivisionthird) }}
+            {{ render_field(form.organization) }}
+            {{ render_field(form.language) }}
+            {{ render_field(form.timezone) }}
+            {{ render_field(form.pypi_username) }}
+            {{ render_field(form.pypi_password) }}
             {%- endif %}
             <br>
             {{ get_part('profile page submit') }}<div class="form-actions">
-              {{ render_submit_field(form.submit, tabindex=330) }}
+              {{ render_submit_field(form.submit) }}
             </div>
           </form>{{ get_part('profile page post') }}
 {%- endblock %}

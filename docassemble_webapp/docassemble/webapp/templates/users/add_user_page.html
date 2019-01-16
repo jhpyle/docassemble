@@ -6,20 +6,20 @@
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
     
-    {{ render_field(form.first_name, tabindex=100) }}
+    {{ render_field(form.first_name) }}
 
-    {{ render_field(form.last_name, tabindex=110) }}
+    {{ render_field(form.last_name) }}
 
-    {{ render_field(form.email, tabindex=120) }}
+    {{ render_field(form.email) }}
 
-    {{ render_field(form.password, tabindex=130) }}
+    {{ render_field(form.password) }}
 
-    {{ render_multiselect_field(form.role_id, tabindex=140) }}
+    {{ render_multiselect_field(form.role_id) }}
 
     <br>
     <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=150) }}
-      <a tabindex="160" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
+      {{ render_submit_field(form.submit) }}
+      <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
     </div>
 </form>
 

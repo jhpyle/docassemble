@@ -355,6 +355,9 @@ def sync_with_onedrive(user_id):
             http = credentials.authorize(httplib2.Http())
             #r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive", "GET")
             #drive_id = json.loads(content)['id']
+            #r, content = try_request(http, "https://graph.microsoft.com/v1.0/drive/special/approot")
+            #if int(r['status']) != 200:
+            #    return worker_controller.functions.ReturnValue(ok=False, error="Could not verify application root", restart=False)
             key = 'da:onedrive:mapping:userid:' + str(user_id)
             the_folder = worker_controller.r.get(key)
             r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder), "GET")
@@ -484,7 +487,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path)
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path)
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_files[section].add(f)
@@ -507,7 +510,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
                             #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
@@ -531,7 +534,7 @@ def sync_with_onedrive(user_id):
                             #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
@@ -573,21 +576,22 @@ def sync_with_onedrive(user_id):
     except Exception as e:
         return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
 
-def onedrive_upload(http, folder_id, data, the_path, new_item_id=None):
+def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=None):
     headers = { 'Content-Type': 'application/json' }
     if new_item_id is None:
         is_new = True
-        item_data = copy.deepcopy(data)
-        item_data['file'] = dict()
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + '/children'
-        r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(item_data))
-        if int(r['status']) != 201:
-            return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
-        new_item_id = json.loads(content)['id']
-        sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
+        #item_data = copy.deepcopy(data)
+        #item_data['file'] = dict()
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + '/children'
+        #r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(item_data))
+        #if int(r['status']) != 201:
+        #    return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
+        #new_item_id = json.loads(content)['id']
+        #sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     else:
         is_new = False    
-    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
     r, content = try_request(http, the_url, 'POST')
     if int(r['status']) != 200:
         return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url, restart=False)
@@ -611,6 +615,8 @@ def onedrive_upload(http, folder_id, data, the_path, new_item_id=None):
                     sys.stderr.write(unicode(r['status']) + "\n")
                     sys.stderr.write(content)
                     return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+                if new_item_id is None:
+                    new_item_id = json.loads(content)['id']
             else:
                 if int(r['status']) != 202:
                     sys.stderr.write("Error2\n")

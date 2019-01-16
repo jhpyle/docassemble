@@ -1,5 +1,15 @@
-bootstrap-fileinput
-===================
+<h1 align="center">
+    <a href="http://plugins.krajee.com" title="Krajee Plugins" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/krajee-logo-b.png" alt="Krajee Logo"/>
+    </a>
+    <br>
+    bootstrap-fileinput
+    <hr>
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DTP3NZQ6G2AYU"
+       title="Donate via Paypal" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/donate.png" alt="Donate"/>
+    </a>
+</h1>
 
 [![Bower version](https://badge.fury.io/bo/bootstrap-fileinput.svg)](http://badge.fury.io/bo/bootstrap-fileinput)
 [![Latest Stable Version](https://poser.pugx.org/kartik-v/bootstrap-fileinput/v/stable)](https://packagist.org/packages/kartik-v/bootstrap-fileinput)
@@ -34,12 +44,17 @@ The [master branch](https://github.com/kartik-v/bootstrap-fileinput/tree/master)
 ## Installation
 
 ### Using Bower
-You can use the `bower` package manager to install. Run:
+To install using the `bower` package manager run:
 
     bower install bootstrap-fileinput
 
+### Using NPM
+To install using the `npm` package manager run:
+
+    npm install bootstrap-fileinput
+
 ### Using Composer
-You can use the `composer` package manager to install. Either run:
+To install using the `composer` package manager run: 
 
     $ php composer.phar require kartik-v/bootstrap-fileinput "@dev"
 
@@ -64,7 +79,7 @@ Step 1: Load the following assets in your header.
 <!-- if using RTL (Right-To-Left) orientation, load the RTL CSS file after fileinput.css by uncommenting below -->
 <!-- link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.9/css/fileinput-rtl.min.css" media="all" rel="stylesheet" type="text/css" /-->
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<!-- piexif.min.js is only needed for restoring exif data in resized images and when you 
+<!-- piexif.min.js is needed for auto orienting image files OR when restoring exif data in resized images and when you 
     wish to resize images before upload. This must be loaded before fileinput.min.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/4.4.9/js/plugins/piexif.min.js" type="text/javascript"></script>
 <!-- sortable.min.js is only needed if you wish to sort / rearrange files in initial preview. 
@@ -117,4 +132,4 @@ Alternatively, you can directly call the plugin options by setting data attribut
 
 ## License
 
-**bootstrap-fileinput** is released under the BSD 3-Clause License. See the bundled `LICENSE.md` for details.
+**bootstrap-fileinput** is released under the BSD-3-Clause License. See the bundled `LICENSE.md` for details.

@@ -17,16 +17,16 @@
   {{ form.hidden_tag() }}
   <div class="form-group">
     <h4>{{ word('You can provide a:') }}</h4>
-    {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/username/packagename') }}
-    {{ render_select_field(form.gitbranch, tabindex=75) }}
+    {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
+    {{ render_select_field(form.gitbranch) }}
     <h4>{{ word('Or you can upload a:') }}</h4>
-    {{ render_file_field(form.zipfile, tabindex=80) }}
+    {{ render_file_field(form.zipfile) }}
     <h4>{{ word('Or you can specify a:') }}</h4>
-    {{ render_field(form.pippackage, tabindex=90) }}
-    {{ render_checkbox_field(form.use_cache, tabindex=102) }}
+    {{ render_field(form.pippackage) }}
+    {{ render_checkbox_field(form.use_cache) }}
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100) }}
+    {{ render_submit_field(form.submit) }}
   </div>
 </form>
 

@@ -32,10 +32,10 @@
                 <div class="card-header">
                     <span>{{ word('Interview:') }}&nbsp;</span>
                     <span class="select-wrapper">
-                        <select tabindex="130" id="daVariables" class="playground-select"></select>
+                        <select id="daVariables" class="playground-select"></select>
                     </span>
                     <a id="uploadbutton" href="#" class="btn btn-sm btn-primary float-right uploadbutton" title="{{ word('Upload this .docx file to the Templates folder') }}"><i class="fas fa-upload"></i></a>
-                    <a id="uploadspinner" style="display:none;" tabindex="0" class="btn btn-sm btn-primary float-right uploadbutton" title="{{ word('Please wait.  File is being uploaded') }}"><i class="fas fa-spinner fa-spin"></i></a>
+                    <a id="uploadspinner" style="display:none;" class="btn btn-sm btn-primary float-right uploadbutton" title="{{ word('Please wait.  File is being uploaded') }}"><i class="fas fa-spinner fa-spin"></i></a>
                     <div id="autocompletediv" style="display:none">
                         <select title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" class="form-control form-control-sm mt-1" id="autocomplete" multiple="" size="2">
                             <option value="" title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" disabled>{{ word("Autocomplete") }}</option>

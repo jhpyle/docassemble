@@ -29,30 +29,30 @@
 
     {{ render_multiselect_field(form.role_id, undernote=privileges_note) }}
 
-    {{ render_field(form.email, tabindex=235) }}
+    {{ render_field(form.email) }}
 
-    {{ render_field(form.first_name, tabindex=240) }}
+    {{ render_field(form.first_name) }}
 
-    {{ render_field(form.last_name, tabindex=250) }}
+    {{ render_field(form.last_name) }}
 
-    {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
+    {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
 
-    {{ render_field(form.subdivisionfirst, tabindex=270) }}
+    {{ render_field(form.subdivisionfirst) }}
 
-    {{ render_field(form.subdivisionsecond, tabindex=280) }}
+    {{ render_field(form.subdivisionsecond) }}
 
-    {{ render_field(form.subdivisionthird, tabindex=290) }}
+    {{ render_field(form.subdivisionthird) }}
 
-    {{ render_field(form.organization, tabindex=300) }}
+    {{ render_field(form.organization) }}
     
-    {{ render_field(form.language, tabindex=310) }}
+    {{ render_field(form.language) }}
     
-    {{ render_field(form.timezone, tabindex=320) }}
+    {{ render_field(form.timezone) }}
 
     <br>
     <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=330) }}
-      {{ render_submit_field(form.cancel, tabindex=340, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+      {{ render_submit_field(form.submit) }}
+      {{ render_submit_field(form.cancel, class="btn btn-warning " + config['BUTTON_CLASS']) }}
     </div>
 </form>
 
