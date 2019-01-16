@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.3.32](https://github.com/jhpyle/docassemble/releases/tag/v0.3.32) - 2019-01-16
+
+### Changed
+- UI and HTML changes for accessibility.
+
+### Fixed
+- Timing of initialization of Google autocomplete fields resulted in
+  JavaScript error in some circumstances.
+- OneDrive synchronization errors due to changes in the Microsoft Graph API.
+
 ## [0.3.31](https://github.com/jhpyle/docassemble/releases/tag/v0.3.31) - 2019-01-14
 
 ### Changed
