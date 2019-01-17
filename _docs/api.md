@@ -95,6 +95,48 @@ if r.status_code != 204:
     raise Exception("Unable to set user information")
 {% endhighlight %}
 
+Instead of passing the API key in the URL parameter or the POST body,
+you can pass it in a cookie called `X-API-Key`:
+
+{% highlight bash %}
+curl --cookie "X-API-Key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
+{% endhighlight %}
+
+You can also send the API key in an HTTP header called `X-API-Key`:
+
+{% highlight bash %}
+curl -H "X-API-Key: H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
+{% endhighlight %}
+
+By default, all API endpoints return headers to facilitate [Cross-Origin Resource
+Sharing] ([CORS]), such as:
+
+{% highlight text %}
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, HEAD
+Access-Control-Max-Age: 21600
+Access-Control-Allow-Headers: Content-Type, origin
+{% endhighlight %}
+
+However, if you configure [`cross site domain`] in your
+[Configuration], the headers indicated by the configuration setting
+will be sent instead.
+
+Note that the library you use for calling the API may impose [CORS]
+limitations on you, which you may need to override, if they can be
+overridden at all.  If you want to send an API key as a cookie, you
+may need to set [`cross site domain`] to a specific domain, because
+otherwise the library may not allow you to send a cookie.  Typically,
+server-side libraries do not impose these restrictions, but you will
+encounter them if you try to use them from a web browser.
+
+If you do call the API from a web browser, note that the API key will
+be visible to the user.  Make sure that the owner of any API key you
+share in a web browser does not have any special privileges.
+Possessing the API key of a basic user does not give someone greater
+privileges than they would have if they used the standard web
+interface.
+
 # <a name="functions"></a>Available API functions
 
 ## <a name="user_new"></a>Create a new user
@@ -107,7 +149,8 @@ Method: [POST]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `username`: the user's e-mail address.
  - `password` (optional): the user's password.  If a password is not
    supplied, a random password will be generated.
@@ -160,7 +203,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `include_inactive` (optional): set to `1` if inactive users should
    be included in the list.
 
@@ -199,7 +243,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `username`: the e-mail address of the user.
 
 Required privileges:
@@ -244,7 +289,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
 
 Required privileges: none.
 
@@ -279,7 +325,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `first_name` (optional): the user's first name.
  - `last_name` (optional): the user's last name.
  - `country` (optional): the user's country code (e.g., `US`).
@@ -319,7 +366,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
 
 Required privileges: `admin` or `advocate`, or the API owner's user ID is the
 same as `user_id`.
@@ -362,7 +410,8 @@ Method: [DELETE]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
 
 Required privileges: `admin`
 
@@ -388,7 +437,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `country` (optional): user's country code (e.g., `US`).
  - `first_name` (optional): user's first name.
  - `language` (optional): user's language code (e.g., `en`).
@@ -432,7 +482,8 @@ Path: `/api/privileges`
 Method: [GET]
 
 Parameters:
-- `key`: the API key.
+- `key`: the API key (optional if the API key is passed in an
+  `X-API-Key` cookie or header).
 
 Required privileges:
 - `admin` or
@@ -455,7 +506,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `privilege`: the name of the privilege to be added to the list.
 
 Required privileges: `admin`.
@@ -484,7 +536,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `privilege`: the name of the privilege to be given to the user.
 
 Required privileges: `admin`.
@@ -516,7 +569,8 @@ Method: [DELETE]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `privilege`: the name of the privilege to be taken away from the user.
 
 Required privileges: `admin`.
@@ -546,7 +600,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `secret` (optional): set to the user's [secret](#secret) if you
    want to be able to access information about interview sessions that
    may be encrypted.
@@ -608,7 +663,8 @@ Required privileges: `admin`
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
  - `i` (optional): set to an interview filename if you want to delete
@@ -679,7 +735,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `i` (optional): set to a filename of an interview, e.g.,
    `docassemble.demo:data/questions/questions.yml`, if you want to
    retrieve only those sessions for a given interview file.
@@ -705,7 +762,8 @@ as the user ID of the API owner.
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `i` (optional): set to a filename of an interview, e.g.,
    `docassemble.demo:data/questions/questions.yml`, if you want to
    delete only those sessions for a given interview file.
@@ -726,7 +784,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `absolute_urls` (optional): if `0`, the `link` URL returned will be
    relative (i.e., will not include the hostname).
 
@@ -762,7 +821,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
  - `username`: the user name of the user whose secret you wish to retrieve.
  - `password`: the password of the user whose secret you wish to retrieve.
 
@@ -795,7 +855,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `username`: the user name of the user.
  - `password`: the password of the user.
  - `i` (optional): the filename of an interview to which the user will
@@ -845,7 +906,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `secret` (optional): the encryption key to use with the interview,
@@ -900,7 +962,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -939,7 +1002,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1058,7 +1122,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1114,7 +1179,8 @@ Method: [POST]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1162,7 +1228,8 @@ Method: [POST]
 
 Form data:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1213,7 +1280,8 @@ Method: [DELETE]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1239,7 +1307,8 @@ Method: [GET]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
@@ -1270,7 +1339,8 @@ Method: [POST]
 
 Parameters:
 
- - `key`: the API key.
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
  - `user_id` (optional): the user ID of the user whose [Playground]
    should be written to.  Only users with `admin` privileges can write
    to a different user's [Playground].  The default is the current
@@ -1405,6 +1475,7 @@ function.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`requests`]: https://pypi.python.org/pypi/requests
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
 [interview `metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`/api/interviews`]: #interviews
 [`/api/secret`]: #secret
@@ -1433,3 +1504,5 @@ function.
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [Redis]: http://redis.io/
+[Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS

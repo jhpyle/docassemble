@@ -428,13 +428,14 @@ application.
 # <a name="webapp"></a>Setting up the web application
 
 Enable the [Apache]<span></span> [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
-and [proxy_wstunnel] modules, if they are not already enabled, by
+[headers], and [proxy_wstunnel] modules, if they are not already enabled, by
 running the following:
 
 {% highlight bash %}
 sudo a2enmod wsgi
 sudo a2enmod xsendfile
 sudo a2enmod rewrite
+sudo a2enmod headers
 sudo a2enmod proxy
 sudo a2enmod proxy_http
 sudo a2enmod proxy_wstunnel
@@ -1488,6 +1489,7 @@ All of these system administration headaches can be avoided by
 [rewrite]: http://httpd.apache.org/docs/current/mod/mod_rewrite.html
 [proxy]: https://httpd.apache.org/docs/current/mod/mod_proxy.html
 [proxy_http]: https://httpd.apache.org/docs/current/mod/mod_proxy_http.html
+[headers]: http://httpd.apache.org/docs/current/mod/mod_headers.html
 [proxy_wstunnel]: https://httpd.apache.org/docs/current/mod/mod_proxy_wstunnel.html
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [nginx]: https://www.nginx.com/
