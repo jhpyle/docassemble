@@ -136,7 +136,7 @@
 
 			// Start hiding ugly checkboxes
 			// Obviously, we don't need native checkboxes :O
-			$object.css({ display : "none" });
+ 		        $object.css({ display : "none" });
 						
 			// We don't need more data-labelauty attributes!
 			// Ok, ok, it's just for beauty improvement
@@ -171,8 +171,13 @@
 		  if ($object.is(':checked')){
 		    $(element).addClass("btn-primary");
 		    $(element).removeClass("btn-light");
-		  };
-		  
+           	    $(element).attr('aria-checked', true);
+		  }
+		  else{
+		    $(element).removeClass("btn-primary");
+		    $(element).addClass("btn-light");
+           	    $(element).attr('aria-checked', false);
+		  }
                   var the_name = $object.attr('name');
 		  if (type == 'radio'){
 		    $object.on('change', function(){
@@ -181,10 +186,12 @@
 			  if ($(this).is(':checked')){
 			    $(this).next().addClass("btn-primary");
 			    $(this).next().removeClass("btn-light");
+			    $(this).next().attr('aria-checked', true);
 			  }
 			  else{
 			    $(this).next().removeClass("btn-primary");
 			    $(this).next().addClass("btn-light");
+ 		            $(this).next().attr('aria-checked', false);
 			  }
 			}
 		      });
@@ -195,27 +202,36 @@
  	              if($(this).is(':checked')){
  			$(this).next().addClass("btn-primary");
 			$(this).next().removeClass("btn-light");
+			$(this).next().attr('aria-checked', true);
 		      }
 		      else{
 			$(this).next().removeClass("btn-primary");
 			$(this).next().addClass("btn-light");
+			$(this).next().attr('aria-checked', false);
 		      }
 		    });		    
 		  }
 			
-			element.keypress(function(event){
-				event.preventDefault();
-				if(event.keyCode === 32 || event.keyCode === 13){		
-					if($object.is(':checked')){
-						$object.prop('checked', false);
-						//$(element).attr('aria-checked',false);
-					}else{
-						$object.prop('checked', true);
-						//$(element).attr('aria-checked', true);
-					}
-				}
-			});
-			
+		    element.keypress(function(event){
+                	var theCode = event.which || event.keyCode;
+			if(theCode === 32 || theCode === 13){
+   			    event.preventDefault();
+			    if($object.is(':checked')){
+ 			        $(this).addClass("btn-primary");
+			        $(this).removeClass("btn-light");
+				$object.prop('checked', false);
+ 		                $(this).attr('aria-checked', true);
+			    }
+			    else{
+ 			        $(this).addClass("btn-primary");
+			        $(this).removeClass("btn-light");
+				$object.prop('checked', true);
+ 		                $(this).attr('aria-checked', false);
+			    }
+			    $object.trigger('change');
+			}
+		    });
+		    
 			$object.after(element);
 			
 			// Now, add "min-width" to label

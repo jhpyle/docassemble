@@ -1,10 +1,65 @@
 Change Log: `bootstrap-fileinput`
 =================================
 
-## version 4.4.9 (_under development_)
+## version 4.5.2
 
-**Date:** _work in process_
+**Date:** 03-Jan-2019
 
+- (enh #1342): Update Turkish Translations.
+- (enh #1339): Better validation of `createObjectURL` and `revokeObjectURL`.
+- Update examples\index.html to use latest jQuery, Bootstrap & Font Awesome libraries.
+- (enh #1333): Update Galician Translations.
+- (enh #1332): Update Chinese Translations.
+- (enh #1325): Update README for NPM install.
+- (bug #1324): Error in IE11 Folder drag and drop.
+- (enh #1322): Add Uzbek Translations.
+- (enh #1320): New events for files dragged and dropped.
+- (enh #1319): Enhance mimeType parsing via `mimeTypeAliases`.
+   - allows quicktime `.mov` files to be previewed in non Apple browsers like Chrome/Firefox/IE.
+- (enh #1318): Configure PDFjs viewer for IE11 pdf preview.
+- (enh #1314): Update Hebrew Translations.
+- (enh #1313): Correct file type function validation.
+- (enh #1311): Correct preview zoom modal keydown next and prev keyboard behavior.
+- (enh #1308): Enhance audio file preview thumbnail styling.
+- (enh #1298): New `encodeUrl` boolean option that encodes all URL passed by default.
+
+## version 4.5.1
+
+**Date:** 25-Sep-2018
+
+- (enh #1305): Correct `browseOnZoneClick` behavior.
+- (enh #1297): Update default thumbnail shadow style.
+- (enh #1286): Correct piexif library load validation.
+
+## version 4.5.0
+
+**Date:** 30-Aug-2018
+
+- (enh #1292): Update DOMPurify plugin to the latest release.
+- (enh #1291): Update Dutch Translations.
+- (enh #1290): Enhance `htmlEncode` to parse undefined variables.
+- (enh #1288): Update Dutch Translations.
+- (enh #1287): Correct full screen modal styling.
+- (enh #1286): Default `autoOrientImage` to `false`.
+- (enh #1285): Update Danish Translations.
+- (bug #1282): Allow `filebrowse` event to be prevented.
+- (enh #1279): Enhance `usePdfRenderer` callback check to detect android phones.
+- Correct nuget batch file.
+
+## version 4.4.9
+
+**Date:** 25-Jul-2018
+
+- (bug #1276): More correct validation of `previewContentTemplates`.
+- (enh #1275): Update Farsi Translations.
+- (enh #1272, #1273): Add Hebrew Translations.
+- (enh #1269, #1270): Enhance auto orientation of images using piexif.js.
+- Enhance progress bar text styling.
+- (enh #1254): Enhance PDF Preview on iOS devices via external PDF renderer (PDFJS).
+- (bug #1242): Correct drop zone enabling check for ajax uploads.
+- (bug #1232): Correct RTL input group button styling.
+- (enh #1228): Enhance and correct preview refresh for various scenarios.
+- (bug #1226): Enhance native input display styling when `showBrowse` is `false`.
 - (enh #1223): Update Font Awesome 5.x theme icons.
 
 ## version 4.4.8

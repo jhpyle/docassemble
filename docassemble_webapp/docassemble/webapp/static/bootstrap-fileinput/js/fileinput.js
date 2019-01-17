@@ -1,5 +1,5 @@
 /*!
- * bootstrap-fileinput v4.4.9
+ * bootstrap-fileinput v4.5.2
  * http://plugins.krajee.com/file-input
  *
  * Author: Kartik Visweswaran
@@ -60,10 +60,22 @@
         MODAL_ID: 'kvFileinputModal',
         MODAL_EVENTS: ['show', 'shown', 'hide', 'hidden', 'loaded'],
         objUrl: window.URL || window.webkitURL,
+        createObjectURL: function (data) {
+            if ($h.objUrl && $h.objUrl.createObjectURL && data) {
+                return $h.objUrl.createObjectURL(data);
+            }
+            return '';
+        },
+        revokeObjectURL: function (data) {
+            if ($h.objUrl && $h.objUrl.revokeObjectURL && data) {
+                $h.objUrl.revokeObjectURL(data);
+            }
+        },
         compare: function (input, str, exact) {
             return input !== undefined && (exact ? input === str : input.match(str));
         },
         isIE: function (ver) {
+            var div, status;
             // check for IE versions < 11
             if (navigator.appName !== 'Microsoft Internet Explorer') {
                 return false;
@@ -71,7 +83,7 @@
             if (ver === 10) {
                 return new RegExp('msie\\s' + ver, 'i').test(navigator.userAgent);
             }
-            var div = document.createElement("div"), status;
+            div = document.createElement("div");
             div.innerHTML = "<!--[if IE " + ver + "]> <i></i> <![endif]-->";
             status = div.getElementsByTagName("i").length;
             document.body.appendChild(div);
@@ -89,7 +101,7 @@
             }
         },
         getDragDropFolders: function (items) {
-            var i, item, len = items.length, folders = 0;
+            var i, item, len = items ? items.length : 0, folders = 0;
             if (len > 0 && items[0].webkitGetAsEntry()) {
                 for (i = 0; i < len; i++) {
                     item = items[i].webkitGetAsEntry();
@@ -336,7 +348,10 @@
         uniqId: function () {
             return Math.round(new Date().getTime()) + '_' + Math.round(Math.random() * 100);
         },
-        htmlEncode: function (str) {
+        htmlEncode: function (str, undefVal) {
+            if (str === undefined) {
+                return undefVal || null;
+            }
             return str.replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
@@ -358,8 +373,7 @@
         },
         cleanMemory: function ($thumb) {
             var data = $thumb.is('img') ? $thumb.attr('src') : $thumb.find('source').attr('src');
-            /** @namespace $h.objUrl.revokeObjectURL */
-            $h.objUrl.revokeObjectURL(data);
+            $h.revokeObjectURL(data);
         },
         findFileName: function (filePath) {
             var sepIndex = filePath.lastIndexOf('/');
@@ -430,68 +444,65 @@
             }
             $cache.remove();
         },
-        setOrientation: function (buffer, callback) {
-            var scanner = new DataView(buffer), idx = 0, value = 1, // Non-rotated is the default
-                maxBytes, uInt16, exifLength;
-            if (scanner.getUint16(idx) !== 0xFFD8 || buffer.length < 2) { // not a proper JPEG
-                if (callback) {
-                    callback();
-                }
-                return;
-            }
-            idx += 2;
-            maxBytes = scanner.byteLength;
-            while (idx < maxBytes - 2) {
-                uInt16 = scanner.getUint16(idx);
-                idx += 2;
-                switch (uInt16) {
-                    case 0xFFE1: // Start of EXIF
-                        exifLength = scanner.getUint16(idx);
-                        maxBytes = exifLength - idx;
-                        idx += 2;
-                        break;
-                    case 0x0112: // Orientation tag
-                        value = scanner.getUint16(idx + 6, false);
-                        maxBytes = 0; // Stop scanning
-                        break;
-                }
-            }
-            if (callback) {
-                callback(value);
-            }
-        },
-        validateOrientation: function (file, callback) {
-            if (!window.FileReader || !window.DataView) {
-                return; // skip orientation if pre-requisite libraries not supported by browser
-            }
-            var reader = new FileReader(), buffer;
-            reader.onloadend = function () {
-                buffer = reader.result;
-                $h.setOrientation(buffer, callback);
-            };
-            reader.readAsArrayBuffer(file);
-        },
-        adjustOrientedImage: function ($img, isZoom) {
-            var offsetContTop, offsetTop, newTop;
-            if (!$img.hasClass('is-portrait-gt4')) {
-                return;
-            }
-            if (isZoom) {
-                $img.css({width: $img.parent().height()});
-                return;
-            } else {
-                $img.css({height: 'auto', width: $img.height()});
-            }
-            offsetContTop = $img.parent().offset().top;
-            offsetTop = $img.offset().top;
-            newTop = offsetContTop - offsetTop;
-            $img.css('margin-top', newTop);
-        },
         closeButton: function (css) {
             css = css ? 'close ' + css : 'close';
             return '<button type="button" class="' + css + '" aria-label="Close">\n' +
                 '  <span aria-hidden="true">&times;</span>\n' +
                 '</button>';
+        },
+        getRotation: function (value) {
+            switch (value) {
+                case 2:
+                    return 'rotateY(180deg)';
+                case 3:
+                    return 'rotate(180deg)';
+                case 4:
+                    return 'rotate(180deg) rotateY(180deg)';
+                case 5:
+                    return 'rotate(270deg) rotateY(180deg)';
+                case 6:
+                    return 'rotate(90deg)';
+                case 7:
+                    return 'rotate(90deg) rotateY(180deg)';
+                case 8:
+                    return 'rotate(270deg)';
+                default:
+                    return '';
+            }
+        },
+        setTransform: function (el, val) {
+            if (!el) {
+                return;
+            }
+            el.style.transform = val;
+            el.style.webkitTransform = val;
+            el.style['-moz-transform'] = val;
+            el.style['-ms-transform'] = val;
+            el.style['-o-transform'] = val;
+        },
+        setImageOrientation: function ($img, $zoomImg, value) {
+            if (!$img || !$img.length) {
+                return;
+            }
+            var ev = 'load.fileinputimageorient';
+            $img.off(ev).on(ev, function () {
+                var img = $img.get(0), zoomImg = $zoomImg && $zoomImg.length ? $zoomImg.get(0) : null,
+                    h = img.offsetHeight, w = img.offsetWidth, r = $h.getRotation(value);
+                $img.data('orientation', value);
+                if (zoomImg) {
+                    $zoomImg.data('orientation', value);
+                }
+                if (value < 5) {
+                    $h.setTransform(img, r);
+                    $h.setTransform(zoomImg, r);
+                    return;
+                }
+                var offsetAngle = Math.atan(w / h), origFactor = Math.sqrt(Math.pow(h, 2) + Math.pow(w, 2)),
+                    scale = !origFactor ? 1 : (h / Math.cos(Math.PI / 2 + offsetAngle)) / origFactor,
+                    s = ' scale(' + Math.abs(scale) + ')';
+                $h.setTransform(img, r + s);
+                $h.setTransform(zoomImg, r + s);
+            });
         }
     };
     FileInput = function (element, options) {
@@ -574,14 +585,17 @@
             self.progressTemplate = t.replace('{class}', self.progressClass);
             self.progressCompleteTemplate = t.replace('{class}', self.progressCompleteClass);
             self.progressErrorTemplate = t.replace('{class}', self.progressErrorClass);
-            self.dropZoneEnabled = $h.hasDragDropSupport() && self.dropZoneEnabled && $h.canAssignFilesToInput();
             self.isDisabled = $el.attr('disabled') || $el.attr('readonly');
             if (self.isDisabled) {
                 $el.attr('disabled', true);
             }
-            self.isAjaxUpload = $h.hasFileUploadSupport() && !$h.isEmpty(self.uploadUrl);
             self.isClickable = self.browseOnZoneClick && self.showPreview &&
                 (self.dropZoneEnabled || !$h.isEmpty(self.defaultPreviewContent));
+            self.isAjaxUpload = $h.hasFileUploadSupport() && !$h.isEmpty(self.uploadUrl);
+            self.dropZoneEnabled = $h.hasDragDropSupport() && self.dropZoneEnabled;
+            if (!self.isAjaxUpload) {
+                self.dropZoneEnabled = self.dropZoneEnabled && $h.canAssignFilesToInput();
+            }
             self.slug = typeof options.slugCallback === "function" ? options.slugCallback : self._slugDefault;
             self.mainTemplate = self.showCaption ? self._getLayoutTemplate('main1') : self._getLayoutTemplate('main2');
             self.captionTemplate = self._getLayoutTemplate('caption');
@@ -658,7 +672,8 @@
                 '      {browse}\n' +
                 '    </div>\n' +
                 '</div>';
-            tMain2 = '{preview}\n<div class="kv-upload-progress kv-hidden"></div>\n<div class="clearfix"></div>\n{remove}\n{cancel}\n{upload}\n{browse}\n';
+            tMain2 = '{preview}\n<div class="kv-upload-progress kv-hidden"></div>\n<div class="clearfix"></div>\n' +
+                '{remove}\n{cancel}\n{upload}\n{browse}\n';
             tPreview = '<div class="file-preview {class}">\n' +
                 '    {close}' +
                 '    <div class="{dropClass}">\n' +
@@ -672,17 +687,17 @@
             tClose = $h.closeButton('fileinput-remove');
             tFileIcon = '<i class="glyphicon glyphicon-file"></i>';
             // noinspection HtmlUnknownAttribute
-            tCaption = '<div class="file-caption form-control {class}" tabindex="500">\n' +
+            tCaption = '<div class="file-caption form-control {class}">\n' +
                 '  <span class="file-caption-icon"></span>\n' +
-                '  <input class="file-caption-name" onkeydown="return false;" onpaste="return false;">\n' +
+                '  <input class="file-caption-name" onkeydown="ignoreAllButTab(event);" onpaste="return false;">\n' +
                 '</div>';
             //noinspection HtmlUnknownAttribute
-            tBtnDefault = '<button type="{type}" tabindex="500" title="{title}" class="{css}" ' +
+            tBtnDefault = '<button type="{type}" tabindex="0" title="{title}" class="{css}" ' +
                 '{status}>{icon} {label}</button>';
             //noinspection HtmlUnknownAttribute
-            tBtnLink = '<a href="{href}" tabindex="500" title="{title}" class="{css}" {status}>{icon} {label}</a>';
+            tBtnLink = '<a href="{href}" tabindex="0" title="{title}" class="{css}" {status}>{icon} {label}</a>';
             //noinspection HtmlUnknownAttribute
-            tBtnBrowse = '<div tabindex="500" class="{css}" {status}>{icon} {label}</div>';
+            tBtnBrowse = '<div tabindex="0" class="{css}" {status}>{icon} {label}</div>';
             tModalMain = '<div id="' + $h.MODAL_ID + '" class="file-zoom-dialog modal fade" ' +
                 'tabindex="-1" aria-labelledby="' + $h.MODAL_ID + 'Label"></div>';
             tModal = '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
@@ -758,6 +773,9 @@
             tOther = '<div class="kv-preview-data file-preview-other-frame"' + tStyle + '>\n' + $h.DEFAULT_PREVIEW + '\n</div>\n';
             tZoomCache = '<div class="kv-zoom-cache" style="display:none">{zoomContent}</div>';
             vDefaultDim = {width: "100%", height: "100%", 'min-height': "480px"};
+            if (self._isPdfRendered()) {
+                tPdf = self.pdfRendererTemplate.replace('{renderer}', self._encodeURI(self.pdfRendererUrl));
+            }
             self.defaults = {
                 layoutTemplates: {
                     main1: tMain1,
@@ -814,7 +832,7 @@
                     audio: {width: "100%", height: "30px"},
                     flash: {width: "213px", height: "160px"},
                     object: {width: "213px", height: "160px"},
-                    pdf: {width: "213px", height: "160px"},
+                    pdf: {width: "100%", height: "160px"},
                     other: {width: "213px", height: "160px"}
                 },
                 previewSettingsSmall: {
@@ -842,6 +860,9 @@
                     object: {width: "auto", height: "100%", 'max-width': "100%", 'min-height': "480px"},
                     pdf: vDefaultDim,
                     other: {width: "auto", height: "100%", 'min-height': "480px"}
+                },
+                mimeTypeAliases: {
+                    'video/quicktime': 'video/mp4'
                 },
                 fileTypeSettings: {
                     image: function (vType, vName) {
@@ -931,12 +952,15 @@
             self._initPreviewTemplates();
         },
         _initPreviewTemplates: function () {
-            var self = this, cfg = self.defaults, tags = self.previewMarkupTags, tagBef, tagAft = tags.tagAfter;
-            $.each(cfg.previewContentTemplates, function (key, value) {
+            var self = this, tags = self.previewMarkupTags, tagBef, tagAft = tags.tagAfter;
+            $.each(self.previewContentTemplates, function (key, value) {
                 if ($h.isEmpty(self.previewTemplates[key])) {
                     tagBef = tags.tagBefore2;
                     if (key === 'generic' || key === 'image' || key === 'html' || key === 'text') {
                         tagBef = tags.tagBefore1;
+                    }
+                    if (self._isPdfRendered() && key === 'pdf') {
+                        tagBef = tagBef.replace('kv-file-content', 'kv-file-content kv-pdf-rendered');
                     }
                     self.previewTemplates[key] = tagBef + value + tagAft;
                 }
@@ -1125,6 +1149,11 @@
             };
             self.previewCache.init();
         },
+        _isPdfRendered: function () {
+            var self = this, useLib = self.usePdfRenderer,
+                flag = typeof useLib === "function" ? useLib() : !!useLib;
+            return flag && self.pdfRendererUrl;
+        },
         _handler: function ($el, event, callback) {
             var self = this, ns = self.namespace, ev = event.split(' ').join(ns + ' ') + ns;
             if (!$el || !$el.length) {
@@ -1132,11 +1161,16 @@
             }
             $el.off(ev).on(ev, callback);
         },
+        _encodeURI: function (vUrl) {
+            var self = this;
+            return self.encodeUrl ? encodeURI(vUrl) : vUrl;
+        },
         _log: function (msg) {
             var self = this, id = self.$element.attr('id');
             if (id) {
                 msg = '"' + id + '": ' + msg;
             }
+            msg = 'bootstrap-fileinput: ' + msg;
             if (typeof window.console.log !== "undefined") {
                 window.console.log(msg);
             } else {
@@ -1388,6 +1422,15 @@
         },
         _listen: function () {
             var self = this, $el = self.$element, $form = self.$form, $cont = self.$container, fullScreenEvents;
+            self._handler($el, 'click', function (e) {
+                if ($el.hasClass('file-no-browse')) {
+                    if ($el.data('zoneClicked')) {
+                        $el.data('zoneClicked', false);
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            });
             self._handler($el, 'change', $.proxy(self._change, self));
             if (self.showBrowse) {
                 self._handler(self.$btnFile, 'click', $.proxy(self._browse, self));
@@ -1409,6 +1452,7 @@
             });
             self._autoFitContent();
             self._initClickable();
+            self._refreshPreview();
         },
         _autoFitContent: function () {
             var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
@@ -1417,23 +1461,6 @@
             $.each(config, function (cat, settings) {
                 sel = '.file-preview-frame .file-preview-' + cat;
                 self.$preview.find(sel + '.kv-preview-data,' + sel + ' .kv-preview-data').css(settings);
-            });
-        },
-        _initClickable: function () {
-            var self = this, $zone;
-            if (!self.isClickable) {
-                return;
-            }
-            $zone = self.isAjaxUpload ? self.$dropZone : self.$preview.find('.file-default-preview');
-            $h.addCss($zone, 'clickable');
-            $zone.attr('tabindex', -1);
-            self._handler($zone, 'click', function (e) {
-                var $tar = $(e.target);
-                if (!$(self.elErrorContainer + ':visible').length &&
-                    (!$tar.parents('.file-preview-thumbnails').length || $tar.parents('.file-default-preview').length)) {
-                    self.$element.trigger('click');
-                    $zone.blur();
-                }
             });
         },
         _scanDroppedItems: function (item, files, path) {
@@ -1480,14 +1507,17 @@
             e.preventDefault();
         },
         _zoneDragEnter: function (e) {
-            var self = this, hasFiles = $.inArray('Files', e.originalEvent.dataTransfer.types) > -1;
+            var self = this, dataTransfer = e.originalEvent.dataTransfer,
+                hasFiles = $.inArray('Files', dataTransfer.types) > -1;
             self._zoneDragDropInit(e);
             if (self.isDisabled || !hasFiles) {
                 e.originalEvent.dataTransfer.effectAllowed = 'none';
                 e.originalEvent.dataTransfer.dropEffect = 'none';
                 return;
             }
-            $h.addCss(self.$dropZone, 'file-highlighted');
+            if (self._raise('fileDragEnter', {'sourceEvent': e, 'files': dataTransfer.types.Files})) {
+                $h.addCss(self.$dropZone, 'file-highlighted');
+            }
         },
         _zoneDragLeave: function (e) {
             var self = this;
@@ -1495,7 +1525,10 @@
             if (self.isDisabled) {
                 return;
             }
-            self.$dropZone.removeClass('file-highlighted');
+            if (self._raise('fileDragLeave', {'sourceEvent': e})) {
+                self.$dropZone.removeClass('file-highlighted');
+            }
+
         },
         _zoneDrop: function (e) {
             /** @namespace e.originalEvent.dataTransfer */
@@ -1516,6 +1549,9 @@
                 };
             e.preventDefault();
             if (self.isDisabled || $h.isEmpty(files)) {
+                return;
+            }
+            if (!self._raise('fileDragDrop', {'sourceEvent': e, 'files': files})) {
                 return;
             }
             if (folders > 0) {
@@ -1776,10 +1812,10 @@
             $modal.focus();
         },
         _setZoomContent: function ($frame, animate) {
-            var self = this, $content, tmplt, body, title, $body, $dataEl, config, pid = $frame.attr('id'),
-                $modal = self.$modal, $prev = $modal.find('.btn-prev'), $next = $modal.find('.btn-next'), $tmp,
+            var self = this, $content, tmplt, body, title, $body, $dataEl, config, previewId = $frame.attr('id'),
+                $zoomPreview = self.$preview.find('#zoom-' + previewId), $modal = self.$modal, $tmp,
                 $btnFull = $modal.find('.btn-fullscreen'), $btnBord = $modal.find('.btn-borderless'), cap, size,
-                $btnTogh = $modal.find('.btn-toggleheader'), $zoomPreview = self.$preview.find('#zoom-' + pid);
+                $btnTogh = $modal.find('.btn-toggleheader');
             tmplt = $zoomPreview.attr('data-template') || 'generic';
             $content = $zoomPreview.find('.kv-file-content');
             body = $content.length ? $content.html() : '';
@@ -1812,16 +1848,12 @@
                     }
                 });
             }
-            $modal.data('previewId', pid);
-            var $img = $body.find('img');
-            if ($img.length) {
-                $h.adjustOrientedImage($img, true);
-            }
-            self._handler($prev, 'click', function () {
-                self._zoomSlideShow('prev', pid);
+            $modal.data('previewId', previewId);
+            self._handler($modal.find('.btn-prev'), 'click', function () {
+                self._zoomSlideShow('prev', previewId);
             });
-            self._handler($next, 'click', function () {
-                self._zoomSlideShow('next', pid);
+            self._handler($modal.find('.btn-next'), 'click', function () {
+                self._zoomSlideShow('next', previewId);
             });
             self._handler($btnFull, 'click', function () {
                 self._resizeZoomDialog(true);
@@ -1856,12 +1888,13 @@
                 $modal.focus();
             });
             self._handler($modal, 'keydown', function (e) {
-                var key = e.which || e.keyCode;
-                if (key === 37 && !$prev.attr('disabled')) {
-                    self._zoomSlideShow('prev', pid);
+                var key = e.which || e.keyCode, $prev = $(this).find('.btn-prev'), $next = $(this).find('.btn-next'),
+                    vId = $(this).data('previewId'), vPrevKey = self.rtl ? 39 : 37, vNextKey = self.rtl ? 37 : 39;
+                if (key === vPrevKey && $prev.length && !$prev.attr('disabled')) {
+                    self._zoomSlideShow('prev', vId);
                 }
-                if (key === 39 && !$next.attr('disabled')) {
-                    self._zoomSlideShow('next', pid);
+                if (key === vNextKey && $next.length && !$next.attr('disabled')) {
+                    self._zoomSlideShow('next', vId);
                 }
             });
         },
@@ -1908,6 +1941,30 @@
                 });
             });
         },
+        _inputFileCount: function () {
+            return this.$element.get(0).files.length;
+        },
+        _refreshPreview: function () {
+            var self = this, files;
+            if (!self._inputFileCount() || !self.showPreview || !self.isPreviewable) {
+                return;
+            }
+            if (self.isAjaxUpload) {
+                files = self.getFileStack();
+                self.filestack = [];
+                if (files.length) {
+                    self._clearFileInput();
+                } else {
+                    files = self.$element.get(0).files;
+                }
+            } else {
+                files = self.$element.get(0).files;
+            }
+            if (files && files.length) {
+                self.readFiles(files);
+                self._setFileDropZoneTitle();
+            }
+        },
         _clearObjects: function ($el) {
             $el.find('video audio').each(function () {
                 this.pause();
@@ -1919,10 +1976,9 @@
         },
         _clearFileInput: function () {
             var self = this, $el = self.$element, $srcFrm, $tmpFrm, $tmpEl;
-            if ($h.isEmpty($el.files) && $h.isEmpty($el.val())) {
+            if (!self._inputFileCount()) {
                 return;
             }
-            $el.files = null;
             $srcFrm = $el.closest('form');
             $tmpFrm = $(document.createElement('form'));
             $tmpEl = $(document.createElement('div'));
@@ -2121,7 +2177,7 @@
             }
         },
         _ajaxSubmit: function (fnBefore, fnSuccess, fnComplete, fnError, previewId, index) {
-            var self = this, settings;
+            var self = this, settings, vUrl;
             if (!self._raise('filepreajax', [previewId, index])) {
                 return;
             }
@@ -2131,12 +2187,13 @@
             self._mergeAjaxCallback('success', fnSuccess);
             self._mergeAjaxCallback('complete', fnComplete);
             self._mergeAjaxCallback('error', fnError);
+            vUrl = index && self.uploadUrlThumb ? self.uploadUrlThumb : self.uploadUrl;
             settings = $.extend(true, {}, {
                 xhr: function () {
                     var xhrobj = $.ajaxSettings.xhr();
                     return self._initXhr(xhrobj, previewId, self.getFileStack().length);
                 },
-                url: index && self.uploadUrlThumb ? self.uploadUrlThumb : self.uploadUrl,
+                url: self._encodeURI(vUrl),
                 type: 'POST',
                 dataType: 'json',
                 data: self.formdata,
@@ -2683,7 +2740,7 @@
                 btnRemove = $h.FRAMES + ' .kv-file-remove', settings = self.fileActionSettings,
                 origClass = settings.removeClass, errClass = settings.removeErrorClass,
                 resetProgress = function () {
-                    var hasFiles = self.isAjaxUpload ? self.previewCache.count() : self.$element.get(0).files.length;
+                    var hasFiles = self.isAjaxUpload ? self.previewCache.count() : self._inputFileCount();
                     if (!$preview.find($h.FRAMES).length && !hasFiles) {
                         self._setCaption('');
                         self.reset();
@@ -2757,7 +2814,7 @@
                 self._mergeAjaxCallback('success', fnSuccess, 'delete');
                 self._mergeAjaxCallback('error', fnError, 'delete');
                 settings = $.extend(true, {}, {
-                    url: vUrl,
+                    url: self._encodeURI(vUrl),
                     type: 'POST',
                     dataType: 'json',
                     data: $.extend(true, {}, {key: vKey}, extraData)
@@ -2811,6 +2868,10 @@
             }
             return self._getLayoutTemplate('size').replace('{sizeText}', out);
         },
+        _getFileType: function (ftype) {
+            var self = this;
+            return self.mimeTypeAliases[ftype] || ftype;
+        },
         _generatePreviewTemplate: function (cat, data, fname, ftype, previewId, isError, size, frameClass, foot, ind, templ) {
             var self = this, caption = self.slug(fname), prevContent, zoomContent = '', styleAttribs = '',
                 screenW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
@@ -2852,7 +2913,7 @@
                     'previewId': id,
                     'caption': caption,
                     'frameClass': css,
-                    'type': ftype,
+                    'type': self._getFileType(ftype),
                     'fileindex': ind,
                     'typeCss': typeCss,
                     'footer': footer,
@@ -2880,7 +2941,7 @@
             }
             var fname = file ? file.name : '', ftype = file ? file.type : '', content, size = file.size || 0,
                 caption = self.slug(fname), isError = isDisabled === true && !self.isAjaxUpload,
-                data = $h.objUrl.createObjectURL(file);
+                data = $h.createObjectURL(file);
             self._clearDefaultPreview();
             content = self._generatePreviewTemplate('other', data, fname, ftype, previewId, isError, size);
             self._addToPreview($preview, content);
@@ -2907,25 +2968,7 @@
                 self._clearDefaultPreview();
                 self._addToPreview($preview, content);
                 var $img = $preview.find('#' + previewId + ' img');
-                if ($img.length && self.autoOrientImage) {
-                    $h.validateOrientation(file, function (value) {
-                        if (!value) {
-                            self._validateImage(previewId, caption, ftype, fsize, iData);
-                            return;
-                        }
-                        var $zoomImg = $preview.find('#zoom-' + previewId + ' img'), css = 'rotate-' + value;
-                        if (value > 4) {
-                            css += ($img.width() > $img.height() ? ' is-portrait-gt4' : ' is-landscape-gt4');
-                        }
-                        $h.addCss($img, css);
-                        $h.addCss($zoomImg, css);
-                        self._raise('fileimageoriented', {'$img': $img, 'file': file});
-                        self._validateImage(previewId, caption, ftype, fsize, iData);
-                        $h.adjustOrientedImage($img);
-                    });
-                } else {
-                    self._validateImage(previewId, caption, ftype, fsize, iData);
-                }
+                self._validateImageOrientation($img, file, previewId, caption, ftype, fsize, iData);
             } else {
                 self._previewDefault(file, previewId);
             }
@@ -2954,6 +2997,7 @@
             }
         },
         _slugDefault: function (text) {
+            // noinspection RegExpRedundantEscape
             return $h.isEmpty(text) ? '' : String(text).replace(/[\[\]\/\{}:;#%=\(\)\*\+\?\\\^\$\|<>&"']/g, '_');
         },
         _updateFileDetails: function (numFiles) {
@@ -3046,7 +3090,7 @@
             self._setProgress(Math.floor(sum / total));
         },
         _validateMinCount: function () {
-            var self = this, len = self.isAjaxUpload ? self.getFileStack().length : self.$element.get(0).files.length;
+            var self = this, len = self.isAjaxUpload ? self.getFileStack().length : self._inputFileCount();
             if (self.validateInitialCount && self.minFileCount > 0 && self._getFileCount(len - 1) < self.minFileCount) {
                 self._noFilesError({});
                 return false;
@@ -3070,6 +3114,7 @@
                 return null;
             }
             /** @namespace file.webkitRelativePath */
+            /** @namespace file.fileName */
             relativePath = String(file.webkitRelativePath || file.fileName || file.name || null);
             if (!relativePath) {
                 return null;
@@ -3135,9 +3180,33 @@
             self._showUploadError(msg, params);
             self._setPreviewError($thumb, i, null);
         },
-        _validateImage: function (previewId, fname, ftype, fsize, iData) {
+        _getExifObj: function (iData) {
+            var self = this, exifObj = null;
+            try {
+                exifObj = window.piexif ? window.piexif.load(iData) : null;
+            } catch (err) {
+                exifObj = null;
+            }
+            if (!exifObj) {
+                self._log('Error loading the piexif.js library.');
+            }
+            return exifObj;
+        },
+        _validateImageOrientation: function ($img, file, previewId, caption, ftype, fsize, iData) {
+            var self = this, exifObj, value;
+            exifObj = $img.length && self.autoOrientImage ? self._getExifObj(iData) : null;
+            value = exifObj ? exifObj["0th"][piexif.ImageIFD.Orientation] : null; // jshint ignore:line
+            if (!value) {
+                self._validateImage(previewId, caption, ftype, fsize, iData, exifObj);
+                return;
+            }
+            $h.setImageOrientation($img, self.$preview.find('#zoom-' + previewId + ' img'), value);
+            self._raise('fileimageoriented', {'$img': $img, 'file': file});
+            self._validateImage(previewId, caption, ftype, fsize, iData, exifObj);
+        },
+        _validateImage: function (previewId, fname, ftype, fsize, iData, exifObj) {
             var self = this, $preview = self.$preview, params, w1, w2, $thumb = $preview.find("#" + previewId),
-                i = $thumb.attr('data-fileindex'), $img = $thumb.find('img'), exifObject;
+                i = $thumb.attr('data-fileindex'), $img = $thumb.find('img');
             fname = fname || 'Untitled';
             $img.one('load', function () {
                 w1 = $thumb.width();
@@ -3153,11 +3222,6 @@
                     self._checkDimensions(i, 'Large', $img, $thumb, fname, 'Height', params);
                 }
                 self._raise('fileimageloaded', [previewId]);
-                try {
-                    exifObject = window.piexif ? window.piexif.load(iData) : null;
-                } catch (err) {
-                    exifObject = null;
-                }
                 self.loadedImages.push({
                     ind: i,
                     img: $img,
@@ -3167,9 +3231,9 @@
                     siz: fsize,
                     validated: false,
                     imgData: iData,
-                    exifObj: exifObject
+                    exifObj: exifObj
                 });
-                $thumb.data('exif', exifObject);
+                $thumb.data('exif', exifObj);
                 self._validateAllImages();
             }).one('error', function () {
                 self._raise('fileimageloaderror', [previewId]);
@@ -3273,13 +3337,37 @@
             }
         },
         _initBrowse: function ($container) {
-            var self = this;
+            var self = this, $el = self.$element;
             if (self.showBrowse) {
-                self.$btnFile = $container.find('.btn-file');
-                self.$btnFile.append(self.$element);
+                self.$btnFile = $container.find('.btn-file').append($el);
             } else {
-                self.$element.hide();
+                $el.appendTo($container).attr('tabindex', -1);
+                $h.addCss($el, 'file-no-browse');
             }
+        },
+        _initClickable: function () {
+            var self = this, $zone, $tmpZone;
+            if (!self.isClickable) {
+                return;
+            }
+            $zone = self.$dropZone;
+            if (!self.isAjaxUpload) {
+                $tmpZone = self.$preview.find('.file-default-preview');
+                if ($tmpZone.length) {
+                    $zone = $tmpZone;
+                }
+            }
+
+            $h.addCss($zone, 'clickable');
+            $zone.attr('tabindex', -1);
+            self._handler($zone, 'click', function (e) {
+                var $tar = $(e.target);
+                if (!$(self.elErrorContainer + ':visible').length &&
+                    (!$tar.parents('.file-preview-thumbnails').length || $tar.parents('.file-default-preview').length)) {
+                    self.$element.data('zoneClicked', true).trigger('click');
+                    $zone.blur();
+                }
+            });
         },
         _initCaption: function () {
             var self = this, cap = self.initialCaption || '';
@@ -3321,7 +3409,7 @@
         _createContainer: function () {
             var self = this, attribs = {"class": 'file-input file-input-new' + (self.rtl ? ' kv-rtl' : '')},
                 $container = $(document.createElement("div")).attr(attribs).html(self._renderMain());
-            self.$element.before($container);
+            $container.insertBefore(self.$element);
             self._initBrowse($container);
             if (self.theme) {
                 $container.addClass('theme-' + self.theme);
@@ -3329,8 +3417,8 @@
             return $container;
         },
         _refreshContainer: function () {
-            var self = this, $container = self.$container;
-            $container.before(self.$element);
+            var self = this, $container = self.$container, $el = self.$element;
+            $el.insertAfter($container);
             $container.html(self._renderMain());
             self._initBrowse($container);
             self._validateDisabled();
@@ -3501,8 +3589,7 @@
         },
         _browse: function (e) {
             var self = this;
-            self._raise('filebrowse');
-            if (e && e.isDefaultPrevented()) {
+            if (e && e.isDefaultPrevented() || !self._raise('filebrowse')) {
                 return;
             }
             if (self.isError && !self.isAjaxUpload) {
@@ -3679,7 +3766,7 @@
             });
         },
         getFilesCount: function () {
-            var self = this, len = self.isAjaxUpload ? self.getFileStack().length : self.$element.get(0).files.length;
+            var self = this, len = self.isAjaxUpload ? self.getFileStack().length : self._inputFileCount();
             return self._getFileCount(len);
         },
         readFiles: function (files) {
@@ -3739,8 +3826,9 @@
                 }
                 var node = ctr + i, previewId = previewInitId + "-" + node, file = files[i], fSizeKB, j, msg,
                     fnText = settings.text, fnImage = settings.image, fnHtml = settings.html, typ, chk, typ1, typ2,
-                    caption = file.name ? self.slug(file.name) : '', fileSize = (file.size || 0) / 1000,
-                    fileExtExpr = '', previewData = $h.objUrl.createObjectURL(file), fileCount = 0, strTypes = '',
+                    caption = file && file.name ? self.slug(file.name) : '', fileSize = (file && file.size || 0) / 1000,
+                    fileExtExpr = '', previewData = $h.createObjectURL(file), fileCount = 0,
+                    strTypes = '',
                     func, knownTypes = 0, isText, isHtml, isImage, txtFlag, processFileLoaded = function () {
                         var msg = msgProgress.setTokens({
                             'index': i + 1,
@@ -3755,6 +3843,9 @@
                         }, 100);
                         self._raise('fileloaded', [file, previewId, i, reader]);
                     };
+                if (!file) {
+                    return;
+                }
                 if (typLen > 0) {
                     for (j = 0; j < typLen; j++) {
                         typ1 = fileTypes[j];
@@ -3767,7 +3858,7 @@
                     return;
                 }
                 if (caption.length === 0) {
-                    msg = self.msgInvalidFileName.replace('{name}', $h.htmlEncode(file.name));
+                    msg = self.msgInvalidFileName.replace('{name}', $h.htmlEncode(file.name, '[unknown]'));
                     throwError(msg, file, previewId, i);
                     return;
                 }
@@ -3861,8 +3952,8 @@
                             }
                         };
                         fileInfo = {'name': caption, 'type': file.type};
-                        $.each(settings, function (key, func) {
-                            if (key !== 'object' && key !== 'other' && func(file.type, caption)) {
+                        $.each(settings, function (k, f) {
+                            if (k !== 'object' && k !== 'other' && typeof f === 'function' && f(file.type, caption)) {
                                 knownTypes++;
                             }
                         });
@@ -3990,9 +4081,9 @@
             self._getThumbs().find('video,audio,img').each(function () {
                 $h.cleanMemory($(this));
             });
+            self._clearFileInput();
             self._resetUpload();
             self.clearStack();
-            self._clearFileInput();
             self._resetErrors(true);
             if (self._hasInitialPreview()) {
                 self._showFileIcon();
@@ -4127,7 +4218,7 @@
             $cont.off().remove();
             return $el;
         },
-        refresh: function (options, triggerChange) {
+        refresh: function (options) {
             var self = this, $el = self.$element;
             if (typeof options !== 'object' || $h.isEmpty(options)) {
                 options = self.options;
@@ -4136,9 +4227,6 @@
             }
             self._init(options, true);
             self._listen();
-            if (triggerChange) {
-                $el.trigger('change' + self.namespace);
-            }
             return $el;
         },
         zoom: function (frameId) {
@@ -4223,10 +4311,11 @@
         showUploadedThumbs: true,
         browseOnZoneClick: false,
         autoReplace: false,
-        autoOrientImage: true, // for JPEG images based on EXIF orientation tag
+        autoOrientImage: false, // if `true` applicable for JPEG images only
         required: false,
         rtl: false,
         hideThumbnailContent: false,
+        encodeUrl: true,
         generateFileId: null,
         previewClass: '',
         captionClass: '',
@@ -4265,6 +4354,8 @@
             borderless: 'btn btn-sm btn-kv btn-default btn-outline-secondary',
             close: 'btn btn-sm btn-kv btn-default btn-outline-secondary'
         },
+        previewTemplates: {},
+        previewContentTemplates: {},
         preferIconicPreview: false,
         preferIconicZoomPreview: false,
         allowedPreviewTypes: undefined,
@@ -4338,6 +4429,7 @@
         reversePreviewOrder: false
     };
 
+    // noinspection HtmlUnknownAttribute
     $.fn.fileinputLocales.en = {
         fileSingle: 'file',
         filePlural: 'files',
@@ -4410,7 +4502,13 @@
             fullscreen: 'Toggle full screen',
             borderless: 'Toggle borderless mode',
             close: 'Close detailed preview'
-        }
+        },
+        usePdfRenderer: function () {
+            var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+            return !!navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/i) || isIE11;
+        },
+        pdfRendererUrl: '',
+        pdfRendererTemplate: '<iframe class="kv-preview-data file-preview-pdf" src="{renderer}?file={data}" {style}></iframe>'
     };
 
     $.fn.fileinput.Constructor = FileInput;

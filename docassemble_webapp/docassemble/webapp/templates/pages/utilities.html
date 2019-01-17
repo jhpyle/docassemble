@@ -23,9 +23,9 @@
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  {{ render_file_field(form.pdfdocxfile, tabindex=80) }}
+  {{ render_file_field(form.pdfdocxfile) }}
   <div class="form-actions">
-    {{ render_submit_field(form.scan, tabindex=100) }}
+    {{ render_submit_field(form.scan) }}
   </div>
 </form>
 
@@ -34,10 +34,10 @@
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.language, tabindex=110, placeholder=language_placeholder) }}
+    {{ render_field(form.language, placeholder=language_placeholder) }}
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.language_submit, tabindex=120) }}
+    {{ render_submit_field(form.language_submit) }}
   </div>
 </form>
 
@@ -46,8 +46,8 @@
 <form action="{{ url_for('utilities') }}" method="POST" role="form">
   {{ form.hidden_tag() }}
   <div class="form-actions">
-    {{ render_field(form.officeaddin_version, tabindex=115) }}
-    {{ render_submit_field(form.officeaddin_submit, tabindex=120) }}
+    {{ render_field(form.officeaddin_version) }}
+    {{ render_submit_field(form.officeaddin_submit) }}
   </div>
 </form>
 

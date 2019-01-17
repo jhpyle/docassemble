@@ -5,10 +5,10 @@
           <p>{{ version }}</p>
           <form action="" method="POST" role="form" class="configform">
             {{ form.hidden_tag() }}
-            <textarea rows="24" cols="80" id="config_content" name="config_content" tabindex="70"></textarea>
+            <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
             <div class="form-actions mt-2">
-              {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-              {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
             </div>
           </form>
 {% endblock %}

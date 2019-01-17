@@ -243,7 +243,6 @@ RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
             awscli \
             virtualenv"
 
-
 USER www-data
 
 RUN bash -c "cd /tmp && \

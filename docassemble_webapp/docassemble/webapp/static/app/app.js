@@ -21,7 +21,7 @@ function daInitializeSignature(){
     }
     newCanvas();
     $(document).on("touchmove", function(event){event.preventDefault();});
-  }, 1000);
+  }, 500);
   $(window).on('resize', function(){resizeCanvas()});
   $(window).on('orientationchange', function(){resizeCanvas()});
   
@@ -314,11 +314,20 @@ function isCanvasSupported(){
 var placeSearch, autocomplete, base_id;
 
 function initAutocomplete(id) {
-  base_id = id;
-  autocomplete = new google.maps.places.Autocomplete(
-      (document.getElementById(base_id)),
-      {types: ['geocode']});
-  autocomplete.addListener('place_changed', fillInAddress);
+    base_id = id;
+    var timePeriod = 0;
+    try {
+	google;
+    }
+    catch(e){
+	timePeriod = 1000;
+    }
+    setTimeout(function(){
+	autocomplete = new google.maps.places.Autocomplete(
+	    (document.getElementById(base_id)),
+	    {types: ['geocode']});
+	autocomplete.addListener('place_changed', fillInAddress);
+    }, timePeriod);
 }
 
 function fillInAddress() {

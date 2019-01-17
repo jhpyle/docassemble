@@ -1,5 +1,22 @@
 # Change Log
 
+## [0.3.33] - 2019-01-16
+### Changed
+- API calls can be authenticated with an `X-API-Key` cookie or HTTP
+  header.
+- API responses contain CORS-friendly HTTP headers.
+### Fixed
+- JSON error when running `ocr_file_in_background()`.
+- XML error when assembling DOCX files.
+
+## [0.3.32] - 2019-01-16
+### Changed
+- UI and HTML changes for accessibility.
+### Fixed
+- Timing of initialization of Google autocomplete fields resulted in
+  JavaScript error in some circumstances.
+- OneDrive synchronization errors due to changes in the Microsoft Graph API.
+
 ## [0.3.31] - 2019-01-14
 ### Changed
 - Additional information added to data representation of question.
