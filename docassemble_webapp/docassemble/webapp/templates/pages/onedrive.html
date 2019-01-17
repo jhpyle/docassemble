@@ -21,8 +21,8 @@
     </select>
   </div>
   <div>
-    {{ render_submit_field(form.submit, tabindex=100) }}
-    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit) }}
+    {{ render_submit_field(form.cancel, class="btn btn-warning " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 {% endblock %}

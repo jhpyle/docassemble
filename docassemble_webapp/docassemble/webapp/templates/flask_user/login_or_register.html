@@ -14,23 +14,23 @@
 
     {# Username or Email #}
     {% set field = login_form.username if user_manager.enable_username else login_form.email %}
-    {{ render_field(field, tabindex=110) }}
+    {{ render_field(field) }}
 
     {# Password #}
-    {{ render_field(login_form.password, tabindex=120) }}
+    {{ render_field(login_form.password) }}
 
     {# Remember me #}
     {% if user_manager.enable_remember_me %}
-    {{ render_checkbox_field(login_form.remember_me, tabindex=130) }}
+    {{ render_checkbox_field(login_form.remember_me) }}
     {% endif %}
 
     {# Submit button #}
-    {{ render_submit_field(login_form.submit, tabindex=180) }}
+    {{ render_submit_field(login_form.submit) }}
 </form>
     {% if user_manager.enable_forgot_password %}
         <p>
             <br/>
-            <a href="{{ url_for('user.forgot_password') }}" tabindex='190'>
+            <a href="{{ url_for('user.forgot_password') }}">
             {{ word("Forgot your Password?") }}</a>
         </p>
     {% endif %}
@@ -46,19 +46,19 @@
 
     {# Username or Email #}
     {% set field = register_form.username if user_manager.enable_username else register_form.email %}
-    {{ render_field(field, tabindex=210) }}
+    {{ render_field(field) }}
 
     {% if user_manager.enable_email and user_manager.enable_username %}
-        {{ render_field(register_form.email, tabindex=220) }}
+        {{ render_field(register_form.email) }}
     {% endif %}
 
-    {{ render_field(register_form.password, tabindex=230) }}
+    {{ render_field(register_form.password) }}
 
     {% if user_manager.enable_retype_password %}
-        {{ render_field(register_form.retype_password, tabindex=240) }}
+        {{ render_field(register_form.retype_password) }}
     {% endif %}
 
-    {{ render_submit_field(register_form.submit, tabindex=280) }}
+    {{ render_submit_field(register_form.submit) }}
 </form>
 
 </div>

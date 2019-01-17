@@ -9,9 +9,9 @@
 {{ get_part('register page pre') }}
           {%- if user_manager.enable_register %}
           {%- if 'next' in request.args %}
-<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=request.args['next']) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=request.args['next']) }}">{{ word("Sign in.") }}</a></p>
           {%- else %}
-<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
+<p>{{ word("Already registered?") }} <a href="{{ url_for('user.login') }}">{{ word("Sign in.") }}</a></p>
           {%- endif %}
           {%- endif %}
           <form action="" method="POST" novalidate formnovalidate class="form" role="form">
@@ -19,7 +19,7 @@
             {%- set field = form.username if user_manager.enable_username else form.email %}
             <div class="form-group">
               <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
-              {{ field(tabindex=210, class_="form-control", type="email") }}
+              {{ field(class_="form-control", type="email") }}
               {%- if field.errors %}
                 {%- for e in field.errors %}
               <p class="help-block">{{ e }}</p>
@@ -27,16 +27,16 @@
               {% endif %}
             </div>
             {%- if user_manager.enable_email and user_manager.enable_username %}
-            {{ render_field(form.email, type='email', tabindex=220) }}
+            {{ render_field(form.email, type='email') }}
             {%- endif %}
-            {{ render_field(form.password, tabindex=260) }}
+            {{ render_field(form.password) }}
             {%- if user_manager.enable_retype_password %}
-            {{ render_field(form.retype_password, tabindex=270) }}
+            {{ render_field(form.retype_password) }}
             {%- endif %}
             {{ myrender_hidden_field(form.social_id, value=user_manager.random_social()) }}
             <br>
             {{ get_part('register page submit') }}<div class="form-actions">
-              {{ render_submit_field(form.submit, tabindex=280) }}
+              {{ render_submit_field(form.submit) }}
             </div>
           </form>
           {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
@@ -44,32 +44,32 @@
           {%- endif %}
           {%- if config['USE_PHONE_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/phone-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with your mobile phone') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('phone_login') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/phone-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with your mobile phone') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_GOOGLE_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Google') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Google') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_FACEBOOK_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Facebook') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Facebook') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_TWITTER_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='twitter') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/twitter-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Twitter') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('oauth_authorize', provider='twitter') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/twitter-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Twitter') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_AUTH0_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='auth0') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/auth0-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Auth0') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('oauth_authorize', provider='auth0') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/auth0-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Auth0') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_AZURE_LOGIN'] %}
           <div class="row nomargin">
-            <div class="daiconbox col-md-7"><a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Azure') }}</td></tr></tbody></table></a></div>
+            <div class="daiconbox col-md-7"><a role="button" class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><table style="height:100%"><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Register with Azure') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}{{ get_part('register page post') }}
           {%- if False and config['USE_GOOGLE_LOGIN'] %}

@@ -1235,11 +1235,15 @@ def add_terms(termname, terms, status=None):
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'
 
-def audio_control(files, preload="metadata"):
+def audio_control(files, preload="metadata", title_text=None):
     for d in files:
         if type(d) in (str, unicode):
             return d
-    output = '<audio controls="controls" preload="' + preload + '">' + "\n"
+    if title_text is None:
+        title_text = ''
+    else:
+        title_text = " title=" + json.dumps(title_text)
+    output = '<audio' + title_text + ' class="audio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'

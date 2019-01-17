@@ -2362,7 +2362,7 @@ class DAFile(DAObject):
         if os.path.isfile(the_path):
             return the_path
         if hasattr(self, '_task' + prefix):
-            if server.wait_for_task(getattr(self, '_task' + prefix)):
+            if wait and server.wait_for_task(getattr(self, '_task' + prefix)):
                 self.retrieve()
                 the_path = self.file_info['path'] + prefix + '-' + str(int(page)) + '.png'
                 if os.path.isfile(the_path):
