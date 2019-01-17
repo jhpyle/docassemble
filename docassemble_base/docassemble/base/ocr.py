@@ -158,10 +158,11 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
     file_to_read = tempfile.TemporaryFile()
     final_image.save(file_to_read, "PNG")
     file_to_read.seek(0)
+    params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)]
+    sys.stderr.write("ocr_page: piping to command " + " ".join(params) + "\n")
     try:
-        text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read)
+        text = subprocess.check_output(params, stdin=file_to_read)
     except subprocess.CalledProcessError as err:
-        raise Exception("ocr_page: failed to list available languages: " + str(err) + " " + str(err.output))
+        raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output))
     sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
     return dict(page=page, text=text.decode('utf8'))
-

@@ -39,6 +39,7 @@ workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 importlib.import_module('docassemble.webapp.config_worker')
 workerapp.config_from_object('docassemble.webapp.config_worker')
 workerapp.set_current()
+workerapp.set_default()
 
 worker_controller = None
 
