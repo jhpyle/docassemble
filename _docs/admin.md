@@ -220,6 +220,15 @@ dictionary of [`fields`] (or [`field code`], or [`field variables`])
 in which the keys are the names of fields in the underlying PDF file.
 This utility provides a handy way of obtaining the list of fields.
 
+If your PDF field names use non-[ASCII] characters such as characters
+with accent marks, the various software packages that **docassemble**
+uses to fill PDF forms may not be able to fill those fields properly.
+If you find that some fields are being filled and others are not,
+check to see if the fields that are not being filled have accented
+characters.  In the PDF template, try replacing the accented
+characters with non-accented characters, and see if you get a better
+result.
+
 ### <a name="translate"></a>Translate system phrases into another language
 
 The second utility on the "Utilities" screen is helpful if your site
@@ -529,3 +538,4 @@ For tips on troubleshooting your **docassemble** system, see the
 [Slack]: https://slack.com
 [logrotate]: https://manpages.debian.org/stretch/logrotate/logrotate.8.en.html
 [Word add-in section]: {{ site.baseurl }}/docs/playground.html#word addin
+[ASCII]: https://en.wikipedia.org/wiki/ASCII

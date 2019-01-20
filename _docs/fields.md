@@ -1230,6 +1230,31 @@ adding the following to the definition of a field:
 
 {% include side-by-side.html demo="minlength" %}
 
+<a name="validation messages"></a>You can customize the standard
+validation messages that users see.  If you want to customize these
+messages on a server-wide basis, you can edit the [`words`] directive
+in the [Configuration].  If you want to customize these messages on an
+interview-wide basis, you can add a [`default validation messages`]
+block to your interview.  For more information on how to do this, see
+the documentation for the [`default validation messages`] block.
+
+You can also customize the messages for a particular field using the
+`validation messages` field modifier.
+
+{% include side-by-side.html demo="validation-messages" %}
+
+Each validation error message has a special code.  In the example
+above, the codes were `required` and `max`.  A full list of these
+codes is available in the documentation for the [`default validation
+messages`] block.
+
+In a `validation messages` field modifier, you can use an abbreviated
+version of many of these codes.  For example, instead of using the
+code `combobox required`, you can use `required`.  Instead of using
+`date min`, you can use `min`.  Either will work in the context of a
+`validation messages` field modifier.  The last word in the code is
+sufficient.
+
 <a name="validate"></a>You can also use [Python] code to validate an
 input field.  To do so, add a `validate` field modifier that refers to
 the name of a [function] that returns `True` (or something that
@@ -2193,3 +2218,5 @@ why this needs to be done manually as opposed to automatically:
 [lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept
+[`words`]: {{ site.baseurl }}/docs/config.html#words
+[`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages

@@ -176,11 +176,33 @@ If you omit the package name (e.g., `[FILE mugshot.jpg]`),
 
 Optionally, you can set the width of the image:
 
-    [FILE docassemble.crimesolver:mugshot.jpg, 100%]
+{% highlight text %}
+[FILE docassemble.crimesolver:mugshot.jpg, 100%]
+{% endhighlight %}
 
 or:
 
-    [FILE docassemble.crimesolver:mugshot.jpg, 150px]
+{% highlight text %}
+[FILE docassemble.crimesolver:mugshot.jpg, 150px]
+{% endhighlight %}
+
+You can also set the [alt text] of the image:
+
+{% highlight text %}
+[FILE docassemble.crimesolver:mugshot.jpg, 150px, Mugshot photograph]
+{% endhighlight %}
+
+If you want to set the [alt text] without setting a width, use `None`
+(with a capital N) as the width:
+
+{% highlight text %}
+[FILE docassemble.crimesolver:mugshot.jpg, None, Mugshot photograph]
+{% endhighlight %}
+
+You can use any characters in the [alt text] except for the right
+bracket.  If you need to use the right bracket in [alt text], use one
+of the other methods of inserting images, such as creating a
+[`DAStaticFile`] object.
 
 <a name="inserting uploaded images"></a>To insert an image that has
 been uploaded, or created using a [signature field], simply refer to
@@ -292,13 +314,13 @@ See [question modifiers] for more information about including audio and video.
 
 You can also display or insert QR codes using `[QR ...]`, where `...`
 is the text you want to encode.  This works like `[FILE ...]` in that
-you can give the image a width.  The QR code images can be displayed
-on the screen or inserted into a document.
+you can give the image a width and [alt text].  The QR code images can
+be displayed on the screen or inserted into a document.
 
 This works within PDF and RTF documents as well as within questions.
 
 For example, this interview provides a QR code that directs the user to
-[Google News](http://news.google.com):
+[Google News](https://news.google.com):
 
 {% include side-by-side.html demo="qr-code-demo" %}
 
@@ -450,3 +472,5 @@ information about this feature, see the section on
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
+[alt text]: https://moz.com/learn/seo/alt-text
+[`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile

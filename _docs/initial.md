@@ -654,6 +654,84 @@ See [language support] for more information about how to create
 multi-lingual interviews.  See [question modifiers] for information about the
 `language` setting of a question.
 
+# <a name="default validation messages"></a>Custom validation messages
+
+The **docassemble** user interface uses the [jQuery Validation Plugin]
+to pop up messages when the user does not enter information for a
+required field, or if a number does not meet a minimum, or if an
+e-mail address is not valid, and other circumstances.
+
+The messages that are displayed can be customized in a number of ways.
+
+On a server-wide level, the messages can be customized the same way
+other built-in phrases in **docassemble** can be customized: using the
+[`words`] directive in the [Configuration] to make a "translation
+table" between the built-in text to the values you want to be used in
+their place.
+
+On an interview-wide level, the messages can be customized using a
+`default validation messages` block:
+
+{% include side-by-side.html demo="default-validation-messages" %}
+
+Within an individual field in a `question`, you can use the
+[`validation messages`] field modifier to define what validation
+messages should be used.  These will override the `default validation
+messages`.
+
+Each validation message has a code.  In the above example, the codes
+used were `required` and `max`.  The complete list of codes is:
+
+* `required` for `This field is required.` There is a default text transformation for
+  language `en` that translates this to "You need to fill this in."
+  This is the standard message that users see when they fail to
+  complete a required field.
+* `multiple choice required` for `You need to select one.` This is shown for 
+  multiple-choice fields.
+* `combobox required` for `You need to select one or type in a new
+  value.` This is shown for [`combobox`] fields.
+* `checkboxes required` for `Check at least one option, or check "%s"`
+  This is shown for [`checkboxes`] fields with a "None of the above"
+  option.  It is also used for [`yesno`] fields with [`uncheck
+  others`] set, which is shown when the user does not check any of the
+  [`yesno`] fields.  `%s` is a code that is replaced with the label of
+  the "None of the above" choice.
+* `minlength` for `You must type at least %s characters.`  This is shown when there is
+  a [`minlength`] field modifier. 
+* `maxlength` for `You cannot type more than %s characters.`  This is shown when there is
+  a [`maxlength`] field modifier. 
+* `checkbox minmaxlength` for `Please select exactly %s.`  This is shown when there is a
+  [`checkboxes`] field with a [`minlength`] field modifier that is the
+  same as the [`maxlength`] field modifier.
+* `checkbox minlength` for `Please select at least %s.`  This is shown when there is a
+  [`checkboxes`] field with a [`minlength`] field modifier set to
+  something other than `1`.
+* `checkbox maxlength` for `Please select no more than %s.`  This is shown when there is a
+  [`checkboxes`] field with a [`maxlength`] field modifier.
+* `date` for `You need to enter a valid date.` This is shown for [`date`] fields
+  when the text entered is not an actual date.
+* `date minmax` for `You need to enter a date between %s and %s.` This is shown for
+  [`date`] fields with [`min`] and [`max`] set.
+* `date min` for `You need to enter a date on or after %s.` This is shown for
+  [`date`] fields with [`min`] set.
+* `date max` for `You need to enter a date on or before %s.` This is shown for
+  [`date`] fields with [`max`] set.
+* `time` for `You need to enter a valid time.` This is shown for [`time`] fields.
+* `datetime` for `You need to enter a valid date and time.` This is shown for
+  [`datetime`] fields.
+* `email` for `You need to enter a complete e-mail address.` This is shown for
+  [`email`] fields.
+* `number` for `You need to enter a number.` This is shown for numeric fields
+  (`number`, `currency`, `float`, and `integer`) when the input is not
+  valid.
+* `min` for `You need to enter a number that is at least %s.` This is shown for
+  numeric fields with a [`min`] field modifier.
+* `max` for `You need to enter a number that is at most %s.` This is shown for
+  numeric fields with a [`max`] field modifier.
+* `file` for `You must provide a file.` This is shown for [file upload fields].
+* `accept` for `Please upload a file with a valid file format.` This is shown for
+  [file upload fields] with an [`accept`] field modifier.
+
 # <a name="machine learning storage"></a>Machine learning training data
  
 If you use [machine learning] in your interviews, then by default,
@@ -1219,3 +1297,20 @@ features:
 [`show login` metadata specifier]: #show login
 [`show login`]: {{ site.baseurl}}/docs/config.html#show login
 [`reconsider()`]: {{ site.baseurl}}/docs/functions.html#reconsider
+[jQuery Validation Plugin]: http://jqueryvalidation.org
+[`words`]: {{ site.baseurl}}/docs/config.html#words
+[`yesno`]: {{ site.baseurl }}/docs/fields.html#fields yesno
+[`uncheck others`]: {{ site.baseurl }}/docs/fields.html#uncheck others
+[`minlength`]: {{ site.baseurl }}/docs/fields.html#minlength
+[`maxlength`]: {{ site.baseurl }}/docs/fields.html#maxlength
+[`min`]: {{ site.baseurl }}/docs/fields.html#min
+[`max`]: {{ site.baseurl }}/docs/fields.html#max
+[`email`]: {{ site.baseurl }}/docs/fields.html#email
+[`date`]: {{ site.baseurl }}/docs/fields.html#date
+[`datetime`]: {{ site.baseurl }}/docs/fields.html#datetime
+[`time`]: {{ site.baseurl }}/docs/fields.html#time
+[`accept`]: {{ site.baseurl }}/docs/fields.html#accept
+[file upload fields]: {{ site.baseurl }}/docs/fields.html#minlength
+[`validation messages`]: {{ site.baseurl }}/docs/fields.html#validation messages
+[`combobox`]: {{ site.baseurl }}/docs/fields.html#combobox
+[`checkboxes`]: {{ site.baseurl }}/docs/fields.html#fields checkboxes

@@ -1319,6 +1319,16 @@ with a password, you can set a `password`, and the [PDF] file will be
 encrypted.  There are two passwords that can be set: an
 "owner" password and a "user" password.
 
+{% highlight yaml %}
+question: |
+  Here is your document.
+attachment:
+  name: Your letter
+  filename: letter
+  pdf template file: letter_template.pdf
+  password: nelson
+{% endhighlight %}
+
 The `password` can be specified in the following ways:
 
 * If set to a string, only the "user" password will be set.
@@ -1330,6 +1340,26 @@ The `password` can be specified in the following ways:
 
 If the user password and the owner password are the same, then only
 the "user" password will be set.
+
+# <a name="template password"></a>Using encrypted templates
+
+If your template file uses encryption, you can set a `template
+password` to the password of the PDF template so that it can be
+decrypted.
+
+If you get an encryption error when trying to use a PDF, it might be
+the case that your PDF is encrypted with the empty string.  In this
+case, it might help to do:
+
+{% highlight yaml %}
+question: |
+  Here is your document.
+attachment:
+  name: Your letter
+  filename: letter
+  pdf template file: letter_template.pdf
+  template password: ""
+{% endhighlight %}
 
 # <a name="language"></a>Assembling documents in a different language than the current language
 

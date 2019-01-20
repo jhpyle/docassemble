@@ -1043,6 +1043,12 @@ has the following attributes:
 * `ok`: this is `True` if the `number` has been defined, and is
   otherwise `False`.  (You will likely never need to use this,
   either.)
+* `alt_text` (optional): you can set this to a textual description of
+  the file.  This can be useful if the file is an image that will be
+  displayed in the browser.  The `alt_text` will then be used as the
+  [alt text] for the image, which helps users of screen readers.  You
+  can also use the [`set_alt_text()`] and [`get_alt_text()`] methods
+  to set and get this attribute.
 
 You might work with `DAFile` objects in the following contexts:
 
@@ -1122,6 +1128,14 @@ markup.
 In the context of a [Mako] template, writing `${ myfile }` is
 equivalent to writing `${ myfile.show() }` (where `myfile` is a
 `DAFile` object).
+
+The method also takes an optional keyword argument `alt_text`, which
+can be used to set the [alt text] of images that appear in the web
+browser.  If an `alt_text` keyword argument is not supplied, the
+`alt_text` attribute of the `DAFile` object itself will be used as the
+[alt text].  If that attribute does not exist, no [alt text] will be
+used.  (See the [`set_alt_text()`] and [`get_alt_text()`] methods for
+more information about this attribute.)
 
 <a name="DAFile.path"></a>The `.path()` method returns a complete file
 path that you can use to read the file or write to the file.
@@ -1306,6 +1320,22 @@ started for whatever reason, for example if you are constructing files
 manually, you can start the process by running `.make_pngs()`.  This
 will launch background processes and wait until they are completed.
 
+<a name="DAFile.set_alt_text"></a><a
+name="DAFile.get_alt_text"></a>The `.set_alt_text()` and
+`.get_alt_text()` methods can be used to set and retrieve the [alt
+text] of the object, which is stored in the `.alt_text` attribute.
+The `.alt_text` attribute can be accessed directly, but the methods
+are useful because `.get_alt_text()` returns `None` if `.alt_text` is
+not defined, and converts the attribute value to unicode if it is not
+unicode.  The methods are also useful because they work on file
+objects of all types, such as [`DAStaticFile`], [`DAFileList`], and
+[`DAFileCollection`] objects.
+
+{% highlight python %}
+my_file.set_alt_text("A photograph of the Shanghai skyline")
+the_alt_text = my_file.get_alt_text()
+{% endhighlight %}
+
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
@@ -1354,6 +1384,24 @@ markup that displays each file in the collection as an image, or as a
 link if the file cannot be displayed as an image.  This
 method takes an optional keyword argument, `width`.
 
+The method also takes an optional keyword argument `alt_text`, which
+can be used to set the [alt text] of images that appear in the web
+browser.  If an `alt_text` keyword argument is not supplied,
+[`get_alt_text()`] is called on the underling [`DAFile`] object to
+obtain the [alt text].  If no `alt_text` is defined for the file, no
+[alt text] is used.
+
+<a name="DAFileCollection.set_alt_text"></a><a
+name="DAFileCollection.set_alt_text"></a>The `DAFileCollection` object
+supports the `.set_alt_text()` and `.get_alt_text()` methods.  These
+work much like the [`set_alt_text()`] and [`get_alt_text()`] methods
+of [`DAFile`].  Unlike a `DAFile`, however, a `DAFileCollection` does
+not have a `.alt_text` attribute.  If you run `set_alt_text()` on a
+[`DAFileCollection`], it is like calling `set_alt_text()` on each of
+the files in the collection.  If you run `get_alt_text()` on a
+`DAFileCollection`, it is like calling [`get_alt_text()`] on the first
+document type in the collection.
+
 ## <a name="DAFileList"></a>DAFileList
 
 A `DAFileList` is a [`DAList`], the items of which are expected to be
@@ -1371,6 +1419,13 @@ argument, `width`.
 
 When included in a [Mako] template, a `DAFileList` object will effectively
 call `show()` on itself.
+
+The method also takes an optional keyword argument `alt_text`, which
+can be used to set the [alt text] of images that appear in the web
+browser.  If an `alt_text` keyword argument is not supplied,
+[`get_alt_text()`] is called on the underling [`DAFile`] object to
+obtain the [alt text].  If no `alt_text` is defined for the file, no
+[alt text] is used.
 
 <a name="DAFileList.url_for"></a>The `.url_for()` method returns a URL
 at which the first file in the list can be accessed.  This is useful
@@ -1404,6 +1459,16 @@ code: |
   the_upload.set_attributes(private=False)
 {% endhighlight %}
 
+<a name="DAFileList.set_alt_text"></a><a
+name="DAFileList.set_alt_text"></a>The `DAFileList` object supports
+the `.set_alt_text()` and `.get_alt_text()` methods.  These work much
+like the [`set_alt_text()`] and [`get_alt_text()`] methods of
+[`DAFile`].  Unlike a `DAFile`, however, a `DAFileList` does not have
+a `.alt_text` attribute.  If you run `set_alt_text()` on a
+[`DAFileList`], it is like calling `set_alt_text()` on each of the
+items in the list.  If you run `get_alt_text()` on a `DAFileList`, it
+is like calling [`get_alt_text()`] on the first item in the list.
+
 ## <a name="DAStaticFile"></a>DAStaticFile
 
 A `DAStaticFile` represents a file in the "static folder" of a
@@ -1417,6 +1482,11 @@ to a static file, such as:
 * `docassemble.base:data/static/cow.jpg` - a file in the static folder
   of another package.
 
+The `DAStaticFile` also uses the `alt_text` attribute.  If you are
+using a `DAStaticFile` to insert an image into the browser, you can
+set the `alt_text` attribute to the text that you want to use as the
+[alt text] for the image.
+
 The `DAStaticFile` object can be used like this:
 
 {% include side-by-side.html demo="static-file" %}
@@ -1428,9 +1498,33 @@ objects:
   - the_icon: DAStaticFile.using(filename='coins.png')
 {% endhighlight %}
 
+It is a best practice to always include [alt text] for every image.
+For an image that is purely decorative, set the [alt text] to empty
+text:
+
+{% highlight yaml %}
+objects:
+  - the_icon: DAStaticFile.using(filename='coins.png', alt_text='')
+{% endhighlight %}
+
+For an image that conveys substantive information, set the [alt text]
+to something descriptive:
+
+{% highlight yaml %}
+objects:
+  - court_photo: DAStaticFile.using(filename='county_court.jpg', alt_text='Photograph of the Fulton County Courthouse')
+{% endhighlight %}
+
 <a name="DAStaticFile.show"></a>The `.show()` method inserts markup that
 displays the file as an image.  This method takes an optional keyword
 argument, `width`.
+
+The method also takes an optional keyword argument `alt_text`, which
+can be used to set the [alt text] of images that appear in the web
+browser.  If an `alt_text` keyword argument is not supplied, the
+`alt_text` attribute of the `DAStaticFile` object itself will be used
+as the [alt text].  If that attribute does not exist, no [alt text]
+will be used.
 
 When included in a [Mako] template, a `DAStaticFile` object will effectively
 call `show()` on itself.
@@ -1451,6 +1545,14 @@ URL at which the file can be accessed.
 
 <a name="DAStaticFile.path"></a>The `.path()` method returns a complete
 file path that you can use to access the file on the server.
+
+<a name="DAStaticFile.set_alt_text"></a><a
+name="DAStaticFile.set_alt_text"></a>The `DAStaticFile` object
+supports the `.set_alt_text()` and `.get_alt_text()` methods.  These
+work much like the [`set_alt_text()`] and [`get_alt_text()`] methods
+of [`DAFile`].  Like [`DAFile`] objects, [`DAStaticFile`] objects use
+the `alt_text` attribute to store the [alt text] associated with the
+file.
 
 Here is an example that shows how [`DAStaticFile`],
 [`DAFileCollection`], [`DAFileList`], and [`DAFile`] objects can be
@@ -2687,6 +2789,15 @@ of the values returned from the [Google Maps Geocoding API], if applicable:
 Here is an example that illustrates how the `.geolocate()` method works:
 
 {% include side-by-side.html demo="geolocate" %}
+
+There is a also a second use of the `geolocate()` method, which is to
+populate the attributes of an empty `Address` object using an address
+expressed as one line of text:
+
+{% include side-by-side.html demo="geolocate-from-address" %}
+
+If this is used on an `Address` that already has populated attributes,
+the attributes of the existing address will be overwritten.
 
 <a name="Address.normalize"></a>
 The `.normalize()` method uses the results of `.geolocate()` to
@@ -3984,3 +4095,6 @@ of the original [`DADateTime`] object.  See
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [namespace]: https://docs.python.org/2.7/tutorial/classes.html#python-scopes-and-namespaces
 [write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown
+[`set_alt_text()`]: #DAFile.set_alt_text
+[`get_alt_text()`]: #DAFile.get_alt_text
+[alt text]: https://moz.com/learn/seo/alt-text

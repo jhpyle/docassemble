@@ -1975,6 +1975,13 @@
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
   \ True"
+"default-validation-messages": |-
+  default validation messages:
+    required: |
+      I would really like to know this.
+      Please tell me!
+    max: |
+      No more than %s, please!
 "define": |-
   code: |
     define('favorite_fruit', 'apple')
@@ -4952,6 +4959,13 @@
   \  % endif\n\n  % if the_address.attr('county'):\n  The address is located in\n\
   \  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address) }\n\n  % else:\n\
   \  The address could not be\n  geolocated.\n  % endif"
+"geolocate-from-address": "objects:\n  - the_address: Address\n---\nquestion: |\n\
+  \  Enter an address\nfields:\n  - Address: address_one_line\n---\nmandatory: True\n\
+  code: |\n  the_address.geolocate(address_one_line)\n---\nmandatory: True\nquestion:\
+  \ |\n  Information about your address\nsubquestion: |\n  The address you provided\
+  \ is:\n    \n  ${ the_address }\n\n  The address is located in\n  ${ the_address.city\
+  \ }.\n\n  The latitude and longitude are\n  ${ the_address.location.latitude }\n\
+  \  and\n  ${ the_address.location.longitude }."
 "get-default-timezone": |-
   question: |
     The default time zone is
@@ -7517,9 +7531,9 @@
     ${ qr_code('https://news.google.com') }
   mandatory: True
 "qr-code-demo": "mandatory: True\nquestion: Here is a URL for you in a QR code\nsubquestion:\
-  \ |\n  [QR https://news.google.com, 200px]\nattachment:\n  name: Your QR code\n\
-  \  filename: your_code\n  content: |\n    Use the QR reader on your smartphone to\
-  \ take a picture of this:\n    \n    [QR https://news.google.com]"
+  \ |\n  [QR https://news.google.com, 200px, Google News]\nattachment:\n  name: Your\
+  \ QR code\n  filename: your_code\n  content: |\n    Use the QR reader on your smartphone\
+  \ to take a picture of this:\n    \n    [QR https://news.google.com]"
 "quantity-noun": |-
   mandatory: True
   question: |
@@ -10052,6 +10066,23 @@
   question: |
     You are now allowed to use
     the Marauder's Map.
+"validation-messages": |-
+  question: |
+    What is your favorite fruit?
+  fields:
+    - "Favorite Fruit": favorite_fruit
+      validation messages:
+        required: |
+          Come on, everyone has a favorite
+          fruit.
+    - "How many seeds does it have?": number_of_seeds
+      datatype: integer
+      max: 100
+      validation messages:
+        max: |
+          No fruit has that many seeds!
+        required: |
+          I really need to know this.
 "value": |-
   question: Summary
   subquestion: |
