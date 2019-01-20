@@ -360,7 +360,11 @@ class InterviewStatus(object):
     def set_tracker(self, tracker):
         self.tracker = tracker
     def as_data(self, encode=True):
-        result = dict()
+        result = dict(language=self.question.language)
+        if self.question.language in self.question.interview.default_validation_messages:
+            result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
+        else:
+            result['validation_messages'] = dict()
         for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = getattr(self, param).rstrip()
@@ -474,6 +478,8 @@ class InterviewStatus(object):
             the_field['active'] = self.extras['ok'][field.number]
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
+            if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
+                the_field['validation_messages'].update(self.extras['validation messages'][field.number])
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
             if hasattr(field, 'extras'):
@@ -708,6 +714,8 @@ class Field:
             self.helptext = data['help']
         if 'validate' in data:
             self.validate = data['validate']
+        if 'validation messages' in data:
+            self.validation_messages = data['validation messages']
         if 'address_autocomplete' in data:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
@@ -751,6 +759,25 @@ class Field:
             self.required = data['required']
         else:
             self.required = True
+
+    def validation_message(self, validation_type, status, default_message, parameters=None):
+        message = None
+        if 'validation messages' in status.extras and self.number in status.extras['validation messages']:
+            validation_type_tail = re.sub(r'.* ', '', validation_type)
+            if validation_type in status.extras['validation messages'][self.number]:
+                message = status.extras['validation messages'][self.number][validation_type]
+            elif validation_type != validation_type_tail and validation_type_tail in status.extras['validation messages'][self.number]:
+                message = status.extras['validation messages'][self.number][validation_type_tail]
+        if message is None and status.question.language in status.question.interview.default_validation_messages and validation_type in status.question.interview.default_validation_messages[status.question.language]:
+            message = status.question.interview.default_validation_messages[status.question.language][validation_type]
+        if message is None:
+            message = default_message
+        if parameters is not None and len(parameters) > 0:
+            try:
+                message = message % parameters
+            except TypeError:
+                pass
+        return message
 
 def recursive_eval_dataobject(target, user_dict):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
@@ -1383,6 +1410,16 @@ class Question:
             if self.language not in self.interview.helptext:
                 self.interview.helptext[self.language] = list()
             self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audiovideo': audiovideo, 'label': help_label, 'from': 'interview'})
+        if 'default validation messages' in data:
+            should_append = False
+            if not isinstance(data['default validation messages'], dict):
+                raise DAError("A default validation messages block must be in the form of a dictionary." + self.idebug(data))
+            if self.language not in self.interview.default_validation_messages:
+                self.interview.default_validation_messages[self.language] = dict()
+            for validation_key, validation_message in data['default validation messages'].iteritems():
+                if not (isinstance(validation_key, basestring) and isinstance(validation_message, basestring)):
+                    raise DAError("A validation messages block must be a dictionary of text keys and text values." + self.idebug(data))
+                self.interview.default_validation_messages[self.language][validation_key] = validation_message.strip()
         if 'generic object' in data:
             self.is_generic = True
             #self.is_generic_list = False
@@ -1812,6 +1849,14 @@ class Question:
                 if has_code:
                     field_data['has_code'] = True
                 self.question_variety = 'buttons'
+            if 'validation messages' in data:
+                if not isinstance(data['validation messages'], dict):
+                    raise DAError("A validation messages indicator must be a dictionary." + self.idebug(data))
+                field_data['validation messages'] = dict()
+                for validation_key, validation_message in data['validation messages'].iteritems():
+                    if not (isinstance(validation_key, basestring) and isinstance(validation_message, basestring)):
+                        raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
+                    field_data['validation messages'][validation_key] = TextObject(definitions + unicode(validation_message).strip(), names_used=self.mako_names)
             if uses_field:
                 data['field'] = data['field'].strip()
                 if invalid_variable_name(data['field']):
@@ -2091,6 +2136,14 @@ class Question:
                                     else:
                                         field_info['extras']['ml_train'] = {'compute': compile(field[key], '<keep for training code>', 'eval'), 'sourcecode': field[key]}
                                         self.find_fields_in(field[key])
+                            elif key == 'validation messages':
+                                if not isinstance(field[key], dict):
+                                    raise DAError("A validation messages indicator must be a dictionary." + self.idebug(data))
+                                field_info['validation messages'] = dict()
+                                for validation_key, validation_message in field[key].iteritems():
+                                    if not (isinstance(validation_key, basestring) and isinstance(validation_message, basestring)):
+                                        raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
+                                    field_info['validation messages'][validation_key] = TextObject(definitions + unicode(validation_message).strip(), names_used=self.mako_names)
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
@@ -2970,6 +3023,8 @@ class Question:
                 target['valid formats'] = ['*']
             if 'password' in target:
                 options['password'] = TextObject(target['password'])
+            if 'template password' in target:
+                options['template_password'] = TextObject(target['template password'])
             if 'pdf/a' in target:
                 if isinstance(target['pdf/a'], bool):
                     options['pdf_a'] = target['pdf/a']
@@ -3363,11 +3418,19 @@ class Question:
                 if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
                 if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    extras['accept'] = eval(field.accept['compute'], user_dict)
+                    if 'accept' not in extras:
+                        extras['accept'] = dict()
+                    extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
                 if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
                     if 'rows' not in extras:
                         extras['rows'] = dict()
                     extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
+                if hasattr(field, 'validation_messages'):
+                    if 'validation messages' not in extras:
+                        extras['validation messages'] = dict()
+                    extras['validation messages'][field.number] = dict()
+                    for validation_key, validation_message_template in field.validation_messages.iteritems():
+                        extras['validation messages'][field.number][validation_key] = validation_message_template.text(user_dict)
                 if hasattr(field, 'validate'):
                     the_func = eval(field.validate['compute'], user_dict)
                     try:
@@ -3677,7 +3740,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references'):
                     if key in result:
                         del result[key]
                 return result
@@ -3691,9 +3754,9 @@ class Question:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references'):
+                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references'):
                             if key in result:
                                 del result[key]
                         docassemble.base.functions.reset_context()
@@ -3727,7 +3790,7 @@ class Question:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_references=result['update_references'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'update_references']:
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references']:
                             if key in result:
                                 del result[key]
                 else:
@@ -3869,6 +3932,10 @@ class Question:
             result['password'] = attachment['options']['password'].text(user_dict)
         else:
             result['password'] = None
+        if 'template_password' in attachment['options']:
+            result['template_password'] = attachment['options']['template_password'].text(user_dict)
+        else:
+            result['template_password'] = None
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
                 if 'decimal_places' in attachment['options']:
@@ -4136,6 +4203,7 @@ class Interview:
         self.reconsider_generic = dict()
         self.question_index = 0
         self.default_role = None
+        self.default_validation_messages = dict()
         self.title = None
         self.debug = get_config('debug', True)
         self.use_progress_bar = False

@@ -695,12 +695,32 @@ def interview_url_as_qr(**kwargs):
     """Inserts into the markup a QR code linking to the interview.
     This can be used to pass control from a web browser or a paper 
     handout to a mobile device."""
-    return qr_code(interview_url(**kwargs))
+    alt_text = None
+    width = None
+    the_kwargs = dict()
+    for key, val in kwargs.iteritems():
+        if key == 'alt_text':
+            alt_text = val
+        elif key == 'width':
+            width = val
+        else:
+            the_kwargs[key] = val
+    return qr_code(interview_url(**the_kwargs), alt_text=alt_text, width=width)
 
 def interview_url_action_as_qr(action, **kwargs):
     """Like interview_url_as_qr, except it additionally specifies an 
     action.  The keyword arguments are arguments to the action."""
-    return qr_code(interview_url_action(action, **kwargs))
+    alt_text = None
+    width = None
+    the_kwargs = dict()
+    for key, val in kwargs.iteritems():
+        if key == 'alt_text':
+            alt_text = val
+        elif key == 'width':
+            width = val
+        else:
+            the_kwargs[key] = val
+    return qr_code(interview_url_action(action, **the_kwargs), alt_text=alt_text, width=width)
 
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
@@ -2346,17 +2366,24 @@ def static_image(filereference, width=None):
     else:
         return('[FILE ' + filename + ', ' + width + ']')
 
-def qr_code(string, width=None):
+def qr_code(string, width=None, alt_text=None):
     """Inserts appropriate markup to include a QR code image.  If you know
     the string you want to encode, you can just use the "[QR ...]" markup.  
     This function is useful when you want to assemble the string programmatically.
     Takes an optional keyword argument "width"
-    (e.g., qr_code('https://google.com', width='2in'))."""
+    (e.g., qr_code('https://google.com', width='2in')).  Also takes an optional
+    keyword argument "alt_text" for the alt text."""
     ensure_definition(string, width)
     if width is None:
-        return('[QR ' + string + ']')
+        if alt_text is None:
+            return('[QR ' + string + ']')
+        else:
+            return('[QR ' + string + ', None, ' + unicode(alt_text) + ']')
     else:
-        return('[QR ' + string + ', ' + width + ']')
+        if alt_text is None:
+            return('[QR ' + string + ', ' + width + ']')
+        else:
+            return('[QR ' + string + ', ' + width + ', ' + unicode(alt_text) + ']')
 
 def standard_template_filename(the_file):
     try:
@@ -3496,6 +3523,12 @@ class DALocalFile(object):
         self.local_path = local_path
     def path(self):
         return self.local_path
+    def get_alt_text(self):
+        if hasattr(self, 'alt_text'):
+            return unicode(self.alt_text)
+        return None
+    def set_alt_text(self, alt_text):
+        self.alt_text = alt_text
 
 def forget_result_of(*pargs):
     """Resets the user's answer to an embedded code question or mandatory code block."""

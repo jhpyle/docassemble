@@ -846,11 +846,14 @@ class Address(DAObject):
                 result['icon'] = self.icon
             return [result]
         return None
-    def geolocate(self):
-        """Determines the latitude and longitude of the location."""
-        if self.geolocated:
-            return self.geolocate_success    
-        the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+    def geolocate(self, address=None):
+        """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geolocation of the selected address."""
+        if address is None:
+            if self.geolocated:
+                return self.geolocate_success
+            the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+        else:
+            the_address = address
         #logmessage("geolocate: trying to geolocate " + str(the_address))
         from geopy.geocoders import GoogleV3
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
@@ -875,7 +878,6 @@ class Address(DAObject):
             self.location.known = True
             self.location.latitude = results.latitude
             self.location.longitude = results.longitude
-            self.location.description = self.block()
             self.geolocate_response = results.raw
             if hasattr(self, 'norm'):
                 delattr(self, 'norm')
@@ -1003,6 +1005,12 @@ class Address(DAObject):
                 logmessage("Normalized address was incomplete")
                 self.geolocate_success = False
             self.norm_long.geolocate_response = results.raw
+            if address is not None:
+                self.normalize()
+            try:
+                self.location.description = self.block()
+            except:
+                self.location.description = ''
         else:
             logmessage("geolocate: Valid not ok.")
             self.geolocate_success = False

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
 from docassemble.base.util import format_date
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
@@ -885,10 +886,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     label_saveas = field.saveas                        
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
-                #     validation_rules['messages'][the_saveas] = dict()
-                #     validation_rules['rules'][the_saveas] = dict()
-                # else:
-                    validation_rules['messages'][the_saveas]['required'] = word("This field is required.")
+                    if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
+                    elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('multiple choice required', status, word("You need to select one."))
+                    else:
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('required', status, word("This field is required."))
                     if status.extras['required'][field.number]:
                         #sys.stderr.write(field.datatype + "\n")
                         validation_rules['rules'][the_saveas]['required'] = True
@@ -920,7 +923,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         status.extra_scripts.append(the_js)
                     for y in uncheck_list + [the_saveas]:
                         validation_rules['rules'][y]['checkone'] = [1, the_query]
-                        validation_rules['messages'][y]['checkone'] = word("Check at least one option, or check") + " " + '"' + status.labels[field.number] + '"'
+                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([status.labels[field.number]]))
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
@@ -931,9 +934,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                             validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
                             if key == 'minlength':
-                                validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                                validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You must type at least %s characters."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'maxlength':
-                                validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                                validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You cannot type more than %s characters."), parameters=tuple([status.extras[key][field.number]]))
             if hasattr(field, 'inputtype'):
                 if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
                     validation_rules['ignore'] = None
@@ -943,72 +946,90 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
                     if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)):
                         checkbox_rules = dict()
+                        checkbox_messages = dict()
                         if 'minlength' in field.extras and 'minlength' in status.extras and 'maxlength' in field.extras and 'maxlength' in status.extras and status.extras['minlength'][field.number] == status.extras['maxlength'][field.number] and status.extras['minlength'][field.number] > 0:
                             if 'nota' not in status.extras:
                                 status.extras['nota'] = dict()
                             status.extras['nota'][field.number] = False
                             checkbox_rules['checkexactly'] = [str(field.number), status.extras['maxlength'][field.number]]
+                            checkbox_messages['checkexactly'] = field.validation_message('checkbox minmaxlength', status, word("Please select exactly %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
                         else:
                             if 'minlength' in field.extras and 'minlength' in status.extras:
                                 checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
+                                if status.extras['minlength'][field.number] == 1:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select one."))
+                                else:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
                                 if int(status.extras['minlength'][field.number]) > 0:
                                     if 'nota' not in status.extras:
                                         status.extras['nota'] = dict()
                                     status.extras['nota'][field.number] = False
                             if 'maxlength' in field.extras and 'maxlength' in status.extras:
                                 checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
+                                checkbox_messages['checkatmost'] = field.validation_message('checkbox maxlength', status, word("Please select no more than %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
                         validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
+                        validation_rules['messages']['_ignore' + str(field.number)] = checkbox_messages
                     if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                         if '_ignore' + str(field.number) not in validation_rules['rules']:
                             validation_rules['rules']['_ignore' + str(field.number)] = dict()
                         if 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
                             validation_rules['rules']['_ignore' + str(field.number)]['checkatleast'] = [str(field.number), 1]
+                        if status.extras['nota'][field.number] is True:
+                            formatted_item = word("None of the above")
+                        else:
+                            if hasattr(field, 'saveas') and field.saveas in status.embedded:
+                                formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=False, do_terms=False)
+                            else:
+                                formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
+                        validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([formatted_item])))
                     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio':
                     validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
-                    validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
+                    validation_rules['messages'][the_saveas]['date'] = field.validation_message('date', status, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras:
                         validation_rules['rules'][the_saveas]['minmaxdate'] = [format_date(status.extras['min'][field.number], format='yyyy-MM-dd'), format_date(status.extras['max'][field.number], format='yyyy-MM-dd')]
-                        validation_rules['messages'][the_saveas]['minmaxdate'] = word("You need to enter a date between %s and %s") % (format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short'))
+                        validation_rules['messages'][the_saveas]['minmaxdate'] = field.validation_message('date minmax', status, word("You need to enter a date between %s and %s."), parameters=(format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short')))
                     else:
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                                 #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                                 validation_rules['rules'][the_saveas][key + 'date'] = format_date(status.extras[key][field.number], format='yyyy-MM-dd')
                                 if key == 'min':
-                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or after") + " " + format_date(status.extras[key][field.number], format='short')
+                                    validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
                                 elif key == 'max':
-                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or before") + " " + format_date(status.extras[key][field.number], format='short')
+                                    validation_rules['messages'][the_saveas]['maxdate'] = field.validation_message('date max', status, word("You need to enter a date on or before %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
-                    validation_rules['messages'][the_saveas]['time'] = word("You need to enter a valid time.")
+                    validation_rules['messages'][the_saveas]['time'] = field.validation_message('time', status, word("You need to enter a valid time."))
                 if field.datatype == 'datetime':
                     validation_rules['rules'][the_saveas]['datetime'] = True
-                    validation_rules['messages'][the_saveas]['datetime'] = word("You need to enter a valid date and time.")
+                    validation_rules['messages'][the_saveas]['datetime'] = field.validation_message('datetime', status, word("You need to enter a valid date and time."))
                 if field.datatype == 'email':
                     validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
                         validation_rules['rules'][the_saveas]['minlength'] = 1
-                        validation_rules['messages'][the_saveas]['minlength'] = word("This field is required.")
-                    validation_rules['messages'][the_saveas]['email'] = word("You need to enter a complete e-mail address.")
+                        validation_rules['messages'][the_saveas]['minlength'] = field.validation_message('required', status, word("This field is required."))
+                    validation_rules['messages'][the_saveas]['email'] = field.validation_message('email', status, word("You need to enter a complete e-mail address."))
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][the_saveas]['number'] = True
-                    validation_rules['messages'][the_saveas]['number'] = word("You need to enter a number.")
+                    validation_rules['messages'][the_saveas]['number'] = field.validation_message('number', status, word("You need to enter a number."))
                     #sys.stderr.write("Considering adding validation rule\n")
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                             validation_rules['rules'][the_saveas][key] = float(status.extras[key][field.number])
                             if key == 'min':
-                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at least") + " " + str(status.extras[key][field.number])
+                                validation_rules['messages'][the_saveas][key] = field.validation_message('min', status, word("You need to enter a number that is at least %s."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'max':
-                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at most") + " " + str(status.extras[key][field.number])
+                                validation_rules['messages'][the_saveas][key] = field.validation_message('max', status, word("You need to enter a number that is at most %s."), parameters=tuple([status.extras[key][field.number]]))
                 if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(the_saveas)
-                    validation_rules['messages'][the_saveas]['required'] = word("You must provide a file.")
+                    validation_rules['messages'][the_saveas]['required'] = field.validation_message('file required', status, word("You must provide a file."))
+                    if 'accept' in status.extras and field.number in status.extras['accept']:
+                        validation_rules['messages'][the_saveas]['accept'] = field.validation_message('accept', status, word("Please upload a file with a valid file format."))
                 if field.datatype == 'boolean':
                     if field.sign > 0:
                         checkboxes[field.saveas] = 'False'
@@ -1175,10 +1196,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control daspaceafter' + combobox + '" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one or type in a new value.")}
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
             else:
                 indexno = 0
@@ -1216,10 +1237,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one or type in a new value.")}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
             if status.question.question_variety == "radio":
@@ -2112,8 +2133,8 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 accept = ''
                 capture = ''
-            if 'accept' in status.extras:
-                accept = ' accept="' + status.extras['accept'] + '"'
+            if 'accept' in status.extras and field.number in status.extras['accept']:
+                accept = ' accept="' + status.extras['accept'][field.number] + '"'
             maximagesize = ''
             if 'max_image_size' in status.extras:
                 if status.extras['max_image_size']:

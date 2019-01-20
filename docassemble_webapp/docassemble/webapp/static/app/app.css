@@ -1532,13 +1532,16 @@ div.danavdiv {
 a.danavlink {
     cursor: text;
     position: relative;
-    outline: none;
 }
 
 a.danavlink .toggler {
     position: absolute;
     left: 0;
     cursor: pointer;
+}
+
+a.danavlink .toggler:hover {
+    text-decoration: none;
 }
 
 .ul-toggle {

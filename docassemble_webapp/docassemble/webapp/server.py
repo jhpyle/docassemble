@@ -1963,20 +1963,20 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
                 else:
-                    output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
                 else:
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
@@ -2020,12 +2020,12 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                     section_reached = False
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a tabindex="0" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
+                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
                     else:
-                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within:
@@ -2157,8 +2157,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if help_label is None:
         help_label = status.question.help()
     extra_help_message = word("Help is available for this question")
+    phone_sr = word("Phone help")
     phone_message = word("Phone help is available")
     chat_message = word("Live chat is available")
+    chat_sr = word("Live chat")
     source_message = word("How this question came to be asked")
     if debug_mode:
         source_button = '<li class="nav-item d-none d-md-block"><a class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
@@ -2170,7 +2172,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a role="button" href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
     navbar += """
         <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
@@ -2180,12 +2182,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
 """
     if 'menu_items' in status.extras:
         if not isinstance(status.extras['menu_items'], list):
-            custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
+            custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                    custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
@@ -2208,7 +2210,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
-                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="0">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
+                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
                 navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" id="menuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="menuLabel">'
                 if custom_menu:
@@ -8104,21 +8106,25 @@ def index():
           var box = this;
           var prev = $(this).prev();
           if (prev && !prev.hasClass('active')){
-            var toggler = $('<span class="toggler">');
+            var toggler;
             if ($(box).hasClass('notshowing')){
+              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="false">');
               $('<i class="fas fa-caret-right">').appendTo(toggler);
             }
             else{
+              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="true">');
               $('<i class="fas fa-caret-down">').appendTo(toggler);
             }
             toggler.appendTo(prev);
             toggler.on('click', function(e){
+              var oThis = this;
               $(this).find("svg").each(function(){
                 if ($(this).attr('data-icon') == 'caret-down'){
                   $(this).removeClass('fa-caret-down');
                   $(this).addClass('fa-caret-right');
                   $(this).attr('data-icon', 'caret-right');
                   $(box).hide();
+                  $(oThis).attr('aria-pressed', 'false');
                   $(box).toggleClass('notshowing');
                 }
                 else if ($(this).attr('data-icon') == 'caret-right'){
@@ -8126,6 +8132,7 @@ def index():
                   $(this).addClass('fa-caret-down');
                   $(this).attr('data-icon', 'caret-down');
                   $(box).show();
+                  $(oThis).attr('aria-pressed', 'true');
                   $(box).toggleClass('notshowing');
                 }
               });
@@ -8669,7 +8676,7 @@ def index():
         else{
           return false;
         }
-      }, """ + json.dumps(word("Please check at least one.")) + """);
+      });
       $.validator.addMethod('checkatleast', function(value, element, params){
         if ($(element).attr('name') != '_ignore' + params[0]){
           return true;
@@ -8679,13 +8686,6 @@ def index():
         }
         else{
           return false;
-        }
-      }, function(params, element){
-        if (params[1] == 1){
-          return """ + json.dumps(word("Please select one.")) + """;
-        }
-        else{
-          return """ + json.dumps(word("Please select at least")) + """ + " " + params[1] + ".";
         }
       });
       $.validator.addMethod('checkatmost', function(value, element, params){
@@ -8698,8 +8698,6 @@ def index():
         else{
           return true;
         }
-      }, function(params, element){
-        return """ + json.dumps(word("Please select no more than")) + """ + " " + params[1] + ".";
       });
       $.validator.addMethod('checkexactly', function(value, element, params){
         if ($(element).attr('name') != '_ignore' + params[0]){
@@ -8711,8 +8709,6 @@ def index():
         else{
           return true;
         }
-      }, function(params, element){
-        return """ + json.dumps(word("Please select exactly")) + """ + " " + params[1] + ".";
       });
       $.validator.addMethod('mindate', function(value, element, params){
         if (value == null || value == ''){
@@ -8726,7 +8722,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      });
       $.validator.addMethod('maxdate', function(value, element, params){
         if (value == null || value == ''){
           return true;
@@ -8739,7 +8735,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      });
       $.validator.addMethod('minmaxdate', function(value, element, params){
         if (value == null || value == ''){
           return true;
@@ -8753,8 +8749,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
-      $.extend($.validator.messages, {accept: """ + json.dumps(word("Please upload a file with a valid file format.")) + """});
+      });
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language

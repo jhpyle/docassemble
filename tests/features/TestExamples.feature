@@ -1624,7 +1624,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-nota.yml"
     Then I should see the phrase "Please fill in the following information."
     And I click the button "Continue"
-    Then I should see the phrase "Please select one"
+    Then I should see the phrase "Check at least one option, or check “Nothing at all”"
     And I click the option "Sunroof" under "Requested options"
     And I click the option "Automatic transmission" under "Requested options"
     And I click the option "Heated seats" under "Requested options"
@@ -1730,8 +1730,8 @@ Feature: Example interviews
     Then I should see the phrase "Please provide the following information."
     And I set "What is your favorite food?" to "apple pie"
     And I click the button "Continue"
-    Then I should see the phrase 'Check at least one option, or check "Neither"'
-    And I should see the phrase 'Check at least one option, or check "I do not like these rocks"'
+    Then I should see the phrase 'Check at least one option, or check “Neither”'
+    And I should see the phrase 'Check at least one option, or check “I do not like these rocks”'
     And I click the "Apples" option
     And I click the "Obsidian" option
     And I click the button "Continue"
@@ -7468,3 +7468,72 @@ Feature: Example interviews
     And I click the first link " Delete"
     Then I should see the phrase "Table of fruits"
     And I should not see the phrase "Apple"
+
+  # Scenario: Test the interview "Command"
+  #   Given I start the interview "docassemble.base:data/questions/examples/command.yml"
+
+  Scenario: Test the interview "Default validation messages"
+    Given I start the interview "docassemble.base:data/questions/examples/default-validation-messages.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I click the button "Continue"
+    Then I should see the phrase "I would really like to know this. Please tell me!"
+    And I set "Favorite Fruit" to "apples"
+    And I set "How many seeds does it have?" to "542"
+    And I unfocus
+    Then I should see the phrase "No more than 100, please!"
+    And I set "How many seeds does it have?" to "98"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite fruit, apples, has 98 seeds."
+
+  # Scenario: Test the interview "Edit list"
+  #   Given I start the interview "docassemble.base:data/questions/examples/edit-list-non-editable.yml"
+
+  Scenario: Test the interview "Mermaid"
+    Given I start the interview "docassemble.base:data/questions/examples/mermaid.yml"
+    Then I should see the phrase "Give me some names."
+    And I click the button "Continue"
+    Then I should see the phrase "Here is your diagram."
+
+  Scenario: Test the interview "Non-progressive Navigation"
+    Given I start the interview "docassemble.base:data/questions/examples/sections-non-progressive.yml"
+    Then I should see the phrase "Welcome to the interview"
+
+  Scenario: Test the interview "Table export"
+    Given I start the interview "docassemble.base:data/questions/examples/table-export.yml"
+    Then I should see the phrase "What fruit should be added to the list?"
+    And I set "Fruit" to "apple"
+    And I set "Number of seeds" to "4"
+    And I set "When did you last eat one?" to "04/01/2018"
+    And I click the button "Continue"
+    Then I should see the phrase "So far, the fruits include apple. Are there any others?"
+    And I click the button "No"
+    Then I should see the phrase "Information about fruit"
+
+  # Scenario: Test the interview "Upload specific file types"
+  #   Given I start the interview "docassemble.base:data/questions/examples/upload-accept.yml"
+
+  Scenario: Test the interview "Validation messages"
+    Given I start the interview "docassemble.base:data/questions/examples/validation-messages.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I click the button "Continue"
+    Then I should see the phrase "Come on, everyone has a favorite fruit."
+    And I should see the phrase "I really need to know this."
+    And I set "Favorite Fruit" to "apples"
+    And I set "How many seeds does it have?" to "542"
+    And I click the button "Continue"
+    Then I should see the phrase "No fruit has that many seeds!"
+    And I set "How many seeds does it have?" to "98"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite fruit, apples, has 98 seeds."
+
+  # Scenario: Test the interview "Overlay"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/overlay-pdf.yml"
+
+  Scenario: Test the interview "Geolocate from address"
+    Given I start the interview "docassemble.base:data/questions/examples/geolocate-from-address.yml"
+    Then I should see the phrase "Enter an address"
+    And I set "Address" to "5901 Broken Sound Pkwy NW, Boca Raton, FL 33487"
+    And I click the button "Continue"
+    Then I should see the phrase "Information about your address"
+    And I should see the phrase "The address is located in Boca Raton."
+    And I should see the phrase "The latitude and longitude are 26.4024364 and -80.1167301."
