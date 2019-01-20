@@ -2698,7 +2698,7 @@ the latitude and longitude of the address and stores it in the
 attribute `location`, which is a [`LatitudeLongitude`] object.  It
 uses the [`geopy.geocoders.GoogleV3`] class.  To use this, you will
 need an API key for the [Google Maps Geocoding API], which you will
-need to add to the [configuration] as the [`google api`] subdirective
+need to add to the [configuration] as the [`api key`] subdirective
 under the [`google`] directive.
 
 If you call `.geolocate()` on an [`Address`] object called
@@ -4046,6 +4046,7 @@ of the original [`DADateTime`] object.  See
 [Google Places API]: https://developers.google.com/places/
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
+[`api key`]: {{ site.baseurl }}/docs/config.html#google
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
 [translation system]: {{ site.baseurl }}/docs/functions.html#translation
 [`docassemble.base.util.update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
