@@ -785,7 +785,7 @@ class DANav(object):
                         subitems = value
                     all_ids.append(the_key)
                 else:
-                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                     continue
             else:
                 all_ids.append(unicode(x))
@@ -795,7 +795,7 @@ class DANav(object):
                         if len(y) == 1:
                             all_ids.append(y.keys()[0])
                         else:
-                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
                     else:
                         all_ids.append(unicode(y))
@@ -827,7 +827,7 @@ class DANav(object):
                     else:
                         the_title = value
                 else:
-                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                     continue
             else:
                 the_key = None
@@ -843,7 +843,7 @@ class DANav(object):
                             sub_key = y.keys()[0]
                             sub_title = y[sub_key]
                         else:
-                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
                     else:
                         sub_key = None
@@ -1449,11 +1449,11 @@ def item_label(num, level=None, punctuation=True):
     elif level == 1:
         string = alpha(num)
     elif level == 2:
-        string = str(num + 1)
+        string = unicode(num + 1)
     elif level == 3:
         string = alpha(num, case='lower')
     elif level == 4:
-        string = str(num + 1)
+        string = unicode(num + 1)
     elif level == 5:
         string = alpha(num, case='lower')
     elif level == 6:
@@ -1513,11 +1513,11 @@ def word(the_word, **kwargs):
     # expanded to use kwargs.  For example, for languages with gendered words,
     # the gender could be passed as a keyword argument.
     if the_word is True:
-        the_word = 'yes'
+        the_word = u'yes'
     elif the_word is False:
-        the_word = 'no'
+        the_word = u'no'
     elif the_word is None:
-        the_word = "I don't know"
+        the_word = u"I don't know"
     try:
         the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
@@ -1709,9 +1709,8 @@ def comma_list_en(*pargs, **kwargs):
         return(comma_string.join(pargs))
 
 def comma_and_list_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
     if 'and_string' not in kwargs:
-        kwargs['and_string'] = 'y'
+        kwargs['and_string'] = u'y'
     return comma_and_list_en(*pargs, **kwargs)
 
 def comma_and_list_en(*pargs, **kwargs):
@@ -1875,7 +1874,7 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
 
 def capitalize_default(a, **kwargs):
     ensure_definition(a)
-    if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
+    if a and isinstance(a, basestring) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
@@ -2152,7 +2151,7 @@ language_functions = {
 
 def language_function_constructor(term):
     if term not in language_functions:
-        raise SystemError("term " + str(term) + " not in language_functions")
+        raise SystemError("term " + unicode(term) + " not in language_functions")
     def func(*args, **kwargs):
         ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
@@ -2163,9 +2162,9 @@ def language_function_constructor(term):
         if '*' in language_functions[term]:
             return language_functions[term]['*'](*args, **kwargs)
         if 'en' in language_functions[term]:
-            logmessage("Term " + str(term) + " is not defined for language " + str(language))
+            logmessage("Term " + unicode(term) + " is not defined for language " + str(language))
             return language_functions[term]['en'](*args, **kwargs)
-        raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
+        raise SystemError("term " + unicode(term) + " not defined in language_functions for English or *")
     return func
     
 in_the = language_function_constructor('in_the')
@@ -2752,7 +2751,7 @@ def undefine(var):
     """Deletes the variable"""
     unicode(var)
     if type(var) not in [str, unicode]:
-        raise Exception("undefine() must be given a string, not " + str(var) + ", a " + str(var.__class__.__name__))
+        raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
     try:
         eval(var, dict())
         return False
@@ -2761,7 +2760,7 @@ def undefine(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("undefine: variable " + str(var) + " is not a valid variable name")
+        raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2821,7 +2820,7 @@ def defined(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("defined: variable " + str(var) + " is not a valid variable name")
+        raise Exception("defined: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2896,7 +2895,7 @@ def value(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("value: variable " + str(var) + " is not a valid variable name")
+        raise Exception("value: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -3513,10 +3512,10 @@ def redact(text):
 def ensure_definition(*pargs, **kwargs):
     for val in pargs:
         if isinstance(val, Undefined):
-            str(val)
+            unicode(val)
     for var, val in kwargs.iteritems():
         if isinstance(val, Undefined):
-            str(val)
+            unicode(val)
 
 class DALocalFile(object):
     def __init__(self, local_path):

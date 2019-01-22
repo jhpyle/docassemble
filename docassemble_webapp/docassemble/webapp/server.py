@@ -3258,13 +3258,17 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
-        unique_id = str(request.cookies.get('session'))[5:15]
+        if 'session' in request.cookies:
+            unique_id = str(request.cookies.get('session'))[5:15]
+        else:
+            unique_id = ''
         if unique_id == '':
             if current_user.is_authenticated and not current_user.is_anonymous and current_user.email:
                 unique_id = str(current_user.email)
             else:
                 unique_id = random_string(10)
-    if secret is not None:
+        #logmessage("unique id is " + unique_id)
+    if secret is not None: 
         secret = str(secret)
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
@@ -18501,6 +18505,8 @@ def api_session():
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
         secret = request.args.get('secret', None)
+        session['i'] = yaml_filename
+        session['uid'] = session_id
         if secret is not None:
             secret = str(secret)
         if yaml_filename is None or session_id is None:
@@ -18514,6 +18520,8 @@ def api_session():
         post_data = request.form.copy()
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
+        session['i'] = yaml_filename
+        session['uid'] = session_id
         secret = str(post_data.get('secret', None))
         question_name = post_data.get('question_name', None)
         reply_with_question = true_or_false(post_data.get('question', True))
@@ -18531,12 +18539,19 @@ def api_session():
             del_variables = json.loads(post_data.get('delete_variables', '[]'))
         except:
             return jsonify_with_status("Malformed list of delete variables.", 400)
+        try:
+            event_list = json.loads(post_data.get('event_list', '[]'))
+            assert isinstance(event_list, list)
+        except:
+            return jsonify_with_status("Malformed event list.", 400)
         if type(variables) is not dict:
             return jsonify_with_status("Variables data is not a dict.", 400)
         if type(file_variables) is not dict:
             return jsonify_with_status("File variables data is not a dict.", 400)
         if type(del_variables) is not list:
             return jsonify_with_status("Delete variables data is not a list.", 400)
+        if type(event_list) is not list:
+            return jsonify_with_status("Event list data is not a list.", 400)
         files = []
         literal_variables = dict()
         for filekey in request.files:
@@ -18565,7 +18580,7 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)            
         if data is None:
@@ -18667,26 +18682,31 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     #release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None):
     #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
+    vars_set = set()
     if user_dict is None:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.iteritems():
+            #logmessage("Setting: " + unicode(key) + ' = ' + repr(val))
             exec(unicode(key) + ' = ' + repr(val), user_dict)
+            vars_set.add(key)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
         raise Exception("Problem deleting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
+            #logmessage("Setting: " + unicode(key) + ' = ' + unicode(val))
             exec(unicode(key) + ' = ' + val, user_dict)
+            vars_set.add(key)
     if question_name is not None:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         if question_name in interview.questions_by_name:
@@ -18700,16 +18720,43 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem deleting variables: " + str(the_err))
+    session_uid = current_user.email
+    #if 'event_stack' in user_dict['_internal']:
+    #    logmessage("Event stack starting as: " + repr(user_dict['_internal']['event_stack']))
+    #else:
+    #    logmessage("No event stack.")
+    if event_list is not None and len(event_list) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+        for event_name in event_list:
+            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
+                user_dict['_internal']['event_stack'][session_uid].pop(0)
+                #logmessage("Popped " + unicode(event_name))
+    if len(vars_set) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+        for var_name in vars_set:
+            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
+                user_dict['_internal']['event_stack'][session_uid].pop(0)
+                #logmessage("Popped " + unicode(var_name))
+    #if 'event_stack' in user_dict['_internal']:
+    #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
+    #logmessage("Trying")
+    steps += 1
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=True)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
-    steps += 1
-    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+    #logmessage("Got through")
+    if not return_question:
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        if 'multi_user' in vars_set:
+            if user_dict.get('multi_user', False) is True and is_encrypted is True:
+                decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+                is_encrypted = False
+            if user_dict.get('multi_user', False) is False and is_encrypted is False:
+                encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+                is_encrypted = True
     #release_lock(session_id, yaml_filename)
     return data
 
@@ -18793,13 +18840,15 @@ def api_session_question():
         return data['response']
     return jsonify(**data)    
 
-def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True):
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
+    if user_dict is None:
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
-            release_lock(session_id, yaml_filename)
+            if use_lock:
+                release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary")
     try:
         the_section = user_dict['nav'].get_section()
@@ -18814,7 +18863,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
-    interview_status.checkin = True
+    #interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
     try:
         if old_user_dict is not None:
@@ -18833,10 +18882,20 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         docassemble.base.functions.set_language(old_language)
         raise Exception("Failure to assemble interview: " + str(e))
     docassemble.base.functions.set_language(old_language)
+    if save:
+        #logmessage("Saving")
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
+        if user_dict.get('multi_user', False) is True and is_encrypted is True:
+            #logmessage("Decrypting")
+            decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            is_encrypted = False
+        if user_dict.get('multi_user', False) is False and is_encrypted is False:
+            #logmessage("Encrypting")
+            encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            is_encrypted = True
     if use_lock:
-        if save:
-            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
         release_lock(session_id, yaml_filename)
+    #logmessage("Ok ok")
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
             if hasattr(interview_status.question, 'include_internal'):
@@ -18902,6 +18961,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             del data[key]
         elif key.startswith('_'):
             del data[key]
+    #logmessage("Ok returning")
     return data
 
 @app.route('/api/session/action', methods=['POST'])

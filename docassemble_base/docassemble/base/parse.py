@@ -365,6 +365,8 @@ class InterviewStatus(object):
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
         else:
             result['validation_messages'] = dict()
+        if self.orig_sought is not None:
+            result['event_list'] = [self.orig_sought]
         for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = getattr(self, param).rstrip()

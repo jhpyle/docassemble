@@ -1696,7 +1696,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         elif type(attachment) in [str, unicode] and re.search(r'^https?://', attachment):
             attachment_list.append(attachment)
         else:
-            logmessage("send_sms: attachment " + str(attachment) + " is not valid.")
+            logmessage("send_sms: attachment " + repr(attachment) + " is not valid.")
             success = False
         if success:
             for the_attachment in attachment_list:
@@ -1721,7 +1721,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     else:
                         message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
                 except Exception as errstr:
-                    logmessage("send_sms: failed to send message: " + str(errstr))
+                    logmessage("send_sms: failed to send message: " + unicode(errstr))
                     return False
     if success and task is not None:
         mark_task_as_performed(task)
