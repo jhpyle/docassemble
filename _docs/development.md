@@ -585,15 +585,282 @@ sshfs -o idmap=user www-data@localhost:/usr/share/docassemble/files pg
 
 # <a name="testing"></a>Workflow for automated testing
 
-You can use [lettuce] to test your interviews.  This is a Python
-program that runs on your local computer that uses [selenium] to
-automate the behavior of a web browser such as Firefox or Chrome.
+## <a name="testing intro"></a>Introduction to testing concepts
 
-The way that [lettuce] works is beyond the scope of this
+How does an interview developer ensure that an interview is high
+quality?  Automated testing features can help.
+
+It is important to keep in mind that testing is not simply a
+technology problem; like many problems, it involves "[people, process,
+and technology]."
+
+Who are the **people** who should ensure that an interview is
+high-quality?  What skill sets are necessary?  Do interviews need to
+be developed by individuals who have subject matter expertise as well
+as technical skills?  Or can subject matter experts without technical
+skills work together with people who have technical skills?  Should
+someone take on a managerial role to coordinate developers and subject
+matter experts?
+
+What **processes** should be used to ensure that an interview is
+high-quality?  Is testing something that should started shortly before
+the interview goes live, or integrated into the development process
+from the beginning?  How intensive should the testing be?  Should the
+testing process be informal ("try it out, click around, see if it
+breaks") or formal ("Try scenario A to completion, then scenario B to
+completion")?  Should a process of continuous quality improvement be
+followed, in which information is collected from user surveys or
+customer service requests and used as the basis for improvements?
+Should the output of the interview be reviewed by a human before it is
+provided to the user?  Should testing be conducted every time a new
+version is published?  Should this testing target new features only,
+or also target features that used to work without a problem?  After an
+interview goes live, should a subject matter expert review it
+periodically to make sure the logic is not out of date?  Should the
+interview be tested in some way every day to make sure the site hasn't
+crashed without sending a notification?
+
+Finally, how can **technology** assist the people who implement these
+processes?  It is important to view the technology for automated
+testing in this context.  Quality cannot be delegated to a computer
+program; it is a subjective measure.
+
+When thinking about how to test your interviews, it may be helpful to
+read about various approaches to [software testing], as well as
+various approaches to [software development] as a whole (such as the
+difference between [waterfall] and [Agile] lifecycles).
+
+**docassemble** comes with scripts and examples for running automated
+acceptance tests using [Lettuce], which is a Python version of the
+[Cucumber] system for [Behavior-Driven Development].  The idea behind
+"[Behavior-Driven Development]" is for development and management
+teams to work together write acceptance tests in a human-readable
+domain-specific language that can also be carried out by the computer
+in order to test the software.  In [Cucumber] and [Lettuce], this
+human-readable script is a plain text file written in the [Gherkin]
+format.  **docassemble** allows interview developers to write
+[Gherkin] scripts that look like this:
+
+{% highlight text %}
+Scenario: Test the interview "income"
+  Given I start the interview "docassemble.demo:data/questions/income.yml"
+  Then I should see the phrase "What is your income?"
+  And I set "Income" to "400"
+  And I select "Twice Per Month" as the "Period"
+  And I click the button "Continue"
+  Then I should see the phrase "You earn $9,600 per year."
+{% endhighlight %}
+
+These scripts test the interviews by automating Chrome or Firefox.
+The software converts human-readable commands into keystrokes and
+pointer clicks, and reads the screen to verify that the correct
+language appears.  This ensures that testing is thorough because it
+tests the software from the user's perspective.  Everything the
+technology does, from the JavaScript running in the user's browser to
+the background processes running on **docassemble**, is tested.
+
+Technology for web browser automation exists that allows you to
+"record" keystrokes and button clicks and then "play" it back at a
+later time.  By comparison, it may seem time time consuming to write
+out English language sentences.  However, the advantage is that
+English language sentences are human-readable.  The [Gherkin] scripts
+themselves can be reviewed by a subject matter expert for validity,
+and can easily be edited when the underlying interview changes.
+
+Acceptance testing using the [Behavior-Driven Development] model
+requires management and development teams to envision different
+scenarios and precisely specify the expected outputs that result from
+particular inputs.  As the interview changes, the [Gherkin] scripts
+will need to be changed in parallel.  This is a significant commitment
+of time.  However, the strictness of the testing scripts helps to
+uncover unexpected bugs.  When an interview passes a test at one time
+and then fails it later due to a subtle change, that subtlety can be
+the tip of the iceberg of a more systemic problem.
+
+The downside of the [Behavior-Driven Development] model is that it is
+not feasible to envision and test every possible scenario.  For
+example, if an interview has five multiple-choice questions with five
+choices each, that means there are 3,125 possible scenarios.  It would
+be too much work to envision and separately test that many scenarios.
+While there may be a latent bug lurking in one of those 3,125
+combinations of answers, in practice, [Behavior-Driven Development]
+teams will only have the resources to conduct acceptance testing on a
+handful of those scenarios.
+
+Another way to test interviews is use Docassemble's [API], which
+allows an interview session to be driven with a computer program.
+Using the [API], an interview can be repeatedly tested with random
+multiple-choice selections and random input values.  If a random
+combination of inputs results in an error screen, the test fails, and
+the developer will know that there is a bug in the interview.
+
+An example of such a script is the [`random-test.py`] file in the
+[`docassemble.demo`] package.  This is a general-purpose script for
+testing any interview, but you will likely need to tweak it to work
+appropriately with any of your own interviews.  It does not adapt to
+questions that use the [`show if`] feature to conceal fields.
+
+Repeatedly testing a web application with random data can uncover bugs
+that result in the user seeing an error message, but it cannot
+identify substantive errors, such as situations where the user is
+asked an inappropriate question or given inappropriate information.
+
+Another approach for testing a Docassemble interview without using
+[Behavior-Driven Development] is to use the [API] to populate a full
+set of interview answers and then inspect the "output" of the
+interview to ensure it correctly corresponds to the input.  This
+procedure bypasses the information-gathering process of the interview
+and tests only the end-result logic.  Since there can be bugs in the
+logic of the information-gathering process, this procedure is not as
+thorough as [Behavior-Driven Development].
+
+Docassemble also supports the technique of testing components of an
+interview in isolation ("[unit testing]").  Unit testing is feasible
+when the legal logic of an interview is written in the form of
+[Python] classes, methods, and functions.  For example, the interview
+might have an algorithm that determines jurisdiction:
+
+{% highlight python %}
+class Plaintiff(Individual):
+    def jurisdiction_state(self, cause_of_action):
+        if self.lived_in_current_state_for_two_years():
+            return self.address.state
+        return cause_of_action.state_arose_in
+{% endhighlight %}
+
+This method could be tested on a variety of inputs to ensure that the
+legally correct answer is given:
+
+{% highlight python %}
+import unittest
+from docassemble.base.util import as_datetime
+from .massachusetts_law import Plaintiff, CauseOfAction
+
+class TestJurisdiction(unittest.TestCase):
+
+    def test_moved_recently(self):
+        plaintiff = Plaintiff()
+        plaintiff.address.state = 'MA'
+        plaintiff.address.move_in_date = as_datetime('1/5/2017')
+        plaintiff.prior_address.appendObject(state='NH', move_in_date='9/2/2015')
+        cause_of_action = CauseOfAction(state_arose_in='NH')
+        self.assertEqual('NH', plaintiff.jurisdiction_state(cause_of_action))
+
+    def test_did_not_move_recently(self):
+        plaintiff = Plaintiff()
+        plaintiff.address.state = 'MA'
+        plaintiff.address.move_in_date = as_datetime('10/5/2005')
+        cause_of_action = CauseOfAction(state_arose_in='NH')
+        self.assertEqual('MA', plaintiff.jurisdiction_state(cause_of_action))
+
+if __name__ == '__main__':
+    unittest.main()
+{% endhighlight %}
+
+This module uses the [`unittest` framework].  A module using the
+[`unittest` framework] can be called from an interview using the
+[`run_python_module()`] function.
+
+It may seem like a waste of time to write a computer program to test
+two scenarios when it would be much faster to simply test the two
+scenarios manually, and if they work right, there is no more that
+needs to be done.  However, writing out the test scripts is worthwhile
+because test scripts can then be run in the future in an automated
+fashion to prevent "regression."  Very often, the bugs in software
+come from features that used to work but that stop working for
+hard-to-predict reasons.
+
+Legal logic algorithms can also be "unit tested" using brief test
+interviews that are separate from the main interview and exist only
+for testing purposes.  These test interviews can be operated by
+subject matter experts manually, who could manually try out various
+possibilities in to make sure the algorithm produces the legally
+correct response.  These same interviews can also be tested in an
+automated fashion with scenarios specified in [Lettuce] scripts.  For
+example, a test interview, `test-jurisdiction.yml`, might look like
+this:
+
+{% highlight yaml %}
+modules:
+  - .massachusetts_law
+---
+objects:
+  - plaintiff: Plaintiff
+  - cause_of_action: CauseOfAction
+---
+mandatory: True
+code: |
+  plaintiff.prior_address.appendObject()
+  plaintiff.prior_address.gathered = True
+---
+question: |
+  Please provide the following information.
+fields:
+  - Current state: plaintiff.address.state
+    code: states_list()
+  - Move-in date: plaintiff.address.move_in_date
+    datatype: date
+  - Prior address state: plaintiff.prior_address[0].state
+    code: states_list()
+    required: False
+  - Prior address move-in date: plaintiff.prior_address[0].move_in_date
+    datatype: date
+    required: False
+  - State in which cause of action arose: cause_of_action.state_arose_in
+    code: states_list()
+---
+mandatory: True
+question: |
+  The state of jurisdiction is 
+  ${ state_name(plaintiff.jurisdiction_state(cause_of_action)) }.
+---
+{% endhighlight %}
+
+The corresponding [Lettuce] script would look like this:
+
+{% highlight text %}
+Feature: Determination of jurisdiction
+  I want to see if the code determines jurisdiction correctly.
+
+  Scenario: Test jurisdiction when the plaintiff has lived in Massachusetts for a long time.
+    Given I start the interview "docassemble.massachusetts:data/questions/test-jurisdiction.yml"
+    And I select "Massachusetts" as the "Current state"
+    And I set "Move-in date" to "1/5/2017"
+    And I select "New Hampshire" as the "Prior address state"
+    And I set "Prior address move-in date" to "9/2/2015"
+    And I select "New Hampshire" as the "State in which cause of action arose"
+    And I click the button "Continue"
+    Then I should see the phrase "The state of jurisdiction is New Hampshire."
+
+  Scenario: Test jurisdiction when the plaintiff has lived in Massachusetts for a long time.
+    Given I start the interview "docassemble.massachusetts:data/questions/test-jurisdiction.yml"
+    And I select "Massachusetts" as the "Current address"
+    And I set "Move-in date" to "10/5/2005"
+    And I select "New Hampshire" as the "State in which cause of action arose"
+    And I click the button "Continue"
+    Then I should see the phrase "The state of jurisdiction is Massachusetts."
+{% endhighlight %}
+
+You could have a number of testing scripts like these, which you could
+run to ensure that the legal logic of your interview is proper.
+Unlike [Lettuce] scripts that test your actual interview, these
+scripts will not need to be changed whenever you make stylistic
+modifications to your interview.
+
+The next section provides a practical explanation about using
+[Lettuce] to test **docassemble** interviews.
+
+## <a name="lettuce"></a>Using Lettuce
+
+[Lettuce] is a Python program that runs on your local computer.  It
+uses [selenium] to automate the behavior of a web browser such as
+Firefox or Chrome.
+
+The way that [Lettuce] works is beyond the scope of this
 documentation.  This section describes only a broad outline of how
-[lettuce] can be used to test **docassemble** interviews.
+[Lettuce] can be used to test **docassemble** interviews.
 
-To install [lettuce], do:
+To install [Lettuce], do:
 
 {% highlight bash %}
 pip install lettuce selenium
@@ -666,14 +933,14 @@ Feature: Interview that works with actions
 
 One useful feature is the "step" invoked by "I wait forever."  If you
 run this step, the browser will stay open and you can use it.  This
-can be helpful if you want to use [lettuce] to bring you to a
+can be helpful if you want to use [Lettuce] to bring you to a
 particular step in your interview, without you having to re-do all of
 the steps by hand.
 
 For more information about how automated testing works, read the
-documentation for [lettuce].  You may also wish to read about
+documentation for [Lettuce].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
-to use [lettuce].
+to use [Lettuce].
 
 # Workflow for making changes to the core docassemble code
 
@@ -823,7 +1090,8 @@ some variation on them may be helpful.
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
-[lettuce]: http://lettuce.it/
+[Lettuce]: http://lettuce.it/
+[Cucumber]: https://cucumber.io/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
@@ -887,7 +1155,6 @@ some variation on them may be helpful.
 [merge]: https://help.github.com/articles/merging-a-pull-request/
 [`import`]: https://docs.python.org/2/tutorial/modules.html
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
-[GitHub repository]: {{ site.github.repository_url }}
 [sshfs]: https://en.wikipedia.org/wiki/SSHFS
 [installation]: https://docassemble.org/docs/installation.html
 [GitHub repository]: {{ site.github.repository_url }}
@@ -896,3 +1163,16 @@ some variation on them may be helpful.
 [Celery]: http://www.celeryproject.org/
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[Gherkin]: https://en.wikipedia.org/wiki/Cucumber_(software)#Gherkin_language
+[`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
+[`random-test.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/random-test.py
+[unit testing]: https://en.wikipedia.org/wiki/Unit_testing
+[people, process, and technology]: https://www.christopherspenn.com/2018/01/transforming-people-process-and-technology-part-1/
+[waterfall]: https://en.wikipedia.org/wiki/Waterfall_model
+[Agile]: https://en.wikipedia.org/wiki/Agile_software_development
+[software testing]: https://en.wikipedia.org/wiki/Software_testing
+[software development]: https://en.wikipedia.org/wiki/Software_development
+[`unittest` framework]: https://docs.python.org/2/library/unittest.html
+[`run_python_module()`]: {{ site.baseurl }}/docs/functions.html#run_python_module
+[`show if`]: {{ site.baseurl }}/docs/fields.html#show if
+[API]: {{ site.baseurl }}/docs/api.html

@@ -1036,6 +1036,11 @@ Form data:
    input name `my_file`, this will have the effect of setting the
    [Python] variable `user.relative['aunt']` equal to a [`DAFileList`]
    containing the file.
+  - `event_list` (optional): a [JSON] array of variable names that
+    triggered the question to which you are responding.  This is
+    necessary in cases where there is a diversion from the normal
+    interview logic.  The value of `event_list` can be obtained from
+    [`/api/session/question`].
 
 File uploads: you can include file uploads in the POST request.
 
@@ -1049,15 +1054,18 @@ Responses on failure:
    obtaining and decrypting the interview dictionary.
  - [400] "Variables data is not a dict" if `variables` is not a [JSON]
    object.
- - [400] "File variables data is not a dict" if `file_variables`
-   is not a [JSON] object.
+ - [400] "File variables data is not a dict" if `file_variables` is
+   not a [JSON] object.
  - [400] "Delete variables data is not a list" if `delete_variables`
    is not a [JSON] array.
+ - [400] "Event list data is not a list" if `event_list` is not a
+   [JSON] array.
  - [400] "Malformed variables" if `variables` is not valid [JSON].
  - [400] "Malformed list of file variables" if `file_variables` is not
    valid [JSON].
  - [400] "Malformed list of delete variables" if `delete_variables` is
    not valid [JSON].
+ - [400] "Malformed event list" if `event_list` is not valid [JSON].
  - [400] "Problem setting variables" if there was an error while
    setting variables in the dictionary.
  - [400] "Failure to assemble interview" if the interview generates an
@@ -1164,6 +1172,13 @@ following:
   "etc.": "etc."
 }
 {% endhighlight %}
+
+The `event_list` is a list of variables that mark the "event" that led
+to the question being asked.  When you send POST request to
+[`/api/session`] in response to a question, you should pass the
+`event_list` back.  This is necessary in some circumstances to
+indicate to **docassemble** that you wish to get past a diversion in
+the interview logic.
 
 Some of the information in the response may only be relevant to you
 if you are trying to create a front end similar to **docassemble**'s
