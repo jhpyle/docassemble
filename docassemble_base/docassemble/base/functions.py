@@ -904,20 +904,8 @@ word_collection = {
         'No': u'No'
         },
     'en': {
-        'and': "and",
-        'or': "or",
-        'yes': "yes",
-        'no': "no",
-        'Document': "Document",
-        'content': 'content',
         'Open as:': 'Open this document as:',
         'Open as:': 'Save this documents as:',
-        'Question': 'Question',
-        'Help': 'Help',
-        'Download': 'Download',
-        'Preview': 'Preview',
-        'Markdown': 'Markdown',
-        'Source': 'Source',
         'attachment_message_plural': 'The following documents have been created for you.',
         'attachment_message_singular': 'The following document has been created for you.',
         'save_as_multiple': 'The document is available in the following formats:',
@@ -926,17 +914,13 @@ word_collection = {
         'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
         'docx_message': 'for editing; requires Microsoft Word or compatible application',
         'tex_message': 'for debugging PDF output',
-        'vs.': 'vs.',
-        'v.': 'v.',
-        'Case No.': 'Case No.',
-        'In the': 'In the',
         'This field is required.': 'You need to fill this in.',
         "You need to enter a valid date.": "You need to enter a valid date.",
         "You need to enter a complete e-mail address.": "You need to enter a complete e-mail address.",
         "You need to enter a number.": "You need to enter a number.",
         "You need to select one.": "You need to select one.",
         "Country Code": 'Country Code (e.g., "us")',
-        "First Subdivision": "State Abbreviation (e.g., 'NY')",
+        "First Subdivision": 'State Abbreviation (e.g., "NY")',
         "Second Subdivision": "County",
         "Third Subdivision": "Municipality",
         "Organization": "Organization",
@@ -945,59 +929,59 @@ word_collection = {
 
 ordinal_numbers = {
     'en': {
-        '0': 'zeroth',
-        '1': 'first',
-        '2': 'second',
-        '3': 'third',
-        '4': 'fourth',
-        '5': 'fifth',
-        '6': 'sixth',
-        '7': 'seventh',
-        '8': 'eighth',
-        '9': 'ninth',
-        '10': 'tenth'
+        '0': u'zeroth',
+        '1': u'first',
+        '2': u'second',
+        '3': u'third',
+        '4': u'fourth',
+        '5': u'fifth',
+        '6': u'sixth',
+        '7': u'seventh',
+        '8': u'eighth',
+        '9': u'ninth',
+        '10': u'tenth'
     },
     'es': {
-        '0': 'zeroth',
-        '1': 'primero',
-        '2': 'segundo',
-        '3': 'tercero',
-        '4': 'cuarto',
-        '5': 'quinto',
-        '6': 'sexto',
-        '7': 'séptimo',
-        '8': 'octavo',
-        '9': 'noveno',
-        '10': 'décimo'
+        '0': u'zeroth',
+        '1': u'primero',
+        '2': u'segundo',
+        '3': u'tercero',
+        '4': u'cuarto',
+        '5': u'quinto',
+        '6': u'sexto',
+        '7': u'séptimo',
+        '8': u'octavo',
+        '9': u'noveno',
+        '10': u'décimo'
     }
 }
 
 nice_numbers = {
     'en': {
-        '0': 'zero',
-        '1': 'one',
-        '2': 'two',
-        '3': 'three',
-        '4': 'four',
-        '5': 'five',
-        '6': 'six',
-        '7': 'seven',
-        '8': 'eight',
-        '9': 'nine',
-        '10': 'ten'
+        '0': u'zero',
+        '1': u'one',
+        '2': u'two',
+        '3': u'three',
+        '4': u'four',
+        '5': u'five',
+        '6': u'six',
+        '7': u'seven',
+        '8': u'eight',
+        '9': u'nine',
+        '10': u'ten'
     },
     'es': {
-        '0': 'cero',
-        '1': 'uno',
-        '2': 'dos',
-        '3': 'tres',
-        '4': 'cuatro',
-        '5': 'cinco',
-        '6': 'seis',
-        '7': 'siete',
-        '8': 'ocho',
-        '9': 'nueve',
-        '10': 'diez'
+        '0': u'cero',
+        '1': u'uno',
+        '2': u'dos',
+        '3': u'tres',
+        '4': u'cuatro',
+        '5': u'cinco',
+        '6': u'seis',
+        '7': u'siete',
+        '8': u'ocho',
+        '9': u'nueve',
+        '10': u'diez'
     }
 }
 
@@ -1412,15 +1396,15 @@ def default_ordinal_function(i):
 def ordinal_function_en(i):
     num = unicode(i)
     if 10 <= i % 100 <= 20:
-        return num + 'th'
+        return num + u'th'
     elif i % 10 == 3:
-        return num + 'rd'
+        return num + u'rd'
     elif i % 10 == 1:
-        return num + 'st'
+        return num + u'st'
     elif i % 10 == 2:
-        return num + 'nd'
+        return num + u'nd'
     else:
-        return num + 'th'
+        return num + u'th'
 
 ordinal_functions = {
     'en': ordinal_function_en,
@@ -1695,7 +1679,7 @@ def comma_list_en(*pargs, **kwargs):
     if 'comma_string' in kwargs:
         comma_string = kwargs['comma_string']
     else:
-        comma_string = ", "
+        comma_string = u", "
     if (len(pargs) == 0):
         return unicode('')
     elif (len(pargs) == 1):
@@ -1720,9 +1704,9 @@ def comma_and_list_en(*pargs, **kwargs):
     See also comma_list()."""
     ensure_definition(*pargs, **kwargs)
     if 'oxford' in kwargs and kwargs['oxford'] == False:
-        extracomma = ""
+        extracomma = u""
     else:
-        extracomma = ","
+        extracomma = u","
     if 'and_string' in kwargs:
         and_string = kwargs['and_string']
     else:
@@ -1730,15 +1714,15 @@ def comma_and_list_en(*pargs, **kwargs):
     if 'comma_string' in kwargs:
         comma_string = kwargs['comma_string']
     else:
-        comma_string = ", "
+        comma_string = u", "
     if 'before_and' in kwargs:
         before_and = kwargs['before_and']
     else:
-        before_and = " "
+        before_and = u" "
     if 'after_and' in kwargs:
         after_and = kwargs['after_and']
     else:
-        after_and = " "
+        after_and = u" "
     if (len(pargs) == 0):
         return unicode('')
     elif (len(pargs) == 1):

@@ -1217,7 +1217,11 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.convert(question)
         result = converter.output_content.decode('utf8')
     else:
-        result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
+        try:
+            result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
+        except:
+            # Try again because sometimes it fails randomly and maybe trying again will work.
+            result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)

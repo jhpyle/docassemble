@@ -85,8 +85,8 @@ gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
-match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
+#match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
+#match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
@@ -748,6 +748,8 @@ from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import or_, and_
 import docassemble.base.parse
+import docassemble.base.astparser
+import ast
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 #import docassemble.webapp.update
@@ -5304,8 +5306,8 @@ def index():
             return(response)
     if '_the_image' in post_data:
         file_field = from_safeid(post_data['_save_as']);
-        if match_invalid.search(file_field):
-            error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+        if illegal_variable_name(file_field):
+            error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
         else:
             if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
                 #logmessage("index: assemble 2")
@@ -5454,6 +5456,9 @@ def index():
             core_key_name = parse_result['final_parts'][0]
             whole_key = core_key_name + parse_result['final_parts'][1]
             real_key = safeid(whole_key)
+            if illegal_variable_name(whole_key):
+                error_messages.append(("error", "Error: Invalid key " + whole_key))
+                break
             # logmessage("core key name is " + str(core_key_name) + " whole key is " + str(whole_key) + " Checking for existence of " + str(whole_key))
             if whole_key in user_dict:
                 it_exists = True
@@ -5577,6 +5582,9 @@ def index():
             if not parse_result['valid']:
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
+        if illegal_variable_name(key):
+            error_messages.append(("error", "Error: Invalid key " + key))
+            break
         #logmessage("Real key is " + real_key + " and key is " + key)
         do_append = False
         do_opposite = False
@@ -5867,6 +5875,9 @@ def index():
             key = myb64unquote(orig_key)
             #logmessage("3Doing empty key " + str(key))
             vars_set.add(key + '.gathered')
+            if illegal_variable_name(key):
+                logmessage("Received illegal variable name " + unicode(key))
+                continue
             if empty_fields[orig_key] == 'object_checkboxes':
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
@@ -5904,9 +5915,9 @@ def index():
                 except:
                     error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
                     break
-                if match_invalid.search(file_field):
+                if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -5971,8 +5982,8 @@ def index():
                             except:
                                 error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
                                 break
-                            if match_invalid.search(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                            if illegal_variable_name(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -6025,11 +6036,11 @@ def index():
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
-                    error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                    error_messages.append(("error", "Error: Invalid file_field: " + unicode(orig_file_field)))
                     break
-                if match_invalid.search(file_field):
+                if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -6081,10 +6092,10 @@ def index():
                             try:
                                 file_field = from_safeid(var_to_store)
                             except:
-                                error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
+                                error_messages.append(("error", "Error: Invalid file_field: " + unicode(var_to_store)))
                                 break
-                            if match_invalid.search(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                            if illegal_variable_name(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -16769,7 +16780,12 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
-    if request.args.get('post_restart', False) or request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
+    if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
+        if is_json:
+            return redirect(url_for('index', i=session['i'], json='1'))
+        else:
+            return redirect(url_for('index', i=session['i']))
+    if request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
         next_page = page_after_login()
         if next_page is None:
             logmessage("Invalid page " + unicode(next_page))
@@ -18695,7 +18711,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.iteritems():
-            #logmessage("Setting: " + unicode(key) + ' = ' + repr(val))
+            if illegal_variable_name(key):
+                raise Exception("Illegal value as variable name.")
             exec(unicode(key) + ' = ' + repr(val), user_dict)
             vars_set.add(key)
     except Exception as the_err:
@@ -18704,7 +18721,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
-            #logmessage("Setting: " + unicode(key) + ' = ' + unicode(val))
+            if illegal_variable_name(key):
+                raise Exception("Illegal value as variable name.")
             exec(unicode(key) + ' = ' + val, user_dict)
             vars_set.add(key)
     if question_name is not None:
@@ -18716,6 +18734,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if del_variables is not None:
         try:
             for key in del_variables:
+                if illegal_variable_name(key):
+                    raise Exception("Illegal value as variable name.")
                 exec('del ' + unicode(key), user_dict)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
@@ -18737,7 +18757,6 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 #logmessage("Popped " + unicode(var_name))
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
-    #logmessage("Trying")
     steps += 1
     if return_question:
         try:
@@ -18747,7 +18766,6 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
-    #logmessage("Got through")
     if not return_question:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
         if 'multi_user' in vars_set:
@@ -18883,19 +18901,15 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         raise Exception("Failure to assemble interview: " + str(e))
     docassemble.base.functions.set_language(old_language)
     if save:
-        #logmessage("Saving")
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
         if user_dict.get('multi_user', False) is True and is_encrypted is True:
-            #logmessage("Decrypting")
             decrypt_session(secret, user_code=session_id, filename=yaml_filename)
             is_encrypted = False
         if user_dict.get('multi_user', False) is False and is_encrypted is False:
-            #logmessage("Encrypting")
             encrypt_session(secret, user_code=session_id, filename=yaml_filename)
             is_encrypted = True
     if use_lock:
         release_lock(session_id, yaml_filename)
-    #logmessage("Ok ok")
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
             if hasattr(interview_status.question, 'include_internal'):
@@ -19649,6 +19663,17 @@ def get_short_code(**pargs):
     if new_record is None:
         raise SystemError("Failed to generate unique short code")
     return new_short
+
+def illegal_variable_name(var):
+    if re.search(r'[\n\r]', var):
+        return True
+    try:
+        t = ast.parse(var)
+    except:
+        return True
+    detector = docassemble.base.astparser.detectIllegal()
+    detector.visit(t)
+    return detector.illegal
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)

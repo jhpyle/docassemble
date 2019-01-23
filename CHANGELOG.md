@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.3.35] - 2019-01-22
+### Added
+- The `resume interview after login` configuration directive.
+### Changed
+- The `/api/session` API endpoint and the `set_session_variables()`
+  function now accept the `event_list` parameter and can get past
+  `force_ask()` diversions.
+- More robust code injection detection mechanism.
+### Fixed
+- Unicode error with certain Spanish numbers.
+
 ## [0.3.34] - 2019-01-20
 ### Added
 - Customizability of standard validation messages using the `validation
