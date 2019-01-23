@@ -64,7 +64,7 @@ If you do not want your users to be able to log in, you can hide the
 When a user is logged in, the user's information is made available to
 **docassemble** interviews through the [`user_info()`] function.
 
-# User administration
+# <a name="administration"></a>User administration
 
 ## <a name="profile">Profile</a>
 
@@ -124,7 +124,7 @@ with the [`appname`] directive.  If the [`appname`] is
 >
 > -- MyDocassemble 
 
-# Screening users
+# <a name="screening"></a>Screening users
 
 Interviews can behave differently depending on whether the user is
 logged in, or the role of the logged-in user.

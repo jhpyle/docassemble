@@ -499,6 +499,37 @@ mimics the style of the standard start page:
 
 {% include side-by-side.html demo="list-interview" %}
 
+## <a name="resume interview after login"></a>Always go back to the current interview after logging in
+
+If a user starts an interview as an anonymous user and then registers
+or logs in, they generally be taken to the "My Interviews" page.
+However, if the interview session they started is their only interview
+session, then the "My Interviews" page is skipped and the user is sent
+right back into the interview they had started.
+
+The "My Interviews" page is shown to users with more than one session
+because it resolves confusion for users who may have visited the
+interview for purposes of resuming an existing interview session, but
+finding themselves not logged in, they log in.  Some users may expect
+to resume the session they just started; other users may expect to
+resume their original session.  By sending users to the My Interviews
+page, **docassemble** lets users know that they have two sessions and
+can make a choice.
+
+If you want users to always be redirected to the session they just
+started, you can set `resume interview after login` to `True`.
+
+{% highlight yaml %}
+resume interview after login: True
+{% endhighlight %}
+
+The default value is `False`.
+
+If `resume interview after login` is set to `True`, users who start
+out conducting an interview as an anonymous user and then log in will
+not be sent to the "My Interviews" page, but will be redirected back
+into the interview they just started.
+
 ## <a name="auto resume interview"></a>Automatically resuming or starting an interview
 
 The "My Interviews" page at `/interviews` normally displays a list of

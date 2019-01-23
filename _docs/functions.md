@@ -3578,6 +3578,17 @@ a variable for purposes of answering a [`mandatory`] question.  You
 can tell if a question is [`mandatory`] by checking for the presence
 of the attribute `mandatory` in the question data.
 
+There is also an optional keyword parameter `event_list`.  This should
+be set to a list of variable names.  Typically, you will take the
+`question_name` and `event_list` values from [`get_question_data()`]
+or the [`/api/session/question`] API method and pass them directly to
+`set_session_variables()`.  The `event_list` is marks certain variable
+names as having been "handled" (though not necessarily answered),
+which is necessary for indicating that a question has been posed to
+the user and the user has gone through the screen.  Passing the
+`event_list` is not necessary in most cases, but is sometimes
+necessary to get past logic triggered by [`force_ask()`].
+
 For an [API] version of this function, see the [POST method of
 `/api/session`].
 
