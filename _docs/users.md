@@ -124,7 +124,7 @@ with the [`appname`] directive.  If the [`appname`] is
 >
 > -- MyDocassemble 
 
-# Screening users
+# <a name="screen_users">Screening users</a>
 
 Interviews can behave differently depending on whether the user is
 logged in, or the role of the logged-in user.
