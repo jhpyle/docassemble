@@ -137,7 +137,7 @@ If your development server is accessible over the network, you can
 involve testers in your interview while it is still in the
 [Playground].  Every interview in the [Playground] is accessible at a
 hyperlink.  To get this hyperlink, right-click on the "<i
-class="glyphicon glyphicon-link" aria-hidden="true"></i> Share" button
+class="fas fa-link" aria-hidden="true"></i> Share" button
 in the [Playground], copy the URL to your clipboard, then paste the
 URL into an e-mail to your testers.
 
@@ -735,14 +735,6 @@ some variation on them may be helpful.
 
 How can you ensure that a **docassemble** interview is high quality?
 
-There are many low-quality web applications on the internet.  No
-developers really ever _intend_ to create low-quality applications; it
-just happens, with regularity.
-
-Many people who produce web applications operate under a mindset that,
-unbeknownst to them, is practically bound to produce low quality
-applications.
-
 A common mindset is that the way you produce a web application is to
 hire a developer for a "project."  The developer writes code over a
 period of time and then provides a "deliverable" that meets your
@@ -750,8 +742,7 @@ specifications.  The developer then goes away and works on other
 projects.  After you publish the application on the internet, your
 expectation is that it will work perfectly and operate indefinitely.
 Over time, it may need to be tweaked because of changing
-circumstances, so you may hire a developer, who may the same or
-different from the original developer, to make minor changes to the
+circumstances, so you may hire someone to make minor changes to the
 application.  But otherwise, you consider the application "done" when
 the developer delivers it to you.  If quality problems emerge after
 the developer has moved on to other things, you are annoyed.  You wish
@@ -773,7 +764,9 @@ still like to minimize the time you spend fixing bugs.
 Another aspect of the common mindset is to think of web applications
 as falling into the "information technology" bucket.  If there are
 quality problems, people think "that's an IT issue" that needs to be
-delegated to a person with computer skills.
+delegated to a person with computer skills, even when the quality
+issues are actually related to poor communication or poor design,
+neither of which are information technology problems.
 
 People who are involved in the development of a web application but
 lack technology skills often feel a lack of agency over the way the
@@ -842,16 +835,16 @@ how to handle quality assurance may not make sense.
 In particular, think about breaking out of the project-oriented,
 time-limited development paradigm.  Do what is right for your users,
 not what other people do.  Don't imitate big corporations;
-corporations that charge a lot of money still produce crap.  When it
-comes to guided interviews, "building the airplane while flying it" is
-not an absurdity; it may even be advisable.  It may be better to
-spread development resources out over the course of your product's
-lifetime than to invest them all at the beginning and hope that your
-"specification" was perfect.  If you develop a minimum viable product,
-let users use it, study the pain points, and adapt your product
-incrementally to address the actual concerns of actual users, perhaps
-your product will be higher quality than anything you could have
-pre-envisioned while sitting in meetings talking about what
+corporations that charge a lot of money still produce low-quality
+products.  When it comes to guided interviews, "building the airplane
+while flying it" is not an absurdity; it may even be advisable.  It
+may be better to spread development resources out over the course of
+your product's lifetime than to invest them all at the beginning and
+hope that your "specification" was perfect.  If you develop a minimum
+viable product, let users use it, study the pain points, and adapt
+your product incrementally to address the actual concerns of actual
+users, perhaps your product will be higher quality than anything you
+could have pre-envisioned while sitting in meetings talking about what
 "requirements" to give to a vendor.  Is it the end of the world if a
 user encounters a bug?  Perhaps the user will not mind about the bug
 if you communicate with them immediately, demonstrate that you care,
@@ -871,13 +864,13 @@ resilient when those events happen, your software will will stop
 evolving.  When your software stops evolving, it will start being
 "legacy."
 
-You might think, "I don't have the resources for that level of
-quality."  First, maybe the resources necessary are not as expensive
-as you think.  Maybe how you are managing the development of the
-software is the problem, not the money you are spending.  For example,
-maybe instead of spending hundreds of hours of staff time developing a
-custom color scheme, you could allocate those hours toward something
-your users will actually care about, like developing a continuous
+You might think, "I don't have the resources to pay developers to
+continually improve a product."  First, maybe the resources necessary
+are not as expensive as you think.  Maybe how you are managing the
+development of the software is the problem, not the money you are
+spending.  For example, maybe instead of spending hundreds of hours of
+staff time developing a custom color scheme, you could allocate those
+hours toward something that matters more, like developing a continuous
 quality improvement process that ensures the application does what it
 is supposed to do.  Second, maybe you do have the necessary resources,
 but you are not allocating them to software development because you
@@ -900,14 +893,15 @@ stealthy bugs that most people won't notice or report.
 
 **docassemble** comes with scripts and examples for running automated
 acceptance tests using [Lettuce], which is a Python version of the
-[Cucumber] system for [Behavior-Driven Development].  The idea behind
-"[Behavior-Driven Development]" is for development and management
-teams to work together write acceptance tests in a human-readable
-domain-specific language that can also be interpreted by the computer
-in order to test the software.  In [Cucumber] and [Lettuce], this
-human-readable language is a plain text file written in the [Gherkin]
-format.  **docassemble** allows interview developers to write
-[Gherkin] scripts that look like this:
+[Cucumber] system for [Behavior-Driven Development].
+
+The idea behind "[Behavior-Driven Development]" is for development and
+management teams to work together write acceptance tests in a
+human-readable domain-specific language that can also be interpreted
+by the computer in order to test the software.  In [Cucumber] and
+[Lettuce], this human-readable language is a plain text file written
+in the [Gherkin] format.  **docassemble** allows interview developers
+to write [Gherkin] scripts that look like this:
 
 {% highlight text %}
 Scenario: Test the interview "Annual income calculator"
@@ -959,7 +953,7 @@ catch a lot of bugs, but they won't catch all the bugs.
 
 ## <a name="random"></a>Random-input testing
 
-Another way to test interviews is use Docassemble's [API], which
+Another way to test interviews is use **docassemble**'s [API], which
 allows an interview session to be driven with a computer program.
 Using the [API], an interview can be repeatedly tested with random
 multiple-choice selections and random input values.  If a random
@@ -980,22 +974,100 @@ asked an inappropriate question or given inappropriate information.
 
 ## <a name="prepoplate"></a>Input-output testing
 
-Another approach for testing a Docassemble interview without using
-[Behavior-Driven Development] is to use the [API] to populate a full
-set of interview answers and then inspect the "output" of the
-interview to ensure it correctly corresponds to the input.  This
-procedure bypasses the information-gathering process of the interview
-and tests only the end-result logic.  Since there can be bugs in the
-logic of the information-gathering process, this procedure is not as
-thorough as [Behavior-Driven Development].
+Another approach for testing a **docassemble** interview without using
+[Behavior-Driven Development] is to manually populate a full set of
+interview answers and then inspect the "output" of the interview to
+ensure it correctly corresponds to the input.  This procedure bypasses
+the information-gathering process of the interview and tests only the
+end-result logic.
+
+One way to do this is to add blocks to your interview like:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  if user_has_privilege(['developer', 'admin']):
+    if scenario_to_test != 'skip':
+      value(scenario_to_test)
+---
+question: |
+  Which scenario do you want to test?
+field: scenario_to_test
+choices:
+  - Scenario One: scenario_one_defined
+  - Scenario Two: scenario_two_defined
+  - No Scenario: skip
+---
+code: |
+  # Make sure necessary objects are defined
+  # early on so that this block can run idempotently.
+  client.name
+  client.asset
+  client.name.first = 'Joseph'
+  client.name.last = 'Jones'
+  client.birthdate = as_datetime('5/1/1995')
+  car = client.asset.appendObject()
+  car.value = 323
+  car.purchase_date = as_datetime('5/1/2015')
+  # etc. etc.
+  scenario_one_defined = True
+{% endhighlight %}
+
+If the user is not a developer or an administrator, the `mandatory`
+runs to completion and is never run again.  But if the user is a
+developer or administrator, the interview will start with a screen
+that the user can use to select a scenario.  The `mandatory` block
+uses the [`value()`] function to seek a definition of
+`scenario_one_defined` or `scenario_two_defined`.  Once the scenario
+is defined, the `mandatory` block runs to completion and the interview
+proceeds normally.  The next screen that is shown is whatever screen
+would be shown to a user who had input the information listed in the
+scenario.
+
+You can use this technique to "fast forward" to a part of the
+interview you want to test, or to "fast forward" to the very end.
+
+You could use "sub-scenarios" so that you can mix-and-match different
+collections of variables.  For example, your `scenario_one_defined`
+block could seek the definition of `scenario_user_self_employed` and
+`scenario_high_tax_bracket`, while your `scenario_two_defined` block
+could seek the definition of `scenario_user_has_employer` and
+`scenario_high_tax_bracket`.  This will allow you to avoid having to
+copy and paste code.
+
+You could then have a [Lettuce] script that starts with:
+
+{% highlight text %}
+Scenario: Test the interview "Debt collection advice"
+  Given I log in with "jsmith@example.com" and "sUper@sEcr3t_pAssWd"
+  And I start the interview "docassemble.massachusetts:data/questions/debt.yml"
+  Then I should see the phrase "Which scenario do you want to test?"
+  And I click the "Scenario One" option
+  And I click the button "Continue"
+{% endhighlight %}
+
+These few lines effectively "stand in" for many lines of [Gherkin]
+sentences you would otherwise have to write to simulate the user typing in
+information.  A [Lettuce] script like this is easier to maintain than
+one that you have to modify every time you make a change to the
+language or order of your information-gathering screens.
+
+Another way to prepopulate interview answers is to use the [API].
+However, the downside of using the [API] to set variables is that the
+[API]'s variable-setting endpoint is not capable of creating objects.
+
+Since there can be bugs in the logic of the information-gathering
+process, this procedure is not as thorough as a [Behavior-Driven
+Development] approach that goes through all of the
+information-gathering screens.
 
 ## <a name="unittesting"></a>Unit testing
 
-Docassemble also supports the technique of testing components of an
-interview in isolation ("[unit testing]").  Unit testing is feasible
-when the legal logic of an interview is written in the form of
-[Python] classes, methods, and functions.  For example, the interview
-might have an algorithm that determines jurisdiction:
+**docassemble** also supports the technique of testing components of
+an interview in isolation ("[unit testing]").  Unit testing is
+feasible when the legal logic of an interview is written in the form
+of [Python] classes, methods, and functions.  For example, the
+interview might have an algorithm that determines jurisdiction:
 
 {% highlight python %}
 class Plaintiff(Individual):
@@ -1040,8 +1112,8 @@ This module uses the [`unittest` framework].  A module using the
 
 It may seem like a waste of time to write a computer program to test
 two scenarios when it would be much faster to simply test the two
-scenarios manually, and if they work right, you could assume that the
-tests do not need to be run again.  However, writing out the test
+scenarios manually, and if they work right, conclude that the feature
+works and will continue to work.  However, writing out the test
 scripts is worthwhile because test scripts can then be run in the
 future in an automated fashion to prevent "regression."  Very often,
 bugs in software come from features that used to work but that stop
@@ -1049,17 +1121,16 @@ working for hard-to-predict reasons.  Something that used to work
 might suddenly stop working because of a change in the code of a
 dependency, such as a software library written by someone else.  Code
 may also stop working because changes you made elsewhere in your
-package have unanticipated effects.
+package have unanticipated long-distance effects.
 
 Legal logic algorithms can also be "unit tested" using brief test
 interviews that are separate from the main interview and exist only
-for testing purposes.  These test interviews can be operated by
+for testing purposes.  These test interviews could be operated by
 subject matter experts manually, who could manually try out various
 possibilities in to make sure the algorithm produces the legally
-correct response.  These same interviews can also be tested in an
-automated fashion with scenarios specified in [Lettuce] scripts.  For
-example, a test interview, `test-jurisdiction.yml`, might look like
-this:
+correct response.  These same interviews could also be tested in an
+automated fashion with [Lettuce] scripts.  For example, a test
+interview, `test-jurisdiction.yml`, might look like this:
 
 {% highlight yaml %}
 modules:
@@ -1128,6 +1199,22 @@ Unlike [Lettuce] scripts that test your actual interview, these
 scripts will not need to be changed whenever you make stylistic
 modifications to your interview.  In that way, they are much easier to
 maintain.
+
+You might think it is inefficient to write 40 lines of [YAML] and
+[Gherkin] to test an algorithm that is five lines long.  But there is
+no logical basis for assuming that the the algorithm itself should
+take up less space than its testing code.  Nor is there a logical
+basis for assuming that the task of writing the algorithm should take
+longer than testing the algorithm (or writing documentation for the
+algorithm).  All of this work is important.
+
+You do not need to develop a rigid habit of writing test scripts for
+every piece of code you write.  If you have a `code` block that
+capitalizes a word, for example, it is reasonable to "test" it by
+"eyeballing" it or testing it incidentally as part of a
+whole-interview [Lettuce] script.  But if you have mission-critical
+algorithms that do somewhat tricky things, spending a lot of time on
+test code will yield a good return on investment.
 
 The next section provides a practical explanation of how to use
 [Lettuce] to test **docassemble** interviews.
@@ -1224,6 +1311,124 @@ documentation for [Lettuce].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
 to use [Lettuce].
 
+## <a name="nontechnical"></a>Improving quality with non-technical staff
+
+One barrier to involving non-programmers in the development of guided
+interviews is that guided interviews are technologically complex.
+
+It is commonly believed that "code" is the barrier that locks out
+non-programmers from being involved in the development process, and if
+only we had a user friendly UI, non-programmers could develop
+applications just as well as programmers.  However, this may not be
+the case.  For example, a non-programmer can conceptually understand
+what a list is and what a dictionary is, but if you ask a
+non-programmer "what's the optimal data structure for gathering
+information about witnesses, their current employer, and their past
+employers," a non-programmer is going to struggle with that question.
+It can even be a difficult question for a programmer.  The barrier for
+the non-programmer is not that they don't know whether a semicolon
+goes at the end of the line or what brackets to use to specify a
+dictionary.  The programmer's advantage in answering the question is
+not that they have memorized the syntax of coding.  Experience with
+coding leads to a way of thinking; it develops problem-solving skills
+in the technical domain.
+
+Therefore, it is unlikely that you will be able to develop a
+maintainable, elegant software product without involving a skilled
+computer programmer to figure out issues of logic and data structure.
+However, there are ways that non-programmers can and should be deeply
+involved in the development of guided interviews.
+
+You can involve a non-technical person on the team who knows how to
+communicate in writing with succinct phrases, who knows when the text
+is too short and too long, knows when to hide information behind a
+hyperlink, and knows when to include it in the main page.  A
+non-technical person may not know how to figure out tricky logic
+problems, but they can envision what the end result should be, and
+express that to the developers.  When the developers implement it
+imperfectly, the non-technical person can see the imperfections and
+clean them up.
+
+A non-technical person can be an advocate for the users against the
+developers, who may tend to make decisions in a way that makes life
+easier for themselves at the expense of the user.  For example, the
+non-technical person could say, "we are asking the user if they lived
+outside the state in the last five years, but we already asked them
+when they moved to their current address, and if they gave a date that
+was before five years ago, we don't need to ask them that question."
+The developers might say, "well, that would be complicated for us
+because of x, y, and z."  And the non-technical person could say,
+"That's nice, I am sure you can figure it out."  Then the developers
+will begrudgingly figure it out, and the interview will be improved.
+
+When an application is live, non-technical people can provide customer
+service to users.  They can learn about users' difficulties,
+prioritize the changes that are most important, and communicate
+with the developers so that the difficulties are minimized in the
+future.
+
+Non-technical people can also get involved in reading and writing
+code.  They can express what they want to see in a guided interview by
+writing and editing [Gherkin] scripts, which the developers can clean
+up for syntax and use as a basis for implementing changes.
+Non-technical people can review [Gherkin] scripts to make sure they
+make sense from a substantive perspective.  They can edit them to add
+additional conditions so that the [Lettuce] tests are more
+comprehensive.
+
+It is possible to structure [YAML] interview files so that they are
+readable and editable by non-technical people.  To facilitate this,
+developers can:
+
+* Use the [`include`] feature and split up the [YAML] in such a way
+  that complicated blocks are isolated in [YAML] files that
+  non-technical people never see, while [`question`]s and easy-to-read
+  [`code`] blocks are put in files that non-technical people can
+  review and edit.
+* Keep [`question`]s readable.  While **docassemble** allows [Python],
+  [HTML], [CSS], and [JavaScript] to be sprinkled throughout a [YAML]
+  file, a better practice is to hide away this complexity in other
+  files.  Developers can move [Python] into module files and other
+  content into [`template`] blocks.  That way, the [YAML] will
+  primarily contain content that non-technical people can read and
+  edit.
+* Teach non-technical people to edit [YAML] using GitHub.  Since it is
+  possible that non-technical people will introduce errors when
+  editing the content of [YAML] files, the developers should always
+  review the changes and make corrections as necessary.  But by having
+  the power to read, search, and edit the YAML, non-technical people
+  will be able to have a greater deal of control.  Non-technical
+  people should be about to figure out [Markdown] and much of [Mako]
+  with enough confidence to draft questions and make edits.
+* Insert [`comment`]s into the [YAML] to explain what the different
+  blocks do, and arrange the blocks in a relatively sensible order.
+  Non-technical people may not be able to learn the system
+  sufficiently to write flawless code themselves, but they can at
+  least understand the big picture.
+
+If non-technical people are going to be effective members of the team,
+they need to adapt as well.  They need to challenge themselves to
+learn new things every day.  The process of learning is not difficult
+if they are willing to try.  Learning how things works involves typing
+unusual words and phrases into Google (and the **docassemble** web
+site, and the GitHub web site) and reading what comes up.
+
+Sometimes, the non-technical members of a team are viewed as "subject
+matter experts" because they have an expert knowledge of the subject
+matter of the guided interview.  These experts can be important
+members of a team if they devote significant time to the work.  But if
+their involvement in the work is in addition to a full time job, they
+will not be very helpful except as consultants to call for answers to
+specific questions.  It is better to have a dedicated staff member who
+knows a little about the subject matter than to have a distracted
+staff member who knows a lot about the subject matter.
+
+[Mako]: http://www.makotemplates.org/
+[`comment`]: {{ site.baseurl }}/docs/modifiers.html#comment
+[`template`]: {{ site.baseurl }}/docs/template.html#template
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
@@ -1316,3 +1521,4 @@ to use [Lettuce].
 [metrics]: {{ site.baseurl }}/docs/config.html#google analytics
 [observing]: {{ site.baseurl }}/docs/livehelp.html#observe
 [acceptance tests]: https://en.wikipedia.org/wiki/Acceptance_testing
+[`value()`]: {{ site.baseurl }}/docs/functions.html#value
