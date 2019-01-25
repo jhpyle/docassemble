@@ -3626,7 +3626,7 @@ def auto_login():
         url_info = info.get('url_args', dict())
         next_url = get_url_from_file_reference(info['next'], **url_info)
     else:
-        next_url = url_for('interview_list')
+        next_url = url_for('interview_list', from_login='1')
     response = redirect(next_url)
     response.set_cookie('secret', info['secret'])
     return response
@@ -3640,7 +3640,7 @@ def show_headers():
 @csrf.exempt
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
 
@@ -3648,14 +3648,14 @@ def oauth_authorize(provider):
 @csrf.exempt
 def oauth_callback(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email, name_data = oauth.callback()
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     user = UserModel.query.filter_by(social_id=social_id).first()
     if not user:
         user = UserModel.query.filter_by(email=email).first()
@@ -3682,7 +3682,7 @@ def oauth_callback(provider):
         #release_lock(session['uid'], session['i'])
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
-    response = redirect(url_for('interview_list'))
+    response = redirect(url_for('interview_list', from_login='1'))
     response.set_cookie('secret', secret)
     return response
 
@@ -3783,7 +3783,7 @@ def phone_login_verify():
                 session['key_logged'] = True
                 #release_lock(session['uid'], session['i'])
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
-            response = redirect(url_for('interview_list'))
+            response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret)
             return response
         else:
@@ -3828,7 +3828,7 @@ def mfa_setup():
                 next_url = session['next']
                 del session['next']
             else:
-                next_url = url_for('interview_list')
+                next_url = url_for('interview_list', from_login='1')
             return flask_user.views._do_login_user(user, next_url, False)
         flash(word("You are now set up with two factor authentication."), 'success')
         return redirect(url_for('user_profile_page'))
@@ -3995,7 +3995,7 @@ def mfa_verify_sms_setup():
                     next_url = session['next']
                     del session['next']
                 else:
-                    next_url = url_for('interview_list')
+                    next_url = url_for('interview_list', from_login='1')
                 return flask_user.views._do_login_user(user, next_url, False)
             flash(word("You are now set up with two factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
@@ -4018,7 +4018,7 @@ def mfa_login():
         abort(404)
     form = MFALoginForm(request.form)
     if not form.next.data:
-        form.next.data = _get_safe_next_param('next', url_for('interview_list'))
+        form.next.data = _get_safe_next_param('next', url_for('interview_list', from_login='1'))
     if request.method == 'POST' and form.submit.data:
         del session['validated_user']
         if 'next' in session:
@@ -4271,7 +4271,7 @@ def google_page():
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
     session_id = session.get('uid', None)
-    return redirect(url_for('interview_list'))
+    return redirect(url_for('interview_list', from_login='1'))
 
 @app.route("/leave", methods=['GET'])
 def leave():
@@ -16743,16 +16743,18 @@ def interview_list():
     tag = request.args.get('tag', None)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
+        the_args = dict()
         if is_json:
-            if tag:
-                response = redirect(url_for('interview_list', json='1', tag=tag))
-            else:
-                response = redirect(url_for('interview_list', json='1'))
-        else:
-            if tag:
-                response = redirect(url_for('interview_list', tag=tag))
-            else:
-                response = redirect(url_for('interview_list'))
+            the_args['json'] = '1'
+        if tag:
+            the_args['tag'] = tag
+        if 'from_login' in request.args:
+            the_args['from_login'] = request.args['from_login']
+        if 'post_restart' in request.args:
+            the_args['post_restart'] = request.args['post_restart']
+        if 'resume' in request.args:
+            the_args['resume'] = request.args['resume']
+        response = redirect(url_for('interview_list', **the_args))
         response.set_cookie('secret', session['newsecret'])
         del session['newsecret']
         return response

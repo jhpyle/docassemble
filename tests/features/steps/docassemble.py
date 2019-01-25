@@ -20,10 +20,6 @@ def do_wait():
         else:
             time.sleep(world.wait_seconds)
 
-def do_wait():
-    if world.wait_seconds > 0:
-        time.sleep(world.wait_seconds)
-
 @step('I spend at least ([0-9]+) seconds? on each page')
 def change_wait_seconds(step, secs):
     world.wait_seconds = float(secs)

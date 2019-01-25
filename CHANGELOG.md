@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.3.36] - 2019-01-24
+### Fixed
+- Not all login methods were redirecting the user back to the
+  interview when they should have.
+
 ## [0.3.35] - 2019-01-22
 ### Added
 - The `resume interview after login` configuration directive.
