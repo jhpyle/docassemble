@@ -134,7 +134,7 @@ class UserProfileForm(FlaskForm):
     language = StringField(word('Language'), [validators.Length(min=0, max=64)])
     timezone = SelectField(word('Time Zone'))
     pypi_username = StringField(word('PyPI Username'))
-    pypi_password = StringField(word('PyPI Password'), widget=PasswordInput(hide_value=False))
+    pypi_password = StringField(word('PyPI Password'))
     confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
     cancel = SubmitField(word('Cancel'))

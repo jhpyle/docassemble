@@ -3400,8 +3400,12 @@ def set_user_info(**kwargs):
         this_thread.current_info['user']['roles'] = [y for y in kwargs['privileges']]
     if (user_id is None and email is None) or (user_id is not None and user_id == this_thread.current_info['user']['theid']) or (email is not None and email == this_thread.current_info['user']['email']):
         for key, val in kwargs.iteritems():
-            if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
+            if key in ('country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
                 this_thread.current_info['user'][key] = val
+            if key == 'first_name':
+                this_thread.current_info['user']['firstname'] = val
+            if key == 'last_name':
+                this_thread.current_info['user']['lastname'] = val
 
 def create_user(email, password, privileges=None, info=None):
     """Creates a user account with the given e-mail and password, returning the user ID of the new account."""
