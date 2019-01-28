@@ -23,6 +23,7 @@ def fix_nickname(form, field):
 class MySignInForm(LoginForm):
     def validate(self):
         #import redis
+        sys.stderr.write("In validate\n")
         from docassemble.webapp.daredis import r
         #import docassemble.base.util
         from flask import request, abort
@@ -82,7 +83,9 @@ class MySignInForm(LoginForm):
                 else:
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
+            sys.stderr.write("Trying super validate\n")
             result = super(MySignInForm, self).validate()
+            sys.stderr.write("Super validate response was " + repr(result) + "\n")
         if result is False:
             r.incr(key)
             r.expire(key, daconfig['ban period'])

@@ -3,11 +3,12 @@ import subprocess
 from PIL import Image, ImageEnhance
 from docassemble.base.functions import get_config, get_language, ReturnValue
 from docassemble.base.core import DAFile, DAFileList
-from pyPdf import PdfFileReader
+from PyPDF2 import PdfFileReader
 from docassemble.base.logger import logmessage
 import pycountry
 import sys
 import os
+from six import string_types, text_type, PY2
 
 def ocr_finalize(*pargs, **kwargs):
     #sys.stderr.write("ocr_finalize started")
@@ -35,6 +36,8 @@ def get_available_languages():
     except subprocess.CalledProcessError as err:
         raise Exception("get_available_languages: failed to list available languages: " + str(err))
     else:
+        if not isinstance(output, text_type):
+            output = output.decode()
         result = output.splitlines()
         result.pop(0)
         return result
@@ -87,7 +90,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                 raise Exception("document with extension " + doc.extension + " is not a readable image file")
             if doc.extension == 'pdf':
                 #doc.page_path(1, 'page')
-                for i in xrange(PdfFileReader(open(doc.path(), 'rb')).getNumPages()):
+                for i in range(PdfFileReader(open(doc.path(), 'rb')).getNumPages()):
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code))
             else:
                 todo.append(dict(doc=doc, page=None, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code))

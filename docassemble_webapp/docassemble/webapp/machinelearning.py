@@ -1,3 +1,4 @@
+from six import string_types, text_type, PY2
 from docassemble.webapp.core.models import MachineLearning
 from docassemble.base.core import DAObject, DAList, DADict
 from docassemble.webapp.db_object import db
@@ -10,7 +11,11 @@ import numpy as np
 import re
 import random
 import codecs
-import cPickle as pickle
+from io import open
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 import datetime
 import os
 import yaml
@@ -104,7 +109,7 @@ class MachineLearner(object):
             query = db.session.query(MachineLearning.dependent).filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent)
         for record in query:
             if record.dependent is not None:
-                in_use.add(pickle.loads(codecs.decode(record.dependent, 'base64')))
+                in_use.add(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
         return sorted(in_use)
     def is_empty(self):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
@@ -120,8 +125,8 @@ class MachineLearner(object):
         if 'fullpath' not in file_info or file_info['fullpath'] is None or not os.path.exists(file_info['fullpath']):
             return
             #raise Exception("File reference " + str(fileref) + " is invalid")
-        with open(file_info['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
             aref = json.loads(content)
         elif 'extension' in file_info and file_info['extension'].lower() in ['yaml', 'yml']:
@@ -163,10 +168,10 @@ class MachineLearner(object):
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if existing_entry.dependent:
-            dependent = pickle.loads(codecs.decode(existing_entry.dependent, 'base64'))
-            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=pickle.loads(codecs.decode(existing_entry.info, 'base64')) if existing_entry.info is not None else None)
+            dependent = pickle.loads(codecs.decode(bytearray(existing_entry.dependent, encoding='utf-8'), 'base64'))
+            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64')), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=pickle.loads(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64')) if existing_entry.info is not None else None)
         else:
-            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), create_time=existing_entry.create_time, key=existing_entry.key, info=pickle.loads(codecs.decode(existing_entry.info, 'base64')) if existing_entry.info is not None else None)
+            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64')), create_time=existing_entry.create_time, key=existing_entry.key, info=pickle.loads(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64')) if existing_entry.info is not None else None)
     def one_unclassified_entry(self, key=None):
         self._initialize()
         if key is None:
@@ -175,7 +180,7 @@ class MachineLearner(object):
             entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).first()
         if entry is None:
             return None
-        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key, info=pickle.loads(codecs.decode(entry.info, 'base64')) if entry.info is not None else None)._set_instance_name_for_method()
+        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), create_time=entry.create_time, key=entry.key, info=pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None)._set_instance_name_for_method()
     def new_entry(self, **kwargs):
         return MachineLearningEntry(ml=self, **kwargs)._set_instance_name_for_method()
     def unclassified_entries(self, key=None):
@@ -187,7 +192,7 @@ class MachineLearner(object):
         else:
             query = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).all()
         for entry in query:
-            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key, info=pickle.loads(codecs.decode(entry.info, 'base64')) if entry.info is not None else None)
+            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), create_time=entry.create_time, key=entry.key, info=pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None)
         return results
     def classified_entries(self, key=None):
         self._initialize()
@@ -199,7 +204,7 @@ class MachineLearner(object):
         else:
             query = MachineLearning.query.filter_by(group_id=self.group_id, active=True, key=key).order_by(MachineLearning.id).all()
         for entry in query:
-            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=pickle.loads(codecs.decode(entry.dependent, 'base64')), info=pickle.loads(codecs.decode(entry.info, 'base64')) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
+            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), dependent=pickle.loads(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64')), info=pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
         return results
     def _save_entry(self, **kwargs):
         self._initialize()
@@ -260,7 +265,7 @@ class MachineLearner(object):
         success = False
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
             #logmessage("Training...")
-            self._train(pickle.loads(codecs.decode(record.independent, 'base64')), pickle.loads(codecs.decode(record.dependent, 'base64')))
+            self._train(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
             success = True
         lastmodtime[self.group_id] = nowtime
         return success
@@ -296,7 +301,7 @@ class SimpleTextMachineLearner(MachineLearner):
         if not self._train_from_db():
             return list()
         probs = dict()
-        for key, value in learners[self.group_id].classify(Document(indep.lower(), stemmer=PORTER), discrete=False).iteritems():
+        for key, value in learners[self.group_id].classify(Document(indep.lower(), stemmer=PORTER), discrete=False).items():
             probs[key] = value
         if not len(probs):
             single_result = learners[self.group_id].classify(Document(indep.lower(), stemmer=PORTER))
@@ -440,10 +445,10 @@ class RandomForestMachineLearner(MachineLearner):
         data = list()
         depend_data = list()
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
-            indep_var = pickle.loads(codecs.decode(record.independent, 'base64'))
-            depend_var = pickle.loads(codecs.decode(record.dependent, 'base64'))
+            indep_var = pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
+            depend_var = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             if type(depend_var) is str:
-                depend_var = unicode(depend_var)
+                depend_var = text_type(depend_var)
             if learners[self.group_id]['dep_type'] is not None:
                 if type(depend_var) is not learners[self.group_id]['dep_type']:
                     if type(depend_var) is int and learners[self.group_id]['dep_type'] is float:
@@ -453,7 +458,7 @@ class RandomForestMachineLearner(MachineLearner):
                     else:
                         raise Exception("RandomForestMachineLearner: dependent variable type was not consistent")
             else:
-                if type(depend_var) not in [unicode, int, bool, float]:
+                if not isinstance(depend_var, (string_types, int, bool, float)):
                     raise Exception("RandomForestMachineLearner: dependent variable type for key " + repr(key) + " was not a standard variable type")
                 learners[self.group_id]['dep_type'] = type(depend_var)
             depend_data.append(depend_var)
@@ -461,9 +466,9 @@ class RandomForestMachineLearner(MachineLearner):
                 indep_var = indep_var.elements
             if type(indep_var) is not dict:
                 raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
-            for key, val in indep_var.iteritems():
+            for key, val in indep_var.items():
                 if type(val) is str:
-                    val = unicode(val)
+                    val = text_type(val)
                 if key in learners[self.group_id]['indep_type']:
                     if type(val) is not learners[self.group_id]['indep_type'][key]:
                         if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
@@ -473,19 +478,19 @@ class RandomForestMachineLearner(MachineLearner):
                         else:
                             raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
                 else:
-                    if type(val) not in [unicode, int, bool, float]:
+                    if not isinstance(val, (string_types, int, bool, float)):
                         raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not a standard variable type")
                     learners[self.group_id]['indep_type'][key] = type(val)
             data.append(indep_var)
             success = True
         if success:
             df = pd.DataFrame(data)
-            for key, val in learners[self.group_id]['indep_type'].iteritems():
-                if val is unicode:
+            for key, val in learners[self.group_id]['indep_type'].items():
+                if val is text_type:
                     df[key] = pd.Series(df[key], dtype="category")
                     learners[self.group_id]['indep_categories'][key] = df[key].cat.categories
             df = pd.get_dummies(df, dummy_na=True)
-            if learners[self.group_id]['dep_type'] is unicode:
+            if learners[self.group_id]['dep_type'] is text_type:
                 y = pd.Series(depend_data, dtype="category")
                 learners[self.group_id]['dep_categories'] = y.cat.categories
             else:
@@ -503,10 +508,10 @@ class RandomForestMachineLearner(MachineLearner):
             raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
         indep = process_independent_data(indep)
         indep_to_use = dict()
-        for key, val in indep.iteritems():
+        for key, val in indep.items():
             if key in learners[self.group_id]['indep_type']:
                 if type(val) is str:
-                    val = unicode(val)
+                    val = text_type(val)
                 if type(val) is not learners[self.group_id]['indep_type'][key]:
                     if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
                         val = float(val)
@@ -516,13 +521,13 @@ class RandomForestMachineLearner(MachineLearner):
                         raise Exception("RandomForestMachineLearner: the independent variable type for key " + repr(key) + " was not consistent.  Stored was " + str(learners[self.group_id]['indep_type'][key]) + " and type was " + str(type(val)))
             else:
                 raise Exception("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
-            if type(val) is unicode:
+            if isinstance(val, string_types):
                 if val not in learners[self.group_id]['indep_categories'][key]:
                     val = np.nan
             indep_to_use[key] = val
         df = pd.DataFrame([indep_to_use])
-        for key, val in indep_to_use.iteritems():
-            if learners[self.group_id]['indep_type'][key] is unicode:
+        for key, val in indep_to_use.items():
+            if learners[self.group_id]['indep_type'][key] is text_type:
                 #df[key] = pd.Series(df[key]).astype('category', categories=learners[self.group_id]['indep_categories'][key])
                 df[key] = pd.Series(df[key]).astype(CategoricalDtype(learners[self.group_id]['indep_categories'][key]))
         df = pd.get_dummies(df, dummy_na=True)
@@ -600,14 +605,14 @@ class RandomForestMachineLearner(MachineLearner):
 
 def process_independent_data(data):
     result = dict()
-    for key, val in data.iteritems():
+    for key, val in data.items():
         if isinstance(val, DADict) or type(val) is dict:
-            for subkey, subval in val.iteritems():
-                if type(subval) not in (unicode, str, bool, int, float):
+            for subkey, subval in val.items():
+                if not isinstance(subval, (string_types, bool, int, float)):
                     raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
                 result[key + '_' + subkey] = subval
         else:
-            if type(val) not in (unicode, str, bool, int, float):
+            if not isinstance(val, (string_types, bool, int, float)):
                 raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
             result[key] = val
     return result

@@ -1,3 +1,4 @@
+from six import string_types, text_type, PY2
 import sys
 import copy
 import datetime
@@ -20,7 +21,10 @@ import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
 import docassemble.base.functions
-import cPickle as pickle
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 import codecs
 from sqlalchemy import or_, and_
 #import docassemble.webapp.worker
@@ -123,9 +127,9 @@ def run_cron(cron_type):
                             sys.stderr.write(str(err.__class__.__name__) + ": " + str(err) + "\n")
                             release_lock(item['key'], item['filename'])
                             if hasattr(err, 'traceback'):
-                                error_trace = unicode(err.traceback)
+                                error_trace = text_type(err.traceback)
                                 if hasattr(err, 'da_line_with_error'):
-                                    error_trace += "\nIn line: " + unicode(err.da_line_with_error)
+                                    error_trace += "\nIn line: " + text_type(err.da_line_with_error)
                             else:
                                 error_trace = None
                             error_notification(err, trace=error_trace)

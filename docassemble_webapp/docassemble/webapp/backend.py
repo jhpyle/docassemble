@@ -1,3 +1,4 @@
+from six import string_types, text_type, PY2
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
@@ -5,11 +6,14 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
 from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning #Attachments
-from docassemble.base.generate_key import random_string
+from docassemble.base.generate_key import random_string, random_bytes
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
-import cPickle as pickle
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 import codecs
 #import string
 #import random
@@ -17,11 +21,12 @@ import pprint
 import datetime
 import json
 import types
-from Crypto.Cipher import AES
-from Crypto import Random
+from Cryptodome.Cipher import AES
+from Cryptodome import Random
 from dateutil import tz
 import tzlocal
 import ruamel.yaml
+TypeType = type(type(None))
 
 import docassemble.base.parse
 import re
@@ -51,7 +56,7 @@ def elapsed(name_of_function):
         def time_func(*pargs, **kwargs):
             time_start = time.time()
             result = func(*pargs, **kwargs)
-            sys.stderr.write(name_of_function + ': ' + unicode(time.time() - time_start) + "\n")
+            sys.stderr.write(name_of_function + ': ' + text_type(time.time() - time_start) + "\n")
             return result
         return time_func
     return elapse_decorator
@@ -117,7 +122,7 @@ def write_ml_source(playground, playground_number, filename, finalize=True):
                 continue
             if parts[2] not in output:
                 output[parts[2]] = list()
-            the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=pickle.loads(codecs.decode(record.dependent, 'base64')))
+            the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
@@ -205,7 +210,7 @@ if type(word_file_list) is not list:
     word_file_list = [word_file_list]
 for word_file in word_file_list:
     #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    if not isinstance(word_file, basestring):
+    if not isinstance(word_file, string_types):
         sys.stderr.write("Error reading words: file references must be plain text.\n")
         continue
     filename = docassemble.base.functions.static_filename_path(word_file)
@@ -217,7 +222,7 @@ for word_file in word_file_list:
             try:
                 for document in ruamel.yaml.safe_load_all(stream):
                     if document and type(document) is dict:
-                        for lang, words in document.iteritems():
+                        for lang, words in document.items():
                             if type(words) is dict:
                                 docassemble.base.functions.update_word_collection(lang, words)
                             else:
@@ -302,59 +307,46 @@ app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
     #app.logger.warning(message)
-    sys.stderr.write(unicode(message) + "\n")
+    sys.stderr.write(text_type(message) + "\n")
     return
 
 def pad(the_string):
-    return the_string + (16 - len(the_string) % 16) * chr(16 - len(the_string) % 16)
+    return the_string + bytearray((16 - len(the_string) % 16) * chr(16 - len(the_string) % 16), encoding='utf-8')
 
 def unpad(the_string):
-    return the_string[0:-ord(the_string[-1])]
+    if isinstance(the_string[-1], int):
+        return the_string[0:-the_string[-1]]
+    else:
+        return the_string[0:-ord(the_string[-1])]
 
 def encrypt_phrase(phrase, secret):
-    iv = current_app.secret_key[:16]
-    encrypter = AES.new(secret, AES.MODE_CBC, iv)
-    if isinstance(phrase, unicode):
-        phrase = phrase.encode('utf8')
-    return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
+    phrase = bytearray(phrase, encoding='utf-8')
+    iv = bytearray(secret_key[:16], encoding='utf-8')
+    encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
+    return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode()
 
 def pack_phrase(phrase):
-    if isinstance(phrase, unicode):
-        phrase = phrase.encode('utf8')
+    phrase = bytearray(phrase, encoding='utf-8')
     return codecs.encode(phrase, 'base64').decode()
 
 def decrypt_phrase(phrase_string, secret):
-    decrypter = AES.new(secret, AES.MODE_CBC, str(phrase_string[:16]))
-    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf8')
+    phrase_string = bytearray(phrase_string, encoding='utf-8')
+    decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, phrase_string[:16])
+    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf-8')
 
 def unpack_phrase(phrase_string):
-    return codecs.decode(phrase_string, 'base64').decode('utf8')
+    return codecs.decode(bytearray(phrase_string, encoding='utf-8'), 'base64').decode()
 
 def encrypt_dictionary(the_dict, secret):
-    #sys.stderr.write("40\n")
-    iv = random_string(16)
-    #iv = Random.new().read(AES.block_size)
-    #sys.stderr.write("41\n")
-    #sys.stderr.write("iv is " + str(iv) + "\n")
-    #sys.stderr.write("block size is " + str(AES.block_size) + "\n")
-    #sys.stderr.write("secret is " + str(repr(secret)) + "\n")
-    encrypter = AES.new(secret, AES.MODE_CBC, iv)
-    #sys.stderr.write("42\n")
-    #one = pickleable_objects(the_dict)
-    #sys.stderr.write("43\n")
-    #two = pickle.dumps(one)
-    #sys.stderr.write("44\n")
-    #three = pad(two)
-    #sys.stderr.write("45\n")
-    #four = encrypter.encrypt(three)
-    #sys.stderr.write("46\n")
-    #logmessage(pprint.pformat(pickleable_objects(the_dict)))
-    return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
+    iv = random_bytes(16)
+    encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
+    return (iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64')).decode()
 
 def pack_object(the_object):
     return codecs.encode(pickle.dumps(safe_pickle(the_object)), 'base64').decode()
 
 def unpack_object(the_string):
+    the_string = bytearray(the_string, encoding='utf-8')
     return pickle.loads(codecs.decode(the_string, 'base64'))
 
 def safe_pickle(the_object):
@@ -362,7 +354,7 @@ def safe_pickle(the_object):
         return [safe_pickle(x) for x in the_object]
     if type(the_object) is dict:
         new_dict = dict()
-        for key, value in the_object.iteritems():
+        for key, value in the_object.items():
             new_dict[key] = safe_pickle(value)
         return new_dict
     if type(the_object) is set:
@@ -370,35 +362,20 @@ def safe_pickle(the_object):
         for sub_object in the_object:
             new_set.add(safe_pickle(sub_object))
         return new_set
-    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
         return None
     return the_object
 
 def pack_dictionary(the_dict):
-    # sys.stderr.write("pack_dictionary keys:\n")
-    # for key in pickleable_objects(the_dict):
-    #     sys.stderr.write("  " + key + ": " + pprint.pformat(the_dict[key]) + "\n")
     return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
 
 def decrypt_dictionary(dict_string, secret):
-    #sys.stderr.write("60\n")
-    #sys.stderr.write("secret is " + str(repr(secret)) + "\n")
-    decrypter = AES.new(secret, AES.MODE_CBC, str(dict_string[:16]))
-    #sys.stderr.write("61\n")
-    #one = codecs.decode(dict_string[16:], 'base64')
-    #sys.stderr.write("62\n")
-    #two = decrypter.decrypt(one)
-    #sys.stderr.write("63\n")
-    #three = unpad(two)
-    #sys.stderr.write("64\n")
-    #four = pickle.loads(three)
-    #sys.stderr.write(pprint.pformat(four, depth=4, indent=4) + "\n")
-    #sys.stderr.write(json.dumps(four) + "\n")
-    #sys.stderr.write("65\n")
-    #return four
+    dict_string = bytearray(dict_string, encoding='utf-8')
+    decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, dict_string[:16])
     return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
 
 def unpack_dictionary(dict_string):
+    dict_string = bytearray(dict_string, encoding='utf-8')
     return pickle.loads(codecs.decode(dict_string, 'base64'))
 
 def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
@@ -620,9 +597,9 @@ def file_set_attributes(file_number, **kwargs):
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
         upload.persistent = kwargs['persistent']
         changed = True
-    if 'session' in kwargs and type(kwargs['session']) in (str, unicode):
+    if 'session' in kwargs and isinstance(kwargs['session'], string_types):
         upload.key = kwargs['session']
-    if 'filename' in kwargs and type(kwargs['filename']) in (str, unicode):
+    if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
         upload.filename = kwargs['filename']
     if changed:
         db.session.commit()

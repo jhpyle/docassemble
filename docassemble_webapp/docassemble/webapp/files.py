@@ -1,4 +1,5 @@
 import sys
+from six import string_types, text_type
 import os
 import re
 import json
@@ -344,7 +345,7 @@ class SavedFile(object):
                     #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     key.set_contents_from_filename(fullpath)
                     self.modtimes[filename] = key.get_epoch_modtime()
-        for filename, key in self.keydict.iteritems():
+        for filename, key in self.keydict.items():
             if filename not in existing_files:
                 #sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 try:
@@ -414,7 +415,7 @@ def make_package_zip(pkgname, info, author_info, tz_name):
             thefilename = os.path.join(root, file)
             zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple())
             zinfo.compress_type = zipfile.ZIP_DEFLATED
-            zinfo.external_attr = 0644 << 16L
+            zinfo.external_attr = 0o644 << 16
             with open(thefilename, 'rb') as fp:
                 zf.writestr(zinfo, fp.read())
             #zf.write(thefilename, thefilename[trimlength:])
@@ -437,7 +438,7 @@ except ImportError:
 """
     licensetext = info['license']
     if re.search(r'MIT License', licensetext):
-        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(author_info['first name']) + " " + unicode(author_info['last name']) + """
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + text_type(author_info['first name']) + " " + text_type(author_info['last name']) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

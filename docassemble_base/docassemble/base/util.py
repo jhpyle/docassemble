@@ -7,14 +7,19 @@ import time
 import pytz
 import yaml
 import zipfile
+from six import string_types, text_type, PY2
 import collections
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
 import docassemble.base.ocr
-import cPickle as pickle
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError, DAValidationError
+import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
@@ -80,7 +85,7 @@ class DARedis(DAObject):
         #     this_thread.redis = redis.StrictRedis(host=redis_server, db=2)
         pickled_data = pickle.dumps(data)
         if expire is not None:
-            if type(expire) is not int:
+            if not isinstance(expire, int):
                 raise DAError("set_data: expire time must be an integer")
             pipe = server.server_redis_user.pipeline()
             pipe.set(key, pickled_data)
@@ -174,7 +179,7 @@ def run_python_module(module, arguments=None):
         module = this_thread.current_package + module
     commands = [re.sub(r'/lib/python.*', '/bin/python', os.__file__), '-m', module]
     if arguments:
-        if type(arguments) is not list:
+        if not isinstance(arguments, list):
             raise DAError("run_python_module: the arguments parameter must be in the form of a list")
         commands.extend(arguments)
     output = ''
@@ -323,13 +328,13 @@ def format_time(the_time, format='short', language=None):
             time = dateutil.parser.parse(the_time)
         return babel.dates.format_time(time, format=format, locale=language)
     except Exception as errmess:
-        return word("Bad date: " + unicode(errmess))
+        return word("Bad date: " + text_type(errmess))
 
 class DateTimeDelta(object):
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.describe())
+        return text_type(self.describe())
     def describe(self, **kwargs):
         specificity = kwargs.get('specificity', None)
         output = list()
@@ -374,19 +379,19 @@ class DADateTime(datetime.datetime):
     def minus(self, **kwargs):
         return dd(dt(self) - date_interval(**kwargs))
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(format_date(self))
+        return text_type(format_date(self))
     def __add__(self, other):
-        if isinstance(other, basestring):
-            return unicode(self) + other
+        if isinstance(other, string_types):
+            return text_type(self) + other
         val = dt(self) + other
         if isinstance(val, datetime.date):
             return dd(val)
         return val
     def __radd__(self, other):
-        if isinstance(other, basestring):
-            return other + unicode(self)
+        if isinstance(other, string_types):
+            return other + text_type(self)
         return dd(dt(self) + other)
     def __sub__(self, other):
         val = dt(self) - other
@@ -507,14 +512,14 @@ def phone_string(person, country=None):
 def email_string(persons, include_name=None, first=False):
     if persons is None:
         return None
-    if not hasattr(persons, '__iter__'):
+    if not isinstance(persons, (list, DAList, set, DASet, tuple)):
         persons = [persons]
     result = []
     for person in persons:
         if isinstance(person, Person) or isinstance(person, DAEmailRecipient):
             result.append(person.email_address(include_name=include_name))
         else:
-            result.append(unicode(person))
+            result.append(text_type(person))
     result = [x for x in result if x is not None and x != '']
     if first:
         if len(result):
@@ -604,7 +609,7 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
     else:
         exclude_privileges = list()
     lookup_dict = server.user_id_dict()
-    for user_id, access_time in this_thread.internal['accesstime'].iteritems():
+    for user_id, access_time in this_thread.internal['accesstime'].items():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
                 if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
@@ -650,7 +655,7 @@ class LatitudeLongitude(DAObject):
                 return True
     def _set_to_current(self):
         #logmessage("set to current")
-        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
+        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict):
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
                 self.latitude = this_thread.current_info['user']['location']['latitude']
                 self.longitude = this_thread.current_info['user']['location']['longitude']
@@ -661,15 +666,15 @@ class LatitudeLongitude(DAObject):
                 self.known = False
                 #logmessage("known is false")
             self.gathered = True
-            self.description = unicode(self)
+            self.description = text_type(self)
         return
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
-            return unicode(self.latitude) + ', ' + unicode(self.longitude)
+            return text_type(self.latitude) + ', ' + text_type(self.longitude)
         elif hasattr(self, 'error'):
-            return unicode(self.error)
+            return text_type(self.error)
         return u'Unknown'
 
 class RoleChangeTracker(DAObject):
@@ -733,9 +738,9 @@ class Name(DAObject):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return(unicode(self.full()))
+        return(text_type(self.full()))
 #    def __repr__(self):
 #        return(repr(self.full()))
 
@@ -802,33 +807,33 @@ class Address(DAObject):
             self.city_only = False
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return(unicode(self.block()))
+        return(text_type(self.block()))
     def on_one_line(self, include_unit=False, omit_default_country=True, language=None):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-                output += unicode(self.street_number) + " " + unicode(self.street)
+                output += text_type(self.street_number) + " " + text_type(self.street)
             else:
-                output += unicode(self.address)
+                output += text_type(self.address)
             if include_unit:
                 the_unit = self.formatted_unit(language=language)
                 if the_unit != '':
                     output += ", " + the_unit
             output += ", "
         #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += unicode(self.sublocality) + ", "
+        #    output += text_type(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += unicode(self.sublocality_level_1) + ", "
-        output += unicode(self.city)
+            output += text_type(self.sublocality_level_1) + ", "
+        output += text_type(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + unicode(self.state)
+            output += ", " + text_type(self.state)
         if hasattr(self, 'zip') and self.zip:
-            output += " " + unicode(self.zip)
+            output += " " + text_type(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + unicode(self.postal_code)
+            output += " " + text_type(self.postal_code)
         if hasattr(self, 'country') and self.country:
             if (not omit_default_country) or get_country() != self.country:
                 output += ", " + country_name(self.country)
@@ -868,7 +873,7 @@ class Address(DAObject):
                 results = my_geocoder.geocode(the_address)
                 success = True
             except Exception as the_err:
-                logmessage(unicode(the_err))
+                logmessage(text_type(the_err))
                 try_number += 1
                 time.sleep(try_number)
         self.geolocated = True
@@ -921,7 +926,7 @@ class Address(DAObject):
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component and 'long_name' in component:
-                        for geo_type, addr_type in geo_types.iteritems():
+                        for geo_type, addr_type in geo_types.items():
                             if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
                                 setattr(self, addr_type[0], component[addr_type[1]])
                         if (not hasattr(self, geo_type)) or getattr(self, geo_type) == '' or getattr(self, geo_type) is None:
@@ -957,7 +962,7 @@ class Address(DAObject):
                 }
                 for component in results.raw['address_components']:
                     if 'types' in component:
-                        for geo_type, addr_type in geo_types.iteritems():
+                        for geo_type, addr_type in geo_types.items():
                             if geo_type in component['types']:
                                 if 'short_name' in component:
                                     setattr(self.norm, addr_type, component['short_name'])
@@ -968,9 +973,9 @@ class Address(DAObject):
                                     if addr_type != geo_type:
                                         setattr(self.norm_long, geo_type, component['long_name'])
                 if hasattr(self.norm, 'unit'):
-                    self.norm.unit = '#' + unicode(self.norm.unit)
+                    self.norm.unit = '#' + text_type(self.norm.unit)
                 if hasattr(self.norm_long, 'unit'):
-                    self.norm_long.unit = '#' + unicode(self.norm_long.unit)
+                    self.norm_long.unit = '#' + text_type(self.norm_long.unit)
                 if hasattr(self.norm, 'street_number') and hasattr(self.norm, 'street'):
                     self.norm.address = self.norm.street_number + " " + self.norm.street
                 if hasattr(self.norm_long, 'street_number') and hasattr(self.norm_long, 'street'):
@@ -1041,21 +1046,21 @@ class Address(DAObject):
             line_breaker = " [NEWLINE] "
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-                output += unicode(self.street_number) + " " + unicode(self.street) + line_breaker
+                output += text_type(self.street_number) + " " + text_type(self.street) + line_breaker
             else:
-                output += unicode(self.address) + line_breaker
+                output += text_type(self.address) + line_breaker
             the_unit = self.formatted_unit(language=language)
             if the_unit != '':
                 output += the_unit + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += unicode(self.sublocality_level_1) + line_breaker
-        output += unicode(self.city)
+            output += text_type(self.sublocality_level_1) + line_breaker
+        output += text_type(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + unicode(self.state)
+            output += ", " + text_type(self.state)
         if hasattr(self, 'zip'):
-            output += " " + unicode(self.zip)
+            output += " " + text_type(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + unicode(self.postal_code)
+            output += " " + text_type(self.postal_code)
         return(output)
     def formatted_unit(self, language=None, require=False):
         """Returns the unit, formatted appropriately"""
@@ -1065,14 +1070,14 @@ class Address(DAObject):
             else:
                 return ''
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit), flags=re.IGNORECASE):
-                return word("Unit", language=language) + " " + unicode(self.unit)
+            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', text_type(self.unit), flags=re.IGNORECASE):
+                return word("Unit", language=language) + " " + text_type(self.unit)
             else:
-                return unicode(self.unit)
+                return text_type(self.unit)
         elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-            return word("Floor", language=language) + " " + unicode(self.floor)
+            return word("Floor", language=language) + " " + text_type(self.floor)
         elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-            return word("Room", language=language) + " " + unicode(self.room)
+            return word("Room", language=language) + " " + text_type(self.room)
         return ''
     def line_one(self, language=None):
         """Returns the first line of the address, including the unit 
@@ -1080,9 +1085,9 @@ class Address(DAObject):
         if self.city_only:
             return ''
         if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-            output += unicode(self.street_number) + " " + unicode(self.street)
+            output += text_type(self.street_number) + " " + text_type(self.street)
         else:
-            output = unicode(self.address)
+            output = text_type(self.address)
         the_unit = self.formatted_unit(language=language)
         if the_unit != '':
             output += ", " + the_unit
@@ -1092,16 +1097,16 @@ class Address(DAObject):
         state and zip code."""
         output = ""
         #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += unicode(self.sublocality) + ", "
+        #    output += text_type(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += unicode(self.sublocality_level_1) + ", "
-        output += unicode(self.city)
+            output += text_type(self.sublocality_level_1) + ", "
+        output += text_type(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + unicode(self.state)
+            output += ", " + text_type(self.state)
         if hasattr(self, 'zip') and self.zip:
-            output += " " + unicode(self.zip)
+            output += " " + text_type(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + unicode(self.postal_code)
+            output += " " + text_type(self.postal_code)
         return(output)
 
 class City(Address):
@@ -1115,21 +1120,21 @@ class Thing(DAObject):
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
             self.name = Name()
-        if 'name' in kwargs and type(kwargs['name']) in (str, unicode):
+        if 'name' in kwargs and isinstance(kwargs['name'], string_types):
             if not hasattr(self, 'name'):
                 self.name = Name()
             self.name.text = kwargs['name']
             del kwargs['name']
         return super(Thing, self).init(*pargs, **kwargs)
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and type(value) in [str, unicode]:
+        if attrname == 'name' and isinstance(value, string_types):
             self.name.text = value
         else:
             return super(Thing, self).__setattr__(attrname, value)
     def __unicode__(self):
-        return unicode(self.name.full())
+        return text_type(self.name.full())
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
 
 class Event(DAObject):
     """A DAObject with pre-set attributes address, which is a City, and
@@ -1143,9 +1148,9 @@ class Event(DAObject):
             self.initializeAttribute('location', LatitudeLongitude)
         return super(Event, self).init(*pargs, **kwargs)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.address)
+        return text_type(self.address)
     
 class Person(DAObject):
     """Represents a legal or natural person."""
@@ -1156,7 +1161,7 @@ class Person(DAObject):
             self.initializeAttribute('address', Address)
         if 'location' not in kwargs:
             self.initializeAttribute('location', LatitudeLongitude)
-        if 'name' in kwargs and type(kwargs['name']) in (str, unicode):
+        if 'name' in kwargs and isinstance(kwargs['name'], string_types):
             if not hasattr(self, 'name'):
                 self.name = Name()
             self.name.text = kwargs['name']
@@ -1188,14 +1193,14 @@ class Person(DAObject):
             return True
         return False
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and type(value) in [str, unicode]:
+        if attrname == 'name' and isinstance(value, string_types):
             self.name.text = value
         else:
             return super(Person, self).__setattr__(attrname, value)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.name.full())
+        return text_type(self.name.full())
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
@@ -1335,7 +1340,7 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             output = word('you', **kwargs)
         else:
-            output = unicode(self)
+            output = text_type(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -1354,7 +1359,7 @@ class Individual(Person):
         #     self.asset = Asset()
         # if 'expense' not in kwargs and not hasattr(self, 'expense'):
         #     self.expense = Expense()
-        if (not hasattr(self, 'name')) and 'name' in kwargs and type(kwargs['name']) in (str, unicode):
+        if (not hasattr(self, 'name')) and 'name' in kwargs and isinstance(kwargs['name'], string_types):
             self.name = IndividualName()
             self.name.uses_parts = False
             self.name.text = kwargs['name']
@@ -1449,7 +1454,7 @@ class Individual(Person):
         else:
             return(output)
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and type(value) in [str, unicode]:
+        if attrname == 'name' and isinstance(value, string_types):
             if isinstance(self.name, IndividualName):
                 self.name.uses_parts = False
             self.name.text = value
@@ -1486,9 +1491,9 @@ class FinancialList(DADict):
             del self.new_item_value
         return super(FinancialList, self)._new_item_init_callback()
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.total())
+        return text_type(self.total())
     
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
@@ -1531,9 +1536,9 @@ class Value(DAObject):
             return 0
         return (Decimal(self.value))
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.amount())
+        return text_type(self.amount())
     def __float__(self):
         return float(self.amount())
     def __int__(self):
@@ -1674,7 +1679,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
     media = list()
     for attachment in attachments:
         attachment_list = list()
-        if type(attachment) is DAFileCollection:
+        if isinstance(attachment, DAFileCollection):
             subattachment = getattr(attachment, 'pdf', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'docx', None)
@@ -1687,13 +1692,13 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
             else:
                 logmessage("send_sms: could not find file to attach in DAFileCollection.")
                 success = False
-        elif type(attachment) is DAFile:
+        elif isinstance(attachment, DAFile):
             attachment_list.append(attachment)
-        elif type(attachment) is DAStaticFile:
+        elif isinstance(attachment, DAStaticFile):
             attachment_list.append(attachment)
-        elif type(attachment) is DAFileList:
+        elif isinstance(attachment, DAFileList):
             attachment_list.extend(attachment.elements)
-        elif type(attachment) in [str, unicode] and re.search(r'^https?://', attachment):
+        elif isinstance(attachment, string_types) and re.search(r'^https?://', attachment):
             attachment_list.append(attachment)
         else:
             logmessage("send_sms: attachment " + repr(attachment) + " is not valid.")
@@ -1705,7 +1710,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     media.append(the_attachment.url_for(_external=True))
                 if type(the_attachment) is DAStaticFile:
                     media.append(the_attachment.url_for(_external=True))
-                elif type(the_attachment) in [str, unicode]:
+                elif isinstance(the_attachment, string_types):
                     media.append(the_attachment)
     if len(media) > 10:
         logmessage("send_sms: more than 10 attachments were provided; not sending message")
@@ -1721,7 +1726,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     else:
                         message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
                 except Exception as errstr:
-                    logmessage("send_sms: failed to send message: " + unicode(errstr))
+                    logmessage("send_sms: failed to send message: " + text_type(errstr))
                     return False
     if success and task is not None:
         mark_task_as_performed(task)
@@ -1773,7 +1778,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
-    if not hasattr(attachments, '__iter__'):
+    if not isinstance(attachments, (list, DAList, set, DASet, tuple)):
         attachments = [attachments]
     from flask_mail import Message
     if type(to) is not list:
@@ -1801,7 +1806,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     success = True
     for attachment in attachments:
         attachment_list = list()
-        if type(attachment) is DAFileCollection:
+        if isinstance(attachment, DAFileCollection):
             subattachment = getattr(attachment, 'pdf', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'docx', None)
@@ -1813,13 +1818,13 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                 attachment_list.append(subattachment)
             else:
                 success = False
-        elif type(attachment) is DAFile:
+        elif isinstance(attachment, DAFile):
             attachment_list.append(attachment)
-        elif type(attachment) is DAStaticFile:
+        elif isinstance(attachment, DAStaticFile):
             attachment_list.append(attachment)
-        elif type(attachment) is DAFileList:
+        elif isinstance(attachment, DAFileList):
             attachment_list.extend(attachment.elements)
-        elif type(attachment) in (str, unicode):
+        elif isinstance(attachment, string_types):
             file_info = server.file_finder(attachment)
             if 'fullpath' in file_info:
                 failed = True
@@ -1862,7 +1867,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             server.send_mail(msg)
             logmessage("send_email: finished sending")
         except Exception as errmess:
-            logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + unicode(errmess))
+            logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + text_type(errmess))
             success = False
     if success and task is not None:
         mark_task_as_performed(task)
@@ -1886,7 +1891,7 @@ def map_of(*pargs, **kwargs):
     the_map = {'markers': list()}
     all_args = list()
     for arg in pargs:
-        if type(arg) is list:
+        if isinstance(arg, list):
             all_args.extend(arg)
         else:
             all_args.append(arg)
@@ -1895,7 +1900,7 @@ def map_of(*pargs, **kwargs):
             markers = arg._map_info()
             if markers:
                 for marker in markers:
-                    if 'icon' in marker and type(marker['icon']) is not dict:
+                    if 'icon' in marker and not isinstance(marker['icon'], dict):
                         marker['icon'] = {'url': server.url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
                         marker['info'] = markdown_to_html(marker['info'], trim=True)
@@ -1909,7 +1914,7 @@ def map_of(*pargs, **kwargs):
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
-        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf8'), 'base64').decode().replace('\n', '') + ']'
+        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
     return word('(Unable to display map)')
 
 def ocr_file_in_background(*pargs, **kwargs):
@@ -2035,7 +2040,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
             text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read)
         except subprocess.CalledProcessError as err:
             raise Exception("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output))
-        page_text.append(text.decode('utf8'))
+        page_text.append(text.decode('utf-8'))
     for directory in temp_directory_list:
         shutil.rmtree(directory)
     return "\f".join(page_text)
@@ -2164,9 +2169,9 @@ class DAModel(DAObject):
             self.predict()
         return super(DAModel, self).init(*pargs, **kwargs)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.prediction)
+        return text_type(self.prediction)
     def predict(self):
         if self.use_for_training:
             self.entry_id = self.learner.save_for_classification(self.text, key=self.key)
@@ -2187,7 +2192,7 @@ def pdf_concatenate(*pargs, **kwargs):
     get_pdf_paths([x for x in pargs], paths)
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
-    pdf_path = docassemble.base.pdftk.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
+    pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
     pdf_file = DAFile()._set_instance_name_for_function()
     pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'))
     pdf_file.copy_into(pdf_path)
@@ -2198,17 +2203,17 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or type(target) is list:
+    elif isinstance(target, DAFileList) or isinstance(target, list):
         for the_file in target:
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
         paths.append(target.path())
 
 def recurse_zip_params(param, root, files):
-    if type(param) is dict:
-        for key, val in param.iteritems():
+    if isinstance(param, dict):
+        for key, val in param.items():
             recurse_zip_params(val, root + key + '/', files=files)
-    elif type(param) in (list, tuple) or isinstance(param, DAFileList):
+    elif isinstance(param, (list, tuple, DAFileList)):
         for val in param:
             recurse_zip_params(val, root, files=files)
     elif isinstance(param, DAFileCollection):
@@ -2239,7 +2244,7 @@ def zip_file(*pargs, **kwargs):
     for zip_path, path in files:
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
-        info.external_attr = 0644 << 16L
+        info.external_attr = 0o644 << 16
         info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(path)).replace(tzinfo=pytz.utc).astimezone(pytz.timezone(timezone)).timetuple()
         with open(path, 'rb') as fp:
             zf.writestr(info, fp.read())
@@ -2253,7 +2258,7 @@ def validation_error(message):
     raise DAValidationError(message)
 
 def invalid_variable_name(varname):
-    if type(varname) not in (str, unicode):
+    if not isinstance(varname, string_types):
         return True
     if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
         return True
@@ -2264,20 +2269,20 @@ def invalid_variable_name(varname):
 
 def url_ask(data):
     """Like url_action, but accepts a data structure containing a sequence of variables to be sought."""
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
     variables = []
     for the_saveas in data:
-        if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
+        if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
             if 'set' in the_saveas:
-                if type(the_saveas['set']) is not list:
+                if not isinstance(the_saveas['set'], list):
                     raise DAError("url_ask: the set statement must refer to a list.  " + repr(data))
                 clean_list = []
                 for the_dict in the_saveas['set']:
-                    if type(the_dict) is not dict:
+                    if not isinstance(the_dict, dict):
                         raise DAError("url_ask: a set command must refer to a list of dicts.  " + repr(data))
-                    for the_var, the_val in the_dict.iteritems():
-                        if not isinstance(the_var, basestring):
+                    for the_var, the_val in the_dict.items():
+                        if not isinstance(the_var, string_types):
                             raise DAError("url_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
                         the_var_stripped = the_var.strip()
                     if invalid_variable_name(the_var_stripped):
@@ -2285,10 +2290,10 @@ def url_ask(data):
                     clean_list.append([the_var_stripped, the_val])
                 variables.append(dict(action='_da_set', arguments=dict(variables=clean_list)))
             if 'follow up' in the_saveas:
-                if type(the_saveas['follow up']) is not list:
+                if not isinstance(the_saveas['follow up'], list):
                     raise DAError("url_ask: the follow up statement must refer to a list.  " + repr(data))
                 for var in the_saveas['follow up']:
-                    if type(var) not in (str, unicode):
+                    if not isinstance(var, string_types):
                         raise DAError("url_ask: invalid variable name in follow up " + command + ".  " + repr(data))
                     var_saveas = var.strip()
                     if invalid_variable_name(var_saveas):
@@ -2297,11 +2302,11 @@ def url_ask(data):
             for command in ('undefine', 'recompute'):
                 if command not in the_saveas:
                     continue
-                if type(the_saveas[command]) is not list:
+                if not isinstance(the_saveas[command], list):
                     raise DAError("url_ask: the " + command + " statement must refer to a list.  " + repr(data))
                 clean_list = []
                 for undef_var in the_saveas[command]:
-                    if type(undef_var) not in (str, unicode):
+                    if not isinstance(undef_var, string_types):
                         raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
                     undef_saveas = undef_var.strip()
                     if invalid_variable_name(undef_saveas):
@@ -2311,11 +2316,11 @@ def url_ask(data):
                 if command == 'recompute':
                     variables.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
             continue
-        if type(the_saveas) is dict and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
-            if type(the_saveas['arguments']) is not dict:
+        if isinstance(the_saveas, dict) and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
+            if not isinstance(the_saveas['arguments'], dict):
                 raise DAError("url_ask: an arguments directive must refer to a dictionary.  " + repr(data))
             variables.append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
-        if type(the_saveas) not in (str, unicode):
+        if not isinstance(the_saveas, string_types):
             raise DAError("url_ask: invalid variable name " + repr(the_saveas) + ".  " + repr(data))
         the_saveas = the_saveas.strip()
         if invalid_variable_name(the_saveas):
@@ -2326,7 +2331,7 @@ def url_ask(data):
 
 def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True):
     """Returns HTML for a button that visits a particular URL."""
-    if not isinstance(label, basestring):
+    if not isinstance(label, string_types):
         label = 'Edit'
     if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
         color = 'dark'
@@ -2343,8 +2348,8 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     if classname is None:
         classname = ''
     else:
-        classname = ' ' + unicode(classname)
-    if isinstance(icon, basestring):
+        classname = ' ' + text_type(classname)
+    if isinstance(icon, string_types):
         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
         if not re.search(r'^fa[a-z] fa-', icon):
             icon = 'fas fa-' + icon
@@ -2363,7 +2368,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         main_file = main_pdf.pdf.path()
     elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAFileList):
         main_file = main_pdf.path()
-    elif isinstance(main_pdf, basestring):
+    elif isinstance(main_pdf, string_types):
         main_file = main_pdf
     else:
         raise Exception("overlay_pdf: bad main filename")
@@ -2371,7 +2376,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         logo_file = logo_pdf.pdf.path()
     elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAFileList):
         logo_file = logo_pdf.path()
-    elif isinstance(logo_pdf, basestring):
+    elif isinstance(logo_pdf, string_types):
         logo_file = logo_pdf
     else:
         raise Exception("overlay_pdf: bad logo filename")

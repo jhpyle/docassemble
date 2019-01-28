@@ -1,17 +1,30 @@
 min_system_version = '0.2.36'
 import re
 re._MAXCACHE = 10000
+from six import string_types, text_type, PY2
 import os
 import sys
 import tempfile
 import ruamel.yaml
 import tarfile
+from io import open
 from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 import docassemble.base.functions
-from urllib import unquote
+if PY2:
+    from urllib import quote as urllibquote
+    from urllib import unquote as urllibunquote
+    from urllib import urlencode
+    from urlparse import urlparse, parse_qsl, urlunparse
+else:
+    from urllib.parse import quote as urllibquote
+    from urllib.parse import unquote as urllibunquote
+    from urllib.parse import urlunparse, urlencode, urlsplit, parse_qsl
+
+TypeType = type(type(None))
+    
 from docassemble.base.config import daconfig, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
@@ -27,7 +40,7 @@ PACKAGE_PROTECTION = daconfig.get('package protection', True)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
 
-default_playground_yaml = """metadata:
+default_playground_yaml = u"""metadata:
   title: Default playground interview
   short title: Test
   comment: This is a learning tool.  Feel free to write over it.
@@ -152,7 +165,7 @@ FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'si
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 #PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 
-init_py_file = """try:
+init_py_file = u"""try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
@@ -247,11 +260,11 @@ def custom_register():
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
         if safe_next == url_for(user_manager.after_login_endpoint):
-            url_parts = list(urlparse.urlparse(safe_next))
-            query = dict(urlparse.parse_qsl(url_parts[4]))
+            url_parts = list(urlparse(safe_next))
+            query = dict(parse_qsl(url_parts[4]))
             query.update(dict(from_login=1))
-            url_parts[4] = urllib.urlencode(query)
-            safe_next = urlparse.urlunparse(url_parts)
+            url_parts[4] = urlencode(query)
+            safe_next = urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
 
     # Initialize form
@@ -405,7 +418,7 @@ def custom_register():
                         return redirect(url_for('mfa_choose'))
             return flask_user.views._do_login_user(user, safe_reg_next)
         else:
-            return redirect(url_for('user.login') + '?next=' + urllib.quote(safe_reg_next))
+            return redirect(url_for('user.login') + '?next=' + urllibquote(safe_reg_next))
 
     # Process GET or invalid POST
     if is_json:
@@ -417,6 +430,8 @@ def custom_register():
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
+    sys.stderr.write("In custom_login\n")
+    logmessage("Doing custom_login")
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
@@ -429,11 +444,11 @@ def custom_login():
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
         if safe_next == url_for(user_manager.after_login_endpoint):
-            url_parts = list(urlparse.urlparse(safe_next))
-            query = dict(urlparse.parse_qsl(url_parts[4]))
+            url_parts = list(urlparse(safe_next))
+            query = dict(parse_qsl(url_parts[4]))
             query.update(dict(from_login=1))
-            url_parts[4] = urllib.urlencode(query)
-            safe_next = urlparse.urlunparse(url_parts)
+            url_parts[4] = urlencode(query)
+            safe_next = urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
 
     login_form = user_manager.login_form(request.form)
@@ -538,7 +553,7 @@ def logout():
     if current_user.is_authenticated and current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
         if next.startswith('/'):
             next = docassemble.base.functions.get_url_root() + next
-        next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urllib.urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
+        next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
     set_cookie = False
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
@@ -613,7 +628,7 @@ def my_default_url(error, endpoint, values):
     return url_for('index')
 
 def make_safe_url(url):
-    parts = urlparse.urlsplit(url)
+    parts = urlsplit(url)
     safe_url = parts.path
     if parts.query != '':
         safe_url += '?' + parts.query
@@ -641,7 +656,7 @@ def password_validator(form, field):
     if not is_valid:
         import wtforms
         if 'error message' in rules:
-            error_message = unicode(rules['error message'])
+            error_message = text_type(rules['error message'])
         else:
             error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
             standards = list()
@@ -682,7 +697,6 @@ import socket
 import copy
 import threading
 import urllib
-import urllib2
 import tailer
 import datetime
 from dateutil import tz
@@ -693,6 +707,11 @@ import time
 #import pip
 import shutil
 import filecmp
+if PY2:
+    from urllib2 import urlopen, HTTPError
+else:
+    from urllib.request import urlopen
+    from urllib.error import HTTPError
 import codecs
 import weakref
 import types
@@ -704,13 +723,15 @@ import httplib2
 import zipfile
 import operator
 import traceback
-from Crypto.Hash import MD5
+from Cryptodome.Hash import MD5
 import mimetypes
 import logging
-import cPickle as pickle
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 import cgi
-import Cookie
-import urlparse
+#import http.cookies
 import json
 import base64
 import requests
@@ -720,7 +741,7 @@ import inspect
 import pyotp
 import qrcode
 import qrcode.image.svg
-import StringIO
+from io import StringIO
 import links_from_header
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
@@ -796,9 +817,9 @@ def crossdomain(origin=None, methods=None, headers=None,
                 automatic_options=True):
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
-    if headers is not None and not isinstance(headers, basestring):
+    if headers is not None and not isinstance(headers, string_types):
         headers = ', '.join(x.upper() for x in headers)
-    if not isinstance(origin, basestring):
+    if not isinstance(origin, string_types):
         origin = ', '.join(origin)
     if isinstance(max_age, datetime.timedelta):
         max_age = max_age.total_seconds()
@@ -854,8 +875,8 @@ if 'twilio' in daconfig:
         config_list = daconfig['twilio']
     for tconfig in config_list:
         if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
-            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
-            twilio_config['number'][unicode(tconfig['number'])] = tconfig
+            twilio_config['account sid'][text_type(tconfig['account sid'])] = 1
+            twilio_config['number'][text_type(tconfig['number'])] = tconfig
             if 'default' not in twilio_config['name']:
                 twilio_config['name']['default'] = tconfig
             if 'name' in tconfig:
@@ -937,10 +958,10 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
         if key in daconfig:
             if type(daconfig[key]) is dict:
                 page_parts[key] = dict()
-                for lang, val in daconfig[key].iteritems():
+                for lang, val in daconfig[key].items():
                     page_parts[key][lang] = Markup(val)
             else:
-                page_parts[key] = {'*': Markup(unicode(daconfig[key]))}
+                page_parts[key] = {'*': Markup(text_type(daconfig[key]))}
 
 main_page_parts = dict()
 lang_list = set()
@@ -1078,7 +1099,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 url_properties['display_filename'] = file_reference.filename
             if hasattr(file_reference, 'extension'):
                 url_properties['ext'] = file_reference.extension
-            for key, val in kwargs.iteritems():
+            for key, val in kwargs.items():
                 url_properties[key] = val
             the_file = SavedFile(file_number)
             if kwargs.get('temporary', False):
@@ -1220,8 +1241,8 @@ def user_id_dict():
 def get_base_words():
     documentation = get_info_from_file_reference('docassemble.base:data/sources/base-words.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
     return(None)
@@ -1229,8 +1250,8 @@ def get_base_words():
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
     return(None)
@@ -1238,8 +1259,8 @@ def get_documentation_dict():
 def get_name_info():
     docstring = get_info_from_file_reference('docassemble.base:data/questions/docstring.yml')
     if 'fullpath' in docstring and docstring['fullpath'] is not None:
-        with open(docstring['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(docstring['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
     return(None)
@@ -1247,8 +1268,8 @@ def get_name_info():
 def get_title_documentation():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/title_documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
     return(None)
@@ -1418,7 +1439,7 @@ def MD5Hash(data=None):
     if data is None:
         data = ''
     h = MD5.new()
-    h.update(data)
+    h.update(bytearray(data, encoding='utf-8'))
     return h
 
 # def _do_login_user(user, password, secret, next, remember_me=False):
@@ -1507,13 +1528,13 @@ def copy_playground_modules():
         for f in [f for f in os.listdir(mod_dir.directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
             shutil.copyfile(os.path.join(mod_dir.directory, f), os.path.join(local_dir, f))
         #shutil.copytree(mod_dir.directory, local_dir)
-        with open(os.path.join(local_dir, '__init__.py'), 'w') as the_file:
+        with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
             the_file.write(init_py_file)
 
 def proc_example_list(example_list, examples):
     for example in example_list:
         if type(example) is dict:
-            for key, value in example.iteritems():
+            for key, value in example.items():
                 sublist = list()
                 proc_example_list(value, sublist)
                 examples.append({'title': str(key), 'list': sublist})
@@ -1530,8 +1551,8 @@ def proc_example_list(example_list, examples):
         if 'fullpath' not in file_info or file_info['fullpath'] is None:
             logmessage("proc_example_list: could not find " + example_file)
             continue
-        with open(file_info['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             content = fix_initial.sub('', content)
             blocks = map(lambda x: x.strip(), document_match.split(content))
@@ -1581,8 +1602,8 @@ def get_examples():
     example_list_file = get_info_from_file_reference('docassemble.base:data/questions/example-list.yml')
     if 'fullpath' in example_list_file and example_list_file['fullpath'] is not None:
         example_list = list()
-        with open(example_list_file['fullpath'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(example_list_file['fullpath'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             content = fix_tabs.sub('  ', content)
             proc_example_list(ruamel.yaml.safe_load(content), examples)
     #logmessage("Examples: " + str(examples))
@@ -1849,19 +1870,19 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
 
 def process_bracket_expression(match):
     try:
-        inner = codecs.decode(match.group(1), 'base64').decode('utf8')
+        inner = codecs.decode(bytearray(match.group(1), encoding='utf-8'), 'base64').decode('utf8')
     except:
         inner = match.group(1)
     return("[" + re.sub(r'^u', r'', repr(inner)) + "]")
 
 def myb64unquote(the_string):
-    return(codecs.decode(the_string, 'base64').decode('utf8'))
+    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf8'))
 
 def safeid(text):
     return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    return(codecs.decode(text, 'base64').decode('utf8'))
+    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf8'))
 
 def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
@@ -1917,7 +1938,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if isinstance(x, dict):
             #logmessage("It is a dict")
             if len(x) == 2 and 'subsections' in x:
-                for key, val in x.iteritems():
+                for key, val in x.items():
                     if key == 'subsections':
                         subitems = val
                     else:
@@ -1935,11 +1956,11 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 else:
                     the_title = value
             else:
-                raise DAError("navigation_bar: too many keys in dict.  " + unicode(the_sections))
+                raise DAError("navigation_bar: too many keys in dict.  " + text_type(the_sections))
         else:
             #logmessage("It is not a dict")
             the_key = None
-            the_title = unicode(x)
+            the_title = text_type(x)
         if (the_key is not None and the_section == the_key) or the_section == the_title:
             #output += '<li role="presentation" class="' + li_class + ' active">'
             section_reached = True
@@ -1961,24 +1982,24 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if non_progressive:
             seen_more = True
             section_reached = False
-        #logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + unicode(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
+        #logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + text_type(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + text_type(the_title) + '</a>'
                 else:
-                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + text_type(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + text_type(the_title) + '</a>'
                 else:
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + text_type(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
@@ -1996,11 +2017,11 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                         test_for_valid_var(sub_key)
                         sub_title = y[sub_key]
                     else:
-                        raise DAError("navigation_bar: too many keys in dict.  " + unicode(the_sections))
+                        raise DAError("navigation_bar: too many keys in dict.  " + text_type(the_sections))
                         continue
                 else:
                     sub_key = None
-                    sub_title = unicode(y)
+                    sub_title = text_type(y)
                 if (sub_key is not None and the_section == sub_key) or the_section == sub_title:
                     #suboutput += '<li class="' + li_class + ' active" role="presentation">'
                     section_reached = True
@@ -2022,12 +2043,12 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                     section_reached = False
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
+                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + text_type(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(sub_title) + '</a>'
                     else:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + text_type(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within:
@@ -2042,7 +2063,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     if wrapper:
         output += "\n</div>\n</div>\n"
     if (not non_progressive) and (not section_reached):
-        logmessage("Section \"" + unicode(the_section) + "\" did not exist.")
+        logmessage("Section \"" + text_type(the_section) + "\" did not exist.")
     return output        
 
 def progress_bar(progress, interview):
@@ -2054,7 +2075,7 @@ def progress_bar(progress, interview):
     if progress > 100:
         progress = 100
     if hasattr(interview, 'show_progress_bar_percentage') and interview.show_progress_bar_percentage:
-        percentage = unicode(int(progress)) + '%'
+        percentage = text_type(int(progress)) + '%'
     else:
         percentage = ''
     return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n')
@@ -2543,7 +2564,7 @@ def search_button(var, field_origins, name_origins, interview_source, all_source
                 usage[x.path].add('used')
                 all_sources.add(x)
     usage_type = [set(), set(), set()]
-    for path, the_set in usage.iteritems():
+    for path, the_set in usage.items():
         if 'defined' in the_set and 'used' in the_set:
             usage_type[2].add(path)
         elif 'used' in the_set:
@@ -2737,7 +2758,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             if val not in pg_code_cache:
                 pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
             name_info[val] = copy.copy(pg_code_cache[val])
-        elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
+        elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
             if val not in pg_code_cache:
                 bases = list()
@@ -2755,7 +2776,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if val not in name_info:
             name_info[val] = dict()
         name_info[val]['type'] = user_dict[val].__class__.__name__
-        if hasattr(user_dict[val], '__iter__') and not isinstance(user_dict[val], basestring):
+        if hasattr(user_dict[val], '__iter__') and not isinstance(user_dict[val], string_types):
             name_info[val]['iterable'] = True
         else:
             name_info[val]['iterable'] = False
@@ -3256,7 +3277,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         url = req.base_url
         url_root = req.url_root
         secret = req.cookies.get('secret', None)
-        for key, value in req.headers.iteritems():
+        for key, value in req.headers.items():
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
@@ -3335,7 +3356,7 @@ def formatted_current_date():
 
 class Object(object):
     def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             setattr(self, key, value)
     pass
 
@@ -3839,7 +3860,7 @@ def mfa_setup():
         the_name = re.sub(r'.*\$', '', user.social_id)
     the_url = pyotp.totp.TOTP(otp_secret).provisioning_uri(the_name, issuer_name=app.config['APP_NAME'])
     im = qrcode.make(the_url, image_factory=qrcode.image.svg.SvgPathImage)
-    output = StringIO.StringIO()
+    output = StringIO()
     im.save(output)
     the_qrcode = output.getvalue()
     the_qrcode = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_qrcode)
@@ -4089,7 +4110,7 @@ def get_ssh_keys(email):
     private_key_file = os.path.join(area.directory, '.ssh-private')
     public_key_file = os.path.join(area.directory, '.ssh-public')
     if not (os.path.isfile(private_key_file) and os.path.isfile(private_key_file)):
-        from Crypto.PublicKey import RSA
+        from Cryptodome.PublicKey import RSA
         key = RSA.generate(4096)
         pubkey = key.publickey()
         area.write_content(key.exportKey('PEM'), filename=private_key_file, save=False)
@@ -4493,7 +4514,7 @@ def checkin():
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
                 elif isinstance(the_response, list) and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
-                elif isinstance(the_response, basestring) and the_response == 'refresh':
+                elif isinstance(the_response, string_types) and the_response == 'refresh':
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(None), extra='refresh'))
                 else:
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
@@ -4550,7 +4571,7 @@ def checkin():
             obj['partner_roles'] = user_dict['_internal']['livehelp']['partner_roles']
             if current_user.is_authenticated:
                 for attribute in ('email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
-                    obj[attribute] = unicode(getattr(current_user, attribute, None))
+                    obj[attribute] = text_type(getattr(current_user, attribute, None))
             else:
                 obj['temp_user_id'] = temp_user_id
             if help_ok and len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
@@ -4787,7 +4808,7 @@ def rootindex():
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
     the_args = dict()
-    for key, val in request.args.iteritems():
+    for key, val in request.args.items():
         the_args[key] = val
     if yaml_parameter is None and yaml_filename is not None:
         the_args['i'] = yaml_filename
@@ -4950,19 +4971,19 @@ def index():
         user_code = session_id
         obtain_lock(user_code, yaml_filename)
         #sys.stderr.write("index: calling fetch_user_dict1\n")
-        try:
-            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        except Exception as the_err:
-            sys.stderr.write("index: there was an exception " + unicode(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
-            release_lock(user_code, yaml_filename)
-            logmessage("index: dictionary fetch failed, resetting without retain_code")
-            user_code, user_dict = reset_session(yaml_filename, secret)
-            add_referer(user_dict)
-            encrypted = False
-            session['encrypted'] = encrypted
-            is_encrypted = encrypted
-            need_to_resave = True
-            need_to_reset = True
+        #try:
+        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+        #except Exception as the_err:
+        #    sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + ": " + text_type(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+        #    release_lock(user_code, yaml_filename)
+        #    logmessage("index: dictionary fetch failed, resetting without retain_code")
+        #    user_code, user_dict = reset_session(yaml_filename, secret)
+        #    add_referer(user_dict)
+        #    encrypted = False
+        #    session['encrypted'] = encrypted
+        #    is_encrypted = encrypted
+        #    need_to_resave = True
+        #    need_to_reset = True
         if encrypted != is_encrypted:
             #logmessage("index: change in encryption; encrypted is " + str(encrypted) + " but is_encrypted is " + str(is_encrypted))
             encrypted = is_encrypted
@@ -5129,7 +5150,7 @@ def index():
     #logmessage("Visible field names is " + repr(visible_field_names))
     field_numbers = dict()
     numbered_fields = dict()
-    for kv_key, kv_var in known_varnames.iteritems():
+    for kv_key, kv_var in known_varnames.items():
         try:
             field_identifier = myb64unquote(kv_key)
             m = re.search(r'_field_([0-9]+)', field_identifier)
@@ -5137,7 +5158,7 @@ def index():
                 numbered_fields[kv_var] = kv_key
                 field_numbers[kv_var] = int(m.group(1))
         except:
-            logmessage("index: error where kv_key is " + unicode(kv_key) + " and kv_var is " + unicode(kv_var))
+            logmessage("index: error where kv_key is " + text_type(kv_key) + " and kv_var is " + text_type(kv_var))
     visible_fields = set()
     for field_name in visible_field_names:
         try:
@@ -5149,7 +5170,7 @@ def index():
                     #logmessage("Adding " + from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2) + " to visible_fields")
                     visible_fields.add(safeid(from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2)))
         except Exception as the_err:
-            #logmessage("Failure to unpack " + field_name + " because of " + unicode(the_err))
+            #logmessage("Failure to unpack " + field_name + " because of " + text_type(the_err))
             pass
         if field_name in known_varnames:
             visible_fields.add(known_varnames[field_name])
@@ -5161,7 +5182,7 @@ def index():
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         #logmessage("checkbox_fields is " + repr(checkbox_fields))
-        for checkbox_field, checkbox_value in checkbox_fields.iteritems():
+        for checkbox_field, checkbox_value in checkbox_fields.items():
             if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
                 #logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
                 post_data.add(checkbox_field, checkbox_value)
@@ -5199,7 +5220,7 @@ def index():
                 #logmessage("index: pre-assembly necessary")
                 break
         except:
-            logmessage("index: bad key was " + unicode(key))
+            logmessage("index: bad key was " + text_type(key))
     #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     #g.after_interview = time.time()
@@ -5263,9 +5284,9 @@ def index():
                     logmessage("index: failed with " + str(errmess))
                     break
             if success:
-                flash(word("Your documents will be e-mailed to") + " " + unicode(attachment_email_address) + ".", 'success')
+                flash(word("Your documents will be e-mailed to") + " " + text_type(attachment_email_address) + ".", 'success')
             else:
-                flash(word("Unable to e-mail your documents to") + " " + unicode(attachment_email_address) + ".", 'error')
+                flash(word("Unable to e-mail your documents to") + " " + text_type(attachment_email_address) + ".", 'error')
         else:
             flash(word("Unable to find documents to e-mail."), 'error')
     if '_download_attachments' in post_data:
@@ -5307,7 +5328,7 @@ def index():
     if '_the_image' in post_data:
         file_field = from_safeid(post_data['_save_as']);
         if illegal_variable_name(file_field):
-            error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
+            error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
         else:
             if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
                 #logmessage("index: assemble 2")
@@ -5317,7 +5338,7 @@ def index():
                 #logmessage("index: doing " + initial_string)
                 exec(initial_string, user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + unicode(errMess)))
+                error_messages.append(("error", "Error: " + text_type(errMess)))
             if '_success' in post_data and post_data['_success']:
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 filename = secure_filename('canvas.png')
@@ -5338,7 +5359,7 @@ def index():
                     user_dict['_internal']['steps'] = steps
                     changed = True
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + unicode(errMess)))
+                error_messages.append(("error", "Error: " + text_type(errMess)))
     known_datatypes = dict()
     if '_next_action_to_set' in post_data:
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
@@ -5415,11 +5436,11 @@ def index():
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
-        #logmessage("The data type is " + unicode(type(data)))
+        #logmessage("The data type is " + text_type(type(data)))
         try:
             key = myb64unquote(orig_key)
         except:
-            raise DAError("index: invalid name " + unicode(orig_key))
+            raise DAError("index: invalid name " + text_type(orig_key))
         #logmessage("Processing a key: " + key)
         #if orig_key in blank_fields:
             #logmessage(key + " is not a blank field")
@@ -5439,7 +5460,7 @@ def index():
             try:
                 key = match.group(1)
             except:
-                raise DAError("index: invalid bracket name " + unicode(match.group(1)))
+                raise DAError("index: invalid bracket name " + text_type(match.group(1)))
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
@@ -5612,7 +5633,7 @@ def index():
                     data = "False"
                     test_data = False
             elif known_datatypes[real_key] in ('date', 'datetime'):
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5632,7 +5653,7 @@ def index():
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'time':
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5658,7 +5679,7 @@ def index():
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
                     data = 0.0
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = re.sub(r'[,\%]', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
@@ -5680,12 +5701,12 @@ def index():
             elif set_to_empty == 'object_checkboxes':
                 continue
             else:
-                if isinstance(data, basestring):
-                    #data = fixunicode(data)
+                if isinstance(data, string_types):
+                    #data = fixtext_type(data)
                     data = data.strip()
                     #logmessage("data is " + data)
                 if data == "None" and set_to_empty is not None:
-                    #logmessage("setting None; set_to_empty is " + unicode(set_to_empty))
+                    #logmessage("setting None; set_to_empty is " + text_type(set_to_empty))
                     test_data = None
                     data = "None"
                 else:
@@ -5714,7 +5735,7 @@ def index():
                     data = "False"
                     test_data = False
             elif known_datatypes[orig_key] in ('date', 'datetime'):
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5734,7 +5755,7 @@ def index():
                 else:
                     data = repr('')
             elif known_datatypes[orig_key] == 'time':
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = data.strip()
                     if data != '':
                         try:
@@ -5760,7 +5781,7 @@ def index():
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
                 if data == '':
                     data = 0.0
-                if isinstance(data, basestring):
+                if isinstance(data, string_types):
                     data = re.sub(r'[,\%]', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
@@ -5771,8 +5792,8 @@ def index():
             elif set_to_empty == 'object_checkboxes':
                 continue    
             else:
-                if isinstance(data, basestring):
-                    #data = fixunicode(data)
+                if isinstance(data, string_types):
+                    #data = fixtext_type(data)
                     data = data.strip()
                     #logmessage("data is " + data)
                 test_data = data
@@ -5797,13 +5818,13 @@ def index():
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + unicode(errMess)))
+                error_messages.append(("error", "Error: " + text_type(errMess)))
         if is_ml:
             #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + unicode(errMess)))
+                error_messages.append(("error", "Error: " + text_type(errMess)))
             if orig_key in ml_info and 'train' in ml_info[orig_key]:
                 if not ml_info[orig_key]['train']:
                     use_for_training = 'False'
@@ -5820,7 +5841,7 @@ def index():
                 try:
                     exec("import docassemble.base.core", user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + unicode(errMess)))
+                    error_messages.append(("error", "Error: " + text_type(errMess)))
                 data = 'docassemble.base.core.DADict(' + repr(key) + ', auto_gather=False, gathered=True)'
             else:
                 data = 'None'
@@ -5851,7 +5872,7 @@ def index():
                         continue
                 except Exception as errstr:
                     #logmessage("the result was an exception")
-                    field_error[the_key] = unicode(errstr)
+                    field_error[the_key] = text_type(errstr)
                     validated = False
                     continue
         #logmessage("2Doing " + str(the_string))
@@ -5862,9 +5883,9 @@ def index():
                 user_dict['_internal']['steps'] = steps
                 changed = True
         except Exception as errMess:
-            error_messages.append(("error", "Error: " + unicode(errMess)))
+            error_messages.append(("error", "Error: " + text_type(errMess)))
             try:
-                logmessage("Error: " + unicode(errMess))
+                logmessage("Error: " + text_type(errMess))
             except:
                 pass
     if validated:
@@ -5876,7 +5897,7 @@ def index():
             #logmessage("3Doing empty key " + str(key))
             vars_set.add(key + '.gathered')
             if illegal_variable_name(key):
-                logmessage("Received illegal variable name " + unicode(key))
+                logmessage("Received illegal variable name " + text_type(key))
                 continue
             if empty_fields[orig_key] == 'object_checkboxes':
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
@@ -5892,7 +5913,7 @@ def index():
             try:
                 exec(the_question.validation_code, user_dict)
             except Exception as validation_error:
-                the_error_message = unicode(validation_error)
+                the_error_message = text_type(validation_error)
                 if the_error_message == '':
                     the_error_message = word("Please enter a valid value.")
                 error_messages.append(("error", the_error_message))
@@ -5917,7 +5938,7 @@ def index():
                     break
                 if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -5927,7 +5948,7 @@ def index():
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + unicode(errMess)))
+                    error_messages.append(("error", "Error: " + text_type(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
                     #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
@@ -5941,7 +5962,7 @@ def index():
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if orig_file_field not in fileDict['values'] and len(known_varnames):
-                        for key, val in known_varnames.iteritems():
+                        for key, val in known_varnames.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
@@ -5959,7 +5980,7 @@ def index():
                                     if char == ',':
                                         start_index = char_index
                                         break
-                                temp_file.write(codecs.decode(the_file['content'][start_index:], 'base64'))
+                                temp_file.write(codecs.decode(bytearray(the_file['content'][start_index:], encoding='utf-8'), 'base64'))
                                 temp_file.close()
                                 filename = secure_filename(the_file['name'])
                                 extension, mimetype = get_ext_and_mimetype(filename)
@@ -5983,7 +6004,7 @@ def index():
                                 error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
                                 break
                             if illegal_variable_name(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -6007,7 +6028,7 @@ def index():
                                             break
                                     except Exception as errstr:
                                         #logmessage("the result was an exception")
-                                        field_error[the_key] = unicode(errstr)
+                                        field_error[the_key] = text_type(errstr)
                                         validated = False
                                         break
                                 the_string = file_field + " = " + the_file_list
@@ -6022,8 +6043,8 @@ def index():
                                     user_dict['_internal']['steps'] = steps
                                     changed = True
                             except Exception as errMess:
-                                sys.stderr.write("Error: " + unicode(errMess) + "\n")
-                                error_messages.append(("error", "Error: " + unicode(errMess)))
+                                sys.stderr.write("Error: " + text_type(errMess) + "\n")
+                                error_messages.append(("error", "Error: " + text_type(errMess)))
         if '_files' in post_data:
             file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
             has_invalid_fields = False
@@ -6036,11 +6057,11 @@ def index():
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
-                    error_messages.append(("error", "Error: Invalid file_field: " + unicode(orig_file_field)))
+                    error_messages.append(("error", "Error: Invalid file_field: " + text_type(orig_file_field)))
                     break
                 if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -6049,7 +6070,7 @@ def index():
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
-                    error_messages.append(("error", "Error: " + unicode(errMess)))
+                    error_messages.append(("error", "Error: " + text_type(errMess)))
                 if something_changed and should_assemble_now and not should_assemble:
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
@@ -6063,7 +6084,7 @@ def index():
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if orig_file_field not in request.files and len(known_varnames):
-                        for key, val in known_varnames.iteritems():
+                        for key, val in known_varnames.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
@@ -6092,10 +6113,10 @@ def index():
                             try:
                                 file_field = from_safeid(var_to_store)
                             except:
-                                error_messages.append(("error", "Error: Invalid file_field: " + unicode(var_to_store)))
+                                error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
                                 break
                             if illegal_variable_name(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -6119,7 +6140,7 @@ def index():
                                             break
                                     except Exception as errstr:
                                         #logmessage("the result was an exception")
-                                        field_error[the_key] = unicode(errstr)
+                                        field_error[the_key] = text_type(errstr)
                                         validated = False
                                         break
                                 the_string = file_field + " = " + the_file_list
@@ -6135,8 +6156,8 @@ def index():
                                         user_dict['_internal']['steps'] = steps
                                         changed = True
                                 except Exception as errMess:
-                                    sys.stderr.write("Error: " + unicode(errMess) + "\n")
-                                    error_messages.append(("error", "Error: " + unicode(errMess)))
+                                    sys.stderr.write("Error: " + text_type(errMess) + "\n")
+                                    error_messages.append(("error", "Error: " + text_type(errMess)))
         if validated:
             if 'informed' in request.form:
                 user_dict['_internal']['informed'][the_user_id] = dict()
@@ -7964,7 +7985,7 @@ def index():
           var theVal = $(this).val();
           if (theVal.includes('.') || theVal.includes(',')){
             var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + unicode(daconfig.get('currency decimal places', 2)) + """);
+            var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
             $(this).val(cleanNum);
           }
         });
@@ -7972,7 +7993,7 @@ def index():
           var theVal = $(this).val();
           if (theVal.includes('.') || theVal.includes(',')){
             var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + unicode(daconfig.get('currency decimal places', 2)) + """);
+            var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
             $(this).val(cleanNum);
           }
         });
@@ -8822,7 +8843,7 @@ def index():
             for audio_format in ('mp3', 'ogg'):
                 interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
-        for def_key, def_val in post_data.iteritems():
+        for def_key, def_val in post_data.items():
             if def_key in field_numbers:
                 interview_status.defaults[field_numbers[def_key]] = def_val
         the_field_errors = field_error
@@ -8873,7 +8894,7 @@ def index():
         for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
                 continue
-            phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+            phrase = to_text(interview_status.screen_reader_text[question_type]) #.encode('utf8')
             if (not phrase) or len(phrase) < 10:
                 phrase = "The sky is blue."
             phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
@@ -9065,8 +9086,8 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
-def fixunicode(data):
-    return data.decode('utf-8','ignore').encode("utf-8")
+def fixtext_type(data):
+    return bytearray(data, encoding='utf-8').decode('utf-8', 'ignore').encode("utf-8")
 
 def get_history(interview, interview_status):
     output = ''
@@ -9121,11 +9142,11 @@ def add_referer(user_dict):
 
 @app.template_filter('word')
 def word_filter(text):
-    return docassemble.base.functions.word(unicode(text))
+    return docassemble.base.functions.word(text_type(text))
 
 def get_part(part, default=None):
     if default is None:
-        default = unicode()
+        default = text_type()
     if part not in page_parts:
         return default
     if 'language' in session:
@@ -9224,7 +9245,7 @@ def speak_file():
 
 def interview_menu(absolute_urls=False, start_new=False):
     interview_info = list()
-    for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
+    for key, yaml_filename in sorted(daconfig['dispatch'].items()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             if interview.is_unlisted():
@@ -9290,8 +9311,8 @@ def interview_start():
             the_page = docassemble.base.functions.package_template_filename(daconfig['start page template'])
             if the_page is None:
                 raise DAError("Could not find start page template " + daconfig['start page template'])
-            with open(the_page, 'rU') as fp:
-                template_string = fp.read().decode('utf8')
+            with open(the_page, 'rU', encoding='utf-8') as fp:
+                template_string = fp.read()
                 return render_template_string(template_string, **argu)
         else:
             the_page = 'pages/start.html'
@@ -11382,7 +11403,7 @@ def update_package():
         form.gitbranch.choices.append((form.gitbranch.data, form.gitbranch.data))
     action = request.args.get('action', None)
     target = request.args.get('package', None)
-    is_base_upgrade = request.args.get('base', False)
+    #is_base_upgrade = request.args.get('base', False)
     branch = None
     if action is not None and target is not None:
         package_list, package_auth = get_package_info()
@@ -11518,9 +11539,9 @@ def update_package():
       });
     </script>"""
     python_version = daconfig.get('python version', word('Unknown'))
-    version = word("Current") + ': <span class="badge badge-secondary">' + unicode(python_version) + '</span>'
+    version = word("Current") + ': <span class="badge badge-secondary">' + text_type(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
-    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != unicode(python_version):
+    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != text_type(python_version):
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
 
@@ -11651,8 +11672,8 @@ def create_playground_package():
         if os.path.isfile(os.path.join(area['playgroundpackages'].directory, current_package)):
             filename = os.path.join(area['playgroundpackages'].directory, current_package)
             info = dict()
-            with open(filename, 'rU') as fp:
-                content = fp.read().decode('utf8')
+            with open(filename, 'rU', encoding='utf-8') as fp:
+                content = fp.read()
                 info = yaml.load(content)
             for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
@@ -11712,7 +11733,7 @@ def create_playground_package():
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
-                with open(ssh_script.name, 'w') as fp:
+                with open(ssh_script.name, 'w', encoding='utf-8') as fp:
                     fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
@@ -11753,9 +11774,9 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
-                output += "Doing git config user.name " + json.dumps(unicode(current_user.first_name) + " " + unicode(current_user.last_name)) + "\n"
+                output += "Doing git config user.name " + json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name)) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(unicode(current_user.first_name) + " " + unicode(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
@@ -11878,7 +11899,7 @@ except ImportError:
 The MIT License (MIT)
 
 """
-            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
+            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + text_type(current_user.first_name) + " " + text_type(current_user.last_name) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -11898,15 +11919,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
-            manifestin = """\
+            readme = u'# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+            manifestin = u"""\
 include README.md
 """
-            setupcfg = """\
+            setupcfg = u"""\
 [metadata]
 description-file = README
 """
-            setuppy = """\
+            setuppy = u"""\
 #!/usr/bin/env python
 
 import os
@@ -11959,8 +11980,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       description=('A docassemble extension.'),
       long_description=""" + repr(readme) + """,
       long_description_content_type='text/markdown',
-      author=""" + repr(unicode(name_of_user(current_user))) + """,
-      author_email=""" + repr(unicode(current_user.email)) + """,
+      author=""" + repr(text_type(name_of_user(current_user))) + """,
+      author_email=""" + repr(text_type(current_user.email)) + """,
       license='MIT',
       url='https://docassemble.org',
       packages=find_packages(),
@@ -11970,7 +11991,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
      )
 
 """
-            questionfiletext = """\
+            questionfiletext = u"""\
 ---
 metadata:
   title: I am the title of the application
@@ -11978,8 +11999,8 @@ metadata:
   description: |
     Insert description of question file here.
   authors:
-    - name: """ + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
-      organization: """ + unicode(current_user.organization) + """
+    - name: """ + text_type(current_user.first_name) + " " + text_type(current_user.last_name) + """
+      organization: """ + text_type(current_user.organization) + """
   revision_date: """ + formatted_current_date() + """
 ---
 mandatory: True
@@ -12001,25 +12022,25 @@ question: Are you doing well today?
 yesno: user_doing_well
 ...
 """
-            templatereadme = """\
+            templatereadme = u"""\
 # Template directory
 
 If you want to use non-standard document templates with pandoc,
 put template files in this directory.
 """
-            staticreadme = """\
+            staticreadme = u"""\
 # Static file directory
 
 If you want to make files available in the web app, put them in
 this directory.
 """
-            sourcesreadme = """\
+            sourcesreadme = u"""\
 # Sources directory
 
 This directory is used to store word translation files, 
 machine learning training files, and other source files.
 """
-            objectfile = """\
+            objectfile = u"""\
 # This is a Python module in which you can write your own Python code,
 # if you want to.
 #
@@ -12063,29 +12084,29 @@ class Fruit(DAObject):
                 os.makedirs(staticdir)
             if not os.path.isdir(sourcesdir):
                 os.makedirs(sourcesdir)
-            with open(os.path.join(packagedir, 'README.md'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
                 the_file.write(readme)
-            with open(os.path.join(packagedir, 'LICENSE'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'LICENSE'), 'w', encoding='utf-8') as the_file:
                 the_file.write(licensetext)
-            with open(os.path.join(packagedir, 'setup.py'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'setup.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(setuppy)
-            with open(os.path.join(packagedir, 'setup.cfg'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'setup.cfg'), 'w', encoding='utf-8') as the_file:
                 the_file.write(setupcfg)
-            with open(os.path.join(packagedir, 'MANIFEST.in'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
                 the_file.write(manifestin)
-            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(initpy)
-            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write('')
-            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w') as the_file:
+            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(objectfile)
-            with open(os.path.join(templatesdir, 'README.md'), 'w') as the_file:
+            with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
                 the_file.write(templatereadme)
-            with open(os.path.join(staticdir, 'README.md'), 'w') as the_file:
+            with open(os.path.join(staticdir, 'README.md'), 'w', encoding='utf-8') as the_file:
                 the_file.write(staticreadme)
-            with open(os.path.join(sourcesdir, 'README.md'), 'w') as the_file:
+            with open(os.path.join(sourcesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
                 the_file.write(sourcesreadme)
-            with open(os.path.join(questionsdir, 'questions.yml'), 'w') as the_file:
+            with open(os.path.join(questionsdir, 'questions.yml'), 'w', encoding='utf-8') as the_file:
                 the_file.write(questionfiletext)
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
@@ -12098,12 +12119,12 @@ class Fruit(DAObject):
             else:
                 the_timezone = pytz.timezone(get_default_timezone())
             for root, dirs, files in os.walk(packagedir):
-                for file in files:
-                    thefilename = os.path.join(root, file)
+                for the_file in files:
+                    thefilename = os.path.join(root, the_file)
                     info = zipfile.ZipInfo(thefilename[trimlength:])
                     info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
                     info.compress_type = zipfile.ZIP_DEFLATED
-                    info.external_attr = 0644 << 16L
+                    info.external_attr = 0o644 << 16
                     with open(thefilename, 'rb') as fp:
                         zf.writestr(info, fp.read())
                     #zf.write(thefilename, thefilename[trimlength:])
@@ -12491,7 +12512,7 @@ def trash_od_file(section, filename):
         logmessage('trash_od_file: credentials missing or expired')
         return False
     http = credentials.authorize(httplib2.Http())
-    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllib.quote(the_folder), "GET")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder), "GET")
     if int(r['status']) != 200:
         trashed = True
     else:
@@ -12504,7 +12525,7 @@ def trash_od_file(section, filename):
     if trashed is True or 'folder' not in info:
         logmessage('trash_od_file: folder did not exist')
         return False
-    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllib.quote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
     subdir = None
     while True:
         if int(r['status']) != 200:
@@ -12525,7 +12546,7 @@ def trash_od_file(section, filename):
         logmessage('trash_od_file: could not obtain subfolder')
         return False
     id_of_filename = None
-    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(subdir) + "/children?$select=id,name,deleted,folder", "GET")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdir) + "/children?$select=id,name,deleted,folder", "GET")
     while True:
         if int(r['status']) != 200:
             logmessage('trash_od_file: could not obtain contents of subfolder')
@@ -12541,7 +12562,7 @@ def trash_od_file(section, filename):
         if id_of_filename is not None or "@odata.nextLink" not in info:
             break
         r, content = http.request(info["@odata.nextLink"], "GET")
-    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(id_of_filename), "DELETE")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(id_of_filename), "DELETE")
     if int(r['status']) != 204:
         logmessage('trash_od_file: could not delete ')
         return False
@@ -12818,7 +12839,7 @@ def checkin_sync_with_onedrive():
 #                     continue
 #                 gd_ids[section][the_file['name']] = the_file['id']
 #                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
-#                 logmessage("Google says modtime on " + unicode(the_file) + " is " + the_file['modifiedTime'])
+#                 logmessage("Google says modtime on " + text_type(the_file) + " is " + the_file['modifiedTime'])
 #                 if the_file['trashed']:
 #                     gd_deleted[section].add(the_file['name'])
 #                     continue
@@ -12856,7 +12877,7 @@ def checkin_sync_with_onedrive():
 #                     commentary += "Copied " + f + " to Google Drive.  "
 #                     extension, mimetype = get_ext_and_mimetype(the_path)
 #                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on new file " + unicode(f) + " to " + unicode(the_modtime))
+#                     logmessage("Setting GD modtime on new file " + text_type(f) + " to " + text_type(the_modtime))
 #                     file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
 #                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
 #                     the_new_file = service.files().create(body=file_metadata,
@@ -12872,7 +12893,7 @@ def checkin_sync_with_onedrive():
 #                     commentary += "Updated " + f + " on Google Drive.  "
 #                     extension, mimetype = get_ext_and_mimetype(the_path)
 #                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on modified " + unicode(f) + " to " + unicode(the_modtime))
+#                     logmessage("Setting GD modtime on modified " + text_type(f) + " to " + text_type(the_modtime))
 #                     file_metadata = { 'modifiedTime': the_modtime }
 #                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
 #                     service.files().update(fileId=gd_ids[section][f],
@@ -12888,7 +12909,7 @@ def checkin_sync_with_onedrive():
 #                     the_path = os.path.join(area.directory, f)
 #                     extension, mimetype = get_ext_and_mimetype(the_path)
 #                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on undeleted file " + unicode(f) + " to " + unicode(the_modtime))
+#                     logmessage("Setting GD modtime on undeleted file " + text_type(f) + " to " + text_type(the_modtime))
 #                     file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
 #                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
 #                     service.files().update(fileId=gd_ids[section][f],
@@ -12976,7 +12997,7 @@ def google_drive_page():
             set_gd_folder(form.folder.data)
             gd_fix_subdirs(service, form.folder.data)
         else:
-            flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'error')
+            flash(word("The supplied folder " + text_type(form.folder.data) + "could not be found."), 'error')
             set_gd_folder(None)
         return redirect(url_for('user.profile'))
     the_folder = get_gd_folder()
@@ -13067,7 +13088,7 @@ def onedrive_page():
         return redirect(uri)
     while True:
         if int(r['status']) != 200:
-            flash("Error: could not connect to OneDrive; response code was " + unicode(r['status']) + ".   " + unicode(content), 'danger')
+            flash("Error: could not connect to OneDrive; response code was " + text_type(r['status']) + ".   " + text_type(content), 'danger')
             return redirect(url_for('user.profile'))
         info = json.loads(content)
         for item in info['value']:
@@ -13096,22 +13117,22 @@ def onedrive_page():
                 od_fix_subdirs(http, new_item['id'])
                 flash(word("Your Playground is connected to your OneDrive."), 'success')
             else:
-                flash(word("Could not create folder.  " + unicode(content)), 'danger')
+                flash(word("Could not create folder.  " + text_type(content)), 'danger')
         elif form.folder.data in item_ids:
             set_od_folder(form.folder.data)
             od_fix_subdirs(http, form.folder.data)
             flash(word("Your Playground is connected to your OneDrive."), 'success')
         else:
-            flash(word("The supplied folder " + unicode(form.folder.data) + "could not be found."), 'danger')
+            flash(word("The supplied folder " + text_type(form.folder.data) + "could not be found."), 'danger')
             set_od_folder(None)
         return redirect(url_for('user.profile'))
     the_folder = get_od_folder()
     active_folder = None
     if the_folder is not None:
-        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder), "GET")
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(the_folder), "GET")
         if int(r['status']) != 200:
             set_od_folder(None)
-            flash(word("The previously selected OneDrive folder does not exist.") + "  " + unicode(the_folder) + " " + unicode(content) + " status: " + repr(r['status']), "info")
+            flash(word("The previously selected OneDrive folder does not exist.") + "  " + text_type(the_folder) + " " + text_type(content) + " status: " + repr(r['status']), "info")
             return redirect(url_for('onedrive_page'))
         info = json.loads(content)
         logmessage("Found " + repr(info))
@@ -13143,7 +13164,7 @@ def onedrive_page():
 
 def od_fix_subdirs(http, the_folder):
     subdirs = set()
-    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
     while True:
         if int(r['status']) != 200:
             raise DAError("od_fix_subdirs: could not get contents of folder")
@@ -13162,9 +13183,9 @@ def od_fix_subdirs(http, the_folder):
         data['name'] = folder_name
         data['folder'] = dict()
         data["@microsoft.graph.conflictBehavior"] = "rename"
-        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + unicode(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
         if int(r['status']) != 201:
-            raise DAError("od_fix_subdirs: could not create subfolder " + folder_name + ' in ' + unicode(the_folder) + '.  ' + unicode(content) + ' status: ' + unicode(r['status']))
+            raise DAError("od_fix_subdirs: could not create subfolder " + folder_name + ' in ' + text_type(the_folder) + '.  ' + text_type(content) + ' status: ' + text_type(r['status']))
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
@@ -13187,8 +13208,8 @@ def config_page():
                 if cloud is not None:
                     key = cloud.get_key('config.yml')
                     key.set_contents_from_string(form.config_content.data)
-                with open(daconfig['config file'], 'w') as fp:
-                    fp.write(form.config_content.data.encode('utf8'))
+                with open(daconfig['config file'], 'w', encoding='utf-8') as fp:
+                    fp.write(form.config_content.data)
                     flash(word('The configuration file was saved.'), 'success')
                 #session['restart'] = 1
                 return redirect(url_for('restart_page'))
@@ -13199,8 +13220,8 @@ def config_page():
             flash(word('Configuration not updated.  There was an error.'), 'error')
             return redirect(url_for('interview_list'))
     if ok:
-        with open(daconfig['config file'], 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(daconfig['config file'], 'rU', encoding='utf-8') as fp:
+            content = fp.read()
     if content is None:
         abort(404)
     if keymap:
@@ -13212,9 +13233,9 @@ def config_page():
     python_version = daconfig.get('python version', word('Unknown'))
     system_version = daconfig.get('system version', word('Unknown'))
     if python_version == system_version:
-        version = word("Version ") + unicode(python_version)
+        version = word("Version ") + text_type(python_version)
     else:
-        version = word("Version ") + unicode(python_version) + ' (Python); ' + unicode(system_version) + ' (' + word('system') + ')'
+        version = word("Version ") + text_type(python_version) + ' (Python); ' + text_type(system_version) + ' (' + word('system') + ')'
     return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
 
 @app.route('/view_source', methods=['GET'])
@@ -13330,7 +13351,7 @@ def playground_office_addin():
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         return jsonify(success=True, files=files)
     pg_var_file = request.args.get('pgvars', None)
-    #logmessage("playground_office_addin: YAML file is " + unicode(pg_var_file))
+    #logmessage("playground_office_addin: YAML file is " + text_type(pg_var_file))
     use_html = request.args.get('html', False)
     uploadform = AddinUploadForm(request.form)
     if request.method == 'POST':
@@ -13339,7 +13360,7 @@ def playground_office_addin():
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
         if filename == '':
             return jsonify({'success': False})
-        content = unicode(uploadform.content.data)
+        content = text_type(uploadform.content.data)
         start_index = 0
         char_index = 0
         for char in content:
@@ -13347,7 +13368,7 @@ def playground_office_addin():
             if char == ',':
                 start_index = char_index
                 break
-        area.write_content(codecs.decode(content[start_index:], 'base64'), filename=filename)
+        area.write_content(codecs.decode(bytearray(content[start_index:], encoding='utf-8'), 'base64'), filename=filename)
         area.finalize()
         if use_html:
             if pg_var_file is None:
@@ -13359,11 +13380,11 @@ def playground_office_addin():
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if pg_var_file in files:
-            #logmessage("playground_office_addin: file " + unicode(pg_var_file) + " was found")
+            #logmessage("playground_office_addin: file " + text_type(pg_var_file) + " was found")
             interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + pg_var_file)
             interview_source.set_testing(True)
         else:
-            #logmessage("playground_office_addin: file " + unicode(pg_var_file) + " was not found")
+            #logmessage("playground_office_addin: file " + text_type(pg_var_file) + " was not found")
             if pg_var_file == '':
                 pg_var_file = 'test.yml'
             content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
@@ -13536,8 +13557,8 @@ def playground_files():
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 filename = os.path.join(area.directory, the_file)
-                with open(filename, 'w') as fp:
-                    fp.write(re.sub(r'\r\n', r'\n', formtwo.file_content.data).encode('utf8'))
+                with open(filename, 'w', encoding='utf-8') as fp:
+                    fp.write(re.sub(r'\r\n', r'\n', formtwo.file_content.data))
                 the_time = formatted_current_time()
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
                     r.incr(key)
@@ -13617,8 +13638,8 @@ def playground_files():
         filename = None
     if filename is not None:
         area.finalize()
-        with open(filename, 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(filename, 'rU', encoding='utf-8') as fp:
+            content = fp.read()
     elif formtwo.file_content.data:
         content = re.sub(r'\r\n', r'\n', formtwo.file_content.data)
     else:
@@ -14011,7 +14032,7 @@ def playground_packages():
     for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
         file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    for sec, field in section_field.iteritems():
+    for sec, field in section_field.items():
         the_list = []
         for item in file_list[sec]:
             the_list.append((item, item))
@@ -14157,8 +14178,8 @@ def playground_packages():
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
             filename = os.path.join(area['playgroundpackages'].directory, the_file)
-            with open(filename, 'rU') as fp:
-                content = fp.read().decode('utf8')
+            with open(filename, 'rU', encoding='utf-8') as fp:
+                content = fp.read()
                 old_info = yaml.load(content)
                 if isinstance(old_info, dict):
                     github_url_from_file = old_info.get('github_url', None)
@@ -14249,9 +14270,9 @@ def playground_packages():
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
-                        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
+                        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-                            fp.write(the_yaml.encode('utf8'))
+                            fp.write(the_yaml)
                         for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
                             r.incr(key)
                         for sec in area:
@@ -14294,7 +14315,7 @@ def playground_packages():
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
-                with open(ssh_script.name, 'w') as fp:
+                with open(ssh_script.name, 'w', encoding='utf-8') as fp:
                     fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
@@ -14351,8 +14372,8 @@ def playground_packages():
             package_file.close()
         initial_directories = len(splitall(directory)) + 1
         for root, dirs, files in os.walk(directory):
-            for file in files:
-                orig_file = os.path.join(root, file)
+            for the_file in files:
+                orig_file = os.path.join(root, the_file)
                 #output += "Original file is " + orig_file + "\n"
                 thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
                 (the_directory, filename) = os.path.split(thefilename)
@@ -14369,11 +14390,11 @@ def playground_packages():
                         #output += "Copying " + orig_file + "\n"
                         copy_if_different(orig_file, target_filename)
                 if filename == 'README.md' and len(levels) == 0:
-                    with open(orig_file, 'rU') as fp:
-                        readme_text = fp.read().decode('utf8')
+                    with open(orig_file, 'rU', encoding='utf-8') as fp:
+                        readme_text = fp.read()
                 if filename == 'setup.py' and len(levels) == 0:
-                    with open(orig_file, 'rU') as fp:
-                        setup_py = fp.read().decode('utf8')
+                    with open(orig_file, 'rU', encoding='utf-8') as fp:
+                        setup_py = fp.read()
                 elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                     data_files['modules'].append(filename)
                     target_filename = os.path.join(area['playgroundmodules'].directory, filename)
@@ -14410,9 +14431,9 @@ def playground_packages():
             while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
                 index += 1
                 package_name = orig_package_name + str(index)
-        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
+        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-            fp.write(the_yaml.encode('utf8'))
+            fp.write(the_yaml)
         area['playgroundpackages'].finalize()
         for sec in area:
             area[sec].finalize()
@@ -14468,9 +14489,9 @@ def playground_packages():
                             break
                         versions = new_info['version'].split(".")
                 filename = os.path.join(area['playgroundpackages'].directory, the_file)
-                with open(filename, 'w') as fp:
+                with open(filename, 'w', encoding='utf-8') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
-                    fp.write(the_yaml.encode('utf8'))
+                    fp.write(the_yaml)
                 area['playgroundpackages'].finalize()
                 if form.download.data:
                     return redirect(url_for('create_playground_package', package=the_file))
@@ -15139,8 +15160,8 @@ def playground_page():
                     filename = os.path.join(playground.directory, filename)
                     up_file.save(filename)
                     try:
-                        with open(filename, 'rU') as fp:
-                            fp.read().decode('utf8')
+                        with open(filename, 'rU', encoding='utf-8') as fp:
+                            fp.read()
                     except:
                         os.remove(filename)
                         flash(word("There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved."), 'error')
@@ -15199,8 +15220,8 @@ def playground_page():
     if the_file != '':
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
-            with open(filename, 'w') as fp:
-                fp.write(content.encode('utf8'))
+            with open(filename, 'w', encoding='utf-8') as fp:
+                fp.write(content)
             playground.finalize()
     post_data = request.form.copy()
     # if request.method == 'POST' and 'variablefile' in post_data:
@@ -15266,14 +15287,14 @@ def playground_page():
             should_save = True
             the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)
             if os.path.isfile(filename):
-                with open(filename, 'rU') as fp:
-                    orig_content = fp.read().decode('utf8')
+                with open(filename, 'rU', encoding='utf-8') as fp:
+                    orig_content = fp.read()
                     if orig_content == the_content:
                         #logmessage("No need to save")
                         should_save = False
             if should_save:
-                with open(filename, 'w') as fp:
-                    fp.write(the_content.encode('utf8'))
+                with open(filename, 'w', encoding='utf-8') as fp:
+                    fp.write(the_content)
             this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
             active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
             r.incr('da:interviewsource:' + this_interview_string)
@@ -15321,10 +15342,10 @@ def playground_page():
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
     if the_file != '':
-        with open(filename, 'rU') as fp:
+        with open(filename, 'rU', encoding='utf-8') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
-            content = fp.read().decode('utf8')
+            content = fp.read()
             #if not form.playground_content.data:
                 #form.playground_content.data = content
     if active_file != '':
@@ -15615,7 +15636,7 @@ $( document ).ready(function() {
 
 # def mydump(data_dict):
 #     output = ""
-#     for key, val in data_dict.iteritems():
+#     for key, val in data_dict.items():
 #         output += "      exampleData[" + str(repr(key)) + "] = " + str(json.dumps(val)) + "\n"
 #     return output
 
@@ -15639,17 +15660,17 @@ def server_error(the_error):
         the_history = None
     the_vars = None
     if isinstance(the_error, DAError):
-        errmess = unicode(the_error)
+        errmess = text_type(the_error)
         the_trace = None
         logmessage(errmess)
     elif isinstance(the_error, TemplateError):
-        errmess = unicode(the_error)
+        errmess = text_type(the_error)
         # if hasattr(the_error, 'lineno') and the_error.lineno is not None:
-        #     errmess += "; lineno: " + unicode(the_error.lineno)
+        #     errmess += "; lineno: " + text_type(the_error.lineno)
         if hasattr(the_error, 'name') and the_error.name is not None:
-            errmess += "\nName: " + unicode(the_error.name)
+            errmess += "\nName: " + text_type(the_error.name)
         if hasattr(the_error, 'filename') and the_error.filename is not None:
-            errmess += "\nFilename: " + unicode(the_error.filename)
+            errmess += "\nFilename: " + text_type(the_error.filename)
         if hasattr(the_error, 'docx_context'):
             errmess += "\n\nContext:\n" + "\n".join(map(lambda x: "  " + x, the_error.docx_context))
         the_trace = traceback.format_exc()
@@ -15658,13 +15679,13 @@ def server_error(the_error):
         except:
             logmessage("Could not log the error message")
     else:
-        errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
+        errmess = text_type(type(the_error).__name__) + ": " + text_type(the_error)
         if hasattr(the_error, 'traceback'):
             the_trace = the_error.traceback
         else:
             the_trace = traceback.format_exc()
         if hasattr(the_error, 'da_line_with_error'):
-            errmess += "\nIn line: " + unicode(the_error.da_line_with_error)
+            errmess += "\nIn line: " + text_type(the_error.da_line_with_error)
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code
@@ -15735,7 +15756,7 @@ def server_error(the_error):
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=unicode(the_history), logtext=unicode(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
+    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])
@@ -15787,7 +15808,7 @@ def logfile(filename):
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
-        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(filename))
+        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
     response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return(response)
@@ -15823,7 +15844,7 @@ def logs():
         if len(files):
             if the_file is None:
                 the_file = files[0]
-            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(the_file))
+            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(the_file))
     if not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
         if len(files):
@@ -15841,8 +15862,8 @@ def logs():
             lines = tailer.tail(temp_file, 30)
             temp_file.close()
         else:
-            lines = tailer.tail(open(filename), 30)
-        content = "\n".join(map(lambda x: x.decode('utf8'), lines))
+            lines = tailer.tail(open(filename, encoding='utf-8'), 30)
+        content = "\n".join(map(lambda x: x, lines))
     else:
         content = "No log files available"
     return render_template('pages/logs.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
@@ -15951,7 +15972,7 @@ def utilities():
                     for the_word in chunk:
                         result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
-            word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode('utf8')
+            word_box = text_type(ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000))
             word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
         if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
             filename = secure_filename(request.files['pdfdocxfile'].filename)
@@ -15970,7 +15991,7 @@ def utilities():
                     fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
                         if field not in fields_seen:
-                            fields_output += '      - "' + unicode(field) + '": ' + unicode(default) + "\n"
+                            fields_output += '      - "' + text_type(field) + '": ' + text_type(default) + "\n"
                             fields_seen.add(field)
                     fields_output += "---"
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
@@ -15983,8 +16004,8 @@ def utilities():
                 if result_file is None:
                     fields_output = word("Error: no fields could be found in the file")
                 else:
-                    with open(result_file.name, 'rU') as fp:
-                        result = fp.read().decode('utf8')
+                    with open(result_file.name, 'rU', encoding='utf-8') as fp:
+                        result = fp.read()
                     fields = set()
                     for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
                         fields.add(docx_variable_fix(variable))
@@ -16075,14 +16096,14 @@ def ensure_training_loaded(interview):
             record = db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(source_filename + ':%')).first()
             if record is None:
                 if os.path.isfile(the_file):
-                    with open(the_file, 'rU') as fp:
-                        content = fp.read().decode('utf8')
+                    with open(the_file, 'rU', encoding='utf-8') as fp:
+                        content = fp.read()
                     if len(content):
                         try:
                             href = json.loads(content)
                             if isinstance(href, dict):
                                 nowtime = datetime.datetime.utcnow()
-                                for group_id, train_list in href.iteritems:
+                                for group_id, train_list in href.items():
                                     if isinstance(train_list, list):
                                         for entry in train_list:
                                             if 'independent' in entry:
@@ -16166,7 +16187,7 @@ def train():
                 flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
             nowtime = datetime.datetime.utcnow()
-            for group_id, train_list in href.iteritems():
+            for group_id, train_list in href.items():
                 if not isinstance(train_list, list):
                     logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
                     continue
@@ -16180,7 +16201,7 @@ def train():
                 elif uploadform.importtype.data == 'merge':
                     indep_in_use = set()
                     for record in MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).all():
-                        indep_in_use.add(pickle.loads(codecs.decode(record.independent, 'base64')))
+                        indep_in_use.add(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')))
                     for entry in train_list:
                         if 'independent' in entry and entry['independent'] not in indep_in_use:
                             new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
@@ -16194,7 +16215,7 @@ def train():
             group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
             post_data = request.form.copy()
             deleted = set()
-            for key, val in post_data.iteritems():
+            for key, val in post_data.items():
                 m = re.match(r'delete([0-9]+)', key)
                 if not m:
                     continue
@@ -16205,7 +16226,7 @@ def train():
             for key in deleted:
                 if key in post_data:
                     del post_data[key]
-            for key, val in post_data.iteritems():
+            for key, val in post_data.items():
                 m = re.match(r'dependent([0-9]+)', key)
                 if not m:
                     continue
@@ -16315,15 +16336,15 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = pickle.loads(codecs.decode(record.dependent, 'base64'))
-                    the_independent = pickle.loads(codecs.decode(record.independent, 'base64'))
+                        the_dependent = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                    the_independent = pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
                     try:
-                        unicode(the_independent) + ""
-                        unicode(the_dependent) + ""
+                        text_type(the_independent) + ""
+                        text_type(the_dependent) + ""
                     except Exception as e:
                         logmessage("Bad record: id " + str(record.id) + " where error was " + str(e))
                         continue
-                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=the_dependent)
+                    the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[record.group_id].append(the_entry)
@@ -16339,14 +16360,14 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = pickle.loads(codecs.decode(record.dependent, 'base64'))
-                    the_entry = dict(independent=pickle.loads(codecs.decode(record.independent, 'base64')), dependent=the_dependent)
+                        the_dependent = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                    the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[parts[2]].append(the_entry)
             if len(output):
                 the_json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json", delete=False)
-                with open(the_json_file.name, 'w') as fp:
+                with open(the_json_file.name, 'w', encoding='utf-8') as fp:
                     json.dump(output, fp, sort_keys=True, indent=2)
                 response = send_file(the_json_file, mimetype='application/json', as_attachment=True, attachment_filename=json_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -16430,9 +16451,9 @@ def train():
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
-            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(record.independent, 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(record.dependent, 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(record.info, 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
+            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
-                new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + unicode(key) + '</span>: <span class="mldatavalue">' + unicode(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].iteritems()]) + '</div>'
+                new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + text_type(key) + '</span>: <span class="mldatavalue">' + text_type(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
                 new_entry['type'] = 'data'
             else:
                 new_entry['type'] = 'text'
@@ -16475,7 +16496,7 @@ def train():
         if len(entry_list) == 0:
             record = db.session.query(MachineLearning.independent).filter(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None)).first()
             if record is not None:
-                sample_indep = pickle.loads(codecs.decode(record.independent, 'base64'))
+                sample_indep = pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             else:
                 sample_indep = None
         else:
@@ -16489,7 +16510,7 @@ def train():
             #logmessage("There is a choice")
             if record.dependent is None:
                 continue
-            key = pickle.loads(codecs.decode(record.dependent, 'base64'))
+            key = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             choices[key] = record.count
         if len(choices):
             #logmessage("There are choices")
@@ -16667,7 +16688,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     if exclude_invalid:
                         continue
                     try:
-                        logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + unicode(the_err))
+                        logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__) + ": " + text_type(the_err))
                     except:
                         logmessage("user_interviews: unable to decrypt dictionary.  " + str(the_err.__class__.__name__))
                     dictionary = fresh_dictionary()
@@ -16790,7 +16811,7 @@ def interview_list():
     if request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
         next_page = page_after_login()
         if next_page is None:
-            logmessage("Invalid page " + unicode(next_page))
+            logmessage("Invalid page " + text_type(next_page))
             next_page = 'interview_list'
         if next_page not in ('interview_list', 'interviews'):
             return redirect(get_url_from_file_reference(next_page))
@@ -16992,7 +17013,7 @@ def fax_callback():
         logmessage("fax_callback: FaxSid and/or AccountSid missing")
         return ('', 204)
     tconfig = None
-    for config_name, config_info in twilio_config['name'].iteritems():
+    for config_name, config_info in twilio_config['name'].items():
         if 'account sid' in config_info and config_info['account sid'] == post_data['AccountSid']:
             tconfig = config_info
     if tconfig is None:
@@ -17304,8 +17325,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     parts = re.split(r'=', statement)
                     arguments[parts[0]] = parts[1]
             if 'action' in arguments:
-                #logmessage(myb64unquote(urllib.unquote(arguments['action'])))
-                action = json.loads(myb64unquote(urllib.unquote(arguments['action'])))
+                #logmessage(myb64unquote(urllibunquote(arguments['action'])))
+                action = json.loads(myb64unquote(urllibunquote(arguments['action'])))
                 #logmessage("Action is " + str(action))
                 action_performed = True
                 accepting_input = False
@@ -17576,7 +17597,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     if hasattr(field, 'datatype') and field.datatype == 'object_checkboxes':
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
-                            for potential_abb, value in cdata['abblower'].iteritems():
+                            for potential_abb, value in cdata['abblower'].items():
                                 if selection and selection.startswith(potential_abb):
                                     for choice in choice_list:
                                         if value == choice[0]:
@@ -17595,7 +17616,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     elif hasattr(field, 'datatype') and field.datatype == 'checkboxes':
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
-                            for potential_abb, value in cdata['abblower'].iteritems():
+                            for potential_abb, value in cdata['abblower'].items():
                                 if selection and selection.startswith(potential_abb):
                                     for choice in choice_list:
                                         if value == choice[0]:
@@ -17611,7 +17632,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     else:
                         #regular multiple choice
                         #logmessage("do_sms: user selected " + inp_lower + " and data is " + str(cdata))
-                        for potential_abb, value in cdata['abblower'].iteritems():
+                        for potential_abb, value in cdata['abblower'].items():
                             if inp_lower.startswith(potential_abb):
                                 #logmessage("do_sms: user selected " + value)
                                 for choice in choice_list:
@@ -18082,7 +18103,7 @@ def api_create_user():
     except:
         role_list = [post_data['privileges']]
     if not isinstance(role_list, list):
-        if not isinstance(role_list, basestring):
+        if not isinstance(role_list, string_types):
             return jsonify_with_status("List of privileges must be a string or a list.", 400)
         role_list = [role_list]
     valid_role_names = set()
@@ -18207,7 +18228,7 @@ def remove_privilege(privilege):
     user_role = Role.query.filter_by(name='user').first()
     role = Role.query.filter_by(name=privilege).first()
     if role is None:
-        raise Exception('The privilege ' + unicode(privilege) + ' did not exist.')
+        raise Exception('The privilege ' + text_type(privilege) + ' did not exist.')
     for user in db.session.query(UserModel):
         roles_to_remove = list()
         for the_role in user.roles:
@@ -18312,7 +18333,7 @@ def create_user(email, password, privileges=None, info=None):
     if isinstance(privileges, DAList):
         info = info.elements
     if not isinstance(privileges, list):
-        if not isinstance(privileges, basestring):
+        if not isinstance(privileges, string_types):
             raise Exception("The privileges parameter to create_user() must be a list or a string.")
         privileges = [privileges]
     if info is None:
@@ -18377,7 +18398,7 @@ def set_user_info(**kwargs):
         user = UserModel.query.filter_by(email=email).first()
     if user is None:
         raise Exception("User not found")
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             setattr(user, key, val)
     if 'password' in kwargs:
@@ -18712,20 +18733,20 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     try:
-        for key, val in variables.iteritems():
+        for key, val in variables.items():
             if illegal_variable_name(key):
                 raise Exception("Illegal value as variable name.")
-            exec(unicode(key) + ' = ' + repr(val), user_dict)
+            exec(text_type(key) + ' = ' + repr(val), user_dict)
             vars_set.add(key)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
         raise Exception("Problem deleting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
-        for key, val in literal_variables.iteritems():
+        for key, val in literal_variables.items():
             if illegal_variable_name(key):
                 raise Exception("Illegal value as variable name.")
-            exec(unicode(key) + ' = ' + val, user_dict)
+            exec(text_type(key) + ' = ' + val, user_dict)
             vars_set.add(key)
     if question_name is not None:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -18738,7 +18759,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             for key in del_variables:
                 if illegal_variable_name(key):
                     raise Exception("Illegal value as variable name.")
-                exec('del ' + unicode(key), user_dict)
+                exec('del ' + text_type(key), user_dict)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem deleting variables: " + str(the_err))
@@ -18751,12 +18772,12 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         for event_name in event_list:
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
-                #logmessage("Popped " + unicode(event_name))
+                #logmessage("Popped " + text_type(event_name))
     if len(vars_set) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
         for var_name in vars_set:
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
-                #logmessage("Popped " + unicode(var_name))
+                #logmessage("Popped " + text_type(var_name))
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
     steps += 1
@@ -18814,7 +18835,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     session_id, user_dict = reset_session(yaml_filename, secret)
     add_referer(user_dict)
     if url_args:
-        for key, val in url_args.iteritems():
+        for key, val in url_args.items():
             exec("url_args['" + key + "'] = " + repr(val.encode('unicode_escape')), user_dict)
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     ci = current_info(yaml=yaml_filename, req=request)
@@ -19086,7 +19107,7 @@ def api_login_url():
     if 'next' in post_data:
         try:
             path = get_url_from_file_reference(post_data['next'])
-            assert isinstance(path, basestring)
+            assert isinstance(path, string_types)
             assert not path.startswith('javascript')
         except:
             return jsonify_with_status("Unknown path for next", 400)
@@ -19435,9 +19456,9 @@ def retrieve_email(email_id):
 
 class AddressEmail(object):
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return text_type(self).encode('utf-8')
     def __unicode__(self):
-        return unicode(self.address)
+        return text_type(self.address)
 
 def retrieve_emails(**pargs):
     key = pargs.get('key', None)
@@ -19579,7 +19600,7 @@ repository: """ + pypi_url + "\n"
 # username: """ + pypi_username + """
 # password: """ + pypi_password + "\n"
     if existing_content != content:
-        with open(pypirc_file, 'w') as fp:
+        with open(pypirc_file, 'w', encoding='utf-8') as fp:
             fp.write(content)
         os.chmod(pypirc_file, stat.S_IRUSR | stat.S_IWUSR)
     
@@ -19587,14 +19608,14 @@ def pypi_status(packagename):
     result = dict()
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
-        handle = urllib2.urlopen(pypi_url + '/' + str(packagename) + '/json')
-    except urllib2.HTTPError, e:
+        handle = urlopen(pypi_url + '/' + str(packagename) + '/json')
+    except HTTPError as e:
         if e.code == 404:
             result['error'] = False
             result['exists'] = False
         else:
             result['error'] = e.code
-    except Exception, e:
+    except Exception as e:
         result['error'] = str(e)
     else:
         try:
@@ -19684,7 +19705,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     if err.__class__.__name__ in ('CSRFError', 'ClientDisconnected'):
         return
     if message is None:
-        errmess = unicode(err)
+        errmess = text_type(err)
     else:
         errmess = message
     try:
@@ -19693,7 +19714,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         email_address = None
     if the_request:
         try:
-            referer = unicode(the_request.referrer)
+            referer = text_type(the_request.referrer)
         except:
             referer = None
         try:
@@ -19733,29 +19754,29 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         pass
     try:
         try:
-            body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + err.__class__.__name__ + ": " + unicode(errmess)
+            body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + err.__class__.__name__ + ": " + text_type(errmess)
             if trace is not None:
-                body += "\n\n" + unicode(trace)
+                body += "\n\n" + text_type(trace)
             if history is not None:
                 body += "\n\n" + BeautifulSoup(history, "html.parser").get_text('\n')
             if referer is not None and referer != 'None':
-                body += "\n\nThe referer URL was " + unicode(referer)
+                body += "\n\nThe referer URL was " + text_type(referer)
             elif interview_path is not None:
-                body += "\n\nThe interview was " + unicode(interview_path)
+                body += "\n\nThe interview was " + text_type(interview_path)
             if email_address is not None:
-                body += "\n\nThe user was " + unicode(email_address)
-            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + unicode(errmess)
+                body += "\n\nThe user was " + text_type(email_address)
+            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + text_type(errmess)
             if trace is not None:
-                html += "\n\n" + unicode(trace)
+                html += "\n\n" + text_type(trace)
             html += "</pre>\n"
             if history is not None:
-                html += unicode(history)
+                html += text_type(history)
             if referer is not None and referer != 'None':
-                html += "<p>The referer URL was " + unicode(referer) + "</p>"
+                html += "<p>The referer URL was " + text_type(referer) + "</p>"
             elif interview_path is not None:
-                body += "<p>The interview was " + unicode(interview_path) + "</p>"
+                body += "<p>The interview was " + text_type(interview_path) + "</p>"
             if email_address is not None:
-                body += "<p>The user was " + unicode(email_address) + "</p>"
+                body += "<p>The user was " + text_type(email_address) + "</p>"
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
             if json_filename:
@@ -19763,7 +19784,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
         except Exception as zerr:
-            logmessage(unicode(zerr))
+            logmessage(text_type(zerr))
             body = "There was an error in the " + app.config['APP_NAME'] + " application."
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)

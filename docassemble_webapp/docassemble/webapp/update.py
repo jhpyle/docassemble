@@ -1,18 +1,16 @@
 import os
 import sys
-#import pip.utils.logging
-#import pip
 import socket
 import tempfile
-import threading
 import subprocess
-import xmlrpclib
+from six import text_type, PY2
+import xmlrpc.client
 import re
-from cStringIO import StringIO
+from io import StringIO
 import sys
 import shutil
 import time
-#import zipfile
+from io import open
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -20,6 +18,7 @@ if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
+import docassemble.webapp.users.models
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.webapp.core.models import Supervisors
 from docassemble.webapp.files import SavedFile
@@ -40,23 +39,107 @@ def remove_inactive_hosts():
                 continue
             try:
                 socket.gethostbyname(host.hostname)
-                server = xmlrpclib.Server(host.url + '/RPC2')
+                server = xmlrpc.client.Server(host.url + '/RPC2')
                 result = server.supervisor.getState()
             except:
                 to_delete.add(host.id)
         for id_to_delete in to_delete:
             Supervisors.query.filter_by(id=id_to_delete).delete()
 
+class DummyPackage(object):
+    def __init__(self, name):
+        self.name = name
+        self.type = 'pip'
+        self.limitation = None
+            
 def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
     ok = True
     here_already = dict()
     results = dict()
+    sys.stderr.write("check_for_updates: 0.5\n")
+    if PY2:
+        num_deleted = Package.query.filter_by(name='pycryptodome').delete()
+        if num_deleted > 0:
+            db.session.commit()
+    else:
+        num_deleted = Package.query.filter_by(name='pdfminer').delete()
+        if num_deleted > 0:
+            db.session.commit()    
+        num_deleted = Package.query.filter_by(name='pycrypto').delete()
+        if num_deleted > 0:
+            db.session.commit()
+        num_deleted = Package.query.filter_by(name='constraint').delete()
+        if num_deleted > 0:
+            db.session.commit()
+        num_deleted = Package.query.filter_by(name='distutils2').delete()
+        if num_deleted > 0:
+            db.session.commit()
     sys.stderr.write("check_for_updates: 1\n")
     installed_packages = get_installed_distributions()
     for package in installed_packages:
         here_already[package.key] = package.version
+    changed = False
+    if PY2:
+        if 'pycryptodome' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pycryptodome\n")
+            uninstall_package(DummyPackage('pycryptodome'))
+            if 'pycrypto' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling pycrypto\n")
+                uninstall_package(DummyPackage('pycrypto'))
+                install_package(DummyPackage('pycrypto'))
+            changed = True
+        if 'pycrypto' not in here_already:
+            sys.stderr.write("check_for_updates: installing pycrypto\n")
+            install_package(DummyPackage('pycrypto'))
+            changed = True
+        if 'kombu' in here_already and LooseVersion(here_already['kombu']) > LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing older kombu version\n")
+            kombu = DummyPackage('kombu')
+            kombu.limitation = '==4.1.0'
+            install_package(kombu)
+            changed = True
+        if 'celery' in here_already and LooseVersion(here_already['celery']) > LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing older celery version\n")
+            celery = DummyPackage('celery')
+            celery.limitation = '[redis]==4.1.0'
+            install_package(celery)
+            changed = True
+    else:
+        if 'kombu' in here_already and LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing new kombu version\n")
+            install_package(DummyPackage('kombu'))
+            changed = True
+        if 'celery' in here_already and LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing new celery version\n")
+            install_package(DummyPackage('celery'))
+            changed = True
+        if 'pycrypto' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pycrypto\n")
+            uninstall_package(DummyPackage('pycrypto'))
+            if 'pycryptodome' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling pycryptodome\n")
+                uninstall_package(DummyPackage('pycryptodome'))
+                install_package(DummyPackage('pycryptodome'))
+            changed = True
+        if 'pycryptodome' not in here_already:
+            sys.stderr.write("check_for_updates: installing pycryptodome\n")
+            install_package(DummyPackage('pycryptodome'))            
+            changed = True
+        if 'pdfminer' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
+            uninstall_package('pdfminer')
+            changed = True
+        if 'pdfminer3k' not in here_already:
+            sys.stderr.write("check_for_updates: installing pdfminer3k\n")
+            install_package(DummyPackage('pdfminer3k'))
+            changed = True
+    if changed:
+        installed_packages = get_installed_distributions()
+        here_already = dict()
+        for package in installed_packages:
+            here_already[package.key] = package.version
     packages = dict()
     installs = dict()
     to_install = list()
@@ -89,7 +172,7 @@ def check_for_updates(doing_startup=False):
     for auth in PackageAuth.query.filter_by(authtype='owner').all():
         package_owner[auth.package_id] = auth.user_id
     sys.stderr.write("check_for_updates: 7\n")
-    for package in packages.itervalues():
+    for package in packages.values():
         if package.id not in installs and package.name in here_already:
             sys.stderr.write("check_for_updates: package " + package.name + " here already\n")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
@@ -99,7 +182,7 @@ def check_for_updates(doing_startup=False):
     if changed:
         db.session.commit()
     sys.stderr.write("check_for_updates: 8\n")
-    for package in packages.itervalues():
+    for package in packages.values():
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
@@ -121,7 +204,10 @@ def check_for_updates(doing_startup=False):
         if package.name in uninstall_done:
             sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled" + "\n")
             continue
-        returnval, newlog = uninstall_package(package)
+        if package.name not in here_already:
+            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + "\n")
+        else:
+            returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
         logmessages += newlog
         if returnval == 0:
@@ -174,7 +260,7 @@ def check_for_updates(doing_startup=False):
             update_versions()
     sys.stderr.write("check_for_updates: 11\n")
     for package in packages_to_delete:
-        package.active = False
+        db.session.delete(package)
     sys.stderr.write("check_for_updates: 12\n")
     db.session.commit()
     sys.stderr.write("check_for_updates: finished uninstalling and installing\n")
@@ -227,7 +313,6 @@ def add_dependencies(user_id):
             package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
         else:
             package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
-        db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
         install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
@@ -269,10 +354,11 @@ def install_package(package):
         return 0, ''
     sys.stderr.write('install_package: ' + package.name + "\n")
     from docassemble.base.config import daconfig
-    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
+    if PY2:
+        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
+    else:
+        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
     logfilecontents = ''
-    #pip.utils.logging._log_state = threading.local()
-    #pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
     use_pip_cache = r.get('da:updatepackage:use_pip_cache')
@@ -284,10 +370,6 @@ def install_package(package):
         disable_pip_cache = True
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
-        # with zipfile.ZipFile(saved_file.path + '.zip', mode='r') as zf:
-        #     for zinfo in zf.infolist():
-        #         parts = splitall(zinfo.filename)
-        #         if parts[-1] == 'setup.py':
         commands = ['pip', 'install']
         if disable_pip_cache:
             commands.append('--no-cache-dir')
@@ -330,8 +412,8 @@ def install_package(package):
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
-    with open(pip_log.name, 'rU') as x:
-        logfilecontents += x.read().decode('utf8')
+    with open(pip_log.name, 'rU', encoding='utf-8') as x:
+        logfilecontents += x.read()
     pip_log.close()
     try:
         sys.stderr.write(logfilecontents + "\n")
@@ -349,11 +431,8 @@ def uninstall_package(package):
     sys.stderr.write('uninstall_package: ' + package.name + "\n")
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
-    #return 0
-    #pip.utils.logging._log_state = threading.local()
-    #pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
-    commands = ['pip', 'uninstall', '-y', '--log-file=' + pip_log.name, package.name]
+    commands = ['pip', 'uninstall', '--yes', '--log-file=' + pip_log.name, package.name]
     sys.stderr.write("Running " + " ".join(commands) + "\n")
     logfilecontents += " ".join(commands) + "\n"
     #returnval = pip.main(commands)
@@ -366,8 +445,8 @@ def uninstall_package(package):
     sys.stdout.flush()
     time.sleep(4)
     sys.stderr.write('Finished running pip' + "\n")
-    with open(pip_log.name, 'rU') as x:
-        logfilecontents += x.read().decode('utf8')
+    with open(pip_log.name, 'rU', encoding='utf-8') as x:
+        logfilecontents += x.read()
     pip_log.close()
     try:
         sys.stderr.write(logfilecontents + "\n")
@@ -381,31 +460,34 @@ def uninstall_package(package):
 
 class Object(object):
     def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             setattr(self, key, value)
     pass
 
 def get_installed_distributions():
     sys.stderr.write("get_installed_distributions: starting\n")
-    from docassemble.base.config import daconfig
-    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     results = list()
+    try:
+        output = subprocess.check_output(['pip', '--version'])
+    except subprocess.CalledProcessError as err:
+        output = err.output
+    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
+    if not isinstance(output, text_type):
+        output = output.decode()
+    sys.stderr.write("get_installed_distributions: pip version:\n" + output)
     try:
         output = subprocess.check_output(['pip', 'freeze'])
     except subprocess.CalledProcessError as err:
         output = err.output
-    # old_stdout = sys.stdout
-    # old_stderr = sys.stderr
-    # sys.stdout = saved_stdout = StringIO()
-    # pip.main(['freeze'])
-    # sys.stdout = old_stdout
-    # output = saved_stdout.getvalue()
+    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
+    if not isinstance(output, text_type):
+        output = output.decode()
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
-    # sys.stderr = old_stderr
     sys.stderr.write("get_installed_distributions: ending\n")
+    sys.stderr.write(repr([x.key for x in results]) + "\n")
     return results
 
 def get_pip_info(package_name):
@@ -421,6 +503,8 @@ def get_pip_info(package_name):
     # sys.stdout = old_stdout
     # output = saved_stdout.getvalue()
     results = dict()
+    if not isinstance(output, text_type):
+        output = output.decode()
     for line in output.split('\n'):
         #sys.stderr.write("Found line " + str(line) + "\n")
         a = line.split(": ")

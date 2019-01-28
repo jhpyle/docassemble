@@ -1,4 +1,5 @@
 import yaml
+from six import string_types, text_type, PY2
 import os
 import re
 import sys
@@ -6,7 +7,7 @@ import httplib2
 import socket
 import pkg_resources
 from docassemble.base.generate_key import random_string
-
+from io import open
 # def trenv(key):
 #     if os.environ[key] == 'null':
 #         return None
@@ -56,26 +57,31 @@ def load(**kwargs):
             sys.stderr.write("Wrote configuration file to " + str(filename) + "\n")
     if not os.path.isfile(filename):
         sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
-    with open(filename, 'rU') as stream:
+    with open(filename, 'rU', encoding='utf-8') as stream:
         raw_daconfig = yaml.load(stream)
     if raw_daconfig is None:
         sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
-        with open(filename, 'rU') as fp:
-            sys.stderr.write(fp.read().decode('utf8') + "\n")
+        with open(filename, 'rU', encoding='utf-8') as fp:
+            sys.stderr.write(fp.read() + "\n")
         sys.exit(1)
     daconfig.clear()
-    for key, val in raw_daconfig.iteritems():
+    for key, val in raw_daconfig.items():
         if re.search(r'_', key):
             sys.stderr.write("WARNING!  Configuration keys should not contain underscores.  Your configuration key " + str(key) + " has been converted.\n")
             daconfig[re.sub(r'_', r' ', key)] = val
         else:
             daconfig[key] = val
     daconfig['config file'] = filename
-    daconfig['python version'] = unicode(pkg_resources.get_distribution("docassemble.base").version)
+    if 'modules' not in daconfig:
+        if PY2:
+            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local')
+        else:
+            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local3.5')
+    daconfig['python version'] = text_type(pkg_resources.get_distribution("docassemble.base").version)
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
-        with open(version_file, 'rU') as fp:
-            daconfig['system version'] = fp.read().decode('utf8').strip()
+        with open(version_file, 'rU', encoding='utf-8') as fp:
+            daconfig['system version'] = fp.read().strip()
     else:
         daconfig['system version'] = '0.1.12'
     # for key in [['REDIS', 'redis'], ['RABBITMQ', 'rabbitmq'], ['EC2', 'ec2'], ['LOGSERVER', 'log server'], ['LOGDIRECTORY', 'log'], ['USEHTTPS', 'use https'], ['USELETSENCRYPT', 'use lets encrypt'], ['BEHINDHTTPSLOADBALANCER', 'behind https load balancer'], ['LETSENCRYPTEMAIL', 'lets encrypt email'], ['DAHOSTNAME', 'external hostname']]:
@@ -85,7 +91,7 @@ def load(**kwargs):
     #             daconfig[key[1]] = val
     #             changed = True
     if 'page after login' in daconfig:
-        if isinstance(daconfig['page after login'], basestring):
+        if isinstance(daconfig['page after login'], string_types):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]
         if isinstance(daconfig['page after login'], dict):
             daconfig['page after login'] = [daconfig['page after login']]
@@ -93,8 +99,8 @@ def load(**kwargs):
         if isinstance(daconfig['page after login'], list):
             for item in daconfig['page after login']:
                 if isinstance(item, dict):
-                    for key, val in item.iteritems():
-                        if isinstance(key, basestring) and isinstance(val, basestring):
+                    for key, val in item.items():
+                        if isinstance(key, string_types) and isinstance(val, string_types):
                             page_after_login.append((key, val))
         daconfig['page after login'] = page_after_login
     else:

@@ -1,7 +1,6 @@
 import docassemble.base.parse
 import sys
 import threading
-import thread
 
 # from docassemble.base.logger import logmessage
 

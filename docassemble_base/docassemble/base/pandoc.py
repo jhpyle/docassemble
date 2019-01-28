@@ -1,5 +1,6 @@
 import os
 import os.path
+from six import string_types, text_type
 import subprocess
 import docassemble.base.filter
 import docassemble.base.functions
@@ -13,6 +14,7 @@ from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt
+from io import open
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -23,7 +25,7 @@ def get_pandoc_version():
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE
     )
-    version_content = p.communicate()[0]
+    version_content = p.communicate()[0].decode('utf-8')
     version_content = re.sub(r'\n.*', '', version_content)
     version_content = re.sub(r'^pandoc ', '', version_content)
     return version_content
@@ -148,7 +150,7 @@ class MyPandoc(object):
         try:
             msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
-            raise Exception("Failed to assemble file: " + unicode(err.output))
+            raise Exception("Failed to assemble file: " + text_type(err.output))
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)
@@ -288,8 +290,8 @@ def word_to_markdown(in_file, in_format):
         shutil.rmtree(tempdir)
     if result == 0:
         final_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
-        with open(temp_file.name, 'rU') as the_file:
-            file_contents = the_file.read().decode('utf8')
+        with open(temp_file.name, 'rU', encoding='utf-8') as the_file:
+            file_contents = the_file.read()
         file_contents = re.sub(r'\\([\$\[\]])', lambda x: x.group(1), file_contents)
         with open(final_file.name, "w") as the_file:
             the_file.write(file_contents.encode('utf8'))
@@ -325,3 +327,45 @@ if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
     del word_file
 if os.path.isfile(LIBREOFFICE_MACRO_PATH):
     shutil.copyfile(docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba'), LIBREOFFICE_MACRO_PATH)
+
+def concatenate_files(path_list, pdfa=False, password=None):
+    pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+    subprocess_arguments = [PDFTK_PATH]
+    new_path_list = list()
+    for path in path_list:
+        mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype.startswith('image'):
+            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            args = ["convert", path, new_pdf_file.name]
+            result = call(args)
+            if result != 0:
+                logmessage("failed to convert image to PDF: " + " ".join(args))
+                continue
+            new_path_list.append(new_pdf_file.name)
+        elif mimetype in ('application/rtf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'application/vnd.oasis.opendocument.text'):
+            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            if mimetype == 'application/rtf':
+                ext = 'rtf'
+            elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                ext = 'docx'
+            elif mimetype == 'application/msword':
+                ext = 'doc'
+            elif mimetype == 'application/vnd.oasis.opendocument.text':
+                ext = 'odt'
+            word_to_pdf(path, ext, new_pdf_file.name, pdfa=False)
+            new_path_list.append(new_pdf_file.name)
+        elif mimetype == 'application/pdf':
+            new_path_list.append(path)
+    if len(new_path_list) == 0:
+        raise DAError("concatenate_files: no valid files to concatenate")
+    subprocess_arguments.extend(new_path_list)
+    subprocess_arguments.extend(['cat', 'output', pdf_file.name])
+    #logmessage("Arguments are " + str(subprocess_arguments))
+    result = call(subprocess_arguments)
+    if result != 0:
+        logmessage("Failed to concatenate PDF files")
+        raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
+    if pdfa:
+        pdf_to_pdfa(pdf_file.name)
+    replicate_js_and_calculations(new_path_list[0], pdf_file.name, password)
+    return pdf_file.name

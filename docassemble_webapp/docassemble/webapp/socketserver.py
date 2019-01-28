@@ -1,3 +1,4 @@
+from six import string_types, text_type, PY2
 import sys
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
@@ -18,7 +19,10 @@ import redis
 import json
 import datetime
 import pytz
-import cPickle as pickle
+if PY2:
+    import cPickle as pickle
+else:
+    import pickle
 import re
 import time
 import random
@@ -383,7 +387,7 @@ def get_dict():
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + unicode(err) + '\n')
+        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + text_type(err) + '\n')
         return None
     #release_lock(session_id, yaml_filename)
     return user_dict
@@ -402,7 +406,7 @@ def get_dict_encrypt():
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + unicode(err) + '\n')
+        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + text_type(err) + '\n')
         return None, None
     #release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
@@ -753,7 +757,7 @@ def monitor_chat_message(data):
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write("monitor_chat_message: could not get dictionary: " + unicode(err) + "\n")
+        sys.stderr.write("monitor_chat_message: could not get dictionary: " + text_type(err) + "\n")
         return
     #release_lock(session_id, yaml_filename)
     nowtime = datetime.datetime.utcnow()
@@ -814,7 +818,7 @@ def monitor_chat_log(data):
         steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write("monitor_chat_log: could not get dictionary: " + unicode(err) + "\n")
+        sys.stderr.write("monitor_chat_log: could not get dictionary: " + text_type(err) + "\n")
         return
     #release_lock(session_id, yaml_filename)
     chat_mode = user_dict['_internal']['livehelp']['mode']

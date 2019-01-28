@@ -1,4 +1,5 @@
 import os
+from six import string_types, text_type
 import re
 import copy
 import sys
@@ -15,6 +16,8 @@ import docassemble.base.pdftk
 import shutil
 import datetime
 import types
+from io import open
+TypeType = type(type(None))
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
@@ -81,7 +84,7 @@ class DAInterview(DAObject):
         return False
     def decoration_list(self):
         out_list = [["None", "No decoration"]]
-        for key, data in self.decorations.iteritems():
+        for key, data in self.decorations.items():
             out_list.append([key, '[EMOJI ' + str(data.fileref) + ', 1em] ' + str(key)])
         return out_list
     def package_info(self):
@@ -146,7 +149,7 @@ class DAFieldList(DAList):
         self.gathered = True
         return super(DAFieldList, self).init(**kwargs)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return text_type(self).encode('utf-8')
     def __unicode__(self):
         return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
@@ -272,7 +275,7 @@ class DAQuestion(DAObject):
                 content += " - " + str(module) + "\n"
         elif self.type == 'images':
             content += "images:\n"
-            for key, value in self.interview.decorations.iteritems():
+            for key, value in self.interview.decorations.items():
                 content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
                 self.static_files_used.add(value.filename)
         sys.stderr.write(content)
@@ -321,8 +324,8 @@ class PlaygroundSection(object):
         path = self.get_file(filename)
         if path is None:
             return None
-        with open(path, 'rU') as fp:
-            content = fp.read().decode('utf8')
+        with open(path, 'rU', encoding='utf-8') as fp:
+            content = fp.read()
             return content
         return None
     def write_file(self, filename, content):
@@ -350,8 +353,8 @@ class PlaygroundSection(object):
         result_file = word_to_markdown(path, 'docx')
         if result_file is None:
             return False
-        with open(result_file.name, 'rU') as fp:
-            result = fp.read().decode('utf8')
+        with open(result_file.name, 'rU', encoding='utf-8') as fp:
+            result = fp.read()
         fields = set()
         for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
             fields.add(docx_variable_fix(variable))
@@ -388,8 +391,8 @@ class PlaygroundSection(object):
             return None
         out_filename = os.path.splitext(filename)[0] + '.md'
         if convert_variables:
-            with open(temp_file.name, 'rU') as fp:
-                self.write_file(out_filename, replace_square_brackets.sub(fix_variable_name, fp.read().decode('utf8')))
+            with open(temp_file.name, 'rU', encoding='utf-8') as fp:
+                self.write_file(out_filename, replace_square_brackets.sub(fix_variable_name, fp.read()))
         else:
             shutil.copyfile(temp_file.name, self.get_file(out_filename))
         return out_filename
@@ -464,7 +467,7 @@ class Playground(PlaygroundSection):
         for val in user_dict:
             if type(user_dict[val]) is types.FunctionType:
                 functions.add(val)
-            elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
+            elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
                 classes.add(val)
             elif type(user_dict[val]) is types.ModuleType:
                 modules.add(val)

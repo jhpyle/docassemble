@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 import re
 import os
+from six import string_types, text_type
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
 from docassemble.base.functions import server, this_thread, package_template_filename
 import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
-from types import NoneType
 from docassemble.base.logger import logmessage
 from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
-import pyPdf
+import PyPDF2
+
+NoneType = type(None)
 
 DEFAULT_PAGE_WIDTH = '6.5in'
 
@@ -44,7 +46,7 @@ def image_for_docx(fileref, question, tpl, width=None):
 def transform_for_docx(text, question, tpl, width=None):
     if type(text) in (int, float, bool, NoneType):
         return text
-    text = unicode(text)
+    text = text_type(text)
     m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
     if m:
         amount = m.group(2)
@@ -97,11 +99,11 @@ def include_docx_template(template_file, **kwargs):
     sd.subdocx = Document(template_path)
     sd.subdocx._part = sd.docx._part
     first_paragraph = sd.subdocx.paragraphs[0]
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         if hasattr(val, 'instanceName'):
             the_repr = val.instanceName
         else:
-            the_repr = '"' + re.sub(r'\n', '', unicode(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
+            the_repr = '"' + re.sub(r'\n', '', text_type(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
         first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
     if 'docx_include_count' not in this_thread.misc:
         this_thread.misc['docx_include_count'] = 0
@@ -256,12 +258,12 @@ def pdf_pages(file_info, width):
             server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
     if 'pages' not in file_info:
         try:
-            reader = pyPdf.PdfFileReader(open(file_info['path'] + '.pdf'))
+            reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf'))
             file_info['pages'] = reader.getNumPages()
         except:
             file_info['pages'] = 1
     max_pages = 1 + int(file_info['pages'])
-    formatter = '%0' + unicode(len(unicode(max_pages))) + 'd'
+    formatter = '%0' + text_type(len(text_type(max_pages))) + 'd'
     for page in range(1, max_pages):
         page_file = dict()
         test_path = file_info['path'] + 'page-in-progress'
@@ -276,7 +278,7 @@ def pdf_pages(file_info, width):
         if not os.path.isfile(page_file['fullpath']):
             server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
         if os.path.isfile(page_file['fullpath']):
-            output += unicode(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+            output += text_type(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
         else:
             output += "[Error including page image]"
         output += ' '

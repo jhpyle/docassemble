@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
+from six import string_types, text_type
 import subprocess
 import mimetypes
 import docassemble.base.filter
@@ -68,10 +69,10 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         if name is not None:
             name = str(name).decode('latin1')
-            name = remove_nonprintable_limited(unicode(name))
+            name = remove_nonprintable_limited(text_type(name))
         if value is not None:
             value = str(value).decode('latin1')
-            value = remove_nonprintable_limited(unicode(value))
+            value = remove_nonprintable_limited(text_type(value))
         #field_type = remove_nonprintable(str(field_type))
         #logmessage("name is " + repr(name) + " and FT is |" + str(field_type) + "| and value is " + repr(value))
         if page is not None:
@@ -114,7 +115,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                 outfields.append((prefix, default, pageno, rect, field_type))
 
 def read_fields_pdftk(pdffile):
-    output = unicode(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))
+    output = text_type(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))
     fields = list()
     if not len(output) > 0:
         return None
@@ -270,7 +271,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 for i in range(original.getNumPages()):
                     newpage = original.getPage(i)
                     writer.addPage(newpage)
-                for key, val in tree.iteritems():
+                for key, val in tree.items():
                     writer._root_object.update({pypdf.generic.NameObject(key): val})
                 writer.page_list = list()
                 recursive_get_pages(writer._root_object['/Pages'], writer.page_list)
@@ -290,60 +291,18 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
-def concatenate_files(path_list, pdfa=False, password=None):
-    pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    subprocess_arguments = [PDFTK_PATH]
-    new_path_list = list()
-    for path in path_list:
-        mimetype, encoding = mimetypes.guess_type(path)
-        if mimetype.startswith('image'):
-            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            args = ["convert", path, new_pdf_file.name]
-            result = call(args)
-            if result != 0:
-                logmessage("failed to convert image to PDF: " + " ".join(args))
-                continue
-            new_path_list.append(new_pdf_file.name)
-        elif mimetype in ('application/rtf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'application/vnd.oasis.opendocument.text'):
-            new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            if mimetype == 'application/rtf':
-                ext = 'rtf'
-            elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                ext = 'docx'
-            elif mimetype == 'application/msword':
-                ext = 'doc'
-            elif mimetype == 'application/vnd.oasis.opendocument.text':
-                ext = 'odt'
-            docassemble.base.pandoc.word_to_pdf(path, ext, new_pdf_file.name, pdfa=False)
-            new_path_list.append(new_pdf_file.name)
-        elif mimetype == 'application/pdf':
-            new_path_list.append(path)
-    if len(new_path_list) == 0:
-        raise DAError("concatenate_files: no valid files to concatenate")
-    subprocess_arguments.extend(new_path_list)
-    subprocess_arguments.extend(['cat', 'output', pdf_file.name])
-    #logmessage("Arguments are " + str(subprocess_arguments))
-    result = call(subprocess_arguments)
-    if result != 0:
-        logmessage("Failed to concatenate PDF files")
-        raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
-    if pdfa:
-        pdf_to_pdfa(pdf_file.name)
-    replicate_js_and_calculations(new_path_list[0], pdf_file.name, password)
-    return pdf_file.name
-
 def get_passwords(password):
     if password is None:
         return (None, None)
     if type(password) in (str, unicode, bool, int, float):
-        owner_password = unicode(password).strip()
-        user_password = unicode(password).strip()
+        owner_password = text_type(password).strip()
+        user_password = text_type(password).strip()
     elif type(password) is list:
-        owner_password = unicode(password[0]).strip()
-        user_password = unicode(password[1]).strip()
+        owner_password = text_type(password[0]).strip()
+        user_password = text_type(password[1]).strip()
     elif type(password) is dict:
-        owner_password = unicode(password.get('owner', 'password')).strip()
-        user_password = unicode(password.get('user', 'password')).strip()
+        owner_password = text_type(password.get('owner', 'password')).strip()
+        user_password = text_type(password.get('user', 'password')).strip()
     else:
         raise DAError("get_passwords: invalid password")
     return (owner_password, user_password)

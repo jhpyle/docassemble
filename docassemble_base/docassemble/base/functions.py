@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
+from six import string_types, text_type, PY2
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
@@ -16,7 +17,13 @@ from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
 import locale
 import decimal
-import urllib
+if PY2:
+    from urllib import quote as urllibquote
+    FileType = file
+else:
+    from urllib.parse import quote as urllibquote
+    from io import IOBase
+    FileType = IOBase
 import codecs
 import copy
 import base64
@@ -34,6 +41,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug
 from jinja2.runtime import Undefined
+TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data']
@@ -71,17 +79,17 @@ class ReturnValue(object):
     def __init__(self, **kwargs):
         self.extra = kwargs.get('extra', None)
         self.value = kwargs.get('value', None)
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if key not in ['extra', 'value']:
                 setattr(self, key, value)
     def __unicode__(self):
         if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
-            return unicode(self.content)
+            return text_type(self.content)
         if hasattr(self, 'error_message'):
-            return unicode(self.error_message)
-        return unicode(self.value)
+            return text_type(self.error_message)
+        return text_type(self.value)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
 
 def get_current_variable():
     if len(this_thread.current_variable):
@@ -162,7 +170,7 @@ def reset_gathering_mode(*pargs):
         return
     var = pargs[0]
     todel = list()
-    for instanceName, curVar in this_thread.gathering_mode.iteritems():
+    for instanceName, curVar in this_thread.gathering_mode.items():
         if curVar == var:
             todel.append(instanceName)
     for item in todel:
@@ -394,9 +402,9 @@ class TheUser:
             return self.first_name
         return word("Unnamed User")
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(self.name())
+        return text_type(self.name())
 
 def user_info():
     """Returns an object with information from the user profile.  Keys 
@@ -431,7 +439,7 @@ def action_argument(item):
     """Used when processing an "action."  Returns the value of the given 
     argument, which is assumed to have been passed to url_action() or 
     interview_url_action()."""
-    #logmessage("action_argument: item is " + unicode(item) + " and arguments are " + repr(this_thread.current_info['arguments']))
+    #logmessage("action_argument: item is " + text_type(item) + " and arguments are " + repr(this_thread.current_info['arguments']))
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments'].get(item, None)
     else:
@@ -512,7 +520,7 @@ def interview_url(**kwargs):
     additional users to participate."""
     do_local = False
     args = dict()
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         args[key] = val
     if 'local' in args:
         if args['local']:
@@ -536,7 +544,7 @@ def interview_url(**kwargs):
         root_url += 'interview'
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
-    url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    url += '?' + '&'.join(map(lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1])), args.items()))
     return url
 
 def set_title(**kwargs):
@@ -546,7 +554,7 @@ def set_title(**kwargs):
     """
     this_thread.internal['short title'] = kwargs.get('short', None)
     this_thread.internal['tab title'] = kwargs.get('tab', None)
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
         if key in ('title', 'logo', 'subtitle', 'exit link', 'exit label'):
             this_thread.internal[key] = val
@@ -597,9 +605,9 @@ class DATagsSet():
     def __hash__(self, the_object):
         return this_thread.internal['tags'].__hash__(the_object)
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
-        return unicode(this_thread.internal['tags'])
+        return text_type(this_thread.internal['tags'])
     def union(self, other_set):
         """Returns a Python set consisting of the elements of current set
         combined with the elements of the other_set.
@@ -688,7 +696,7 @@ def interview_url_action(action, **kwargs):
         root_url += 'interview'
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
-    url += '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    url += '?' + '&'.join(map((lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1]))), args.items()))
     return url
 
 def interview_url_as_qr(**kwargs):
@@ -698,7 +706,7 @@ def interview_url_as_qr(**kwargs):
     alt_text = None
     width = None
     the_kwargs = dict()
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         if key == 'alt_text':
             alt_text = val
         elif key == 'width':
@@ -713,7 +721,7 @@ def interview_url_action_as_qr(action, **kwargs):
     alt_text = None
     width = None
     the_kwargs = dict()
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         if key == 'alt_text':
             alt_text = val
         elif key == 'width':
@@ -733,7 +741,7 @@ def get_current_info(*pargs):
 
 def set_info(**kwargs):
     """Used to set the values of global variables you wish to retrieve through get_info()."""
-    for att, value in kwargs.iteritems():
+    for att, value in kwargs.items():
         setattr(this_thread.global_vars, att, value)
 
 def set_progress(number):
@@ -755,7 +763,7 @@ class DANav(object):
         return self.show_sections()
     
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
 
     def set_section(self, section):
         """Sets the current section in the navigation."""
@@ -773,7 +781,7 @@ class DANav(object):
             subitems = None
             if type(x) is dict:
                 if len(x) == 2 and 'subsections' in x:
-                    for key, val in x.iteritems():
+                    for key, val in x.items():
                         if key == 'subsections':
                             subitems = val
                         else:
@@ -788,7 +796,7 @@ class DANav(object):
                     logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                     continue
             else:
-                all_ids.append(unicode(x))
+                all_ids.append(text_type(x))
             if subitems:
                 for y in subitems:
                     if type(y) is dict:
@@ -798,7 +806,7 @@ class DANav(object):
                             logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
                     else:
-                        all_ids.append(unicode(y))
+                        all_ids.append(text_type(y))
         return all_ids
 
     def get_section(self, display=False, language=None):
@@ -812,7 +820,7 @@ class DANav(object):
             subitems = None
             if type(x) is dict:
                 if len(x) == 2 and 'subsections' in x:
-                    for key, val in x.iteritems():
+                    for key, val in x.items():
                         if key == 'subsections':
                             subitems = val
                         else:
@@ -831,7 +839,7 @@ class DANav(object):
                     continue
             else:
                 the_key = None
-                the_title = unicode(x)
+                the_title = text_type(x)
             if (the_key is not None and current_section == the_key) or (the_key is None and current_section == the_title):
                 current_title = the_title
                 break
@@ -847,7 +855,7 @@ class DANav(object):
                             continue
                     else:
                         sub_key = None
-                        sub_title = unicode(y)
+                        sub_title = text_type(y)
                     if (sub_key is not None and current_section == sub_key) or (sub_key is None and current_section == sub_title):
                         current_title = sub_title
                         found_it = True
@@ -1169,7 +1177,7 @@ def server_capabilities():
 #     return server.absolute_filename(*pargs, **kwargs)
 
 def update_server(*pargs, **kwargs):
-    for arg, func in kwargs.iteritems():
+    for arg, func in kwargs.items():
         #sys.stderr.write("Setting " + str(arg) + "\n")
         if arg == 'bg_action':
             the_func = func
@@ -1391,10 +1399,10 @@ def worker_caller(func, ui_notification, action):
 #     server_redis = target
 
 def default_ordinal_function(i):
-    return unicode(i)
+    return text_type(i)
 
 def ordinal_function_en(i):
-    num = unicode(i)
+    num = text_type(i)
     if 10 <= i % 100 <= 20:
         return num + u'th'
     elif i % 10 == 3:
@@ -1433,11 +1441,11 @@ def item_label(num, level=None, punctuation=True):
     elif level == 1:
         string = alpha(num)
     elif level == 2:
-        string = unicode(num + 1)
+        string = text_type(num + 1)
     elif level == 3:
         string = alpha(num, case='lower')
     elif level == 4:
-        string = unicode(num + 1)
+        string = text_type(num + 1)
     elif level == 5:
         string = alpha(num, case='lower')
     elif level == 6:
@@ -1473,9 +1481,9 @@ def roman(num, case=None):
         case = 'upper'
     num = num + 1
     if type(num) != type(1):
-        raise TypeError, "expected integer, got %s" % type(num)
+        raise TypeError("expected integer, got %s" % type(num))
     if not 0 < num < 4000:
-        raise ValueError, "Argument must be between 1 and 3999"   
+        raise ValueError("Argument must be between 1 and 3999")
     ints = (1000, 900, 500,  400, 100,  90, 50,  40, 10,  9,   5,   4,  1)
     nums = ('M',  'CM', 'D', 'CD', 'C','XC','L','XL','X','IX','V','IV','I')
     result = ""
@@ -1505,7 +1513,7 @@ def word(the_word, **kwargs):
     try:
         the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
-        the_word = unicode(the_word)
+        the_word = text_type(the_word)
     if kwargs.get('capitalize', False):
         return capitalize(the_word)
     return the_word
@@ -1519,15 +1527,15 @@ def update_language_function(lang, term, func):
 def update_nice_numbers(lang, defs):
     if lang not in nice_numbers:
         nice_numbers[lang] = dict()
-    for number, word in defs.iteritems():
-        nice_numbers[lang][unicode(number)] = word
+    for number, word in defs.items():
+        nice_numbers[lang][text_type(number)] = word
     return
 
 def update_ordinal_numbers(lang, defs):
     if lang not in ordinal_numbers:
         ordinal_numbers[lang] = dict()
-    for number, word in defs.iteritems():
-        ordinal_numbers[lang][unicode(number)] = word
+    for number, word in defs.items():
+        ordinal_numbers[lang][text_type(number)] = word
     return
 
 def update_ordinal_function(lang, func):
@@ -1537,7 +1545,7 @@ def update_ordinal_function(lang, func):
 def update_word_collection(lang, defs):
     if lang not in word_collection:
         word_collection[lang] = dict()
-    for word, translation in defs.iteritems():
+    for word, translation in defs.items():
         if translation is not None:
             word_collection[lang][word] = translation
     return
@@ -1681,14 +1689,14 @@ def comma_list_en(*pargs, **kwargs):
     else:
         comma_string = u", "
     if (len(pargs) == 0):
-        return unicode('')
+        return text_type('')
     elif (len(pargs) == 1):
         if type(pargs[0]) == list:
             pargs = pargs[0]
     if (len(pargs) == 0):
-        return unicode('')
+        return text_type('')
     elif (len(pargs) == 1):
-        return(unicode(pargs[0]))
+        return(text_type(pargs[0]))
     else:
         return(comma_string.join(pargs))
 
@@ -1724,20 +1732,20 @@ def comma_and_list_en(*pargs, **kwargs):
     else:
         after_and = u" "
     if (len(pargs) == 0):
-        return unicode('')
+        return text_type('')
     elif (len(pargs) == 1):
         if type(pargs[0]) == list:
             pargs = pargs[0]
         elif type(pargs[0]) == set:
             pargs = list(pargs[0])
     if (len(pargs) == 0):
-        return unicode('')
+        return text_type('')
     elif (len(pargs) == 1):
-        return(unicode(pargs[0]))
+        return(text_type(pargs[0]))
     elif (len(pargs) == 2):
-        return(unicode(pargs[0]) + before_and + and_string + after_and + unicode(pargs[1]))
+        return(text_type(pargs[0]) + before_and + and_string + after_and + text_type(pargs[1]))
     else:
-        return(comma_string.join(map(unicode, pargs[:-1])) + extracomma + before_and + and_string + after_and + unicode(pargs[-1]))
+        return(comma_string.join(map(text_type, pargs[:-1])) + extracomma + before_and + and_string + after_and + text_type(pargs[-1]))
 
 def need(*pargs):
     """Given one or more variables, this function instructs docassemble 
@@ -1750,7 +1758,7 @@ def need(*pargs):
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
-        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
+        if isinstance(input_dict[key], (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType)):
             continue
         if key == "__builtins__":
             continue
@@ -1761,7 +1769,7 @@ def ordinal_number_default(i):
     """Returns the "first," "second," "third," etc. for a given number.
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
-    num = unicode(i)
+    num = text_type(i)
     if this_thread.language in ordinal_numbers:
         language_to_use = this_thread.language
     elif '*' in ordinal_numbers:
@@ -1835,16 +1843,16 @@ def nice_number_default(num, capitalize=False, language=None):
         language_to_use = 'en'
     if int(float(num)) == float(num):
         num = int(float(num))
-    if unicode(num) in nice_numbers[language_to_use]:
-        the_word = nice_numbers[language_to_use][unicode(num)]
+    if text_type(num) in nice_numbers[language_to_use]:
+        the_word = nice_numbers[language_to_use][text_type(num)]
         if capitalize:
             return capitalize_function(the_word)
         else:
             return the_word
     elif type(num) is int:
-        return unicode(locale.format("%d", num, grouping=True))
+        return text_type(locale.format("%d", num, grouping=True))
     else:
-        return unicode(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
+        return text_type(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
 
 def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
     ensure_definition(num, noun, as_integer, capitalize, language)
@@ -1858,14 +1866,14 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
 
 def capitalize_default(a, **kwargs):
     ensure_definition(a)
-    if a and isinstance(a, basestring) and len(a) > 1:
+    if a and isinstance(a, string_types) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
-        return(unicode(a))
+        return(text_type(a))
 
 def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
-    return locale.localeconv()['currency_symbol'].decode('utf8')
+    return text_type(locale.localeconv()['currency_symbol'])
 
 def currency_default(value, decimals=True, **kwargs):
     """Returns the value as a currency, according to the conventions of the current locale.
@@ -1885,7 +1893,7 @@ def currency_default(value, decimals=True, **kwargs):
     except:
         return ''
     if decimals:
-        return locale.currency(float(value), symbol=True, grouping=True).decode('utf8')
+        return text_type(locale.currency(float(value), symbol=True, grouping=True))
     else:
         return currency_symbol() + locale.format("%d", int(float(value)), grouping=True)
 
@@ -1893,35 +1901,35 @@ def prefix_constructor(prefix):
     def func(word, **kwargs):
         ensure_definition(word, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix)) + unicode(word)
+            return capitalize(text_type(prefix)) + text_type(word)
         else:
-            return unicode(prefix) + unicode(word)
+            return text_type(prefix) + text_type(word)
     return func
 
 def double_prefix_constructor_reverse(prefix_one, prefix_two):
     def func(word_one, word_two, **kwargs):
         ensure_definition(word_one, word_two, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix_one)) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
+            return capitalize(text_type(prefix_one)) + text_type(word_two) + text_type(prefix_two) + text_type(word_one)
         else:
-            return unicode(prefix_one) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
+            return text_type(prefix_one) + text_type(word_two) + text_type(prefix_two) + text_type(word_one)
     return func
 
 def prefix_constructor_two_arguments(prefix, **kwargs):
     def func(word_one, word_two, **kwargs):
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix)) + unicode(word_one) + ' ' + unicode(word_two)
+            return capitalize(text_type(prefix)) + text_type(word_one) + ' ' + text_type(word_two)
         else:
-            return unicode(prefix) + unicode(word_one) + ' ' + unicode(word_two)
+            return text_type(prefix) + text_type(word_one) + ' ' + text_type(word_two)
     return func
 
 def middle_constructor(middle, **kwargs):
     def func(a, b, **kwargs):
         ensure_definition(a, b, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(a)) + unicode(middle) + unicode(b)
+            return capitalize(text_type(a)) + text_type(middle) + text_type(b)
         else:
-            return unicode(a) + unicode(middle) + unicode(b)
+            return text_type(a) + text_type(middle) + text_type(b)
     return func
 
 def possessify_en(a, b, **kwargs):
@@ -1931,9 +1939,9 @@ def possessify_en(a, b, **kwargs):
     else:
         middle = "'s "
     if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(unicode(a)) + unicode(middle) + unicode(b)
+        return capitalize(text_type(a)) + text_type(middle) + text_type(b)
     else:
-        return unicode(a) + unicode(middle) + unicode(b)
+        return text_type(a) + text_type(middle) + text_type(b)
 
 def a_preposition_b_default(a, b, **kwargs):
     #logmessage("Got here")
@@ -1944,15 +1952,15 @@ def a_preposition_b_default(a, b, **kwargs):
     else:
         preposition = word('in the')
     if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(unicode(a)) + unicode(' ' + preposition + ' ') + unicode(b)
+        return capitalize(text_type(a)) + text_type(' ' + preposition + ' ') + text_type(b)
     else:
-        return unicode(a) + unicode(' ' + preposition + ' ') + unicode(b)
+        return text_type(a) + text_type(' ' + preposition + ' ') + text_type(b)
 
 def verb_present_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     new_args = list()
     for arg in pargs:
-        new_args.append(unicode(arg))
+        new_args.append(text_type(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
     output = pattern.en.conjugate(*new_args, **kwargs)
@@ -1978,8 +1986,8 @@ def noun_plural_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
-        return unicode(noun)
-    output = pattern.en.pluralize(unicode(noun))
+        return text_type(noun)
+    output = pattern.en.pluralize(text_type(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -1989,7 +1997,7 @@ def noun_singular_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.en.singularize(unicode(pargs[0]))
+    output = pattern.en.singularize(text_type(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -1997,7 +2005,7 @@ def noun_singular_en(*pargs, **kwargs):
 
 def indefinite_article_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.en.article(unicode(pargs[0]).lower()) + " " + unicode(pargs[0])
+    output = pattern.en.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2135,7 +2143,7 @@ language_functions = {
 
 def language_function_constructor(term):
     if term not in language_functions:
-        raise SystemError("term " + unicode(term) + " not in language_functions")
+        raise SystemError("term " + text_type(term) + " not in language_functions")
     def func(*args, **kwargs):
         ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
@@ -2146,9 +2154,9 @@ def language_function_constructor(term):
         if '*' in language_functions[term]:
             return language_functions[term]['*'](*args, **kwargs)
         if 'en' in language_functions[term]:
-            logmessage("Term " + unicode(term) + " is not defined for language " + str(language))
+            logmessage("Term " + text_type(term) + " is not defined for language " + str(language))
             return language_functions[term]['en'](*args, **kwargs)
-        raise SystemError("term " + unicode(term) + " not defined in language_functions for English or *")
+        raise SystemError("term " + text_type(term) + " not defined in language_functions for English or *")
     return func
     
 in_the = language_function_constructor('in_the')
@@ -2245,11 +2253,11 @@ if ordinal.__doc__ is None:
     ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
 
 def underscore_to_space(a):
-    return(re.sub('_', ' ', unicode(a)))
+    return(re.sub('_', ' ', text_type(a)))
 
 def space_to_underscore(a):
     """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
-    return werkzeug.secure_filename(unicode(a).encode('ascii', errors='ignore'))
+    return werkzeug.secure_filename(text_type(a).encode('ascii', errors='ignore').decode())
 
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message."""
@@ -2299,7 +2307,7 @@ def force_ask(*pargs, **kwargs):
         force_ask_nameerror(pargs[0])
 
 def force_ask_nameerror(variable_name):
-    raise NameError("name '" + unicode(variable_name) + "' is not defined")
+    raise NameError("name '" + text_type(variable_name) + "' is not defined")
 
 def force_gather(*pargs):
     """Like force_ask(), except more insistent.  In addition to making a 
@@ -2361,12 +2369,12 @@ def qr_code(string, width=None, alt_text=None):
         if alt_text is None:
             return('[QR ' + string + ']')
         else:
-            return('[QR ' + string + ', None, ' + unicode(alt_text) + ']')
+            return('[QR ' + string + ', None, ' + text_type(alt_text) + ']')
     else:
         if alt_text is None:
             return('[QR ' + string + ', ' + width + ']')
         else:
-            return('[QR ' + string + ', ' + width + ', ' + unicode(alt_text) + ']')
+            return('[QR ' + string + ', ' + width + ', ' + text_type(alt_text) + ']')
 
 def standard_template_filename(the_file):
     try:
@@ -2459,7 +2467,7 @@ def package_question_filename(the_file):
 #     return
 
 def nodoublequote(text):
-    return re.sub(r'"', '', unicode(text))
+    return re.sub(r'"', '', text_type(text))
 
 def list_same(a, b):
     for elem in a:
@@ -2575,14 +2583,14 @@ def process_action():
             try:
                 this_thread.current_info['action_list'].pop(this_thread.current_info['action_item'])
             except Exception as err:
-                logmessage("process_action: _da_list_remove error: " + unicode(err))
+                logmessage("process_action: _da_list_remove error: " + text_type(err))
         raise ForcedReRun()
     elif the_action == '_da_dict_remove':
         if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
             try:
                 this_thread.current_info['action_dict'].pop(this_thread.current_info['action_item'])
             except Exception as err:
-                logmessage("process_action: _da_dict_remove error: " + unicode(err))
+                logmessage("process_action: _da_dict_remove error: " + text_type(err))
         raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
@@ -2662,10 +2670,10 @@ def process_action():
 
 def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
-    return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
+    return '?action=' + urllibquote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
 
 def myb64quote(text):
-    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 # def set_debug_status(new_value):
 #     global debug
@@ -2733,8 +2741,8 @@ def get_user_dict():
 
 def undefine(var):
     """Deletes the variable"""
-    unicode(var)
-    if type(var) not in [str, unicode]:
+    text_type(var)
+    if not isinstance(var, string_types):
         raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
     try:
         eval(var, dict())
@@ -2766,7 +2774,7 @@ def undefine(var):
 
 def dispatch(var):
     """Shows a menu screen."""
-    if type(var) not in [str, unicode]:
+    if not isinstance(var, string_types):
         raise Exception("dispatch() must be given a string")
     while value(var) != 'None':
         value(value(var))
@@ -2778,7 +2786,7 @@ def dispatch(var):
 def define(var, val):
     """Sets the given variable, expressed as a string, to the given value."""
     ensure_definition(var, val)
-    if type(var) not in [str, unicode]:
+    if not isinstance(var, string_types):
         raise Exception("define() must be given a string as the variable name")
     user_dict = get_user_dict()
     if user_dict is None:
@@ -2793,8 +2801,8 @@ def define(var, val):
 
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
-    unicode(var)
-    if type(var) not in [str, unicode]:
+    text_type(var)
+    if not isinstance(var, string_types):
         raise Exception("defined() must be given a string")
     try:
         eval(var, dict())
@@ -2857,7 +2865,7 @@ def defined(var):
         try:
             result = eval(to_eval, the_user_dict)
         except Exception as err:
-            #logmessage("Returning False3 after " + to_eval + ": " + unicode(err))
+            #logmessage("Returning False3 after " + to_eval + ": " + text_type(err))
             return False
         if result:
             continue
@@ -2867,8 +2875,8 @@ def defined(var):
 
 def value(var):
     """Returns the value of the variable given by the string 'var'."""
-    unicode(var)
-    if type(var) not in [str, unicode]:
+    text_type(var)
+    if not isinstance(var, string_types):
         raise Exception("value() must be given a string")
     try:
         return eval(var, dict())
@@ -2970,11 +2978,11 @@ def value(var):
 def single_paragraph(text):
     """Reduces the text to a single paragraph.  Useful when using Markdown 
     to indent user-supplied text."""
-    return newlines.sub(' ', unicode(text))
+    return newlines.sub(' ', text_type(text))
 
 def quote_paragraphs(text):
     """Adds Markdown to quote all paragraphs in the text."""
-    return '> ' + single_newline.sub('\n> ', unicode(text).strip())
+    return '> ' + single_newline.sub('\n> ', text_type(text).strip())
 
 def task_performed(task):
     """Returns True if the task has been performed at least once, otherwise False."""
@@ -3092,12 +3100,12 @@ def dict_as_json(user_dict, include_internal=False):
 
 def serializable_dict(user_dict, include_internal=False):
     result_dict = dict()
-    for key, data in user_dict.iteritems():
+    for key, data in user_dict.items():
         if key == '_internal' and not include_internal:
             continue
         if key == '__builtins__':
             continue
-        if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
+        if type(data) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
             continue
         result_dict[key] = safe_json(data)
     return result_dict
@@ -3105,21 +3113,21 @@ def serializable_dict(user_dict, include_internal=False):
 def safe_json(the_object, level=0):
     if level > 20:
         return None
-    if type(the_object) in [str, unicode, bool, int, float]:
+    if isinstance(the_object, (string_types, bool, int, float)):
         return the_object
-    if type(the_object) is list:
+    if isinstance(the_object, list):
         return [safe_json(x, level=level+1) for x in the_object]
-    if type(the_object) is dict:
+    if isinstance(the_object, dict):
         new_dict = dict()
-        for key, value in the_object.iteritems():
+        for key, value in the_object.items():
             new_dict[key] = safe_json(value, level=level+1)
         return new_dict
-    if type(the_object) is set:
+    if isinstance(the_object, set):
         new_list = list()
         for sub_object in the_object:
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
         return None
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
@@ -3139,7 +3147,7 @@ def safe_json(the_object, level=0):
             if hasattr(the_object, 'instanceName'):
                 new_dict['instanceName'] = the_object.instanceName
             return new_dict
-        for key, data in the_object.__dict__.iteritems():
+        for key, data in the_object.__dict__.items():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
             new_dict[key] = safe_json(data, level=level+1)
@@ -3184,8 +3192,8 @@ def bold(text, default=None):
         if default is None:
             return ''
         else:
-            return u'**' + unicode(default) + u'**'
-    return u'**' + unicode(text) + u'**'
+            return u'**' + text_type(default) + u'**'
+    return u'**' + text_type(text) + u'**'
 
 def italic(text, default=None):
     """Adds Markdown tags to make the text italic if it is not blank."""
@@ -3194,8 +3202,8 @@ def italic(text, default=None):
         if default is None:
             return ''
         else:
-            return u'_' + unicode(default) + u'_'
-    return u'_' + unicode(text) + u'_'
+            return u'_' + text_type(default) + u'_'
+    return u'_' + text_type(text) + u'_'
 
 # def inspector():
 #     frame = inspect.stack()[1][0]
@@ -3211,7 +3219,7 @@ def indent(text, by=None):
     ensure_definition(text, by)
     if by is None:
         by = 4
-    text = " " * 4 + unicode(text)
+    text = " " * 4 + text_type(text)
     text = re.sub(r'\r', '', text)
     text = re.sub(r'\n', '\n' + (" " * by), text)
     return text
@@ -3252,7 +3260,7 @@ def noyes(value, invert=False):
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
     ensure_definition(text, breaks, index)
-    text = re.sub(r'[\n\r]+', "\n", unicode(text).strip())
+    text = re.sub(r'[\n\r]+', "\n", text_type(text).strip())
     if type(breaks) is not list:
         breaks = [breaks]
     lastbreakpoint = 0
@@ -3322,20 +3330,20 @@ def showifdef(var, alternative=''):
 def log(message, priority='log'):
     """Log a message to the server or the browser."""
     if priority == 'log':
-        logmessage(unicode(message))
+        logmessage(text_type(message))
     else:
-        this_thread.message_log.append(dict(message=unicode(message), priority=priority))
+        this_thread.message_log.append(dict(message=text_type(message), priority=priority))
 
 def get_message_log():
     return this_thread.message_log
 
 def encode_name(var):
     """Convert a variable name to base64-encoded form for inclusion in an HTML element."""
-    return codecs.encode(var.encode('utf8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(var.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
-    return(codecs.decode(var, 'base64').decode('utf8'))
+    return codecs.decode(bytearray(var, encoding='utf-8'), 'base64').decode('utf-8')
 
 def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True):
     """Returns a list of interviews that users have started."""
@@ -3399,7 +3407,7 @@ def set_user_info(**kwargs):
     if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple) and len(kwargs['privileges']) > 0:
         this_thread.current_info['user']['roles'] = [y for y in kwargs['privileges']]
     if (user_id is None and email is None) or (user_id is not None and user_id == this_thread.current_info['user']['theid']) or (email is not None and email == this_thread.current_info['user']['email']):
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             if key in ('country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
                 this_thread.current_info['user'][key] = val
             if key == 'first_name':
@@ -3445,7 +3453,7 @@ def redact(text):
     """Redact the given text from documents, except when redaction is turned off for the given file."""
     if not this_thread.misc.get('redact', True):
         return text
-    the_text = unicode(text)
+    the_text = text_type(text)
     the_text = re.sub(r'\[(NBSP|ENDASH|EMDASH|HYPHEN|CHECKBOX|PAGENUM|TOTALPAGES|SECTIONNUM)\]', 'x', the_text)
     ref_text = the_text
     ref_text = re.sub(r'(\[(INDENTBY) [^\]]*\])', turn_to_at_sign, ref_text)
@@ -3480,12 +3488,12 @@ def redact(text):
             char = the_text[indexno]
             if ref_text[indexno] == '@':
                 if len(current_word):
-                    output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
+                    output += u'[REDACTION_WORD ' + text_type(current_word) + u']'
                     current_word = ''
                 output += char
             elif char == ' ':
                 if len(current_word):
-                    output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
+                    output += u'[REDACTION_WORD ' + text_type(current_word) + u']'
                     current_word = ''
                 output += u'[REDACTION_SPACE]'
             else:
@@ -3494,16 +3502,16 @@ def redact(text):
                 else:
                     current_word += char
         if len(current_word):
-            output += u'[REDACTION_WORD ' + unicode(current_word) + u']'
+            output += u'[REDACTION_WORD ' + text_type(current_word) + u']'
     return output
 
 def ensure_definition(*pargs, **kwargs):
     for val in pargs:
         if isinstance(val, Undefined):
-            unicode(val)
-    for var, val in kwargs.iteritems():
+            text_type(val)
+    for var, val in kwargs.items():
         if isinstance(val, Undefined):
-            unicode(val)
+            text_type(val)
 
 class DALocalFile(object):
     def __init__(self, local_path):
@@ -3512,7 +3520,7 @@ class DALocalFile(object):
         return self.local_path
     def get_alt_text(self):
         if hasattr(self, 'alt_text'):
-            return unicode(self.alt_text)
+            return text_type(self.alt_text)
         return None
     def set_alt_text(self, alt_text):
         self.alt_text = alt_text

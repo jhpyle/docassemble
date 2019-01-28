@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from docassemble.base.functions import word
 import re
+from six import string_types, text_type
 
 __all__ = ['to_text']
 
@@ -31,14 +32,14 @@ def to_text(html_doc):
             terms[s.string] = s.attrs['data-content']
     if len(terms):
         output += word("Terms used in this question:") + "\n"
-        for term, definition in terms.iteritems():
+        for term, definition in terms.items():
             output += term + '.  ' + definition + '\n'
     output = re.sub(r'&amp;gt;', '>', output)
     output = re.sub(r'&amp;lt;', '<', output)
     output = re.sub(r'&gt;', '>', output)
     output = re.sub(r'&lt;', '<', output)
     output = re.sub(r'<[^>]+>', '', output)
-    #foo = unicode(output).encode('utf8')
+    #foo = text_type(output).encode('utf8')
     #logmessage("ending to_text")
     return output
 

@@ -1,3 +1,4 @@
+from six import string_types, text_type
 import psutil
 import time
 import sys
@@ -26,7 +27,7 @@ while True:
                 p.kill()
             except:
                 pass
-            sys.stderr.write("Killed " + unicode(pid))
+            sys.stderr.write("Killed " + text_type(pid))
             busy_pids.discard(pid)
         else:
             busy_pids.add(pid)

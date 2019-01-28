@@ -5,6 +5,7 @@ import os
 import codecs
 import re
 import yaml
+from io import open
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
@@ -34,8 +35,8 @@ def read_file(filename):
     end_block = 2
     if not os.path.isfile(filename):
         sys.exit("File " + str(filename) + " not found")
-    with open(filename, 'rU') as fp:
-        content = fp.read().decode('utf8')
+    with open(filename, 'rU', encoding='utf-8') as fp:
+        content = fp.read()
         content = fix_tabs.sub('  ', content)
         content = fix_initial.sub('', content)
         blocks = map(lambda x: x.strip(), document_match.split(content))

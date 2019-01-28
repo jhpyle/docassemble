@@ -1,0 +1,4 @@
+./docassemble
+./docassemble_base
+./docassemble_webapp
+./docassemble_demo
