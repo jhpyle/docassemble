@@ -261,7 +261,7 @@ RUN bash -c "cd /tmp && \
         distutils2 \
         passlib \
         pycryptodome && \
-    pip install -- upgrade \
+    pip install --upgrade \
     'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
     'git+https://github.com/euske/pdfminer.git' \
         simplekv==0.10.0 \
