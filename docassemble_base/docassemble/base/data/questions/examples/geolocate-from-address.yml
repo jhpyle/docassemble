@@ -1,0 +1,37 @@
+metadata:
+  title: Geolocate from address
+  short title: Geolocate
+  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - the_address: Address
+---
+question: |
+  Enter an address
+fields:
+  - Address: address_one_line
+---
+mandatory: True
+code: |
+  the_address.geolocate(address_one_line)
+---
+mandatory: True
+question: |
+  Information about your address
+subquestion: |
+  The address you provided is:
+    
+  ${ the_address }
+
+  The address is located in
+  ${ the_address.city }.
+
+  The latitude and longitude are
+  ${ the_address.location.latitude }
+  and
+  ${ the_address.location.longitude }.

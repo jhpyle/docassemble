@@ -67,7 +67,7 @@ def transform_for_docx(text, question, tpl, width=None):
         if 'fullpath' not in file_info:
             return '[FILE NOT FOUND]'
         return InlineImage(tpl, file_info['fullpath'], Inches(2))
-    return docassemble.base.filter.docx_template_filter(text)
+    return docassemble.base.filter.docx_template_filter(text, question=question)
 
 def create_hyperlink(url, anchor_text, tpl):
     return InlineHyperlink(tpl, url, anchor_text)

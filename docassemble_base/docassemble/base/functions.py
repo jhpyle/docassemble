@@ -695,12 +695,32 @@ def interview_url_as_qr(**kwargs):
     """Inserts into the markup a QR code linking to the interview.
     This can be used to pass control from a web browser or a paper 
     handout to a mobile device."""
-    return qr_code(interview_url(**kwargs))
+    alt_text = None
+    width = None
+    the_kwargs = dict()
+    for key, val in kwargs.iteritems():
+        if key == 'alt_text':
+            alt_text = val
+        elif key == 'width':
+            width = val
+        else:
+            the_kwargs[key] = val
+    return qr_code(interview_url(**the_kwargs), alt_text=alt_text, width=width)
 
 def interview_url_action_as_qr(action, **kwargs):
     """Like interview_url_as_qr, except it additionally specifies an 
     action.  The keyword arguments are arguments to the action."""
-    return qr_code(interview_url_action(action, **kwargs))
+    alt_text = None
+    width = None
+    the_kwargs = dict()
+    for key, val in kwargs.iteritems():
+        if key == 'alt_text':
+            alt_text = val
+        elif key == 'width':
+            width = val
+        else:
+            the_kwargs[key] = val
+    return qr_code(interview_url_action(action, **the_kwargs), alt_text=alt_text, width=width)
 
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
@@ -765,7 +785,7 @@ class DANav(object):
                         subitems = value
                     all_ids.append(the_key)
                 else:
-                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                     continue
             else:
                 all_ids.append(unicode(x))
@@ -775,7 +795,7 @@ class DANav(object):
                         if len(y) == 1:
                             all_ids.append(y.keys()[0])
                         else:
-                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
                     else:
                         all_ids.append(unicode(y))
@@ -807,7 +827,7 @@ class DANav(object):
                     else:
                         the_title = value
                 else:
-                    logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                    logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                     continue
             else:
                 the_key = None
@@ -823,7 +843,7 @@ class DANav(object):
                             sub_key = y.keys()[0]
                             sub_title = y[sub_key]
                         else:
-                            logmessage("navigation_bar: too many keys in dict.  " + str(the_sections))
+                            logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
                     else:
                         sub_key = None
@@ -884,20 +904,8 @@ word_collection = {
         'No': u'No'
         },
     'en': {
-        'and': "and",
-        'or': "or",
-        'yes': "yes",
-        'no': "no",
-        'Document': "Document",
-        'content': 'content',
         'Open as:': 'Open this document as:',
         'Open as:': 'Save this documents as:',
-        'Question': 'Question',
-        'Help': 'Help',
-        'Download': 'Download',
-        'Preview': 'Preview',
-        'Markdown': 'Markdown',
-        'Source': 'Source',
         'attachment_message_plural': 'The following documents have been created for you.',
         'attachment_message_singular': 'The following document has been created for you.',
         'save_as_multiple': 'The document is available in the following formats:',
@@ -906,17 +914,13 @@ word_collection = {
         'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
         'docx_message': 'for editing; requires Microsoft Word or compatible application',
         'tex_message': 'for debugging PDF output',
-        'vs.': 'vs.',
-        'v.': 'v.',
-        'Case No.': 'Case No.',
-        'In the': 'In the',
         'This field is required.': 'You need to fill this in.',
         "You need to enter a valid date.": "You need to enter a valid date.",
         "You need to enter a complete e-mail address.": "You need to enter a complete e-mail address.",
         "You need to enter a number.": "You need to enter a number.",
         "You need to select one.": "You need to select one.",
         "Country Code": 'Country Code (e.g., "us")',
-        "First Subdivision": "State Abbreviation (e.g., 'NY')",
+        "First Subdivision": 'State Abbreviation (e.g., "NY")',
         "Second Subdivision": "County",
         "Third Subdivision": "Municipality",
         "Organization": "Organization",
@@ -925,59 +929,59 @@ word_collection = {
 
 ordinal_numbers = {
     'en': {
-        '0': 'zeroth',
-        '1': 'first',
-        '2': 'second',
-        '3': 'third',
-        '4': 'fourth',
-        '5': 'fifth',
-        '6': 'sixth',
-        '7': 'seventh',
-        '8': 'eighth',
-        '9': 'ninth',
-        '10': 'tenth'
+        '0': u'zeroth',
+        '1': u'first',
+        '2': u'second',
+        '3': u'third',
+        '4': u'fourth',
+        '5': u'fifth',
+        '6': u'sixth',
+        '7': u'seventh',
+        '8': u'eighth',
+        '9': u'ninth',
+        '10': u'tenth'
     },
     'es': {
-        '0': 'zeroth',
-        '1': 'primero',
-        '2': 'segundo',
-        '3': 'tercero',
-        '4': 'cuarto',
-        '5': 'quinto',
-        '6': 'sexto',
-        '7': 'séptimo',
-        '8': 'octavo',
-        '9': 'noveno',
-        '10': 'décimo'
+        '0': u'zeroth',
+        '1': u'primero',
+        '2': u'segundo',
+        '3': u'tercero',
+        '4': u'cuarto',
+        '5': u'quinto',
+        '6': u'sexto',
+        '7': u'séptimo',
+        '8': u'octavo',
+        '9': u'noveno',
+        '10': u'décimo'
     }
 }
 
 nice_numbers = {
     'en': {
-        '0': 'zero',
-        '1': 'one',
-        '2': 'two',
-        '3': 'three',
-        '4': 'four',
-        '5': 'five',
-        '6': 'six',
-        '7': 'seven',
-        '8': 'eight',
-        '9': 'nine',
-        '10': 'ten'
+        '0': u'zero',
+        '1': u'one',
+        '2': u'two',
+        '3': u'three',
+        '4': u'four',
+        '5': u'five',
+        '6': u'six',
+        '7': u'seven',
+        '8': u'eight',
+        '9': u'nine',
+        '10': u'ten'
     },
     'es': {
-        '0': 'cero',
-        '1': 'uno',
-        '2': 'dos',
-        '3': 'tres',
-        '4': 'cuatro',
-        '5': 'cinco',
-        '6': 'seis',
-        '7': 'siete',
-        '8': 'ocho',
-        '9': 'nueve',
-        '10': 'diez'
+        '0': u'cero',
+        '1': u'uno',
+        '2': u'dos',
+        '3': u'tres',
+        '4': u'cuatro',
+        '5': u'cinco',
+        '6': u'seis',
+        '7': u'siete',
+        '8': u'ocho',
+        '9': u'nueve',
+        '10': u'diez'
     }
 }
 
@@ -1392,15 +1396,15 @@ def default_ordinal_function(i):
 def ordinal_function_en(i):
     num = unicode(i)
     if 10 <= i % 100 <= 20:
-        return num + 'th'
+        return num + u'th'
     elif i % 10 == 3:
-        return num + 'rd'
+        return num + u'rd'
     elif i % 10 == 1:
-        return num + 'st'
+        return num + u'st'
     elif i % 10 == 2:
-        return num + 'nd'
+        return num + u'nd'
     else:
-        return num + 'th'
+        return num + u'th'
 
 ordinal_functions = {
     'en': ordinal_function_en,
@@ -1429,11 +1433,11 @@ def item_label(num, level=None, punctuation=True):
     elif level == 1:
         string = alpha(num)
     elif level == 2:
-        string = str(num + 1)
+        string = unicode(num + 1)
     elif level == 3:
         string = alpha(num, case='lower')
     elif level == 4:
-        string = str(num + 1)
+        string = unicode(num + 1)
     elif level == 5:
         string = alpha(num, case='lower')
     elif level == 6:
@@ -1493,11 +1497,11 @@ def word(the_word, **kwargs):
     # expanded to use kwargs.  For example, for languages with gendered words,
     # the gender could be passed as a keyword argument.
     if the_word is True:
-        the_word = 'yes'
+        the_word = u'yes'
     elif the_word is False:
-        the_word = 'no'
+        the_word = u'no'
     elif the_word is None:
-        the_word = "I don't know"
+        the_word = u"I don't know"
     try:
         the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
@@ -1675,7 +1679,7 @@ def comma_list_en(*pargs, **kwargs):
     if 'comma_string' in kwargs:
         comma_string = kwargs['comma_string']
     else:
-        comma_string = ", "
+        comma_string = u", "
     if (len(pargs) == 0):
         return unicode('')
     elif (len(pargs) == 1):
@@ -1689,9 +1693,8 @@ def comma_list_en(*pargs, **kwargs):
         return(comma_string.join(pargs))
 
 def comma_and_list_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
     if 'and_string' not in kwargs:
-        kwargs['and_string'] = 'y'
+        kwargs['and_string'] = u'y'
     return comma_and_list_en(*pargs, **kwargs)
 
 def comma_and_list_en(*pargs, **kwargs):
@@ -1701,9 +1704,9 @@ def comma_and_list_en(*pargs, **kwargs):
     See also comma_list()."""
     ensure_definition(*pargs, **kwargs)
     if 'oxford' in kwargs and kwargs['oxford'] == False:
-        extracomma = ""
+        extracomma = u""
     else:
-        extracomma = ","
+        extracomma = u","
     if 'and_string' in kwargs:
         and_string = kwargs['and_string']
     else:
@@ -1711,15 +1714,15 @@ def comma_and_list_en(*pargs, **kwargs):
     if 'comma_string' in kwargs:
         comma_string = kwargs['comma_string']
     else:
-        comma_string = ", "
+        comma_string = u", "
     if 'before_and' in kwargs:
         before_and = kwargs['before_and']
     else:
-        before_and = " "
+        before_and = u" "
     if 'after_and' in kwargs:
         after_and = kwargs['after_and']
     else:
-        after_and = " "
+        after_and = u" "
     if (len(pargs) == 0):
         return unicode('')
     elif (len(pargs) == 1):
@@ -1855,7 +1858,7 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
 
 def capitalize_default(a, **kwargs):
     ensure_definition(a)
-    if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
+    if a and isinstance(a, basestring) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
@@ -2132,7 +2135,7 @@ language_functions = {
 
 def language_function_constructor(term):
     if term not in language_functions:
-        raise SystemError("term " + str(term) + " not in language_functions")
+        raise SystemError("term " + unicode(term) + " not in language_functions")
     def func(*args, **kwargs):
         ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
@@ -2143,9 +2146,9 @@ def language_function_constructor(term):
         if '*' in language_functions[term]:
             return language_functions[term]['*'](*args, **kwargs)
         if 'en' in language_functions[term]:
-            logmessage("Term " + str(term) + " is not defined for language " + str(language))
+            logmessage("Term " + unicode(term) + " is not defined for language " + str(language))
             return language_functions[term]['en'](*args, **kwargs)
-        raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
+        raise SystemError("term " + unicode(term) + " not defined in language_functions for English or *")
     return func
     
 in_the = language_function_constructor('in_the')
@@ -2346,17 +2349,24 @@ def static_image(filereference, width=None):
     else:
         return('[FILE ' + filename + ', ' + width + ']')
 
-def qr_code(string, width=None):
+def qr_code(string, width=None, alt_text=None):
     """Inserts appropriate markup to include a QR code image.  If you know
     the string you want to encode, you can just use the "[QR ...]" markup.  
     This function is useful when you want to assemble the string programmatically.
     Takes an optional keyword argument "width"
-    (e.g., qr_code('https://google.com', width='2in'))."""
+    (e.g., qr_code('https://google.com', width='2in')).  Also takes an optional
+    keyword argument "alt_text" for the alt text."""
     ensure_definition(string, width)
     if width is None:
-        return('[QR ' + string + ']')
+        if alt_text is None:
+            return('[QR ' + string + ']')
+        else:
+            return('[QR ' + string + ', None, ' + unicode(alt_text) + ']')
     else:
-        return('[QR ' + string + ', ' + width + ']')
+        if alt_text is None:
+            return('[QR ' + string + ', ' + width + ']')
+        else:
+            return('[QR ' + string + ', ' + width + ', ' + unicode(alt_text) + ']')
 
 def standard_template_filename(the_file):
     try:
@@ -2725,7 +2735,7 @@ def undefine(var):
     """Deletes the variable"""
     unicode(var)
     if type(var) not in [str, unicode]:
-        raise Exception("undefine() must be given a string, not " + str(var) + ", a " + str(var.__class__.__name__))
+        raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
     try:
         eval(var, dict())
         return False
@@ -2734,7 +2744,7 @@ def undefine(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("undefine: variable " + str(var) + " is not a valid variable name")
+        raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2794,7 +2804,7 @@ def defined(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("defined: variable " + str(var) + " is not a valid variable name")
+        raise Exception("defined: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2869,7 +2879,7 @@ def value(var):
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("value: variable " + str(var) + " is not a valid variable name")
+        raise Exception("value: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -3486,16 +3496,22 @@ def redact(text):
 def ensure_definition(*pargs, **kwargs):
     for val in pargs:
         if isinstance(val, Undefined):
-            str(val)
+            unicode(val)
     for var, val in kwargs.iteritems():
         if isinstance(val, Undefined):
-            str(val)
+            unicode(val)
 
 class DALocalFile(object):
     def __init__(self, local_path):
         self.local_path = local_path
     def path(self):
         return self.local_path
+    def get_alt_text(self):
+        if hasattr(self, 'alt_text'):
+            return unicode(self.alt_text)
+        return None
+    def set_alt_text(self, alt_text):
+        self.alt_text = alt_text
 
 def forget_result_of(*pargs):
     """Resets the user's answer to an embedded code question or mandatory code block."""

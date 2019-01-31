@@ -1,0 +1,29 @@
+metadata:
+  title: Validation messages
+  short title: Validation
+  documentation: "https://docassemble.org/docs/fields.html#validation messages"
+  example start: 1
+  example end: 1
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - "Favorite Fruit": favorite_fruit
+    validation messages:
+      required: |
+        Come on, everyone has a favorite
+        fruit.
+  - "How many seeds does it have?": number_of_seeds
+    datatype: integer
+    max: 100
+    validation messages:
+      max: |
+        No fruit has that many seeds!
+      required: |
+        I really need to know this.
+---
+question: Result of question
+subquestion: |
+  Your favorite fruit, ${ favorite_fruit},
+  has ${ number_of_seeds } seeds.
+mandatory: True

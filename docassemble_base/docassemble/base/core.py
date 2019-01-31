@@ -2172,6 +2172,8 @@ class DAFile(DAObject):
             self.content = kwargs['content']
         if 'markdown' in kwargs:
             self.markdown = kwargs['markdown']
+        if 'alt_text' in kwargs:
+            self.alt_text = kwargs['alt_text']
         if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True
@@ -2183,6 +2185,14 @@ class DAFile(DAObject):
             if 'make_pngs' in kwargs and kwargs['make_pngs']:
                 self._make_pngs_for_pdf()
         return
+    def set_alt_text(self, alt_text):
+        """Sets the alt text for the file."""
+        self.alt_text = alt_text
+    def get_alt_text(self):
+        """Returns the alt text for the file.  If no alt text is defined, None is returned."""
+        if hasattr(self, 'alt_text'):
+            return unicode(self.alt_text)
+        return None
     def set_mimetype(self, mimetype):
         """Sets the MIME type of the file"""
         self.mimetype = mimetype
@@ -2208,6 +2218,8 @@ class DAFile(DAObject):
             self.content = kwargs['content']
         if 'markdown' in kwargs:
             self.markdown = kwargs['markdown']
+        if 'alt_text' in kwargs:
+            self.alt_text = kwargs['alt_text']
         if 'number' in kwargs and kwargs['number'] is not None:
             self.number = kwargs['number']
             self.ok = True
@@ -2393,9 +2405,9 @@ class DAFile(DAObject):
             #logmessage("Committed " + str(self.number))
             sf = SavedFile(self.number, fix=True)
             sf.finalize()
-    def show(self, width=None, wait=True):
-        """Inserts markup that displays the file as an image.  Takes an
-        optional keyword argument width.
+    def show(self, width=None, wait=True, alt_text=None):
+        """Inserts markup that displays the file as an image.  Takes
+        optional keyword arguments width and alt_text.
 
         """
         if not self.ok:
@@ -2417,9 +2429,16 @@ class DAFile(DAObject):
                 return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
-                return(u'[FILE ' + unicode(self.number) + u', ' + unicode(width) + u']')
+                the_width = unicode(width)
             else:
-                return(u'[FILE ' + unicode(self.number) + u']')
+                the_width = u'None'
+            if alt_text is None:
+                alt_text = self.get_alt_text()
+            if alt_text is not None:
+                the_alt_text = re.sub(r'\]', '', unicode(alt_text))
+            else:
+                the_alt_text = u'None'
+            return(u'[FILE ' + unicode(self.number) + u', ' + the_width + u', ' + the_alt_text + u']')
     def _pdf_pages(self, width):
         file_info = server.file_finder(self.number, question=docassemble.base.functions.this_thread.current_question)
         if 'path' not in file_info:
@@ -2449,6 +2468,20 @@ class DAFileCollection(DAObject):
         if hasattr(self, 'info') and 'formats' in self.info:
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
+    def set_alt_text(self, alt_text):
+        """Sets the alt text of each of the files in the collection."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                getattr(self, ext).alt_text = alt_text
+    def get_alt_text(self):
+        """Returns the alt text for the first file in the collection.  If no
+        alt text is defined, None is returned.
+
+        """
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                return getattr(self, ext).get_alt_text()
+        return None
     def num_pages(self):
         """If there is a PDF file, returns the number of pages in the file, otherwise returns 1."""
         if hasattr(self, 'pdf'):
@@ -2502,6 +2535,18 @@ class DAFileList(DAList):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.show())
+    def set_alt_text(self, alt_text):
+        """Sets the alt text of each of the files in the list."""
+        for item in self:
+            item.alt_text = alt_text
+    def get_alt_text(self):
+        """Returns the alt text for the first file in the list.  If no alt
+        text is defined, None is returned.
+
+        """
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].get_alt_text()
     def num_pages(self):
         """Returns the total number of pages in the PDF documents, or one page per non-PDF file."""
         result = 0;
@@ -2514,15 +2559,15 @@ class DAFileList(DAList):
         if len(self.elements) == 0:
             return None
         return self.elements[0].slurp()
-    def show(self, width=None):
+    def show(self, width=None, alt_text=None):
         """Inserts markup that displays each element in the list as an image.
-        Takes an optional keyword argument width.
+        Takes optional keyword arguments width and alt_text.
 
         """
         output = ''
         for element in sorted(self.elements):
             if element.ok:
-                new_image = element.show(width=width)
+                new_image = element.show(width=width, alt_text=alt_text)
                 if isinstance(new_image, InlineImage) or isinstance(new_image, Subdoc):
                     return new_image
                 output += new_image
@@ -2551,9 +2596,20 @@ class DAStaticFile(DAObject):
         if 'filename' in kwargs and 'mimetype' not in kwargs and 'extension' not in kwargs:
             self.extension, self.mimetype = server.get_ext_and_mimetype(kwargs['filename'])
         return super(DAStaticFile, self).init(*pargs, **kwargs)
-    def show(self, width=None):
-        """Inserts markup that displays the file.  Takes an optional keyword
-        argument width.
+    def get_alt_text(self):
+        """Returns the alt text for the file.  If no alt text is defined, None
+        is returned.
+
+        """
+        if hasattr(self, 'alt_text'):
+            return unicode(self.alt_text)
+        return None
+    def set_alt_text(self, alt_text):
+        """Sets the alt text for the file."""
+        self.alt_text = alt_text
+    def show(self, width=None, alt_text=None):
+        """Inserts markup that displays the file.  Takes optional keyword
+        arguments width and alt_text.
 
         """
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
@@ -2565,9 +2621,16 @@ class DAStaticFile(DAObject):
                 return docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
-                return('[FILE ' + str(self.filename) + ', ' + str(width) + ']')
+                the_width = unicode(width)
             else:
-                return('[FILE ' + str(self.filename) + ']')
+                the_width = u'None'
+            if alt_text is None:
+                alt_text = self.get_alt_text()
+            if alt_text is not None:
+                the_alt_text = the_alt_text = re.sub(r'\]', '', unicode(alt_text))
+            else:
+                the_alt_text = u'None'
+            return(u'[FILE ' + unicode(self.filename) + u', ' + the_width + u', ' + the_alt_text + u']')
     def _pdf_pages(self, width):
         file_info = dict()
         pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)

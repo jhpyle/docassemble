@@ -111,6 +111,8 @@ class MyPandoc(object):
             #logmessage("Before: " + repr(self.input_content))
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
+        if not re.search(r'[^\s]', self.input_content):
+            self.input_content = "\\textbf{}\n"
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('utf8'))
         temp_file.close()
