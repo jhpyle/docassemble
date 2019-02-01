@@ -826,11 +826,12 @@ about what people and processes are optimal.
 Before thinking about how you wish to provide quality assurance, it
 may be helpful to read about various approaches to [software
 development] as a whole (such as the difference between [waterfall]
-and [Agile] lifecycles) and specifically about different approaches to
-[software testing].  The approaches that have been used in the past
-are not necessarily "best practices."  However, reading about other
-people's approaches may help you realize that your initial ideas about
-how to handle quality assurance may not make sense.
+and [Agile] lifecycles, and the [DevOps] methodology) and specifically
+about different approaches to [software testing].  The approaches that
+have been used in the past are not necessarily "best practices."
+However, reading about other people's approaches may help you realize
+that your initial ideas about how to handle quality assurance may not
+make sense.
 
 In particular, think about breaking out of the project-oriented,
 time-limited development paradigm.  Do what is right for your users,
@@ -1339,6 +1340,13 @@ computer programmer to figure out issues of logic and data structure.
 However, there are ways that non-programmers can and should be deeply
 involved in the development of guided interviews.
 
+Notice the popularity of the [DevOps] methodology in software
+development, which breaks down the silos of "operations" engineers and
+"development" engineers.  Your non-technical people who know the
+subject matter of your interview may not think of themselves as
+"engineers," but they similar in many ways to the "operations" side of
+[DevOps].
+
 You can involve a non-technical person on the team who knows how to
 communicate in writing with succinct phrases, who knows when the text
 is too short and too long, knows when to hide information behind a
@@ -1522,3 +1530,4 @@ staff member who knows a lot about the subject matter.
 [observing]: {{ site.baseurl }}/docs/livehelp.html#observe
 [acceptance tests]: https://en.wikipedia.org/wiki/Acceptance_testing
 [`value()`]: {{ site.baseurl }}/docs/functions.html#value
+[DevOps]: https://en.wikipedia.org/wiki/DevOps

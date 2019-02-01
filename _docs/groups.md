@@ -333,13 +333,13 @@ an interview that does this:
 
 {% include side-by-side.html demo="gather-list-friend-bad-order" %}
 
-If you would prefer that all of the questions about each individual be
-asked together, you can use the `.complete_attribute` attribute to
-tell **docassemble** that an item is not completely gathered until a
-particular attribute of that item is defined, and write a
-[`code` block] that defines this attribute.  You can use this
-[`code` block] to ensure that all the questions you want to be asked
-are asked during the gathering process.
+<a name="complete_attribute"></a>If you would prefer that all of the
+questions about each individual be asked together, you can use the
+`.complete_attribute` attribute to tell **docassemble** that an item
+is not completely gathered until a particular attribute of that item
+is defined, and write a [`code` block] that defines this attribute.
+You can use this [`code` block] to ensure that all the questions you
+want to be asked are asked during the gathering process.
 
 In the above example, we can accomplish this by doing
 `friend.complete_attribute = 'complete'`.  Then we include a `code`
@@ -593,7 +593,11 @@ The `.gather()` method accepts three optional keyword arguments:
 * `number` can be set to the total number of items you want to
   gather.  The `.there_is_another` attribute will not be sought.
 * `item_object_type` can be set to the type of object each element of
-the group should be.  (This is not available for [`DASet`] objects.)
+  the group should be.  (This is not available for [`DASet`] objects.)
+* `complete_attribute` can be set to the name of an attribute that
+  should be sought for each item during the gathering process.  You
+  can also set the [`complete_attribute`] attribute of the group object
+  itself.
 
 The `.gather()` method is not the only way that a gathering process
 can be triggered.  The `.auto_gather` attribute controls whether the
@@ -1016,3 +1020,4 @@ For more information about "for loops" in [Mako], see the
 [`table`]: {{ site.baseurl }}/docs/template.html#table
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`minimum_number`]: #minimum_number
+[`complete_attribute`]: #complete_attribute

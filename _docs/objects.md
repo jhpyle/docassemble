@@ -1236,7 +1236,7 @@ contents = the_file.slurp()
 {% endhighlight %}
 
 By default, the `.slurp()` method attempts to automatically decode
-text files using the `utf8` encoding.  To turn off this automatic
+text files using the `utf-8` encoding.  To turn off this automatic
 decoding feature, call it with `.slurp(auto_decode=False)`.
 
 <a name="DAFile.readlines"></a>The `.readlines()` method reads the
@@ -1264,6 +1264,10 @@ contents = the_file.slurp()
 contents = re.sub(r'swords', r'ploughshares', contents)
 the_file.write(contents)
 {% endhighlight %}
+
+By default, the `.write()` method treats the contents as text and
+applies the `utf-8` encoding.  However, if you want to write raw
+bytes to the file, include the keyword parameter `binary=True`.
 
 <a name="DAFile.copy_into"></a>The `.copy_into()` method overwrites
 any existing contents of the file with the contents of the file given
