@@ -3840,7 +3840,7 @@ included in a [Mako] template with `${ birthday }`, the text
 conversion is done using [`format_date()`].
 
 <a name="DADateTime.replace"></a>The `.replace()` method returns a new
-[`DADateTime`] object that is the same as the original object, excep
+[`DADateTime`] object that is the same as the original object, except
 with edited components.  For example, `birthdate.replace(year=2018)`
 will return the date of a person's birthday in 2018.  The available
 parameters are `year`, `month`, `day`, `hour` (0 to 23), `minute`,
