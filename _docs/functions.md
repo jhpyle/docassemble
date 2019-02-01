@@ -1200,6 +1200,9 @@ It accepts the following optional keyword arguments:
 * `label` - this is the text on the button.  It passes through the
   [`word()`]  function, so you can use the translation system to
   handle different languages.
+* `new_window` - set this to `False` if you don't want the button to
+  open a new tab.  The default is for external links to open in a new
+  tab.
 
 # <a name="qrfunctions"></a>QR code functions
 
