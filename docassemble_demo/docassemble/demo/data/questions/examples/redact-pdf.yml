@@ -2,14 +2,20 @@ metadata:
   title: Redact text
   short title: Redact
   documentation: "https://docassemble.org/docs/functions.html#redact"
-  example start: 3
-  example end: 3
+  example start: 4
+  example end: 4
 ---
 modules:
   - docassemble.base.util
 ---
 objects:
   - user: Individual
+---
+mandatory: True
+code: |
+  user.name.first
+  money_claimed
+  user.address.address
 ---
 mandatory: True
 question: |

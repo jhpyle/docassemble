@@ -15,6 +15,7 @@ from email.utils import parseaddr, parsedate, getaddresses
 from time import mktime
 import datetime
 import mimetypes
+from io import open
 
 def main():
     fp = open("/tmp/mail.log", "a")

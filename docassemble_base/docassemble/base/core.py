@@ -2,6 +2,10 @@
 from six import string_types, text_type, PY2
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
+if PY2:
+    import collections as abc
+else:
+    import collections.abc as abc
 from collections import OrderedDict
 from functools import reduce
 from io import open
@@ -297,11 +301,14 @@ class DAObject(object):
     def _map_info(self):
         return None
     def __getattr__(self, thename):
-        if thename.startswith('_'):
+        if thename.startswith('_') or hasattr(self.__class__, thename):
+            if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                raise docassemble.base.functions.this_thread.misc['pending_error']
             return object.__getattribute__(self, thename)
         else:
             var_name = object.__getattribute__(self, 'instanceName') + "." + thename
-            raise DAAttributeError("name '" + var_name + "' is not defined")
+            docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
+            raise docassemble.base.functions.this_thread.misc['pending_error']
     def object_name(self, **kwargs):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
@@ -414,6 +421,20 @@ class DAObject(object):
             value.has_nonrandom_instance_name = True
             value.instanceName = self.instanceName + '.' + str(key)
         return super(DAObject, self).__setattr__(key, value)
+    def __le__(self, other):
+        return text_type(self) <= (text_type(other) if isinstance(other, DAObject) else other)
+    def __ge__(self, other):
+        return text_type(self) >= (text_type(other) if isinstance(other, DAObject) else other)
+    def __gt__(self, other):
+        return text_type(self) > (text_type(other) if isinstance(other, DAObject) else other)
+    def __lt__(self, other):
+        return text_type(self) < (text_type(other) if isinstance(other, DAObject) else other)
+    def __eq__(self, other):
+        return self is other
+    def __ne__(self, other):
+        return self is not other
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class DAList(DAObject):
     """The base class for lists of things."""
@@ -1117,7 +1138,7 @@ class DADict(DAObject):
             self.ask_object_type = True
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
-        if 'keys' in kwargs and isinstance(kwargs['keys'], (list, DAList, set, DASet, tuple)):
+        if 'keys' in kwargs and isinstance(kwargs['keys'], (DAList, DASet, abc.Iterable)) and not isinstance(kwargs['keys'], string_types):
             self.new(kwargs['keys'])
         return super(DADict, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
@@ -1165,7 +1186,7 @@ class DADict(DAObject):
         the_list = list()
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
-            if isinstance(parg, (list, DAList, set, DASet, tuple)):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
                 the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
@@ -1204,7 +1225,7 @@ class DADict(DAObject):
         the_list = list()
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
-            if isinstance(parg, (list, DAList, set, DASet, tuple)):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
                 the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
@@ -1280,7 +1301,7 @@ class DADict(DAObject):
         the object positions['file clerk'].  The type of object is given by
         the object_type attribute, or DAObject if object_type is not set."""
         for parg in pargs:
-            if isinstance(parg, (list, DAList, set, DASet, tuple)):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
                 for item in parg:
                     self.new(item, **kwargs)
             else:
@@ -1903,7 +1924,7 @@ class DASet(DAObject):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
         for parg in pargs:
-            if isinstance(parg, (list, DAList, set, DASet, tuple)):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
                 for item in parg:
                     self.add(item)
             else:
@@ -2282,7 +2303,7 @@ class DAFile(DAObject):
             with open(the_path, 'rU', encoding='utf-8') as f:
                 return(f.read())
         else:
-            with open(the_path, 'rU') as f:
+            with open(the_path, 'rb') as f:
                 return(f.read())
     def readlines(self):
         """Returns the contents of the file."""
@@ -2292,12 +2313,16 @@ class DAFile(DAObject):
             raise Exception("File does not exist yet.")
         with open(the_path, 'rU', encoding='utf-8') as f:
             return(f.readlines())
-    def write(self, content):
+    def write(self, content, binary=False):
         """Writes the given content to the file, replacing existing contents."""
         self.retrieve()
         the_path = self.file_info['path']
-        with open(the_path, 'w') as f:
-            f.write(content)
+        if binary:
+            with open(the_path, 'wb') as f:
+                f.write(content)
+        else:
+            with open(the_path, 'wU', encoding='utf-8') as f:
+                f.write(content)
         self.retrieve()
     def copy_into(self, other_file):
         """Makes the contents of the file the same as those of another file."""
@@ -2803,7 +2828,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     the_iterable = eval(table_info.row, user_dict)
     if not isinstance(the_iterable, (list, dict, DAList, DADict)):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
-    if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+    if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
         the_iterable = the_iterable.complete_elements()
     contents = list()
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
@@ -2977,7 +3002,7 @@ class DALazyTableTemplate(DALazyTemplate):
         the_iterable = eval(self.table_info.row, user_dict)
         if not isinstance(the_iterable, (list, dict, DAList, DADict)):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
-        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and type(the_iterable.elements) in (list, dict) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
             the_iterable = the_iterable.complete_elements()
         contents = list()
         if hasattr(the_iterable, 'items') and callable(the_iterable.items):
@@ -3039,7 +3064,7 @@ def myb64quote(text):
 def setify(item, output=set()):
     if isinstance(item, DAObject) and hasattr(item, 'elements'):
         setify(item.elements, output)
-    elif isinstance(item, (list, dict, set)):
+    elif isinstance(item, abc.Iterable) and not isinstance(item, string_types):
         for subitem in item:
             setify(subitem, output)
     else:
@@ -3119,7 +3144,10 @@ def recurse_obj(the_object, recursive=True):
                         module_name = docassemble.base.functions.this_thread.current_package + the_object['module']
                     else:
                         module_name = the_object['module']
-                    new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
+                    if PY2:
+                        new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
+                    else:
+                        new_module = __import__(module_name, globals(), locals(), [the_object['object']], 0)
                     constructor = getattr(new_module, the_object['object'], None)
             if not constructor:
                 raise SystemError('recurse_obj: found an object for which the object declaration, ' + str(the_object['object']) + ' could not be found')

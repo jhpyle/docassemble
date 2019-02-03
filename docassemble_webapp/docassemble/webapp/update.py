@@ -6,7 +6,7 @@ import subprocess
 from six import text_type, PY2
 import xmlrpc.client
 import re
-from io import StringIO
+#from io import StringIO
 import sys
 import shutil
 import time
@@ -16,13 +16,6 @@ from distutils.version import LooseVersion
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-from docassemble.webapp.app_object import app
-from docassemble.webapp.db_object import db
-import docassemble.webapp.users.models
-from docassemble.webapp.packages.models import Package, Install, PackageAuth
-from docassemble.webapp.core.models import Supervisors
-from docassemble.webapp.files import SavedFile
-from docassemble.webapp.daredis import r
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -32,6 +25,9 @@ else:
 
 def remove_inactive_hosts():
     from docassemble.base.config import hostname
+    from docassemble.webapp.app_object import app
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.core.models import Supervisors
     if USING_SUPERVISOR:
         to_delete = set()
         for host in Supervisors.query.all():
@@ -55,6 +51,9 @@ class DummyPackage(object):
 def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
+    from docassemble.webapp.app_object import app
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.packages.models import Package, Install, PackageAuth
     ok = True
     here_already = dict()
     results = dict()
@@ -90,28 +89,32 @@ def check_for_updates(doing_startup=False):
                 uninstall_package(DummyPackage('pycrypto'))
                 install_package(DummyPackage('pycrypto'))
             changed = True
+        if 'pathlib' not in here_already:
+            sys.stderr.write("check_for_updates: installing pathlib\n")
+            install_package(DummyPackage('pathlib'))
+            changed = True
         if 'pycrypto' not in here_already:
             sys.stderr.write("check_for_updates: installing pycrypto\n")
             install_package(DummyPackage('pycrypto'))
             changed = True
-        if 'kombu' in here_already and LooseVersion(here_already['kombu']) > LooseVersion('4.1.0'):
+        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) > LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing older kombu version\n")
             kombu = DummyPackage('kombu')
             kombu.limitation = '==4.1.0'
             install_package(kombu)
             changed = True
-        if 'celery' in here_already and LooseVersion(here_already['celery']) > LooseVersion('4.1.0'):
+        if 'celery' not in here_already or LooseVersion(here_already['celery']) > LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing older celery version\n")
             celery = DummyPackage('celery')
             celery.limitation = '[redis]==4.1.0'
             install_package(celery)
             changed = True
     else:
-        if 'kombu' in here_already and LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
+        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing new kombu version\n")
             install_package(DummyPackage('kombu'))
             changed = True
-        if 'celery' in here_already and LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
+        if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing new celery version\n")
             install_package(DummyPackage('celery'))
             changed = True
@@ -126,6 +129,10 @@ def check_for_updates(doing_startup=False):
         if 'pycryptodome' not in here_already:
             sys.stderr.write("check_for_updates: installing pycryptodome\n")
             install_package(DummyPackage('pycryptodome'))            
+            changed = True
+        if 'py-bcrypt' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
+            uninstall_package('py-bcrypt')
             changed = True
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
@@ -212,9 +219,9 @@ def check_for_updates(doing_startup=False):
         logmessages += newlog
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
-            results[package.name] = 'successfully uninstalled'
+            results[package.name] = 'pip uninstall command returned success code.  See log for details.'
         else:
-            results[package.name] = 'uninstall failed'
+            results[package.name] = 'pip uninstall command returned failure code'
             ok = False
     packages_to_delete = list()
     sys.stderr.write("check_for_updates: 10\n")
@@ -242,9 +249,9 @@ def check_for_updates(doing_startup=False):
                 sys.stderr.write("check_for_updates: removing package entry for " + package.name + "\n")
                 packages_to_delete.append(package)
         elif returnval != 0:
-            results[package.name] = 'could not be upgraded'
+            results[package.name] = 'pip install command returned failure code'
         else:
-            results[package.name] = 'successfully installed'
+            results[package.name] = 'pip install command returned success code.  See log for details.'
             if real_name != package.name:
                 sys.stderr.write("check_for_updates: changing name" + "\n")
                 package.name = real_name
@@ -268,8 +275,12 @@ def check_for_updates(doing_startup=False):
 
 def update_versions():
     sys.stderr.write("update_versions: starting" + "\n")
-    install_by_id = dict()
     from docassemble.base.config import hostname
+    from docassemble.webapp.app_object import app
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from docassemble.webapp.daredis import r
+    install_by_id = dict()
     for install in Install.query.filter_by(hostname=hostname).all():
         install_by_id[install.package_id] = install
     package_by_name = dict()
@@ -294,6 +305,9 @@ def add_dependencies(user_id):
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     sys.stderr.write("add_dependencies: starting\n")
     from docassemble.base.config import hostname, daconfig
+    from docassemble.webapp.app_object import app
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.packages.models import Package, Install, PackageAuth
     #docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
@@ -322,6 +336,9 @@ def add_dependencies(user_id):
     return
 
 def fix_names():
+    from docassemble.webapp.app_object import app
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.packages.models import Package, Install, PackageAuth
     installed_packages = [package.key for package in get_installed_distributions()]
     for package in Package.query.filter_by(active=True).all():
         if package.name not in installed_packages:
@@ -354,6 +371,8 @@ def install_package(package):
         return 0, ''
     sys.stderr.write('install_package: ' + package.name + "\n")
     from docassemble.base.config import daconfig
+    from docassemble.webapp.daredis import r
+    from docassemble.webapp.files import SavedFile
     if PY2:
         PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     else:
@@ -468,20 +487,16 @@ def get_installed_distributions():
     sys.stderr.write("get_installed_distributions: starting\n")
     results = list()
     try:
-        output = subprocess.check_output(['pip', '--version'])
+        output = subprocess.check_output(['pip', '--version']).decode()
     except subprocess.CalledProcessError as err:
-        output = err.output
+        output = err.output.decode()
     #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
-    if not isinstance(output, text_type):
-        output = output.decode()
     sys.stderr.write("get_installed_distributions: pip version:\n" + output)
     try:
-        output = subprocess.check_output(['pip', 'freeze'])
+        output = subprocess.check_output(['pip', 'freeze']).decode()
     except subprocess.CalledProcessError as err:
-        output = err.output
+        output = err.output.decode()
     #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
-    if not isinstance(output, text_type):
-        output = output.decode()
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
@@ -493,10 +508,10 @@ def get_installed_distributions():
 def get_pip_info(package_name):
     #sys.stderr.write("get_pip_info: " + package_name + "\n")
     try:
-        output = subprocess.check_output(['pip', 'show', package_name])
+        output = subprocess.check_output(['pip', 'show', package_name]).decode()
     except subprocess.CalledProcessError as err:
         output = ""
-        sys.stderr.write("get_pip_info: error.  output was " + str(err.output) + "\n")
+        sys.stderr.write("get_pip_info: error.  output was " + err.output.decode() + "\n")
     # old_stdout = sys.stdout
     # sys.stdout = saved_stdout = StringIO()
     # pip.main(['show', package_name])
@@ -518,7 +533,11 @@ def get_pip_info(package_name):
 
 if __name__ == "__main__":
     #import docassemble.webapp.database
+    from docassemble.webapp.app_object import app
     with app.app_context():
+        from docassemble.webapp.db_object import db
+        from docassemble.webapp.packages.models import Package, Install, PackageAuth
+        from docassemble.webapp.daredis import r
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         update_versions()
         any_package = Package.query.filter_by(active=True).first()

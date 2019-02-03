@@ -3,13 +3,14 @@ import mimetypes
 import traceback
 import re
 from io import open
-from six import string_types, text_type
+from six import string_types, text_type, PY2, PY3
 from jinja2.runtime import StrictUndefined, UndefinedError
 from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
 from jinja2.lexer import Token
+from jinja2.utils import internalcode, missing
 from jinja2.ext import Extension
 import ast
 import ruamel.yaml as yaml
@@ -18,7 +19,10 @@ import os
 import os.path
 import sys
 import types
-import urllib
+if PY2:
+    from urllib import urlretrieve
+else:
+    from urllib.request import urlretrieve
 import httplib2
 import datetime
 import time
@@ -26,6 +30,7 @@ import operator
 import pprint
 import copy
 import codecs
+import array
 import random
 import tempfile
 import json
@@ -40,8 +45,13 @@ from docassemble.base.pandoc import MyPandoc, word_to_markdown
 from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
+if PY2:
+    import collections as abc
+else:
+    import collections.abc as abc
 from collections import OrderedDict
 from types import CodeType
+RangeType = type(range(1,2))
 NoneType = type(None)
 
 debug = True
@@ -131,6 +141,29 @@ class InterviewSource(object):
         self.language = kwargs.get('language', '*')
         self.dialect = kwargs.get('dialect', None)
         self.testing = kwargs.get('testing', False)
+    def __le__(self, other):
+        return text_type(self) <= (text_type(other) if isinstance(other, InterviewSource) else other)
+    def __ge__(self, other):
+        return text_type(self) >= (text_type(other) if isinstance(other, InterviewSource) else other)
+    def __gt__(self, other):
+        return text_type(self) > (text_type(other) if isinstance(other, InterviewSource) else other)
+    def __lt__(self, other):
+        return text_type(self) < (text_type(other) if isinstance(other, InterviewSource) else other)
+    def __eq__(self, other):
+        return self is other
+    def __ne__(self, other):
+        return self is not other
+    def __str__(self):
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+    def __unicode__(self):
+        if hasattr(self, 'path'):
+            return text_type(self.path)
+        return 'interviewsource'
+    def __hash__(self):
+        if hasattr(self, 'path'):
+            return hash((self.path,))
+        else:
+            return hash(('interviewsource',))
     def set_path(self, path):
         self.path = path
         return
@@ -288,7 +321,7 @@ class InterviewSourceURL(InterviewSource):
             h = httplib2.Http()
             resp, content = h.request(self.path, "GET")
             if resp['status'] >= 200 and resp['status'] < 300:
-                self.set_content(content)
+                self.set_content(content.decode())
                 self._modtime = datetime.datetime.utcnow()
                 return True
         except:
@@ -917,7 +950,7 @@ class FileInPackage:
                 elif re.search(r'^https?://', str(the_file_ref)):
                     temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
                     try:
-                        urllib.urlretrieve(str(the_file_ref), temp_template_file.name)
+                        urlretrieve(str(the_file_ref), temp_template_file.name)
                     except Exception as err:
                         raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
                     the_file_ref = temp_template_file.name
@@ -3704,33 +3737,12 @@ class Question:
         if self.is_mandatory or self.mandatory_code is not None:
             user_dict['_internal']['answered'].add(self.name)
     def follow_multiple_choice(self, user_dict, interview_status):
-        # logmessage("follow_multiple_choice")
-        # if self.name:
-        #     logmessage("question is " + self.name)
-        # else:
-        #     logmessage("question has no name")
-        # logmessage("question type is " + str(self.question_type))
         if self.name and self.name in user_dict['_internal']['answers']:
             interview_status.followed_mc = True
             interview_status.tentatively_answered.add(self)
-            # self.mark_as_answered(user_dict)
-            # logmessage("question in answers")
-            # user_dict['_internal']['answered'].add(self.name)
-            # logmessage("2 Question name was " + self.name)
-            the_choice = self.fields[0].choices[user_dict['_internal']['answers'][self.name]]
-            for key in the_choice:
-                if len(the_choice) > 1 and key in ('image', 'compute', 'help', 'default'):
-                    continue
-                # logmessage("Setting target")
-                target = the_choice[key]
-                break
-            if target:
-                # logmessage("Target defined")
-                if isinstance(target, string_types):
-                    pass
-                elif isinstance(target, Question):
-                    # logmessage("Reassigning question")
-                    return(target.follow_multiple_choice(user_dict, interview_status))
+            qtarget = self.fields[0].choices[user_dict['_internal']['answers'][self.name]].get('key', False)
+            if isinstance(qtarget, Question):
+                return(qtarget.follow_multiple_choice(user_dict, interview_status))
         return(self)
     def finalize_attachment(self, attachment, result, user_dict):
         if self.interview.cache_documents and attachment['variable_name']:
@@ -3783,6 +3795,7 @@ class Question:
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
                                 the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(user_dict=user_dict))
+                            #logmessage("TemplateError:\n" + traceback.format_exc())
                             raise the_error
                         docassemble.base.functions.reset_context()
                         docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
@@ -3954,6 +3967,7 @@ class Question:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))
+                        docassemble.base.functions.set_context('docx', template=result['template'])
                         if isinstance(attachment['options']['fields'], string_types):
                             result['field_data'] = user_dict
                         else:
@@ -3965,6 +3979,8 @@ class Question:
                                         new_field_data.update(item)
                                 the_field_data = new_field_data
                             result['field_data'] = the_field_data
+                        result['field_data']['_codecs'] = codecs
+                        result['field_data']['_array'] = array
                         if 'code' in attachment['options']:
                             additional_dict = eval(attachment['options']['code'], user_dict)
                             if isinstance(additional_dict, dict):
@@ -3993,6 +4009,7 @@ class Question:
                                     result['field_data'][varname] = val.value
                                 else:
                                     result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
+                        docassemble.base.functions.reset_context()
                 elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
                     docassemble.base.functions.set_context('pdf')
                     result['data_strings'] = []
@@ -4485,7 +4502,6 @@ class Interview:
         return result
     def assemble(self, user_dict, *args):
         #sys.stderr.write("assemble\n")
-        #logmessage("assemble: starting")
         user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
@@ -4670,7 +4686,9 @@ class Interview:
                 except ForcedReRun as the_exception:
                     continue
                 except (NameError, DAAttributeError, DAIndexError) as the_exception:
-                    #logmessage("Error in NameError is " + str(the_exception))
+                    if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                        del docassemble.base.functions.this_thread.misc['pending_error']
+                    #logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
                     if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
                         logmessage("NameError exception during document assembly: " + text_type(the_exception))
                     docassemble.base.functions.reset_context()
@@ -4717,10 +4735,12 @@ class Interview:
                         interview_status.populate(question_result)
                         break
                 except UndefinedError as the_exception:
+                    #logmessage("UndefinedError")
                     if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
-                        logmessage("UndefinedError exception during document assembly: " + text_type(the_exception))
+                        logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n" + traceback.format_exc())
                     docassemble.base.functions.reset_context()
                     missingVariable = extract_missing_name(the_exception)
+                    #logmessage("extracted " + missingVariable)
                     variables_sought.add(missingVariable)
                     question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
                     if question_result['type'] == 'continue':
@@ -4731,6 +4751,7 @@ class Interview:
                         interview_status.populate(question_result)
                         break
                 except CommandError as qError:
+                    #logmessage("CommandError")
                     docassemble.base.functions.reset_context()
                     question_data = dict(command=qError.return_type, url=qError.url)
                     new_interview_source = InterviewSourceString(content='')
@@ -4814,6 +4835,7 @@ class Interview:
                 #     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 #     break
                 except QuestionError as qError:
+                    #logmessage("QuestionError")
                     docassemble.base.functions.reset_context()
                     question_data = dict()
                     if qError.question:
@@ -4850,20 +4872,24 @@ class Interview:
                     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except AttributeError as the_error:
+                    #logmessage("Regular attributeerror")
                     docassemble.base.functions.reset_context()
                     #logmessage(str(the_error.args))
                     docassemble.base.functions.wrap_up(user_dict)
-                    raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc(the_error) + "\nHistory was " + pprint.pformat(interview_status.seeking))
+                    raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc() + "\nHistory was " + pprint.pformat(interview_status.seeking))
                 except MandatoryQuestion:
+                    #logmessage("MandatoryQuestion")
                     docassemble.base.functions.reset_context()
                     break
                 except CodeExecute as code_error:
+                    #logmessage("CodeExecute")
                     docassemble.base.functions.reset_context()
                     #if self.debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                     exec(code_error.compute, user_dict)
                     code_error.question.mark_as_answered(user_dict)
                 except SyntaxException as qError:
+                    #logmessage("SyntaxException")
                     docassemble.base.functions.reset_context()
                     the_question = None
                     try:
@@ -4875,6 +4901,7 @@ class Interview:
                         raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                     raise DAError("no question available: " + str(qError))
                 except CompileException as qError:
+                    #logmessage("CompileException")
                     docassemble.base.functions.reset_context()
                     the_question = None
                     try:
@@ -4889,12 +4916,19 @@ class Interview:
                     docassemble.base.functions.wrap_up(user_dict)
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         except Exception as the_error:
+            #logmessage("Untrapped exception")
             if self.debug:
                 the_error.interview = self
                 the_error.interview_status = interview_status
                 the_error.user_dict = docassemble.base.functions.serializable_dict(user_dict)
-                if not hasattr(the_error, 'traceback'):
-                    the_error.traceback = traceback.format_exc()
+                if PY2 and not hasattr(the_error, 'traceback'):
+                    the_error.traceback = the_error.__class__.__name__ + ': ' + traceback.format_exc()
+                if PY3 and not hasattr(the_error, '__traceback__'):
+                    cl, exc, tb = sys.exc_info()
+                    the_error.__traceback__ = tb
+                    del cl
+                    del exc
+                    del tb
             raise the_error
         if docassemble.base.functions.this_thread.prevent_going_back:
             interview_status.can_go_back = False
@@ -4915,7 +4949,7 @@ class Interview:
         if self.debug:
             seeking.append({'variable': missingVariable, 'time': time.time()})
         if recursion_depth > self.recursion_limit:
-            raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(variable_stack) + ".")
+            raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(sorted(variable_stack)) + ".")
         #logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
         #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
         origMissingVariable = missingVariable
@@ -4976,10 +5010,10 @@ class Interview:
                 raise DAError("Infinite loop detected while looking for " + missing_var)
             a_question_was_skipped = False
             docassemble.base.functions.reset_gathering_mode(origMissingVariable)
-            # logmessage("Starting the while loop")
+            #logmessage("Starting the while loop")
             try:
                 for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
-                    # logmessage("In for loop with question " + the_question.name)
+                    #logmessage("In for loop with question " + the_question.name)
                     if missing_var in questions_tried and the_question in questions_tried[missing_var]:
                         a_question_was_skipped = True
                         # logmessage("Skipping question " + the_question.name)
@@ -5158,6 +5192,7 @@ class Interview:
                         the_object.table_info = table_info
                         the_object.user_dict = user_dict
                         the_object.temp_vars = temp_vars
+                        #logmessage("Pop variable for table")
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
@@ -5226,9 +5261,12 @@ class Interview:
                     return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
+                #logmessage("forcedrerun")
                 continue
             except (NameError, DAAttributeError, DAIndexError) as the_exception:
-                # logmessage("NameError: " + str(the_exception))
+                if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['pending_error']
+                #logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
                 if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
                     logmessage("NameError exception during document assembly: " + text_type(the_exception))
                 docassemble.base.functions.reset_context()
@@ -5267,6 +5305,8 @@ class Interview:
                     #logmessage("regular nameerror")
                     follow_mc = True
                     newMissingVariable = extract_missing_name(the_exception)
+                if newMissingVariable == 'file':
+                    raise
                 #newMissingVariable = str(the_exception).split("'")[1]
                 #if newMissingVariable in questions_tried and newMissingVariable in variable_stack:
                 #    raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
@@ -5282,9 +5322,10 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except UndefinedError as the_exception:
-                #logmessage("UndefinedError: " + text_type(the_exception))
+                #logmessage("UndefinedError")
                 if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
-                    logmessage("UndefinedError exception during document assembly: " + text_type(the_exception))
+                    #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n" + traceback.format_exc())
+                    logmessage(the_exception.__class__.__name__ + " exception during document assembly")
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
@@ -5298,7 +5339,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 return(question_result)
             except CommandError as qError:
-                # logmessage("CommandError: " + str(qError))
+                #logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
                 question_data = dict(command=qError.return_type, url=qError.url)
                 new_interview_source = InterviewSourceString(content='')
@@ -5308,7 +5349,7 @@ class Interview:
                 new_question.name = "Question_Temp"
                 return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except ResponseError as qError:
-                # logmessage("ResponseError")
+                #logmessage("ResponseError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped ResponseError2")
                 question_data = dict(extras=dict())
@@ -5366,7 +5407,7 @@ class Interview:
                 docassemble.base.functions.pop_event_stack(origMissingVariable)
                 return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except QuestionError as qError:
-                # logmessage("QuestionError")
+                #logmessage("QuestionError")
                 docassemble.base.functions.reset_context()
                 #logmessage("Trapped QuestionError")
                 question_data = dict()
@@ -5403,6 +5444,7 @@ class Interview:
                 # the_question = new_question.follow_multiple_choice(user_dict)
                 return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except CodeExecute as code_error:
+                #logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
                 #if self.debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
@@ -5420,7 +5462,7 @@ class Interview:
                     #raise DAError("Problem setting that variable")
                     continue
             except SyntaxException as qError:
-                # logmessage("SyntaxException")
+                #logmessage("SyntaxException")
                 docassemble.base.functions.reset_context()
                 the_question = None
                 try:
@@ -5431,7 +5473,7 @@ class Interview:
                     raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                 raise DAError("no question available in askfor: " + str(qError))
             except CompileException as qError:
-                # logmessage("CompileException")
+                #logmessage("CompileException")
                 docassemble.base.functions.reset_context()
                 the_question = None
                 try:
@@ -5493,7 +5535,7 @@ def process_selections(data, manual=False, exclude=None):
     else:
         to_exclude = unpack_list(exclude)
     result = []
-    if isinstance(data, list) or (hasattr(data, 'elements') and isinstance(data.elements, list)):
+    if (isinstance(data, abc.Iterable) and not isinstance(data, (string_types, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, list)):
         for entry in data:
             if isinstance(entry, dict) or (hasattr(entry, 'elements') and isinstance(entry.elements, dict)):
                 the_item = dict()
@@ -5616,7 +5658,6 @@ def extract_missing_name(the_error):
         return m.group(1)
     else:
         raise the_error
-        #raise DAError("Unable to extract variable name from '" + text_type(the_error) + "'")
 
 def auto_determine_type(field_info, the_value=None):
     types = dict()
@@ -5773,7 +5814,12 @@ def exec_with_trap(the_question, the_dict):
             line_with_error = traceback.extract_tb(tb)[-1][1]
             if isinstance(line_with_error, int) and line_with_error > 0 and hasattr(the_question, 'sourcecode'):
                 exc.da_line_with_error = the_question.sourcecode.splitlines()[line_with_error - 1]
-                exc.traceback = traceback.format_exc()
+                if PY2:
+                    exc.traceback = traceback.format_exc()
+                if PY3:
+                    exc.__traceback__ = tb
+        del cl
+        del exc
         del tb
         raise
 
@@ -5879,14 +5925,102 @@ class DAEnvironment(Environment):
     def from_string(self, source, **kwargs):
         source = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, source)
         return super(DAEnvironment, self).from_string(source, **kwargs)
+    def getitem(self, obj, argument):
+        """Get an item or attribute of an object but prefer the item."""
+        try:
+            return obj[argument]
+        except (AttributeError, TypeError, LookupError):
+            if isinstance(argument, string_types):
+                try:
+                    attr = str(argument)
+                except Exception:
+                    pass
+                else:
+                    try:
+                        return getattr(obj, attr)
+                    except AttributeError:
+                        pass
+            return self.undefined(obj=obj, name=argument, accesstype='item')
+
+    def getattr(self, obj, attribute):
+        """Get an item or attribute of an object but prefer the attribute.
+        Unlike :meth:`getitem` the attribute *must* be a bytestring.
+        """
+        try:
+            return getattr(obj, attribute)
+        except AttributeError:
+            pass
+        try:
+            return obj[attribute]
+        except (TypeError, LookupError, AttributeError):
+            return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
     if value.__class__.__name__ in ('DAFile', 'DALink'): #, 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc'
         return value
     return re.sub(r'&(?!#\d{4};|amp;)', '&amp;', text_type(value))
 
+class DAStrictUndefined(StrictUndefined):
+    __slots__ = ('_undefined_type')
+    def __init__(self, hint=None, obj=missing, name=None, exc=UndefinedError, accesstype=None):
+        self._undefined_hint = hint
+        self._undefined_obj = obj
+        self._undefined_name = name
+        self._undefined_exception = exc
+        self._undefined_type = accesstype
+
+    @internalcode
+    def __getattr__(self, name):
+        if name[:2] == '__':
+            raise AttributeError(name)
+        return self._fail_with_undefined_error(attribute=True)
+
+    @internalcode
+    def __getitem__(self, index):
+        if name[:2] == '__':
+            raise IndexError(name)
+        return self._fail_with_undefined_error(item=True)
+
+    @internalcode
+    def _fail_with_undefined_error(self, *args, **kwargs):
+        if True or self._undefined_hint is None:
+            if self._undefined_obj is missing:
+                hint = "'%s' is undefined" % self._undefined_name
+            elif 'attribute' in kwargs or self._undefined_type == 'attribute':
+                if hasattr(self._undefined_obj, 'instanceName'):
+                    hint = "'%s.%s' is undefined" % (
+                        self._undefined_obj.instanceName,
+                        self._undefined_name
+                    )
+                else:
+                    hint = '%r has got no attribute %r' % (
+                        object_type_repr(self._undefined_obj),
+                        self._undefined_name
+                    )
+            else:
+                if hasattr(self._undefined_obj, 'instanceName'):
+                    hint = "'%s[%r]' is undefined" % (
+                        self._undefined_obj.instanceName,
+                        self._undefined_name
+                    )
+                else:
+                    hint = '%s has no element %r' % (
+                        object_type_repr(self._undefined_obj),
+                        self._undefined_name
+                    )
+        else:
+            hint = self._undefined_hint
+        raise self._undefined_exception(hint)
+    __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
+        __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
+        __mod__ = __rmod__ = __pos__ = __neg__ = __call__ = \
+        __getitem__ = __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
+        __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
+        __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
+        __ne__ = __bool__ = __hash__ = __unicode__ = _fail_with_undefined_error
+
 def custom_jinja_env():
-    env = DAEnvironment(undefined=StrictUndefined, extensions=[DAExtension])
+    env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
     return env

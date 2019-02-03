@@ -2,7 +2,7 @@ metadata:
   title: Checkbox export value
   short title: Checkbox value
   documentation: "https://docassemble.org/docs/documents.html#pdf template file"
-  example start: 10
+  example start: 11
 ---
 modules:
   - docassemble.base.util
@@ -48,6 +48,14 @@ subquestion: |
 
   [download the template]: ${ url_of('sample-form-checkbox-export-value.pdf') }
 field: introduction_shown
+---
+mandatory: True
+code: |
+  user.name.first
+  likes_apples
+  likes_oranges
+  likes_pears
+  likes_toast
 ---
 question: |
   Here is your PDF form

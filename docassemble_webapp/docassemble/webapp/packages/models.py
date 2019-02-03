@@ -1,4 +1,6 @@
 from docassemble.webapp.db_object import db
+import docassemble.webapp.users.models
+import docassemble.webapp.core.models
 from docassemble.base.config import daconfig, dbtableprefix
 
 class Package(db.Model):

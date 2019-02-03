@@ -18,6 +18,7 @@ question: |
   How old are you?
 fields:
   - Age in years: number_of_years_old
+    datatype: integer
 ---
 mandatory: True
 need:

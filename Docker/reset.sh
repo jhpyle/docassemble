@@ -15,9 +15,13 @@ python -m docassemble.webapp.restart
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 stop celery || exit 1
-    supervisorctl --serverurl http://localhost:9001 stop rabbitmq || exit 1
+    if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+	supervisorctl --serverurl http://localhost:9001 stop rabbitmq || exit 1
+    fi
     sleep 1
-    supervisorctl --serverurl http://localhost:9001 start rabbitmq || exit 1
+    if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+	supervisorctl --serverurl http://localhost:9001 start rabbitmq || exit 1
+    fi
     supervisorctl --serverurl http://localhost:9001 start celery || exit 1
 fi
 

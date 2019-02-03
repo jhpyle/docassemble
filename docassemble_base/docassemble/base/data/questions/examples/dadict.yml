@@ -20,7 +20,7 @@ code: |
 mandatory: True
 question: The players
 subquestion: |
-  % for type in player:
+  % for type in player.keys():
   ${ player[type].firstname }
   ${ player[type].lastname } is here.
 

@@ -1,6 +1,7 @@
 from docassemble.base.util import DAGoogleAPI, DAFile
 import apiclient
 from six import string_types, text_type
+from io import open
 
 api = DAGoogleAPI()
 

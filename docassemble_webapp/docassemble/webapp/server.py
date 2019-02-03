@@ -1,7 +1,7 @@
 min_system_version = '0.2.36'
 import re
 re._MAXCACHE = 10000
-from six import string_types, text_type, PY2
+from six import string_types, text_type, PY2, PY3
 import os
 import sys
 import tempfile
@@ -16,12 +16,13 @@ import docassemble.base.functions
 if PY2:
     from urllib import quote as urllibquote
     from urllib import unquote as urllibunquote
-    from urllib import urlencode
+    from urllib import urlencode, urlretrieve
     from urlparse import urlparse, parse_qsl, urlunparse
 else:
     from urllib.parse import quote as urllibquote
     from urllib.parse import unquote as urllibunquote
     from urllib.parse import urlunparse, urlencode, urlsplit, parse_qsl
+    from urllib.request import urlretrieve
 
 TypeType = type(type(None))
     
@@ -430,8 +431,8 @@ def custom_register():
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
-    sys.stderr.write("In custom_login\n")
-    logmessage("Doing custom_login")
+    #sys.stderr.write("In custom_login\n")
+    #logmessage("Doing custom_login")
     if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         is_json = True
     else:
@@ -556,6 +557,7 @@ def logout():
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
     set_cookie = False
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+    #clear_user_cache(user_id=current_user.id)
     logout_user()
     delete_session()
     flash(word('You have signed out successfully.'), 'success')
@@ -707,11 +709,6 @@ import time
 #import pip
 import shutil
 import filecmp
-if PY2:
-    from urllib2 import urlopen, HTTPError
-else:
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
 import codecs
 import weakref
 import types
@@ -723,7 +720,7 @@ import httplib2
 import zipfile
 import operator
 import traceback
-from Cryptodome.Hash import MD5
+from Crypto.Hash import MD5
 import mimetypes
 import logging
 if PY2:
@@ -741,7 +738,7 @@ import inspect
 import pyotp
 import qrcode
 import qrcode.image.svg
-from io import StringIO
+from io import BytesIO
 import links_from_header
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
@@ -781,6 +778,7 @@ from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVar
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message
+from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -857,7 +855,7 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
-from docassemble.webapp.daredis import r_store
+from docassemble.webapp.daredis import r_store#, clear_user_cache
 
 store = RedisStore(r_store)
 #store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
@@ -941,7 +939,8 @@ if 'oauth' in daconfig:
         app.config['USE_GITHUB'] = False
 else:
     app.config['OAUTH_CREDENTIALS'] = dict()
-    
+app.config['USE_PYPI'] = daconfig.get('pypi', False)
+
 if daconfig.get('button size', 'medium') == 'medium':
     app.config['BUTTON_CLASS'] = 'btn-da'
 elif daconfig.get('button size', 'medium') == 'large':
@@ -998,7 +997,7 @@ def get_sms_session(phone_number, config='default'):
     sess_contents = r.get('da:sms:client:' + phone_number + ':server:' + tconfig['number'])
     if sess_contents is not None:
         try:        
-            sess_info = pickle.loads(sess_contents)
+            sess_info = fix_pickle_obj(pickle.loads(sess_contents, encoding="bytes", fix_imports=True))
         except:
             logmessage("get_sms_session: unable to decode session information")
     sess_info['email'] = None
@@ -1555,7 +1554,7 @@ def proc_example_list(example_list, examples):
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             content = fix_initial.sub('', content)
-            blocks = map(lambda x: x.strip(), document_match.split(content))
+            blocks = list(map(lambda x: x.strip(), document_match.split(content)))
             if len(blocks):
                 has_context = False
                 for block in blocks:
@@ -1673,18 +1672,19 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         for role in partner_roles:
             for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
-                user_id = re.sub(r'^.*:userid:', '', the_key)
+                user_id = re.sub(r'^.*:userid:', '', the_key.decode())
                 potential_partners.add(user_id)
         for the_key in r.keys('da:monitor:chatpartners:*'):
+            the_key = the_key.decode()
             user_id = re.sub(r'^.*chatpartners:', '', the_key)
             if user_id not in potential_partners:
                 for chat_key in r.hgetall(the_key):
-                    if chat_key == chat_session_key:
+                    if chat_key.decode() == chat_session_key:
                         potential_partners.add(user_id)
     num_peer = 0
     if peer_ok:
         for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
-            if sess_key != key:
+            if sess_key.decode() != key:
                 num_peer += 1
     result = ChatPartners()
     result.peer = num_peer
@@ -1914,7 +1914,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     #logmessage("Past sections are: " + str(nav.past))
     if the_section is None:
         if isinstance(the_sections[0], dict):
-            the_section = the_sections[0].keys()[0]
+            the_section = list(the_sections[0])[0]
         else:
             the_section = the_sections[0]
     max_section = the_section
@@ -1947,7 +1947,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                         the_title = val
             elif len(x) == 1:
                 #logmessage("The len is one")
-                the_key = x.keys()[0]
+                the_key = list(x)[0]
                 test_for_valid_var(the_key)
                 value = x[the_key]
                 if isinstance(value, list):
@@ -2013,7 +2013,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 sub_currently_active = False
                 if isinstance(y, dict):
                     if len(y) == 1:
-                        sub_key = y.keys()[0]
+                        sub_key = list(y)[0]
                         test_for_valid_var(sub_key)
                         sub_title = y[sub_key]
                     else:
@@ -3224,7 +3224,7 @@ def restart_on(host):
     return
 
 def restart_all():
-    for interview_path in [x for x in r.keys('da:interviewsource:*')]:
+    for interview_path in [x.decode() for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)
     restart_others()
     restart_this()
@@ -3333,7 +3333,7 @@ def call_sync():
     check_args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'status', 'sync']
     while in_process == 1 and counter > 0:
         output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
-        if not re.search(r'RUNNING', output):
+        if not re.search(r'RUNNING', output.decode()):
             in_process = 0
         else:
             time.sleep(1)
@@ -3606,6 +3606,16 @@ def get_user_object(user_id):
 @lm.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
+    # key = 'da:usercache:' + str(id)
+    # stored_user = r.get(key)
+    # if stored_user is None:
+    #     user = UserModel.query.get(int(id))
+    #     pipe = r.pipeline()
+    #     pipe.set(key, pickle.dumps(user))
+    #     pipe.expire(key, 1800)
+    #     pipe.execute()
+    #     return user
+    # return pickle.loads(stored_user)
 
 # @app.route('/post_login', methods=['GET'])
 # def post_login():
@@ -3630,6 +3640,7 @@ def auto_login():
     if info_text is None:
         abort(403)
     r.delete(the_key)
+    info_text = info_text.decode()
     try:
         info = json.loads(decrypt_phrase(info_text, decryption_key))
     except:
@@ -3737,7 +3748,7 @@ def phone_login():
             pipe.execute()
             total_attempts = 0
             for key in r.keys(tracker_prefix + '*'):
-                val = r.get(key)
+                val = r.get(key.decode())
                 total_attempts += int(val)
             if total_attempts > daconfig['attempt limit']:
                 logmessage("IP address " + str(request.remote_addr) + " attempted to log in too many times.")
@@ -3745,7 +3756,7 @@ def phone_login():
                 return redirect(url_for('user.login'))
             total_attempts = 0
             for key in r.keys('da:phonelogin:ip:*:phone:' + phone_number):
-                val = r.get(key)
+                val = r.get(key.decode())
                 total_attempts += int(val)
             if total_attempts > daconfig['attempt limit']:
                 logmessage("Too many attempts were made to log in to phone number " + str(phone_number))
@@ -3860,9 +3871,9 @@ def mfa_setup():
         the_name = re.sub(r'.*\$', '', user.social_id)
     the_url = pyotp.totp.TOTP(otp_secret).provisioning_uri(the_name, issuer_name=app.config['APP_NAME'])
     im = qrcode.make(the_url, image_factory=qrcode.image.svg.SvgPathImage)
-    output = StringIO()
+    output = BytesIO()
     im.save(output)
-    the_qrcode = output.getvalue()
+    the_qrcode = output.getvalue().decode()
     the_qrcode = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_qrcode)
     the_qrcode = re.sub(r'height="[0-9]+mm" ', '', the_qrcode)
     the_qrcode = re.sub(r'width="[0-9]+mm" ', '', the_qrcode)
@@ -4007,7 +4018,7 @@ def mfa_verify_sms_setup():
         if verification_code is None:
             flash(word('Your verification code was missing or expired'), 'error')
             return redirect(url_for('user_profile_page'))
-        if verification_code == supplied_verification_code:
+        if verification_code.decode() == supplied_verification_code:
             user = load_user(user.id)
             user.otp_secret = ':phone:' + phone_number
             db.session.commit()
@@ -4057,7 +4068,7 @@ def mfa_login():
             key = 'da:mfa:phone:' + str(phone_number) + ':code'
             verification_code = r.get(key)
             r.delete(key)
-            if verification_code is None or supplied_verification_code != verification_code:
+            if verification_code is None or supplied_verification_code != verification_code.decode():
                 r.incr(fail_key)
                 r.expire(fail_key, 86400)
                 flash(word("Your verification code was invalid or expired."), 'error')
@@ -4070,7 +4081,12 @@ def mfa_login():
                 r.incr(fail_key)
                 r.expire(fail_key, 86400)
                 flash(word("Your verification code was invalid."), 'error')
-                return redirect(url_for('user.login'))
+                if 'validated_user' in session:
+                    del session['validated_user']
+                if 'next' in session:
+                    return redirect(url_for('user.login', next=session['next']))
+                else:
+                    return redirect(url_for('user.login'))
             elif failed_attempts is not None:
                 r.delete(fail_key)
         return flask_user.views._do_login_user(user, safe_next, False)
@@ -4110,7 +4126,7 @@ def get_ssh_keys(email):
     private_key_file = os.path.join(area.directory, '.ssh-private')
     public_key_file = os.path.join(area.directory, '.ssh-public')
     if not (os.path.isfile(private_key_file) and os.path.isfile(private_key_file)):
-        from Cryptodome.PublicKey import RSA
+        from Crypto.PublicKey import RSA
         key = RSA.generate(4096)
         pubkey = key.publickey()
         area.write_content(key.exportKey('PEM'), filename=private_key_file, save=False)
@@ -4164,7 +4180,7 @@ def github_configure():
     found = False
     resp, content = http.request("https://api.github.com/user/emails", "GET")
     if int(resp['status']) == 200:
-        user_info_list = json.loads(content)
+        user_info_list = json.loads(content.decode())
         if len(user_info_list):
             user_info = user_info_list[0]
             if user_info.get('email', None) is None:
@@ -4175,7 +4191,7 @@ def github_configure():
         raise DAError("github_configure: could not get information about user")
     resp, content = http.request("https://api.github.com/user/keys", "GET")
     if int(resp['status']) == 200:
-        for key in json.loads(content):
+        for key in json.loads(content.decode()):
             if key['title'] == app.config['APP_NAME']:
                 found = True
     else:
@@ -4185,7 +4201,7 @@ def github_configure():
         if next_link:
             resp, content = http.request(next_link, "GET")
             if int(resp['status']) == 200:
-                for key in json.loads(content):
+                for key in json.loads(content.decode()):
                     if key['title'] == app.config['APP_NAME']:
                         found = True
             else:
@@ -4196,7 +4212,7 @@ def github_configure():
         flash(word("Your GitHub integration has already been configured."), 'info')
     if not found:
         (private_key_file, public_key_file) = get_ssh_keys(user_info['email'])
-        with open(public_key_file, 'rb') as fp:
+        with open(public_key_file, 'rU', encoding='utf-8') as fp:
             public_key = fp.read()
         headers = {'Content-Type': 'application/json'}
         body = json.dumps(dict(title=app.config['APP_NAME'], key=public_key))
@@ -4226,7 +4242,7 @@ def github_unconfigure():
     found = False
     resp, content = http.request("https://api.github.com/user/keys", "GET")
     if int(resp['status']) == 200:
-        for key in json.loads(content):
+        for key in json.loads(content.decode()):
             if key['title'] == app.config['APP_NAME']:
                 found = True
                 id_to_remove = key['id']
@@ -4237,7 +4253,7 @@ def github_unconfigure():
         if next_link:
             resp, content = http.request(next_link, "GET")
             if int(resp['status']) == 200:
-                for key in json.loads(content):
+                for key in json.loads(content.decode()):
                     if key['title'] == app.config['APP_NAME']:
                         found = True
                         id_to_remove = key['id']
@@ -4248,7 +4264,7 @@ def github_unconfigure():
     if found:
         resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
         if int(resp['status']) != 204:
-            raise DAError("github_configure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + str(content))
+            raise DAError("github_configure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())
     delete_ssh_keys()
     r.delete('da:github:userid:' + str(current_user.id))
     r.delete('da:using_github:userid:' + str(current_user.id))
@@ -4542,12 +4558,15 @@ def checkin():
         call_forwarding_message = None
         if call_forwarding_on:
             for call_key in r.keys(re.sub(r'^da:session:uid:', 'da:phonecode:monitor:*:uid:', key)):
+                call_key = call_key.decode()
                 call_forwarding_code = r.get(call_key)
                 if call_forwarding_code is not None:
-                    other_value = r.get('da:callforward:' + str(call_forwarding_code))
+                    call_forwarding_code = call_forwarding_code.decode()
+                    other_value = r.get('da:callforward:' + call_forwarding_code)
                     if other_value is None:
                         r.delete(call_key)
                         continue
+                    other_value = other_value.decode()
                     remaining_seconds = r.ttl(call_key)
                     if remaining_seconds > 30:
                         call_forwarding_message = '<span class="phone-message"><i class="fas fa-phone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
@@ -4583,14 +4602,14 @@ def checkin():
                 pipe.execute()
                 for role in obj['partner_roles']:
                     for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
-                        user_id = re.sub(r'^.*:userid:', '', the_key)
+                        user_id = re.sub(r'^.*:userid:', '', the_key.decode())
                         if user_id not in potential_partners:
                             potential_partners.append(user_id)
                 for the_key in r.keys('da:monitor:chatpartners:*'):
-                    user_id = re.sub(r'^.*chatpartners:', '', the_key)
+                    user_id = re.sub(r'^.*chatpartners:', '', the_key.decode())
                     if user_id not in potential_partners:
                         for chat_key in r.hgetall(the_key):
-                            if chat_key == chat_session_key:
+                            if chat_key.decode() == chat_session_key:
                                 potential_partners.append(user_id)
             if len(potential_partners) > 0:
                 if chatstatus == 'ringing':
@@ -4600,10 +4619,11 @@ def checkin():
                     failure = True
                     for user_id in potential_partners:
                         for the_key in r.keys('da:monitor:available:' + str(user_id)):
-                            pipe.rpush(lkey, the_key)
+                            pipe.rpush(lkey, the_key.decode())
                             failure = False
                     if peer_ok:
                         for the_key in r.keys('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                            the_key = the_key.decode()
                             if the_key != chat_session_key:
                                 pipe.rpush(lkey, the_key)
                                 failure = False
@@ -4626,7 +4646,7 @@ def checkin():
                         current_helper = None
                         for user_id in potential_partners:
                             for the_key in r.hgetall('da:monitor:chatpartners:' + str(user_id)):
-                                if the_key == chat_session_key:
+                                if the_key.decode() == chat_session_key:
                                     already_connected_to_help = True
                                     current_helper = user_id
                         if not already_connected_to_help:
@@ -4634,9 +4654,11 @@ def checkin():
                                 mon_sid = r.get('da:monitor:available:' + str(user_id))
                                 if mon_sid is None:
                                     continue
+                                mon_sid = mon_sid.decode()
                                 int_sid = r.get('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
                                 if int_sid is None:
                                     continue
+                                int_sid = int_sid.decode()
                                 r.publish(mon_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=int_sid)))
                                 r.publish(int_sid, json.dumps(dict(messagetype='chatpartner', sid=mon_sid)))
                                 break
@@ -4651,6 +4673,7 @@ def checkin():
                         pipe = r.pipeline()
                         failure = True
                         for the_key in r.keys('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                            the_key = the_key.decode()
                             if the_key != chat_session_key:
                                 pipe.rpush(lkey, the_key)
                                 failure = False
@@ -4671,14 +4694,14 @@ def checkin():
                         obj['chatstatus'] = chatstatus
             if peer_ok:
                 for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
-                    if sess_key != key:
+                    if sess_key.decode() != key:
                         num_peers += 1
         help_available = len(potential_partners)
         html_key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         if old_chatstatus != chatstatus:
             html = r.get(html_key)
             if html is not None:
-                html_obj = json.loads(html)
+                html_obj = json.loads(html.decode())
                 if 'browser_title' in html_obj:
                     obj['browser_title'] = html_obj['browser_title']
                 if r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
@@ -5053,8 +5076,7 @@ def index():
                 # 'filename', 'question', 'format', 'index', 'action'
                 need_to_reset = True
                 continue
-            if re.match('[A-Za-z_][A-Za-z0-9_]*', argname):
-                exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
+            exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
                 #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
             need_to_resave = True
             need_to_reset = True
@@ -5345,7 +5367,7 @@ def index():
                 file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 new_file = SavedFile(file_number, extension=extension, fix=True)
-                new_file.write_content(theImage)
+                new_file.write_content(theImage, binary=True)
                 new_file.finalize()
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
@@ -9071,7 +9093,7 @@ def index():
         response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
         #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
         if return_fake_html:
-            response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + response.get_data().encode('base64') + 'ABCDABOUNDARYENDABC</pre></body></html>')
+            response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
     else:
         output = start_output + output + end_output
@@ -9355,7 +9377,7 @@ def serve_temporary_file(code, filename, extension):
     if file_info is None:
         logmessage("file_info was none")
         abort(404)
-    (section, file_number) = file_info.split('^')
+    (section, file_number) = file_info.decode().split('^')
     the_file = SavedFile(file_number, fix=True, section=section)
     the_path = the_file.path
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
@@ -9517,7 +9539,7 @@ def visit_interview():
     userid = request.args.get('userid', None)
     key = 'da:session:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
     try:
-        obj = pickle.loads(r.get(key))
+        obj = fix_pickle_obj(pickle.loads(r.get(key), encoding="bytes", fix_imports=True))
     except:
         abort(404)
     if 'secret' not in obj or 'encrypted' not in obj:
@@ -9573,6 +9595,14 @@ def observer():
         stopPushChanges();
         socket.emit('observerStopControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
         return;
+      }
+      function injectTrim(handler){
+        return function (element, event) {
+          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
+            element.value = $.trim(element.value);
+          }
+          return handler.call(this, element, event);
+        };
       }
       function daValidationHandler(form){
         //console.log("observer: daValidationHandler");
@@ -10081,7 +10111,7 @@ def observer():
     the_key = 'da:html:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
     html = r.get(the_key)
     if html is not None:
-        obj = json.loads(html)
+        obj = json.loads(html.decode())
     else:
         logmessage("observer: failed to load JSON from key " + the_key)
         obj = dict()
@@ -10093,6 +10123,12 @@ def observer():
     response = make_response(output.encode('utf8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
+
+def decode_dict(the_dict):
+    out_dict = dict()
+    for k, v in the_dict.items():
+        out_dict[k.decode()] = v.decode()
+    return out_dict
 
 @app.route('/monitor', methods=['GET', 'POST'])
 @login_required
@@ -10107,9 +10143,11 @@ def monitor():
     default_phone_number = r.get(phone_number_key)
     if default_phone_number is None:
         default_phone_number = ''
+    else:
+        default_phone_number = default_phone_number.decode()
     sub_role_key = 'da:monitor:userrole:' + str(session['user_id'])
     if r.exists(sub_role_key):
-        subscribed_roles = r.hgetall(sub_role_key)
+        subscribed_roles = decode_dict(r.hgetall(sub_role_key))
         r.expire(sub_role_key, 2592000)
     else:
         subscribed_roles = dict()
@@ -10588,6 +10626,7 @@ def monitor():
               var sessionDiv = document.createElement('div');
               $(sessionDiv).attr('id', "session" + key);
               $(sessionDiv).addClass('chat-session');
+              $(sessionDiv).addClass('p-1');
               $(sessionDiv).appendTo($(theListElement));
               $(theListElement).appendTo("#monitorsessions");
               // controlDiv = document.createElement('div');
@@ -10665,6 +10704,7 @@ def monitor():
               $(phoneButton).addClass("invisible");
             }
             $(phoneButton).click(function(e){
+              e.preventDefault();
               if ($(this).hasClass("phone-off") && daPhoneNumber != null){
                 $(this).removeClass("phone-off");
                 $(this).removeClass("btn-secondary");
@@ -10676,7 +10716,6 @@ def monitor():
                 if (key in daTermPhonePartners){
                   delete daTermPhonePartners[key];
                 }
-                update_monitor();
               }
               else{
                 $(this).removeClass("phone-on");
@@ -10691,9 +10730,8 @@ def monitor():
                   delete daNewPhonePartners[key];
                 }
                 daTermPhonePartners[key] = 1;
-                update_monitor();
               }
-              e.preventDefault();
+              update_monitor();
               return false;
             });
           }
@@ -10801,7 +10839,7 @@ def monitor():
                   }
                   return false;
               });
-              $(openButton).click(function(){
+              $(openButton).click(function(event){
                   //console.log("Observing..");
                   $(this).addClass("invisible");
                   $(stopObservingButton).removeClass("invisible");
@@ -11147,7 +11185,7 @@ def monitor():
           else{
               $("#daAvailable").addClass("invisible");
           }
-          $("#daAvailable").click(function(){
+          $("#daAvailable").click(function(event){
               $("#daAvailable").addClass("invisible");
               $("#daNotAvailable").removeClass("invisible");
               daAvailableForChat = false;
@@ -11155,7 +11193,7 @@ def monitor():
               update_monitor();
               playSound('signinout');
           });
-          $("#daNotAvailable").click(function(){
+          $("#daNotAvailable").click(function(event){
               checkNotifications();
               $("#daNotAvailable").addClass("invisible");
               $("#daAvailable").removeClass("invisible");
@@ -11251,13 +11289,13 @@ def update_package_wait():
           if (data.status == 'finished'){
             resultsAreIn = true;
             if (data.ok){
-              $("#notification").html(""" + json.dumps(word("The package update was successful.  The logs are below.")) + """);
+              $("#notification").html(""" + json.dumps(word("The package update did not report an error.  The logs are below.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
             }
             else{
-              $("#notification").html(""" + json.dumps(word("The package update was not fully successful.  The logs are below.")) + """);
+              $("#notification").html(""" + json.dumps(word("The package update reported an error.  The logs are below.")) + """);
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
@@ -11620,7 +11658,7 @@ def create_playground_package():
         http = credentials.authorize(httplib2.Http())
         resp, content = http.request("https://api.github.com/user", "GET")
         if int(resp['status']) == 200:
-            user_info = json.loads(content)
+            user_info = json.loads(content.decode())
             github_user_name = user_info.get('login', None)
             github_email = user_info.get('email', None)
         else:
@@ -11628,7 +11666,7 @@ def create_playground_package():
         if github_email is None:
             resp, content = http.request("https://api.github.com/user/emails", "GET")
             if int(resp['status']) == 200:
-                info = json.loads(content)
+                info = json.loads(content.decode())
                 if len(info) and 'email' in info[0]:
                     github_email = info[0]['email']
         if github_user_name is None or github_email is None:
@@ -11727,14 +11765,18 @@ def create_playground_package():
                     resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
                     if int(resp['status']) != 201:
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
-                    all_repositories[github_package_name] = json.loads(content)
+                    all_repositories[github_package_name] = json.loads(content.decode())
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
-                with open(ssh_script.name, 'w', encoding='utf-8') as fp:
-                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
+                if PY3:
+                    ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False, encoding='utf-8')
+                    ssh_script.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
+                else:
+                    ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False)
+                    content = '# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6'
+                    ssh_script.write(content.encode())
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
                 #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
@@ -11750,9 +11792,9 @@ def create_playground_package():
                     branch_option = ''
                 output += "Doing " + git_prefix + "git clone " + branch_option + ssh_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
+                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("create_playground_package: error running git clone.  " + output)
                 if current_user.timezone:
                     the_timezone = current_user.timezone
@@ -11770,39 +11812,39 @@ def create_playground_package():
                 #     raise DAError("create_playground_package: error running git init.  " + output)
                 output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
                 output += "Doing git config user.name " + json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name)) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
                 output += "Doing git add .\n"
                 try:
-                    output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git add.  " + output)
                 output += "Doing git status\n"
                 try:
-                    output += subprocess.check_output(["git", "status"], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "status"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("create_playground_package: error running git status.  " + output)
                 output += "Doing git commit -m " + repr(str(commit_message)) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT)
+                    output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("create_playground_package: error running git commit.  " + output)
                 if False:
                     try:
-                        output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT)
+                        output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
-                        output += err.output
+                        output += err.output.decode()
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
                     if branch:
                         the_branch = branch
@@ -11810,24 +11852,24 @@ def create_playground_package():
                         the_branch = 'master'
                     output += "Doing " + git_prefix + "git push -u origin " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                        output += subprocess.check_output(git_prefix + "git push -u origin " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
-                        output += err.output
+                        output += err.output.decode()
                         raise DAError("create_playground_package: error running first git push.  " + output)
                 else:
                     if branch:
                         output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
                         try:
-                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + str(branch), cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + str(branch), cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                         except subprocess.CalledProcessError as err:
-                            output += err.output
+                            output += err.output.decode()
                             raise DAError("create_playground_package: error running git push.  " + output)
                     else:
                         output += "Doing " + git_prefix + "git push\n"
                         try:
-                            output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True)
+                            output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                         except subprocess.CalledProcessError as err:
-                            output += err.output
+                            output += err.output.decode()
                             raise DAError("create_playground_package: error running git push.  " + output)
                 logmessage(output)
                 flash(word("Pushed commit to GitHub.") + "  " + output, 'info')
@@ -11888,14 +11930,14 @@ def create_package():
         else:
             #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
             #sys.stderr.write("this is it: " + str(foobar) + "\n")
-            initpy = """\
+            initpy = u"""\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 """
-            licensetext = """\
+            licensetext = u"""\
 The MIT License (MIT)
 
 """
@@ -11928,8 +11970,6 @@ include README.md
 description-file = README
 """
             setuppy = u"""\
-#!/usr/bin/env python
-
 import os
 import sys
 from setuptools import setup, find_packages
@@ -11975,7 +12015,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 """
-            setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+            setuppy += u"setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.0.1',
       description=('A docassemble extension.'),
       long_description=""" + repr(readme) + """,
@@ -12097,7 +12137,7 @@ class Fruit(DAObject):
             with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(initpy)
             with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write('')
+                the_file.write(u'')
             with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(objectfile)
             with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
@@ -12223,7 +12263,10 @@ def get_gd_flow():
 
 def get_gd_folder():
     key = 'da:googledrive:mapping:userid:' + str(current_user.id)
-    return r.get(key)
+    folder = r.get(key)
+    if folder is not None:
+        return folder.decode()
+    return folder
 
 def set_gd_folder(folder):
     key = 'da:googledrive:mapping:userid:' + str(current_user.id)
@@ -12251,7 +12294,10 @@ def get_od_flow():
 
 def get_od_folder():
     key = 'da:onedrive:mapping:userid:' + str(current_user.id)
-    return r.get(key)
+    folder = r.get(key)
+    if folder is not None:
+        return folder.decode()
+    return folder
 
 def set_od_folder(folder):
     key = 'da:onedrive:mapping:userid:' + str(current_user.id)
@@ -12276,6 +12322,7 @@ class RedisCredStorage(oauth2client.client.Storage):
         json_creds = r.get(self.key)
         creds = None
         if json_creds is not None:
+            json_creds = json_creds.decode()
             try:
                 creds = oauth2client.client.Credentials.new_from_json(json_creds)
             except:
@@ -12516,7 +12563,7 @@ def trash_od_file(section, filename):
     if int(r['status']) != 200:
         trashed = True
     else:
-        info = json.loads(content)
+        info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
         if info.get('deleted', None):
             trashed = True
@@ -12531,7 +12578,7 @@ def trash_od_file(section, filename):
         if int(r['status']) != 200:
             logmessage('trash_od_file: could not obtain subfolders')
             return False
-        info = json.loads(content)
+        info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
         for item in info['value']:
             if item.get('deleted', None) or 'folder' not in item:
@@ -12551,7 +12598,7 @@ def trash_od_file(section, filename):
         if int(r['status']) != 200:
             logmessage('trash_od_file: could not obtain contents of subfolder')
             return False
-        info = json.loads(content)
+        info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
         for item in info['value']:
             if item.get('deleted', None) or 'folder' in item:
@@ -13088,9 +13135,9 @@ def onedrive_page():
         return redirect(uri)
     while True:
         if int(r['status']) != 200:
-            flash("Error: could not connect to OneDrive; response code was " + text_type(r['status']) + ".   " + text_type(content), 'danger')
+            flash("Error: could not connect to OneDrive; response code was " + text_type(r['status']) + ".   " + content.decode(), 'danger')
             return redirect(url_for('user.profile'))
-        info = json.loads(content)
+        info = json.loads(content.decode())
         for item in info['value']:
             if 'folder' not in item:
                 continue
@@ -13112,12 +13159,12 @@ def onedrive_page():
             info["@microsoft.graph.conflictBehavior"] = "fail"
             r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/root/children", "POST", headers=headers, body=json.dumps(info))
             if int(r['status']) == 201:
-                new_item = json.loads(content)
+                new_item = json.loads(content.decode())
                 set_od_folder(new_item['id'])
                 od_fix_subdirs(http, new_item['id'])
                 flash(word("Your Playground is connected to your OneDrive."), 'success')
             else:
-                flash(word("Could not create folder.  " + text_type(content)), 'danger')
+                flash(word("Could not create folder.  " + content.decode()), 'danger')
         elif form.folder.data in item_ids:
             set_od_folder(form.folder.data)
             od_fix_subdirs(http, form.folder.data)
@@ -13134,7 +13181,7 @@ def onedrive_page():
             set_od_folder(None)
             flash(word("The previously selected OneDrive folder does not exist.") + "  " + text_type(the_folder) + " " + text_type(content) + " status: " + repr(r['status']), "info")
             return redirect(url_for('onedrive_page'))
-        info = json.loads(content)
+        info = json.loads(content.decode())
         logmessage("Found " + repr(info))
         if info.get('deleted', None):
             set_od_folder(None)
@@ -13168,7 +13215,7 @@ def od_fix_subdirs(http, the_folder):
     while True:
         if int(r['status']) != 200:
             raise DAError("od_fix_subdirs: could not get contents of folder")
-        info = json.loads(content)
+        info = json.loads(content.decode())
         logmessage("Found " + repr(info))
         for item in info['value']:
             if 'folder' in item:
@@ -13185,7 +13232,7 @@ def od_fix_subdirs(http, the_folder):
         data["@microsoft.graph.conflictBehavior"] = "rename"
         r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
         if int(r['status']) != 201:
-            raise DAError("od_fix_subdirs: could not create subfolder " + folder_name + ' in ' + text_type(the_folder) + '.  ' + text_type(content) + ' status: ' + text_type(r['status']))
+            raise DAError("od_fix_subdirs: could not create subfolder " + folder_name + ' in ' + text_type(the_folder) + '.  ' + content.decode() + ' status: ' + text_type(r['status']))
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
@@ -13368,7 +13415,7 @@ def playground_office_addin():
             if char == ',':
                 start_index = char_index
                 break
-        area.write_content(codecs.decode(bytearray(content[start_index:], encoding='utf-8'), 'base64'), filename=filename)
+        area.write_content(codecs.decode(bytearray(content[start_index:], encoding='utf-8'), 'base64'), filename=filename, binary=True)
         area.finalize()
         if use_html:
             if pg_var_file is None:
@@ -13465,7 +13512,7 @@ def playground_files():
                 os.remove(filename)
                 area.finalize()
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                    r.incr(key)
+                    r.incr(key.decode())
                 if use_gd:
                     try:
                         trash_gd_file(section, argument)
@@ -13481,7 +13528,7 @@ def playground_files():
                             logmessage("playground_files: unable to delete file on OneDrive.")
                 flash(word("Deleted file: ") + argument, "success")
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                    r.incr(key)
+                    r.incr(key.decode())
                 return redirect(url_for('playground_files', section=section))
             else:
                 flash(word("File not found: ") + argument, "error")
@@ -13528,7 +13575,7 @@ def playground_files():
                         filename = os.path.join(area.directory, filename)
                         up_file.save(filename)
                         for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                            r.incr(key)
+                            r.incr(key.decode())
                         area.finalize()
                         if section == 'modules':
                             flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
@@ -13542,7 +13589,7 @@ def playground_files():
                 if os.path.exists(filename):
                     os.remove(filename)
                     for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                        r.incr(key)
+                        r.incr(key.decode())
                     area.finalize()
                     flash(word("Deleted file: ") + the_file, "success")
                     return redirect(url_for('playground_files', section=section))
@@ -13561,7 +13608,7 @@ def playground_files():
                     fp.write(re.sub(r'\r\n', r'\n', formtwo.file_content.data))
                 the_time = formatted_current_time()
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                    r.incr(key)
+                    r.incr(key.decode())
                 area.finalize()
                 if formtwo.active_file.data and formtwo.active_file.data != the_file:
                     #interview_file = os.path.join(pgarea.directory, formtwo.active_file.data)
@@ -13908,7 +13955,7 @@ def get_git_branches():
         branches = list()
         resp, content = http.request(the_url, "GET")
         if int(resp['status']) == 200:
-            branches.extend(json.loads(content))
+            branches.extend(json.loads(content.decode()))
             while True:
                 next_link = get_next_link(resp)
                 if next_link:
@@ -13916,7 +13963,7 @@ def get_git_branches():
                     if int(resp['status']) != 200:
                         return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
                     else:
-                        branches.extend(json.loads(content))
+                        branches.extend(json.loads(content.decode()))
                 else:
                     break
             return jsonify(dict(success=True, result=branches))
@@ -13929,7 +13976,7 @@ def get_user_repositories(http):
     repositories = list()
     resp, content = http.request("https://api.github.com/user/repos", "GET")
     if int(resp['status']) == 200:
-        repositories.extend(json.loads(content))
+        repositories.extend(json.loads(content.decode()))
         while True:
             next_link = get_next_link(resp)
             if next_link:
@@ -13937,7 +13984,7 @@ def get_user_repositories(http):
                 if int(resp['status']) != 200:
                     raise DAError("get_user_repositories: could not get information from next URL")
                 else:
-                    repositories.extend(json.loads(content))
+                    repositories.extend(json.loads(content.decode()))
             else:
                 break
     else:
@@ -13948,7 +13995,7 @@ def get_orgs_info(http):
     orgs_info = list()
     resp, content = http.request("https://api.github.com/user/orgs", "GET")
     if int(resp['status']) == 200:
-        orgs_info.extend(json.loads(content))
+        orgs_info.extend(json.loads(content.decode()))
         while True:
             next_link = get_next_link(resp)
             if next_link:
@@ -13956,7 +14003,7 @@ def get_orgs_info(http):
                 if int(resp['status']) != 200:
                     raise DAError("get_orgs_info: could not get additional information about organizations")
                 else:
-                    orgs_info.extend(json.loads(content))
+                    orgs_info.extend(json.loads(content.decode()))
             else:
                 break
     else:
@@ -13967,7 +14014,7 @@ def get_branch_info(http, full_name):
     branch_info = list()
     resp, content = http.request("https://api.github.com/repos/" + str(full_name) + '/branches', "GET")
     if int(resp['status']) == 200:
-        branch_info.extend(json.loads(content))
+        branch_info.extend(json.loads(content.decode()))
         while True:
             next_link = get_next_link(resp)
             if next_link:
@@ -14110,7 +14157,7 @@ def playground_packages():
             http = credentials.authorize(httplib2.Http())
             resp, content = http.request("https://api.github.com/user", "GET")
             if int(resp['status']) == 200:
-                info = json.loads(content)
+                info = json.loads(content.decode())
                 github_user_name = info.get('login', None)
                 github_author_name = info.get('name', None)
                 github_email = info.get('email', None)
@@ -14119,7 +14166,7 @@ def playground_packages():
             if github_email is None:
                 resp, content = http.request("https://api.github.com/user/emails", "GET")
                 if int(resp['status']) == 200:
-                    info = json.loads(content)
+                    info = json.loads(content.decode())
                     if len(info) and 'email' in info[0]:
                         github_email = info[0]['email']
             if github_user_name is None or github_email is None:
@@ -14127,7 +14174,7 @@ def playground_packages():
             found = False
             resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
             if int(resp['status']) == 200:
-                repo_info = json.loads(content)
+                repo_info = json.loads(content.decode())
                 github_http = repo_info['html_url']
                 github_ssh = repo_info['ssh_url']
                 if repo_info['private']:
@@ -14157,7 +14204,7 @@ def playground_packages():
                 for org_info in orgs_info:
                     resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
                     if int(resp['status']) == 200:
-                        repo_info = json.loads(content)
+                        repo_info = json.loads(content.decode())
                         github_http = repo_info['html_url']
                         github_ssh = repo_info['ssh_url']
                         if repo_info['private']:
@@ -14196,6 +14243,8 @@ def playground_packages():
                     for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                         if field in old_info and isinstance(old_info[field], list) and len(old_info[field]):
                             form[field].data = old_info[field]
+                else:
+                    raise Exception("YAML yielded " + repr(old_info) + " from " + repr(content))
         else:
             filename = None
     if request.method == 'POST' and 'uploadfile' in request.files:
@@ -14272,9 +14321,9 @@ def playground_packages():
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
                         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-                            fp.write(the_yaml)
+                            fp.write(text_type(the_yaml))
                         for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-                            r.incr(key)
+                            r.incr(key.decode())
                         for sec in area:
                             area[sec].finalize()
                         the_file = package_name
@@ -14314,27 +14363,31 @@ def playground_packages():
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                ssh_script = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.sh', delete=False)
-                with open(ssh_script.name, 'w', encoding='utf-8') as fp:
-                    fp.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
+                if PY3:
+                    ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False, encoding='utf-8')
+                    ssh_script.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
+                else:
+                    ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False)
+                    content = '# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6'
+                    ssh_script.write(content.encode())
                 ssh_script.close()
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
                 #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True)
+                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
                 try:
                     if branch is not None:
-                        output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT)
+                        output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
                     else:
-                        output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT)
+                        output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
-                    output += err.output
+                    output += err.output.decode()
                     raise DAError("playground_packages: error running git clone.  " + output)
             logmessage(output)
         elif 'pypi' in request.args:
@@ -14346,7 +14399,7 @@ def playground_packages():
                 resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
                 pypi_url = None
                 if int(resp['status']) == 200:
-                    pypi_response = json.loads(content)
+                    pypi_response = json.loads(content.decode())
                     for file_option in pypi_response['releases'][pypi_response['info']['version']]:
                         if file_option['packagetype'] == 'sdist':
                             pypi_url = file_option['url']
@@ -14360,7 +14413,7 @@ def playground_packages():
             except Exception as err:
                 raise DAError("playground_packages: error getting information about PyPI package.  " + str(err))
             try:
-                urllib.urlretrieve(pypi_url, package_file.name)
+                urlretrieve(pypi_url, package_file.name)
             except Exception as err:
                 raise DAError("playground_packages: error downloading PyPI package.  " + str(err))
             try:
@@ -14433,12 +14486,12 @@ def playground_packages():
                 package_name = orig_package_name + str(index)
         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-            fp.write(the_yaml)
+            fp.write(text_type(the_yaml))
         area['playgroundpackages'].finalize()
         for sec in area:
             area[sec].finalize()
         for key in r.keys('da:interviewsource:playground' + str(current_user.id) + ':*'):
-            r.incr(key)
+            r.incr(key.decode())
         the_file = package_name
         if show_message:
             flash(word("The package was unpacked into the Playground."), 'success')
@@ -14491,7 +14544,7 @@ def playground_packages():
                 filename = os.path.join(area['playgroundpackages'].directory, the_file)
                 with open(filename, 'w', encoding='utf-8') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
-                    fp.write(the_yaml)
+                    fp.write(text_type(the_yaml))
                 area['playgroundpackages'].finalize()
                 if form.download.data:
                     return redirect(url_for('create_playground_package', package=the_file))
@@ -14699,6 +14752,7 @@ def playground_redirect_poll():
     the_url = r.get(key)
     #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
     if the_url is not None:
+        the_url = the_url.decode()
         r.delete(key)
         return jsonify(dict(success=True, url=the_url))
     return jsonify(dict(success=False, url=the_url))
@@ -14713,6 +14767,7 @@ def playground_redirect():
         the_url = r.get(key)
         #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
         if the_url is not None:
+            the_url = the_url.decode()
             r.delete(key)
             return redirect(the_url)
         time.sleep(1)
@@ -15630,7 +15685,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\u00a0\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 
@@ -15808,7 +15863,7 @@ def logfile(filename):
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
-        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
+        the_file, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
     response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return(response)
@@ -15844,7 +15899,7 @@ def logs():
         if len(files):
             if the_file is None:
                 the_file = files[0]
-            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(the_file))
+            filename, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(the_file))
     if not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
         if len(files):
@@ -15854,11 +15909,19 @@ def logs():
         if request.method == 'POST' and form.submit.data and form.filter_string.data:
             default_filter_string = form.filter_string.data
             reg_exp = re.compile(form.filter_string.data)
-            temp_file = tempfile.NamedTemporaryFile()
-            with open(filename, 'rU') as fp:
-                for line in fp:
-                    if reg_exp.search(line):
-                        temp_file.write(line)
+            if PY3:
+                temp_file = tempfile.NamedTemporaryFile(mode='a+', encoding='utf-8')
+                with open(filename, 'rU', encoding='utf-8') as fp:
+                    for line in fp:
+                        if reg_exp.search(line):
+                            temp_file.write(line)
+            else:
+                temp_file = tempfile.NamedTemporaryFile(mode='a+')
+                with open(filename, 'rU', encoding='utf-8') as fp:
+                    for line in fp:
+                        if reg_exp.search(line):
+                            temp_file.write(line.encode())
+            temp_file.seek(0)
             lines = tailer.tail(temp_file, 30)
             temp_file.close()
         else:
@@ -16171,7 +16234,7 @@ def train():
             if the_file is None or not os.path.isfile(the_file):
                 flash(word("Error reading JSON file from package.  File did not exist."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
-            json_file = open(the_file, 'rU')
+            json_file = open(the_file, 'rU', encoding='utf-8')
         if uploadform.usepackage.data == 'no' and 'jsonfile' in request.files and request.files['jsonfile'].filename:
             json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json")
             request.files['jsonfile'].save(json_file.name)
@@ -16201,7 +16264,7 @@ def train():
                 elif uploadform.importtype.data == 'merge':
                     indep_in_use = set()
                     for record in MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).all():
-                        indep_in_use.add(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')))
+                        indep_in_use.add(fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)))
                     for entry in train_list:
                         if 'independent' in entry and entry['independent'] not in indep_in_use:
                             new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
@@ -16336,15 +16399,15 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
-                    the_independent = pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
+                        the_dependent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+                    the_independent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
                     try:
                         text_type(the_independent) + ""
                         text_type(the_dependent) + ""
                     except Exception as e:
                         logmessage("Bad record: id " + str(record.id) + " where error was " + str(e))
                         continue
-                    the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
+                    the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent))
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[record.group_id].append(the_entry)
@@ -16360,15 +16423,19 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
-                    the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
+                        the_dependent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+                    the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[parts[2]].append(the_entry)
             if len(output):
-                the_json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json", delete=False)
-                with open(the_json_file.name, 'w', encoding='utf-8') as fp:
-                    json.dump(output, fp, sort_keys=True, indent=2)
+                if PY3:
+                    the_json_file = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix=".json", delete=False, encoding='utf-8')
+                    json.dump(output, the_json_file, sort_keys=True, indent=2)
+                else:
+                    the_json_file = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix=".json", delete=False)
+                    with open(the_json_file.name, 'w') as fp:
+                        json.dump(output, fp, sort_keys=True, indent=2)
                 response = send_file(the_json_file, mimetype='application/json', as_attachment=True, attachment_filename=json_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
@@ -16451,7 +16518,7 @@ def train():
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
-            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=pickle.loads(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
+            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.independent is not None else None, dependent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.dependent is not None else None, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
                 new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + text_type(key) + '</span>: <span class="mldatavalue">' + text_type(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
                 new_entry['type'] = 'data'
@@ -16496,7 +16563,7 @@ def train():
         if len(entry_list) == 0:
             record = db.session.query(MachineLearning.independent).filter(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None)).first()
             if record is not None:
-                sample_indep = pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
+                sample_indep = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
             else:
                 sample_indep = None
         else:
@@ -16510,7 +16577,7 @@ def train():
             #logmessage("There is a choice")
             if record.dependent is None:
                 continue
-            key = pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+            key = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
             choices[key] = record.count
         if len(choices):
             #logmessage("There are choices")
@@ -16697,7 +16764,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     is_valid = False
             else:
                 dictionary = unpack_dictionary(interview_info.dictionary)
-            if type(dictionary) is not dict:
+            if not isinstance(dictionary, dict):
                 logmessage("user_interviews: found a dictionary that was not a dictionary")
                 continue
         if is_valid:
@@ -16867,8 +16934,8 @@ def interview_list():
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
             raise DAError("Could not find start page template " + daconfig['start page template'])
-        with open(the_page, 'rU') as fp:
-            template_string = fp.read().decode('utf8')
+        with open(the_page, 'rU', encoding='utf-8') as fp:
+            template_string = fp.read()
             return render_template_string(template_string, **argu)
     else:
         return render_template('pages/interviews.html', **argu)
@@ -16958,6 +17025,7 @@ def on_register_hook(sender, user, **extra):
         user.roles.remove(role)
     user.roles.append(this_user_role)
     db.session.commit()
+    #clear_user_cache()
     login_or_register(sender, user, **extra)
     #flash(word('You have registered successfully.'), 'success')
 
@@ -17083,6 +17151,7 @@ def digits():
             resp.say(word("I am sorry.  The code you entered is invalid or expired.  Goodbye."))
             resp.hangup()
         else:
+            phone_number = phone_number.decode()
             dial = resp.dial(number=phone_number)
             r.delete('da:callforward:' + str(the_digits))
     else:
@@ -17229,7 +17298,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             accepting_input = False
         else:
             try:        
-                sess_info = pickle.loads(sess_contents)
+                sess_info = fix_pickle_obj(pickle.loads(sess_contents, encoding="bytes", fix_imports=True))
             except:
                 logmessage("do_sms: unable to decode session information")
                 return resp
@@ -17916,7 +17985,7 @@ def api_verify(req, roles=None):
         logmessage("api_verify: API key not found")
         return False
     try:
-        info = json.loads(r.get(rkeys[0]))
+        info = json.loads(r.get(rkeys[0].decode()).decode())
     except:
         logmessage("api_verify: API information could not be unpacked")
         return False
@@ -18041,6 +18110,7 @@ def make_user_inactive(user_id=None, email=None):
         raise Exception("User not found")
     user.active = False
     db.session.commit()
+    #clear_user_cache()
 
 @app.route('/api/user', methods=['GET', 'POST'])
 @csrf.exempt
@@ -18242,6 +18312,7 @@ def remove_privilege(privilege):
     db.session.commit()
     db.session.delete(role)
     db.session.commit()
+    #clear_user_cache()
 
 @app.route('/api/user/<user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
@@ -18299,6 +18370,7 @@ def add_user_privilege(user_id, privilege):
         raise Exception("The specified privilege did not exist.")
     user.roles.append(role_to_add)
     db.session.commit()
+    #clear_user_cache()
 
 def remove_user_privilege(user_id, privilege):
     if not (current_user.has_role('admin')):
@@ -18318,6 +18390,7 @@ def remove_user_privilege(user_id, privilege):
         raise Exception("The user did not already have that privilege.")
     user.roles.remove(role_to_remove)
     db.session.commit()
+    #clear_user_cache()
 
 def create_user(email, password, privileges=None, info=None):
     if current_user.is_anonymous:
@@ -18412,7 +18485,7 @@ def set_user_info(**kwargs):
             raise Exception("Cannot change active status of the current user.")
         user.active = kwargs['active']
     db.session.commit()
-    if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple):
+    if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple, set):
         if len(kwargs['privileges']) == 0:
             raise Exception("Cannot remove all of a user's privileges.")
         roles_to_add = []
@@ -18428,6 +18501,7 @@ def set_user_info(**kwargs):
             remove_user_privilege(user.id, role)
         for role in roles_to_add:
             add_user_privilege(user.id, role)
+    #clear_user_cache()
     
 @app.route('/api/secret', methods=['GET'])
 @crossdomain(origin='*', methods=['GET', 'HEAD'])
@@ -19201,7 +19275,7 @@ def api_playground():
         if current_user.has_role('admin'):
             user_id = int(post_data.get('user_id', current_user.id))
         else:
-            if 'user_id' in requests.args:
+            if 'user_id' in request.args:
                 assert int(post_data['user_id']) == current_user.id
             user_id = current_user.id
     except:
@@ -19233,7 +19307,7 @@ def api_playground():
     if not found:
         return jsonify_with_status("No file found.", 400)
     for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
-        r.incr(key)
+        r.incr(key.decode())
     if section == 'modules':
         restart_all()
     return ('', 204)
@@ -19371,6 +19445,7 @@ def manage_api():
             if existing_key is None:
                 flash(word("The key no longer exists"), 'error')
                 return render_template('pages/manage_api.html', **argu)
+            existing_key = existing_key.decode()
             if form.delete.data:
                 r.delete(rkey)
                 flash(word("The key was deleted"), 'error')
@@ -19400,7 +19475,7 @@ def manage_api():
         rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info'
         info = r.get(rkey)
         if info is not None:
-            info = json.loads(info)
+            info = json.loads(info.decode())
             if type(info) is dict and info.get('name', None) and info.get('method', None):
                 argu['method'] = info.get('method')
                 form.method.data = info.get('method')
@@ -19415,8 +19490,9 @@ def manage_api():
         argu['mode'] = 'list'
         avail_keys = list()
         for rkey in r.keys('da:api:userid:' + str(current_user.id) + ':key:*:info'):
+            rkey = rkey.decode()
             try:
-                info = json.loads(r.get(rkey))
+                info = json.loads(r.get(rkey).decode())
                 if type(info) is not dict:
                     logmessage("manage_api: response from redis was not a dict")
                     continue
@@ -19585,11 +19661,11 @@ def write_pypirc():
     # if pypi_username is None or pypi_password is None:
     #     return
     if os.path.isfile(pypirc_file):
-        with open(pypirc_file, 'rU') as fp:
+        with open(pypirc_file, 'rU', encoding='utf-8') as fp:
             existing_content = fp.read()
     else:
         existing_content = None
-    content = """\
+    content = u"""\
 [distutils]
 index-servers =
   pypi
@@ -19608,18 +19684,19 @@ def pypi_status(packagename):
     result = dict()
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
-        handle = urlopen(pypi_url + '/' + str(packagename) + '/json')
-    except HTTPError as e:
-        if e.code == 404:
+        response = requests.get(pypi_url + '/' + str(packagename) + '/json')
+        assert response.status_code == 200
+    except AssertionError:
+        if response.status_code == 404:
             result['error'] = False
             result['exists'] = False
         else:
-            result['error'] = e.code
-    except Exception as e:
-        result['error'] = str(e)
+            result['error'] = response.status_code
+    except:
+        result['error'] = 'unknown'
     else:
         try:
-            result['info'] = json.load(handle)
+            result['info'] = response.json()
         except:
             result['error'] = 'json'
         else:
@@ -19735,9 +19812,14 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     json_filename = None
     if the_vars is not None and len(the_vars):
         try:
-            with tempfile.NamedTemporaryFile(prefix="datemp", suffix='.json', delete=False) as fp:
-                fp.write(json.dumps(the_vars, sort_keys=True, indent=2).encode('utf8'))
-                json_filename = fp.name
+            if PY3:
+                with tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.json', delete=False, encoding='utf-8') as fp:
+                    fp.write(json.dumps(the_vars, sort_keys=True, indent=2))
+                    json_filename = fp.name
+            else:
+                with tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.json', delete=False) as fp:
+                    fp.write(json.dumps(the_vars, sort_keys=True, indent=2).encode())
+                    json_filename = fp.name
         except Exception as the_err:
             pass
     interview_path = docassemble.base.functions.interview_path()
@@ -19780,7 +19862,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
             if json_filename:
-                with open(json_filename, 'rb') as fp:
+                with open(json_filename, 'rU', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
         except Exception as zerr:
@@ -19789,7 +19871,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
             if json_filename:
-                with open(json_filename, 'rb') as fp:
+                with open(json_filename, 'rU', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
     except:
@@ -19849,7 +19931,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf,
                                          fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,
                                          fg_make_pdf_for_word_path=fg_make_pdf_for_word_path,
-                                         get_question_data=get_question_data)
+                                         get_question_data=get_question_data,
+                                         fix_pickle_obj=fix_pickle_obj)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

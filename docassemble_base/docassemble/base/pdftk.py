@@ -13,6 +13,8 @@ import re
 import PyPDF2 as pypdf
 import pypdftk
 import string
+import codecs
+from io import open
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
@@ -23,6 +25,8 @@ from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdftypes import resolve1
 from pdfminer.pdfpage import PDFPage
+import logging
+logging.getLogger('pdfminer').setLevel(logging.ERROR)
 import uuid
 
 PDFTK_PATH = 'pdftk'
@@ -68,23 +72,31 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         if name is not None:
-            name = str(name).decode('latin1')
-            name = remove_nonprintable_limited(text_type(name))
+            name = str(name)
+            try:
+                name = codecs.decode(name, 'latin1')
+            except:
+                pass
+            name = remove_nonprintable_limited(name)
         if value is not None:
-            value = str(value).decode('latin1')
-            value = remove_nonprintable_limited(text_type(value))
+            value = str(value)
+            try:
+                value = codecs.decode(value, 'latin1')
+            except:
+                pass
+            value = remove_nonprintable_limited(value)
         #field_type = remove_nonprintable(str(field_type))
-        #logmessage("name is " + repr(name) + " and FT is |" + str(field_type) + "| and value is " + repr(value))
+        #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
         if page is not None:
             pageno = id_to_page[page.objid]
         else:
             pageno = 1
-        if str(field_type) in ('/Btn', "/u'Btn'"):
+        if str(field_type) in ('/Btn', "/u'Btn'", "/'Btn'"):
             if value == '/Yes':
                 default = "Yes"
             else:
                 default = "No"
-        elif str(field_type) in ('/Sig', "/u'Sig'"):
+        elif str(field_type) in ('/Sig', "/u'Sig'", "/'Sig'"):
             default = '${ user.signature }'
         else:
             if value is not None:
@@ -115,7 +127,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                 outfields.append((prefix, default, pageno, rect, field_type))
 
 def read_fields_pdftk(pdffile):
-    output = text_type(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))
+    output = check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
     fields = list()
     if not len(output) > 0:
         return None
@@ -219,7 +231,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if len(images):
         fields = dict()
         for field, default, pageno, rect, field_type in read_fields(template):
-            if str(field_type) == '/Sig':
+            if str(field_type) in ('/Sig', "/u'Sig'", "/'Sig'"):
                 fields[field] = {'pageno': pageno, 'rect': rect}
         image_todo = list()
         for field, file_info in images:
@@ -316,7 +328,7 @@ def pdf_encrypt(filename, password):
     else:
         commands = ['pdftk', filename, 'output', outfile.name, 'owner_pw', owner_password, 'user_pw', user_password, 'allow', 'printing']
     try:
-        output = subprocess.check_output(commands, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
         output = err.output
         raise DAError("pdf_encrypt: error running pdftk.  " + output)

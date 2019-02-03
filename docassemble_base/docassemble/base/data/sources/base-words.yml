@@ -460,8 +460,8 @@
 "The new user has been created": Null
 "The operator is no longer controlling your screen.": Null
 "The package information was saved.": Null
-"The package update was not fully successful.  The logs are below.": Null
-"The package update was successful.  The logs are below.": Null
+"The package update did not report an error.  The logs are below.": Null
+"The package update reported an error.  The logs are below.": Null
 "The package was unpacked into the Playground.": Null
 "The package you specified could not be downloaded from PyPI as a tar.gz file.": Null
 "The package you specified could not be downloaded from PyPI.": Null

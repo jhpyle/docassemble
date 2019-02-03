@@ -12,6 +12,8 @@ from docassemble.base.logger import logmessage
 from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
 import PyPDF2
+import codecs
+from io import open
 
 NoneType = type(None)
 
@@ -103,7 +105,7 @@ def include_docx_template(template_file, **kwargs):
         if hasattr(val, 'instanceName'):
             the_repr = val.instanceName
         else:
-            the_repr = '"' + re.sub(r'\n', '', text_type(val).encode('utf-8').encode('base64')) + '".decode("base64").decode("utf-8")'
+            the_repr = '_codecs.decode(_array.array("b", "' + re.sub(r'\n', '', codecs.encode(bytearray(val, encoding='utf-8'), 'base64').decode()) + '".encode()), "base64").decode()'
         first_paragraph.insert_paragraph_before(str("{%%p set %s = %s %%}" % (key, the_repr)))
     if 'docx_include_count' not in this_thread.misc:
         this_thread.misc['docx_include_count'] = 0
@@ -258,7 +260,7 @@ def pdf_pages(file_info, width):
             server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
     if 'pages' not in file_info:
         try:
-            reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf'))
+            reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
             file_info['pages'] = reader.getNumPages()
         except:
             file_info['pages'] = 1

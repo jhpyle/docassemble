@@ -22,4 +22,4 @@ question: |
 subquestion: |
   The key is `${ key }`.
   
-  The value is "${ r.get(key) }".
+  The value is "${ r.get(key).decode() }".

@@ -11,6 +11,6 @@ mandatory: True
 question: |
   Server capabilities
 subquestion: |
-  % for feature, enabled in server_capabilities().iteritems():
+  % for feature, enabled in server_capabilities().items():
   * **${ feature }**: ${ 'enabled' if enabled else 'disabled' }
   % endfor

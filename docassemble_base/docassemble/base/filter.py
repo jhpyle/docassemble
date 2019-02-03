@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-from six import string_types, text_type
+from six import string_types, text_type, PY2
 import re
 import os
 import markdown
@@ -22,11 +22,12 @@ from bs4 import BeautifulSoup
 import docassemble.base.file_docx
 from pylatex.utils import escape_latex
 from io import open
+from pathlib import Path
 
 NoneType = type(None)
 
 from docassemble.base.logger import logmessage
-from rtfng.object.picture import Image
+from docassemble.base.rtfng.object.picture import Image
 import PIL
 
 DEFAULT_PAGE_WIDTH = '6.5in'
@@ -657,7 +658,7 @@ def map_string(encoded_text, status):
     if status is None:
         return ''
     map_number = len(status.maps)
-    status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf8'))
+    status.maps.append(codecs.decode(bytearray(encoded_text, 'utf-8'), 'base64').decode())
     return '<div id="map' + text_type(map_number) + '" class="googleMap"></div>'
 
 def target_html(match):
@@ -777,7 +778,7 @@ def image_as_rtf(match, question=None):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
         if 'pages' not in file_info:
             try:
-                reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf'))
+                reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
                 file_info['pages'] = reader.getNumPages()
             except:
                 file_info['pages'] = 1
@@ -876,7 +877,7 @@ def rtf_image(file_info, width, insert_page_breaks):
         content = ''
     #logmessage(content + image.Data)
     return(content + image.Data)
-    
+
 unit_multipliers = {'twips': 0.0500, 'hp': 0.5, 'in': 72, 'pt': 1, 'px': 1, 'em': 12, 'cm': 28.346472}
 
 def convert_length(length, unit):
@@ -951,7 +952,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 server.fg_make_png_for_pdf_path(file_info['path'] + ".pdf", 'screen', page=1)
             if 'pages' not in file_info:
                 try:
-                    reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf'))
+                    reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
                     file_info['pages'] = reader.getNumPages()
                 except:
                     file_info['pages'] = 1
@@ -995,7 +996,7 @@ def qr_url_string(match):
     im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathImage)
     output = BytesIO()
     im.save(output)
-    the_image = output.getvalue()
+    the_image = output.getvalue().decode()
     the_image = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_image)
     the_image = re.sub(r'height="[0-9]+mm" ', '', the_image)
     the_image = re.sub(r'width="[0-9]+mm" ', '', the_image)
@@ -1215,10 +1216,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if use_pandoc:
         converter = MyPandoc()
         converter.output_format = 'html'
-        #logmessage("input was:\n" + repr(a))
-        converter.input_content = a
+        converter.input_content = text_type(a)
         converter.convert(question)
-        result = converter.output_content.decode('utf8')
+        result = converter.output_content
     else:
         try:
             result = docassemble.base.functions.this_thread.markdown.reset().convert(a)

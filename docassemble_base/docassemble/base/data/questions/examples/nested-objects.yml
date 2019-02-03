@@ -69,7 +69,7 @@ subquestion: |
   % for sibling in user.sibling:
   You have a sibling named ${ sibling }.
  
-  % for company_type in sibling.company_hired:
+  % for company_type in sibling.company_hired.keys():
   ${ sibling } has hired a ${ company_type }
   called ${ sibling.company_hired[company_type] },
   which has a principal place of business in

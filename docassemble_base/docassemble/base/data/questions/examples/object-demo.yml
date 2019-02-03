@@ -41,7 +41,7 @@ subquestion: |
   feet.
   % endfor
 
-  % for animal, number in feet.iteritems():
+  % for animal, number in feet.items():
   There are ${ number } feet on
   a ${ animal }.
   % endfor

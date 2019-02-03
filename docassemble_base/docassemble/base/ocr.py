@@ -9,6 +9,7 @@ import pycountry
 import sys
 import os
 from six import string_types, text_type, PY2
+from io import open
 
 def ocr_finalize(*pargs, **kwargs):
     #sys.stderr.write("ocr_finalize started")
@@ -32,12 +33,10 @@ def ocr_finalize(*pargs, **kwargs):
 
 def get_available_languages():
     try:
-        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT)
+        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT, encoding='utf-8')
     except subprocess.CalledProcessError as err:
         raise Exception("get_available_languages: failed to list available languages: " + str(err))
     else:
-        if not isinstance(output, text_type):
-            output = output.decode()
         result = output.splitlines()
         result.pop(0)
         return result
@@ -164,8 +163,8 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
     params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)]
     sys.stderr.write("ocr_page: piping to command " + " ".join(params) + "\n")
     try:
-        text = subprocess.check_output(params, stdin=file_to_read)
+        text = subprocess.check_output(params, stdin=file_to_read).decode()
     except subprocess.CalledProcessError as err:
-        raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output))
+        raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
     sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
-    return dict(page=page, text=text.decode('utf8'))
+    return dict(page=page, text=text)

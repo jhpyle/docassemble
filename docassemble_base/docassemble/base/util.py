@@ -8,7 +8,10 @@ import pytz
 import yaml
 import zipfile
 from six import string_types, text_type, PY2
-import collections
+if PY2:
+    import collections as abc
+else:
+    import collections.abc as abc
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
@@ -45,11 +48,12 @@ import tempfile
 import os
 import shutil
 import subprocess
+from io import open
 from bs4 import BeautifulSoup
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type']
 
 #knn_machine_learner = DummyObject
 
@@ -74,7 +78,7 @@ class DARedis(DAObject):
         if result is None:
             return None
         try:
-            result = pickle.loads(result)
+            result = server.fix_pickle_obj(pickle.loads(result, encoding="bytes", fix_imports=True))
         except:
             logmessage("get_data: could not unpickle contents of " + str(key))
             result = None
@@ -177,20 +181,23 @@ def run_python_module(module, arguments=None):
         module = this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
     elif re.search(r'^\.', module):
         module = this_thread.current_package + module
-    commands = [re.sub(r'/lib/python.*', '/bin/python', os.__file__), '-m', module]
+    if PY2:
+        commands = [re.sub(r'/lib/python.*', '/bin/python', docassemble.base.ocr.__file__), '-m', module]
+    else:
+        commands = [re.sub(r'/lib/python.*', '/bin/python3', docassemble.base.ocr.__file__), '-m', module]
     if arguments:
         if not isinstance(arguments, list):
             raise DAError("run_python_module: the arguments parameter must be in the form of a list")
         commands.extend(arguments)
     output = ''
     try:
-        output = subprocess.check_output(commands, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
         return_code = 0
     except subprocess.CalledProcessError as err:
-        output = err.output
+        output = err.output.decode()
         return_code = err.returncode
     return output, return_code
-    
+
 # def default_user_id_function():
 #     return dict()
 
@@ -512,7 +519,7 @@ def phone_string(person, country=None):
 def email_string(persons, include_name=None, first=False):
     if persons is None:
         return None
-    if not isinstance(persons, (list, DAList, set, DASet, tuple)):
+    if not (isinstance(persons, (DAList, DASet, abc.Iterable)) and not isinstance(persons, string_types)):
         persons = [persons]
     result = []
     for person in persons:
@@ -1545,6 +1552,18 @@ class Value(DAObject):
         return int(self.__float__())
     def __long__(self):
         return long(self.__float__())
+    def __le__(self, other):
+        return self.value <= (other.value if isinstance(other, Value) else other)
+    def __ge__(self, other):
+        return self.value >= (other.value if isinstance(other, Value) else other)
+    def __gt__(self, other):
+        return self.value > (other.value if isinstance(other, Value) else other)
+    def __lt__(self, other):
+        return self.value < (other.value if isinstance(other, Value) else other)
+    def __eq__(self, other):
+        return self.value == (other.value if isinstance(other, Value) else other)
+    def __ne__(self, other):
+        return self.value != (other.value if isinstance(other, Value) else other)
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
@@ -2037,10 +2056,10 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         final_image.save(file_to_read, "PNG")
         file_to_read.seek(0)
         try:
-            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read)
+            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read).decode()
         except subprocess.CalledProcessError as err:
-            raise Exception("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output))
-        page_text.append(text.decode('utf-8'))
+            raise Exception("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output.decode()))
+        page_text.append(text)
     for directory in temp_directory_list:
         shutil.rmtree(directory)
     return "\f".join(page_text)

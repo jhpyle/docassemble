@@ -1,4 +1,4 @@
-from six import string_types, text_type
+from six import string_types, text_type, PY2
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
@@ -21,8 +21,10 @@ import json
 import iso8601
 import datetime
 import pytz
+import traceback
 from requests.utils import quote
 from docassemble.webapp.files import SavedFile
+from io import open
 
 ONEDRIVE_CHUNK_SIZE = 2000000
 
@@ -108,6 +110,7 @@ class RedisCredStorage(oauth2client.client.Storage):
         json_creds = self.r.get(self.key)
         creds = None
         if json_creds is not None:
+            json_creds = json_creds.decode()
             try:
                 creds = oauth2client.client.Credentials.new_from_json(json_creds)
             except:
@@ -135,6 +138,8 @@ def sync_with_google_drive(user_id):
             service = worker_controller.apiclient.discovery.build('drive', 'v3', http=http)
             key = 'da:googledrive:mapping:userid:' + str(user_id)
             the_folder = worker_controller.r.get(key)
+            if the_folder is not None:
+                the_folder = the_folder.decode()
             response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
             the_mime_type = response.get('mimeType', None)
             trashed = response.get('trashed', False)
@@ -362,11 +367,13 @@ def sync_with_onedrive(user_id):
             #    return worker_controller.functions.ReturnValue(ok=False, error="Could not verify application root", restart=False)
             key = 'da:onedrive:mapping:userid:' + str(user_id)
             the_folder = worker_controller.r.get(key)
+            if the_folder is not None:
+                the_folder = the_folder.decode()
             r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder), "GET")
             if int(r['status']) != 200:
                 trashed = True
             else:
-                info = json.loads(content)
+                info = json.loads(content.decode())
                 if 'deleted' in info:
                     trashed = True
                 else:
@@ -391,7 +398,7 @@ def sync_with_onedrive(user_id):
             while True:
                 if int(r['status']) != 200:
                     return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolders", restart=False)
-                info = json.loads(content)
+                info = json.loads(content.decode())
                 for item in info['value']:
                     if 'deleted' in item or 'folder' not in item:
                         continue
@@ -432,8 +439,8 @@ def sync_with_onedrive(user_id):
                     sys.stderr.write("sync_with_onedrive: processing " + section + ", which is " + text_type(subdirs[section]) + "\n")
                     while True:
                         if int(r['status']) != 200:
-                            return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + text_type(r['status']) + ": " + text_type(content) + " looking for " + text_type(subdirs[section]), restart=False)
-                        info = json.loads(content)
+                            return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + text_type(r['status']) + ": " + content.decode() + " looking for " + text_type(subdirs[section]), restart=False)
+                        info = json.loads(content.decode())
                         #sys.stderr.write("sync_with_onedrive: result was " + repr(info) + "\n")
                         for the_file in info['value']:
                             #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
@@ -564,7 +571,7 @@ def sync_with_onedrive(user_id):
                         headers = { 'Content-Type': 'application/json' }
                         r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": od_createtimes[section][f], "lastModifiedDateTime": the_modtime })))
                         if int(r['status']) != 200:
-                            return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + text_type(r['status']) + ": " + text_type(content), restart=False)
+                            return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
@@ -596,9 +603,9 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
     r, content = try_request(http, the_url, 'POST')
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content) + " and url was " + the_url, restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url, restart=False)
     sys.stderr.write("Upload session created.\n")
-    upload_url = json.loads(content)["uploadUrl"].encode('utf-8')
+    upload_url = json.loads(content.decode())["uploadUrl"]
     sys.stderr.write("Upload url obtained.\n")
     total_bytes = os.path.getsize(the_path)
     start_byte = 0
@@ -615,16 +622,16 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
                 if int(r['status']) not in (200, 201):
                     sys.stderr.write("Error1\n")
                     sys.stderr.write(text_type(r['status']) + "\n")
-                    sys.stderr.write(content)
-                    return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content), restart=False)
+                    sys.stderr.write(content.decode())
+                    return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                 if new_item_id is None:
-                    new_item_id = json.loads(content)['id']
+                    new_item_id = json.loads(content.decode())['id']
             else:
                 if int(r['status']) != 202:
                     sys.stderr.write("Error2\n")
                     sys.stderr.write(text_type(r['status']) + "\n")
-                    sys.stderr.write(content)
-                    return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content), restart=False)
+                    sys.stderr.write(content.decode())
+                    return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                 sys.stderr.write("Got 202\n")
     item_data = copy.deepcopy(data)
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
@@ -633,7 +640,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data))
     sys.stderr.write("PATCH request sent\n")
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content), restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
     # tries = 1
     # start_time = time.time()
     # while tries < 3:
@@ -850,18 +857,32 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
-                if hasattr(e, 'traceback'):
-                    sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+                if PY2:
+                    if hasattr(e, 'traceback'):
+                        sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+                    else:
+                        sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
                 else:
-                    sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
+                    if hasattr(e, '__traceback__'):
+                        sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(traceback.format_tb(e.__traceback__)))
+                    else:
+                        sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
                 error_type = e.__class__.__name__
                 error_message = text_type(e)
-                if hasattr(e, 'traceback'):
-                    error_trace = text_type(e.traceback)
-                    if hasattr(e, 'da_line_with_error'):
-                        error_trace += "\nIn line: " + text_type(e.da_line_with_error)
+                if PY2:
+                    if hasattr(e, 'traceback'):
+                        error_trace = text_type(e.traceback)
+                        if hasattr(e, 'da_line_with_error'):
+                            error_trace += "\nIn line: " + text_type(e.da_line_with_error)
+                    else:
+                        error_trace = None
                 else:
-                    error_trace = None
+                    if hasattr(e, '__traceback__'):
+                        error_trace = ''.join(traceback.format_tb(e.__traceback__))
+                        if hasattr(e, 'da_line_with_error'):
+                            error_trace += "\nIn line: " + text_type(e.da_line_with_error)
+                    else:
+                        error_trace = None
                 variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
                 worker_controller.error_notification(e, message=error_message, trace=error_trace)
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:

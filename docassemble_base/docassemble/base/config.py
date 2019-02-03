@@ -158,7 +158,7 @@ def load(**kwargs):
         h = httplib2.Http()
         resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
-            hostname = content
+            hostname = content.decode()
         else:
             sys.stderr.write("Could not get hostname from ec2\n")
             sys.exit(1)

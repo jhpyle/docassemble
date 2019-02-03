@@ -54,6 +54,9 @@ choices:
 mandatory: true
 code: |
   introduction_shown
+  subject_of_letter
+  recipient.name.first
+  recipient.address.address
 ---
 mandatory: True
 question: Here is your document.

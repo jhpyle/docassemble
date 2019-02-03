@@ -12,8 +12,10 @@ import docassemble.webapp.database
 import logging
 if PY2:
     import cPickle as pickle
+    FileType = file
 else:
     import pickle
+    from io import IOBase as FileType
 import codecs
 #import string
 #import random
@@ -27,7 +29,9 @@ from dateutil import tz
 import tzlocal
 import ruamel.yaml
 TypeType = type(type(None))
+NoneType = type(None)
 
+from io import open
 import docassemble.base.parse
 import re
 import os
@@ -38,6 +42,7 @@ from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 import docassemble.webapp.worker
 from docassemble.webapp.mailgun_mail import Mail as MailgunMail
+from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict
 
 #sys.stderr.write("I am in backend\n")
 
@@ -122,7 +127,7 @@ def write_ml_source(playground, playground_number, filename, finalize=True):
                 continue
             if parts[2] not in output:
                 output[parts[2]] = list()
-            the_entry = dict(independent=pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
+            the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)))
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
@@ -347,7 +352,7 @@ def pack_object(the_object):
 
 def unpack_object(the_string):
     the_string = bytearray(the_string, encoding='utf-8')
-    return pickle.loads(codecs.decode(the_string, 'base64'))
+    return fix_pickle_dict(pickle.loads(codecs.decode(the_string, 'base64'), encoding="bytes", fix_imports=True))
 
 def safe_pickle(the_object):
     if type(the_object) is list:
@@ -362,21 +367,70 @@ def safe_pickle(the_object):
         for sub_object in the_object:
             new_set.add(safe_pickle(sub_object))
         return new_set
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
         return None
     return the_object
 
 def pack_dictionary(the_dict):
-    return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
+    retval = codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
+    return retval
 
 def decrypt_dictionary(dict_string, secret):
     dict_string = bytearray(dict_string, encoding='utf-8')
     decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, dict_string[:16])
-    return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
+    return fix_pickle_dict(pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))), encoding="bytes", fix_imports=True))
 
 def unpack_dictionary(dict_string):
-    dict_string = bytearray(dict_string, encoding='utf-8')
-    return pickle.loads(codecs.decode(dict_string, 'base64'))
+    dict_string = codecs.decode(bytearray(dict_string, encoding='utf-8'), encoding='base64')
+    return fix_pickle_dict(pickle.loads(dict_string, encoding="bytes", fix_imports=True))
+
+def safe_json(the_object, level=0):
+    if level > 20:
+        return None
+    if isinstance(the_object, (string_types, bool, int, float)):
+        return the_object
+    if isinstance(the_object, list):
+        return [safe_json(x, level=level+1) for x in the_object]
+    if isinstance(the_object, dict):
+        new_dict = dict()
+        for key, value in the_object.items():
+            new_dict[key] = safe_json(value, level=level+1)
+        return new_dict
+    if isinstance(the_object, set):
+        new_list = list()
+        for sub_object in the_object:
+            new_list.append(safe_json(sub_object, level=level+1))
+        return new_list
+    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
+        return None
+    if isinstance(the_object, datetime.datetime):
+        serial = the_object.isoformat()
+        return serial
+    if isinstance(the_object, datetime.time):
+        serial = the_object.isoformat()
+        return serial
+    if isinstance(the_object, decimal.Decimal):
+        return float(the_object)
+    if isinstance(the_object, DANav):
+        return dict(past=list(the_object.past), current=the_object.current)
+    from docassemble.base.core import DAObject
+    if isinstance(the_object, DAObject):
+        new_dict = dict()
+        new_dict['_class'] = type_name(the_object)
+        if the_object.__class__.__name__ == 'DALazyTemplate' or the_object.__class__.__name__ == 'DALazyTableTemplate':
+            if hasattr(the_object, 'instanceName'):
+                new_dict['instanceName'] = the_object.instanceName
+            return new_dict
+        for key, data in the_object.__dict__.items():
+            if key in ['has_nonrandom_instance_name', 'attrList']:
+                continue
+            new_dict[key] = safe_json(data, level=level+1)
+        return new_dict
+    try:
+        json.dumps(the_object)
+    except:
+        return None
+    return the_object
 
 def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
     return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')

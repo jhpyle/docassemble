@@ -1,7 +1,7 @@
 metadata:
   title: PDF fill-in with code
   documentation: "https://docassemble.org/docs/documents.html#template code"
-  example start: 8
+  example start: 9
 ---
 modules:
   - docassemble.base.util
@@ -31,6 +31,14 @@ yesno: likes_pears
 question: |
   Do you like oranges?
 yesno: likes_oranges
+---
+mandatory: True
+code: |
+  user.name.first
+  likes_apples
+  likes_oranges
+  likes_pears
+  likes_toast
 ---
 question: |
   Here is your PDF form

@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.0] - 2019-02-03
+### Added
+- The `DAPYTHONVERSION` Docker environment variable.
+### Changed
+- The system is now compatible with Python 3.5.
+- The `subdivision_type()` algorithm was improved.
+### Fixed
+- The update script failed under some circumstances due to a SQL
+  error.
+
 ## [0.3.36] - 2019-01-24
 ### Fixed
 - Not all login methods were redirecting the user back to the

@@ -13,9 +13,9 @@ if __name__ == "__main__":
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
     if PY2:
-        print('export DA_PYTHON_VERSION="2"')
+        print('export DAPYTHONVERSION="2"')
     else:
-        print('export DA_PYTHON_VERSION="3"')
+        print('export DAPYTHONVERSION="3"')
     if 'other os locales' in daconfig and type(daconfig['other os locales']) is list:
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')

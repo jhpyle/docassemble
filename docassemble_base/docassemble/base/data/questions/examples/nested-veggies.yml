@@ -36,7 +36,7 @@ mandatory: True
 question: |
   Summary of weights
 subquestion: |
-  % for veggie_name in veggies:
+  % for veggie_name in veggies.keys():
     % for weight in veggies[veggie_name]:
   A ${ veggie_name }
   weighs

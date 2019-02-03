@@ -5,6 +5,7 @@ from flask import url_for as url_for
 from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
+#import docassemble.webapp.daredis
 from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
@@ -112,6 +113,7 @@ def delete_privilege(id):
         db.session.delete(role)
         db.session.commit()
         flash(word('The role ' + role.name + ' was deleted.'), 'success')
+        #docassemble.webapp.daredis.clear_user_cache()
     return redirect(url_for('privilege_list'))
 
 @app.route('/user/<id>/editprofile', methods=['GET', 'POST'])
@@ -125,10 +127,12 @@ def edit_user_profile_page(id):
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         return redirect(url_for('edit_user_profile_page', id=id))
     if 'reset_email_confirmation' in request.args and int(request.args['reset_email_confirmation']) == 1:
         user.confirmed_at = None
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         return redirect(url_for('edit_user_profile_page', id=id))
     the_role_id = list()
     for role in user.roles:
@@ -167,6 +171,7 @@ def edit_user_profile_page(id):
                 user.roles.append(role)
                 the_role_id.append(role.id)
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
     form.role_id.default = the_role_id
@@ -186,6 +191,7 @@ def add_privilege():
         
         db.session.add(Role(name=form.name.data))
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
@@ -206,6 +212,7 @@ def user_profile_page():
     if request.method == 'POST' and form.validate():
         form.populate_obj(current_user)
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('interview_list'))
     return render_template('users/user_profile_page.html', version_warning=None, page_title=word('User Profile'), tab_title=word('User Profile'), form=form, debug=debug_status())
@@ -259,6 +266,7 @@ def invite():
 
         user_invite.token = token
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         try:
             logmessage("Trying to send e-mail to " + str(user_invite.email))
             emails.send_invite_email(user_invite, accept_invite_link)
@@ -266,6 +274,7 @@ def invite():
             logmessage("Failed to send e-mail")
             db.session.delete(user_invite)
             db.session.commit()
+            #docassemble.webapp.daredis.clear_user_cache()
             flash(word('Unable to send e-mail.  Error was: ') + str(e), 'error')
             return redirect(url_for('invite'))
         flash(word('Invitation has been sent.'), 'success')
@@ -315,6 +324,7 @@ def user_add():
         db.session.add(user_auth)
         db.session.add(the_user)
         db.session.commit()
+        #docassemble.webapp.daredis.clear_user_cache()
         flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
     return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form)

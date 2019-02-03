@@ -32,8 +32,10 @@
             {{ render_field(form.organization) }}
             {{ render_field(form.language) }}
             {{ render_field(form.timezone) }}
+            {%- if config['USE_PYPI'] %}
             {{ render_field(form.pypi_username) }}
             {{ render_field(form.pypi_password) }}
+            {%- endif %}
             {%- endif %}
             <br>
             {{ get_part('profile page submit') }}<div class="form-actions">

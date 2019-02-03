@@ -1,6 +1,6 @@
 import os
 import os.path
-from six import string_types, text_type
+from six import string_types, text_type, PY2, PY3
 import subprocess
 import docassemble.base.filter
 import docassemble.base.functions
@@ -114,9 +114,14 @@ class MyPandoc(object):
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
         if not re.search(r'[^\s]', self.input_content):
-            self.input_content = "\\textbf{}\n"
-        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".md", delete=False)
-        temp_file.write(self.input_content.encode('utf8'))
+            self.input_content = u"\\textbf{}\n"
+        if PY3:
+            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".md", delete=False, encoding='utf-8')
+            temp_file.write(self.input_content)
+        else:
+            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".md", delete=False)
+            with open(temp_file.name, 'w', encoding='utf-8') as fp:
+                fp.write(self.input_content)
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_extension), delete=False)
         temp_outfile.close()
@@ -148,21 +153,21 @@ class MyPandoc(object):
         #logmessage("Arguments are " + str(subprocess_arguments))
         the_temp_dir = tempfile.gettempdir()
         try:
-            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT)
+            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT).decode()
         except subprocess.CalledProcessError as err:
-            raise Exception("Failed to assemble file: " + text_type(err.output))
+            raise Exception("Failed to assemble file: " + err.output.decode())
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)
         if os.path.exists(temp_outfile.name):
             if self.output_format in ('rtf', 'rtf to docx'):
-                with open(temp_outfile.name) as the_file:
+                with open(temp_outfile.name, encoding='utf-8') as the_file:
                     file_contents = the_file.read()
                 # with open('/tmp/asdf.rtf', 'w') as deb_file:
                 #     deb_file.write(file_contents)
                 file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file), question=question)
                 with open(temp_outfile.name, "wb") as the_file:
-                    the_file.write(file_contents)
+                    the_file.write(bytearray(file_contents, encoding='utf-8'))
                 if self.output_format == 'rtf to docx':
                     docx_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                     success = rtf_to_docx(temp_outfile.name, docx_outfile.name)
@@ -195,9 +200,9 @@ class MyPandoc(object):
             else:
                 if self.input_format == 'markdown':
                     input_format = "markdown+smart"
-                else:
-                    input_format = input_format
             subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('.', 'conv'), '--from=%s' % input_format, '--to=%s' % self.output_format])
+            if self.output_format == 'html':
+                subprocess_arguments.append('--ascii')
             subprocess_arguments.extend(self.arguments)
             #logmessage("Arguments are " + str(subprocess_arguments))
             p = subprocess.Popen(
@@ -207,7 +212,13 @@ class MyPandoc(object):
                 cwd=tempfile.gettempdir()
             )
             self.output_filename = None
-            self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
+            #logmessage("input content is a " + self.input_content.__class__.__name__)
+            #with open('/tmp/moocow1', 'wb') as fp:
+            #    fp.write(bytearray(self.input_content, encoding='utf-8'))
+            self.output_content = p.communicate(bytearray(self.input_content, encoding='utf-8'))[0]
+            #with open('/tmp/moocow2', 'wb') as fp:
+            #    fp.write(self.output_content)
+            self.output_content = self.output_content.decode()
         return
 
 def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_references=False):

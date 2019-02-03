@@ -23,7 +23,6 @@ def fix_nickname(form, field):
 class MySignInForm(LoginForm):
     def validate(self):
         #import redis
-        sys.stderr.write("In validate\n")
         from docassemble.webapp.daredis import r
         #import docassemble.base.util
         from flask import request, abort
@@ -83,9 +82,9 @@ class MySignInForm(LoginForm):
                 else:
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
-            sys.stderr.write("Trying super validate\n")
+            #sys.stderr.write("Trying super validate\n")
             result = super(MySignInForm, self).validate()
-            sys.stderr.write("Super validate response was " + repr(result) + "\n")
+            #sys.stderr.write("Super validate response was " + repr(result) + "\n")
         if result is False:
             r.incr(key)
             r.expire(key, daconfig['ban period'])
@@ -221,8 +220,8 @@ class PhoneLoginVerifyForm(FlaskForm):
         if verification_code is None:
             logmessage("Verification code with " + str(verification_key) + " is None")
             result = False
-        elif verification_code != supplied_verification_code:
-            logmessage("Verification code with " + str(verification_key) + " which is " + str(verification_code) + " does not match supplied code, which is " + str(self.verification_code.data))
+        elif verification_code.decode() != supplied_verification_code:
+            logmessage("Verification code with " + str(verification_key) + " which is " + str(verification_code.decode()) + " does not match supplied code, which is " + str(self.verification_code.data))
             result = False
         else:
             logmessage("Code matched")

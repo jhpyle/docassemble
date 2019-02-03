@@ -19,7 +19,7 @@ class UserModel(db.Model, UserMixin):
     timezone = db.Column(db.String(64))
     language = db.Column(db.String(64))
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id")
-    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic'))
+    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic')) 
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
     pypi_username = db.Column(db.String(255), nullable=True)

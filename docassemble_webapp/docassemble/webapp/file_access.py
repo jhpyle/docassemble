@@ -18,6 +18,7 @@ from flask import session, has_request_context, url_for
 from flask_login import current_user
 from sqlalchemy import or_, and_
 import docassemble.base.config
+from io import open
 
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
@@ -186,7 +187,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
 def add_info_about_file(filename, result):
     if result['extension'] == 'pdf':
         try:
-            reader = PyPDF2.PdfFileReader(open(filename))
+            reader = PyPDF2.PdfFileReader(open(filename, 'rb'))
             result['pages'] = reader.getNumPages()
         except:
             result['pages'] = 1

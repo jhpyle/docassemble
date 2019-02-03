@@ -30,9 +30,9 @@ def mmdc(input_text, file_format='svg', flags=dict()):
         commands.append(repr(str(val)))
     sys.stderr.write("Commands are: " + " ".join(commands) + "\n")
     try:
-        output = subprocess.check_output(commands, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
-        output = err.output
+        output = err.output.decode()
         raise Exception("mmdc: there was an error.  " + output)
     if os.path.getsize(output_file.name) == 0:
         raise Exception("mmdc: the command did not produce any output.  " + output)

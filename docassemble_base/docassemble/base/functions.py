@@ -44,7 +44,7 @@ from jinja2.runtime import Undefined
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type']
 
 # debug = False
 # default_dialect = 'us'
@@ -92,8 +92,10 @@ class ReturnValue(object):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
 
 def get_current_variable():
+    #logmessage("get_current_variable")
     if len(this_thread.current_variable):
         return this_thread.current_variable[-1]
+    #logmessage("get_current_variable: no current variable")
     return None
 
 def reset_context():
@@ -160,7 +162,9 @@ def set_gathering_mode(mode, instanceName):
 def get_gathering_mode(instanceName):
     #logmessage("get_gathering_mode: " + str(instanceName))
     if instanceName not in this_thread.gathering_mode:
+        #logmessage("get_gathering_mode: returning False")
         return False
+    #logmessage("get_gathering_mode: returning True")
     return True
 
 def reset_gathering_mode(*pargs):
@@ -173,6 +177,7 @@ def reset_gathering_mode(*pargs):
     for instanceName, curVar in this_thread.gathering_mode.items():
         if curVar == var:
             todel.append(instanceName)
+    #logmessage("reset_gathering_mode: deleting " + repr([y for y in todel]))
     for item in todel:
         del this_thread.gathering_mode[item]
 
@@ -328,12 +333,12 @@ def subdivision_type(country_code):
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         if subdivision.parent_code is not None:
             continue
-        if subdivision.name not in counts:
+        if subdivision.type not in counts:
             counts[subdivision.type] = 1
         else:
             counts[subdivision.type] += 1
     counts_ordered = sorted(counts.keys(), key=lambda x: counts[x], reverse=True)
-    if len(counts_ordered) > 1 and counts[counts_ordered[1]] > 1:
+    if len(counts_ordered) > 1 and counts[counts_ordered[1]] > 0.5*counts[counts_ordered[0]]:
         return counts_ordered[0] + '/' + counts_ordered[1]
     elif len(counts_ordered) > 0:
         return counts_ordered[0]
@@ -787,7 +792,7 @@ class DANav(object):
                         else:
                             all_ids.append(key)
                 elif len(x) == 1:
-                    the_key = x.keys()[0]
+                    the_key = list(x)[0]
                     value = x[the_key]
                     if type(value) is list:
                         subitems = value
@@ -801,7 +806,7 @@ class DANav(object):
                 for y in subitems:
                     if type(y) is dict:
                         if len(y) == 1:
-                            all_ids.append(y.keys()[0])
+                            all_ids.append(list(y)[0])
                         else:
                             logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
                             continue
@@ -827,7 +832,7 @@ class DANav(object):
                             the_key = key
                             the_title = val
                 elif len(x) == 1:
-                    the_key = x.keys()[0]
+                    the_key = list(x)[0]
                     value = x[the_key]
                     if type(value) is list:
                         subitems = value
@@ -848,7 +853,7 @@ class DANav(object):
                 for y in subitems:
                     if type(y) is dict:
                         if len(y) == 1:
-                            sub_key = y.keys()[0]
+                            sub_key = list(y)[0]
                             sub_title = y[sub_key]
                         else:
                             logmessage("navigation_bar: too many keys in dict.  " + repr(the_sections))
@@ -1309,6 +1314,7 @@ def backup_thread_variables():
     return backup
 
 def restore_thread_variables(backup):
+    #logmessage("restore_thread_variables")
     for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars']:
         setattr(this_thread, key, backup[key])
 
@@ -1599,6 +1605,7 @@ def get_default_timezone():
 #     this_thread.message_log = list()
 
 def reset_local_variables():
+    #logmessage("reset_local_variables")
     this_thread.language = server.default_language
     this_thread.dialect = server.default_dialect
     this_thread.country = server.default_country
@@ -1619,7 +1626,6 @@ def reset_local_variables():
     this_thread.current_package = None
     this_thread.current_question = None
     this_thread.internal = dict()
-    this_thread.current_variable = list()
     this_thread.prevent_going_back = False
 
 def prevent_going_back():
@@ -1944,7 +1950,6 @@ def possessify_en(a, b, **kwargs):
         return text_type(a) + text_type(middle) + text_type(b)
 
 def a_preposition_b_default(a, b, **kwargs):
-    #logmessage("Got here")
     ensure_definition(a, b, **kwargs)
     if hasattr(a, 'preposition'):
         #logmessage("Has preposition")

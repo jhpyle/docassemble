@@ -2,11 +2,17 @@ metadata:
   title: Data structure from code
   short title: Data code
   documentation: "https://docassemble.org/docs/initial.html#data from code"
-  example start: 2
-  example end: 6
+  example start: 3
+  example end: 7
 ---
 modules:
   - docassemble.base.util
+---
+mandatory: True
+code: |
+  seeds_in_orange
+  peach_description
+  user_favorite_fruit
 ---
 variable name: fruits
 data from code:

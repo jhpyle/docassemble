@@ -25,6 +25,7 @@ www-compile.sh
 compile2.sh
 www-compile2.sh
 requirements.txt
+requirements3.txt
 full-requirements.txt
 taskdefinition.json
 TODO.md
@@ -47,3 +48,4 @@ tests/ghostdriver.log
 tests/features/Temp.feature
 tests/features/Screenshots.feature
 fix-seq.sql
+rtftest.py

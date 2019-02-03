@@ -74,6 +74,11 @@ under: |
 mandatory: true
 code: |
   introduction_shown
+  subject_matter
+  user.name.first
+  user.signature
+  adverse_party.name.first
+  adverse_party.address.address
 ---
 mandatory: True
 question: |
