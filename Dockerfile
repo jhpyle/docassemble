@@ -164,7 +164,7 @@ fonts-liberation \
 qpdf \
 python3 \
 python3-venv; \
-do sleep 5; 
+do sleep 5; \
 done; \
 apt-get -q -y install -t stretch-backports libreoffice"
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
