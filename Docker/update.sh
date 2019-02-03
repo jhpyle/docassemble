@@ -14,6 +14,12 @@ source "${DA_ACTIVATE}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export HOME=/var/www
 
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
+source /dev/stdin < <(source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE)
+
+set -- $LOCALE
+export LANG=$1
+
 python -m docassemble.webapp.update
 
 exit 0
