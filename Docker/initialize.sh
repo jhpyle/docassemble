@@ -610,9 +610,15 @@ echo "43" >&2
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	if [ "${DAPYTHONVERSION}" == "2" ]; then
-	    apt-get -q -y install libapache2-mod-wsgi &> /dev/null
+	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
+	    if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
+		cd /tmp && wget http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
+	    fi
 	else
-	    apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
+	    if [ "${WSGI_VERSION}" != '4.5.11-1' ]; then
+		apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+	    fi
 	fi
     fi
 
