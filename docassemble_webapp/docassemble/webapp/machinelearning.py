@@ -110,7 +110,7 @@ class MachineLearner(object):
             query = db.session.query(MachineLearning.dependent).filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent)
         for record in query:
             if record.dependent is not None:
-                in_use.add(fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')), encoding="bytes", fix_imports=True))
+                in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')), encoding="bytes", fix_imports=True)
         return sorted(in_use)
     def is_empty(self):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
@@ -169,10 +169,10 @@ class MachineLearner(object):
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if existing_entry.dependent:
-            dependent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(existing_entry.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
-            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if existing_entry.info is not None else None)
+            dependent = fix_pickle_obj(codecs.decode(bytearray(existing_entry.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)
+            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True) if existing_entry.info is not None else None)
         else:
-            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if existing_entry.info is not None else None)
+            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True) if existing_entry.info is not None else None)
     def one_unclassified_entry(self, key=None):
         self._initialize()
         if key is None:
@@ -181,7 +181,7 @@ class MachineLearner(object):
             entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).first()
         if entry is None:
             return None
-        return MachineLearningEntry(ml=self, id=entry.id, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if entry.info is not None else None)._set_instance_name_for_method()
+        return MachineLearningEntry(ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True) if entry.info is not None else None)._set_instance_name_for_method()
     def new_entry(self, **kwargs):
         return MachineLearningEntry(ml=self, **kwargs)._set_instance_name_for_method()
     def unclassified_entries(self, key=None):
@@ -193,7 +193,7 @@ class MachineLearner(object):
         else:
             query = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).all()
         for entry in query:
-            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if entry.info is not None else None)
+            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True) if entry.info is not None else None)
         return results
     def classified_entries(self, key=None):
         self._initialize()
@@ -205,7 +205,7 @@ class MachineLearner(object):
         else:
             query = MachineLearning.query.filter_by(group_id=self.group_id, active=True, key=key).order_by(MachineLearning.id).all()
         for entry in query:
-            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
+            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), dependent=fix_pickle_obj(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
         return results
     def _save_entry(self, **kwargs):
         self._initialize()
@@ -266,7 +266,7 @@ class MachineLearner(object):
         success = False
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
             #logmessage("Training...")
-            self._train(fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)))
+            self._train(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True), fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
             success = True
         lastmodtime[self.group_id] = nowtime
         return success
@@ -446,8 +446,8 @@ class RandomForestMachineLearner(MachineLearner):
         data = list()
         depend_data = list()
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
-            indep_var = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
-            depend_var = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+            indep_var = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)
+            depend_var = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)
             if type(depend_var) is str:
                 depend_var = text_type(depend_var)
             if learners[self.group_id]['dep_type'] is not None:

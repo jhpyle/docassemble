@@ -26,7 +26,7 @@ else:
 import re
 import time
 import random
-from docassemble.webapp.backend import initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
+from docassemble.webapp.backend import initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj
 from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import session, request
@@ -732,7 +732,7 @@ def update_monitor(message):
     sessions = dict()
     for key in keylist:
         try:
-            sessobj = pickle.loads(rr.get(key))
+            sessobj = fix_pickle_obj(rr.get(key))
         except:
             sys.stderr.write('error parsing value of ' + str(key) + " which was " + repr(rr.get(key)) + "\n")
             continue

@@ -470,6 +470,7 @@
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
+"The regular expression you provided could not be parsed.": Null
 "There is already a username and password on this system with the e-mail address": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null

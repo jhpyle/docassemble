@@ -163,7 +163,8 @@ ttf-liberation \
 fonts-liberation \
 qpdf \
 python3 \
-python3-venv; \
+python3-venv \
+python3-dev; \
 do sleep 5; \
 done; \
 apt-get -q -y install -t stretch-backports libreoffice"
@@ -233,7 +234,7 @@ ln -s /var/mail/mail /var/mail/root \
 && bash -c \
 "chown www-data.www-data /usr/share/docassemble/config \
 && chown www-data.www-data \
-   /usr/share/docassemble/config/config.yml.dist 
+   /usr/share/docassemble/config/config.yml.dist \
    /usr/share/docassemble/webapp/docassemble.wsgi \
 && chown -R www-data.www-data \
    /tmp/docassemble \

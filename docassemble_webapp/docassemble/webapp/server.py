@@ -997,7 +997,7 @@ def get_sms_session(phone_number, config='default'):
     sess_contents = r.get('da:sms:client:' + phone_number + ':server:' + tconfig['number'])
     if sess_contents is not None:
         try:        
-            sess_info = fix_pickle_obj(pickle.loads(sess_contents, encoding="bytes", fix_imports=True))
+            sess_info = fix_pickle_obj(sess_contents)
         except:
             logmessage("get_sms_session: unable to decode session information")
     sess_info['email'] = None
@@ -9539,7 +9539,7 @@ def visit_interview():
     userid = request.args.get('userid', None)
     key = 'da:session:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
     try:
-        obj = fix_pickle_obj(pickle.loads(r.get(key), encoding="bytes", fix_imports=True))
+        obj = fix_pickle_obj(r.get(key))
     except:
         abort(404)
     if 'secret' not in obj or 'encrypted' not in obj:
@@ -15874,7 +15874,7 @@ def logfile(filename):
 def logs():
     form = LogForm(request.form)
     the_file = request.args.get('file', None)
-    default_filter_string = ''
+    default_filter_string = request.args.get('q', '')
     if request.method == 'POST' and form.file_name.data:
         the_file = form.file_name.data
     if the_file is not None and (the_file.startswith('.') or the_file.startswith('/') or the_file == ''):
@@ -15908,7 +15908,14 @@ def logs():
     if len(files):
         if request.method == 'POST' and form.submit.data and form.filter_string.data:
             default_filter_string = form.filter_string.data
-            reg_exp = re.compile(form.filter_string.data)
+        try:
+            reg_exp = re.compile(default_filter_string)
+        except:
+            flash(word("The regular expression you provided could not be parsed."), 'error')
+            default_filter_string = ''
+        if default_filter_string == '':
+            lines = tailer.tail(open(filename, encoding='utf-8'), 30)
+        else:
             if PY3:
                 temp_file = tempfile.NamedTemporaryFile(mode='a+', encoding='utf-8')
                 with open(filename, 'rU', encoding='utf-8') as fp:
@@ -15924,8 +15931,6 @@ def logs():
             temp_file.seek(0)
             lines = tailer.tail(temp_file, 30)
             temp_file.close()
-        else:
-            lines = tailer.tail(open(filename, encoding='utf-8'), 30)
         content = "\n".join(map(lambda x: x, lines))
     else:
         content = "No log files available"
@@ -16264,7 +16269,7 @@ def train():
                 elif uploadform.importtype.data == 'merge':
                     indep_in_use = set()
                     for record in MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).all():
-                        indep_in_use.add(fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)))
+                        indep_in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')))
                     for entry in train_list:
                         if 'independent' in entry and entry['independent'] not in indep_in_use:
                             new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
@@ -16399,15 +16404,15 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
-                    the_independent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+                        the_dependent = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                    the_independent = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
                     try:
                         text_type(the_independent) + ""
                         text_type(the_dependent) + ""
                     except Exception as e:
                         logmessage("Bad record: id " + str(record.id) + " where error was " + str(e))
                         continue
-                    the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent))
+                    the_entry = dict(independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[record.group_id].append(the_entry)
@@ -16423,8 +16428,8 @@ def train():
                     if record.dependent is None:
                         the_dependent = None
                     else:
-                        the_dependent = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
-                    the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=the_dependent)
+                        the_dependent = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                    the_entry = dict(independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=the_dependent)
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[parts[2]].append(the_entry)
@@ -16518,7 +16523,7 @@ def train():
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
-            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.independent is not None else None, dependent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.dependent is not None else None, info=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
+            new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=fix_pickle_obj(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
                 new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + text_type(key) + '</span>: <span class="mldatavalue">' + text_type(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
                 new_entry['type'] = 'data'
@@ -16563,7 +16568,7 @@ def train():
         if len(entry_list) == 0:
             record = db.session.query(MachineLearning.independent).filter(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None)).first()
             if record is not None:
-                sample_indep = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+                sample_indep = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             else:
                 sample_indep = None
         else:
@@ -16577,7 +16582,7 @@ def train():
             #logmessage("There is a choice")
             if record.dependent is None:
                 continue
-            key = fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True))
+            key = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             choices[key] = record.count
         if len(choices):
             #logmessage("There are choices")
@@ -17298,7 +17303,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             accepting_input = False
         else:
             try:        
-                sess_info = fix_pickle_obj(pickle.loads(sess_contents, encoding="bytes", fix_imports=True))
+                sess_info = fix_pickle_obj(sess_contents)
             except:
                 logmessage("do_sms: unable to decode session information")
                 return resp

@@ -47,27 +47,10 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 if PY2:
-    setup(name='docassemble.base',
-          version='0.3.36',
-          description=('The base components of the docassemble system.'),
-          long_description=read("README.md"),
-          long_description_content_type='text/markdown',
-          author='Jonathan Pyle',
-          author_email='jhpyle@gmail.com',
-          license='MIT',
-          url='https://docassemble.org',
-          download_url='https://download.docassemble.org/docassemble-base.tar.gz',
-          namespace_packages = ['docassemble'],
-          install_requires = ['docassemble==0.3.36', 'python-docx==0.8.7', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.6', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer.six', 'pdfminer3k', 'pillow', 'pip', 'pycparser', 'pycrypto', 'pycryptodomex', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode[pil]', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'pypng', 'pyzbar', 'qrtools', 'pylatex', 'pandas', 'XlsxWriter', 'xlwt', 'future'],
-          packages=find_packages(),
-          zip_safe = False,
-          package_data=find_package_data(where=os.path.join('docassemble', 'base', ''), package='docassemble.base'),
-         )
-if PY2:
-    install_requires = ['docassemble==0.3.36', 'python-docx==0.8.7', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.6', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer.six', 'pdfminer3k', 'pillow', 'pip', 'pycparser', 'pycrypto', 'pycryptodomex', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools', 'pylatex', 'pandas', 'XlsxWriter', 'xlwt', 'future']
+    install_requires = ['docassemble==0.3.36', 'python-docx==0.8.7', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.6', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pillow', 'pip', 'pycparser', 'pycrypto', 'pycryptodomex', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools', 'pylatex', 'pandas', 'XlsxWriter', 'xlwt', 'future']
 else:
-    install_requires = ['docassemble==0.3.36', 'python-docx==0.8.7', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.6', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer.six', 'pdfminer3k', 'pillow', 'pip', 'pycparser', 'pycryptodome', 'pycryptodomex', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools', 'pylatex', 'pandas', 'XlsxWriter', 'xlwt', 'future']
-    
+    install_requires = ['docassemble==0.3.36', 'python-docx==0.8.7', '3to2', 'astunparse', 'babel', 'bcrypt', 'blinker', 'cffi', 'fdfgen', 'guess-language-spirit', 'httplib2', 'itsdangerous', 'jellyfish==0.5.6', 'jinja2', 'lxml', 'mako', 'markdown', 'markupsafe', 'mdx-smartypants', 'namedentities==1.5.2', 'passlib', 'pdfminer3k', 'pillow', 'pip', 'pycparser', 'pycryptodome', 'pycryptodomex', 'geopy', 'pygments', 'pyjwt', 'pypdf', 'pypdftk', 'PyPDF2', 'python-dateutil', 'pytz', 'pyyaml', 'ruamel.yaml', 'qrcode', 'six', 'titlecase', 'wheel', 'pattern', 'tzlocal', 'us', 'phonenumbers', 'pycountry', 'ua-parser', 'user-agents', 'textstat', 'twine', 'docxtpl', 'qrtools', 'pylatex', 'pandas', 'XlsxWriter', 'xlwt', 'future']
+
 setup(name='docassemble.base',
       version='0.3.36',
       description=('The base components of the docassemble system.'),

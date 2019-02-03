@@ -127,7 +127,7 @@ def write_ml_source(playground, playground_number, filename, finalize=True):
                 continue
             if parts[2] not in output:
                 output[parts[2]] = list()
-            the_entry = dict(independent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)), dependent=fix_pickle_obj(pickle.loads(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'), encoding="bytes", fix_imports=True)))
+            the_entry = dict(independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
@@ -352,7 +352,7 @@ def pack_object(the_object):
 
 def unpack_object(the_string):
     the_string = bytearray(the_string, encoding='utf-8')
-    return fix_pickle_dict(pickle.loads(codecs.decode(the_string, 'base64'), encoding="bytes", fix_imports=True))
+    return fix_pickle_dict(codecs.decode(the_string, 'base64'))
 
 def safe_pickle(the_object):
     if type(the_object) is list:
@@ -378,11 +378,11 @@ def pack_dictionary(the_dict):
 def decrypt_dictionary(dict_string, secret):
     dict_string = bytearray(dict_string, encoding='utf-8')
     decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, dict_string[:16])
-    return fix_pickle_dict(pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))), encoding="bytes", fix_imports=True))
+    return fix_pickle_dict(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
 
 def unpack_dictionary(dict_string):
-    dict_string = codecs.decode(bytearray(dict_string, encoding='utf-8'), encoding='base64')
-    return fix_pickle_dict(pickle.loads(dict_string, encoding="bytes", fix_imports=True))
+    dict_string = codecs.decode(bytearray(dict_string, encoding='utf-8'), 'base64')
+    return fix_pickle_dict(dict_string)
 
 def safe_json(the_object, level=0):
     if level > 20:

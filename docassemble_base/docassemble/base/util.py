@@ -78,7 +78,7 @@ class DARedis(DAObject):
         if result is None:
             return None
         try:
-            result = server.fix_pickle_obj(pickle.loads(result, encoding="bytes", fix_imports=True))
+            result = server.fix_pickle_obj(result)
         except:
             logmessage("get_data: could not unpickle contents of " + str(key))
             result = None

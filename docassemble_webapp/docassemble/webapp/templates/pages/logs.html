@@ -32,7 +32,11 @@
       <button type="submit" name="{{ form.clear.id }}" class="btn btn-secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
     </div>
     <div class="col-auto ml-auto my-1 h3">
+      {%- if default_filter_string == '' %}
       <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fas fa-sync-alt"></i></a>
+      {%- else %}
+      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file, q=default_filter_string) }}"><i class="fas fa-sync-alt"></i></a>
+      {%- endif %}
     </div>
   </div>
   {{ form.hidden_tag() }}
@@ -40,5 +44,8 @@
 </form>
 <div>
   <pre class="wrappre vspace">{{ content }}</pre>
+</div>
+<div>
+  <p>{{ word("Only the last 30 lines are shown.  Download the file to see the previous lines.") }}</p>
 </div>
 {%- endblock %}
