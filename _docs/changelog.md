@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.0](https://github.com/jhpyle/docassemble/releases/tag/v0.4.0) - 2019-02-04
+
+### Added
+- The `DAPYTHONVERSION` Docker environment variable.
+- The `text_type()` function.
+
+### Changed
+- The system is now compatible with Python 3.5.
+- The `subdivision_type()` algorithm was improved.
+
+### Fixed
+- The update script failed under some circumstances due to a SQL
+  error.
+
 ## [0.3.36](https://github.com/jhpyle/docassemble/releases/tag/v0.3.36) - 2019-01-24
 
 ### Fixed

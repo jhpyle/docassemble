@@ -3650,6 +3650,13 @@ For an [API] version of this function, see [`/api/privileges`].
 
 # <a name="functions"></a>Miscellaneous functions
 
+## <a name="text_type"></a>text_type()
+
+The `text_type()` function is equivalent to `unicode()` in Python 2
+and `str()` in Python 3.  It comes from the [six] package.  You should
+use this instead of `unicode()` in order to be ready to [upgrade to
+Python 3].
+
 ## <a name="validation_error"></a>validation_error()
 
 <a name="DAValidationError"></a>The `validation_error()` function
@@ -6381,3 +6388,5 @@ $(document).on('daPageLoad', function(){
 [`create_user()`]: #create_user
 [privileges]: {{ site.baseurl }}/docs/users.html
 [privilege]: {{ site.baseurl }}/docs/users.html
+[upgrade to Python 3]: {{ site.baseurl }}/docs/twotothree.html
+[six]: https://pypi.org/project/six/

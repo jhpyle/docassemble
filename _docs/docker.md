@@ -138,7 +138,7 @@ provider's instructions for using [SSH] to connect to your machine.
 From the command line, simply type in:
 
 {% highlight bash %}
-docker run -d -p 80:80 jhpyle/docassemble
+docker run -d -p 80:80 --env DAPYTHONVERSION=3 jhpyle/docassemble
 {% endhighlight %}
 
 The [`docker run`] command will download and run **docassemble**,
@@ -356,6 +356,7 @@ DAHOSTNAME=docassemble.example.com
 USEHTTPS=true
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=admin@example.com
+DAPYTHONVERSION=3
 {% endhighlight %}
 
 Then, you can pass these environment variables to the container using
@@ -612,6 +613,13 @@ container for the new configuration to take effect.
 * <a name="DABACKUPDAYS"></a>`DABACKUPDAYS`: The number of days
   backups should be kept.  The default is 14.  See the [`backup days`]
   configuration directive.
+* <a name="DAPYTHONVERSION"></a>`DAPYTHONVERSION`: Set this to `3` in
+  order to run **docassemble** using Python 3.5.  If `DAPYTHONVERSION`
+  is not set, **docassemble** will be run using Python 2.7.  If you
+  have an existing **docassemble** instance that uses Python 2.7
+  (which is the default unless `DAPYTHONVERSION` is set to `3`), you
+  will not want to change this until you have done testing.  See
+  [migration from Python 2.7 to Python 3.5] for more information.
 
 ## <a name="configuration"></a>Changing the configuration
 
@@ -1318,6 +1326,7 @@ Set the contents of `env.list` to:
 BEHINDHTTPSLOADBALANCER=true
 DAHOSTNAME=justice.example.com
 POSTURLROOT=/da/
+DAPYTHONVERSION=3
 {% endhighlight %}
 
 The `POSTURLROOT` variable, which is set to `/da/`, indicates the
@@ -1757,3 +1766,4 @@ line), as the containers depend on the images.
 [Traefik]: https://traefik.io/
 [Flask]: http://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
+[migration from Python 2.7 to Python 3.5]: {{ site.baseurl }}/docs/twotothree.html

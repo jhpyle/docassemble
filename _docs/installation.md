@@ -150,7 +150,7 @@ The following dependencies can be installed from [Debian] or
 {% highlight bash %}
 sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   git locales pandoc texlive texlive-latex-extra apache2 postgresql \
-  libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils \
+  libapache2-mod-wsgi-py3 libapache2-mod-xsendfile poppler-utils \
   libffi-dev libffi6 imagemagick gcc supervisor \
   libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl \
   libogg-vorbis-header-pureperl-perl make perl libvorbis-dev \
@@ -189,7 +189,8 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   cm-super libgs-dev ghostscript texlive-extra-utils \
   default-libmysqlclient-dev python-passlib libsasl2-dev \
   libldap2-dev ttf-mscorefonts-installer \
-  fonts-ebgaramond-extra ttf-liberation fonts-liberation
+  fonts-ebgaramond-extra ttf-liberation fonts-liberation \
+  qpdf python3 python3-venv python3-dev
 {% endhighlight %}
 
 The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
@@ -202,8 +203,8 @@ depending on which distribution and version you are using.
 The latest version of [Pandoc] can be installed by doing:
 
 {% highlight bash %}
-wget https://github.com/jgm/pandoc/releases/download/2.3/pandoc-2.3-1-amd64.deb
-sudo dpkg -i pandoc-2.3-1-amd64.deb
+wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb
+sudo dpkg -i pandoc-2.5-1-amd64.deb
 {% endhighlight %}
 
 For best results, install an up-to-date version of [LibreOffice].  On
@@ -235,12 +236,13 @@ sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
 wget -qO- https://deb.nodesource.com/setup_6.x | sudo bash -
 sudo apt-get -y install nodejs
 sudo npm install -g azure-storage-cmd
+sudo npm install -g mermaid.cli
 {% endhighlight %}
 
 ([npm] is absent from [Debian stretch] due to security issues, so it
 needs to be installed from another source.  If [npm] is available on
-your Linux distribution, it is probably sufficient just to run `npm
-install -g azure-storage-cmd`.)
+your Linux distribution, it is probably sufficient just to run `sudo npm
+install -g azure-storage-cmd` and `sudo npm install -g mermaid.cli`.)
 
 **docassemble** uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
@@ -304,6 +306,7 @@ sudo mkdir -p \
   /usr/share/docassemble/files \
   /usr/share/docassemble/log \
   /etc/ssl/docassemble
+sudo echo '{ "args": ["--no-sandbox"] }' > /var/www/puppeteer-config.json
 sudo chown -R www-data.www-data /var/www /usr/share/docassemble
 {% endhighlight %}
 
@@ -335,12 +338,11 @@ includes the [SMS] interface), and the
 
 <a name="virtualenv"></a>To install **docassemble** and its [Python]
 dependencies into the [Python virtual environment], first install the
-latest version of [pip], then install the `virtualenv` module:
+latest version of [pip]:
 
 {% highlight bash %}
 wget https://bootstrap.pypa.io/get-pip.py
 sudo -H python get-pip.py
-sudo -H pip install virtualenv
 {% endhighlight %}
 
 (If you get an "InsecurePlatformWarning," you can ignore it.)
@@ -354,28 +356,47 @@ sudo su www-data
 and run the following as `www-data`:
 
 {% highlight bash %}
-virtualenv /usr/share/docassemble/local
+python3 -m venv --copies /usr/share/docassemble/local
 cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local/
 source /usr/share/docassemble/local/bin/activate
-pip install --upgrade ndg-httpsclient
-pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+export LC_CTYPE=C.UTF-8
+export LANG=C.UTF-8
+pip install --upgrade ndg-httpsclient \
 ./docassemble/docassemble \
 ./docassemble/docassemble_base \
 ./docassemble/docassemble_demo \
 ./docassemble/docassemble_webapp
 {% endhighlight %}
 
+This will install a Python 3 virtual environment.  If you want to use
+Python 2.7, then instead of the first line, run:
+
+{% highlight bash %}
+pip install --upgrade virtualenv
+virtualenv /usr/share/docassemble/local
+{% endhighlight %}
+
+Also, if you want to use Python 2.7, you will need to run the
+following as root:
+
+{% highlight bash %}
+apt-get -y remove libapache2-mod-wsgi-py3
+apt-get -y install libapache2-mod-wsgi
+{% endhighlight %}
+
+This will uninstall the Python 3 version of [mod_wsgi] and install the
+Python 2.7 version.  Keep in mind, however, that Python 2.7 [will not
+be maintained] after January 1, 2020.
+
 The `pip.conf` file is necessary because it enables the use of
 [GitHub] package references in the `setup.py` files of **docassemble**
 extension packages.  The [ndg-httpsclient] module, which is a
 dependency, is installed by itself because errors might occur during
 installation if this package does not already exist on the system.
-There is one [Python] dependency, [PyRTF-ng], which is not available
-on [PyPI], but must be installed from [GitHub].  The **docassemble**
-packages are installed from the cloned [GitHub] repository.  These
-packages are also available on [PyPI], and could be installed with
-`pip install docassemble.webapp`, but it is just as easy to install
-them from the local copy.
+The **docassemble** packages are installed from the cloned [GitHub]
+repository.  These packages are also available on [PyPI], and could be
+installed with `pip install docassemble.webapp`, but it is just as
+easy to install them from the local copy.
 
 Then, you need to move certain files into place for the web
 application.  Still acting as `www-data`, do:
@@ -546,6 +567,11 @@ If you do not have your own SSL certificates, it is easy to set up
 HTTPS using [Let's Encrypt].  Once you get your site working on HTTP,
 you can run a single command line that enables HTTPS on your system.
 This is explained [below](#certbot).
+
+# <a name="pythonversion"></a>Choosing a Python version
+
+Currently, the default Python version in [Debian] is Python 2.7.
+However, Python 2.7 [will not be maintained] after January 1, 2020.  
 
 # <a name="setup"></a>Setting up the SQL server
 
@@ -1035,6 +1061,13 @@ sudo systemctl stop apache2.service
 sudo systemctl disable apache2.service
 {% endhighlight %}
 
+Do the same with [RabbitMQ]:
+
+{% highlight bash %}
+sudo systemctl stop rabbitmq-server.service
+sudo systemctl disable rabbitmq-server.service
+{% endhighlight %}
+
 If you are using the [e-mail receiving] feature, disable the exim4
 service as well:
 {% highlight bash %}
@@ -1042,8 +1075,8 @@ sudo systemctl stop exim4.service
 sudo systemctl disable exim4.service
 {% endhighlight %}
 
-Make sure that [Redis] and [RabbitMQ] are already running.  They
-should have started running after installation.
+Make sure that [Redis] is already running.  It should have started
+running after installation.
 
 To check [Redis], do:
 
@@ -1052,23 +1085,6 @@ redis-cli ping
 {% endhighlight %}
 
 If it does not respond with `PONG`, then there is a problem with [Redis].
-
-To check [RabbitMQ], do:
-
-{% highlight bash %}
-sudo rabbitmqctl status
-{% endhighlight %}
-
-If it responds with "Error: unable to connect to node . . ." then
-there is a problem with [RabbitMQ].
-
-While [RabbitMQ] should have been started after you installed it, you
-still need to restart it because you gave it a new configuration file,
-which it has not processed yet:
-
-{% highlight bash %}
-sudo systemctl restart rabbitmq-server.service
-{% endhighlight %}
 
 Optionally, you can also control [PostgreSQL] and [Redis] with [supervisor]:
 
@@ -1388,7 +1404,6 @@ git pull
 sudo su www-data
 source /usr/share/docassemble/local/bin/activate
 pip install --upgrade \
-'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble \
 ./docassemble_base \
 ./docassemble_demo \
@@ -1598,3 +1613,5 @@ All of these system administration headaches can be avoided by
 [OneDrive APIs]: https://onedrive.live.com/about/en-us/
 [`mailgun api`]: {{ site.baseurl }}/docs/config.html#mailgun api
 [Google settings]: https://support.google.com/accounts/answer/6010255
+[will not be maintained]: https://www.python.org/dev/peps/pep-0373/
+[mod_wsgi]: https://modwsgi.readthedocs.io/en/develop/

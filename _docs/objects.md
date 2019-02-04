@@ -2341,19 +2341,21 @@ The following attributes are also used, but undefined by default:
   `'male'`, `'female'`, or something else.  It is used by a variety of
   methods such as [`pronoun()`].
 
-A number of useful methods can be applied to objects of class
-`Individual`.  Many of them will respond differently depending on
-whether the `Individual` is the user or not.  If you use these
-methods, be sure to inform **docassemble** who the user is by
+<a name="set_info"></a>A number of useful methods can be applied to
+objects of class `Individual`.  Many of them will respond differently
+depending on whether the `Individual` is the user or not.  If you use
+these methods, be sure to inform **docassemble** who the user is by
 inserting the following [initial block]:
 
 {% highlight yaml %}
 initial: True
 code: |
-  set_info(user=user, role='user_role')
+  set_info(user=client)
 {% endhighlight %}
 
-(If you include the [`basic-questions.yml`] file, this is done for you.)
+(If you include the [`basic-questions.yml`] file, this is done for
+you.) See the documentation for the [`set_info()`] function for more
+information.
 
 ### <a name="Individual.identified"></a>`.identified()`
 
@@ -2423,7 +2425,8 @@ For an explanation of how [`.object_possessive()`] works, see the
 ### <a name="Individual.possessive"></a>`.possessive()`
 
 If the individual's name is "Adam Smith," this returns "Adam Smith's."
- But if the individual is the current user, this returns "your."
+ But if the individual is the current user, this returns "your."  (See
+ the [note above].)
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 
@@ -2513,9 +2516,10 @@ docassemble.base.util.update_language_function('*', 'salutation', my_salutation)
 
 If the individual is `client`, then
 `client.pronoun_possessive('fish')` returns "your fish," "his fish,"
-or "her fish," depending on whether `client` is the user and depending
-on the value of `client.gender`.  `client.pronoun_possessive('fish',
-capitalize=True)` returns "Your fish," "His fish," or "Her fish."
+or "her fish," depending on whether `client` is the user (see the
+[note above]) and depending on the value of `client.gender`.
+`client.pronoun_possessive('fish', capitalize=True)` returns "Your
+fish," "His fish," or "Her fish."
 
 If you want to refer to the individual in the third person even if the
 individual is the user, write `client.pronoun_possessive('fish',
@@ -2528,9 +2532,9 @@ pronoun may be different depending on what the noun is.
 ### <a name="Individual.pronoun"></a>`.pronoun()`
 
 Returns "you," "him," or "her," depending on whether the individual is
-the user and depending on the value of the `gender` attribute.  If
-called with `capitalize=True`, the word will be capitalized (for use
-at the beginning of a sentence).
+the user (see the [note above]) and depending on the value of the
+`gender` attribute.  If called with `capitalize=True`, the word will
+be capitalized (for use at the beginning of a sentence).
 
 ### <a name="Individual.pronoun_objective"></a>`.pronoun_objective()`
 
@@ -2541,7 +2545,8 @@ as `pronoun`.  (Other classes returns "it.")  If called with
 ### <a name="Individual.pronoun_subjective"></a>`.pronoun_subjective()`
 
 Returns "you," "he," or "she," depending on whether the individual is
-the user and depending on the value of the `gender` attribute.
+the user (see the [note above]) and depending on the value of the
+`gender` attribute.
 
 You can call this method with the following optional keyword arguments:
 
@@ -2552,9 +2557,10 @@ is the user.
 
 ### <a name="Individual.yourself_or_name"></a>`.yourself_or_name()`
 
-Returns "yourself" if the individual is the user, but otherwise
-returns the person's name.  If called with the optional keyword
-argument `capitalize=True`, the output will be capitalized.
+Returns "yourself" if the individual is the user (see the [note
+above]), but otherwise returns the person's name.  If called with the
+optional keyword argument `capitalize=True`, the output will be
+capitalized.
 
 ## <a name="Name"></a>Name
 
@@ -4103,3 +4109,4 @@ of the original [`DADateTime`] object.  See
 [`set_alt_text()`]: #DAFile.set_alt_text
 [`get_alt_text()`]: #DAFile.get_alt_text
 [alt text]: https://moz.com/learn/seo/alt-text
+[note above]: #set_info
