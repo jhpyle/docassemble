@@ -1,8 +1,9 @@
 # Change Log
 
-## [0.4.0] - 2019-02-03
+## [0.4.0] - 2019-02-04
 ### Added
 - The `DAPYTHONVERSION` Docker environment variable.
+- The `text_type()` function.
 ### Changed
 - The system is now compatible with Python 3.5.
 - The `subdivision_type()` algorithm was improved.
