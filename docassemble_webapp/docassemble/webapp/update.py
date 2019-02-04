@@ -58,14 +58,24 @@ def check_for_updates(doing_startup=False):
     here_already = dict()
     results = dict()
     sys.stderr.write("check_for_updates: 0.5\n")
+
+    num_deleted = Package.query.filter_by(name='psycopg2').delete()
+    if num_deleted > 0:
+        db.session.commit()
     if PY2:
         num_deleted = Package.query.filter_by(name='pycryptodome').delete()
+        if num_deleted > 0:
+            db.session.commit()
+        num_deleted = Package.query.filter_by(name='pdfminer3k').delete()
         if num_deleted > 0:
             db.session.commit()
     else:
         num_deleted = Package.query.filter_by(name='pdfminer').delete()
         if num_deleted > 0:
-            db.session.commit()    
+            db.session.commit()
+        num_deleted = Package.query.filter_by(name='py-bcrypt').delete()
+        if num_deleted > 0:
+            db.session.commit()
         num_deleted = Package.query.filter_by(name='pycrypto').delete()
         if num_deleted > 0:
             db.session.commit()
@@ -80,6 +90,22 @@ def check_for_updates(doing_startup=False):
     for package in installed_packages:
         here_already[package.key] = package.version
     changed = False
+    if 'pdfminer.six' not in here_already:
+        sys.stderr.write("check_for_updates: installing pdfminer.six\n")
+        install_package(DummyPackage('pdfminer.six'))
+        changed = True
+    if 'psycopg2' in here_already:
+        sys.stderr.write("check_for_updates: uninstalling psycopg2\n")
+        uninstall_package(DummyPackage('psycopg2'))
+        if 'psycopg2-binary' in here_already:
+            sys.stderr.write("check_for_updates: reinstalling psycopg2-binary\n")
+            uninstall_package(DummyPackage('psycopg2-binary'))
+            install_package(DummyPackage('psycopg2-binary'))
+        changed = True
+    if 'psycopg2-binary' not in here_already:
+        sys.stderr.write("check_for_updates: installing psycopg2-binary\n")
+        install_package(DummyPackage('psycopg2-binary'))
+        change = True
     if PY2:
         if 'pycryptodome' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pycryptodome\n")
@@ -109,6 +135,15 @@ def check_for_updates(doing_startup=False):
             celery.limitation = '[redis]==4.1.0'
             install_package(celery)
             changed = True
+        if 'pdfminer' not in here_already:
+            sys.stderr.write("check_for_updates: installing pdfminer\n")
+            pdfminer = DummyPackage('pdfminer')
+            pdfminer.type = 'git'
+            pdfminer.giturl = 'https://github.com/euske/pdfminer'
+            pdfminer.gitsubdir = None
+            pdfminer.gitbranch = None
+            install_package(pdfminer)
+            changed = True
     else:
         if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing new kombu version\n")
@@ -130,10 +165,6 @@ def check_for_updates(doing_startup=False):
             sys.stderr.write("check_for_updates: installing pycryptodome\n")
             install_package(DummyPackage('pycryptodome'))            
             changed = True
-        if 'py-bcrypt' in here_already:
-            sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
-            uninstall_package(DummyPackage('py-bcrypt'))
-            changed = True
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
             uninstall_package(DummyPackage('pdfminer'))
@@ -141,6 +172,19 @@ def check_for_updates(doing_startup=False):
         if 'pdfminer3k' not in here_already:
             sys.stderr.write("check_for_updates: installing pdfminer3k\n")
             install_package(DummyPackage('pdfminer3k'))
+            changed = True
+        if 'py-bcrypt' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
+            uninstall_package(DummyPackage('py-bcrypt'))
+            changed = True
+            if 'bcrypt' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling bcrypt\n")
+                uninstall_package(DummyPackage('bcrypt'))
+                install_package(DummyPackage('bcrypt'))
+                changed = True
+        if 'bcrypt' not in here_already:
+            sys.stderr.write("check_for_updates: installing bcrypt\n")
+            install_package(DummyPackage('bcrypt'))
             changed = True
     if changed:
         installed_packages = get_installed_distributions()

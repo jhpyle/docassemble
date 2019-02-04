@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
-from six import string_types, text_type
+from six import string_types, text_type, PY2
 import subprocess
 import mimetypes
 import docassemble.base.filter
@@ -72,20 +72,19 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         if name is not None:
-            name = str(name)
-            try:
-                name = codecs.decode(name, 'latin1')
-            except:
-                pass
-            name = remove_nonprintable_limited(name)
+            if PY2:
+                name = remove_nonprintable_limited(str(name))
+            else:
+                if not isinstance(name, bytes):
+                    name = bytes(str(name), encoding='utf-8')
+                name = remove_nonprintable_bytes_limited(name)
         if value is not None:
-            value = str(value)
-            try:
-                value = codecs.decode(value, 'latin1')
-            except:
-                pass
-            value = remove_nonprintable_limited(value)
-        #field_type = remove_nonprintable(str(field_type))
+            if PY2:
+                value = remove_nonprintable_limited(str(value))
+            else:
+                if not isinstance(value, bytes):
+                    value = bytes(str(value), encoding='utf-8')
+                value = remove_nonprintable_bytes_limited(value)
         #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
         if page is not None:
             pageno = id_to_page[page.objid]
@@ -436,11 +435,27 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         return bookmarkRef
 
 def remove_nonprintable(text):
-    final = ''
+    final = text_type()
     for char in text:
         if char in string.printable:
             final += char
     return final
+
+def remove_nonprintable_bytes(byte_list):
+    final = text_type()
+    for the_int in byte_list:
+        if chr(the_int) in string.printable:
+            final += chr(the_int)
+    return final
+
+def remove_nonprintable_bytes_limited(byte_list):
+    final = bytes()
+    if len(byte_list) >= 2 and byte_list[0] == 254 and byte_list[1] == 255:
+        byte_list = byte_list[2:]
+    for the_int in byte_list:
+        if the_int > 0:
+            final += bytes([the_int])
+    return final.decode()
 
 def remove_nonprintable_limited(text):
     text = re.sub(r'^\xfe\xff', '', text)

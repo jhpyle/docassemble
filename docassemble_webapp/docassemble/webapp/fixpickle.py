@@ -16,9 +16,15 @@ def fix_pickle_obj(data):
     return recursive_fix_pickle(pickle.loads(data, encoding="bytes", fix_imports=True), seen=set())
 
 def fix_pickle_dict(the_dict):
-    if PY2 or '_internal' in the_dict:
+    if PY2:
         return pickle.loads(the_dict)
-    return recursive_fix_pickle(pickle.loads(the_dict, encoding="bytes", fix_imports=True), seen=set())
+    try:
+        obj = pickle.loads(the_dict)
+        assert '_internal' in obj
+        return obj
+    except:
+        obj = pickle.loads(the_dict, encoding="bytes", fix_imports=True)
+        return recursive_fix_pickle(obj, seen=set())
 
 def recursive_fix_pickle(the_object, seen):
     if isinstance(the_object, (string_types, bool, int, float, complex, NoneType, datetime.datetime, TypeType)):
