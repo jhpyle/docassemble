@@ -60,11 +60,6 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 # def TheSimpleTextMachineLearner(*pargs, **kwargs):
 #     return knn_machine_learner(*pargs, **kwargs)
 
-#redis_server = None
-
-#def redis_server():
-#    return re.sub(r'^redis://', r'', server.redis_host)
-
 class DARedis(DAObject):
     """A class used to interact with the redis server."""
     def key(self, keyname):
@@ -72,8 +67,6 @@ class DARedis(DAObject):
         return this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
     def get_data(self, key):
         """Returns data from Redis and unpickles it."""
-        # if this_thread.redis is None:
-        #     this_thread.redis = redis.StrictRedis(host=redis_server, db=2)
         result = server.server_redis_user.get(key)
         if result is None:
             return None
@@ -85,8 +78,6 @@ class DARedis(DAObject):
         return result
     def set_data(self, key, data, expire=None):
         """Saves data in Redis after pickling it."""
-        # if this_thread.redis is None:
-        #     this_thread.redis = redis.StrictRedis(host=redis_server, db=2)
         pickled_data = pickle.dumps(data)
         if expire is not None:
             if not isinstance(expire, int):
@@ -98,13 +89,7 @@ class DARedis(DAObject):
         else:
             server.server_redis_user.set(key, pickled_data)
     def __getattr__(self, funcname):
-        # if this_thread.redis is None:
-        #     this_thread.redis = redis.StrictRedis(host=redis_server, db=2)
         return getattr(server.server_redis_user, funcname)
-
-#def set_redis_server(redis_host):
-#    global redis_server
-#    redis_server = re.sub(r'^redis://', r'', redis_host)
 
 class DACloudStorage(DAObject):
     """Returns an object that can be used to interface with S3 or Azure."""

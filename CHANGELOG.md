@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.1] - 2019-02-04
+### Added
+- Placeholder CSS classes for customization.
+- Support for alternative Redis ports and database offsets.
+
 ## [0.4.0] - 2019-02-04
 ### Added
 - The `DAPYTHONVERSION` Docker environment variable.

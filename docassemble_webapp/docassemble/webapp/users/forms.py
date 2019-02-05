@@ -22,11 +22,8 @@ def fix_nickname(form, field):
 
 class MySignInForm(LoginForm):
     def validate(self):
-        #import redis
         from docassemble.webapp.daredis import r
-        #import docassemble.base.util
         from flask import request, abort
-        #r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
         key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
@@ -201,13 +198,10 @@ class PhoneLoginVerifyForm(FlaskForm):
     verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits'])])
     submit = SubmitField(word('Verify'))
     def validate(self):
-        #import redis
-        #import docassemble.base.util
         from docassemble.webapp.daredis import r
         from docassemble.base.logger import logmessage
         from flask import request, abort
         result = True
-        #r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
         key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:

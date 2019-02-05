@@ -732,7 +732,6 @@ import cgi
 import json
 import base64
 import requests
-#import redis
 import yaml
 import inspect
 import pyotp
@@ -855,10 +854,9 @@ def crossdomain(origin=None, methods=None, headers=None,
         return update_wrapper(wrapped_function, f)
     return decorator
 
-from docassemble.webapp.daredis import r_store#, clear_user_cache
+from docassemble.webapp.daredis import r_store
 
 store = RedisStore(r_store)
-#store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
 
 kv_session = KVSessionExtension(store, app)
 
@@ -8834,6 +8832,8 @@ def index():
         bodyclass="dasignature"
     else:
         bodyclass="dabody pad-for-navbar"
+    if hasattr(interview_status.question, 'id'):
+        bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
         # if not is_ajax:
         #     start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
         # output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode)
@@ -19894,10 +19894,7 @@ if not os.access(WEBAPP_PATH, os.W_OK):
     sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
 from docassemble.webapp.daredis import r, r_user
-#r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
-#docassemble.base.functions.set_server_redis(r)
 
-#docassemble.base.util.set_twilio_config(twilio_config)
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
                                          chat_partners_available=chat_partners_available,

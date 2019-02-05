@@ -145,12 +145,6 @@ def load(**kwargs):
         AZURE_ENABLED = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
-    # for key in [['DBPREFIX', 'prefix'], ['DBNAME', 'name'], ['DBUSER', 'user'], ['DBPASSWORD', 'password'], ['DBHOST', 'host'], ['DBPORT', 'port'], ['DBTABLEPREFIX', 'table prefix']]:
-    #     if key[0] in os.environ:
-    #         val = trenv(os.environ[key[0]])
-    #         if key[1] not in daconfig['db'] or daconfig['db'][key[1]] != val:
-    #             daconfig['db'][key[1]] = val
-    #             changed = True
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''

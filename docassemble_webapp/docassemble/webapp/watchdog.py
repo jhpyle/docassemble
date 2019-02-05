@@ -4,6 +4,7 @@ import time
 import sys
 
 busy_pids = set()
+index = 0
 
 while True:
     busy_now = set()
@@ -11,24 +12,27 @@ while True:
     for pid in psutil.pids():
         try:
             p = psutil.Process(pid)
-            if p.name() == 'apache2' and p.cpu_times().user > 90.0 and p.cpu_percent(interval=1.0) > 19.0:
+            if p.name() == 'apache2' and p.cpu_percent(interval=30.0) > 90.0:
                 busy_now.add(pid)
         except:
             continue
-    for pid in busy_pids:
-        if not pid in busy_now:
-            no_longer_busy.add(pid)
-    for pid in no_longer_busy:
-        busy_pids.discard(pid)
-    for pid in busy_now:
-        if pid in busy_pids:
-            try:
-                p = psutil.Process(pid)
-                p.kill()
-            except:
-                pass
-            sys.stderr.write("Killed " + text_type(pid))
+    index += 1
+    index = index % 6
+    if index == 5:
+        for pid in busy_pids:
+            if not pid in busy_now:
+                no_longer_busy.add(pid)
+        for pid in no_longer_busy:
             busy_pids.discard(pid)
-        else:
-            busy_pids.add(pid)
-    time.sleep(30)
+        for pid in busy_now:
+            if pid in busy_pids:
+                try:
+                    p = psutil.Process(pid)
+                    p.kill()
+                except:
+                    pass
+                sys.stderr.write("Killed " + text_type(pid) + "\n")
+                busy_pids.discard(pid)
+            else:
+                busy_pids.add(pid)
+    time.sleep(5)
