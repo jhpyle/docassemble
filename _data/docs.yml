@@ -21,6 +21,7 @@
     - special
     - reserved
     - accessibility
+    - recipes
 - title: Special features
   docs:
     - language

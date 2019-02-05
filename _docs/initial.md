@@ -1023,6 +1023,26 @@ If you want to include [CSS] or [Javascript] code in a specific
 question, rather than in all questions of your interview you can use
 the [`script`] and [`css`] modifiers.
 
+<a name="css customization"></a>The HTML of the screen showing a
+[`question`] contains a number of placeholder [CSS] classes that are
+not used for formatting, but that are available to facilitate
+customization:
+
+* If a `question` is tagged with an [`id`], the `<body>` will be given
+  a class beginning with `question-` followed by the [`id`], except
+  that the [`id`] will be transformed into lowercase and
+  non-alphanumeric characters will be converted into hyphens.  For
+  example, if the [`id`] is `Intro screen`, the class name will be
+  `question-intro-screen`.
+* `<fieldset>`s are tagged with classes like `field-yesno` and
+  `field-buttons`.
+* `<div>`s that contain fields are tagged with classes like
+  `field-container`, `field-container-datatype-area`,
+  `field-container-inputtype-combobox`, and other classes.
+
+For more information, use the [DOM] inspector in your web browser to
+see what the class names are and which elements have the class names.
+
 ### <a name="charts"></a>Example use of JavaScript: charting
 
 Here is an example interview that uses a [`javascript`] feature and a
@@ -1314,3 +1334,4 @@ features:
 [`validation messages`]: {{ site.baseurl }}/docs/fields.html#validation messages
 [`combobox`]: {{ site.baseurl }}/docs/fields.html#combobox
 [`checkboxes`]: {{ site.baseurl }}/docs/fields.html#fields checkboxes
+[DOM]: https://en.wikipedia.org/wiki/Document_Object_Model

@@ -926,6 +926,11 @@ the `user` and `password`.  It will connect to the database called
 `name`.  If you want separate **docassemble** systems to share the
 same database, you can set a `table prefix`.
 
+If you are using [Docker] with [S3] or [Azure blob storage], and you
+omit the `host` or set it to `null`, then **docassemble** will
+automatically find the hostname of the central SQL server in cloud
+storage.
+
 ## <a name="appname"></a><a name="brandname"></a>Branding
 
 The `appname` and `brandname` directives control the name of the
@@ -1658,6 +1663,11 @@ The default directory is `/usr/share/docassemble/log`.
 If a `log server` is set, **docassemble** will write messages to TCP
 port 514 on that server, and will not write to the `log` directory.
 
+If you are using [Docker] with [S3] or [Azure blob storage], and you
+omit the `log server` or set it to `null`, then **docassemble** will
+automatically find the hostname of the central log server in cloud
+storage.
+
 ## <a name="interview delete days"></a>Days of inactivity before interview deletion
 
 When the [scheduled tasks] feature is [enabled] on the server,
@@ -2300,7 +2310,24 @@ redis: redis://192.168.0.2
 {% endhighlight %}
 
 The `redis` directive needs to be written in the form of a
-[redis URI].
+[redis URI].  To specify a non-standard port, use the form
+`redis://192.168.0.2:7000`.
+
+If you are using [Docker] with [S3] or [Azure blob storage], and you
+omit the `redis` directive or set it to `null`, then **docassemble**
+will automatically find the hostname of the central redis server in
+cloud storage.
+
+**docassemble** uses three [Redis] "databases."  By default, it uses
+0, 1, and 2.  If you want it to use different database numbers, you
+can set `redis database offset` to a number.
+
+{% highlight yaml %}
+redis database offset: 3
+{% endhighlight %}
+
+In this case, **docassemble** will use databases 3, 4, and 5 instead
+of 0, 1, and 2.
 
 ## <a name="rabbitmq"></a>RabbitMQ server location
 
@@ -2314,6 +2341,11 @@ rabbitmq: amqp://guest@192.168.0.2//
 
 The `rabbitmq` directive needs to be written in the form of an [AMQP
 URI].
+
+If you are using [Docker] with [S3] or [Azure blob storage], and you
+omit the `rabbitmq` directive or set it to `null`, then
+**docassemble** will automatically find the hostname of the central
+[RabbitMQ] server in cloud storage.
 
 ## <a name="imagemagick"></a><a name="pdftoppm"></a>Image conversion
 

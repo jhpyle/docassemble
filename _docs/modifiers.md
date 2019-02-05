@@ -581,9 +581,10 @@ third block in the interview).  But with `id` set to `initialize`,
 `initialize`.
 
 In most cases, your blocks do not need to have unique IDs.  However,
-there are some features in **docassemble**, such as the
-[changing order of precedence](#precedence) feature discussed
-[below](#precedence), which use `id` specifiers.
+there are some features in **docassemble**, such as the [Google
+Analytics integration] feature, the [CSS custom class] feature, and
+the [changing order of precedence](#precedence) feature discussed
+[below](#precedence), all of which use `id` specifiers.
 
 Also, in some situations, it can be important to tag your interview
 blocks with a unique name that does not change when the blocks in the
@@ -926,3 +927,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [`objects from file`]: {{ site.baseurl}}/docs/initial.html#objects from file
 [`data`]: {{ site.baseurl}}/docs/initial.html#data
 [`data from code`]: {{ site.baseurl}}/docs/initial.html#data from code
+[CSS custom class]: {{ site.baseurl}}/docs/initial.html#css customization
+[Google Analytics integration]: {{ site.baseurl}}/docs/config.html#google analytics
