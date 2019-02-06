@@ -1,0 +1,33 @@
+metadata:
+  title: Mermaid
+  documentation: "https://docassemble.org/docs/functions.html#mmdc"
+  example start: 1
+  example end: 4
+---
+modules:
+  - docassemble.base.mermaid
+---
+template: diagram
+content: |
+  graph TD;
+      ${ a }-->${ b };
+      ${ a }-->${ c };
+      ${ b }-->${ d };
+      ${ c }-->${ d };
+---
+question: Give me some names.
+fields:
+  - A: a
+    default: A
+  - B: b
+    default: B
+  - C: c
+    default: C
+  - D: d
+    default: D
+---
+mandatory: True
+question: |
+  Here is your diagram.
+subquestion: |
+  ${ mmdc(diagram, file_format='png') }

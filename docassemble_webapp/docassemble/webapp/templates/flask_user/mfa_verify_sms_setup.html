@@ -9,10 +9,10 @@
 <form action="" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.verification_code, tabindex=50) }}
+    {{ render_field(form.verification_code) }}
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100) }}
+    {{ render_submit_field(form.submit) }}
   </div>
 </form>
 

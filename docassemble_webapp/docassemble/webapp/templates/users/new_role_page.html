@@ -5,9 +5,9 @@
 
 <form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
-  {{ render_field(form.name, tabindex=240) }}
-  {{ render_submit_field(form.submit, tabindex=310) }}
-  <a tabindex="320" class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('privilege_list') }}">{{ word('Back') }}</a>
+  {{ render_field(form.name) }}
+  {{ render_submit_field(form.submit) }}
+  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('privilege_list') }}">{{ word('Back') }}</a>
 
 </form>
 

@@ -1,0 +1,127 @@
+metadata:
+  title: Non-progressive Navigation
+  short title: Non-progressive
+  documentation: "https://docassemble.org/docs/initial.html#sections"
+  example start: 1
+  example end: 8
+---
+sections:
+  - intro: Introduction
+  - about: About you
+    subsections:
+      - contact: Contact info
+      - demographic: Demographics
+  - prefs: Preferences
+  - conclusion: Conclusion
+progressive: False
+---
+event: intro
+code: |
+  force_ask('sees_nav_bar')
+---
+event: about
+code: |
+  force_ask('intro_to_about_you')
+---
+event: contact
+code: |
+  force_ask('first_name', 'email_address')
+---
+event: demographic
+code: |
+  force_ask('gender', 'belly_button')
+---
+event: prefs
+code: |
+  force_ask('favorite_fruit', 'favorite_vegetable')
+---
+event: conclusion
+code: |
+  force_ask('final_screen')
+---
+features:
+  navigation: True
+---
+mandatory: True
+code: |
+  sees_nav_bar
+  intro_to_about_you
+  first_name
+  email_address
+  gender
+  belly_button
+  favorite_fruit
+  favorite_vegetable
+  final_screen
+---
+question: |
+  Welcome to the interview
+subquestion: |
+  If you are not on a
+  smartphone-sized device,
+  you should see a navigation
+  bar to the left.
+field: sees_nav_bar
+section: intro
+---
+question: |
+  I am going to ask you some
+  questions about yourself.
+field: intro_to_about_you
+section: about
+---
+question: |
+  What is your name?
+fields:
+  - First Name: first_name
+  - Last Name: last_name
+section: contact
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email
+section: contact
+---
+question: |
+  What is your gender?
+field: gender
+choices:
+  - Male
+  - Female
+  - Something else
+section: demographic
+---
+question: |
+  What kind of belly button
+  do you have?
+field: belly_button
+choices:
+  - Innie
+  - Outie
+section: demographic
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+section: prefs
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+section: prefs
+---
+event: final_screen
+question: Thank you.
+subquestion: |
+  ${ first_name },
+
+  Your answers mean a lot to me.
+  
+  I am going to go eat some
+  ${ favorite_vegetable }
+  now.
+section: conclusion

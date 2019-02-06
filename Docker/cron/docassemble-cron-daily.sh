@@ -97,7 +97,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     rm -rf "$PGBACKUPDIR"
 fi
 if [ "${AZUREENABLE:-false}" == "false" ]; then
-    rm -rf $(find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +14 -print)
+    rm -rf $(find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print)
 fi
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [ "${EC2:-false}" == "true" ]; then
@@ -116,7 +116,7 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
     for the_file in $(find ${DA_ROOT}/backup/ -type f | cut -c 31-); do
         blob-cmd -f cp "${DA_ROOT}/backup/$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'${the_file}
     done
-    for the_dir in $(find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +14 -print | cut -c 31-); do
+    for the_dir in $(find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print | cut -c 31-); do
         for the_file in $(find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31-); do
             blob-cmd -f rm 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'$($the_file)
         done

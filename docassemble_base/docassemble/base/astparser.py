@@ -127,3 +127,126 @@ class myvisitnode(ast.NodeVisitor):
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)
 
+class detectIllegal(ast.NodeVisitor):
+    def __init__(self):
+        self.illegal = False
+    def visit_FunctionDef(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_ExceptHandler(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_ClassDef(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Return(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Delete(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Assign(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_AugAssign(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Print(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_For(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_While(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_If(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_With(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Raise(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_TryExcept(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_TryFinally(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Assert(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Import(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_ImportFrom(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Exec(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Global(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Pass(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Break(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Continue(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_BoolOp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_BinOp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_UnaryOp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Lambda(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_IfExp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Dict(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Set(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_ListComp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_SetComp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_DictComp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_GeneratorExp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Yield(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Compare(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Call(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Repr(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_List(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Tuple(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)

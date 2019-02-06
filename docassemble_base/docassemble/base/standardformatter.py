@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
 from docassemble.base.util import format_date
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
@@ -54,9 +55,9 @@ def varname_tag(varnames):
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     #logmessage("icon_html: name is " + repr(name))
-    if type(name) is dict and name['type'] == 'decoration':
+    if isinstance(name, dict) and name['type'] == 'decoration':
         name = name['value']
-    if type(name) is not dict:
+    if not isinstance(name, dict):
         is_decoration = True
         the_image = status.question.interview.images.get(name, None)
         if the_image is None:
@@ -81,7 +82,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
                 sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
         else:
             sizing += 'height:auto;'    
-    return('<img class="daicon" src="' + url + '" style="' + str(sizing) + '"/>')
+    return('<img alt="" class="daicon" src="' + url + '" style="' + str(sizing) + '"/>')
 
 # def signature_html(status, debug, root, validation_rules):
 #     if (status.continueLabel):
@@ -388,9 +389,9 @@ def as_sms(status, links=None, menu_items=None):
                     qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
     if 'underText' in status.extras and question.question_type != 'signature':
         qoutput += "\n" + to_text(markdown_to_html(status.extras['underText'], status=status), terms, links, status)
-    if 'menu_items' in status.extras and type(status.extras['menu_items']) is list:
+    if 'menu_items' in status.extras and isinstance(status.extras['menu_items'], list):
         for menu_item in status.extras['menu_items']:
-            if type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item:
+            if isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item:
                 menu_items.append((menu_item['url'], menu_item['label']))
     if len(links):
         indexno = 1
@@ -536,12 +537,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     #     status.extra_scripts.append(status.question.script)
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i> '
+        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
         if status.extras['back_button_label'] is not None:
             back_button += status.extras['back_button_label']
         else:
             back_button += status.question.back()
-        back_button += '</button>'
+        back_button += '</span></button>'
     else:
         back_button = ''
     if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:
@@ -549,19 +550,19 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionhelpbutton">' + help_label + '</button>'
+        help_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionhelpbutton"><span>' + help_label + '</span></button>'
     else:
         help_button = ''
     if status.audiovideo is not None:
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
         if len(audio_urls):
-            audio_text += '<div>\n' + audio_control(audio_urls) + '</div>\n'
+            audio_text += '<div class="audiovideo-control">\n' + audio_control(audio_urls) + '</div>\n'
         video_urls = get_video_urls(status.audiovideo)
         if len(video_urls):
-            video_text += '<div>\n' + video_control(video_urls) + '</div>\n'
+            video_text += '<div class="audiovideo-control">\n' + video_control(video_urls) + '</div>\n'
     if status.using_screen_reader and 'question' in status.screen_reader_links:
-        audio_text += '<div>\n' + audio_control(status.screen_reader_links['question'], preload="none") + '</div>\n'
+        audio_text += '<div class="audiovideo-control">\n' + audio_control(status.screen_reader_links['question'], preload="none", title_text=word('Read this screen out loud')) + '</div>\n'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -586,7 +587,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         if the_image.attribution is not None:
                             #sys.stderr.write("yoo6\n")
                             status.attributions.add(the_image.attribution)
-                        decorations.append('<img class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
+                        decorations.append('<img alt="" class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
                 elif daconfig.get('default icons', None) == 'font awesome':
                     decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration"><i class="' + daconfig.get('font awesome prefix', 'fas') + ' fa-' + str(decoration['image']) + '"></i></span>')
                 elif daconfig.get('default icons', None) == 'material icons':
@@ -604,17 +605,17 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += the_progress_bar
     if status.question.question_type == "signature":
         if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-            back_clear_button = '<button class="btn btn-sm btn-secondary signav-left signavbutton sigclear" id="questionbackbutton">' + status.question.back() + '</button>'
+            back_clear_button = '<button class="btn btn-sm btn-secondary signav-left signavbutton sigclear" id="questionbackbutton"><span>' + status.question.back() + '</span></button>'
         else:
-            back_clear_button = '<a tabindex="0" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>'
-        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  ' + back_clear_button + '\n                  <a tabindex="0" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div class="sigtitle">'
+            back_clear_button = '<a href="#" role="button" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>'
+        output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div id="sigtitle" class="sigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True, status=status)
         else:
             output += word('Sign Your Name')
         output += '</div>\n                </div>\n              </div>\n              <div class="sigtoppart" id="sigtoppart">\n                <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n'
         if status.questionText:
-            output += '                <div class="page-header d-none d-md-block"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+            output += '                <div class="page-header d-none d-md-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
         if status.subquestionText:
             output += '                <div id="sigmidpart" class="sigmidpart">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
@@ -626,11 +627,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += "\n              </div>"
         output += """
               <div class="form-actions d-none d-md-block sigbuttons">""" + back_button + """
-                <a tabindex="0" class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
-                <a tabindex="0" class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
+                <a href="#" role="button" class="btn btn-primary """ + BUTTON_CLASS + """ sigsave">""" + continue_label + """</a>
+                <a href="#" role="button" class="btn btn-warning """ + BUTTON_CLASS + """ sigclear">""" + word('Clear') + """</a>
               </div>
 """
-        output += '            </div>\n            <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+        output += '            </div>\n            <form aria-labelledBy="sigtitle" action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
         output += '            <div class="d-block d-md-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
@@ -638,19 +639,19 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div>' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
+        output += '                <div>' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.no() + '</span></button>'
         if status.question.question_type == 'yesnomaybe':
-            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</button>'
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</span></button>'
         output += help_button
-        output += '\n                </div>\n'
+        output += '\n                </div></fieldset>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -659,24 +660,24 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.datatypes = datatypes
         output += varname_tag(varnames)
         status.varnames = varnames
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     elif status.question.question_type in ["noyes", "noyesmaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div>' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
+        output += '                <div>' + back_button + '\n                  <button class="btn btn-primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_CLASS + ' btn-secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.no() + '</span></button>'
         if status.question.question_type == 'noyesmaybe':
-            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + status.question.maybe() + '</span></button>'
         output += help_button
-        output += '\n                </div>\n'
+        output += '\n                </div></fieldset>\n'
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
@@ -684,9 +685,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.datatypes = datatypes
         output += varname_tag(varnames)
         status.varnames = varnames
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     elif status.question.question_type == "review":
         fieldlist = list()
+        if hasattr(status.question, 'review_saveas'):
+            datatypes[safeid(status.question.review_saveas)] = "boolean"
         for field in status.get_field_list():
             if 'html' in status.extras and field.number in status.extras['html']:
                 side_note_content = status.extras['html'][field.number].rstrip()
@@ -702,14 +705,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 side_note_parent = ''
             if not status.extras['ok'][field.number]:
                 continue
-            if hasattr(field, 'extras'):
-                if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
-                    status.extra_scripts.append(status.extras['script'][field.number])
+            #if hasattr(field, 'extras'):
+            #    if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
+            #        status.extra_scripts.append(status.extras['script'][field.number])
                 # if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
                 #     status.extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html' and 'html' in status.extras and field.number in status.extras['html']:
-                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + side_note_content + '</note></div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><div>' + side_note_content + '</div></div></div>\n')
                     continue
                 elif field.datatype == 'note' and 'note' in status.extras and field.number in status.extras['note']:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + side_note_content + '</div></div>\n')
@@ -717,15 +720,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('                <div class="row' + side_note_parent + '"><div class="col-md-12"><a tabindex="0" class="btn btn-sm btn-success review-action review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="row' + side_note_parent + '"><div class="col-md-12"><a href="#" role="button" class="btn btn-sm btn-success review-action review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
                     continue
             if hasattr(field, 'label'):
-                fieldlist.append('                <div class="form-group row' + side_note_parent + '"><div class="col-md-12"><a tabindex="0" class="review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div>' + side_note + '</div>\n')
+                fieldlist.append('                <div class="form-group row' + side_note_parent + '"><div class="col-md-12"><a href="#" class="review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div>' + side_note + '</div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
@@ -738,15 +741,16 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         else:
             resume_button_label = word('Resume')
         output += status.submit
-        output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'review_saveas'):
-            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + help_button + '</div></fieldset>\n'
         else:
-            output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + resume_button_label + '</button>' + help_button + '</div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit"><span>' + resume_button_label + '</span></button>' + help_button + '</div></fieldset>\n'
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
-        output += '              </fieldset>\n            </form>\n'
+        output += datatype_tag(datatypes)
+        output += '            </form>\n'
     elif status.question.question_type == "fields":
         enctype_string = ""
         fieldlist = list()
@@ -789,7 +793,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             else:
                 side_note = ''
                 side_note_parent = ''
-            if hasattr(field, 'disableothers') and field.disableothers and type(field.disableothers) is list:
+            if hasattr(field, 'disableothers') and field.disableothers and isinstance(field.disableothers, list):
                 if 'disableothers' not in status.extras:
                     status.extras['disableothers'] = dict()
                 status.extras['disableothers'][field.number] = list()
@@ -838,7 +842,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         fieldlist.append('                <div class="jsshowif" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><note>' + note_fields[field.number] + '</note></div></div>\n')
+                    fieldlist.append('                <div class="form-group row' + req_tag +'"><div class="col-md-12"><div>' + note_fields[field.number] + '</div></div></div>\n')
                     #continue
                 elif field.datatype == 'note':
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
@@ -882,10 +886,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     label_saveas = field.saveas                        
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
-                #     validation_rules['messages'][the_saveas] = dict()
-                #     validation_rules['rules'][the_saveas] = dict()
-                # else:
-                    validation_rules['messages'][the_saveas]['required'] = word("This field is required.")
+                    if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
+                    elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('multiple choice required', status, word("You need to select one."))
+                    else:
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('required', status, word("This field is required."))
                     if status.extras['required'][field.number]:
                         #sys.stderr.write(field.datatype + "\n")
                         validation_rules['rules'][the_saveas]['required'] = True
@@ -917,7 +923,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         status.extra_scripts.append(the_js)
                     for y in uncheck_list + [the_saveas]:
                         validation_rules['rules'][y]['checkone'] = [1, the_query]
-                        validation_rules['messages'][y]['checkone'] = word("Check at least one option, or check") + " " + '"' + status.labels[field.number] + '"'
+                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([status.labels[field.number]]))
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
@@ -928,9 +934,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                             validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
                             if key == 'minlength':
-                                validation_rules['messages'][the_saveas][key] = word("You must type at least") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                                validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You must type at least %s characters."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'maxlength':
-                                validation_rules['messages'][the_saveas][key] = word("You cannot type more than") + " " + str(status.extras[key][field.number]) + " " + word("characters")
+                                validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You cannot type more than %s characters."), parameters=tuple([status.extras[key][field.number]]))
             if hasattr(field, 'inputtype'):
                 if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
                     validation_rules['ignore'] = None
@@ -940,72 +946,90 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
                     if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)):
                         checkbox_rules = dict()
+                        checkbox_messages = dict()
                         if 'minlength' in field.extras and 'minlength' in status.extras and 'maxlength' in field.extras and 'maxlength' in status.extras and status.extras['minlength'][field.number] == status.extras['maxlength'][field.number] and status.extras['minlength'][field.number] > 0:
                             if 'nota' not in status.extras:
                                 status.extras['nota'] = dict()
                             status.extras['nota'][field.number] = False
                             checkbox_rules['checkexactly'] = [str(field.number), status.extras['maxlength'][field.number]]
+                            checkbox_messages['checkexactly'] = field.validation_message('checkbox minmaxlength', status, word("Please select exactly %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
                         else:
                             if 'minlength' in field.extras and 'minlength' in status.extras:
                                 checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
+                                if status.extras['minlength'][field.number] == 1:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select one."))
+                                else:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
                                 if int(status.extras['minlength'][field.number]) > 0:
                                     if 'nota' not in status.extras:
                                         status.extras['nota'] = dict()
                                     status.extras['nota'][field.number] = False
                             if 'maxlength' in field.extras and 'maxlength' in status.extras:
                                 checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
+                                checkbox_messages['checkatmost'] = field.validation_message('checkbox maxlength', status, word("Please select no more than %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
                         validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
+                        validation_rules['messages']['_ignore' + str(field.number)] = checkbox_messages
                     if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                         if '_ignore' + str(field.number) not in validation_rules['rules']:
                             validation_rules['rules']['_ignore' + str(field.number)] = dict()
                         if 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
                             validation_rules['rules']['_ignore' + str(field.number)]['checkatleast'] = [str(field.number), 1]
+                        if status.extras['nota'][field.number] is True:
+                            formatted_item = word("None of the above")
+                        else:
+                            if hasattr(field, 'saveas') and field.saveas in status.embedded:
+                                formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=False, do_terms=False)
+                            else:
+                                formatted_item = markdown_to_html(unicode(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
+                        validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([formatted_item])))
                     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio':
                     validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
-                    validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
+                    validation_rules['messages'][the_saveas]['date'] = field.validation_message('date', status, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras:
                         validation_rules['rules'][the_saveas]['minmaxdate'] = [format_date(status.extras['min'][field.number], format='yyyy-MM-dd'), format_date(status.extras['max'][field.number], format='yyyy-MM-dd')]
-                        validation_rules['messages'][the_saveas]['minmaxdate'] = word("You need to enter a date between %s and %s") % (format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short'))
+                        validation_rules['messages'][the_saveas]['minmaxdate'] = field.validation_message('date minmax', status, word("You need to enter a date between %s and %s."), parameters=(format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short')))
                     else:
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                                 #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                                 validation_rules['rules'][the_saveas][key + 'date'] = format_date(status.extras[key][field.number], format='yyyy-MM-dd')
                                 if key == 'min':
-                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or after") + " " + format_date(status.extras[key][field.number], format='short')
+                                    validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
                                 elif key == 'max':
-                                    validation_rules['messages'][the_saveas][key + 'date'] = word("You need to enter a date on or before") + " " + format_date(status.extras[key][field.number], format='short')
+                                    validation_rules['messages'][the_saveas]['maxdate'] = field.validation_message('date max', status, word("You need to enter a date on or before %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
-                    validation_rules['messages'][the_saveas]['time'] = word("You need to enter a valid time.")
+                    validation_rules['messages'][the_saveas]['time'] = field.validation_message('time', status, word("You need to enter a valid time."))
                 if field.datatype == 'datetime':
                     validation_rules['rules'][the_saveas]['datetime'] = True
-                    validation_rules['messages'][the_saveas]['datetime'] = word("You need to enter a valid date and time.")
+                    validation_rules['messages'][the_saveas]['datetime'] = field.validation_message('datetime', status, word("You need to enter a valid date and time."))
                 if field.datatype == 'email':
                     validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
                         validation_rules['rules'][the_saveas]['minlength'] = 1
-                        validation_rules['messages'][the_saveas]['minlength'] = word("This field is required.")
-                    validation_rules['messages'][the_saveas]['email'] = word("You need to enter a complete e-mail address.")
+                        validation_rules['messages'][the_saveas]['minlength'] = field.validation_message('required', status, word("This field is required."))
+                    validation_rules['messages'][the_saveas]['email'] = field.validation_message('email', status, word("You need to enter a complete e-mail address."))
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][the_saveas]['number'] = True
-                    validation_rules['messages'][the_saveas]['number'] = word("You need to enter a number.")
+                    validation_rules['messages'][the_saveas]['number'] = field.validation_message('number', status, word("You need to enter a number."))
                     #sys.stderr.write("Considering adding validation rule\n")
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                             validation_rules['rules'][the_saveas][key] = float(status.extras[key][field.number])
                             if key == 'min':
-                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at least") + " " + str(status.extras[key][field.number])
+                                validation_rules['messages'][the_saveas][key] = field.validation_message('min', status, word("You need to enter a number that is at least %s."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'max':
-                                validation_rules['messages'][the_saveas][key] = word("You need to enter a number that is at most") + " " + str(status.extras[key][field.number])
+                                validation_rules['messages'][the_saveas][key] = field.validation_message('max', status, word("You need to enter a number that is at most %s."), parameters=tuple([status.extras[key][field.number]]))
                 if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(the_saveas)
-                    validation_rules['messages'][the_saveas]['required'] = word("You must provide a file.")
+                    validation_rules['messages'][the_saveas]['required'] = field.validation_message('file required', status, word("You must provide a file."))
+                    if 'accept' in status.extras and field.number in status.extras['accept']:
+                        validation_rules['messages'][the_saveas]['accept'] = field.validation_message('accept', status, word("Please upload a file with a valid file format."))
                 if field.datatype == 'boolean':
                     if field.sign > 0:
                         checkboxes[field.saveas] = 'False'
@@ -1029,20 +1053,20 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><div class="col widecol">' + input_for(status, field, wide=True) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="col widecol">' + input_for(status, field, wide=True) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="form-group row yesnospacing ' + side_note_parent + '"><div class="col widecol">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing ' + side_note_parent + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="col widecol">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group row yesnospacing' + side_note_parent + req_tag +'"><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="form-group row yesnospacing' + side_note_parent + req_tag +'"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif status.labels[field.number] == '':
-                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 else:
                     fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
             if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + sub_question_text 
             #for saveas_string in status.embedded:
@@ -1071,11 +1095,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             #status.extra_scripts.append(init_string)
             #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += status.submit
-        output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'fields_saveas'):
-            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + help_button + '</div></fieldset>\n'
         else:
-            output += '                <div class="form-actions">' + back_button + '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
+            output += '                <div class="form-actions">' + back_button + '\n                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit"><span>' + continue_label + '</span></button>' + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1084,20 +1108,20 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.datatypes = datatypes
         output += varname_tag(varnames)
         status.varnames = varnames
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     elif status.question.question_type == "settrue":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = "boolean"
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + help_button + '</div>\n'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
+        output += '                <div class="form-actions">' + back_button + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"><span>' + continue_label + '</span></button>' + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1106,10 +1130,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.datatypes = datatypes
         output += varname_tag(varnames)
         status.varnames = varnames
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     elif status.question.question_type == "multiple_choice":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
-        if status.question.fields[0].number in status.defaults and type(status.defaults[status.question.fields[0].number]) in [str, unicode, int, float]:
+        if status.question.fields[0].number in status.defaults and isinstance(status.defaults[status.question.fields[0].number], (basestring, int, float)):
             defaultvalue = unicode(status.defaults[status.question.fields[0].number])
             #logmessage("Default value is " + str(defaultvalue))
         else:
@@ -1117,18 +1141,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
-        output += '                <p class="sr-only">' + word('Your choices are:') + '</p>\n'
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
         if status.question.question_variety in ["radio", "dropdown", "combobox"]:
             if status.question.question_variety == "radio":
                 verb = 'check'
+                output += '                <fieldset><legend class="sr-only">' + word("Choices:") + "</legend>\n"
             else:
                 verb = 'select'
                 if status.question.question_variety == "dropdown":
@@ -1150,11 +1174,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'default' in pair and pair['default'] and defaultvalue is None:
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=True, do_terms=False)
-                    if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
+                    if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     if status.question.question_variety == "radio":
                         if True or pair['key'] is not None: #not sure why this was added
-                            output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
+                            output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                         else:
                             output += '                <div class="form-group row"><div class="col-md-12">' + help_wrap(markdown_to_html(pair['label'], status=status), helptext, status) + '</div></div>\n'
                     else:
@@ -1172,10 +1196,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control daspaceafter' + combobox + '" name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one or type in a new value.")}
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
+                    validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
             else:
                 indexno = 0
@@ -1198,7 +1222,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     id_index = 0
                     formatted_key = markdown_to_html(choice['label'], status=status, trim=True, escape=True, do_terms=False)
                     if status.question.question_variety == "radio":
-                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
+                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_key + '" alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                     else:
                         inner_fieldlist.append('<option value="' + str(indexno) + '"' + ischecked + '>' + formatted_key + '</option>')
                     id_index += 1
@@ -1213,20 +1237,22 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one or type in a new value.")}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
             output += '                <div id="errorcontainer" style="display:none"></div>\n'
+            if status.question.question_variety == "radio":
+                output += "                </fieldset>\n"
             output += status.submit
-            output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
+            output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div>' + back_button + '\n'
-            output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '\n'
-            output += '                </div>\n'
+            output += '                  <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit"><span>' + continue_label + '</span></button>' + help_button + '\n'
+            output += '                </div></fieldset>\n'
         else:
             output += status.submit
-            #output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
+            output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div>' + back_button + '\n'
             if hasattr(status.question.fields[0], 'saveas'):
                 btn_class = ' btn-primary'
@@ -1236,12 +1262,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if 'image' in pair:
-                            the_icon = '<div>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
+                            the_icon = '<span>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</span>';
                             btn_class = ' btn-light btn-da btn-da-custom'
                         else:
                             the_icon = ''
                         if True or pair['key'] is not None:
-                            output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '">' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair['key']) + '"><span>' + the_icon + markdown_to_html(pair['label'], status=status, trim=True, do_terms=False) + '</span></button>\n'
                         else:
                             output += markdown_to_html(pair['label'], status=status)
                 else:
@@ -1251,7 +1277,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(choicelist)
                     for choice in choicelist:
                         if 'image' in choice:
-                            the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
+                            the_icon = '<span>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</span>';
                             btn_class = ' btn-light btn-da btn-da-custom'
                         else:
                             the_icon = ''
@@ -1259,14 +1285,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             the_help = choice['help']
                         else:
                             the_help = ''
-                        output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice['key']) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False) + '</button>\n'
+                        output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice['key']) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False) + '</span></button>\n'
             else:
                 indexno = 0
                 for choice in status.selectcompute[status.question.fields[0].number]:
                 #for choice in status.question.fields[0].choices:
                     btn_class = ' btn-primary'
                     if 'image' in choice:
-                        the_icon = '<div>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>'
+                        the_icon = '<span>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</span>'
                         btn_class = ' btn-light btn-da btn-da-custom'
                     else:
                         the_icon = ''
@@ -1290,10 +1316,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         elif choice['key'].question_type in ("exit", "logout"):
                             btn_class = ' btn-danger'
                     #output += '                  <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n'
-                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
+                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
                     indexno += 1
             output += help_button
-            output += '                </div>\n'
+            output += '                </div></fieldset>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
@@ -1302,39 +1328,41 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.datatypes = datatypes
         output += varname_tag(varnames)
         status.varnames = varnames
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     elif status.question.question_type == 'deadend':
         output += status.pre
-        output += indent_by(audio_text, 12) + '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if back_button != '' or help_button != '':
             output += status.submit
-            output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-            output += '                <div class="form-actions">' + back_button + help_button + '</div>\n'
+            output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
+            output += '                <div class="form-actions">' + back_button + help_button + '</div></fieldset>\n'
     else:
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n              <fieldset>\n'
-        output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
+        output += '                <div class="page-header"><h1 class="h3" id="mainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit">' + continue_label + '</button>' + help_button + '</div>\n'
+        output += '                <fieldset><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
+        output += '                <div class="form-actions">' + back_button + '\n                <button class="btn ' + BUTTON_CLASS + ' btn-primary" type="submit"><span>' + continue_label + '</span></button>' + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
-        output += '              </fieldset>\n            </form>\n'
+        output += '            </form>\n'
     if len(status.attachments) > 0:
         output += '            <br/>\n'
         if len(status.attachments) > 1:
+            output += '            <h2 class="sr-only">' + word('Attachments') + "</h2>\n"
             output += '            <div class="alert alert-success" role="alert">' + word('attachment_message_plural') + '</div>\n'
         else:
+            output += '            <h2 class="sr-only">' + word('Attachment') + "</h2>\n"
             output += '            <div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>\n'
         attachment_index = 0
         editable_included = False
@@ -1385,13 +1413,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '            <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
             output += '            <div>\n'
             if True or show_preview or show_markdown:
-                output += '              <ul class="nav nav-tabs" role="tablist">\n'
+                output += '              <ul role="tablist" class="nav nav-tabs" role="tablist">\n'
                 if show_download:
-                    output += '                <li class="nav-item"><a class="nav-link active" id="download-tab' + str(attachment_index) + '" href="#download' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Download') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link active" id="download-tab' + str(attachment_index) + '" href="#download' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="download' + str(attachment_index) + '" aria-selected="true">' + word('Download') + '</a></li>\n'
                 if show_preview:
-                    output += '                <li class="nav-item"><a class="nav-link" id="preview-tab' + str(attachment_index) + '" href="#preview' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Preview') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link" id="preview-tab' + str(attachment_index) + '" href="#preview' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="preview' + str(attachment_index) + '" aria-selected="false">' + word('Preview') + '</a></li>\n'
                 if show_markdown:
-                    output += '                <li class="nav-item"><a class="nav-link" id="markdown-tab' + str(attachment_index) + '" href="#markdown' + str(attachment_index) + '" data-toggle="tab" role="tab">' + word('Markdown') + '</a></li>\n'
+                    output += '                <li class="nav-item"><a class="nav-link" id="markdown-tab' + str(attachment_index) + '" href="#markdown' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="markdown' + str(attachment_index) + '" aria-selected="false">' + word('Markdown') + '</a></li>\n'
                 output += '              </ul>\n'
             output += '              <div class="tab-content" id="tabcontent' + str(attachment_index) + '">\n'
             if show_download:
@@ -1441,13 +1469,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 </div>
                 <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
                   <div class="card-body">
-                    <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
+                    <form aria-labelledby="headingOne" action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
                       <div class="form-group row"><label for="_attachment_email_address" class="col-md-4 col-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-md-8"><input alt=""" + json.dumps(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
                 if editable_included:
                     output += """
                       <div class="form-group row"><div class="col-md-4 col-form-label datext-right"></div><div class="col-md-8"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
-                      <button class="btn btn-primary" type="submit">""" + word('Send') + '</button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
+                      <button class="btn btn-primary" type="submit"><span>""" + word('Send') + '</span></button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
@@ -1465,12 +1493,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 </div>
                 <div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo">
                   <div class="card-body">
-                    <form action=\"""" + root + """\" id="downloadform" class="form-horizontal" method="POST">"""
+                    <form aria-labelledby="headingTwo" action=\"""" + root + """\" id="downloadform" class="form-horizontal" method="POST">"""
                 if editable_included:
                     output += """
                       <div class="form-group row"><div class="col-md-12"><input alt=""" + json.dumps(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
-                      <button class="btn btn-primary" type="submit">""" + word('Download All') + '</button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
+                      <button class="btn btn-primary" type="submit"><span>""" + word('Download All') + '</span></button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
@@ -1491,7 +1519,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         # if len(status.attributions):
         #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         # for attribution in sorted(status.attributions):
-        #     output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
+        #     output += '            <div><cite><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></cite></div>\n'
     if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = unicode(output)
     if 'rightText' in status.extras:
@@ -1507,73 +1535,74 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     master_output += output
     master_output += '          </section>\n'
     master_output += '          <section id="help" class="tab-pane ' + grid_class + '">\n'
-    output = '<div class="mt-2 mb-2"><a tabindex="0" id="backToQuestion" class="btn btn-info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
+    output = '            <div class="mt-2 mb-2"><a href="#question" role="button" id="backToQuestion" class="btn btn-info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
-<div id="daPhoneMessage" class="row invisible">
-  <div class="col-md-12">
-    <h3>""" + word("Telephone assistance") + """</h3>
-    <p></p>
-  </div>
-</div>
-<div id="daChatBox" class="invisible">
-  <div class="row">
-    <div class="col-md-12 dachatbutton">
-      <a tabindex="0" id="daChatOnButton" class="btn btn-success">""" + word("Activate chat") + """</a>
-      <a tabindex="0" id="daChatOffButton" class="btn btn-warning">""" + word("Turn off chat") + """</a>
-      <h3>""" + word("Live chat") + """</h3>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-12">
-      <ul class="list-group dachatbox" id="daCorrespondence"></ul>
-    </div>
-  </div>
-  <form id="dachat" autocomplete="off">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="input-group">
-            <input type="text" class="form-control" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
-            <span class="input-group-btn"><button class="btn btn-secondary" id="daSend" type="button">""" + word("Send") + """</button></span>
-        </div>
-      </div>
-    </div>
-  </form>
-  <div class="row invisible">
-    <div class="col-md-12">
-      <p id="daPushResult"></p>
-    </div>
-  </div>
-  <div class="row topspace">
-    <div class="col-md-12">
-      <p>
-        <span class="peer-message" id="peerMessage"></span>
-        <span class="peer-message" id="peerHelpMessage"></span>
-      </p>
-    </div>
-  </div>
-</div>
+            <div id="daPhoneMessage" class="row invisible">
+              <div class="col-md-12">
+                <h1 class="h3">""" + word("Telephone assistance") + """</h1>
+                <p></p>
+              </div>
+            </div>
+            <div id="daChatBox" class="invisible">
+              <div class="row">
+                <div class="col-md-12 dachatbutton">
+                  <a href="#" id="daChatOnButton" role="button" class="btn btn-success">""" + word("Activate chat") + """</a>
+                  <a href="#" id="daChatOffButton" role="button" class="btn btn-warning">""" + word("Turn off chat") + """</a>
+                  <h1 class="h3" id="chatHeading">""" + word("Live chat") + """</h1>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <ul class="list-group dachatbox" id="daCorrespondence"></ul>
+                </div>
+              </div>
+              <form aria-labelledby="chatHeading" id="dachat" autocomplete="off">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="input-group">
+                        <label for="daMessage" class="sr-only">""" + word("Chat message you want to send") + """</label>
+                        <input type="text" class="form-control" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
+                        <span class="input-group-btn"><button class="btn btn-secondary" id="daSend" type="button"><span>""" + word("Send") + """</span></button></span>
+                    </div>
+                  </div>
+                </div>
+              </form>
+              <div class="row invisible">
+                <div class="col-md-12">
+                  <p id="daPushResult"></p>
+                </div>
+              </div>
+              <div class="row topspace">
+                <div class="col-md-12">
+                  <p>
+                    <span class="peer-message" id="peerMessage"></span>
+                    <span class="peer-message" id="peerHelpMessage"></span>
+                  </p>
+                </div>
+              </div>
+            </div>
 """
     if len(status.helpText):
         if status.using_screen_reader and 'help' in status.screen_reader_links:
-            output += '            <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 14) + '            </div>\n'
+            output += '            <div class="audiovideo-control">\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none", title_text=word('Read this screen out loud')), 14) + '            </div>\n'
         for help_section in status.helpText:
             if help_section['heading'] is not None:
-                output += '            <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
+                output += '            <div class="page-header"><h1 class="h3">' + help_section['heading'].strip() + '</h1></div>\n'
             elif len(status.helpText) > 1:
-                output += '            <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
+                output += '            <div class="page-header"><h1 class="h3">' + word('Help with this question') + '</h1></div>\n'
             if help_section['audiovideo'] is not None:
                 uses_audio_video = True
                 audio_urls = get_audio_urls(help_section['audiovideo'])
                 if len(audio_urls):
-                    output += '            <div>\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
+                    output += '            <div class="audiovideo-control">\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
                 video_urls = get_video_urls(help_section['audiovideo'])
                 if len(video_urls):
-                    output += '            <div>\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
+                    output += '            <div class="audiovideo-control">\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
             output += markdown_to_html(help_section['content'], status=status, indent=12)
         # if len(status.attributions):
         #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         # for attribution in sorted(status.attributions):
-        #     output += '            <div><attribution><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></attribution></div>\n'
+        #     output += '            <div><cite><small>' + markdown_to_html(attribution, status=status, strip_newlines=True) + '</small></cite></div>\n'
         if debug or status.using_screen_reader:
             status.screen_reader_text['help'] = unicode(output)
     master_output += output
@@ -1718,6 +1747,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
     extra_scripts.append("""<script>
   var validation_rules = """ + json.dumps(validation_rules) + """;
   validation_rules.submitHandler = daValidationHandler;
+  validation_rules.onfocusout = injectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
     //console.log("Running validator")
     var validator = $("#daform").validate(validation_rules);""" + error_show + """
@@ -1728,7 +1758,7 @@ def input_for(status, field, wide=False, embedded=False):
     output = ""
     if field.number in status.defaults:
         defaultvalue_set = True
-        if type(status.defaults[field.number]) in (str, int, float):
+        if isinstance(status.defaults[field.number], (basestring, int, float)):
             defaultvalue = unicode(status.defaults[field.number])
         else:
             defaultvalue = status.defaults[field.number]
@@ -1802,7 +1832,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="embed-checkbox-wrapper">'
             else:
-                output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
+                output += '<fieldset><legend class="sr-only">' + word('Checkboxes:') + '</legend>'
             for pair in pairlist:
                 if 'image' in pair:
                     the_icon = icon_html(status, pair['image']) + ' '
@@ -1817,22 +1847,22 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     elif defaultvalue is None:
                         ischecked = ''
-                    elif type(defaultvalue) in (list, set) and unicode(pair['key']) in defaultvalue:
+                    elif isinstance(defaultvalue, (list, set)) and unicode(pair['key']) in defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) is dict and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]:
+                    elif isinstance(defaultvalue, dict) and unicode(pair['key']) in defaultvalue and defaultvalue[unicode(pair['key'])]:
                         ischecked = ' checked'
-                    elif (hasattr(defaultvalue, 'elements') and type(defaultvalue.elements) is dict) and unicode(pair['key']) in defaultvalue.elements and defaultvalue.elements[unicode(pair['key'])]:
+                    elif (hasattr(defaultvalue, 'elements') and isinstance(defaultvalue.elements, dict)) and unicode(pair['key']) in defaultvalue.elements and defaultvalue.elements[unicode(pair['key'])]:
                         ischecked = ' checked'
                     elif pair['key'] is defaultvalue:
                         ischecked = ' checked'
-                    elif type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue):
+                    elif isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
                     if embedded:
-                        inner_fieldlist.append('<input class="checkbox-embedded dafield' + str(field.number) + ' non-nota-checkbox" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                        inner_fieldlist.append('<input aria-label="' + formatted_item + '" class="checkbox-embedded dafield' + str(field.number) + ' non-nota-checkbox" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                     else:
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' non-nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>', helptext, status))
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext, status))
                 id_index += 1
@@ -1848,13 +1878,14 @@ def input_for(status, field, wide=False, embedded=False):
                 if embedded:
                     inner_fieldlist.append('<input class="dafield' + str(field.number) + ' checkbox-embedded nota-checkbox" id="_ignore' + str(field.number) + '" type="checkbox" name="_ignore' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label for="_ignore' + str(field.number) + '">' + formatted_item + '</label>')
                 else:
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
+                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' nota-checkbox to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
             elif (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras))):
                 inner_fieldlist.append('<input value="" type="hidden" name="_ignore' + str(field.number) + '"/>')
             if embedded:
                 output += u' '.join(inner_fieldlist) + '</span>'
             else:
                 output += u''.join(inner_fieldlist)
+            output += '</fieldset>'
             if field.datatype in ['object_checkboxes']:                
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
@@ -1873,7 +1904,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_printable and unicode(pair['label']) == defaultvalue_printable):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_printable and unicode(pair['label']) == defaultvalue_printable):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1883,7 +1914,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += " ".join(inner_fieldlist)
                 output += '</span>'
             else:
-                output += '<p class="sr-only">' + word('Choices:') + '</p>'
+                output += '<fieldset><legend class="sr-only">' + word('Choices:') + '</legend>'
                 for pair in pairlist:
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
@@ -1893,11 +1924,11 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                     else:
                         inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(unicode(pair['label']), status=status) + '</div>', helptext, status))
                     id_index += 1
@@ -1905,6 +1936,7 @@ def input_for(status, field, wide=False, embedded=False):
                     output += '<span class="embed-radio-wrapper">' + " ".join(inner_fieldlist) + '</span>'
                 else:
                     output += "".join(inner_fieldlist)
+                output += "</fieldset>"
         else:
             if embedded:
                 emb_text = 'class="input-embedded" '
@@ -1946,7 +1978,7 @@ def input_for(status, field, wide=False, embedded=False):
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, do_terms=False)
                     #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
                     output += '<option value="' + unicode(pair['key']) + '"'
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and type(defaultvalue) not in [str, unicode, int, bool, float] and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and defaultvalue_is_printable and unicode(pair['label']) == defaultvalue_printable):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             if embedded:
@@ -1962,7 +1994,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if embedded:
                     output += '<span class="embed-radio-wrapper">'
                 else:
-                    output += '<p class="sr-only">' + word('Choices:') + '</p>'
+                    output += '<fieldset><legend class="sr-only">' + word('Choices:') + '</legend>'
                 if field.sign > 0:
                     for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no())]:
                         formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
@@ -1971,14 +2003,14 @@ def input_for(status, field, wide=False, embedded=False):
                         else:
                             the_icon = ''
                         helptext = pair.get('help', None)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
                         if embedded:
                             inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                         else:
-                            inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                            inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                         id_index += 1
                 else:
                     for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no())]:
@@ -1988,22 +2020,22 @@ def input_for(status, field, wide=False, embedded=False):
                         else:
                             the_icon = ''
                         helptext = pair.get('help', None)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
                         if embedded:
                             inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                         else:
-                            inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                            inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                         id_index += 1
                 if embedded:
                     output += " ".join(inner_fieldlist) + '</span>'
                 else:
-                    output += "".join(inner_fieldlist)
+                    output += "".join(inner_fieldlist) + '</fieldset>'
             else:
                 if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
-                    if type(field.uncheckothers) is list:
+                    if isinstance(field.uncheckothers, list):
                         uncheck = ''
                     else:
                         uncheck = ' uncheckothers'
@@ -2017,25 +2049,29 @@ def input_for(status, field, wide=False, embedded=False):
                     docheck = ''
                 if embedded:
                     output += '<span class="embed-yesno-wrapper">'
+                else:
+                    output += '<fieldset><legend class="sr-only">' + word('Choices:') + '</legend>'                    
                 if field.sign > 0:
                     if embedded:
                         output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="True" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
                     else:
-                        output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
+                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
                 else:
                     if embedded:
                         output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="False" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
                     else:
-                        output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
+                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
                 if embedded:
                     output += '</span>'
+                else:
+                    output += '</fieldset>'
         elif field.datatype == 'threestate':
             inner_fieldlist = list()
             id_index = 0
             if embedded:
                 output += '<span class="embed-threestate-wrapper">'
             else:
-                output += '<p class="sr-only">' + word('Choices:') + '</p>'
+                output += '<fieldset><legend class="sr-only">' + word('Choices:') + '</legend>'
             if field.sign > 0:
                 for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
                     formatted_item = markdown_to_html(unicode(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
@@ -2044,14 +2080,14 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
                     if embedded:
                         inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + disable_others_data + '</label>')
                     else:
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                     id_index += 1
             else:
                 for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
@@ -2061,36 +2097,44 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair['key']) == unicode(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)) and unicode(pair['key']) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
                     if embedded:
                         inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                     else:
-                        inner_fieldlist.append(help_wrap('<input alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                     id_index += 1
             if embedded:
                 output += " ".join(inner_fieldlist) + '</span>'
             else:
-                output += "".join(inner_fieldlist)
+                output += "".join(inner_fieldlist) + '</fieldset>'
         elif field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']:
             if field.datatype == 'files':
                 multipleflag = ' multiple'
             else:
                 multipleflag = ''
             if field.datatype == 'camera':
-                accept = ' accept="image/*" capture="camera"'
+                accept = ' accept="image/*"'
+                capture = ' capture="camera"'
             elif field.datatype == 'user':
                 accept = ' accept="image/*" capture="user"'
+                capture = ' capture="environment"'
             elif field.datatype == 'environment':
-                accept = ' accept="image/*" capture="environment"'
+                accept = ' accept="image/*"'
+                capture = ' capture="environment"'
             elif field.datatype == 'camcorder':
-                accept = ' accept="video/*" capture="camcorder"'
+                accept = ' accept="video/*"'
+                capture = '  capture="camcorder"'
             elif field.datatype == 'microphone':
-                accept = ' accept="audio/*" capture="microphone"'
+                accept = ' accept="audio/*"'
+                capture = ' capture="microphone"'
             else:
                 accept = ''
+                capture = ''
+            if 'accept' in status.extras and field.number in status.extras['accept']:
+                accept = ' accept="' + status.extras['accept'][field.number] + '"'
             maximagesize = ''
             if 'max_image_size' in status.extras:
                 if status.extras['max_image_size']:
@@ -2100,7 +2144,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/></span>'
             else:
-                output += '<input alt=' + json.dumps(word("You can upload a file here")) + ' type="file" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + json.dumps(word("You can upload a file here")) + ' type="file" tabindex="-1" class="dafile" data-show-upload="false" ' + maximagesize + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
@@ -2108,7 +2152,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if not (hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]):
                     ok = False
             if ok:
-                if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+                if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                     the_default = ' data-slider-value="' + str(defaultvalue) + '"'
                 else:
                     the_default = ' data-slider-value="' + str(int((float(status.extras['max'][field.number]) + float(status.extras['min'][field.number]))/2)) + '"'
@@ -2123,21 +2167,25 @@ def input_for(status, field, wide=False, embedded=False):
                 max_string = str(float(status.extras['max'][field.number]))
                 min_string = str(float(status.extras['min'][field.number]))
                 if embedded:
-                    output += '<span class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + '></span><br>'
+                    output += '<span class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + ' data-slider-id="' + escape_id(saveas_string) + '_slider"></span><br>'
                 else:
-                    output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + '>'
+                    output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + ' data-slider-id="' + escape_id(saveas_string) + '_slider">'
                 status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype in ['area', 'mlarea']:
             if embedded:
                 output += '<span class="embed-area-wrapper">'
-            output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
-            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+            if 'rows' in status.extras and field.number in status.extras['rows']:
+                rows = noquote(unicode(status.extras['rows'][field.number]))
+            else:
+                rows = '"4"'
+            output += '<textarea alt=' + json.dumps(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows=' + rows + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
+            if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                 output += defaultvalue
             output += '</textarea>'
             if embedded:
                 output += '</span>'
         else:
-            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
+            if defaultvalue is not None and isinstance(defaultvalue, (basestring, int, bool, float)):
                 defaultstring = ' value="' + defaultvalue + '"'
             elif isinstance(defaultvalue, datetime.datetime):
                 defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
@@ -2159,6 +2207,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if field.datatype == 'currency':
                         step_string = ' step="0.01"'
                 if field.datatype == 'currency':
+                    extra_class += ' dacurrency'
                     if embedded:
                         output += '<span class="embed-currency-wrapper"><span class="embed-currency-symbol">' + currency_symbol() + '</span>'
                     else:
@@ -2169,7 +2218,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<span class="inline-error-wrapper">'
                 # output += '<span class="inline-error-wrapper"><label for="' + escape_id(saveas_string) + '" class="da-has-error inline-error-position inline-error" style="display: none" id="' + escape_id(saveas_string) + '-error"></label>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-            if not embedded and field.datatype in ('currency', 'file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone'):
+            if not embedded and field.datatype == 'currency':
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + '/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
                 output += '/>'

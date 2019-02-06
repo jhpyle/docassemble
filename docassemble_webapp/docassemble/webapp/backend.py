@@ -21,6 +21,7 @@ from Crypto.Cipher import AES
 from Crypto import Random
 from dateutil import tz
 import tzlocal
+import ruamel.yaml
 
 import docassemble.base.parse
 import re
@@ -43,6 +44,18 @@ DEBUG = daconfig.get('debug', False)
 from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, reference_exists, url_if_exists
 from docassemble.webapp.file_number import get_new_file_number
 
+import time
+
+def elapsed(name_of_function):
+    def elapse_decorator(func):
+        def time_func(*pargs, **kwargs):
+            time_start = time.time()
+            result = func(*pargs, **kwargs)
+            sys.stderr.write(name_of_function + ': ' + unicode(time.time() - time_start) + "\n")
+            return result
+        return time_func
+    return elapse_decorator
+
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
     db.session.add(new_record)
@@ -59,6 +72,7 @@ def delete_record(key, id):
     ObjectStorage.query.filter_by(key=key, id=id).delete()
     db.session.commit()
 
+#@elapsed('save_numbered_file')
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         if has_request_context() and 'uid' in session:
@@ -166,7 +180,7 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
                                          default_timezone=DEFAULT_TIMEZONE,
-                                         default_country=daconfig.get('country', re.sub(r'\..*', r'', DEFAULT_LOCALE)),
+                                         default_country=daconfig.get('country', re.sub(r'^.*_', '', re.sub(r'\..*', r'', DEFAULT_LOCALE))),
                                          daconfig=daconfig,
                                          hostname=hostname,
                                          debug_status=DEBUG,
@@ -185,6 +199,34 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    #sys.stderr.write("Reading from " + str(word_file) + "\n")
+    if not isinstance(word_file, basestring):
+        sys.stderr.write("Error reading words: file references must be plain text.\n")
+        continue
+    filename = docassemble.base.functions.static_filename_path(word_file)
+    if filename is None:
+        sys.stderr.write("Error reading " + str(word_file) + ": file not found.\n")
+        continue
+    if os.path.isfile(filename):
+        with open(filename, 'rU') as stream:
+            try:
+                for document in ruamel.yaml.safe_load_all(stream):
+                    if document and type(document) is dict:
+                        for lang, words in document.iteritems():
+                            if type(words) is dict:
+                                docassemble.base.functions.update_word_collection(lang, words)
+                            else:
+                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                    else:
+                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+            except:
+                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
+
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 
@@ -227,6 +269,7 @@ from docassemble.base.functions import pickleable_objects
 #docassemble.base.parse.set_absolute_filename(absolute_filename)
 #logmessage("Server started")
 
+#@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uid=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         return True
@@ -276,6 +319,8 @@ def encrypt_phrase(phrase, secret):
     return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
 
 def pack_phrase(phrase):
+    if isinstance(phrase, unicode):
+        phrase = phrase.encode('utf8')
     return codecs.encode(phrase, 'base64').decode()
 
 def decrypt_phrase(phrase_string, secret):
@@ -283,7 +328,7 @@ def decrypt_phrase(phrase_string, secret):
     return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf8')
 
 def unpack_phrase(phrase_string):
-    return codecs.decode(phrase_string, 'base64')
+    return codecs.decode(phrase_string, 'base64').decode('utf8')
 
 def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("40\n")
@@ -362,6 +407,7 @@ def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
 def nice_utc_date(timestamp, timezone=tz.tzlocal()):
     return timestamp.strftime('%F %T')
 
+#@elapsed('fetch_user_dict')
 def fetch_user_dict(user_code, filename, secret=None):
     #logmessage("fetch_user_dict: user_code is " + str(user_code) + " and filename is " + str(filename))
     user_dict = None
@@ -387,12 +433,14 @@ def fetch_user_dict(user_code, filename, secret=None):
         break
     return steps, user_dict, encrypted
 
+#@elapsed('user_dict_exists')
 def user_dict_exists(user_code, filename):
     result = UserDict.query.filter(and_(UserDict.key == user_code, UserDict.filename == filename)).first()
     if result:
         return True
     return False
 
+#@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
@@ -405,6 +453,7 @@ def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
     return
 
+#@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
     if force:
@@ -457,6 +506,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
     #logmessage("reset_user_dict: done")
     return
 
+#@elapsed('get_person')
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
@@ -465,6 +515,7 @@ def get_person(user_id, cache):
         return record
     return None
 
+#@elapsed('get_chat_log')
 def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
     messages = list()
     people = dict()
@@ -557,6 +608,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     return messages
 
+#@elapsed('file_set_attributes')
 def file_set_attributes(file_number, **kwargs):
     upload = Uploads.query.filter_by(indexno=file_number).first()
     if upload is None:

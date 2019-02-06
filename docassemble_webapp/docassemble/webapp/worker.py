@@ -4,6 +4,7 @@ if not docassemble.base.config.loaded:
 from docassemble.base.config import daconfig, hostname
 from celery import Celery, chord
 from celery.result import result_from_tuple, AsyncResult
+from celery.backends.redis import RedisBackend
 import celery
 import copy
 import sys
@@ -38,6 +39,7 @@ workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 importlib.import_module('docassemble.webapp.config_worker')
 workerapp.config_from_object('docassemble.webapp.config_worker')
 workerapp.set_current()
+workerapp.set_default()
 
 worker_controller = None
 
@@ -354,6 +356,9 @@ def sync_with_onedrive(user_id):
             http = credentials.authorize(httplib2.Http())
             #r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive", "GET")
             #drive_id = json.loads(content)['id']
+            #r, content = try_request(http, "https://graph.microsoft.com/v1.0/drive/special/approot")
+            #if int(r['status']) != 200:
+            #    return worker_controller.functions.ReturnValue(ok=False, error="Could not verify application root", restart=False)
             key = 'da:onedrive:mapping:userid:' + str(user_id)
             the_folder = worker_controller.r.get(key)
             r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder), "GET")
@@ -483,7 +488,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path)
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path)
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_files[section].add(f)
@@ -506,7 +511,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
                             #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
@@ -530,7 +535,7 @@ def sync_with_onedrive(user_id):
                             #data["fileSystemInfo"] = { "createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             data["fileSystemInfo"] = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], data, the_path, new_item_id=od_ids[section][f])
+                            result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
@@ -572,21 +577,22 @@ def sync_with_onedrive(user_id):
     except Exception as e:
         return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
 
-def onedrive_upload(http, folder_id, data, the_path, new_item_id=None):
+def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=None):
     headers = { 'Content-Type': 'application/json' }
     if new_item_id is None:
         is_new = True
-        item_data = copy.deepcopy(data)
-        item_data['file'] = dict()
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + '/children'
-        r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(item_data))
-        if int(r['status']) != 201:
-            return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
-        new_item_id = json.loads(content)['id']
-        sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
+        #item_data = copy.deepcopy(data)
+        #item_data['file'] = dict()
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + '/children'
+        #r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(item_data))
+        #if int(r['status']) != 201:
+        #    return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
+        #new_item_id = json.loads(content)['id']
+        #sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     else:
         is_new = False    
-    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
     r, content = try_request(http, the_url, 'POST')
     if int(r['status']) != 200:
         return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content) + " and url was " + the_url, restart=False)
@@ -610,6 +616,8 @@ def onedrive_upload(http, folder_id, data, the_path, new_item_id=None):
                     sys.stderr.write(unicode(r['status']) + "\n")
                     sys.stderr.write(content)
                     return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + unicode(r['status']) + ": " + unicode(content), restart=False)
+                if new_item_id is None:
+                    new_item_id = json.loads(content)['id']
             else:
                 if int(r['status']) != 202:
                     sys.stderr.write("Error2\n")
@@ -643,8 +651,8 @@ def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(kwargs['user_code'])
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(kwargs['user_code'])
     with worker_controller.flaskapp.app_context():
         return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
 
@@ -669,8 +677,8 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
     return
@@ -704,8 +712,8 @@ def email_attachments(user_code, email_address, attachment_info):
     success = False
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(user_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
         doc_names = list()
@@ -812,8 +820,8 @@ def email_attachments(user_code, email_address, attachment_info):
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.set_uid(session_code)
     worker_controller.functions.reset_local_variables()
+    worker_controller.functions.set_uid(session_code)
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url):
             if not str(user_info['the_user_id']).startswith('t'):
@@ -825,17 +833,19 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
             interview = worker_controller.interview_cache.get_interview(yaml_filename)
             worker_controller.obtain_lock(session_code, yaml_filename)
-            worker_controller.release_lock(session_code, yaml_filename)
             try:
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             except Exception as the_err:
+                worker_controller.release_lock(session_code, yaml_filename)
                 sys.stderr.write("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err) + "\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
+            worker_controller.release_lock(session_code, yaml_filename)
             if user_dict is None:
                 sys.stderr.write("background_action: dictionary could not be found\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
             start_time = time.time()
             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, action=action['action'], interface='worker', arguments=action['arguments']))
+            old_language = docassemble.base.functions.get_language()
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
@@ -857,19 +867,25 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
                 else:
                     sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time))
+                    docassemble.base.functions.set_language(old_language)
                     return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
+            docassemble.base.functions.set_language(old_language)
             sys.stderr.write("Time in background action was " + str(time.time() - start_time))
             if not hasattr(interview_status, 'question'):
                 #sys.stderr.write("background_action: status had no question\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                 #sys.stderr.write("background_action: status was restart or exit\n")
+                worker_controller.obtain_lock(session_code, yaml_filename)
                 if str(user_info.get('the_user_id', None)).startswith('t'):
                     worker_controller.reset_user_dict(session_code, yaml_filename, temp_user_id=user_info.get('theid', None))
                 else:
                     worker_controller.reset_user_dict(session_code, yaml_filename, user_id=user_info.get('theid', None))
-            if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                 worker_controller.release_lock(session_code, yaml_filename)
+            if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
+                #There is no lock to release.  Why is this here?
+                #worker_controller.release_lock(session_code, yaml_filename)
+                pass
             if interview_status.question.question_type == "response":
                 #sys.stderr.write("background_action: status was response\n")
                 if hasattr(interview_status.question, 'all_variables'):
@@ -887,6 +903,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 worker_controller.obtain_lock(session_code, yaml_filename)
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
                 interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
+                old_language = docassemble.base.functions.get_language()
                 try:
                     interview.assemble(user_dict, interview_status)
                     has_error = False
@@ -906,11 +923,13 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
                     worker_controller.error_notification(e, message=error_message, trace=error_trace)
                     has_error = True
-                # is this right?
-                if str(user_info.get('the_user_id', None)).startswith('t'):
-                    worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-                else:
-                    worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+                # is this right?  Save even though there was an error on assembly?
+                docassemble.base.functions.set_language(old_language)
+                if not has_error:
+                    if str(user_info.get('the_user_id', None)).startswith('t'):
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+                    else:
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
                 worker_controller.release_lock(session_code, yaml_filename)
                 if has_error:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
@@ -927,14 +946,18 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
                 return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
             if hasattr(interview_status, 'questionText') and interview_status.questionText:
-                sys.stderr.write("background_action: The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip()) + "\n")
+                if interview_status.orig_sought != interview_status.sought:
+                    sought_message = unicode(interview_status.orig_sought) + " (" + interview_status.sought + ")"
+                else:
+                    sought_message = unicode(interview_status.orig_sought)
+                sys.stderr.write("background_action: The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip()) + "\n")
                 sys.stderr.write("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
                 sys.stderr.write("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
                 error_type = 'QuestionError'
                 error_trace = None
                 error_message = interview_status.questionText
                 variables = list(reversed([y for y in worker_controller.functions.this_thread.current_variable]))
-                worker_controller.error_notification(Exception("The end result of the background action was the asking of this question: " + repr(str(interview_status.questionText).strip())))
+                worker_controller.error_notification(Exception("The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip())))
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 else:
@@ -952,6 +975,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     worker_controller.obtain_lock(session_code, yaml_filename)
     steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
     interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
+    old_language = docassemble.base.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
     except Exception as e:
@@ -968,6 +992,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         else:
             error_trace = None
         worker_controller.error_notification(e, message=error_message, trace=error_trace)
+    docassemble.base.functions.set_language(old_language)
     # is this right?
     if str(user_info.get('the_user_id', None)).startswith('t'):
         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)

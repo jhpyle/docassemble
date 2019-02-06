@@ -35,6 +35,7 @@ oauth:
     id: ba45316c5951436328bc
     secret: 68e37cebd352f1ea36b6147cd52ff661c413f4b1
 secretkey: {{DASECRETKEY}}
+backup days: {{DABACKUPDAYS}}
 default title: docassemble
 default short title: doc
 mail:

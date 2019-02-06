@@ -1,0 +1,38 @@
+metadata:
+  title: Table for dictionary
+  short title: Table
+  documentation: "https://docassemble.org/docs/template.html#table"
+  example start: 3
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - income: DADict.using(object_type=DAObject,
+                         keys=['employment', 'benefits', 'interest'],
+                         gathered=True)
+---
+mandatory: True
+code: |
+  income['employment'].receives = True
+  income['employment'].amount = 237
+  income['benefits'].receives = False
+  income['interest'].receives = True
+  income['interest'].amount = 23
+---
+table: income.table
+rows: income
+columns:
+  - Type: |
+      row_index
+  - Receives: |
+      'Yes' if row_item.receives else 'No'
+  - Amount: |
+      currency(row_item.amount) if row_item.receives else ''
+---
+mandatory: True
+question: |
+  Summary of income
+subquestion: |
+  ${ income.table }

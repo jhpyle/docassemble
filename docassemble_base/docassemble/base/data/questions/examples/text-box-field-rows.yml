@@ -1,0 +1,18 @@
+metadata:
+  title: Text box rows
+  documentation: "https://docassemble.org/docs/fields.html#area"
+---
+question: |
+  Tell me the story of your life.
+fields:
+  - Life Story: target_variable
+    datatype: area
+    rows: 10
+---
+question: Result of question
+subquestion: |
+  target_variable is:
+
+  ${ target_variable }
+mandatory: True
+

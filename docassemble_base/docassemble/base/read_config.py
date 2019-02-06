@@ -68,6 +68,15 @@ if __name__ == "__main__":
         print('export REDIS="' + str(daconfig['redis']) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:
         print('export RABBITMQ="' + str(daconfig['rabbitmq']) + '"')
+    if 'backup days' in daconfig:
+        try:
+            days = int(daconfig['backup days'])
+            assert days > 0
+        except:
+            days = 14
+        print('export DABACKUPDAYS="' + str(days) + '"')
+    else:
+        print('export DABACKUPDAYS="14"')
     if 's3' in daconfig:
         if 'enable' in daconfig['s3'] and daconfig['s3']['enable']:
             print('export S3ENABLE=true')

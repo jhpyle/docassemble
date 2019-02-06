@@ -105,7 +105,7 @@
 </div>
 {%- endmacro %}
 
-{% macro render_multiselect_field(field) %}
+{% macro render_multiselect_field(field, undernote=None) %}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   <label for="{{ field.id }}">{{ field.label.text }}</label>
   <select multiple class="form-control" name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
@@ -117,6 +117,9 @@
   {%- for e in field.errors %}
   <p class="help-block">{{ e }}</p>
   {%- endfor %}
+  {%- endif %}
+  {%- if undernote %}
+  <small class="form-text text-muted">{{ undernote }}</small>
   {%- endif %}
 </div>
 {%- endmacro %}

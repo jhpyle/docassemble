@@ -1,0 +1,59 @@
+metadata:
+  title: Table with read only
+  short title: Read only
+  documentation: "https://docassemble.org/docs/template.html#read only"
+  example start: 3
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - fruit: DAList.using(object_type=Thing)
+---
+mandatory: True
+code: |
+  fruit.appendObject()
+  fruit[-1].important = True
+  fruit[-1].name.text = 'Apple'
+  fruit[-1].seeds = 10
+  fruit.appendObject()
+  fruit[-1].important = True
+  fruit[-1].name.text = 'Orange'
+  fruit[-1].seeds = 5
+---
+code: |
+  fruit[i].important = False
+---
+table: fruit.table
+rows: fruit
+columns:
+  - Name: |
+      row_item
+  - Seeds: |
+      row_item.seeds
+edit:
+  - name.text
+read only: important
+---
+question: |
+  Tell me about the fruit.
+fields:
+  - Name: fruit[i].name.text
+  - Seeds: fruit[i].seeds
+    datatype: integer
+    min: 0
+---
+question: |
+  Do you want to add another fruit to the list?
+subquestion: |
+  So far, the fruits include ${ fruit }.
+yesno: fruit.there_is_another
+---
+mandatory: True
+question: |
+  Table of fruits
+subquestion: |
+  ${ fruit.table }
+
+  ${ fruit.add_action() }

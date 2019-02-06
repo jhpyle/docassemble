@@ -1,5 +1,6 @@
 import psutil
 import time
+import sys
 
 busy_pids = set()
 
@@ -9,7 +10,7 @@ while True:
     for pid in psutil.pids():
         try:
             p = psutil.Process(pid)
-            if p.name() == 'apache2' and p.cpu_times().user > 30.0 and p.cpu_percent(interval=1.0) > 19.0:
+            if p.name() == 'apache2' and p.cpu_times().user > 90.0 and p.cpu_percent(interval=1.0) > 19.0:
                 busy_now.add(pid)
         except:
             continue
@@ -25,6 +26,7 @@ while True:
                 p.kill()
             except:
                 pass
+            sys.stderr.write("Killed " + unicode(pid))
             busy_pids.discard(pid)
         else:
             busy_pids.add(pid)

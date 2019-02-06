@@ -191,8 +191,10 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     text = re.sub(r'\\par}\s*\[(END_TWOCOL|END_CAPTION|BREAK|VERTICAL_LINE)\]', r'}[\1]', text, flags=re.DOTALL)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\s*\[BREAK\]\s*(.+?)\[END_TWOCOL\]', rtf_two_col, text, flags=re.DOTALL)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_as_rtf(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_as_rtf(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_as_rtf(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_as_rtf(x, question=question), text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_as_rtf, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -344,8 +346,10 @@ def docx_filter(text, metadata=None, question=None):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_include_docx, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -394,7 +398,7 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', r'\3', text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def docx_template_filter(text):
+def docx_template_filter(text, question=None):
     #logmessage('docx_template_filter')
     if text == 'True':
         return True
@@ -404,8 +408,10 @@ def docx_template_filter(text):
         return None
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx_template, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -480,8 +486,10 @@ def pdf_filter(text, metadata=None, question=None):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_string(x, emoji=True, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_string(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_string(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_string(x, question=question), text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_include_string, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_string, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_string, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -545,8 +553,10 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     if docassemble.base.functions.this_thread.evaluation_context != 'docx':
         text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_url_string(x, question=question), text)
         text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
         text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width), text)
+        text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
@@ -736,6 +746,7 @@ def image_as_rtf(match, question=None):
     width_supplied = False
     try:
         width = match.group(2)
+        assert width != 'None'
         width_supplied = True
     except:
         width = DEFAULT_IMAGE_WIDTH
@@ -806,6 +817,7 @@ def qr_as_rtf(match):
     width_supplied = False
     try:
         width = match.group(2)
+        assert width != 'None'
         width_supplied = True
     except:
         width = DEFAULT_IMAGE_WIDTH
@@ -890,13 +902,21 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
     file_reference = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
     except:
         if default_image_width is not None:
             width = default_image_width
         else:
             width = "300px"
     if width == "full":
-        width = "300px"    
+        width = "300px"
+    if match.lastindex == 3:
+        if match.group(3) != 'None':
+            alt_text = 'alt=' + json.dumps(match.group(3)) + ' '
+        else:
+            alt_text = ''
+    else:
+        alt_text = ''
     file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype'] is not None:
         if re.search(r'^audio', file_info['mimetype']):
@@ -916,11 +936,12 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             width_string = "max-width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
+            alt_text = 'alt="" '
         the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'])
         if the_url is None:
             return ('[ERROR: File reference ' + unicode(file_reference) + ' cannot be displayed]')
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img ' + alt_text + 'class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -938,7 +959,11 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 title = ' title="' + file_info['filename'] + '"'
             else:
                 title = ''
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            if alt_text == '':
+                the_alt_text = 'alt=' + json.dumps(word("Thumbnail image of document")) + ' '
+            else:
+                the_alt_text = alt_text
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + unicode(file_info['pages']) + " " + word('pages') + ")"
             return(output)
@@ -951,10 +976,18 @@ def qr_url_string(match):
     string = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
     except:
         width = "300px"
     if width == "full":
-        width = "300px"    
+        width = "300px"
+    if match.lastindex == 3:
+        if match.group(3) != 'None':
+            alt_text = unicode(match.group(3))
+        else:
+            alt_text = word("A QR code")
+    else:
+        alt_text = word("A QR code")
     width_string = "width:" + width
     im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathImage)
     output = StringIO.StringIO()
@@ -968,7 +1001,7 @@ def qr_url_string(match):
         viewbox = m.group(1)
     else:
         viewbox = ""
-    return('<svg style="' + width_string + '" ' + viewbox + '><g transform="scale(1.0)">' + the_image + '</g></svg>')
+    return('<svg style="' + width_string + '" ' + viewbox + '><g transform="scale(1.0)">' + the_image + '</g><title>' + alt_text + '</title></svg>')
 
 def convert_pixels(match):
     pixels = match.group(1)
@@ -978,6 +1011,7 @@ def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '\\textwidth'
@@ -1010,6 +1044,7 @@ def image_include_docx(match, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '100%'
@@ -1035,6 +1070,7 @@ def qr_include_string(match):
     string = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '\\textwidth'
@@ -1054,6 +1090,7 @@ def qr_include_docx(match):
     string = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '100%'
@@ -1180,7 +1217,11 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.convert(question)
         result = converter.output_content.decode('utf8')
     else:
-        result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
+        try:
+            result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
+        except:
+            # Try again because sometimes it fails randomly and maybe trying again will work.
+            result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
@@ -1235,11 +1276,15 @@ def add_terms(termname, terms, status=None):
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'
 
-def audio_control(files, preload="metadata"):
+def audio_control(files, preload="metadata", title_text=None):
     for d in files:
         if type(d) in (str, unicode):
             return d
-    output = '<audio controls="controls" preload="' + preload + '">' + "\n"
+    if title_text is None:
+        title_text = ''
+    else:
+        title_text = " title=" + json.dumps(title_text)
+    output = '<audio' + title_text + ' class="audio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'
@@ -1517,6 +1562,7 @@ def image_include_docx_template(match, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '100%'
@@ -1534,17 +1580,18 @@ def image_include_docx_template(match, question=None):
                 if file_info['mimetype'] == 'text/plain':
                     return contents
                 else:
-                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.docx_template)
+                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.misc.get('docx_template', None))
             if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return unicode(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
             else:
-                return unicode(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.docx_template, width=width))
+                return unicode(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
     return '[reference to file that could not be found]'
 
 def qr_include_docx_template(match):
     string = match.group(1)
     try:
         width = match.group(2)
+        assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
         if width == "full":
             width = '100%'
@@ -1553,4 +1600,13 @@ def qr_include_docx_template(match):
     im = qrcode.make(string)
     the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
     im.save(the_image.name)
-    return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.docx_template, width=width))
+    return unicode(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+
+def ensure_valid_filename(filename):
+    m = re.search(r'[\\/\&\`:;,~\'\"\*\?\<\>\|]', filename)
+    if m:
+        raise Exception("Filename contained invalid character " + repr(m.group(1)))
+    for char in filename:
+        if ord(char) < 32 or ord(char) >= 127:
+            raise Exception("Filename contained invalid character " + repr(char))
+    return True

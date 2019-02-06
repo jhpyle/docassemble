@@ -7,7 +7,7 @@ from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
 standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
-standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -31,7 +31,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
                         new_package = package + '.' + name
                         stack.append((fn, '', new_package))
                 else:
-                    stack.append((fn, prefix + name + '/', package))
+                    stack.append((fn, prefix + name + os.path.sep, package))
             else:
                 bad_name = False
                 for pattern in exclude:
@@ -55,5 +55,5 @@ setup(name='docassemble.base.mako',
       namespace_packages = ['docassemble'],
       install_requires = ['docassemble'],
       zip_safe = False,
-      package_data=find_package_data(where='docassemble.base.mako/', package='docassemble.base.mako'),
+      package_data=find_package_data(where=os.path.join('docassemble.base.mako', ''), package='docassemble.base.mako'),
   )

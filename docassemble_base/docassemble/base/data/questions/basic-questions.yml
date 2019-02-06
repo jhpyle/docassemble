@@ -634,4 +634,19 @@ sets:
 code: |
   x.geolocate()
 comment: |
+---
+generic object: DAList
+code: |
+  x.gather()
+  x.re_gathered = True
+---
+generic object: DADict
+code: |
+  x.gather()
+  x.re_gathered = True
+---
+generic object: DASet
+code: |
+  x.gather()
+  x.re_gathered = True
 ...

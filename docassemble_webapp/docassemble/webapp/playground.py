@@ -481,7 +481,6 @@ class Playground(PlaygroundSection):
         all_names_reduced = all_names.difference( set(['url_args']) )
         return dict(names_used=names_used, undefined_names=undefined_names, fields_used=fields_used, all_names=all_names, all_names_reduced=all_names_reduced)
 
-
 def fix_variable_name(match):
     var_name = match.group(1)
     var_name = end_spaces.sub(r'', var_name)

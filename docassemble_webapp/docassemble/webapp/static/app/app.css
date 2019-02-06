@@ -109,12 +109,22 @@ body.dacontrolled > div > .navbar-dark {
     padding: 0;
 }
 
+.daiconbox > a:focus,
+.daiconbox > a:hover {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+
 .nomargin {
     margin: 0;
 }
 
 .daiconbox td img {
     margin: 2px 0px 2px 0px;
+}
+
+a.nohover {
+    display: block;
 }
 
 a.nohover:hover {
@@ -156,6 +166,10 @@ button.btn-da-custom {
     height: 8em;
     text-align: center;
     vertical-align: middle;
+}
+
+button.btn-da-custom:focus {
+    outline: 1px dotted !important;
 }
 
 .checkbox_count {
@@ -392,9 +406,9 @@ table.datable {
 .vspace {
     margin-top: 10px;
 }
-.navbar-brand:focus {
+/*.navbar-brand:focus {
     outline: none;
-}
+}*/
 .mynavbar-text {
   float: right;
   outline: none;
@@ -919,7 +933,7 @@ iframe.observer {
 }
 
 .no-outline:focus {
-    outline: none;
+    /*outline: none;*/
     text-decoration: none;
 }
 
@@ -1218,7 +1232,7 @@ select.input-embedded {
     background-color: #f0f0ff;
     -moz-appearance: none;
     -webkit-appearance: none;
-    outline: 0;
+    /*outline: 0;*/
     border-color: #888888;
     border-radius: 2px;
     border-width: 0px 0px 1px 0px;
@@ -1235,7 +1249,7 @@ select.input-embedded:focus {
 }
 
 select.input-embedded option {
-    outline: 0;
+    /*outline: 0;*/
     border-style: none;
     margin: 0px;
 }
@@ -1256,7 +1270,7 @@ input.file-embedded {
     background-color: #f0f0ff;
     -moz-appearance: none;
     -webkit-appearance: none;
-    outline: 0;
+    /*outline: 0;*/
     border-style: none;
     border-radius: 2px;
     border-width: 0px;
@@ -1370,6 +1384,10 @@ blockquote.limheight {
 }
 
 .da-has-error {
+    color: #a94442;
+}
+
+.help-block {
     color: #a94442;
 }
 
@@ -1513,6 +1531,17 @@ div.danavdiv {
 
 a.danavlink {
     cursor: text;
+    position: relative;
+}
+
+a.danavlink .toggler {
+    position: absolute;
+    left: 0;
+    cursor: pointer;
+}
+
+a.danavlink .toggler:hover {
+    text-decoration: none;
 }
 
 .ul-toggle {
@@ -2048,4 +2077,12 @@ div.constraintlist div + div {
 	margin-left: 100%;
 	width: 50%;
     }
+}
+
+div.progress + div.audiovideo-control {
+    margin-top: 0.5rem !important;
+}
+
+.audio-control {
+    width: 100%;
 }

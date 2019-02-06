@@ -12,19 +12,18 @@ from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
 import docassemble.base.ocr
-from celery import chord
 import cPickle as pickle
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError, DAValidationError
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_title, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, get_session_variables, set_session_variables, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic
-from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_title, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider
+from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import markdown_to_html, to_text
+from docassemble.base.filter import markdown_to_html, to_text, ensure_valid_filename
 
 #file_finder, url_finder, da_send_mail
 
@@ -43,7 +42,9 @@ import shutil
 import subprocess
 from bs4 import BeautifulSoup
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic']
+valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
+
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_title', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data']
 
 #knn_machine_learner = DummyObject
 
@@ -328,7 +329,25 @@ class DateTimeDelta(object):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return unicode(quantity_noun(output.days, word('day')))
+        return unicode(self.describe())
+    def describe(self, **kwargs):
+        specificity = kwargs.get('specificity', None)
+        output = list()
+        diff = dateutil.relativedelta.relativedelta(self.end, self.start)
+        if diff.years != 0:
+            output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years))))
+        if diff.months != 0 and specificity != 'year':
+            output.append((abs(diff.months), noun_plural(word('month'), abs(diff.months))))
+        if diff.days != 0 and specificity not in ('year', 'month'):
+            output.append((abs(diff.days), noun_plural(word('day'), abs(diff.days))))
+        if kwargs.get('nice', True):
+            return_value = comma_and_list(["%s %s" % (nice_number(y[0]), y[1]) for y in output])
+            if kwargs.get('capitalize', False):
+                return capitalize(return_value)
+            else:
+                return return_value
+        else:
+            return comma_and_list(["%d %s" % y for y in output])
 
 class DADateTime(datetime.datetime):
     def format(self, format='long', language=None):
@@ -341,6 +360,9 @@ class DADateTime(datetime.datetime):
         return format_time(self, format=format, language=language)
     def replace_time(self, time):
         return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
+    @property
+    def nanosecond(self):
+        return 0
     @property
     def dow(self):
         return self.isocalendar()[2]
@@ -448,6 +470,8 @@ def date_difference(starting=None, ending=None, timezone=None):
         ending = pytz.timezone(timezone).localize(ending)
     delta = ending - starting
     output = DateTimeDelta()
+    output.start = starting
+    output.end = ending
     output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
     output.days = delta.days + (delta.seconds / 86400.0)
     output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
@@ -560,29 +584,37 @@ def last_access_minutes(*pargs, **kwargs):
     delta = last_access_delta(*pargs, **kwargs) 
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
-def last_access_time(*pargs, **kwargs):
-    """Returns the last time the interview was accessed, as a 
-    DADateTime object."""
-    include_cron = kwargs.get('include_cron', False)
+def last_access_time(include_privileges=None, exclude_privileges=None, include_cron=False, timezone=None):
+    """Returns the last time the interview was accessed, as a DADateTime object."""
     max_time = None
-    roles = None
-    if len(pargs) > 0:
-        roles = pargs[0]
-        if type(roles) is not list:
-            roles = [roles]
-        if 'cron' in roles:
-            include_cron = True    
+    if include_privileges is not None:
+        if not isinstance(include_privileges, (list, tuple, dict)):
+            if isinstance(include_privileges, DAObject) and hasattr(include_privileges, 'elements'):
+                include_privileges = include_privileges.elements
+            else:
+                include_privileges = [include_privileges]
+        if 'cron' in include_privileges:
+            include_cron = True
+    if exclude_privileges is not None:
+        if not isinstance(exclude_privileges, (list, tuple, dict)):
+            if isinstance(exclude_privileges, DAObject) and hasattr(exclude_privileges, 'elements'):
+                exclude_privileges = exclude_privileges.elements
+            else:
+                exclude_privileges = [exclude_privileges]
+    else:
+        exclude_privileges = list()
     lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].iteritems():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
-                if include_cron is False:
-                    if role.name == 'cron':
-                        continue
-                if roles is None or role in roles:
+                if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
+                    continue
+                if include_privileges is None or role.name in include_privileges:
                     if max_time is None or max_time < access_time:
                         max_time = access_time
-    timezone = kwargs.get('timezone', None)
+                        break
+    if max_time is None:
+        return None
     if timezone is not None:
         return dd(pytz.utc.localize(max_time).astimezone(pytz.timezone(timezone)))
     else:
@@ -782,15 +814,9 @@ class Address(DAObject):
             else:
                 output += unicode(self.address)
             if include_unit:
-                if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                    if re.search(r'^[0-9]', self.unit):
-                        output += ", " + word("Unit", language=language) + " " + unicode(self.unit)
-                    else:
-                        output += ", " + unicode(self.unit)
-                elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                    output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
-                elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                    output += ", " + word("Room", language=language) + " " + unicode(self.room)
+                the_unit = self.formatted_unit(language=language)
+                if the_unit != '':
+                    output += ", " + the_unit
             output += ", "
         #if hasattr(self, 'sublocality') and self.sublocality:
         #    output += unicode(self.sublocality) + ", "
@@ -820,11 +846,14 @@ class Address(DAObject):
                 result['icon'] = self.icon
             return [result]
         return None
-    def geolocate(self):
-        """Determines the latitude and longitude of the location."""
-        if self.geolocated:
-            return self.geolocate_success    
-        the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+    def geolocate(self, address=None):
+        """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geolocation of the selected address."""
+        if address is None:
+            if self.geolocated:
+                return self.geolocate_success
+            the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+        else:
+            the_address = address
         #logmessage("geolocate: trying to geolocate " + str(the_address))
         from geopy.geocoders import GoogleV3
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
@@ -849,7 +878,6 @@ class Address(DAObject):
             self.location.known = True
             self.location.latitude = results.latitude
             self.location.longitude = results.longitude
-            self.location.description = self.block()
             self.geolocate_response = results.raw
             if hasattr(self, 'norm'):
                 delattr(self, 'norm')
@@ -977,6 +1005,12 @@ class Address(DAObject):
                 logmessage("Normalized address was incomplete")
                 self.geolocate_success = False
             self.norm_long.geolocate_response = results.raw
+            if address is not None:
+                self.normalize()
+            try:
+                self.location.description = self.block()
+            except:
+                self.location.description = ''
         else:
             logmessage("geolocate: Valid not ok.")
             self.geolocate_success = False
@@ -1010,16 +1044,9 @@ class Address(DAObject):
                 output += unicode(self.street_number) + " " + unicode(self.street) + line_breaker
             else:
                 output += unicode(self.address) + line_breaker
-            if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-                if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit)):
-                    output += word("Unit", language=language) + " "
-                output += unicode(self.unit) + line_breaker
-            elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-                output += word("Floor", language=language) + " " + unicode(self.floor) + line_breaker
-            elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-                output += word("Room", language=language) + " " + unicode(self.room) + line_breaker
-        #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += unicode(self.sublocality) + line_breaker
+            the_unit = self.formatted_unit(language=language)
+            if the_unit != '':
+                output += the_unit + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             output += unicode(self.sublocality_level_1) + line_breaker
         output += unicode(self.city)
@@ -1030,6 +1057,23 @@ class Address(DAObject):
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + unicode(self.postal_code)
         return(output)
+    def formatted_unit(self, language=None, require=False):
+        """Returns the unit, formatted appropriately"""
+        if not hasattr(self, 'unit') and not hasattr(self, 'floor') and not hasattr(self, 'room'):
+            if require:
+                self.unit
+            else:
+                return ''
+        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', unicode(self.unit), flags=re.IGNORECASE):
+                return word("Unit", language=language) + " " + unicode(self.unit)
+            else:
+                return unicode(self.unit)
+        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+            return word("Floor", language=language) + " " + unicode(self.floor)
+        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+            return word("Room", language=language) + " " + unicode(self.room)
+        return ''
     def line_one(self, language=None):
         """Returns the first line of the address, including the unit 
         number if there is one."""
@@ -1039,12 +1083,9 @@ class Address(DAObject):
             output += unicode(self.street_number) + " " + unicode(self.street)
         else:
             output = unicode(self.address)
-        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            output += ", " + unicode(self.unit)
-        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-            output += ", " + word("Floor", language=language) + " " + unicode(self.floor)
-        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-            output += ", " + word("Room", language=language) + " " + unicode(self.room)
+        the_unit = self.formatted_unit(language=language)
+        if the_unit != '':
+            output += ", " + the_unit
         return(output)
     def line_two(self, language=None):
         """Returns the second line of the address, including the city,
@@ -1493,6 +1534,12 @@ class Value(DAObject):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
         return unicode(self.amount())
+    def __float__(self):
+        return float(self.amount())
+    def __int__(self):
+        return int(self.__float__())
+    def __long__(self):
+        return long(self.__float__())
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
@@ -1649,7 +1696,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         elif type(attachment) in [str, unicode] and re.search(r'^https?://', attachment):
             attachment_list.append(attachment)
         else:
-            logmessage("send_sms: attachment " + str(attachment) + " is not valid.")
+            logmessage("send_sms: attachment " + repr(attachment) + " is not valid.")
             success = False
         if success:
             for the_attachment in attachment_list:
@@ -1674,7 +1721,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     else:
                         message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
                 except Exception as errstr:
-                    logmessage("send_sms: failed to send message: " + str(errstr))
+                    logmessage("send_sms: failed to send message: " + unicode(errstr))
                     return False
     if success and task is not None:
         mark_task_as_performed(task)
@@ -1885,7 +1932,7 @@ def ocr_file_in_background(*pargs, **kwargs):
     todo = list()
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
         todo.append(server.ocr_page.s(**item))
-    the_chord = chord(todo)(collector)
+    the_chord = server.chord(todo)(collector)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
         #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
@@ -2204,3 +2251,134 @@ def zip_file(*pargs, **kwargs):
 def validation_error(message):
     """Raises a validation error with a given message"""
     raise DAValidationError(message)
+
+def invalid_variable_name(varname):
+    if type(varname) not in (str, unicode):
+        return True
+    if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
+        return True
+    varname = re.sub(r'[\.\[].*', '', varname)
+    if not valid_variable_match.match(varname):
+        return True 
+    return False
+
+def url_ask(data):
+    """Like url_action, but accepts a data structure containing a sequence of variables to be sought."""
+    if type(data) is not list:
+        data = [data]
+    variables = []
+    for the_saveas in data:
+        if type(the_saveas) is dict and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
+            if 'set' in the_saveas:
+                if type(the_saveas['set']) is not list:
+                    raise DAError("url_ask: the set statement must refer to a list.  " + repr(data))
+                clean_list = []
+                for the_dict in the_saveas['set']:
+                    if type(the_dict) is not dict:
+                        raise DAError("url_ask: a set command must refer to a list of dicts.  " + repr(data))
+                    for the_var, the_val in the_dict.iteritems():
+                        if not isinstance(the_var, basestring):
+                            raise DAError("url_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
+                        the_var_stripped = the_var.strip()
+                    if invalid_variable_name(the_var_stripped):
+                        raise DAError("url_ask: missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
+                    clean_list.append([the_var_stripped, the_val])
+                variables.append(dict(action='_da_set', arguments=dict(variables=clean_list)))
+            if 'follow up' in the_saveas:
+                if type(the_saveas['follow up']) is not list:
+                    raise DAError("url_ask: the follow up statement must refer to a list.  " + repr(data))
+                for var in the_saveas['follow up']:
+                    if type(var) not in (str, unicode):
+                        raise DAError("url_ask: invalid variable name in follow up " + command + ".  " + repr(data))
+                    var_saveas = var.strip()
+                    if invalid_variable_name(var_saveas):
+                        raise DAError("url_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
+                    variables.append(dict(action=var, arguments=dict()))
+            for command in ('undefine', 'recompute'):
+                if command not in the_saveas:
+                    continue
+                if type(the_saveas[command]) is not list:
+                    raise DAError("url_ask: the " + command + " statement must refer to a list.  " + repr(data))
+                clean_list = []
+                for undef_var in the_saveas[command]:
+                    if type(undef_var) not in (str, unicode):
+                        raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
+                    undef_saveas = undef_var.strip()
+                    if invalid_variable_name(undef_saveas):
+                        raise DAError("url_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
+                    clean_list.append(undef_saveas)
+                variables.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                if command == 'recompute':
+                    variables.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
+            continue
+        if type(the_saveas) is dict and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
+            if type(the_saveas['arguments']) is not dict:
+                raise DAError("url_ask: an arguments directive must refer to a dictionary.  " + repr(data))
+            variables.append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
+        if type(the_saveas) not in (str, unicode):
+            raise DAError("url_ask: invalid variable name " + repr(the_saveas) + ".  " + repr(data))
+        the_saveas = the_saveas.strip()
+        if invalid_variable_name(the_saveas):
+            raise DAError("url_ask: missing or invalid variable name " + repr(the_saveas) + " .  " + repr(data))
+        if the_saveas not in variables:
+            variables.append(the_saveas)
+    return url_action('_da_force_ask', variables=variables)
+
+def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True):
+    """Returns HTML for a button that visits a particular URL."""
+    if not isinstance(label, basestring):
+        label = 'Edit'
+    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+        color = 'dark'
+    if size not in ('sm', 'md', 'lg'):
+        size = 'sm'
+    if size == 'md':
+        size = ''
+    else:
+        size = " btn-" + size
+    if block:
+        block = ' btn-block'
+    else:
+        block = ''
+    if classname is None:
+        classname = ''
+    else:
+        classname = ' ' + unicode(classname)
+    if isinstance(icon, basestring):
+        icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
+        if not re.search(r'^fa[a-z] fa-', icon):
+            icon = 'fas fa-' + icon
+        icon = '<i class="' + icon + '"></i> '
+    else:
+        icon = ''
+    if new_window:
+        target = ''
+    else:
+        target = 'target="_self" '
+    return '<a ' + target + 'href="' + url + '" class="btn' + size + block + ' btn-' + color + ' btn-revisit' + classname + '">' + icon + word(label) + '</a> '
+
+def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
+    """Overlays a page from a PDF file on top of the pages of another PDF file."""
+    if isinstance(main_pdf, DAFileCollection):
+        main_file = main_pdf.pdf.path()
+    elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAFileList):
+        main_file = main_pdf.path()
+    elif isinstance(main_pdf, basestring):
+        main_file = main_pdf
+    else:
+        raise Exception("overlay_pdf: bad main filename")
+    if isinstance(logo_pdf, DAFileCollection):
+        logo_file = logo_pdf.pdf.path()
+    elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAFileList):
+        logo_file = logo_pdf.path()
+    elif isinstance(logo_pdf, basestring):
+        logo_file = logo_pdf
+    else:
+        raise Exception("overlay_pdf: bad logo filename")
+    outfile = DAFile()
+    outfile.set_random_instance_name()
+    outfile.initialize(extension='pdf')
+    docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only)
+    outfile.commit()
+    outfile.retrieve()
+    return outfile

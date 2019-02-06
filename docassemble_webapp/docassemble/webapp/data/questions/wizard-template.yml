@@ -93,6 +93,8 @@ code: |
         markdown_filename = template_filename
       else:
         markdown_filename = templates.convert_file_to_md(template_filename)
+      if markdown_filename is None:
+        raise Exception("The file provided was not a type that could be processed.")
       attachment = attachments.appendObject()
       attachment.type = 'md'
       base_file = varname(base_name(markdown_filename))
@@ -189,7 +191,10 @@ mandatory: True
 code: |
   interview.demonstrate()
   need(attachments.gathered)
-  varsinuse = Playground().variables_from(interview.source())
+  try:
+    varsinuse = Playground().variables_from(interview.source())
+  except:
+    problem_with_attachment
   end_question = interview.questions.initializeObject('all_done')
   end_question.type = 'question'
   end_question.is_mandatory = True
@@ -574,3 +579,16 @@ subquestion: |
   If you are not sure what any of this means, feel free to
   say "No" here.
 yesno: using_modules
+---
+event: problem_with_attachment
+question: |
+  Sorry, the file you uploaded could not be
+  processed.
+subquestion: |
+  The Wizard can only read the variables referenced
+  in a Word document if the Word document contains no
+  Jinja2 errors.  It appears that your file contained
+  an error
+
+  Please fix the errors, click the Back button, and
+  try uploading it again.

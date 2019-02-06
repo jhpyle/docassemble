@@ -33,14 +33,4 @@ subquestion: |
   At least the sky is blue.
     % endif
   % endif
-subquestion: |
-  % if user_is_well:
-    % if sky_is_blue:
-  Enjoy the sunshine!  
-    % endif
-  % else:
-    % if sky_is_blue:
-  At least the sky is blue.
-    % endif
-  % endif
 mandatory: True

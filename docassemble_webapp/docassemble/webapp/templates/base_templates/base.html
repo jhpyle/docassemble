@@ -65,8 +65,12 @@
                 <a class="dropdown-item" href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a>
               </div>
             </li>
-            {%- elif request.path != "/login" and request.path != "/user/sign-in" and request.url_rule != None %}
+            {%- elif request.path != "/login" and request.path != "/user/sign-in" and request.path != "/mfa_login" and request.url_rule != None %}
+              {%- if request.path == "/user/forgot-password" or request.path == "/user/register" or request.path == "/user/change-password" or request.path == "/phone_login" or request.path == "/user/google-sign-in" %}
+            <li><a class="nav-link" href="{{ url_for('user.login') }}">{{ word('Sign in') }}</a></li>
+              {%- else %}
             <li><a class="nav-link" href="{{ url_for('user.login', next=url_for(request.url_rule.endpoint)) }}">{{ word('Sign in') }}</a></li>
+              {%- endif %}
             {%- endif %}
           </ul>
         </div>

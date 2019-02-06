@@ -217,8 +217,8 @@
     </div>
   </div>
   <div class="mt-2">
-    {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
   {%- if entry_list|length > 0 %}
@@ -289,8 +289,8 @@
   </div>
   {%- endfor %}
   <div class="mt-2">
-    {{ render_submit_field(form.submit, tabindex=200, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, tabindex=210, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
 </form>

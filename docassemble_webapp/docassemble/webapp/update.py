@@ -107,7 +107,12 @@ def check_for_updates(doing_startup=False):
         else:
             new_version_needed = False
         #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
-        if package.id not in installs or package.version > installs[package.id].version or new_version_needed:
+        # Check for missing local packages
+        if (package.name not in here_already) and (package.id in installs):
+            package_missing = True
+        else:
+            package_missing = False
+        if package.id not in installs or package.version > installs[package.id].version or new_version_needed or package_missing:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9\n")
@@ -190,10 +195,12 @@ def update_versions():
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
-                install_by_id[package_by_name[package.key].id].packageversion = package.version
+                install_row = Install.query.filter_by(hostname=hostname, package_id=package_by_name[package.key].id).first()
+                install_row.packageversion = package.version
                 db.session.commit()
             if package.version != package_by_name[package.key].packageversion:
-                package_by_name[package.key].packageversion = package.version
+                package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).first()
+                package_row.packageversion = package.version
                 db.session.commit()
     return
 

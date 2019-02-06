@@ -4,6 +4,7 @@
 "Activate chat": Null
 "Active File": Null
 "Active": Null
+"Add an item": Null
 "Add another": Null
 "Add": Null
 "Add Privilege": Null
@@ -14,12 +15,13 @@
 "and": Null
 "An e-mail address is required.": Null
 "A new docassemble system version is available.  If you are using Docker, install a new Docker image.": Null
-"anonymous": Null
 "Anonymous": Null
 "anonymous visitor": Null
+"Answer here": Null
 "API Keys": Null
 "Apply": Null
 "App": Null
+"A QR code": Null
 ", are attached": Null
 "are you": Null
 "Are you sure that you want to delete this file?": Null
@@ -29,6 +31,8 @@
 "Are you sure you want to delete all saved interviews?": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
+"Attachment": Null
+"Attachments": Null
 "A user with that e-mail has already registered": Null
 "Authentication failed.": Null
 "Authentication": Null
@@ -49,10 +53,10 @@
 "Changed name of interview": Null
 "Change": Null
 "Change Password": Null
-"characters": Null
-"Check at least one option, or check": Null
+"Chat message you want to send": Null
 "Checkboxes:": Null
 "Check box": Null
+"Check if applicable": Null
 "Choices:": Null
 "Classes": Null
 "Clear": Null
@@ -94,6 +98,7 @@
 "Description": Null
 "Developer Access": Null
 "Disable": Null
+"Display the menu": Null
 "Docassemble Office Add-in": Null
 "Docassemble Playground": Null
 "Documentation": Null
@@ -124,7 +129,7 @@
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
 "Enter an ISO-639-1 language code (e.g., es, fr, it)": Null
-"Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.": Null
+"Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
 "Error: interview not found and answers could not be decrypted": Null
@@ -136,6 +141,7 @@
 "Error reading JSON file from package.  File did not exist.": Null
 "Error reading JSON file.  Not a valid JSON file.": Null
 "Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
+"ERROR: you cannot insert a table into a .docx document": Null
 "Every Two Weeks": Null
 "Existing module files": Null
 "Existing source files": Null
@@ -237,13 +243,14 @@
 "means the name may be located in a file included by reference, such as:": Null
 "menu items": Null
 "menu": Null
-"Menu:": Null
 "Menu": Null
+"Menu:": Null
 "Methods": Null
 "Modules available in Playground": Null
 "Modules defined": Null
 "Modules": Null
 "Monitor": Null
+"month": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "My Interviews": Null
@@ -272,10 +279,11 @@
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
 "Note": Null
+"Note: only users with e-mail/password accounts can be given admin privileges.": Null
 "Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.": Null
 "Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.": Null
-"?": Null
 ".": Null
+"?": Null
 "Observation": Null
 "Observe": Null
 "OCR succeeded": Null
@@ -311,6 +319,7 @@
 "Per Week": Null
 "Per Year": Null
 "Phone help is available": Null
+"Phone help": Null
 "Phone number": Null
 "pip log": Null
 "Plain text of sections": Null
@@ -318,17 +327,16 @@
 "Playground": Null
 "Playground Packages": Null
 "Playground YAML": Null
-"Please check at least one.": Null
 "Please choose a different e-mail address.": Null
-"Please enter a valid date.": Null
 "Please enter a valid phone number": Null
 "Please enter a valid value.": Null
 "Please enter the four digit code, followed by the pound sign.": Null
 "Please enter the verification code from the text message we just sent you.": Null
 "Please enter the verification code from your authentication app.": Null
 "Please log in.": Null
-"Please select at least": Null
-"Please select no more than": Null
+"Please select at least %s.": Null
+"Please select exactly %s.": Null
+"Please select no more than %s.": Null
 "Please select one.": Null
 "Please send an audio clip.": Null
 "Please send an audio clip, or type skip.": Null
@@ -338,6 +346,7 @@
 "Please send a video, or type skip.": Null
 "Please send one or more images.": Null
 "Please send one or more images, or type skip.": Null
+"Please upload a file with a valid file format.": Null
 "Possibly not defined": Null
 "Possibly not used": Null
 "Press one of the following buttons:": Null
@@ -362,6 +371,7 @@
 "Question": Null
 "quit": Null
 "README file": Null
+"Read this screen out loud": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
 "Registration is invite only": Null
@@ -404,12 +414,15 @@
 "Sign in with your mobile phone": Null
 "Sign Out": Null
 "Sign Your Name": Null
+"Since you changed a Python module, the server needs to restart in order to load your module.": Null
+"Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
 "skip": Null
 "SMS": Null
 "SMS version": Null
 "Social ID": Null
 "something": Null
 "Sorry, no help is available for this question.": Null
+"Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders.": Null
 "Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders.": Null
 "Sorry, that package name does not exist in the playground": Null
 "Sorry, that package name is already in use by someone else": Null
@@ -468,6 +481,7 @@
 "The synchronization was not successful.": Null
 "The synchronization was successful.": Null
 "The user can call you.  Click to cancel.": Null
+"The user profile was not changed.": Null
 "The version on PyPI is": Null
 "they": Null
 "Third subdivision": Null
@@ -479,6 +493,7 @@
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null
 "This package was originally pulled from": Null
+"Thumbnail image of document": Null
 "Time Zone": Null
 "t": Null
 "to proceed.": Null
@@ -566,13 +581,16 @@
 "Version": Null
 "View documentation": Null
 "v.": Null
+"Waiting": Null
 "Warning: a file by that name already exists.  If you save, you will overwrite it.": Null
 "Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
 "was saved at": Null
 "WebRTC": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
 "We were unable to submit your request.": Null
+"Would you like to reconfigure two-factor authentication?": Null
 "x": Null
+"year": Null
 "yes": Null
 "Yes": Null
 "y": Null
@@ -582,8 +600,8 @@
 "You cannot log in this way.": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
-"You cannot type more than": Null
-"You can press the following button:": Null
+"You cannot take away your own admin privilege.": Null
+"You cannot type more than %s characters.": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
 "You can type menu1, etc. to select a menu item": Null
@@ -599,14 +617,14 @@
 "You must provide a file.": Null
 "You must select an option.": Null
 "You must sign your name to continue.": Null
-"You must type at least": Null
+"You must type at least %s characters.": Null
 "You need to enter a complete e-mail address.": Null
-"You need to enter a date between %s and %s": Null
-"You need to enter a date on or after": Null
-"You need to enter a date on or before": Null
+"You need to enter a date between %s and %s.": Null
+"You need to enter a date on or after %s.": Null
+"You need to enter a date on or before %s.": Null
 "You need to enter a number.": Null
-"You need to enter a number that is at least": Null
-"You need to enter a number that is at most": Null
+"You need to enter a number that is at least %s.": Null
+"You need to enter a number that is at most %s.": Null
 "You need to enter a valid date and time.": Null
 "You need to enter a valid date.": Null
 "You need to enter a valid time.": Null
@@ -626,7 +644,6 @@
 "Your account has been disabled.": Null
 "Your account has not been enabled.": Null
 "Your account no longer uses two-factor authentication.": Null
-"Your choices are:": Null
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null

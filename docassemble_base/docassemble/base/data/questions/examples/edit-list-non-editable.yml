@@ -1,0 +1,89 @@
+metadata:
+  title: Edit list
+  short title: Edit list
+  documentation: "https://docassemble.org/docs/groups.html#custom editing"
+  example start: 9
+  example end: 9
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - person: DAList.using(object_type=Individual,
+                         there_are_any=True,
+                         complete_attribute='complete')
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_interview') ]
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+question: |
+  Who is your favorite person?
+fields:
+  - Favorite: favorite
+    code: person
+---
+mandatory: true
+question: |
+  Thank you for your answers!
+subquestion: |
+  ${ person.table.show(editable=False) }
+
+  You can
+  [edit your answers](${ url_action('review_interview') })
+  if you want.
+---
+event: review_interview
+question: |
+  Edit your answers
+review:
+  - Edit: favorite
+    button: |
+      Your favorite person is ${ favorite }.
+  - Edit: person.revisit
+    button: |
+      The people are:
+
+      % for y in person:
+      * ${ y }
+      % endfor
+---
+field: person.revisit
+question: |
+  Edit the people
+subquestion: |
+  ${ person.table }
+  
+  ${ person.add_action() }
+---
+table: person.table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+edit:
+  - name.first
+  - favorite_fruit

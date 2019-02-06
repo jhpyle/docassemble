@@ -4,7 +4,7 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c 'echo -e "deb http://deb.debian.org/d
     apt-get -y update'
 
 RUN DEBIAN_FRONTEND=noninteractive bash -c " \
-	until apt-get -q -y install \
+    until apt-get -q -y install \
         apt-utils \
         tzdata \
         python \
@@ -155,7 +155,8 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c " \
         ttf-mscorefonts-installer \
         fonts-ebgaramond-extra \
         ttf-liberation \
-        fonts-liberation; \
+        fonts-liberation \
+        qpdf; \
     do sleep 5; done; \
     apt-get -q -y install -t \
         stretch-backports \
@@ -164,12 +165,11 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c " \
     dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && \
     rm libapache2-mod-wsgi_4.3.0-1_amd64.deb"
 
-
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
     cd /tmp && \
-    wget https://github.com/jgm/pandoc/releases/download/2.3/pandoc-2.3-1-amd64.deb && \
-    dpkg -i pandoc-2.3-1-amd64.deb && \
-    rm pandoc-2.3-1-amd64.deb && \
+    wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb && \
+    dpkg -i pandoc-2.5-1-amd64.deb && \
+    rm pandoc-2.5-1-amd64.deb && \
     mkdir -p /etc/ssl/docassemble \
         /usr/share/docassemble/local \
         /usr/share/docassemble/certs \
@@ -182,12 +182,15 @@ RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
         /usr/share/docassemble/log \
         /tmp/docassemble \
         /var/www/html/log && \
+    echo '{ "args": ["--no-sandbox"] }' > /var/www/puppeteer-config.json && \
     chown -R www-data.www-data /var/www && \
     chsh -s /bin/bash www-data && \
     update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10 && \
     wget -qO- https://deb.nodesource.com/setup_6.x | bash - && \
     apt-get -y install nodejs && \
-    npm install -g azure-storage-cmd
+    npm install -g azure-storage-cmd && \
+    npm install -g mermaid.cli
+
 
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
     cd /usr/share/docassemble && \
@@ -201,6 +204,7 @@ RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 COPY . /tmp/docassemble/
 
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
+    ln -s /var/mail/mail /var/mail/root && \
     cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ && \
     cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ && \
     cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ && \
@@ -240,7 +244,6 @@ RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
             awscli \
             virtualenv"
 
-
 USER www-data
 
 RUN bash -c "cd /tmp && \
@@ -258,7 +261,9 @@ RUN bash -c "cd /tmp && \
         distutils2 \
         passlib \
         pycryptodome && \
-    pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+    pip install --upgrade \
+    'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+    'git+https://github.com/euske/pdfminer.git' \
         simplekv==0.10.0 \
         /tmp/docassemble/docassemble \
         /tmp/docassemble/docassemble_base \
@@ -269,6 +274,7 @@ RUN bash -c "cd /tmp && \
 USER root
 
 RUN rm -rf /tmp/docassemble && \
+    rm -f /etc/cron.daily/apt-compat && \
     sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf && \
     sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \

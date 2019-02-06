@@ -3,7 +3,7 @@ from docassemble.base.config import daconfig, dbtableprefix
 
 class Package(db.Model):
     __tablename__ = dbtableprefix + 'package'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     name = db.Column(db.String(255), nullable=False)
     type = db.Column(db.Text()) #github, zip, pip
     giturl = db.Column(db.String(255), nullable=True)
@@ -20,14 +20,14 @@ class Package(db.Model):
 
 class PackageAuth(db.Model):
     __tablename__ = dbtableprefix + 'package_auth'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     package_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'package.id', ondelete='CASCADE'))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     authtype = db.Column(db.String(255), server_default='owner')
 
 class Install(db.Model):
     __tablename__ = dbtableprefix + "install"
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True, unique=True)
     hostname = db.Column(db.Text())
     version = db.Column(db.Integer())
     packageversion = db.Column(db.Text())
