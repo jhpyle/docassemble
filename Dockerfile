@@ -155,7 +155,8 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c " \
         ttf-mscorefonts-installer \
         fonts-ebgaramond-extra \
         ttf-liberation \
-        fonts-liberation; \
+        fonts-liberation \
+        qpdf; \
     do sleep 5; done; \
     apt-get -q -y install -t \
         stretch-backports \
@@ -166,9 +167,9 @@ RUN DEBIAN_FRONTEND=noninteractive bash -c " \
 
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
     cd /tmp && \
-    wget https://github.com/jgm/pandoc/releases/download/2.3/pandoc-2.3-1-amd64.deb && \
-    dpkg -i pandoc-2.3-1-amd64.deb && \
-    rm pandoc-2.3-1-amd64.deb && \
+    wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb && \
+    dpkg -i pandoc-2.5-1-amd64.deb && \
+    rm pandoc-2.5-1-amd64.deb && \
     mkdir -p /etc/ssl/docassemble \
         /usr/share/docassemble/local \
         /usr/share/docassemble/certs \
@@ -260,7 +261,9 @@ RUN bash -c "cd /tmp && \
         distutils2 \
         passlib \
         pycryptodome && \
-    pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+    pip install --upgrade \
+    'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+    'git+https://github.com/euske/pdfminer.git' \
         simplekv==0.10.0 \
         /tmp/docassemble/docassemble \
         /tmp/docassemble/docassemble_base \

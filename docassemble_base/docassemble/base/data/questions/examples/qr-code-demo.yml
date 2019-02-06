@@ -7,7 +7,7 @@ metadata:
 mandatory: True
 question: Here is a URL for you in a QR code
 subquestion: |
-  [QR https://news.google.com, 200px]
+  [QR https://news.google.com, 200px, Google News]
 attachment:
   name: Your QR code
   filename: your_code

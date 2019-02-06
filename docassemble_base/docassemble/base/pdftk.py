@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import os.path
 import subprocess
@@ -24,10 +25,15 @@ from pdfminer.pdfpage import PDFPage
 import uuid
 
 PDFTK_PATH = 'pdftk'
+QPDF_PATH = 'qpdf'
 
 def set_pdftk_path(path):
     global PDFTK_PATH
     PDFTK_PATH = path
+
+def set_qpdf_path(path):
+    global QPDF_PATH
+    QPDF_PATH = path
 
 def read_fields(pdffile):
     import string
@@ -56,25 +62,28 @@ def fieldsorter(x):
         y_coord = 0
     return (x[2], y_coord, x_coord)
 
-def recursively_add_fields(fields, id_to_page, outfields):
+def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
     for i in fields:
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         if name is not None:
             name = str(name).decode('latin1')
+            name = remove_nonprintable_limited(unicode(name))
         if value is not None:
             value = str(value).decode('latin1')
-        #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "| and value is " + str(value))
+            value = remove_nonprintable_limited(unicode(value))
+        #field_type = remove_nonprintable(str(field_type))
+        #logmessage("name is " + repr(name) + " and FT is |" + str(field_type) + "| and value is " + repr(value))
         if page is not None:
             pageno = id_to_page[page.objid]
         else:
             pageno = 1
-        if str(field_type) == '/Btn':
+        if str(field_type) in ('/Btn', "/u'Btn'"):
             if value == '/Yes':
                 default = "Yes"
             else:
                 default = "No"
-        elif str(field_type) == '/Sig':
+        elif str(field_type) in ('/Sig', "/u'Sig'"):
             default = '${ user.signature }'
         else:
             if value is not None:
@@ -89,9 +98,20 @@ def recursively_add_fields(fields, id_to_page, outfields):
                 default = word("something")
         kids = field.get('Kids')
         if kids:
-            recursively_add_fields(kids, id_to_page, outfields)
+            if name is None:
+                recursively_add_fields(kids, id_to_page, outfields, prefix=prefix)
+            else:
+                if prefix == '':
+                    recursively_add_fields(kids, id_to_page, outfields, prefix=name)
+                else:
+                    recursively_add_fields(kids, id_to_page, outfields, prefix=prefix + '.' + name)
         else:
-            outfields.append((name, default, pageno, rect, field_type))
+            if prefix != '' and name is not None:
+                outfields.append((prefix + '.' + name, default, pageno, rect, field_type))
+            elif prefix == '':
+                outfields.append((name, default, pageno, rect, field_type))
+            else:
+                outfields.append((prefix, default, pageno, rect, field_type))
 
 def read_fields_pdftk(pdffile):
     output = unicode(check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode('utf8'))
@@ -161,7 +181,7 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
             #logmessage("Added bookmark " + destination.title)
 
-def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None):
+def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None):
     if pdf_url is None:
         pdf_url = ''
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
@@ -177,6 +197,14 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
 ".xfdf", delete=False)
         shutil.copyfile(xfdf_temp_filename, xfdf_file.name)
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+    if template_password is not None:
+        template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, '--decrypt', '--password=' + template_password, template, template_file.name]
+        result = call(qpdf_subprocess_arguments)
+        if result != 0:
+            logmessage("Failed to decrypt PDF template " + str(template))
+            raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+        template = template_file.name
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
     #logmessage("Arguments are " + str(subprocess_arguments))
     if editable or len(images):
@@ -442,6 +470,11 @@ def remove_nonprintable(text):
         if char in string.printable:
             final += char
     return final
+
+def remove_nonprintable_limited(text):
+    text = re.sub(r'^\xfe\xff', '', text)
+    text = re.sub(r'\x00', '', text)
+    return text
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
     #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))

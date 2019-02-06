@@ -85,8 +85,8 @@ gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
-match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
+#match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
+#match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
@@ -748,6 +748,8 @@ from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import or_, and_
 import docassemble.base.parse
+import docassemble.base.astparser
+import ast
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 #import docassemble.webapp.update
@@ -1963,20 +1965,20 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
                 else:
-                    output += '<a tabindex="0" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + unicode(the_title) + '</a>'
                 else:
-                    output += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
+                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + unicode(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
@@ -2020,12 +2022,12 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                     section_reached = False
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a tabindex="0" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
+                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + unicode(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + unicode(sub_title) + '</a>'
                     else:
-                        suboutput += '<a tabindex="0" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + unicode(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within:
@@ -2157,8 +2159,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
     if help_label is None:
         help_label = status.question.help()
     extra_help_message = word("Help is available for this question")
+    phone_sr = word("Phone help")
     phone_message = word("Phone help is available")
     chat_message = word("Live chat is available")
+    chat_sr = word("Live chat")
     source_message = word("How this question came to be asked")
     if debug_mode:
         source_button = '<li class="nav-item d-none d-md-block"><a class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
@@ -2170,7 +2174,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i></a></li></ul>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a role="button" href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
     navbar += """
         <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
@@ -2180,12 +2184,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
 """
     if 'menu_items' in status.extras:
         if not isinstance(status.extras['menu_items'], list):
-            custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
+            custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<a tabindex="0" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                    custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
@@ -2208,7 +2212,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
-                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="0">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
+                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
                 navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" id="menuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="menuLabel">'
                 if custom_menu:
@@ -3256,13 +3260,17 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
-        unique_id = str(request.cookies.get('session'))[5:15]
+        if 'session' in request.cookies:
+            unique_id = str(request.cookies.get('session'))[5:15]
+        else:
+            unique_id = ''
         if unique_id == '':
             if current_user.is_authenticated and not current_user.is_anonymous and current_user.email:
                 unique_id = str(current_user.email)
             else:
                 unique_id = random_string(10)
-    if secret is not None:
+        #logmessage("unique id is " + unique_id)
+    if secret is not None: 
         secret = str(secret)
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
@@ -3618,7 +3626,7 @@ def auto_login():
         url_info = info.get('url_args', dict())
         next_url = get_url_from_file_reference(info['next'], **url_info)
     else:
-        next_url = url_for('interview_list')
+        next_url = url_for('interview_list', from_login='1')
     response = redirect(next_url)
     response.set_cookie('secret', info['secret'])
     return response
@@ -3632,7 +3640,7 @@ def show_headers():
 @csrf.exempt
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
 
@@ -3640,14 +3648,14 @@ def oauth_authorize(provider):
 @csrf.exempt
 def oauth_callback(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email, name_data = oauth.callback()
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
-        return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list', from_login='1'))
     user = UserModel.query.filter_by(social_id=social_id).first()
     if not user:
         user = UserModel.query.filter_by(email=email).first()
@@ -3674,7 +3682,7 @@ def oauth_callback(provider):
         #release_lock(session['uid'], session['i'])
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
-    response = redirect(url_for('interview_list'))
+    response = redirect(url_for('interview_list', from_login='1'))
     response.set_cookie('secret', secret)
     return response
 
@@ -3775,7 +3783,7 @@ def phone_login_verify():
                 session['key_logged'] = True
                 #release_lock(session['uid'], session['i'])
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
-            response = redirect(url_for('interview_list'))
+            response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret)
             return response
         else:
@@ -3820,7 +3828,7 @@ def mfa_setup():
                 next_url = session['next']
                 del session['next']
             else:
-                next_url = url_for('interview_list')
+                next_url = url_for('interview_list', from_login='1')
             return flask_user.views._do_login_user(user, next_url, False)
         flash(word("You are now set up with two factor authentication."), 'success')
         return redirect(url_for('user_profile_page'))
@@ -3987,7 +3995,7 @@ def mfa_verify_sms_setup():
                     next_url = session['next']
                     del session['next']
                 else:
-                    next_url = url_for('interview_list')
+                    next_url = url_for('interview_list', from_login='1')
                 return flask_user.views._do_login_user(user, next_url, False)
             flash(word("You are now set up with two factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
@@ -4010,7 +4018,7 @@ def mfa_login():
         abort(404)
     form = MFALoginForm(request.form)
     if not form.next.data:
-        form.next.data = _get_safe_next_param('next', url_for('interview_list'))
+        form.next.data = _get_safe_next_param('next', url_for('interview_list', from_login='1'))
     if request.method == 'POST' and form.submit.data:
         del session['validated_user']
         if 'next' in session:
@@ -4263,7 +4271,7 @@ def google_page():
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
     session_id = session.get('uid', None)
-    return redirect(url_for('interview_list'))
+    return redirect(url_for('interview_list', from_login='1'))
 
 @app.route("/leave", methods=['GET'])
 def leave():
@@ -5298,8 +5306,8 @@ def index():
             return(response)
     if '_the_image' in post_data:
         file_field = from_safeid(post_data['_save_as']);
-        if match_invalid.search(file_field):
-            error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+        if illegal_variable_name(file_field):
+            error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
         else:
             if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
                 #logmessage("index: assemble 2")
@@ -5448,6 +5456,9 @@ def index():
             core_key_name = parse_result['final_parts'][0]
             whole_key = core_key_name + parse_result['final_parts'][1]
             real_key = safeid(whole_key)
+            if illegal_variable_name(whole_key):
+                error_messages.append(("error", "Error: Invalid key " + whole_key))
+                break
             # logmessage("core key name is " + str(core_key_name) + " whole key is " + str(whole_key) + " Checking for existence of " + str(whole_key))
             if whole_key in user_dict:
                 it_exists = True
@@ -5571,6 +5582,9 @@ def index():
             if not parse_result['valid']:
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
+        if illegal_variable_name(key):
+            error_messages.append(("error", "Error: Invalid key " + key))
+            break
         #logmessage("Real key is " + real_key + " and key is " + key)
         do_append = False
         do_opposite = False
@@ -5861,6 +5875,9 @@ def index():
             key = myb64unquote(orig_key)
             #logmessage("3Doing empty key " + str(key))
             vars_set.add(key + '.gathered')
+            if illegal_variable_name(key):
+                logmessage("Received illegal variable name " + unicode(key))
+                continue
             if empty_fields[orig_key] == 'object_checkboxes':
                 docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
                 exec(key + '.clear()' , user_dict)
@@ -5898,9 +5915,9 @@ def index():
                 except:
                     error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
                     break
-                if match_invalid.search(file_field):
+                if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -5965,8 +5982,8 @@ def index():
                             except:
                                 error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
                                 break
-                            if match_invalid.search(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                            if illegal_variable_name(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -6019,11 +6036,11 @@ def index():
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
-                    error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                    error_messages.append(("error", "Error: Invalid file_field: " + unicode(orig_file_field)))
                     break
-                if match_invalid.search(file_field):
+                if illegal_variable_name(file_field):
                     has_invalid_fields = True
-                    error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                    error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
@@ -6075,10 +6092,10 @@ def index():
                             try:
                                 file_field = from_safeid(var_to_store)
                             except:
-                                error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
+                                error_messages.append(("error", "Error: Invalid file_field: " + unicode(var_to_store)))
                                 break
-                            if match_invalid.search(file_field):
-                                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                            if illegal_variable_name(file_field):
+                                error_messages.append(("error", "Error: Invalid character in file_field: " + unicode(file_field)))
                                 break
                             if len(files_to_process) > 0:
                                 elements = list()
@@ -8104,21 +8121,25 @@ def index():
           var box = this;
           var prev = $(this).prev();
           if (prev && !prev.hasClass('active')){
-            var toggler = $('<span class="toggler">');
+            var toggler;
             if ($(box).hasClass('notshowing')){
+              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="false">');
               $('<i class="fas fa-caret-right">').appendTo(toggler);
             }
             else{
+              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="true">');
               $('<i class="fas fa-caret-down">').appendTo(toggler);
             }
             toggler.appendTo(prev);
             toggler.on('click', function(e){
+              var oThis = this;
               $(this).find("svg").each(function(){
                 if ($(this).attr('data-icon') == 'caret-down'){
                   $(this).removeClass('fa-caret-down');
                   $(this).addClass('fa-caret-right');
                   $(this).attr('data-icon', 'caret-right');
                   $(box).hide();
+                  $(oThis).attr('aria-pressed', 'false');
                   $(box).toggleClass('notshowing');
                 }
                 else if ($(this).attr('data-icon') == 'caret-right'){
@@ -8126,6 +8147,7 @@ def index():
                   $(this).addClass('fa-caret-down');
                   $(this).attr('data-icon', 'caret-down');
                   $(box).show();
+                  $(oThis).attr('aria-pressed', 'true');
                   $(box).toggleClass('notshowing');
                 }
               });
@@ -8669,7 +8691,7 @@ def index():
         else{
           return false;
         }
-      }, """ + json.dumps(word("Please check at least one.")) + """);
+      });
       $.validator.addMethod('checkatleast', function(value, element, params){
         if ($(element).attr('name') != '_ignore' + params[0]){
           return true;
@@ -8679,13 +8701,6 @@ def index():
         }
         else{
           return false;
-        }
-      }, function(params, element){
-        if (params[1] == 1){
-          return """ + json.dumps(word("Please select one.")) + """;
-        }
-        else{
-          return """ + json.dumps(word("Please select at least")) + """ + " " + params[1] + ".";
         }
       });
       $.validator.addMethod('checkatmost', function(value, element, params){
@@ -8698,8 +8713,6 @@ def index():
         else{
           return true;
         }
-      }, function(params, element){
-        return """ + json.dumps(word("Please select no more than")) + """ + " " + params[1] + ".";
       });
       $.validator.addMethod('checkexactly', function(value, element, params){
         if ($(element).attr('name') != '_ignore' + params[0]){
@@ -8711,8 +8724,6 @@ def index():
         else{
           return true;
         }
-      }, function(params, element){
-        return """ + json.dumps(word("Please select exactly")) + """ + " " + params[1] + ".";
       });
       $.validator.addMethod('mindate', function(value, element, params){
         if (value == null || value == ''){
@@ -8726,7 +8737,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      });
       $.validator.addMethod('maxdate', function(value, element, params){
         if (value == null || value == ''){
           return true;
@@ -8739,7 +8750,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
+      });
       $.validator.addMethod('minmaxdate', function(value, element, params){
         if (value == null || value == ''){
           return true;
@@ -8753,8 +8764,7 @@ def index():
           }
         } catch (e) {}
         return false;
-      }, """ + json.dumps(word("Please enter a valid date.")) + """);
-      $.extend($.validator.messages, {accept: """ + json.dumps(word("Please upload a file with a valid file format.")) + """});
+      });
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -16733,16 +16743,18 @@ def interview_list():
     tag = request.args.get('tag', None)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
+        the_args = dict()
         if is_json:
-            if tag:
-                response = redirect(url_for('interview_list', json='1', tag=tag))
-            else:
-                response = redirect(url_for('interview_list', json='1'))
-        else:
-            if tag:
-                response = redirect(url_for('interview_list', tag=tag))
-            else:
-                response = redirect(url_for('interview_list'))
+            the_args['json'] = '1'
+        if tag:
+            the_args['tag'] = tag
+        if 'from_login' in request.args:
+            the_args['from_login'] = request.args['from_login']
+        if 'post_restart' in request.args:
+            the_args['post_restart'] = request.args['post_restart']
+        if 'resume' in request.args:
+            the_args['resume'] = request.args['resume']
+        response = redirect(url_for('interview_list', **the_args))
         response.set_cookie('secret', session['newsecret'])
         del session['newsecret']
         return response
@@ -16770,7 +16782,12 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
-    if request.args.get('post_restart', False) or request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
+    if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
+        if is_json:
+            return redirect(url_for('index', i=session['i'], json='1'))
+        else:
+            return redirect(url_for('index', i=session['i']))
+    if request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
         next_page = page_after_login()
         if next_page is None:
             logmessage("Invalid page " + unicode(next_page))
@@ -18506,6 +18523,8 @@ def api_session():
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
         secret = request.args.get('secret', None)
+        session['i'] = yaml_filename
+        session['uid'] = session_id
         if secret is not None:
             secret = str(secret)
         if yaml_filename is None or session_id is None:
@@ -18519,6 +18538,8 @@ def api_session():
         post_data = request.form.copy()
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
+        session['i'] = yaml_filename
+        session['uid'] = session_id
         secret = str(post_data.get('secret', None))
         question_name = post_data.get('question_name', None)
         reply_with_question = true_or_false(post_data.get('question', True))
@@ -18536,12 +18557,19 @@ def api_session():
             del_variables = json.loads(post_data.get('delete_variables', '[]'))
         except:
             return jsonify_with_status("Malformed list of delete variables.", 400)
+        try:
+            event_list = json.loads(post_data.get('event_list', '[]'))
+            assert isinstance(event_list, list)
+        except:
+            return jsonify_with_status("Malformed event list.", 400)
         if type(variables) is not dict:
             return jsonify_with_status("Variables data is not a dict.", 400)
         if type(file_variables) is not dict:
             return jsonify_with_status("File variables data is not a dict.", 400)
         if type(del_variables) is not list:
             return jsonify_with_status("Delete variables data is not a list.", 400)
+        if type(event_list) is not list:
+            return jsonify_with_status("Event list data is not a list.", 400)
         files = []
         literal_variables = dict()
         for filekey in request.files:
@@ -18570,7 +18598,7 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)            
         if data is None:
@@ -18672,26 +18700,33 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     #release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None):
     #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
+    vars_set = set()
     if user_dict is None:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.iteritems():
+            if illegal_variable_name(key):
+                raise Exception("Illegal value as variable name.")
             exec(unicode(key) + ' = ' + repr(val), user_dict)
+            vars_set.add(key)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
         raise Exception("Problem deleting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.iteritems():
+            if illegal_variable_name(key):
+                raise Exception("Illegal value as variable name.")
             exec(unicode(key) + ' = ' + val, user_dict)
+            vars_set.add(key)
     if question_name is not None:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         if question_name in interview.questions_by_name:
@@ -18701,20 +18736,47 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if del_variables is not None:
         try:
             for key in del_variables:
+                if illegal_variable_name(key):
+                    raise Exception("Illegal value as variable name.")
                 exec('del ' + unicode(key), user_dict)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem deleting variables: " + str(the_err))
+    session_uid = current_user.email
+    #if 'event_stack' in user_dict['_internal']:
+    #    logmessage("Event stack starting as: " + repr(user_dict['_internal']['event_stack']))
+    #else:
+    #    logmessage("No event stack.")
+    if event_list is not None and len(event_list) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+        for event_name in event_list:
+            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
+                user_dict['_internal']['event_stack'][session_uid].pop(0)
+                #logmessage("Popped " + unicode(event_name))
+    if len(vars_set) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+        for var_name in vars_set:
+            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
+                user_dict['_internal']['event_stack'][session_uid].pop(0)
+                #logmessage("Popped " + unicode(var_name))
+    #if 'event_stack' in user_dict['_internal']:
+    #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
+    steps += 1
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=True)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
-    steps += 1
-    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+    if not return_question:
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        if 'multi_user' in vars_set:
+            if user_dict.get('multi_user', False) is True and is_encrypted is True:
+                decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+                is_encrypted = False
+            if user_dict.get('multi_user', False) is False and is_encrypted is False:
+                encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+                is_encrypted = True
     #release_lock(session_id, yaml_filename)
     return data
 
@@ -18798,13 +18860,15 @@ def api_session_question():
         return data['response']
     return jsonify(**data)    
 
-def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True):
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
+    if user_dict is None:
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
-            release_lock(session_id, yaml_filename)
+            if use_lock:
+                release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary")
     try:
         the_section = user_dict['nav'].get_section()
@@ -18819,7 +18883,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
-    interview_status.checkin = True
+    #interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
     try:
         if old_user_dict is not None:
@@ -18838,9 +18902,15 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         docassemble.base.functions.set_language(old_language)
         raise Exception("Failure to assemble interview: " + str(e))
     docassemble.base.functions.set_language(old_language)
+    if save:
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
+        if user_dict.get('multi_user', False) is True and is_encrypted is True:
+            decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            is_encrypted = False
+        if user_dict.get('multi_user', False) is False and is_encrypted is False:
+            encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            is_encrypted = True
     if use_lock:
-        if save:
-            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
         release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
@@ -18907,6 +18977,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             del data[key]
         elif key.startswith('_'):
             del data[key]
+    #logmessage("Ok returning")
     return data
 
 @app.route('/api/session/action', methods=['POST'])
@@ -19594,6 +19665,17 @@ def get_short_code(**pargs):
     if new_record is None:
         raise SystemError("Failed to generate unique short code")
     return new_short
+
+def illegal_variable_name(var):
+    if re.search(r'[\n\r]', var):
+        return True
+    try:
+        t = ast.parse(var)
+    except:
+        return True
+    detector = docassemble.base.astparser.detectIllegal()
+    detector.visit(t)
+    return detector.illegal
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)
