@@ -3,22 +3,13 @@ metadata:
   short title: Gather
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 7
+  example end: 8
 ---
 modules:
   - docassemble.base.util
 ---
 objects:
   - fruit: DAList
----
-question: |
-  Are there more fruits?
-yesno: more_fruits
----
-question: |
-  What's the ${ ordinal(i) } fruit?
-fields:
-  - Fruit: fruit[i]
 ---
 mandatory: True
 code: |
@@ -30,10 +21,24 @@ comment: |
 ---
 mandatory: True
 code: |
-  fruit[0]
-  if more_fruits:
+  num_fruits = 0
+  more_fruits = True
+---
+mandatory: True
+code: |
+  while more_fruits:
+    fruit[num_fruits]
+    num_fruits += 1
     del more_fruits
-    fruit[len(fruit)]
+---
+question: |
+  Are there more fruits?
+yesno: more_fruits
+---
+question: |
+  What's the ${ ordinal(i) } fruit?
+fields:
+  - Fruit: fruit[i]
 ---
 mandatory: True
 question: |

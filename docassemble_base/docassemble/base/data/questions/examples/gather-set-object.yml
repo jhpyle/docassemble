@@ -6,7 +6,7 @@ metadata:
   example end: 8
 ---
 modules:
-  - docassemble.base.core
+  - docassemble.base.util
 ---
 objects:
   - fruit: DASet

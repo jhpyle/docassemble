@@ -13,8 +13,10 @@ import random
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
-from docassemble.base.pdftk import pdf_encrypt
+from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_calculations
 from io import open
+import mimetypes
+from subprocess import call, check_output
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -304,8 +306,8 @@ def word_to_markdown(in_file, in_format):
         with open(temp_file.name, 'rU', encoding='utf-8') as the_file:
             file_contents = the_file.read()
         file_contents = re.sub(r'\\([\$\[\]])', lambda x: x.group(1), file_contents)
-        with open(final_file.name, "w") as the_file:
-            the_file.write(file_contents.encode('utf8'))
+        with open(final_file.name, "w", encoding='utf-8') as the_file:
+            the_file.write(file_contents)
         return final_file
     else:
         return None

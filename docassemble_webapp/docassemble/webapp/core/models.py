@@ -5,17 +5,17 @@ from sqlalchemy import true, false
 class Attachments(db.Model):
     __tablename__ = dbtableprefix + "attachments"
     id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.String(250))
+    key = db.Column(db.String(250), index=True)
     dictionary = db.Column(db.Text())
     question = db.Column(db.Integer())
-    filename = db.Column(db.Text())
+    filename = db.Column(db.Text(), index=True)
     encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
     indexno = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.String(250))
-    filename = db.Column(db.Text())
+    key = db.Column(db.String(250), index=True)
+    filename = db.Column(db.Text(), index=True)
     yamlfile = db.Column(db.Text())
     private = db.Column(db.Boolean(), nullable=False, server_default=true())
     persistent = db.Column(db.Boolean(), nullable=False, server_default=false())
@@ -23,14 +23,14 @@ class Uploads(db.Model):
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
     id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.Text())
+    key = db.Column(db.Text(), index=True)
     value = db.Column(db.Text())
 
 class SpeakList(db.Model):
     __tablename__ = dbtableprefix + "speaklist"
     id = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text())
-    key = db.Column(db.String(250))
+    filename = db.Column(db.Text(), index=True)
+    key = db.Column(db.String(250), index=True)
     phrase = db.Column(db.Text())
     question = db.Column(db.Integer())
     type = db.Column(db.String(20))
@@ -52,7 +52,7 @@ class MachineLearning(db.Model):
     __tablename__ = dbtableprefix + "machinelearning"
     id = db.Column(db.Integer(), primary_key=True)
     group_id = db.Column(db.Text())
-    key = db.Column(db.Text())
+    key = db.Column(db.Text(), index=True)
     independent = db.Column(db.Text())
     dependent = db.Column(db.Text())
     info = db.Column(db.Text())
@@ -64,11 +64,11 @@ class Shortener(db.Model):
     __tablename__ = dbtableprefix + "shortener"
     id = db.Column(db.Integer(), primary_key=True)
     short = db.Column(db.String(250), nullable=False, unique=True)
-    filename = db.Column(db.Text())
+    filename = db.Column(db.Text(), index=True)
     uid = db.Column(db.String(250))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
-    key = db.Column(db.Text())
+    key = db.Column(db.Text(), index=True)
     index = db.Column(db.Integer())
     modtime = db.Column(db.DateTime(), server_default=db.func.now())
 

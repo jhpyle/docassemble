@@ -809,7 +809,10 @@ class DAList(DAObject):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         #sys.stderr.write("Gather\n")
         if hasattr(self, 'gathered') and self.gathered:
-            return True
+            if len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
+                del self.gathered
+            else:
+                return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters

@@ -1,0 +1,37 @@
+metadata:
+  title: Complete method
+  short title: Complete
+  documentation: "https://docassemble.org/docs/groups.html#complete_attribute"
+  example start: 1
+  example end: 1
+---
+modules:
+  - docassemble.base.util
+  - .fishlist
+---
+objects:
+  - fishes: FishList
+---
+question: |
+  Are there any fish?
+yesno: fishes.there_are_any
+---
+question: |
+  Are there any more fish?
+yesno: fishes.there_is_another
+---
+question: |
+  What is the ${ ordinal(i) } fish's common name?
+fields:
+  - Name: fishes[i].common_name
+---
+question: |
+  Tell me more about the ${ fishes[i] }.
+fields:
+  - Species name: fishes[i].species
+  - Number of scales: fishes[i].scales
+    datatype: integer
+---
+mandatory: True
+question: |
+  Thank you for telling me about ${ fishes }.

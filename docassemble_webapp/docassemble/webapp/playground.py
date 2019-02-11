@@ -126,7 +126,7 @@ class DAInterview(DAObject):
         for block in self.all_blocks():
             block.demonstrated
     def source(self):
-        return "---\n".join(map(lambda x: x.source(), self.all_blocks()))
+        return u"---\n".join(map(lambda x: x.source(), self.all_blocks()))
     def known_source(self, skip=None):
         output = list()
         for block in self.all_blocks():
@@ -168,9 +168,9 @@ class DAQuestion(DAObject):
         var_list = sorted([field.variable for field in self.field_list])
         return [var for var in sorted(varsinuse['undefined_names']) if var not in var_list and var != self.interview.target_variable]
     def source(self, follow_additional_fields=True):
-        content = ''
+        content = u''
         if hasattr(self, 'is_mandatory') and self.is_mandatory:
-            content += "mandatory: True\n"
+            content += u"mandatory: True\n"
         if self.type == 'question':
             done_with_content = False
             if follow_additional_fields and len(self.other_variables()):
@@ -184,101 +184,101 @@ class DAQuestion(DAObject):
                             self.interview.questions[addl_field] = self
             content += "question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
-                content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
+                content += u"subquestion: |\n" + indent_by(self.subquestion_text, 2)
             if len(self.field_list) == 1:
                 if self.field_list[0].field_type == 'yesno':
-                    content += "yesno: " + varname(self.field_list[0].variable) + "\n"
+                    content += u"yesno: " + varname(self.field_list[0].variable) + "\n"
                     done_with_content = True
                 elif self.field_list[0].field_type == 'yesnomaybe':
-                    content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
+                    content += u"yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
                     done_with_content = True
             if self.field_list[0].field_type == 'end_attachment':
-                content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
+                content += u"buttons:\n  - Exit: exit\n  - Restart: restart\n"
                 if self.attachments.gathered and len(self.attachments):
-                    content += "attachments:\n"
+                    content += u"attachments:\n"
                     for attachment in self.attachments:
-                        content += "  - name: " + oneline(attachment.name) + "\n"
-                        content += "    filename: " + varname(attachment.name) + "\n"
+                        content += u"  - name: " + oneline(attachment.name) + "\n"
+                        content += u"    filename: " + varname(attachment.name) + "\n"
                         if attachment.type == 'md':
-                            content += "    content: " + oneline(attachment.content) + "\n"
+                            content += u"    content: " + oneline(attachment.content) + "\n"
                         elif attachment.type == 'pdf':
-                            content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
+                            content += u"    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
                             self.templates_used.add(attachment.pdf_filename)
-                            content += "    fields: " + "\n"
+                            content += u"    fields: " + "\n"
                             for field, default, pageno, rect, field_type in attachment.fields:
-                                content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
+                                content += u'      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
-                            content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
+                            content += u"    docx template file: " + oneline(attachment.docx_filename) + "\n"
                             self.templates_used.add(attachment.docx_filename)
                 done_with_content = True
             if not done_with_content:
-                content += "fields:\n"
+                content += u"fields:\n"
                 for field in self.field_list:
                     if field.has_label:
-                        content += "  - " + repr_str(field.label) + ": " + varname(field.variable) + "\n"
+                        content += u"  - " + repr_str(field.label) + ": " + varname(field.variable) + "\n"
                     else:
-                        content += "  - no label: " + varname(field.variable) + "\n"
+                        content += u"  - no label: " + varname(field.variable) + "\n"
                     if field.field_type == 'yesno':
-                        content += "    datatype: yesno\n"
+                        content += u"    datatype: yesno\n"
                     elif field.field_type == 'yesnomaybe':
-                        content += "    datatype: yesnomaybe\n"
+                        content += u"    datatype: yesnomaybe\n"
                     elif field.field_type == 'area':
-                        content += "    datatype: area\n"
+                        content += u"    datatype: area\n"
                     elif field.field_type == 'file':
-                        content += "    datatype: file\n"
+                        content += u"    datatype: file\n"
                     elif field.field_data_type == 'integer':
-                        content += "    datatype: integer\n"
+                        content += u"    datatype: integer\n"
                     elif field.field_data_type == 'number':
-                        content += "    datatype: number\n"
+                        content += u"    datatype: number\n"
                     elif field.field_data_type == 'currency':
-                        content += "    datatype: currency\n"
+                        content += u"    datatype: currency\n"
                     elif field.field_data_type == 'date':
-                        content += "    datatype: date\n"
+                        content += u"    datatype: date\n"
                     elif field.field_data_type == 'email':
-                        content += "    datatype: email\n"
+                        content += u"    datatype: email\n"
                     elif field.field_data_type == 'range':
-                        content += "    datatype: range\n"
-                        content += "    min: " + field.range_min + "\n"
-                        content += "    max: " + field.range_max + "\n"
-                        content += "    step: " + field.range_step + "\n"
+                        content += u"    datatype: range\n"
+                        content += u"    min: " + field.range_min + "\n"
+                        content += u"    max: " + field.range_max + "\n"
+                        content += u"    step: " + field.range_step + "\n"
             if self.interview.has_decorations() and self.decoration and self.decoration != 'None':
-                content += "decoration: " + str(self.decoration) + "\n"
+                content += u"decoration: " + str(self.decoration) + "\n"
         elif self.type == 'signature':
-            content += "signature: " + varname(self.field_list[0].variable) + "\n"
+            content += u"signature: " + varname(self.field_list[0].variable) + "\n"
             self.under_text
-            content += "question: |\n" + indent_by(self.question_text, 2)
+            content += u"question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
-                content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
+                content += u"subquestion: |\n" + indent_by(self.subquestion_text, 2)
             if self.under_text:
-                content += "under: |\n" + indent_by(self.under_text, 2)
+                content += u"under: |\n" + indent_by(self.under_text, 2)
         elif self.type == 'code':
-            content += "code: |\n" + indent_by(self.code, 2)
+            content += u"code: |\n" + indent_by(self.code, 2)
         elif self.type == 'text_template':
-            content += "template: " + varname(self.field_list[0].variable) + "\n"
+            content += u"template: " + varname(self.field_list[0].variable) + "\n"
             if hasattr(self, 'template_subject') and self.template_subject:
-                content += "subject: " + oneline(self.template_subject) + "\n"
+                content += u"subject: " + oneline(self.template_subject) + "\n"
             if self.template_type == 'file':
-                content += "content file: " + oneline(self.template_file) + "\n"
+                content += u"content file: " + oneline(self.template_file) + "\n"
             else:
-                content += "content: |\n" + indent_by(self.template_body, 2)
+                content += u"content: |\n" + indent_by(self.template_body, 2)
         elif self.type == 'template':
-            content += "template: " + varname(self.field_list[0].variable) + "\n"
-            content += "content file: " + oneline(self.template_file) + "\n"
+            content += u"template: " + varname(self.field_list[0].variable) + "\n"
+            content += u"content file: " + oneline(self.template_file) + "\n"
             self.templates_used.add(self.template_file)
         elif self.type == 'metadata':
-            content += "metadata:\n"
-            content += "  title: " + oneline(self.title) + "\n"
-            content += "  short title: " + oneline(self.short_title) + "\n"
+            content += u"metadata:\n"
+            content += u"  title: " + oneline(self.title) + "\n"
+            content += u"  short title: " + oneline(self.short_title) + "\n"
         elif self.type == 'modules':
-            content += "modules:\n"
+            content += u"modules:\n"
             for module in self.modules:
-                content += " - " + str(module) + "\n"
+                content += u" - " + str(module) + "\n"
         elif self.type == 'images':
-            content += "images:\n"
+            content += u"images:\n"
             for key, value in self.interview.decorations.items():
-                content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
+                content += u"  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
                 self.static_files_used.add(value.filename)
-        sys.stderr.write(content)
+        #sys.stderr.write(content)
         return content
 
 class DAQuestionDict(DADict):
@@ -328,11 +328,15 @@ class PlaygroundSection(object):
             content = fp.read()
             return content
         return None
-    def write_file(self, filename, content):
+    def write_file(self, filename, content, binary=False):
         area = self.get_area()
         path = os.path.join(area.directory, filename)
-        with open(path, 'w') as fp:
-            fp.write(content.encode('utf8'))
+        if binary:
+            with open(path, 'wb') as ifile:
+                ifile.write(content)
+        else:
+            with open(path, 'w', encoding='utf-8') as ifile:
+                ifile.write(content)
         area.finalize()
     def commit(self):
         self.get_area().finalize()
@@ -408,7 +412,7 @@ class Playground(PlaygroundSection):
     def interview_url(self, filename):
         return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
     def write_package(self, pkgname, info):
-        the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
+        the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|').decode()
         pg_packages = PlaygroundSection('packages')
         pg_packages.write_file(pkgname, the_yaml)
     def get_package_as_zip(self, pkgname):

@@ -542,8 +542,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
         back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
-        if status.extras['back_button_label'] is not None:
-            back_button += status.extras['back_button_label']
+        if status.extras['back button label text'] is not None:
+            back_button += status.extras['back button label text']
         else:
             back_button += status.question.back()
         back_button += '</span></button>'
@@ -1358,6 +1358,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += status.submit
             output += '                <fieldset class="field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div class="form-actions">' + back_button + help_button + '</div></fieldset>\n'
+        if 'underText' in status.extras:
+            output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="mainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'

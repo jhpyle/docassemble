@@ -1,6 +1,6 @@
 metadata:
   title: Logo title
-  documentation: "https://docassemble.org/docs/functions.html#set_title"
+  documentation: "https://docassemble.org/docs/functions.html#set_parts"
   example start: 2
   example end: 3
 ---
@@ -12,7 +12,7 @@ objects:
 ---
 mandatory: True
 code: |
-  set_title(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
+  set_parts(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
 ---
 question: |
   Welcome to the Example Inc. interview!

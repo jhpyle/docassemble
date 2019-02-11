@@ -5584,8 +5584,8 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "All done"
 
-  Scenario: Test the interview "Set the interview title"
-    Given I start the interview "docassemble.base:data/questions/examples/set-title.yml"
+  Scenario: Test the interview "Set the interview parts"
+    Given I start the interview "docassemble.base:data/questions/examples/set-parts.yml"
     Then I should see "The Title" as the title of the page
     And I should see the phrase "What is your favorite fruit?"
     And I set "Fruit" to "apple"

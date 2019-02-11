@@ -33,7 +33,7 @@ def ocr_finalize(*pargs, **kwargs):
 
 def get_available_languages():
     try:
-        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT, encoding='utf-8')
+        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
         raise Exception("get_available_languages: failed to list available languages: " + str(err))
     else:

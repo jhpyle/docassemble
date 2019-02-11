@@ -43,6 +43,7 @@ import werkzeug
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
+contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type']
 
@@ -132,7 +133,7 @@ def pop_current_variable():
     #logmessage("pop_current_variable: None")
     return None
 
-def wrap_up(user_dict):
+def wrap_up(the_user_dict):
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
@@ -552,17 +553,24 @@ def interview_url(**kwargs):
     url += '?' + '&'.join(map(lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1])), args.items()))
     return url
 
-def set_title(**kwargs):
-    """Sets the title of the interview that is displayed in the navigation
-    bar and other places, as well as other features of the navigation bar.
+def set_parts(**kwargs):
+    """Sets parts of the page, such as words in the navigation bar and
+    HTML in the page.
 
     """
-    this_thread.internal['short title'] = kwargs.get('short', None)
-    this_thread.internal['tab title'] = kwargs.get('tab', None)
+    if 'short' in kwargs:
+        this_thread.internal['short title'] = kwargs['short']
+    if 'tab' in kwargs:
+        this_thread.internal['tab title'] = kwargs['tab']
     for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
-        if key in ('title', 'logo', 'subtitle', 'exit link', 'exit label'):
+        if key in ('title', 'logo', 'subtitle', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label'):
             this_thread.internal[key] = val
+
+def set_title(**kwargs):
+    """Obsolete name for the set_parts function"""
+    logmessage("warning: the set_title() function has been renamed to set_parts()")
+    return set_parts(**kwargs)
 
 class DATagsSet():
     def add(self, item):
@@ -688,6 +696,8 @@ def interview_url_action(action, **kwargs):
         del kwargs['session']
     else:
         args['session'] = this_thread.current_info['session']
+    if contains_volatile.search(action):
+        raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if do_local:
         url = get_config('root')
@@ -2307,7 +2317,7 @@ def force_ask(*pargs, **kwargs):
 
     """
     if kwargs.get('persistent', True):
-        raise ForcedNameError(*pargs)
+        raise ForcedNameError(*pargs, user_dict=get_user_dict())
     else:
         force_ask_nameerror(pargs[0])
 
@@ -2320,9 +2330,14 @@ def force_gather(*pargs):
     it enlists the process_action() function to seek the definition of 
     the variable.  The process_action() function will keep trying to define
     the variable until it is defined."""
+    the_user_dict = get_user_dict()
+    the_context = dict()
+    for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+        if var_name in the_user_dict:
+            the_context[var_name] = the_user_dict[var_name]
     for variable_name in pargs:
-        if variable_name not in this_thread.internal['gather']:
-            this_thread.internal['gather'].append(variable_name)
+        if variable_name not in [(variable_dict if isinstance(variable_dict, string_types) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+            this_thread.internal['gather'].append(dict(var=variable_name, context=the_context))
     raise ForcedNameError(variable_name, gathering=True)
 
 def static_filename_path(filereference):
@@ -2499,14 +2514,22 @@ def process_action():
     #sys.stderr.write("process_action() started")
     #logmessage("process_action: starting")
     if 'action' not in this_thread.current_info:
-        to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
-        for variable_name in to_be_gathered:
+        to_be_gathered = [(dict(var=variable_dict, context=dict()) if isinstance(variable_dict, string_types) else variable_dict) for variable_dict in this_thread.internal['gather']] # change this later
+        for variable_dict in to_be_gathered:
             #logmessage("process_action: considering a gather of " + variable_name)
-            if defined(variable_name):
-                this_thread.internal['gather'].remove(variable_name)
+            if defined(variable_dict['var']):
+                if variable_dict in this_thread.internal['gather']:  # change this later
+                    this_thread.internal['gather'].remove(variable_dict)
+                elif variable_dict['var'] in this_thread.internal['gather']:  # change this later
+                    this_thread.internal['gather'].remove(variable_dict['var']) # change this later
             else:
                 #logmessage("process_action: doing a gather of " + variable_name)
-                force_ask_nameerror(variable_name)
+                if len(variable_dict['context']):
+                    the_user_dict = get_user_dict()
+                    for var_name, var_val in variable_dict['context'].items():
+                        the_user_dict[var_name] = var_val
+                    del the_user_dict
+                force_ask_nameerror(variable_dict['var'])
         if 'event_stack' in this_thread.internal and this_thread.current_info['user']['session_uid'] in this_thread.internal['event_stack']:
             if len(this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']]):
                 if this_thread.interview_status.checkin:
@@ -2515,6 +2538,12 @@ def process_action():
                     event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']][0]
                 #logmessage("process_action: adding " + event_info['action'] + " to current_info")
                 this_thread.current_info.update(event_info)
+                the_context = event_info.get('context', dict())
+                if len(the_context):
+                    the_user_dict = get_user_dict()
+                    for var_name, var_val in the_context.items():
+                        the_user_dict[var_name] = var_val
+                    del the_user_dict
                 if event_info['action'].startswith('_da_'):
                     #logmessage("process_action: forcing a re-run")
                     raise ForcedReRun()
@@ -2545,8 +2574,14 @@ def process_action():
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
-            if variable_name not in this_thread.internal['gather']:
-                this_thread.internal['gather'].append(variable_name)
+            if variable_name not in [(variable_dict if isinstance(variable_dict, string_types) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+                the_context = dict()
+                the_user_dict = get_user_dict()
+                for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                    if var_name in the_user_dict:
+                        the_context[var_name] = the_user_dict[var_name]
+                del the_user_dict
+                this_thread.internal['gather'].append(dict(var=variable_name, context=the_context))
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
             #logmessage("popped the da_compute")
@@ -2555,8 +2590,14 @@ def process_action():
         force_ask_nameerror(this_thread.current_info['arguments']['variables'][0])
     elif the_action == '_da_define' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
-            if variable_name not in this_thread.internal['gather']:
-                this_thread.internal['gather'].append(variable_name)
+            if variable_name not in [(variable_dict if isinstance(variable_dict, string_types) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+                the_context = dict()
+                the_user_dict = get_user_dict()
+                for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                    if var_name in the_user_dict:
+                        the_context[var_name] = the_user_dict[var_name]
+                del the_user_dict
+                this_thread.internal['gather'].append(dict(var=variable_name, context=the_context))
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and list_same(this_thread.internal['event_stack'][unique_id][0]['arguments']['variables'], this_thread.current_info['arguments']['variables']):
             #logmessage("popped the da_compute")
@@ -2654,15 +2695,30 @@ def process_action():
             if key in this_thread.current_info['arguments']:
                 if type(this_thread.current_info['arguments'][key]) is list:
                     for var in this_thread.current_info['arguments'][key]:
-                        if var not in this_thread.internal['gather']:
-                            this_thread.internal['gather'].append(var)
-                elif this_thread.current_info['arguments'][key] not in this_thread.internal['gather']:
-                    this_thread.internal['gather'].append(this_thread.current_info['arguments'][key])
+                        if var not in [(variable_dict if isinstance(variable_dict, string_types) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+                            the_context = dict()
+                            the_user_dict = get_user_dict()
+                            for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                                if var_name in the_user_dict:
+                                    the_context[var_name] = the_user_dict[var_name]
+                            del the_user_dict
+                            this_thread.internal['gather'].append(dict(var=var, context=the_context))
+                elif this_thread.current_info['arguments'][key] not in [(variable_dict if isinstance(variable_dict, string_types) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+                    the_context = dict()
+                    the_user_dict = get_user_dict()
+                    for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                        if var_name in the_user_dict:
+                            the_context[var_name] = the_user_dict[var_name]
+                    del the_user_dict
+                    this_thread.internal['gather'].append(dict(var=this_thread.current_info['arguments'][key], context=the_context))
                 del this_thread.current_info['arguments'][key]
-        to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
-        for variable_name in to_be_gathered:
-            if defined(variable_name):
-                this_thread.internal['gather'].remove(variable_name)
+        to_be_gathered = [(dict(var=variable_dict, context=dict()) if isinstance(variable_dict, string_types) else variable_dict) for variable_dict in this_thread.internal['gather']]
+        for variable_dict in to_be_gathered:
+            if defined(variable_name['var']):
+                if variable_dict in this_thread.internal['gather']:  # change this later
+                    this_thread.internal['gather'].remove(variable_dict)
+                elif variable_name['var'] in this_thread.internal['gather']: # change this later
+                    this_thread.internal['gather'].remove(variable_name['var']) # change this later
             else:
                 #logmessage("process_action: doing a gather2: " + variable_name)
                 force_ask_nameerror(variable_name)
@@ -2675,6 +2731,8 @@ def process_action():
 
 def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
+    if contains_volatile.search(action):
+        raise DAError("url_action cannot be used with a generic object or a variable iterator")
     return '?action=' + urllibquote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
 
 def myb64quote(text):

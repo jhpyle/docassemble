@@ -87,6 +87,7 @@ final_default_yaml_filename = daconfig.get('default interview', 'docassemble.dem
 keymap = daconfig.get('keymap', None)
 google_config = daconfig.get('google', dict())
 
+contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 detect_mobile = re.compile('Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
@@ -970,7 +971,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -979,6 +980,8 @@ for key in ('main page pre', 'main page submit', 'main page post'):
                 main_page_parts[lang][key] = daconfig[key]
         else:
             main_page_parts[lang][key] = ''
+    if main_page_parts[DEFAULT_LANGUAGE][key] == '' and main_page_parts['*'][key] != '':
+        main_page_parts[DEFAULT_LANGUAGE][key] = main_page_parts['*'][key]
 del lang_list
 
 def get_sms_session(phone_number, config='default'):
@@ -1824,6 +1827,9 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
+    #for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+    #    if var_name in user_dict:
+    #        del user_dict[var_name]
     nowtime = datetime.datetime.utcnow()
     if steps is not None:
         user_dict['_internal']['steps'] = steps
@@ -1907,7 +1913,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
     the_sections = nav.sections[the_language]
     if len(the_sections) == 0:
         return('')
-    the_section = nav.current
+    if docassemble.base.functions.this_thread.current_question.section is not None:
+        the_section = docassemble.base.functions.this_thread.current_question.section
+    else:
+        the_section = nav.current
     #logmessage("Current section is " + repr(the_section))
     #logmessage("Past sections are: " + str(nav.past))
     if the_section is None:
@@ -1980,7 +1989,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if non_progressive:
             seen_more = True
             section_reached = False
-        #logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + text_type(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
+        logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + text_type(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
@@ -2032,13 +2041,18 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 new_sub_key = sub_title if sub_key is None else sub_key
                 seen.add(new_sub_key)
                 #logmessage("sub: seen sections are: " + str(seen))
-                if len(nav.past.difference(seen)) or new_sub_key in nav.past:
+                relevant_past = nav.past.intersection(set(nav.section_ids()))
+                if len(relevant_past.difference(seen)) or new_sub_key in nav.past or sub_title in nav.past:
+                    #logmessage("Setting seen_more to True where seen is " + repr(seen) + " and past is " + repr(nav.past))
                     seen_more = True
                 else:
+                    #logmessage("Setting seen_more to False")
                     seen_more = False
                 if non_progressive:
+                    #logmessage("Setting seen_more to True bc non-progressive")
                     seen_more = True
                     section_reached = False
+                #logmessage("First sub is %s, indexno is %d, sub_currently_active is %s, sub_key is %s, sub_title is %s, section_reached is %s, current_is_within is %s, sub_active_class is %s, new_sub_key is %s, seen_more is %s, section_reached is %s, show_links is %s" % (str(first_sub), indexno, str(sub_currently_active), sub_key, sub_title, section_reached, current_is_within, sub_active_class, new_sub_key, str(seen_more), str(section_reached), str(show_links)))
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
                     suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + text_type(sub_title) + '</a>'
@@ -2176,6 +2190,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
             help_label = help_section['label']
             break
     if help_label is None:
+        help_label = status.extras.get('help label text', None)
+    if help_label is None:
         help_label = status.question.help()
     extra_help_message = word("Help is available for this question")
     phone_sr = word("Phone help")
@@ -2266,10 +2282,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         if custom_menu:
             navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide standard menu', False):
-                navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a>'
+                navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + status.exit_label + '</a>'
             navbar += '</div></li>'
         else:
-            navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for(status.exit_link) + '">' + word(status.exit_label) + '</a></li>'
+            navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for(status.exit_link) + '">' + status.exit_label + '</a></li>'
     navbar += """
           </ul>
         </div>
@@ -4127,8 +4143,9 @@ def get_ssh_keys(email):
         from Crypto.PublicKey import RSA
         key = RSA.generate(4096)
         pubkey = key.publickey()
-        area.write_content(key.exportKey('PEM'), filename=private_key_file, save=False)
-        area.write_content(pubkey.exportKey('OpenSSH') + " " + str(email) + "\n", filename=public_key_file, save=False)
+        area.write_content(key.exportKey('PEM').decode(), filename=private_key_file, save=False)
+        pubkey_text = pubkey.exportKey('OpenSSH') + " " + text_type(email) + "\n"
+        area.write_content(pubkey_text.decode(), filename=public_key_file, save=False)
         area.finalize()
     return (private_key_file, public_key_file)
 
@@ -4521,7 +4538,7 @@ def checkin():
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
             interview_status.checkin = True
-            interview.assemble(user_dict, interview_status)
+            interview.assemble(user_dict, interview_status=interview_status)
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse
                 if isinstance(the_response, dict) and 'pargs' in the_response and isinstance(the_response['pargs'], list) and len(the_response['pargs']) == 2 and the_response['pargs'][1] in ('javascript', 'flash', 'refresh', 'fields'):
@@ -4834,6 +4851,13 @@ def rootindex():
     if yaml_parameter is None and yaml_filename is not None:
         the_args['i'] = yaml_filename
     return redirect(url_for('index', **the_args))
+
+def title_converter(content, part, status):
+    if part == 'exit link':
+        return content
+    if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo'):
+        return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
+    return docassemble.base.util.markdown_to_html(content, status=status)
 
 @app.route("/interview", methods=['POST', 'GET'])
 def index():
@@ -5231,20 +5255,25 @@ def index():
     else:
         the_location = None
     should_assemble = False
-    for key in post_data:
-        if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
-            continue
-        try:
-            if key_requires_preassembly.search(from_safeid(key)):
-                should_assemble = True
-                #logmessage("index: pre-assembly necessary")
-                break
-        except:
-            logmessage("index: bad key was " + text_type(key))
     #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     #g.after_interview = time.time()
     #g.interview = interview
+    for key in post_data:
+        if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
+            continue
+        try:
+            the_key = from_safeid(key)
+            if key_requires_preassembly.search(the_key):
+                if the_key == '_multiple_choice' and '_question_name' in post_data:
+                    question_name = post_data.get('_question_name', -100)
+                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])].question_type in ('refresh', 'continue'):
+                        continue
+                should_assemble = True
+                #logmessage("index: pre-assembly necessary for " + the_key)
+                break
+        except:
+            logmessage("index: bad key was " + text_type(key))
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = interview.debug
@@ -5258,9 +5287,10 @@ def index():
         should_assemble = True
     if should_assemble or something_changed:
         #logmessage("index: assemble 1")
-        interview.assemble(user_dict, interview_status)
-        if '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
+        interview.assemble(user_dict, interview_status=interview_status)
+        if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
+            raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
     error_messages = list()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
@@ -6401,6 +6431,7 @@ def index():
     if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None:
         advance_progress(user_dict)
     #logmessage("index: saving user dict where encrypted is " + str(encrypted))
+    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
     if user_dict.get('multi_user', False) is True and encrypted is True:
         #logmessage("index: post interview, encryption should be False")
@@ -8199,7 +8230,7 @@ def index():
           }
         });
         $("body").focus();
-        var firstInput = $("#daform input, #daform textarea, #daform select").first();
+        var firstInput = $("#daform input, #daform textarea, #daform select").filter(":visible").first();
         if (firstInput.length > 0){
           $(firstInput).focus();
           var inputType = $(firstInput).attr('type');
@@ -8213,6 +8244,15 @@ def index():
                 console.log(err.message);
               }
             }
+          }
+        }
+        else {
+          var firstButton = $("#navbar-collapse .nav-link").filter(':visible').first();
+          if (firstButton.length > 0){
+            setTimeout(function(){
+              $(firstButton).focus();
+              $(firstButton).blur();
+            }, 0);
           }
         }
         $(".uncheckothers").on('change', function(){
@@ -8812,9 +8852,8 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
-    title_info = interview_status.question.interview.get_title(user_dict)
     interview_status.exit_link = title_info.get('exit link', 'exit')
-    interview_status.exit_label = title_info.get('exit label', 'Exit')
+    interview_status.exit_label = title_info.get('exit label', word('Exit'))
     interview_status.title = title_info.get('full', default_title)
     interview_status.display_title = title_info.get('logo', interview_status.title)
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
@@ -8948,7 +8987,7 @@ def index():
                 the_phrase = encrypt_phrase(phrase, secret)
             else:
                 the_phrase = pack_phrase(phrase)
-            the_hash = MD5Hash(data=phrase.encode('utf8')).hexdigest()
+            the_hash = MD5Hash(data=phrase).hexdigest()
             content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
             existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
             if existing_entry:
@@ -9271,6 +9310,8 @@ def interview_menu(absolute_urls=False, start_new=False):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             if interview.is_unlisted():
+                continue
+            if not interview.allowed_to_access(current_user):
                 continue
             if interview.source is None:
                 package = None
@@ -18813,7 +18854,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.items():
-            if illegal_variable_name(key):
+            if illegal_variable_name(key) or contains_volatile(key):
                 raise Exception("Illegal value as variable name.")
             exec(text_type(key) + ' = ' + repr(val), user_dict)
             vars_set.add(key)
@@ -18986,10 +19027,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     #interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
     try:
-        if old_user_dict is not None:
-            interview.assemble(user_dict, interview_status, old_user_dict)
-        else:
-            interview.assemble(user_dict, interview_status)
+        interview.assemble(user_dict, interview_status=interview_status, old_user_dict=old_user_dict)
     except DAErrorMissingVariable as err:
         if use_lock:
             #save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
@@ -19039,7 +19077,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    title_info = interview_status.question.interview.get_title(user_dict)
+    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', 'Exit')
     interview_status.title = title_info.get('full', default_title)
@@ -19051,6 +19089,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
+    bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if steps is None:
         steps = user_dict['_internal']['steps']
     if interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1):
@@ -19934,7 +19973,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,
                                          fg_make_pdf_for_word_path=fg_make_pdf_for_word_path,
                                          get_question_data=get_question_data,
-                                         fix_pickle_obj=fix_pickle_obj)
+                                         fix_pickle_obj=fix_pickle_obj,
+                                         main_page_parts=main_page_parts)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)
@@ -20068,3 +20108,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run()
+

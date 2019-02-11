@@ -1448,6 +1448,20 @@ class Question:
             if self.language not in self.interview.helptext:
                 self.interview.helptext[self.language] = list()
             self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audiovideo': audiovideo, 'label': help_label, 'from': 'interview'})
+        if 'default screen parts' in data:
+            should_append = False
+            if not isinstance(data['default screen parts'], dict):
+                raise DAError("A default screen parts block must be in the form of a dictionary." + self.idebug(data))
+            if self.language not in self.interview.default_screen_parts:
+                self.interview.default_screen_parts[self.language] = dict()
+            for key, content in data['default screen parts'].items():
+                if content is None:
+                    if key in self.interview.default_screen_parts[self.language]:
+                        del self.interview.default_screen_parts[self.language][key]
+                else:
+                    if not (isinstance(key, string_types) and isinstance(content, string_types)):
+                        raise DAError("A default screen parts block must be a dictionary of text keys and text values." + self.idebug(data))
+                self.interview.default_screen_parts[self.language][key] = TextObject(definitions + text_type(content.strip()), names_used=self.mako_names)
         if 'default validation messages' in data:
             should_append = False
             if not isinstance(data['default validation messages'], dict):
@@ -3103,11 +3117,34 @@ class Question:
             subquestion = self.subcontent.text(user_dict)
         else:
             subquestion = None
+        the_default_titles = dict()
+        if self.language in self.interview.default_title:
+            the_default_titles.update(self.interview.default_title[self.language])
+        for key, val in self.interview.default_title['*'].items():
+            if key not in the_default_titles:
+                the_default_titles[key] = val
         extras = dict()
         if hasattr(self, 'undertext') and self.undertext is not None:
             extras['underText'] = self.undertext.text(user_dict)
+        elif self.language in self.interview.default_screen_parts and 'under' in self.interview.default_screen_parts[self.language]:
+            extras['underText'] = self.interview.default_screen_parts[self.language]['under'].text(user_dict)
+        elif 'under' in the_default_titles:
+            extras['underText'] = the_default_titles['under']
         if hasattr(self, 'righttext') and self.righttext is not None:
             extras['rightText'] = self.righttext.text(user_dict)
+        elif 'right' in user_dict['_internal'] and user_dict['_internal']['right'] is not None:
+            extras['rightText'] = user_dict['_internal']['right']
+        elif self.language in self.interview.default_screen_parts and 'right' in self.interview.default_screen_parts[self.language]:
+            extras['rightText'] = self.interview.default_screen_parts[self.language]['right'].text(user_dict)
+        elif 'right' in the_default_titles:
+            extras['rightText'] = the_default_titles['right']
+        if self.language in self.interview.default_screen_parts:
+            for screen_part in self.interview.default_screen_parts[self.language]:
+                if screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo'):
+                    extras[screen_part + ' text'] = self.interview.default_screen_parts[self.language][screen_part].text(user_dict)
+        for key, val in the_default_titles.items():
+            if key in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (key + ' text') not in extras:
+                extras[key + ' text'] = val
         if len(self.terms):
             extras['terms'] = dict()
             for termitem, definition in self.terms.items():
@@ -3122,15 +3159,33 @@ class Question:
             extras['script'] = self.script.text(user_dict)
         if self.continuelabel is not None:
             continuelabel = self.continuelabel.text(user_dict)
+        elif 'continue button label' in user_dict['_internal'] and user_dict['_internal']['continue button label'] is not None:
+            continuelabel = user_dict['_internal']['continue button label']
+        elif self.language in self.interview.default_screen_parts and 'continue button label' in self.interview.default_screen_parts[self.language]:
+            continuelabel = self.interview.default_screen_parts[self.language]['continue button label'].text(user_dict)
+        elif 'continue button label' in the_default_titles:
+            continuelabel = the_default_titles['continue button label']
         else:
             continuelabel = None
         if self.backbuttonlabel is not None:
-            extras['back_button_label'] = self.backbuttonlabel.text(user_dict)
+            extras['back button label text'] = self.backbuttonlabel.text(user_dict)
+        elif 'back button label' in user_dict['_internal'] and user_dict['_internal']['back button label'] is not None:
+            extras['back button label text'] = user_dict['_internal']['back button label']
+        elif self.language in self.interview.default_screen_parts and 'back button label' in self.interview.default_screen_parts[self.language]:
+            extras['back button label text'] = self.interview.default_screen_parts[self.language]['back button label'].text(user_dict)
+        elif 'back button label' in the_default_titles:
+            extras['back button label text'] = the_default_titles['back button label']
         else:
-            extras['back_button_label'] = None
+            extras['back button label text'] = None
         if self.helptext is not None:
             if self.helplabel is not None:
                 helplabel = self.helplabel.text(user_dict)
+            elif 'help label' in user_dict['_internal'] and user_dict['_internal']['help label'] is not None:
+                helplabel = user_dict['_internal']['help label']
+            elif self.language in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts[self.language]:
+                helplabel = self.interview.default_screen_parts[self.language]['help label'].text(user_dict)
+            elif 'help label' in the_default_titles:
+                helplabel = the_default_titles['help label']
             else:
                 helplabel = None
             if self.audiovideo is not None and 'help' in self.audiovideo:
@@ -3144,6 +3199,10 @@ class Question:
                 help_text_list = list()
         else:
             help_text_list = list()
+            if self.language in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts[self.language]:
+                extras['help label text'] = self.interview.default_screen_parts[self.language]['help label'].text(user_dict)
+            elif 'help label' in the_default_titles:
+                extras['help label text'] = the_default_titles['help label']
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
         if len(interview_help_text_list) > 0:
             help_text_list.extend(interview_help_text_list)
@@ -4226,6 +4285,7 @@ class Interview:
         self.question_index = 0
         self.default_role = None
         self.default_validation_messages = dict()
+        self.default_screen_parts = dict()
         self.title = None
         self.debug = get_config('debug', True)
         self.use_progress_bar = False
@@ -4295,35 +4355,57 @@ class Interview:
                     for tag in metadata['tags']:
                         tags.add(tag)
             return tags
-    def get_title(self, user_dict):
+    def get_title(self, user_dict, status=None, converter=None):
+        if converter is None:
+            converter = lambda y: y
         mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'))
-        if not hasattr(self, 'default_title'):
-            self.default_title = dict()
-            for metadata in self.metadata:
-                for title_name, title_abb in mapping:
-                    if metadata.get(title_name, None) is not None:
-                        if isinstance(metadata[title_name], dict):
-                            value = metadata[title_name].get(get_language(), None)
-                            if value is not None:
-                                self.default_title[title_abb] = text_type(value).strip()
-                            else:
-                                value = metadata[title_name].get('*', None)
-                                if value is not None:
-                                    self.default_title[title_abb] = text_type(value).strip()
-                                else:
-                                    value = metadata[title_name].get(docassemble.base.functions.server.default_language, None)
-                                    if value is not None:
-                                        self.default_title[title_abb] = text_type(value).strip()
-                        else:
-                            self.default_title[title_abb] = text_type(metadata[title_name]).strip()
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
                 title[title_abb] = text_type(user_dict['_internal'][title_name]).strip()
-        for key, val in self.default_title.items():
-            if key not in title:
-                title[key] = val
+            elif status is not None and (title_name + ' text') in status.extras and status.extras[title_name + ' text'] is not None:
+                if title_name == 'exit link':
+                    title[title_abb] = status.extras[title_name + ' text']
+                else:
+                    title[title_abb] = converter(status.extras[title_name + ' text'], title_name)
+                user_dict['_internal'][title_name + ' default'] = title[title_abb]
+            elif status is None and (title_name + ' default') in user_dict['_internal'] and user_dict['_internal'][title_name + ' default'] is not None:
+                title[title_abb] = user_dict['_internal'][title_name + ' default']
+        if status is not None:
+            base_lang = status.question.language
+        else:
+            base_lang = get_language()
+        if base_lang in self.default_title:
+            for key, val in self.default_title[base_lang].items():
+                if key not in title:
+                    title[key] = val
+        if '*' in self.default_title:
+            for key, val in self.default_title['*'].items():
+                if key not in title:
+                    title[key] = val
         return title
+    def allowed_to_access(self, user):
+        if not hasattr(user, 'has_role'):
+            return True
+        roles = set()
+        for metadata in self.metadata:
+            if 'required privileges' in metadata:
+                roles = set()
+                privs = metadata['required privileges']
+                if isinstance(privs, list) or (hasattr(privs, 'instanceName') and hasattr(privs, 'elements') and isinstance(privs.elements, list)):
+                    for priv in privs:
+                        roles.add(priv)
+                elif isinstance(privs, string_types):
+                    roles.add(privs)
+        if len(roles):
+            if user.is_anonymous:
+                if 'anonymous' in roles:
+                    return True
+                return False
+            roles = list(roles)
+            return user.has_role(*roles)
+        return True
+
     def is_unlisted(self):
         unlisted = False
         for metadata in self.metadata:
@@ -4434,6 +4516,27 @@ class Interview:
         for metadata in self.metadata:
             for key, val in metadata.items():
                 self.consolidated_metadata[key] = val
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'))
+        self.default_title = {'*': dict()}
+        for metadata in self.metadata:
+            for title_name, title_abb in mapping:
+                if metadata.get(title_name, None) is not None:
+                    if isinstance(metadata[title_name], dict):
+                        for lang, val in metadata[title_name].items():
+                            if lang not in self.default_title:
+                                self.default_title[lang] = dict()
+                            self.default_title[lang][title_abb] = text_type(val).strip()
+                    else:
+                        self.default_title['*'][title_abb] = text_type(metadata[title_name]).strip()
+        for lang, parts in docassemble.base.functions.server.main_page_parts.items():
+            if lang not in self.default_title:
+                self.default_title[lang] = dict()
+            for title_name, title_abb in mapping:
+                if title_abb in self.default_title[lang]:
+                    continue
+                if parts.get('main page ' + title_name, '') != '':
+                    self.default_title[lang][title_abb] = parts['main page ' + title_name]
+
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K(object):
@@ -4500,18 +4603,11 @@ class Interview:
                 help_item['content'] = source['content'].text(user_dict)
                 result.append(help_item)
         return result
-    def assemble(self, user_dict, *args):
+    def assemble(self, user_dict, interview_status=None, old_user_dict=None):
         #sys.stderr.write("assemble\n")
         user_dict['_internal']['tracker'] += 1
-        if len(args):
-            interview_status = args[0]
-            if len(args) >= 2:
-                old_user_dict = args[1]
-            else:
-                old_user_dict = None
-        else:
+        if interview_status is None:
             interview_status = InterviewStatus()
-            old_user_dict = None
         if 'docvar' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
             user_dict['_internal']['docvar'] = dict()
         if 'doc_cache' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!

@@ -49,13 +49,20 @@ class ForcedNameError(NameError):
         the_args = [x for x in pargs]
         if len(the_args) == 0:
             raise DAError("ForcedNameError must have at least one argument")
+        the_context = dict()
+        the_user_dict = kwargs.get('user_dict', dict())
+        for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+            if var_name in the_user_dict:
+                the_context[var_name] = the_user_dict[var_name]
         if type(the_args[0]) is dict:
             if 'action' in the_args[0] and (len(the_args[0]) == 1 or 'arguments' in the_args[0]):
                 self.name = the_args[0]['action']
                 self.arguments = the_args[0].get('arguments', dict())
+                self.context = the_context
         else:
             self.name = the_args[0]
             self.arguments = None
+            self.context = the_context
         if kwargs.get('gathering', False):
             self.next_action = None
             return
@@ -80,7 +87,7 @@ class ForcedNameError(NameError):
                             if invalid_variable_name(the_var_stripped):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + ".")
                             clean_list.append([the_var_stripped, the_val])
-                        self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list)))
+                        self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list), context=the_context))
                     if 'follow up' in arg:
                         if type(arg['follow up']) is not list:
                             raise DAError("force_ask: the follow up statement must refer to a list.")
@@ -90,7 +97,7 @@ class ForcedNameError(NameError):
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
-                            self.set_action(dict(action=var, arguments=dict()))
+                            self.set_action(dict(action=var, arguments=dict(), context=the_context))
                     for command in ('undefine', 'recompute'):
                         if command not in arg:
                             continue
@@ -104,18 +111,19 @@ class ForcedNameError(NameError):
                             if invalid_variable_name(undef_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
                             clean_list.append(undef_saveas)
-                        self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                        self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
                         if command == 'recompute':
-                            self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list)))
+                            self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list), context=the_context))
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
-                self.set_action(dict(action=arg, arguments=dict()))
+                self.set_action(dict(action=arg, arguments=dict(), context=the_context))
     def set_action(self, data):
         if not hasattr(self, 'name'):
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
                 self.name = data['action']
                 self.arguments = data.get('arguments', dict())
+                self.context = data.get('context', dict())
             else:
                 raise DAError("force_ask: invalid parameter " + repr(data))
         self.next_action.append(data)

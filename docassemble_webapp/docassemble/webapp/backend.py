@@ -326,7 +326,7 @@ def unpad(the_string):
 
 def encrypt_phrase(phrase, secret):
     phrase = bytearray(phrase, encoding='utf-8')
-    iv = bytearray(secret_key[:16], encoding='utf-8')
+    iv = bytearray(app.secret_key[:16], encoding='utf-8')
     encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
     return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode()
 

@@ -1,11 +1,11 @@
 metadata:
   title: Set the interview title
   short title: Title
-  example start: 2
-  example end: 5
-  documentation: "https://docassemble.org/docs/functions.html#set_title"
   tab title: The Title
   subtitle: The subtitle
+  example start: 2
+  example end: 5
+  documentation: "https://docassemble.org/docs/functions.html#set_parts"
 ---
 modules:
   - docassemble.base.util
@@ -15,6 +15,9 @@ metadata:
   short title: Title
   tab title: The Title
   subtitle: The subtitle
+  pre: The pre text
+  submit: The submit text
+  post: The post text
 ---
 question: |
   What is your favorite fruit?
@@ -27,11 +30,14 @@ mandatory: True
 code: |
   favorite_fruit = noun_plural(favorite_fruit)
   favorite_fruit = capitalize(favorite_fruit)
-  set_title(
+  set_parts(
     title=favorite_fruit + " rule",
     short="I'm Tiny!",
     tab="TabTab",
-    subtitle="a fruit interview")
+    subtitle="a fruit interview",
+    pre="This is about fruit",
+    submit="Get ready for some buttons",
+    post=DAStaticFile(filename="endmatter.html").slurp())
 ---
 mandatory: True
 question: |

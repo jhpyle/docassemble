@@ -546,7 +546,7 @@ def get_installed_distributions():
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
     sys.stderr.write("get_installed_distributions: ending\n")
-    sys.stderr.write(repr([x.key for x in results]) + "\n")
+    #sys.stderr.write(repr([x.key for x in results]) + "\n")
     return results
 
 def get_pip_info(package_name):
