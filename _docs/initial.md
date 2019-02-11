@@ -64,11 +64,17 @@ will be used in place of the word "Exit" on the "Exit" menu option.
 This text is passed through the [`word()`] function, so that it can be
 translated into different languages.
 
-If you set `unlisted: True` for an interview that has an entry in the
-[`dispatch`] list in your [configuration], the interview will be
-exempted from display in the list of interviews available at `/list`.
-For more information about this, see the documentation for the
-[`dispatch`] configuration directive.
+<a name="unlisted"></a>If you set `unlisted: True` for an interview
+that has an entry in the [`dispatch`] list in your [configuration],
+the interview will be exempted from display in the list of interviews
+available at `/list`.  For more information about this, see the
+documentation for the [`dispatch`] configuration directive.
+
+<a name="required privileges"></a>If you set `required privileges` to
+a list of one or more privileges, then the interview will only be
+shown in the list of interviews available at `/list` if the user has
+the required privilege.  For more information about this, see the
+documentation for the [`dispatch`] configuration directive.
 
 <a name="pre"></a><a name="submit"></a><a name="post"></a>The
 [`metadata`] block also accepts the specifiers `pre`, `submit`, and
@@ -653,6 +659,13 @@ probably not a good idea to) set a `default language`.
 See [language support] for more information about how to create
 multi-lingual interviews.  See [question modifiers] for information about the
 `language` setting of a question.
+
+# <a name="default screen parts"></a>Default screen parts
+
+The `default screen parts` allows you to write [Mako] and [Markdown]
+to create text that will appear in parts of the screen on every page.
+
+{% include side-by-side.html demo="default-screen-parts" %}
 
 # <a name="default validation messages"></a>Custom validation messages
 

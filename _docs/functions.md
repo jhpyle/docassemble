@@ -450,14 +450,14 @@ The [`all_variables()`] function also has three special behaviors:
 
 * `all_variables(special='titles')` will return a [Python dictionary]
   containing information set by the [`metadata` initial block] and the
-  [`set_title()`] function.
+  [`set_parts()`] function.
 * `all_variables(special='metadata')` will return a dictionary
   representing the "metadata" indicated in the [`metadata` initial
   block]s of the interview.  (If multiple blocks exist, information is
   "layered" so that keys in later blocks overwrite keys in earlier
   blocks.)  Unlike the `'titles'` option, the information returned
   here is not updated to take into account changes made
-  programmatically by the [`set_title()`] function.
+  programmatically by the [`set_parts()`] function.
 * `all_variables(special='tags')` will return a [Python set]
   containing the current set of [tags] defined for the interview
   session.
@@ -1923,13 +1923,13 @@ yesno: email_is_best
 ---
 {% endhighlight %}
 
-## <a name="set_title"></a>set_title()
+## <a name="set_parts"></a>set_parts()
 
-The `set_title()` function allows you to configure the title of the
-interview session, which is displayed in the "Interviews" list and in
-the navigation bar.
+The `set_parts()` function allows you to configure text on various
+parts of the screen, which is displayed in the "My Interviews" list
+and in the navigation bar.
 
-It accepts any of four optional keyword arguments:
+It accepts any of the following optional keyword arguments:
 
 * `title` - this is the main title of the interview.  It should be
   plain text.  It is displayed in the navigation bar if there is no `logo`.
@@ -1951,16 +1951,22 @@ It accepts any of four optional keyword arguments:
   user's answers will not be deleted.  The default behavior is `'exit'`.
 * `exit_label` - can be used to change the appearance of the "Exit"
   menu option.
+* `pre` - can be set to HTML that will be inserted immediately after
+  the `question` part of a screen
+* `post` - can be set to HTML that will be inserted at the bottom of
+  the screen, after the buttons.
+* `submit` - can be set to HTML that will be inserted before the
+  buttons.
 
-{% include side-by-side.html demo="set-title" %}
+{% include side-by-side.html demo="set-parts" %}
 
 The following example shows how you can use a [`DAStaticFile`] to
 display a logo from your "static" folder in the navigation bar.
 
 {% include side-by-side.html demo="set-logo-title" %}
 
-For more information about titles, see the documentation for the
-[`metadata` initial block].
+For more information about parts of the page, see the documentation
+for the [`metadata` initial block].
 
 ## <a name="session_tags"></a>session_tags()
 
@@ -3285,8 +3291,8 @@ of the screen available at `/list`.
 
 The keys in each dictionary are: 
 
-* `title`: the [title](#set_title) of the interview
-* `subtitle`: the [subtitle](#set_title) of the interview
+* `title`: the [title](#set_parts) of the interview
+* `subtitle`: the [subtitle](#set_parts) of the interview
 * `filename`: e.g., `docassemble.demo:data/questions/questions.yml`
 * `link`: a hyperlink to the interview on your server
 * `package`: the package in which the interview is located, e.g., `docassemble.demo`
@@ -5093,7 +5099,7 @@ code: |
   for id in read_records(user_key):
     delete_record(user_key, id)
   write_record(user_key, user)
-  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  set_parts(title=capitalize(side_of_bed) + " side of the bed")
   session_tags().add(side_of_bed)
   user_info_saved = True
 {% endhighlight %}
@@ -5177,7 +5183,7 @@ code: |
   for id in read_records(user_key):
     delete_record(user_key, id)
   write_record(user_key, user)
-  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  set_parts(title=capitalize(side_of_bed) + " side of the bed")
   session_tags().add(side_of_bed)
   user_info_saved = True
 {% endhighlight %}
@@ -5189,7 +5195,7 @@ new copy of the `user` object to storage.  Thus, the interview can
 make changes to the `user` object if necessary, and those changes will
 be saved.
 
-This interview also uses [`set_title()`] and [`session_tags()`] to
+This interview also uses [`set_parts()`] and [`session_tags()`] to
 change the title and tags of the interview, so that when the user goes
 to "My Interviews," the user will see a different title and different
 tags based on their interview answers.  Using a technique like this
@@ -5303,7 +5309,7 @@ buttons:
     url: ${ url_of('dispatch') }
 ---
 code: |
-  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  set_parts(title=capitalize(side_of_bed) + " side of the bed")
   session_tags().add(side_of_bed)
   interview_tagged = True
 {% endhighlight %}
@@ -6349,7 +6355,7 @@ $(document).on('daPageLoad', function(){
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
 [`interview_list()`]: #interview_list
 [Google Drive API]: https://developers.google.com/drive/
-[`set_title()`]: #set_title
+[`set_parts()`]: #set_parts
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [`session_tags()`]: #session_tags
 [`read_records()`]: #read_records

@@ -46,7 +46,7 @@ Adding a new element to the list is called "appending" to the list.
 {% endhighlight %}
 
 The [`sorted()` function] is a built-in [Python] function that
-arranges a list in alphabetical order.
+arranges a list in order.
 
 In **docassemble**, lists are objects of type [`DAList`], which behave
 much like [Python lists].
@@ -80,11 +80,12 @@ and `feet['bird']` will return `2`.  The keys are `'dog'`, `'human'`, and
 [4, 2, 2]
 {% endhighlight %}
 
-The keys of a dictionary are unique.  Doing `feet['rabbit'] = 2` will
-add a new entry to the above dictionary, whereas doing 
-`feet['dog'] = 3` will change the existing entry for `'dog'`.  The items in a
-dictionary are stored in no particular order; [Python] will not
-remember the order in which you add them.
+The keys of a dictionary are unique.  Setting `feet['rabbit'] = 4`
+will add a new entry to the above dictionary, whereas setting
+`feet['dog'] = 3` will change the existing entry for `'dog'`.  The
+items in a dictionary are stored in no particular order; [Python] will
+not remember the order in which you add them.  (See the
+[`DAOrderedDict`] for an alternative to this.)
 
 In **docassemble**, dictionaries are objects of type [`DADict`], which
 behave much like [Python dict]s.
@@ -93,7 +94,8 @@ behave much like [Python dict]s.
 
 A **set** is a **group of unique items with no order**.  There is no
 index or key that allows you to refer to a particular item; an item is
-either in the set or is not.  In [Python], a set can be defined with a
+either in the set or is not.  (A set in Python behaves much like a set
+in mathematical [set theory].)  In [Python], a set can be defined with a
 statement like `colors = set(['blue', 'red'])`. Adding a new item to
 the set is called "adding," not "appending."  For example:
 `colors.add('green')`.  If you add an item to a set when the item is
@@ -151,12 +153,12 @@ The following interview populates a list of fruits.
 
 {% include side-by-side.html demo="gather-fruit" %}
 
-First, the module [`docassemble.base.core`] is brought in, because it
+First, the module [`docassemble.base.util`] is brought in, because it
 contains the definition of the [`DAList`] object.
 
 {% highlight yaml %}
 modules:
-  - docassemble.base.core
+  - docassemble.base.util
 {% endhighlight %}
 
 Second, the variable `fruit` is defined as a [`DAList`] <span></span>
@@ -183,13 +185,41 @@ Since this [`question`] is [`mandatory`], **docassemble** tries to ask
 it.  However, it encounters `fruit.number_as_word()`, which returns
 the number of items in the list.  But in order to know how many items
 are in the list, **docassemble** needs to ask the user what those
-items are.  So the reference to `fruit.number_as_word()` will trigger
-the process of asking these questions.  (The reference to `${ fruit }`
-would also trigger the same process, but **docassemble** will
-encounter `fruit.number_as_word()` first.)
+items are.  So the reference to `fruit.number_as_word()` will
+implicitly trigger the process of asking these questions.  (The
+reference to `${ fruit }` would also trigger the same process, but
+**docassemble** will encounter `fruit.number_as_word()` first.)
 
-The text of these questions is provided in [`question`] blocks that
-define the following variables:
+Behind the scenes, when `fruit.number_as_word()` is run,
+**docassemble** runs `fruit.gather()`, which is an auto-gathering
+algorithm.  The `.gather()` method orchestrates the gathering process
+by triggering the seeking of variables necessary to gather the list.
+
+The auto-gathering algorithm behaves like a lawyer interrogating a
+witness.
+
+"Do you have any children?" asks the lawyer.
+
+"Yes," answers the witness.
+
+"What is the name of your first child?"
+
+"James."
+
+"Besides James, do you have any other children?"
+
+"Yes"
+
+"What is the name of your second child?"
+
+"Charlotte."
+
+"Besides James and Charlotte, do you have any other children?"
+
+"No"
+
+The `.gather()` method asks questions like these by seeking the values
+of various variables:
 
 * `fruit.there_are_any`: should there be any items in the list at all?
 * `fruit[i]`: the name of the `i`th fruit in the list.
@@ -240,13 +270,13 @@ enters "oranges."
 
 Then the interview will again seek the definition of
 `fruit.there_is_another`.  This time, if the answer is `False`, then
-`fruit.number_as_word()` has all the information it needs, and it will
-return the number of items in `fruit` (in this case, 2).  When
-**docassemble** later encounters `The fruits are ${ fruit }.`, it will
-attempt to reduce the variable `fruit` to text.  Since the interview
-knows that there are no more elements in the list, it does not need to
-ask any further questions.  `${ fruit }` will result in 
-`apples and oranges`.
+the `fruit.gather()` method will return without asking any questions,
+and `fruit.number_as_word()` will respond with the the number of items
+in `fruit` (in this case, 2).  When **docassemble** later encounters
+`The fruits are ${ fruit }.`, it will attempt to reduce the variable
+`fruit` to text.  Since the interview knows that there are no more
+elements in the list, it does not need to ask any further questions.
+`${ fruit }` will result in `apples and oranges`.
 
 <a name="i"></a>Note that the variable `i` is special in
 **docassemble**.  When the interview seeks a definition for
@@ -314,15 +344,21 @@ code: |
 
 then the list will consist of [`Individual`]s, and **docassemble**
 will gather `friend[i].name.first` for each item in the list.  This is
-because of the way that the [`Individual`] object works: if `x` is an
+because of the way that the [`Individual`] object works: if `y` is an
 [`Individual`], then its textual representation (e.g., including 
-`${ x }` in a [Mako] template, or calling `str(x)` in [Python] code) will
-run `x.name.full()`, which, at a minimum, requires a definition for
-`x.name.first`.  (See the documentation for [`Individual`] for more
+`${ y }` in a [Mako] template, or calling `str(y)` in [Python] code) will
+run `y.name.full()`, which, at a minimum, requires a definition for
+`y.name.first`.  (See the documentation for [`Individual`] for more
 details.)  Other object types behave differently.  For example,
-if `x` is an [`Address`], including `${ x }` in a [Mako] template will
-result in `x.block()`, which depends on the `address`, `city`, and
-`state` attributes.
+if `y` is an [`Address`], including `${ y }` in a [Mako] template will
+result in `y.block()`, which depends on the `address`, `city`, and
+`state` attributes.  If you use a plain [`DAObject`] as the
+`object_type`, then **no** questions will be asked; this is because
+the [`DAObject`] is meant to be a "base class," with no meaningful
+attributes of its own.  Thus, calling `str(y)` on a plain [`DAObject`]
+will simply return a name based on the variable name; no questions
+will be asked.  Thus, it is not recommended that you set `object_type`
+to `DAObject`.
 
 If your interview has a list of [`Individual`]s and uses attributes of
 the [`Individual`]s besides the name, **docassemble** will eventually
@@ -337,9 +373,9 @@ an interview that does this:
 questions about each individual be asked together, you can use the
 `.complete_attribute` attribute to tell **docassemble** that an item
 is not completely gathered until a particular attribute of that item
-is defined, and write a [`code` block] that defines this attribute.
-You can use this [`code` block] to ensure that all the questions you
-want to be asked are asked during the gathering process.
+is defined.  You can then write a [`code` block] that defines this
+attribute.  You can use this [`code` block] to ensure that all the
+questions you want to be asked are asked during the gathering process.
 
 In the above example, we can accomplish this by doing
 `friend.complete_attribute = 'complete'`.  Then we include a `code`
@@ -361,6 +397,41 @@ attribute indicated by `complete_attribute`.  If `.birthdate` was the
 only other element we wanted to define during the gathering process,
 we could have written `friend.complete_attribute = 'birthdate'` and
 skipped the [`code` block] entirely.
+
+When you write your own class definitions, you can set a
+default `complete_attribute` that is not really an attribute, but a method
+that behaves like an attribute.
+
+In the following example, `FishList` is a list of `Fish`, where a
+`Fish` is considered "complete" for purposes of auto-gathering when
+the `common_name`, `scales`, and `species` attributes have been
+defined.
+
+{% highlight python %}
+from docassemble.base.util import DAList, DAObject
+
+__all__ = ['FishList', 'Fish']
+
+class FishList(DAList):
+    def init(self, *pargs, **kwargs):
+        self.object_type = Fish
+        self.complete_attribute = 'fish_complete'
+        super(FishList, self).init(*pargs, **kwargs)
+
+class Fish(DAObject):
+    @property
+    def fish_complete(self):
+        self.common_name
+        self.scales
+        self.species
+
+    def __unicode__(self):
+        return self.common_name
+{% endhighlight %}
+
+Here is an interview that uses this class definition.
+
+{% include demo-side-by-side.html demo="complete-attribute-method" %}
 
 ## <a name="mixed object types"></a>Mixed object types
 
@@ -584,7 +655,7 @@ same method used when the process is implicitly triggered.)
 
 {% include side-by-side.html demo="gather-fruit-gather" %}
 
-The `.gather()` method accepts three optional keyword arguments:
+The `.gather()` method accepts some optional keyword arguments:
 
 * `minimum` can be set to the minimum number of items you want to
   gather.  The `.there_are_any` attribute will not be sought.  The
@@ -651,7 +722,8 @@ after each item, ask if any additional items exist.
 
 {% include side-by-side.html demo="gather-another" %}
 
-It is necessary to [disable the automatic gathering system]:
+To gather the list manually, it is necessary to [disable the automatic
+gathering system]:
 
 {% highlight python %}
 fruit.auto_gather = False
@@ -659,29 +731,34 @@ fruit.gathered = True
 {% endhighlight %}
 
 This example uses a little bit of [Python] code to ask the appropriate
-questions.  The code is:
+questions.
+
+Some variables are initialized:
 
 {% highlight python %}
-fruit[0]
-if more_fruits:
-  del more_fruits
-  fruit[len(fruit)]
+num_fruits = 0
+more_fruits = True
 {% endhighlight %}
 
-The first line makes sure that the first fruit, `fruit[0]`, is
-defined.  Initially, this is undefined.  So when the code
+Then the main algorithm is:
+
+{% highlight python %}
+while more_fruits:
+  fruit[num_fruits]
+  num_fruits += 1
+  del more_fruits
+{% endhighlight %}
+
+Since `more_fruits` is initialized as `0`, the first undefined
+variable that this code encounters is `fruit[0]`.  When the code
 encounters `fruit[0]`, it will go looking for the value of `fruit[0]`,
 and the question "What's the first fruit?" will be asked.  Once
-`fruit[0]` is defined, the interview considers whether `more_fruits`
-is true.  If `more_fruits` is undefined, the interview presents the
+`fruit[0]` is defined, the interview undefines `more_fruits`, but then
+when the `while` loop loops around, the definition of `more_fruits` is
+needed.  Since `more_fruits` is undefined, the interview presents the
 user with the `more_fruit` question, which asks "Are there more
-fruits?"  If `more_fruits` is `True`, however, the interview deletes
-the definition of `more_fruit` (making the variable undefined again),
-and then makes sure that `fruit[len(fruit)]` is defined.  The
-[expression] `len(fruit)` returns the number of items in the `fruit`
-list.  If there is only one item in the list (i.e., `fruit[0]`), then
-`len(fruit)` will return `1`, and the interview will look for the
-second element in the list, `fruit[1]`.
+fruits?"  If `more_fruits` is `True`, the loop repeats, and the
+definition of `fruit[1]` is sought.
 
 This is starting to get complicated.  And things get even more
 complicated when you want to say things like "There are three fruits
@@ -692,8 +769,8 @@ supplied the full list.  But in the case of "You have told me about
 three fruits so far," you would not want this prerequisite.
 
 Since asking users for lists of things can get complicated,
-**docassemble** automates the process of asking the necessary
-questions to fully populate the list.
+**docassemble** has a feature for automating the process of asking the
+necessary questions to fully populate the list.
 
 If your list is `fruit`, there are three special attributes:
 `fruit.gathered`, `fruit.there_are_any`, and `fruit.there_is_another`.
@@ -1021,3 +1098,5 @@ For more information about "for loops" in [Mako], see the
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`minimum_number`]: #minimum_number
 [`complete_attribute`]: #complete_attribute
+[`DAOrderedDict`]: {{ site.baseurl }}/docs/objects.html#DAOrderedDict
+[set theory]: https://en.wikipedia.org/wiki/Set_theory

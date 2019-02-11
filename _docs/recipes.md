@@ -125,3 +125,45 @@ buttons:
   Exit: exit
 {% endhighlight %}
 
+# Exit interview with a hyperlink rather than a redirect
+
+Suppose you have a final screen in your interview that looks like this:
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  kick_out
+---
+event: kick_out
+question: Bye
+buttons:
+  - Exit: exit
+    url: https://example.com
+{% endhighlight %}
+
+When the user clicks the "Exit" button, an Ajax request is sent to the
+**docassemble** server, the interview logic is run again, and then
+when the browser processes the response, the browser is redirected
+by JavaScript to the url (https://example.com).
+
+If you would rather that the button act as a hyperlink, where clicking
+the button sends the user directly to the URL, you can make the button
+this way:
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  kick_out
+---
+event: kick_out
+question: Bye
+subquestion: |
+  ${ action_button_html("https://example.com", size='md', color='primary', label='Exit', new_window=False) }
+{% endhighlight %}
+

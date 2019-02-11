@@ -620,10 +620,10 @@ Other methods available on a `DAList` are:
   name="DASet.clear"></a>`clear()` - makes the list empty.
 * <a name="DAList.complete_elements"></a><a
   name="DADict.complete_elements"></a>`complete_elements()` - returns
-  the elements in the list that are "complete."  This is useful when
-  you have a list of objects, and some objects are still in a nascent
-  state, and you only want to use the objects that are "complete."
-  (See the discussion of `.complete_attribute` below.)
+  the subset of elements in the list that are "complete."  This is
+  useful when you have a list of objects, and some objects are still
+  in a nascent state, and you only want to use the objects that are
+  "complete."  (See the discussion of `.complete_attribute` below.)
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
@@ -830,11 +830,14 @@ The `DAList` uses the following attributes:
   indicates whether the interview should use the `.gather()` method to
   ask questions to gather the items of the list.
 * `complete_attribute`: a text string indicating the name of an
-  attribute of each item of the list.  If you have a [`DAList`] called
+  attribute of a list item.  If you have a [`DAList`] called
   `fruit` and you set `fruit.complete_attribute = 'weight'`, then
   when the `.gather()` method is gathering the items of the list, it
   will seek a definition of `fruit[i].weight` for every item of the
-  list, as it is gathering the items of the list.
+  list, as it is gathering the items of the list.  If you do not set a
+  `complete_attribute`, the default behavior is to ask whatever
+  questions are necessary to represent the list item as text.  See
+  [using `complete_attribute`] for more information.
 * `ask_object_type`: a boolean value, initially set to `False`.  This
   is used when you want to build a list of objects of diverse types.
   When `ask_object_type` is `True`, then when items are added to the
@@ -4110,3 +4113,4 @@ of the original [`DADateTime`] object.  See
 [`get_alt_text()`]: #DAFile.get_alt_text
 [alt text]: https://moz.com/learn/seo/alt-text
 [note above]: #set_info
+[using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute

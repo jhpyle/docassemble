@@ -1434,6 +1434,7 @@
 "comment-weather": "question: |\n  Do you agree the weather\n  is nice today? \nyesno:\
   \ day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this question.\n\
   \  It does not seem necessary."
+"complete-attribute-method": ""
 "continue": |-
   field: target_variable
   question: |
@@ -1583,7 +1584,7 @@
   mandatory: True
   question: The players
   subquestion: |
-    % for type in player:
+    % for type in player.keys():
     ${ player[type].firstname }
     ${ player[type].lastname } is here.
 
@@ -1975,6 +1976,27 @@
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
   \ True"
+"default-screen-parts": |-
+  default screen parts:
+    under: |
+      You have seen
+      ${ quantity_noun(counter, 'screen') }
+      of this interview so far.
+    help label: |
+      About
+    continue button label: |
+      Go to next step
+    subtitle: |
+      A _groovy_ interview
+    pre: |
+      The text below **does not**
+      constitute legal advice.
+    submit: |
+      Please re-read the question
+      before moving forward.
+    post: |
+      This interview was generously
+      sponsored by Example, Inc.
 "default-validation-messages": |-
   default validation messages:
     required: |
@@ -4252,15 +4274,6 @@
   objects:
     - fruit: DAList
   ---
-  question: |
-    Are there more fruits?
-  yesno: more_fruits
-  ---
-  question: |
-    What's the ${ ordinal(i) } fruit?
-  fields:
-    - Fruit: fruit[i]
-  ---
   mandatory: True
   code: |
     fruit.auto_gather = False
@@ -4271,10 +4284,24 @@
   ---
   mandatory: True
   code: |
-    fruit[0]
-    if more_fruits:
+    num_fruits = 0
+    more_fruits = True
+  ---
+  mandatory: True
+  code: |
+    while more_fruits:
+      fruit[num_fruits]
+      num_fruits += 1
       del more_fruits
-      fruit[len(fruit)]
+  ---
+  question: |
+    Are there more fruits?
+  yesno: more_fruits
+  ---
+  question: |
+    What's the ${ ordinal(i) } fruit?
+  fields:
+    - Fruit: fruit[i]
   ---
   mandatory: True
   question: |
@@ -4363,7 +4390,7 @@
     the database?
   fields:
     - Fruit: fruit.new_item_name
-"gather-dict-object": "modules:\n  - docassemble.base.core\n---\nobjects:\n  - pet:\
+"gather-dict-object": "modules:\n  - docassemble.base.util\n---\nobjects:\n  - pet:\
   \ DADict\n---\nmandatory: True\ncode: |\n  pet.object_type = DAObject\n---\nmandatory:\
   \ True\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
   \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item].name } has\
@@ -4375,7 +4402,7 @@
   \ your\n  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another"
 "gather-dict-value": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DADict
@@ -4409,7 +4436,7 @@
   yesno: fruit.there_is_another
 "gather-fruit": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DAList
@@ -4459,7 +4486,7 @@
     The fruits are ${ fruit }.
 "gather-fruit-incomplete": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DAList
@@ -4756,7 +4783,7 @@
     % endfor
 "gather-set": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DASet
@@ -4786,7 +4813,7 @@
   yesno: fruit.there_is_another
 "gather-set-number": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DASet
@@ -4817,7 +4844,7 @@
     - Fruit: fruit.new_item
 "gather-set-object": |-
   modules:
-    - docassemble.base.core
+    - docassemble.base.util
   ---
   objects:
     - fruit: DASet
@@ -4954,11 +4981,11 @@
   \ indent=2)) }\n  \n  The long-form normalized\n  version is:\n\n  ${ the_address.norm_long\
   \ }\n\n  As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm_long.as_serializable(),\
   \ indent=2)) }\n\n  The latitude and longitude are\n  ${ the_address.location.latitude\
-  \ }\n  and\n  ${ the_address.location.longitude }.\n\n  % if the_address.attr('neighborhood'):\n\
-  \  The address is located in the\n  ${ the_address.neighborhood }\n  neighborhood.\n\
-  \  % endif\n\n  % if the_address.attr('county'):\n  The address is located in\n\
-  \  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address) }\n\n  % else:\n\
-  \  The address could not be\n  geolocated.\n  % endif"
+  \ }\n  and\n  ${ the_address.location.longitude }.\n\n  % if hasattr(the_address,\
+  \ 'neighborhood'):\n  The address is located in the\n  ${ the_address.neighborhood\
+  \ }\n  neighborhood.\n  % endif\n\n  % if hasattr(the_address, 'county'):\n  The\
+  \ address is located in\n  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address)\
+  \ }\n\n  % else:\n  The address could not be\n  geolocated.\n  % endif"
 "geolocate-from-address": "objects:\n  - the_address: Address\n---\nquestion: |\n\
   \  Enter an address\nfields:\n  - Address: address_one_line\n---\nmandatory: True\n\
   code: |\n  the_address.geolocate(address_one_line)\n---\nmandatory: True\nquestion:\
@@ -6332,7 +6359,7 @@
   fields:\n  - City: user.sibling[i].company_hired[j].place_of_business.city\n  -\
   \ State: user.sibling[i].company_hired[j].place_of_business.state\n    code: states_list()\n\
   ---\nmandatory: True\nquestion: All done\nsubquestion: |\n  % for sibling in user.sibling:\n\
-  \  You have a sibling named ${ sibling }.\n \n  % for company_type in sibling.company_hired:\n\
+  \  You have a sibling named ${ sibling }.\n \n  % for company_type in sibling.company_hired.keys():\n\
   \  ${ sibling } has hired a ${ company_type }\n  called ${ sibling.company_hired[company_type]\
   \ },\n  which has a principal place of business in\n  ${ sibling.company_hired[company_type].place_of_business\
   \ }.\n \n  % endfor\n \n  % endfor"
@@ -6647,7 +6674,7 @@
     feet.
     % endfor
 
-    % for animal, number in feet.iteritems():
+    % for animal, number in feet.items():
     There are ${ number } feet on
     a ${ animal }.
     % endfor
@@ -7902,7 +7929,7 @@
 "redis": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  key = r.key('my_variable')\n\
   \  r.set(key, 'hello world')\n---\nmandatory: True\nquestion: |\n  Value has been\
   \ retrieved from\n  the redis server.\nsubquestion: |\n  The key is `${ key }`.\n\
-  \  \n  The value is \"${ r.get(key) }\"."
+  \  \n  The value is \"${ r.get(key).decode() }\"."
 "redis-data": |-
   objects:
     - r: DARedis
@@ -8758,7 +8785,7 @@
   question: |
     Server capabilities
   subquestion: |
-    % for feature, enabled in server_capabilities().iteritems():
+    % for feature, enabled in server_capabilities().items():
     * **${ feature }**: ${ 'enabled' if enabled else 'disabled' }
     % endfor
 "session-interview": |-
@@ -8836,13 +8863,16 @@
   ---
   mandatory: True
   code: |
-    set_title(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
-"set-title": |-
+    set_parts(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
+"set-parts": |-
   metadata:
     title: Set the interview title
     short title: Title
     tab title: The Title
     subtitle: The subtitle
+    pre: The pre text
+    submit: The submit text
+    post: The post text
   ---
   question: |
     What is your favorite fruit?
@@ -8855,11 +8885,14 @@
   code: |
     favorite_fruit = noun_plural(favorite_fruit)
     favorite_fruit = capitalize(favorite_fruit)
-    set_title(
+    set_parts(
       title=favorite_fruit + " rule",
       short="I'm Tiny!",
       tab="TabTab",
-      subtitle="a fruit interview")
+      subtitle="a fruit interview",
+      pre="This is about fruit",
+      submit="Get ready for some buttons",
+      post=DAStaticFile(filename="endmatter.html").slurp())
   ---
   mandatory: True
   question: |
@@ -10253,6 +10286,10 @@
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
+"complete-attribute-method": |-
+  modules:
+    - docassemble.base.util
+    - .fishlist
 "custody": |-
   modules:
     - docassemble.base.util

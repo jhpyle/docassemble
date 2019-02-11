@@ -4,6 +4,26 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.2](https://github.com/jhpyle/docassemble/releases/tag/v0.4.2) - 2019-02-10
+
+### Added
+- Additional SQL indexes.
+- The `default screen parts` block.
+- The `required privileges` specifier in `metadata`.
+
+### Changed
+- The `set_title()` function was renamed to `set_parts()` and now
+  supports setting `pre`, `submit`, and `post` parts.
+
+### Fixed
+- Error with OCR.
+- Error with screen reader.
+- Error with `concatenate_files()`.
+- The current section when showing a `nav` in a question was not
+  always current.
+- Wrong formatting of subsections in sections sidebar under some
+  circumstances.
+
 ## [0.4.1](https://github.com/jhpyle/docassemble/releases/tag/v0.4.1) - 2019-02-04
 
 ### Added
