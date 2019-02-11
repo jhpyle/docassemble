@@ -167,3 +167,157 @@ subquestion: |
   ${ action_button_html("https://example.com", size='md', color='primary', label='Exit', new_window=False) }
 {% endhighlight %}
 
+# Re-Use a Master List of Individuals
+
+In some circumstances, the same Individual's information might need to be recorded multiple times.  In these
+cases it can be helpful to allow the user to select from Individuals whose information has already been
+entered.
+
+In other circumstances, it is important to know whether the Individuals filling to roles are the same Individual.
+For example, you might want to verify that the user is not making the executor of a document one of the witnesses also.
+
+These purposes can be achieved by using a master list of Individuals.  When an individual needs to be specified, you can
+allow the user to either choose an existing Individual, or enter a new one.
+
+This technique requires non-idempotently checking for all Individuals that might have been set in an `initial` block,
+and adding them to the
+master list of Individuals using the `set_instance_name=True` parameter to `DAList.append()`.
+
+{% highligh yaml %}
+modules:
+  - docassemble.base.core
+  - docassemble.base.util
+---
+objects:
+  - people: DAList.using(object_type=Individual)
+  - boss: Individual
+  - employee: Individual
+  - customers: DAList.using(object_type=Individual)
+---
+initial: True
+code: |
+  if boss.name.defined():
+    if boss not in people:
+      people.append(boss,set_instance_name = True)
+  if employee.name.defined():
+    if employee not in people:
+      people.append(employee, set_instance_name = True)
+  for c in customers.complete_elements():
+    if c.name.defined():
+      if c not in people:
+        people.append(c, set_instance_name = True)
+---
+mandatory: True
+code: |
+  people.there_are_any = False
+  people.gathered = True
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  The boss is ${ boss }.
+  
+  The employee is ${ employee }.
+  
+  The customers are ${ customers }.
+  
+  % if boss in customers or employee in customers:
+  Either the boss or the employee is also a customer.
+  % else:
+  Neither the boss nor the employee is also a customer.
+  % endif
+---
+question: Are there any customers?
+yesno: customers.there_are_any
+---
+question: Is there another customer?
+yesno: customers.there_is_another
+---
+question: |
+  Who is the boss?
+fields:
+  - Existing or New: boss.existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: boss
+    show if:
+      variable: boss.existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: boss.name.first
+    show if:
+      variable: boss.existing_or_new
+      is: New
+  - Last Name: boss.name.last
+    show if:
+      variable: boss.existing_or_new
+      is: New
+  - Birthday: boss.birthdate
+    datatype: date
+    show if:
+      variable: boss.existing_or_new
+      is: New
+---
+question: |
+  Who is the employee?
+fields:
+  - Existing or New: employee.existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: employee
+    show if:
+      variable: employee.existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: employee.name.first
+    show if:
+      variable: employee.existing_or_new
+      is: New
+  - Last Name: employee.name.last
+    show if:
+      variable: employee.existing_or_new
+      is: New
+  - Birthday: employee.birthdate
+    datatype: date
+    show if:
+      variable: employee.existing_or_new
+      is: New
+---
+question: |
+  Who is the customer?
+fields:
+  - Existing or New: customers[i].existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: customers[i]
+    show if:
+      variable: customers[i].existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: customers[i].name.first
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
+  - Last Name: customers[i].name.last
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
+  - Birthday: customers[i].birthdate
+    datatype: date
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
+{% endhighlight %}
