@@ -963,7 +963,7 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
 
 main_page_parts = dict()
 lang_list = set()
-for key in ('main page pre', 'main page submit', 'main page post'):
+for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page resume button label'):
     if key in daconfig and type(daconfig[key]) is dict:
         for lang in daconfig[key]:
             lang_list.add(lang)
@@ -971,7 +971,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit label', 'main page exit link', 'main page resume button label'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -1331,7 +1331,9 @@ def encrypt_session(secret, user_code=None, filename=None):
         return
     changed = False
     for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+        logmessage("record.phrase is a " + record.phrase.__class__.__name__)
         phrase = unpack_phrase(record.phrase)
+        logmessage("phrase is a " + phrase.__class__.__name__)
         record.phrase = encrypt_phrase(phrase, secret)
         record.encrypted = True
         changed = True
@@ -5290,7 +5292,8 @@ def index():
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
-            raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
+            if not interview.consolidated_metadata.get('allow non-idempotent questions', True):
+                raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
     error_messages = list()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
@@ -5750,6 +5753,8 @@ def index():
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
             elif set_to_empty == 'object_checkboxes':
                 continue
+            elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
+                continue
             else:
                 if isinstance(data, string_types):
                     #data = fixtext_type(data)
@@ -5841,6 +5846,8 @@ def index():
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             elif set_to_empty == 'object_checkboxes':
                 continue    
+            elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
+                continue
             else:
                 if isinstance(data, string_types):
                     #data = fixtext_type(data)
@@ -9003,6 +9010,7 @@ def index():
                     existing_entry.encrypted = encrypted
                     db.session.commit()
             else:
+                logmessage("Adding speaklist entry where encrypted is " + repr(encrypted) + " and phrase is " + repr(the_phrase))
                 new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                 db.session.add(new_entry)
                 db.session.commit()
@@ -9035,6 +9043,18 @@ def index():
         output += '          </section>\n'
     #output += "        </div>\n      </div>\n"
     output += "      </div>\n"
+    if interview_status.question.question_type != "signature" and interview_status.post:
+        output += '      <div class="row">' + "\n"
+        if interview_status.using_navigation == 'vertical':
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
+        else:
+            if interview_status.question.interview.flush_left:
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+            else:
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+        output += interview_status.post
+        output += '        </div>\n'
+        output += '      </div>' + "\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
@@ -9047,7 +9067,7 @@ def index():
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
             output += '          <div><p><cite><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True, trim=True) + '</small></cite></p></div>\n'
-            output += '        </div>\n'
+        output += '        </div>\n'
         output += '      </div>' + "\n"
     if debug_mode:
         output += '      <h2 class="sr-only">Information for developers</h2>\n'
@@ -9311,8 +9331,12 @@ def interview_menu(absolute_urls=False, start_new=False):
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             if interview.is_unlisted():
                 continue
-            if not interview.allowed_to_access(current_user):
-                continue
+            if current_user.is_anonymous:
+                if not interview.allowed_to_access(is_anonymous=True):
+                    continue
+            else:
+                if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                    continue
             if interview.source is None:
                 package = None
             else:
@@ -19825,6 +19849,11 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         return
     if err.__class__.__name__ in ('CSRFError', 'ClientDisconnected'):
         return
+    email_recipients = list()
+    if isinstance(recipient_email, list):
+        email_recipients.extend(recipient_email)
+    else:
+        email_recipients.append(recipient_email)
     if message is None:
         errmess = text_type(err)
     else:
@@ -19904,7 +19933,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             if email_address is not None:
                 body += "<p>The user was " + text_type(email_address) + "</p>"
             html += "\n  </body>\n</html>"
-            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:
                 with open(json_filename, 'rU', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
@@ -19913,7 +19942,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             logmessage(text_type(zerr))
             body = "There was an error in the " + app.config['APP_NAME'] + " application."
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
-            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=[recipient_email], body=body, html=html)
+            msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:
                 with open(json_filename, 'rU', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())

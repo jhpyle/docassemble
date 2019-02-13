@@ -223,7 +223,7 @@ for word_file in word_file_list:
         sys.stderr.write("Error reading " + str(word_file) + ": file not found.\n")
         continue
     if os.path.isfile(filename):
-        with open(filename, 'rU') as stream:
+        with open(filename, 'rU', encoding='utf-8') as stream:
             try:
                 for document in ruamel.yaml.safe_load_all(stream):
                     if document and type(document) is dict:
@@ -325,14 +325,15 @@ def unpad(the_string):
         return the_string[0:-ord(the_string[-1])]
 
 def encrypt_phrase(phrase, secret):
-    phrase = bytearray(phrase, encoding='utf-8')
-    iv = bytearray(app.secret_key[:16], encoding='utf-8')
+    iv = random_bytes(16)
     encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
-    return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode()
+    if isinstance(phrase, unicode):
+        phrase = phrase.encode('utf-8')
+    return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode('utf-8')
 
 def pack_phrase(phrase):
     phrase = bytearray(phrase, encoding='utf-8')
-    return codecs.encode(phrase, 'base64').decode()
+    return codecs.encode(phrase, 'base64').decode('utf-8')
 
 def decrypt_phrase(phrase_string, secret):
     phrase_string = bytearray(phrase_string, encoding='utf-8')
@@ -340,7 +341,7 @@ def decrypt_phrase(phrase_string, secret):
     return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64'))).decode('utf-8')
 
 def unpack_phrase(phrase_string):
-    return codecs.decode(bytearray(phrase_string, encoding='utf-8'), 'base64').decode()
+    return codecs.decode(bytearray(phrase_string, encoding='utf-8'), 'base64').decode('utf-8')
 
 def encrypt_dictionary(the_dict, secret):
     iv = random_bytes(16)

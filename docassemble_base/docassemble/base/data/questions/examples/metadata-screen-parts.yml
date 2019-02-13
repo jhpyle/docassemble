@@ -1,0 +1,82 @@
+metadata:
+  title: Metadata screen parts
+  short title: Parts
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/initial.html#pre"
+  show login: False
+---
+metadata:
+  title: Title
+  short title: Short title
+  subtitle: |
+    This is the subtitle part.
+  pre: |
+    This is the pre part.
+  submit: |
+    This is the submit part.
+  post: |
+    This is the post part.
+  under: |
+    This is the under part.
+  right: |
+    This is the right part.
+  exit link: leave
+  exit label: |
+    Exit label
+  help label: |
+    Help label
+  continue button label: |
+    Continue button label
+  resume button label: |
+    Resume button label
+  back button label: |
+    Back button label
+---
+modules:
+  - docassemble.base.util
+---
+features:
+  question back button: True
+  question help button: True
+---
+image sets:
+  docassemble:
+    attribution: |
+      This is the image attribution.
+    images:
+      star: star.svg
+---
+interview help: |
+  This is the interview help
+---
+decoration: star
+question: |
+  Question
+subquestion: |
+  Subquestion
+fields:
+  - Favorite fruit: favorite_fruit
+help: |
+  This is some question-specific
+  help text for the fruit question.
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+help: |
+  This is some question-specific
+  help text for the vegetable question.
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+  
+  Your favorite vegetable is
+  ${ favorite_vegetable }.
+
+  

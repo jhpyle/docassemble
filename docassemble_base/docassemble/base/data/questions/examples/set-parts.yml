@@ -30,6 +30,9 @@ mandatory: True
 code: |
   favorite_fruit = noun_plural(favorite_fruit)
   favorite_fruit = capitalize(favorite_fruit)
+---
+mandatory: True
+code: |
   set_parts(
     title=favorite_fruit + " rule",
     short="I'm Tiny!",

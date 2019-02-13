@@ -1,0 +1,38 @@
+metadata:
+  title: Config screen parts
+  short: Parts
+  example start: 5
+  example end: 5
+  documentation: "https://docassemble.org/docs/config.html#main page pre"
+  show login: False
+---
+modules:
+  - docassemble.base.util
+---
+features:
+  question back button: True
+---
+interview help: |
+  This is the interview help
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+  
+  Your favorite vegetable is
+  ${ favorite_vegetable }.
+
+  

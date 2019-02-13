@@ -1,0 +1,46 @@
+metadata:
+  title: Default screen parts
+  short title: Parts
+  example start: 5
+  example end: 5
+  documentation: "https://docassemble.org/docs/initial.html#default screen parts"
+  under: |
+    Actually I am the under
+---
+modules:
+  - docassemble.base.util
+---
+default screen parts:
+  under: |
+    No, I am the under!
+---
+mandatory: True
+code: |
+  counter = 0
+  set_title(under="Forget you, I am the under!")
+---
+initial: True
+code: |
+  counter += 1
+---
+interview help: |
+  This interview demonstrates the
+  `default screen parts` feature.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+under: |
+  You all can just forget it,
+  I am actually the under!!!
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+mandatory: True
+question: |
+  You like ${ favorite_fruit } and
+  ${ favorite_vegetable }.

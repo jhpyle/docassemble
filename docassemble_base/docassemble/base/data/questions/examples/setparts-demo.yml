@@ -1,0 +1,40 @@
+metadata:
+  title: Code screen parts
+  short: Parts
+  example start: 4
+  example end: 4
+  documentation: "https://docassemble.org/docs/functions.html#set_parts"
+  show login: False
+---
+modules:
+  - docassemble.base.util
+---
+features:
+  question back button: True
+---
+interview help: |
+  This is the interview help
+---
+mandatory: True
+code: |
+  set_parts(subtitle='This is the subtitle part.', pre='This is the pre part.', submit='This is the submit part.', post='This is the post part.', under='This is the under part.', right='This is the right part.', exit_link='leave', exit_label='Exit label', help_label='Help label', continue_button_label='Continue button label', back_button_label='Back button label')
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+  
+  Your favorite vegetable is
+  ${ favorite_vegetable }.

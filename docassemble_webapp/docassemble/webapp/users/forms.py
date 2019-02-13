@@ -151,6 +151,7 @@ class EditUserProfileForm(UserProfileForm):
             if admin_id not in self.role_id.data:
                 self.role_id.errors.append(word('You cannot take away your own admin privilege.'))
                 return False
+            self.active.data = True
         return True
 
 class PhoneUserProfileForm(UserProfileForm):

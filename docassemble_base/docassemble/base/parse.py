@@ -3126,6 +3126,8 @@ class Question:
         extras = dict()
         if hasattr(self, 'undertext') and self.undertext is not None:
             extras['underText'] = self.undertext.text(user_dict)
+        elif 'under' in user_dict['_internal'] and user_dict['_internal']['under'] is not None:
+            extras['underText'] = user_dict['_internal']['under']
         elif self.language in self.interview.default_screen_parts and 'under' in self.interview.default_screen_parts[self.language]:
             extras['underText'] = self.interview.default_screen_parts[self.language]['under'].text(user_dict)
         elif 'under' in the_default_titles:
@@ -3138,9 +3140,12 @@ class Question:
             extras['rightText'] = self.interview.default_screen_parts[self.language]['right'].text(user_dict)
         elif 'right' in the_default_titles:
             extras['rightText'] = the_default_titles['right']
+        for screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo'):
+            if screen_part in user_dict['_internal'] and user_dict['_internal'][screen_part] is not None:
+                extras[screen_part + ' text'] = user_dict['_internal'][screen_part]
         if self.language in self.interview.default_screen_parts:
             for screen_part in self.interview.default_screen_parts[self.language]:
-                if screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo'):
+                if screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (screen_part + ' text') not in extras:
                     extras[screen_part + ' text'] = self.interview.default_screen_parts[self.language][screen_part].text(user_dict)
         for key, val in the_default_titles.items():
             if key in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (key + ' text') not in extras:
@@ -3159,14 +3164,24 @@ class Question:
             extras['script'] = self.script.text(user_dict)
         if self.continuelabel is not None:
             continuelabel = self.continuelabel.text(user_dict)
-        elif 'continue button label' in user_dict['_internal'] and user_dict['_internal']['continue button label'] is not None:
-            continuelabel = user_dict['_internal']['continue button label']
-        elif self.language in self.interview.default_screen_parts and 'continue button label' in self.interview.default_screen_parts[self.language]:
-            continuelabel = self.interview.default_screen_parts[self.language]['continue button label'].text(user_dict)
-        elif 'continue button label' in the_default_titles:
-            continuelabel = the_default_titles['continue button label']
+        elif self.question_type == 'review':
+            if 'resume button label' in user_dict['_internal'] and user_dict['_internal']['resume button label'] is not None:
+                continuelabel = user_dict['_internal']['resume button label']
+            elif self.language in self.interview.default_screen_parts and 'resume button label' in self.interview.default_screen_parts[self.language]:
+                continuelabel = self.interview.default_screen_parts[self.language]['resume button label'].text(user_dict)
+            elif 'resume button label' in the_default_titles:
+                continuelabel = the_default_titles['resume button label']
+            else:
+                continuelabel = None
         else:
-            continuelabel = None
+            if 'continue button label' in user_dict['_internal'] and user_dict['_internal']['continue button label'] is not None:
+                continuelabel = user_dict['_internal']['continue button label']
+            elif self.language in self.interview.default_screen_parts and 'continue button label' in self.interview.default_screen_parts[self.language]:
+                continuelabel = self.interview.default_screen_parts[self.language]['continue button label'].text(user_dict)
+            elif 'continue button label' in the_default_titles:
+                continuelabel = the_default_titles['continue button label']
+            else:
+                continuelabel = None
         if self.backbuttonlabel is not None:
             extras['back button label text'] = self.backbuttonlabel.text(user_dict)
         elif 'back button label' in user_dict['_internal'] and user_dict['_internal']['back button label'] is not None:
@@ -4358,7 +4373,7 @@ class Interview:
     def get_title(self, user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
@@ -4384,9 +4399,7 @@ class Interview:
                 if key not in title:
                     title[key] = val
         return title
-    def allowed_to_access(self, user):
-        if not hasattr(user, 'has_role'):
-            return True
+    def allowed_to_access(self, is_anonymous=False, has_roles=None):
         roles = set()
         for metadata in self.metadata:
             if 'required privileges' in metadata:
@@ -4398,12 +4411,12 @@ class Interview:
                 elif isinstance(privs, string_types):
                     roles.add(privs)
         if len(roles):
-            if user.is_anonymous:
+            if is_anonymous:
                 if 'anonymous' in roles:
                     return True
                 return False
-            roles = list(roles)
-            return user.has_role(*roles)
+            if has_roles is not None:
+                return len(set(roles).intersection(set(has_roles))) > 0
         return True
 
     def is_unlisted(self):
@@ -4516,7 +4529,7 @@ class Interview:
         for metadata in self.metadata:
             for key, val in metadata.items():
                 self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:

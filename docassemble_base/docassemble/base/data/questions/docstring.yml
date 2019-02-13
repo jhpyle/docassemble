@@ -492,3 +492,16 @@ row_item:
 row_index:
   doc: |
     This is used to represent the index number of a row of a table.
+text_type:
+  doc: |
+    This is a compatibility function from the six package.  It should
+    be used in place of unicode() in Python 2 code, for compatibility
+    with Python 3.
+string_types:
+  doc: |
+    This is a compatibility function from the six package.  It refers to
+    a collection of string classes.  It should be used in place of
+    basestring in Python 2 code, for compatibility with Python 3.
+PY2:
+  doc: |
+    This is true if Python 2 is being used.

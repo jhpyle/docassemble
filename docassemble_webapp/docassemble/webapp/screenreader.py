@@ -7,24 +7,24 @@ __all__ = ['to_text']
 
 def to_text(html_doc):
     #logmessage("Starting to_text")
-    output = ""
+    output = text_type()
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
     [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
-    previous = ""
+    previous = text_type()
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
             words = s.attrs['alt']
             if s.has_attr('placeholder'):
-                words += ", " + s.attrs['placeholder']
+                words += text_type(", ") + s.attrs['placeholder']
         else:
             words = s.get_text()
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         if len(words) and re.search(r'\w *$', words, re.UNICODE):
-            words = words + '.'
+            words = words + text_type('.')
         if words != previous:
-            output += words + "\n"
+            output += text_type(words) + "\n"
         previous = words
     terms = dict()
     for s in soup.find_all('a'):
@@ -33,14 +33,12 @@ def to_text(html_doc):
     if len(terms):
         output += word("Terms used in this question:") + "\n"
         for term, definition in terms.items():
-            output += term + '.  ' + definition + '\n'
+            output += text_type(term) + '.  ' + text_type(definition) + '\n'
     output = re.sub(r'&amp;gt;', '>', output)
     output = re.sub(r'&amp;lt;', '<', output)
     output = re.sub(r'&gt;', '>', output)
     output = re.sub(r'&lt;', '<', output)
     output = re.sub(r'<[^>]+>', '', output)
-    #foo = text_type(output).encode('utf8')
-    #logmessage("ending to_text")
     return output
 
 def hidden(element):

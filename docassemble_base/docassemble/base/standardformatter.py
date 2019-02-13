@@ -31,7 +31,7 @@ else:
     BUTTON_CLASS = 'btn-da'
 
 def tracker_tag(status):
-    output = ''
+    output = text_type()
     output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(server.generate_csrf()) + '/>\n'
     #restore this, maybe
     #if len(status.next_action):
@@ -193,7 +193,7 @@ def as_sms(status, links=None, menu_items=None):
     links_len = 0
     menu_items_len = 0
     next_variable = None
-    qoutput = ''
+    qoutput = text_type()
     if status.question.question_type == 'signature':
         qoutput += word('Sign Your Name') + "\n"
     #logmessage("The question is " + status.questionText)
@@ -425,7 +425,7 @@ def as_sms(status, links=None, menu_items=None):
             if re.search(r'action=', href):
                 links.append((href, label))
     if len(status.helpText) or len(terms) or len(menu_items):
-        houtput = ''
+        houtput = text_type()
         for help_section in status.helpText:
             if houtput != '':
                 houtput += "\n"
@@ -600,9 +600,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         decoration_text = decorations[0];
     else:
         decoration_text = ''
-    master_output = ""
+    master_output = text_type()
     master_output += '          <section id="question" class="tab-pane active ' + grid_class + '">\n'
-    output = ""
+    output = text_type()
     if the_progress_bar:
         if status.question.question_type == "signature":
             the_progress_bar = re.sub(r'class="row"', 'class="d-none d-md-block"', the_progress_bar)
@@ -1534,8 +1534,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
     if status.question.question_type == "signature":
         output += '<div class="sigpost">' + status.post + '</div>'
-    else:
-        output += status.post
         # if len(status.attributions):
         #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         # for attribution in sorted(status.attributions):
@@ -1555,7 +1553,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     master_output += output
     master_output += '          </section>\n'
     master_output += '          <section id="help" class="tab-pane ' + grid_class + '">\n'
-    output = '            <div class="mt-2 mb-2"><a href="#question" role="button" id="backToQuestion" class="btn btn-info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
+    output = text_type() + '            <div class="mt-2 mb-2"><a href="#question" role="button" id="backToQuestion" class="btn btn-info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
             <div id="daPhoneMessage" class="row invisible">
               <div class="col-md-12">
@@ -1775,7 +1773,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
 </script>""")
 
 def input_for(status, field, wide=False, embedded=False):
-    output = ""
+    output = text_type()
     if field.number in status.defaults:
         defaultvalue_set = True
         if isinstance(status.defaults[field.number], (string_types, int, float)):

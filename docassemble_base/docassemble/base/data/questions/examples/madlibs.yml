@@ -3,9 +3,6 @@ metadata:
   example start: 2
   example end: 4
   documentation: "https://docassemble.org/docs/groups.html"
-  required privileges:
-    - admin
-    - user
 ---
 modules:
   - docassemble.base.util

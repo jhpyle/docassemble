@@ -144,7 +144,13 @@ do
          "$file" = "sections-keywords-review" -o \
          "$file" = "sections-keywords-set-sections" -o \
 	 "$file" = "sections-non-progressive" -o \
-         "$file" = "centered" ]
+         "$file" = "centered" -o \
+         "$file" = "mainpage-demo-parts" -o \
+         "$file" = "setparts-demo" -o \
+         "$file" = "default-screen-parts-override" -o \
+         "$file" = "metadata-screen-parts" -o \
+         "$file" = "default-screen-parts" -o \
+         "$file" = "set-parts" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "radio-list-mobile" ]

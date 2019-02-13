@@ -1,6 +1,7 @@
 metadata:
-  title: Default screen parts
-  short: Parts
+  title: Title
+  short title: Short title
+  subtitle: Subtitle
   example start: 5
   example end: 5
   documentation: "https://docassemble.org/docs/initial.html#default screen parts"
@@ -44,12 +45,12 @@ default screen parts:
 question: |
   What is your favorite fruit?
 fields:
-  - Fruit: favorite_fruit
+  - Favorite fruit: favorite_fruit
 ---
 question: |
   What is your favorite vegetable?
 fields:
-  - Vegetable: favorite_vegetable
+  - Favorite vegetable: favorite_vegetable
 ---
 mandatory: True
 question: |
