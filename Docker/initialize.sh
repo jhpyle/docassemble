@@ -545,6 +545,10 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     fi
 fi
 
+if [ "${WATCHDOGENABLE:-true}" == "true" ]; then
+    supervisorctl start watchdog
+fi
+
 echo "36" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
