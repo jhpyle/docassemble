@@ -18,8 +18,9 @@ Platform], is currently available in beta mode.)
 If you want to deploy **docassemble** yourself, the easiest way is to
 install it using [Docker] on whatever machine you wish to use.
 [Docker] works on laptop computers as well as on virtual machines in
-the cloud (or [clusters] of them).  If you want very fine-grained
-control, you can [install] it without using Docker.
+the cloud (or [clusters] of them).  Using a cloud-based virtual
+machine is recommended.  If you want very fine-grained control, you
+can [install] it without using Docker.
 
 If you are interested in hiring someone to develop an interview for
 you, you can propose a project in the #questions channel of the [Slack

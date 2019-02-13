@@ -299,8 +299,8 @@ There are two functions that interact with the [live chat] system:
 
 ### The <a name="set_live_help_status"></a>`set_live_help_status()` function
 
-The `set_live_help_status()` function takes three optional keyword arguments
-in order to control three different settings.
+The `set_live_help_status()` function takes three keyword arguments in
+order to control three different settings.
 
 For example:
 
@@ -335,13 +335,13 @@ affected.
   using the [monitor] system, but any other users who use the
   interview will be able to see the chat history.
 
-<a name="partner_roles"></a>The `partner_roles` setting allows you to
+<a name="partner_roles"></a>The `partner_roles` setting is used to
 indicate the necessary qualifications of any operator using the
 [monitor] who will be able to chat with the user.  For example, if
-your interview concerns tax law, but the operators logged in to
-the [monitor] only know about family law and criminal law, then you
-would not want the user to be able to chat with one of the
-operators at that time.
+your interview concerns tax law, but the operators logged in to the
+[monitor] only know about family law and criminal law, then you would
+not want the user to be able to chat with one of the operators at that
+time.
 
 You can set `partner_roles` to either a list of roles
 (`['tax law', 'estate law']`) or to a single value (`'family law'`).
@@ -352,6 +352,8 @@ developer.  When a user is using the interview, the [monitor] will see a
 list of the partner roles requested and will be able to select the
 roles for which they wish to make themselves available to chat.  The
 partner roles are case sensitive.
+
+At least one "role" must be set.
 
 Note that these "partner role" names are separate and distinct from
 the names of [privileges] of user accounts and the names of "roles" in

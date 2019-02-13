@@ -286,6 +286,110 @@ reach from the menu or from hyperlinks embedded in question text.  For
 more information, see [`event`], [`url_action()`],
 [`process_action()`], [`action_menu_item()`], and [`menu_items`].
 
+# <a name="screen parts"></a>Customizing screen parts
+
+When the user looks at a screen in an interview, there are many
+different "parts" of the screen.  Above, you were introduced to the
+[`question`], [`subquestion`], [`under`], and [`right`] parts.
+
+There are other parts of the screen as well, which by default are
+empty or have a useful default.  The following interview demonstrates
+where each part is located.  Try out the interview and look at the
+results with different screen sizes.
+
+{% include side-by-side.html demo="metadata-screen-parts" %}
+
+* The `title` is the "long title" that appears in the upper-left on a
+  large screen.
+* The `short title` appears in the upper-left on a small screen.  If
+  not provided, the `title` is used in its place.
+* The `subtitle` is not visible on the screen, but can be seen in the
+  list of [Available Interviews].
+* The `logo`, if set, will replace the `title` and `short title` with
+  custom content, such as an image.
+* The `pre` area is above the [`question`].
+* The `submit` area is above the buttons, if the screen has buttons.
+* The `under` area is directly below the buttons.
+* The `right` area is to the right, but if the screen is too small, it
+  wraps and appears under the `under` area.
+* The `post` area is below everything except for image attributions,
+  which are below the `post` area.
+* The `exit link` is not a visible component, but rather a value that
+  is either `exit` or `leave`.  It controls the operation of the exit
+  link in the upper right corner, which is present if [`show login`]
+  is set to `False`.
+* The `exit label` is the visible label of the exit link in the upper
+  right corner, which is present if [`show login`] is set to `False`.
+* The `help label` is the default label for the "help" tab.  It can be
+  overridden by a `label` specifier inside a [`help`] modifier.  If
+  you set a [`question help button`], the `help label` will be used
+  for the help button, while the label for the help tab will be the
+  less conspicuous word "Help."
+* The `continue button label` is the label for the "Continue" button.
+  If the `question` is a [`review`] question, this is called the
+  `resume button label`.
+* The `back button label` is the label for the back button that
+  appears within the question itself (not the upper-left corner).
+
+There are a variety of ways that you can specify what content should
+appear in these areas.  These ways range from question-specific
+specifiers to interview-wide defaults to server-wide defaults.  You
+should pick whatever method works best for your purposes.
+
+You can customize many of the screen parts as part of a `question`
+block.  As explained above, there are specifiers for the [`question`],
+[`subquestion`], [`under`], and [`right`] parts.  There are also
+modifiers for [`continue button label`], [`resume button label`], and
+[`back button label`].  When you set question-specific [`help`], you
+can indicate a `label` that will be used as a label for the help tab
+or the help button.
+
+There are three methods for specifying interview-wide default values for
+parts of the screen:
+
+* Using the [`set_parts()`] function in [Python] code to set default
+  values for the screen parts.  You can use [Python] logic and the
+  [`get_language()`] function to set different values for different
+  languages.  [Mako] templating is not supported and formatting must
+  use raw [HTML].
+* Using a [`default screen parts`] block to specify dynamic content
+  using [Mako] templating and [Markdown] formatting, which is
+  re-evaluated every time the screen loads.  Using the [`language`]
+  modifier (or a [`default language`] block in a separate [YAML]
+  file), you can write different [`default screen parts`] blocks for
+  different languages.
+* Using a [`metadata`] block to specify static content that is the
+  same for all sessions of the interview.  [Mako] templating is not
+  supported and formatting must use raw [HTML].  You can specify
+  different content to be used for different languages.  An advantage
+  of [`metadata`] over [`default screen parts`] is that it is visible
+  to the [Available Interviews] list, whereas other methods of setting
+  defaults are not.
+
+Finally, there is a server-wide method for specifying default values,
+which is to set the [Configuration] directives [`main page pre`],
+[`main page post`], etc.  [Mako] templating is not supported and
+formatting must use raw [HTML].  These directives allow you to set
+different content for different languages.
+
+These different methods override each other in this order.  A
+[`metadata`] block will override [Configuration] directives, a
+[`default screen parts`] block will override a [`metadata`] block,
+[`set_parts()`] will override a [`default screen parts`] block, and
+[`question`]-specific specifiers will override a [`default screen
+parts`] block.
+
+For more information about each method, see its documentation.
+
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[`main page pre`]: {{ site.baseurl }}/docs/config.html#main page pre
+[`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
+[`get_language()`]: {{ site.baseurl }}/docs/functions.html#get_language
+[`default language`]: {{ site.baseurl }}/docs/initial.html#default language
+[`language`]: {{ site.baseurl }}/docs/modifiers.html#language
+[`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
+[`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [role]: {{ site.baseurl }}/docs/roles.html
@@ -313,6 +417,9 @@ more information, see [`event`], [`url_action()`],
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`question`]: #question
+[`subquestion`]: #subquestion
+[`right`]: #right
+[`under`]: #under
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code`]: {{ site.baseurl }}/docs/code.html#code
@@ -323,3 +430,10 @@ more information, see [`event`], [`url_action()`],
 [multiple-choice buttons that run code]: {{ site.baseurl }}/docs/fields.html#code button
 [`centered`]: {{ site.baseurl }}/docs/initial.html#centered
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[Available Interviews]: {{ site.baseurl }}/docs/admin.html#available%20interviews
+[`show login`]: {{ site.baseurl }}/docs/initial.html#show login
+[`help`]: {{ site.baseurl }}/docs/modifiers.html#help
+[`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
+[`back button label`]: {{ site.baseurl }}/docs/modifiers.html#back button label
+[`resume button label`]: {{ site.baseurl }}/docs/fields.html#resume button label
+[`question help button`]: {{ site.baseurl }}/docs/initial.html#question help button

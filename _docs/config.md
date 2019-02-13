@@ -403,14 +403,47 @@ you can use the [`global css`] and [`global javascript`] directives.
 <a name="main page pre"></a><a name="main page submit"></a><a
 name="main page post"></a>The `main page` directive is special because
 it relates to actual interviews, which are different from
-administrative pages.  The only directives that work with the `main
-page` prefix are `main page pre`, `main page submit`, `main page
-post`.  You can use these if you want special [HTML] content to appear
-on the page before the main question heading, before the buttons,
-and/or after the buttons, respectively.  These values set global
-defaults for the server.  They can be overridden for specific
-interviews using the [`metadata`] directives [`pre`], [`submit`], and
-[`post`].
+administrative pages.  The directives that work with the `main
+page` prefix are:
+
+* `main page back button label`
+* `main page continue button label`
+* `main page exit label`
+* `main page exit link`
+* `main page help label`
+* `main page logo`
+* `main page post`
+* `main page pre`
+* `main page resume button label`
+* `main page right`
+* `main page short title`
+* `main page submit`
+* `main page subtitle`
+* `main page title`
+* `main page under`
+
+You can set these when you want special content to be set by default
+for various parts of the screen for all interviews running on your
+server.
+
+{% highlight yaml %}
+main page post: |
+  <p>This interview was sponsored in part by a grant from the Example Foundation.</p>
+{% endhighlight %}
+
+You can set the directives to a dictionary where the keys are
+languages and the values are the text.
+
+{% highlight yaml %}
+main page post:
+  en: |
+    <p class="smallprint">This interview was sponsored in part by a grant from the Example Foundation.</p>
+  es: |
+    <p class="smallprint">Esta entrevista fue patrocinada en parte por una beca de la Fundación Ejemplo.</p>
+{% endhighlight %}
+
+For information about other ways to set defaults for different parts
+of the screens during interviews, see the [screen parts] section.
 
 <a name="start page template"></a><a name="interview page template"></a>
 There are two pages that you can customize even more extensively:
@@ -1267,10 +1300,16 @@ in the [Apache] configuration.
 
 ## <a name="error notification email"></a>E-mail address to which error messages shall be sent
 
-If `error notification email` is set to an e-mail address, then if any
-user sees an error message, the server will try to send an e-mail
-notification to this e-mail address.  If possible, the e-mail will
-contain the error message.
+If `error notification email` is set to an e-mail address or a list of
+e-mail addresses, then if any user sees an error message, the server
+will try to send an e-mail notification to this e-mail address (or
+addresses).  If possible, the e-mail will contain the error message.
+
+{% highlight yaml %}
+error notification email:
+  - jsmith@example.com
+  - tjoseph@example.com
+{% endhighlight %}
 
 Information about errors is also available in the [Logs].
 
@@ -3115,3 +3154,4 @@ and Facebook API keys.
 [`show login` metadata directive]: {{ site.baseurl }}/docs/initial.html#show login
 [translates system phrases]: {{ site.baseurl }}/docs/admin.html#translate
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts

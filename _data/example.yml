@@ -1997,6 +1997,10 @@
     post: |
       This interview was generously
       sponsored by Example, Inc.
+"default-screen-parts-override": |-
+  interview help: |
+    This interview demonstrates the
+    `default screen parts` feature.
 "default-validation-messages": |-
   default validation messages:
     required: |
@@ -5754,6 +5758,11 @@
     post: |
       <p style="color: green;">Need
       help? Call 888-555-3933 now!!!</p>
+"mainpage-demo-parts": |-
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Favorite vegetable: favorite_vegetable
 "mako-01": |-
   mandatory: True
   question: |
@@ -6011,6 +6020,33 @@
         organization: Example, Inc.
     revision_date: 2016-03-22
     documentation: "https://docassemble.org/docs/initial.html#metadata"
+"metadata-screen-parts": |-
+  metadata:
+    title: Title
+    short title: Short title
+    subtitle: |
+      This is the subtitle part.
+    pre: |
+      This is the pre part.
+    submit: |
+      This is the submit part.
+    post: |
+      This is the post part.
+    under: |
+      This is the under part.
+    right: |
+      This is the right part.
+    exit link: leave
+    exit label: |
+      Exit label
+    help label: |
+      Help label
+    continue button label: |
+      Continue button label
+    resume button label: |
+      Resume button label
+    back button label: |
+      Back button label
 "min": |-
   question: |
     What percentage of your friends
@@ -8885,6 +8921,9 @@
   code: |
     favorite_fruit = noun_plural(favorite_fruit)
     favorite_fruit = capitalize(favorite_fruit)
+  ---
+  mandatory: True
+  code: |
     set_parts(
       title=favorite_fruit + " rule",
       short="I'm Tiny!",
@@ -8893,13 +8932,6 @@
       pre="This is about fruit",
       submit="Get ready for some buttons",
       post=DAStaticFile(filename="endmatter.html").slurp())
-  ---
-  mandatory: True
-  question: |
-    The interview titles have been
-    changed.
-  buttons:
-    - Restart: restart
 "setField": |-
   question: |
     What groceries should we buy for
@@ -8938,6 +8970,10 @@
         return false;
       });
     </script>
+"setparts-demo": |-
+  mandatory: True
+  code: |
+    set_parts(subtitle='This is the subtitle part.', pre='This is the pre part.', submit='This is the submit part.', post='This is the post part.', under='This is the under part.', right='This is the right part.', exit_link='leave', exit_label='Exit label', help_label='Help label', continue_button_label='Continue button label', back_button_label='Back button label')
 "show-login": |-
   metadata:
     show login: False

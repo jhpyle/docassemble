@@ -1939,11 +1939,13 @@ It accepts any of the following optional keyword arguments:
   height.
 * `short` - for the mobile-friendly version of the interview title,
   which is displayed in the navigation bar when the screen is small.
+* `short_title` does the same thing as `short`.
 * `subtitle` - for the subtitle of the interview, which is displayed
   in the "Interviews" list.  The subtitle is not visible on the screen
   of the interview itself.
 * `tab` - for the [HTML] title of the web page.  This is typically
   displayed in the browser tab.
+* `tab_title` does the same thing as `tab`.
 * `exit_link` - can be set to `'exit'` or `'leave'` in order to
   control the behavior of the "Exit" menu option, which is displayed
   when [`show login`] is `False`.  If set to `'exit'`, then clicking
@@ -1953,10 +1955,25 @@ It accepts any of the following optional keyword arguments:
   menu option.
 * `pre` - can be set to HTML that will be inserted immediately after
   the `question` part of a screen
-* `post` - can be set to HTML that will be inserted at the bottom of
-  the screen, after the buttons.
 * `submit` - can be set to HTML that will be inserted before the
   buttons.
+* `continue_button_label` - will change the text in the Continue
+  button.
+* `resume_button_label` - will change the text in the Resume
+  button on [`review`] screens.
+* `back button label` - will change the text of the back button that
+  appears inside
+* `help_label` - will change the default label of the help tab and the
+  help button
+* `under` - can be set to HTML that will be inserted after the buttons.
+* `right` - can be set to HTML that will be inserted to the right of
+  the question, or below the `under` content on small screens.
+* `post` - can be set to HTML that will be inserted at the bottom of
+  the screen, after the buttons.
+
+In the following interview, note that the screen parts that were
+initially set by [`metadata`] are overridden when `set_parts()` is
+run.
 
 {% include side-by-side.html demo="set-parts" %}
 
@@ -1965,8 +1982,8 @@ display a logo from your "static" folder in the navigation bar.
 
 {% include side-by-side.html demo="set-logo-title" %}
 
-For more information about parts of the page, see the documentation
-for the [`metadata` initial block].
+For information about other ways to set defaults for different parts
+of the screens during interviews, see the [screen parts] section.
 
 ## <a name="session_tags"></a>session_tags()
 
@@ -6396,3 +6413,4 @@ $(document).on('daPageLoad', function(){
 [privilege]: {{ site.baseurl }}/docs/users.html
 [upgrade to Python 3]: {{ site.baseurl }}/docs/twotothree.html
 [six]: https://pypi.org/project/six/
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts

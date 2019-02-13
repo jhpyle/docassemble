@@ -191,7 +191,8 @@ highlighted in yellow.
 The default label "Help" can be changed on a per-interview basis.  If
 you set an [`interview help`] initial block and provide a `label` as
 part of it, the value of this `label` will be used instead of "Help"
-as the name of the "Help" tab in the navigation bar.
+as the name of the "Help" tab in the navigation bar.  You can also use
+[screen parts] methods to set this value (which is called `help label`).
 
 # <a name="decoration"></a>Adding images to question: `decoration`
 
@@ -345,6 +346,9 @@ button`] feature, you can change the text of the button using the
 
 The text of the label can include [Mako] templating.
 
+For information about other ways to set a default value for the
+Continue button label, see the [screen parts] section.
+
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
 Using the modifiers `terms` or `auto terms`, you can specify the
@@ -420,6 +424,9 @@ The types of questions that feature a "Continue" button include:
 
 This modifier also allows you to customize the "Done" button that
 appears in [`signature`] questions.
+
+For information about other ways to set a default value for the
+Continue button label, see the [screen parts] section.
 
 # <a name="generic object"></a>Reusable questions: `generic object`
 
@@ -929,3 +936,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`data from code`]: {{ site.baseurl}}/docs/initial.html#data from code
 [CSS custom class]: {{ site.baseurl}}/docs/initial.html#css customization
 [Google Analytics integration]: {{ site.baseurl}}/docs/config.html#google analytics
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts

@@ -2052,6 +2052,9 @@ However, if `review` is used with `field`, a "Continue" button is
 used.  The "Continue" button can be customized using the modifier
 [`continue button label`].
 
+For information about other ways to set a default value for the
+Continue button label, see the [screen parts] section.
+
 ### <a name="review auto"></a>Why can't `review` screens be automatically generated?
 
 The list of variables to display to the user in a `review` screen needs
@@ -2220,3 +2223,4 @@ why this needs to be done manually as opposed to automatically:
 [accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts

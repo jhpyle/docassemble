@@ -42,9 +42,9 @@ If a `subtitle` is provided, it will be displayed as the subtitle of
 the interview in the "Interviews" list available to a logged-in
 user at `/interviews`.
 
-These titles can be overridden using the [`set_title()` function].
+These titles can be overridden using the [`set_parts()` function].
 
-The `metadata` block and the [`set_title()` function] can be used to
+The `metadata` block and the [`set_parts()` function] can be used to
 modify other aspects of the navigation bar.
 
 <a name="exit link"></a>If an `exit link` is provided, the behavior of
@@ -73,17 +73,67 @@ documentation for the [`dispatch`] configuration directive.
 <a name="required privileges"></a>If you set `required privileges` to
 a list of one or more privileges, then the interview will only be
 shown in the list of interviews available at `/list` if the user has
-the required privilege.  For more information about this, see the
-documentation for the [`dispatch`] configuration directive.
+the required privilege.  If `anonymous` is included as one of the
+required privileges, then users who are not logged in will be able to
+see the interview listed.  However, note that `anonymous` is not
+actually a [privilege] in **docassemble**'s [privilege] management
+system; only logged-in users actually have [privileges].  If no
+`required privileges` are listed, then the default is that the
+interview is always listed.
+
+{% highlight yaml %}
+metadata:
+  title: Administrative interview
+  short title: Admin
+  description: |
+    A management dashboard
+  required privileges:
+    - admin
+    - developer
+    - advocate
+{% endhighlight %}
+
+If there are multiple [`metadata`] blocks in the [YAML] of an
+interview that set `required privileges`, the `required privileges`
+settings of later [`metadata`] blocks will override the `required
+privileges` settings of earlier [`metadata`] blocks.  Setting
+`required privileges: []` will ensure that the interview is always
+shown in the list, notwithstanding the `required privileges` settings
+of any earlier [`metadata`] blocks.
+
+For more information about the `/list` page, see the documentation for
+the [`dispatch`] configuration directive.
+
+<a name="allow non-idempotent questions"></a>You can set `allow
+non-idempotent questions: False` in the [`metadata`] in order to
+enforce strict idempotency of [`question`]s with generic objects,
+iterators, or multiple choice selections.  If your interview has
+non-idempotent logic, there is a risk that variables will be set
+improperly.  The `allow non-idempotent questions` currently defaults
+to `True`, but in the future, it will default to `False`, which may
+break some interviews.
 
 <a name="pre"></a><a name="submit"></a><a name="post"></a>The
-[`metadata`] block also accepts the specifiers `pre`, `submit`, and
-`post`.  You can use these to provide raw [HTML] that will be inserted
-into the page before the [`question`] heading, before the buttons, and
-after the buttons, respectively.  You can also set server-wide
-defaults for these values using the [`main page pre`], [`main page
-submit`], and [`main page post`] directives in the [Configuration].
-You can also customize these values with the [`set_title()`] function.
+[`metadata`] block also accepts specifiers for default content to be
+inserted into various parts of the screen.
+
+{% include side-by-side.html demo="metadata-screen-parts" %}
+
+You can provide different values for different languages by setting
+each directive to a dictionary in which the keys are languages and the
+values are content.
+
+{% highlight yaml %}
+metadata:
+  post:
+    en: |
+      This interview was sponsored in part by a grant from the Example Foundation.
+    es: |
+      Esta entrevista fue patrocinada en parte por una beca de la Fundación Ejemplo.
+{% endhighlight %}
+
+For information about other ways to set defaults for different parts
+of the screens during interviews, see the [screen parts] section.
 
 <a name="error help">The [`metadata`] block also accepts the specifier
 `error help`.  This is [Markdown]-formatted text that will be included
@@ -663,9 +713,20 @@ multi-lingual interviews.  See [question modifiers] for information about the
 # <a name="default screen parts"></a>Default screen parts
 
 The `default screen parts` allows you to write [Mako] and [Markdown]
-to create text that will appear in parts of the screen on every page.
+to create text that will appear by default in parts of the screen on
+every page.
 
 {% include side-by-side.html demo="default-screen-parts" %}
+
+When using this, make sure you do not cause your interview to go into
+an infinite loop.  If any of your screen parts require information
+from the user, your interview will need to pose a [`question`] to the
+user to gather that information, but in order to pose the
+[`question`], it will need the information.  To avoid this, you can
+use the [`defined()`] function or other methods.
+
+For information about other ways to set defaults for different parts
+of the screens during interviews, see the [screen parts] section.
 
 # <a name="default validation messages"></a>Custom validation messages
 
@@ -1302,7 +1363,7 @@ features:
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
 [`data`]: #data
-[`set_title()` function]: {{ site.baseurl}}/docs/functions.html#set_title
+[`set_parts()` function]: {{ site.baseurl}}/docs/functions.html#set_parts
 [`show login` configuration directive]: {{ site.baseurl }}/docs/config.html#show login
 [`url_of()`]: {{ site.baseurl}}/docs/functions.html#url_of
 [`menu_items` special variable]: {{ site.baseurl}}/docs/special.html#menu_items
@@ -1317,7 +1378,7 @@ features:
 [`main page submit`]: {{ site.baseurl }}/docs/config.html#main page submit
 [`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
 [`metadata`]: #metadata
-[`set_title()`]: {{ site.baseurl}}/docs/functions.html#set_title
+[`set_parts()`]: {{ site.baseurl}}/docs/functions.html#set_parts
 [`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
 [chart.js]: https://www.chartjs.org/
 [Google Charts]: https://developers.google.com/chart/
@@ -1348,3 +1409,7 @@ features:
 [`combobox`]: {{ site.baseurl }}/docs/fields.html#combobox
 [`checkboxes`]: {{ site.baseurl }}/docs/fields.html#fields checkboxes
 [DOM]: https://en.wikipedia.org/wiki/Document_Object_Model
+[privilege]: {{ site.baseurl }}/docs/users.html
+[privileges]: {{ site.baseurl }}/docs/users.html
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[`defined()`]: {{ site.baseurl}}/docs/functions.html#defined

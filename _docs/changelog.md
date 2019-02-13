@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.3](https://github.com/jhpyle/docassemble/releases/tag/v0.4.3) - 2019-02-13
+
+### Added
+- The `string_types` and `PY2` names, imported from the `six` package.
+- The `allow non-idempotent questions` specifier in `metadata`.
+
+### Changed
+- The `post` screen part is now positioned below the `right` screen
+  part on small screens.
+
+### Fixed
+- The screen parts feature was not fully implemented and documented.
+- The `required privileges` feature was not fully implemented.
+- Editing yourself through `/userlist` would disable yourself.
+- Error with text-to-speech cache.
+- Non-required file upload variables were being set to `'None'`
+  instead of being ignored.
+
 ## [0.4.2](https://github.com/jhpyle/docassemble/releases/tag/v0.4.2) - 2019-02-10
 
 ### Added
@@ -13,7 +31,7 @@ short_title: Change Log
 
 ### Changed
 - The `set_title()` function was renamed to `set_parts()` and now
-  supports setting `pre`, `submit`, and `post` parts.
+  supports setting any screen part.
 
 ### Fixed
 - Error with OCR.
