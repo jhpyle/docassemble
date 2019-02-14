@@ -775,6 +775,10 @@ fi
 
 echo "51" >&2
 
+if [ "${WATCHDOGENABLE:-true}" == "true" ]; then
+    supervisorctl start watchdog
+fi
+
 function deregister() {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then
