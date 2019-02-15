@@ -3187,7 +3187,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, dict):
         new_dict = dict()
         for key, value in the_object.items():
-            new_dict[key] = safe_json(value, level=level+1)
+            new_dict[safe_json(key, level=level+1)] = safe_json(value, level=level+1)
         return new_dict
     if isinstance(the_object, set):
         new_list = list()
@@ -3217,7 +3217,7 @@ def safe_json(the_object, level=0):
         for key, data in the_object.__dict__.items():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
-            new_dict[key] = safe_json(data, level=level+1)
+            new_dict[safe_json(key, level=level+1)] = safe_json(data, level=level+1)
         return new_dict
     try:
         json.dumps(the_object)

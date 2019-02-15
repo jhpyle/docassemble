@@ -1991,7 +1991,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if non_progressive:
             seen_more = True
             section_reached = False
-        logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + text_type(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
+        #logmessage("the title is " + str(the_title) + " and non_progressive is " + str(non_progressive) + " and show links is " + str(show_links) + " and seen_more is " + str(seen_more) + " and active_class is " + repr(active_class) + " and currently_active is " + str(currently_active) + " and section_reached is " + str(section_reached) + " and the_key is " + str(the_key) + " and interview is " + text_type(interview) + " and in q is " + ('in q' if the_key in interview.questions else 'not in q'))
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
@@ -5846,7 +5846,7 @@ def index():
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             elif set_to_empty == 'object_checkboxes':
                 continue    
-            elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
+            elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
                 continue
             else:
                 if isinstance(data, string_types):
@@ -13535,7 +13535,7 @@ def playground_files():
     section = request.args.get('section', 'template')
     the_file = request.args.get('file', '')
     scroll = False
-    if the_file:
+    if the_file != '':
         scroll = True
     if request.method == 'GET':
         is_new = request.args.get('new', False)
@@ -18059,7 +18059,7 @@ def api_verify(req, roles=None):
     except:
         logmessage("api_verify: API information could not be unpacked")
         return False
-    m = re.match('da:api:userid:([0-9]+):key:' + api_key + ':info', rkeys[0])
+    m = re.match('da:api:userid:([0-9]+):key:' + api_key + ':info', rkeys[0].decode())
     if not m:
         logmessage("api_verify: user id could not be extracted")
         return False
@@ -18619,6 +18619,7 @@ def api_users_interviews():
             the_list = user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, filename=filename, include_dict=include_dict)
         except:
             return jsonify_with_status("Error getting interview list.", 400)
+        return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
             the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename)
@@ -18878,13 +18879,13 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         raise Exception("Unable to obtain interview dictionary.")
     try:
         for key, val in variables.items():
-            if illegal_variable_name(key) or contains_volatile(key):
+            if illegal_variable_name(key) or contains_volatile.search(key):
                 raise Exception("Illegal value as variable name.")
             exec(text_type(key) + ' = ' + repr(val), user_dict)
             vars_set.add(key)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
-        raise Exception("Problem deleting variables:" + str(the_err))
+        raise Exception("Problem setting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.core', user_dict)
         for key, val in literal_variables.items():
@@ -19331,23 +19332,38 @@ def api_interviews():
             user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
 
-@app.route('/api/playground', methods=['POST'])
+@app.route('/api/playground', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['POST', 'HEAD'])
+@crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
 def api_playground():
     if not api_verify(request, roles=['admin', 'developer']):
         return jsonify_with_status("Access denied.", 403)
-    post_data = request.form.copy()
-    folder = post_data.get('folder', 'static')
-    try:
-        if current_user.has_role('admin'):
-            user_id = int(post_data.get('user_id', current_user.id))
-        else:
-            if 'user_id' in request.args:
-                assert int(post_data['user_id']) == current_user.id
-            user_id = current_user.id
-    except:
-        return jsonify_with_status("Invalid user_id.", 400)
+    if request.method in ('GET', 'DELETE'):
+        folder = request.args.get('folder', 'static')
+        try:
+            if current_user.has_role('admin'):
+                user_id = int(request.args.get('user_id', current_user.id))
+            else:
+                if 'user_id' in request.args:
+                    assert int(request.args['user_id']) == current_user.id
+                user_id = current_user.id
+        except:
+            return jsonify_with_status("Invalid user_id.", 400)
+    elif request.method == 'POST':
+        post_data = request.form.copy()
+        folder = post_data.get('folder', 'static')
+        try:
+            if current_user.has_role('admin'):
+                user_id = int(post_data.get('user_id', current_user.id))
+            else:
+                if 'user_id' in post_data:
+                    assert int(post_data['user_id']) == current_user.id
+                user_id = current_user.id
+        except:
+            return jsonify_with_status("Invalid user_id.", 400)
+    if request.method == 'DELETE':
+        if 'filename' not in request.args:
+            return jsonify_with_status("Missing filename.", 400)
     if folder not in ('questions', 'sources', 'static', 'templates', 'modules'):
         return jsonify_with_status("Invalid folder.", 400)
     if folder == 'questions':
@@ -19359,26 +19375,34 @@ def api_playground():
     docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
     from docassemble.webapp.playground import PlaygroundSection
     pg_section = PlaygroundSection(section=section)
-    found = False
-    try:
-        for filekey in request.files:
-            the_files = request.files.getlist(filekey)
-            if the_files:
-                for the_file in the_files:
-                    filename = secure_filename(the_file.filename)
-                    temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
-                    the_file.save(temp_file.name)
-                    pg_section.copy_from(temp_file.name, filename=filename)
-                    found = True
-    except:
-        return jsonify_with_status("Error saving file(s).", 400)
-    if not found:
-        return jsonify_with_status("No file found.", 400)
-    for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
-        r.incr(key.decode())
-    if section == 'modules':
-        restart_all()
-    return ('', 204)
+    if request.method == 'GET':
+        return jsonify(pg_section.file_list)
+    elif request.method == 'DELETE':
+        pg_section.delete_file(request.args['filename'])
+        if section == 'modules':
+            restart_all()
+        return ('', 204)
+    elif request.method == 'POST':
+        found = False
+        try:
+            for filekey in request.files:
+                the_files = request.files.getlist(filekey)
+                if the_files:
+                    for the_file in the_files:
+                        filename = secure_filename(the_file.filename)
+                        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
+                        the_file.save(temp_file.name)
+                        pg_section.copy_from(temp_file.name, filename=filename)
+                        found = True
+        except:
+            return jsonify_with_status("Error saving file(s).", 400)
+        if not found:
+            return jsonify_with_status("No file found.", 400)
+        for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
+            r.incr(key.decode())
+        if section == 'modules':
+            restart_all()
+        return ('', 204)
 
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required

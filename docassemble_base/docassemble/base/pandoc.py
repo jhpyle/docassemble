@@ -17,9 +17,15 @@ from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_cal
 from io import open
 import mimetypes
 from subprocess import call, check_output
+import convertapi
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
+
+def convertapi_to_pdf(from_file, to_file):
+    convertapi.api_secret = daconfig.get('convertapi secret')
+    result = convertapi.convert('pdf', { 'File': from_file })
+    result.file.save(to_file)
 
 def get_pandoc_version():
     p = subprocess.Popen(
@@ -230,18 +236,41 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     shutil.copyfile(in_file, from_file)
     tries = 0
     while tries < 5:
+        use_libreoffice = True
         if update_references:
-            subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexerPdf(' + from_file + ',' + to_file + ')']
+            if daconfig.get('convertapi secret', None) is not None:
+                update_references(from_file)
+                try:
+                    convertapi_to_pdf(from_file, to_file)
+                    result = 0
+                except:
+                    logmessage("Call to convertapi failed")
+                    result = 1
+                use_libreoffice = False
+            else:
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexerPdf(' + from_file + ',' + to_file + ')']
+        elif daconfig.get('convertapi secret', None) is not None:
+            try:
+                convertapi_to_pdf(from_file, to_file)
+                result = 0
+            except:
+                logmessage("Call to convertapi failed")
+                result = 1
+            use_libreoffice = False
         else:
             subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
-        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-        result = p.wait()
+        if use_libreoffice:
+            p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+            result = p.wait()
         if os.path.isfile(to_file):
             break
         result = 1
         tries += 1
         time.sleep(2 + tries*random.random())
-        logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
+        if use_libreoffice:
+            logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
+        else:
+            logmessage("Retrying convertapi")
         continue
     if result == 0:
         if pdfa:

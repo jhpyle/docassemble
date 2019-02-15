@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.4] - 2019-02-15
+### Added
+- The `convertapi secret` configuration directive.
+- API endpoints for listing and deleting Playground files.
+### Fixed
+- JSON serialization with unusual dict keys.
+- Screen scrolling problem in Playground folders.
+
 ## [0.4.3] - 2019-02-13
 ### Added
 - The `string_types` and `PY2` names, imported from the `six` package.

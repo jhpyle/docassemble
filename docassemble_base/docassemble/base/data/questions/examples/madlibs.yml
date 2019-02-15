@@ -42,3 +42,7 @@ question: |
   % endif
 fields:
   - no label: x[i]
+---
+event: set_noun
+code: |
+  noun[0] = action_argument('noun')

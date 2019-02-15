@@ -320,6 +320,9 @@ class PlaygroundSection(object):
         if os.path.isfile(path):
             return True
         return False
+    def delete_file(self, filename):
+        area = self.get_area()
+        area.delete_file(filename)
     def read_file(self, filename):
         path = self.get_file(filename)
         if path is None:
