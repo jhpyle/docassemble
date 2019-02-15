@@ -2429,7 +2429,7 @@ If you have [ffmpeg] instead of [avconv], you can do:
 avconv: ffmpeg
 {% endhighlight %}
 
-## <a name="libreoffice"></a><a name="pandoc"></a>Document conversion
+## <a name="libreoffice"></a><a name="pandoc"></a><a name="convertapi secret"></a>Document conversion
 
 **docassemble** requires that you have [Pandoc] installed on your
 system.  It assumes that it can be run using the command `pandoc`.
@@ -2455,6 +2455,21 @@ that go by different names:
 {% highlight yaml %}
 libreoffice: soffice
 {% endhighlight %}
+
+By default, **docassemble** uses [LibreOffice] to convert DOCX
+templates to PDF format.  Alternatively, you can use [ConvertAPI], a
+web service for file conversion.  To enable this, sign up with
+[ConvertAPI] and set the `convertapi secret` to the "Secret" that
+[ConvertAPI] generates for you.
+
+{% highlight yaml %}
+convertapi secret: SrWh4XfuOje5jYx1
+{% endhighlight %}
+
+Enabling [ConvertAPI] can be useful if you are using [`docx template
+file`] to generate PDF files, but the standard [LibreOffice]
+conversion does not work properly due to incompatibilities between
+[Microsoft Word] and [LibreOffice].
 
 ## <a name="pandoc engine"></a>Pandoc's LaTeX engine
 
@@ -3155,3 +3170,6 @@ and Facebook API keys.
 [translates system phrases]: {{ site.baseurl }}/docs/admin.html#translate
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[ConvertAPI]: https://www.convertapi.com
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word

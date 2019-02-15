@@ -1344,6 +1344,75 @@ Response on success: [200]
 
 Body of response: the contents of the file
 
+## <a name="playground_get"></a>List files in Playground
+
+Description: Returns a list of files in a folder of the [Playground].
+
+Path: `/api/playground`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be read.  Only users with `admin` privileges can read from a
+   different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+ - `folder` (optional): the folder in the [Playground] from which to
+   obtain the list of files.  Must be one of `questions`, `sources`,
+   `static`, `templates`, or `modules`.
+
+Required privileges: `admin` or `developer`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid folder" if the value of `folder` is unknown.
+
+Response on success: [200]
+
+Body of response: a [JSON] array of file names
+
+## <a name="playground_delete"></a>Delete a file in the Playground
+
+Description: Deletes a file in a folder of the [Playground].
+
+Path: `/api/playground`
+
+Method: [DELETE]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be read.  Only users with `admin` privileges can read from a
+   different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+ - `folder` (optional): the folder in the [Playground] from which to
+   obtain the list of files.  Must be one of `questions`, `sources`,
+   `static`, `templates`, or `modules`.  The default is `static`.
+ - `filename`: the name of the file to be deleted.  If the filename
+   does not exist, a success code is still returned.
+
+Required privileges: `admin` or `developer`
+
+Responses on failure: 
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid folder" if the value of `folder` is unknown.
+ - [400] "Missing filename." if a `filename` is not provided.
+
+Response on success: [204]
+
+Body of response: empty.
+
 ## <a name="playground_upload"></a>Upload files to the Playground
 
 Description: Saves one or more uploaded files to a folder in the [Playground].
@@ -1358,8 +1427,8 @@ Parameters:
    cookie or header).
  - `user_id` (optional): the user ID of the user whose [Playground]
    should be written to.  Only users with `admin` privileges can write
-   to a different user's [Playground].  The default is the current
-   user's user ID.
+   to a different user's [Playground].  The default is the user ID of the
+   owner of the API key.
  - `folder` (optional): the folder in the [Playground] to which the
    uploaded file(s) should be written.  Must be one of `questions`,
    `sources`, `static`, `templates`, or `modules`.
@@ -1377,7 +1446,7 @@ Responses on failure:
    process of saving files.
  - [400] "No file found." if no uploaded files were provided.
 
-Response on success: [200]
+Response on success: [204]
 
 Body of response: empty.
 
