@@ -825,7 +825,10 @@ class DAList(DAObject):
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
-            number = self.target_number
+            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+                number = 0
+            else:
+                number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
         if number is None and minimum is None:
@@ -899,6 +902,8 @@ class DAList(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
+        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            return 0
         return self.target_number
     def __len__(self):
         if self.ask_number:
@@ -1511,7 +1516,10 @@ class DADict(DAObject):
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         self._validate(item_object_type, complete_attribute, keys=keys)
         if number is None and self.ask_number:
-            number = self.target_number
+            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+                number = 0
+            else:
+                number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
         if number is None and minimum is None:
@@ -1663,6 +1671,8 @@ class DADict(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
+        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            return 0
         return self.target_number
     def __len__(self):
         if self.ask_number:
@@ -2038,7 +2048,10 @@ class DASet(DAObject):
         for elem in sorted(self.elements):
             text_type(elem)
         if number is None and self.ask_number:
-            number = self.target_number
+            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+                number = 0
+            else:
+                number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
         if number is None and minimum is None:
@@ -2076,6 +2089,8 @@ class DASet(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
+        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            return 0
         return self.target_number
     def __len__(self):
         if self.ask_number:
