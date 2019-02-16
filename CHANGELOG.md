@@ -4,6 +4,9 @@
 ### Changed
 - Group gathering with `ask_number=True` will use the value of
   `there_are_any` if it is defined and set to false.
+### Added
+- The `subject_as_html()` and `content_as_html()` methods of objects
+  generated from a `template`.
 
 ## [0.4.4] - 2019-02-15
 ### Added

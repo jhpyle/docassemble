@@ -1,74 +1,72 @@
-var ctx, color = "#000";	
+var daCtx, daColor = "#000";	
 
-//var theTop;
-//var theLeft;
-var theWidth;
-var aspectRatio;
-var theBorders;
-var waiter;
-var waitlimit;
-var isEmpty;
+var daTheWidth;
+var daAspectRatio;
+var daTheBorders;
+var daWaiter;
+var daWaitLimit;
+var daIsEmpty;
 
 function daInitializeSignature(){
-  aspectRatio = 0.4;
-  theBorders = 30;
-  waiter = 0;
-  waitlimit = 2;
-  isEmpty = 1;
+  daAspectRatio = 0.4;
+  daTheBorders = 30;
+  daWaiter = 0;
+  daWaitLimit = 2;
+  daIsEmpty = 1;
   setTimeout(function(){
     if (!isCanvasSupported()){
-      da_post({'success': 0});
+      daPost({'success': 0});
     }
-    newCanvas();
+    daNewCanvas();
     $(document).on("touchmove", function(event){event.preventDefault();});
   }, 500);
-  $(window).on('resize', function(){resizeCanvas()});
-  $(window).on('orientationchange', function(){resizeCanvas()});
+  $(window).on('resize', function(){daResizeCanvas()});
+  $(window).on('orientationchange', function(){daResizeCanvas()});
   
   $(".sigpalette").click(function(){
     $(".sigpalette").css("border-color", "#777");
     $(".sigpalette").css("border-style", "solid");
     $(this).css("border-color", "#fff");
     $(this).css("border-style", "dashed");
-    color = $(this).css("background-color");
-    ctx.beginPath();
-    ctx.lineJoin="round";
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
+    daColor = $(this).css("background-color");
+    daCtx.beginPath();
+    daCtx.lineJoin="round";
+    daCtx.strokeStyle = daColor;
+    daCtx.fillStyle = daColor;
   });
   $(".sigclear").click(function() {
-    newCanvas();
+    daNewCanvas();
   });
   $(".sigsave").click(function() {
-    if (isEmpty){
+    if (daIsEmpty){
       $("#errormess").removeClass("signotshowing");
       setTimeout(function(){ $("#errormess").addClass("signotshowing"); }, 3000);
     }
     else{
       $(".sigclear").attr('disabled', true);
       $(".sigsave").attr('disabled', true);
-      saveCanvas();
+      daSaveCanvas();
     }
   });
 }
 
 // function to setup a new canvas for drawing
 
-function resizeCanvas(){
+function daResizeCanvas(){
   //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
   setTimeout(function(){
-    newCanvas();
+    daNewCanvas();
   }, 200);
   //console.log("I resized");
   return;
-  // var cheight = $(window).width()*aspectRatio;
+  // var cheight = $(window).width()*daAspectRatio;
   // if (cheight > $(window).height()-theTop){
   //   cheight = $(window).height()-theTop;
   // }
   // if (cheight > 350){
   //   cheight = 350;
   // }
-  // var cwidth = $(window).width() - theBorders;
+  // var cwidth = $(window).width() - daTheBorders;
   
   // $("#sigcontent").height(cheight);
   // //$("#sigcontent").css('top', ($("#sigheader").height() + $("#sigtoppart").height()) + "px");
@@ -77,28 +75,28 @@ function resizeCanvas(){
   // $("#sigcanvas").height(cheight);
   // theTop = $("#sigcanvas").offset().top;
   // theLeft = $("#sigcanvas").offset().left;
-  // theWidth = cwidth/100.0;
-  // if (theWidth < 1){
-  //   theWidth = 1;
+  // daTheWidth = cwidth/100.0;
+  // if (daTheWidth < 1){
+  //   daTheWidth = 1;
   // }
   // return;
 }
 
-function saveCanvas(){
+function daSaveCanvas(){
   var dataURL = document.getElementById("sigcanvas").toDataURL();
   //console.log(dataURL)
-  daSpinnerTimeout = setTimeout(showSpinner, 1000);
-  da_post({'_success': 1, '_the_image': dataURL});
+  daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+  daPost({'_success': 1, '_the_image': dataURL});
 }
 
-function newCanvas(){
-  console.log("running newCanvas");
-  var cwidth = $(window).width() - theBorders;
+function daNewCanvas(){
+  console.log("running daNewCanvas");
+  var cwidth = $(window).width() - daTheBorders;
   var contentwidth = $("#sigpage").outerWidth(true);
   if (cwidth > contentwidth ){
     cwidth = contentwidth;
   }
-  var cheight = cwidth*aspectRatio;
+  var cheight = cwidth*daAspectRatio;
   var otherHeights = $("#sigheader").outerHeight(true) + $("#sigtoppart").outerHeight(true) + $("#sigmidpart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
   console.log("height is " + $(window).height());
   console.log("otherHeights are " + otherHeights);
@@ -113,17 +111,17 @@ function newCanvas(){
   $("#sigcontent").html(canvas);
   //theTop = $("#sigcanvas").offset().top;
   //theLeft = $("#sigcanvas").offset().left;
-  theWidth = cwidth/100.0;
-  if (theWidth < 1){
-    theWidth = 1;
+  daTheWidth = cwidth/100.0;
+  if (daTheWidth < 1){
+    daTheWidth = 1;
   }
   
   // setup canvas
-  // ctx=document.getElementById("sigcanvas").getContext("2d");
+  // daCtx=document.getElementById("sigcanvas").getContext("2d");
   $("#sigcanvas").each(function(){
-    ctx = $(this)[0].getContext("2d");
-    ctx.strokeStyle = color;
-    ctx.lineWidth = theWidth;
+    daCtx = $(this)[0].getContext("2d");
+    daCtx.strokeStyle = daColor;
+    daCtx.lineWidth = daTheWidth;
   });
   
   // setup to trigger drawing on mouse or touch
@@ -134,7 +132,7 @@ function newCanvas(){
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
   //$("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, user-scalable=0");
-  isEmpty = 1;
+  daIsEmpty = 1;
   setTimeout(function () {
     window.scrollTo(0, 1);
   }, 10);
@@ -146,53 +144,53 @@ $.fn.drawTouch = function() {
     e = e.originalEvent;
     x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
     y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
-    ctx.beginPath();
-    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.lineJoin="round";
-    ctx.moveTo(x,y);
-    if (isEmpty){
+    daCtx.beginPath();
+    daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+    daCtx.fill();
+    daCtx.beginPath();
+    daCtx.lineJoin="round";
+    daCtx.moveTo(x,y);
+    if (daIsEmpty){
       $(".sigsave").prop("disabled", false);
-      isEmpty = 0;
+      daIsEmpty = 0;
     }
   };
   var move = function(e) {
     e.preventDefault();
-    if (waiter % waitlimit == 0){
+    if (daWaiter % daWaitLimit == 0){
       e = e.originalEvent;
       x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
       y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
-      ctx.lineTo(x,y);
-      ctx.stroke();
-      if (isEmpty){
-	isEmpty = 0;
+      daCtx.lineTo(x,y);
+      daCtx.stroke();
+      if (daIsEmpty){
+	daIsEmpty = 0;
       }
     }
-    waiter++;
-    //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
-    //ctx.beginPath();
-    //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    //ctx.fill();
+    daWaiter++;
+    //daCtx.fillRect(x-0.5*daTheWidth,y-0.5*daTheWidth,daTheWidth,daTheWidth);
+    //daCtx.beginPath();
+    //daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+    //daCtx.fill();
   };
   var moveline = function(e) {
-    waiter = 0;
+    daWaiter = 0;
     move(e);
   }
   var dot = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    ctx.lineJoin="round";
+    daCtx.lineJoin="round";
     x = e.pageX-$("#sigcanvas").offset().left;
     y = e.pageY-$("#sigcanvas").offset().top;
-    ctx.beginPath();
-    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.moveTo(x,y);
-    if (isEmpty){
-      isEmpty = 0;
+    daCtx.beginPath();
+    daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+    daCtx.fill();
+    daCtx.moveTo(x,y);
+    if (daIsEmpty){
+      daIsEmpty = 0;
     }
-    //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
+    //daCtx.fillRect(x-0.5*daTheWidth,y-0.5*daTheWidth,daTheWidth,daTheWidth);
     //console.log("Got click");
   };
   $(this).on("click", dot);
@@ -206,38 +204,38 @@ $.fn.drawTouch = function() {
 $.fn.drawPointer = function() {
   var start = function(e) {
     e = e.originalEvent;
-    ctx.beginPath();
-    ctx.lineJoin="round";
+    daCtx.beginPath();
+    daCtx.lineJoin="round";
     x = e.pageX-$("#sigcanvas").offset().left;
     y = e.pageY-$("#sigcanvas").offset().top;
-    ctx.moveTo(x,y);
-    if (isEmpty){
-      isEmpty = 0;
+    daCtx.moveTo(x,y);
+    if (daIsEmpty){
+      daIsEmpty = 0;
     }
-    //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    //ctx.fill();
+    //daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+    //daCtx.fill();
   };
   var move = function(e) {
     e.preventDefault();
-    if (waiter % waitlimit == 0){
+    if (daWaiter % daWaitLimit == 0){
       e = e.originalEvent;
       x = e.pageX-$("#sigcanvas").offset().left;
       y = e.pageY-$("#sigcanvas").offset().top;
-      ctx.lineTo(x,y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x,y);
-      if (isEmpty){
-	isEmpty = 0;
+      daCtx.lineTo(x,y);
+      daCtx.stroke();
+      daCtx.beginPath();
+      daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+      daCtx.fill();
+      daCtx.beginPath();
+      daCtx.moveTo(x,y);
+      if (daIsEmpty){
+	daIsEmpty = 0;
       }
     }
-    //waiter++;
+    //daWaiter++;
   };
   var moveline = function(e) {
-    waiter = 0;
+    daWaiter = 0;
     move(e);
   };
   $(this).on("MSPointerDown", start);
@@ -252,35 +250,35 @@ $.fn.drawMouse = function() {
     clicked = 1;
     x = e.pageX-$("#sigcanvas").offset().left;
     y = e.pageY-$("#sigcanvas").offset().top;
-    ctx.beginPath();
-    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.lineJoin="round";
-    ctx.moveTo(x,y);
-    if (isEmpty){
-      isEmpty = 0;
+    daCtx.beginPath();
+    daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+    daCtx.fill();
+    daCtx.beginPath();
+    daCtx.lineJoin="round";
+    daCtx.moveTo(x,y);
+    if (daIsEmpty){
+      daIsEmpty = 0;
     }
   };
   var move = function(e) {
-    if(clicked && waiter % waitlimit == 0){
+    if(clicked && daWaiter % daWaitLimit == 0){
       x = e.pageX-$("#sigcanvas").offset().left;
       y = e.pageY-$("#sigcanvas").offset().top;
-      ctx.lineTo(x,y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x,y);
-      if (isEmpty){
-	isEmpty = 0;
+      daCtx.lineTo(x,y);
+      daCtx.stroke();
+      daCtx.beginPath();
+      daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
+      daCtx.fill();
+      daCtx.beginPath();
+      daCtx.moveTo(x,y);
+      if (daIsEmpty){
+	daIsEmpty = 0;
       }
     }
-    //waiter++;
+    //daWaiter++;
   };
   var stop = function(e) {
-    waiter = 0;
+    daWaiter = 0;
     move(e);
     clicked = 0;
   };
@@ -289,7 +287,7 @@ $.fn.drawMouse = function() {
   $(window).on("mouseup", stop);
 };
 
-function da_post(params) {
+function daPost(params) {
   for(var key in params) {
     if(params.hasOwnProperty(key)) {
       var hiddenField = document.getElementById(key);
@@ -311,10 +309,10 @@ function isCanvasSupported(){
   return !!(elem.getContext && elem.getContext('2d'));
 }
   
-var placeSearch, autocomplete, base_id;
+var daPlaceSearch, daAutocomplete, daBaseId;
 
-function initAutocomplete(id) {
-    base_id = id;
+function daInitAutocomplete(id) {
+    daBaseId = id;
     var timePeriod = 0;
     try {
 	google;
@@ -323,15 +321,15 @@ function initAutocomplete(id) {
 	timePeriod = 1000;
     }
     setTimeout(function(){
-	autocomplete = new google.maps.places.Autocomplete(
-	    (document.getElementById(base_id)),
+	daAutocomplete = new google.maps.places.Autocomplete(
+	    (document.getElementById(daBaseId)),
 	    {types: ['geocode']});
-	autocomplete.addListener('place_changed', fillInAddress);
+	daAutocomplete.addListener('place_changed', daFillInAddress);
     }, timePeriod);
 }
 
-function fillInAddress() {
-  var base_varname = atob(base_id).replace(/.address$/, '');
+function daFillInAddress() {
+  var base_varname = atob(daBaseId).replace(/.address$/, '');
   base_varname = base_varname.replace(/[\[\]]/g, '.');
   var re = new RegExp('^' + base_varname + '\\.(.*)');
   var componentForm = {
@@ -366,7 +364,7 @@ function fillInAddress() {
       }
     }
   });
-  var place = autocomplete.getPlace();
+  var place = daAutocomplete.getPlace();
   if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
     document.getElementById(id_for_part['address']).value = '';
   }
@@ -432,7 +430,7 @@ function fillInAddress() {
   }
 }
 
-function geolocate() {
+function daGeolocate() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var geolocation = {
@@ -443,7 +441,7 @@ function geolocate() {
 	center: geolocation,
 	radius: position.coords.accuracy
       });
-      autocomplete.setBounds(circle.getBounds());
+      daAutocomplete.setBounds(circle.getBounds());
     });
   }
 }

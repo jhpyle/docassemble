@@ -2918,6 +2918,20 @@ class DALazyTemplate(DAObject):
             return dict(instanceName=self.instanceName)
         else:
             return dict()
+    def subject_as_html(self, **kwargs):
+        the_args = dict()
+        for key, val in kwargs.items():
+            the_args[key] = val
+        the_args['status'] = docassemble.base.functions.this_thread.interview_status
+        the_args['question'] = docassemble.base.functions.this_thread.current_question
+        return docassemble.base.filter.markdown_to_html(self.subject, **the_args)
+    def content_as_html(self, **kwargs):
+        the_args = dict()
+        for key, val in kwargs.items():
+            the_args[key] = val
+        the_args['status'] = docassemble.base.functions.this_thread.interview_status
+        the_args['question'] = docassemble.base.functions.this_thread.current_question
+        return docassemble.base.filter.markdown_to_html(self.content, **the_args)
     @property
     def subject(self):
         if not hasattr(self, 'source_subject'):

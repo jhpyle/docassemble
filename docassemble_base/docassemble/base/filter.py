@@ -1135,10 +1135,12 @@ def rtf_two_col(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text + '[MANUALSKIP]'
 
-def emoji_html(text, status=None, images=None):
+def emoji_html(text, status=None, question=None, images=None):
     #logmessage("Got to emoji_html")
+    if status is not None and question is None:
+        question = status.question
     if images is None:
-        images = status.question.interview.images
+        images = question.interview.images
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
@@ -1210,7 +1212,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                     a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                     #logmessage("string is now " + text_type(a) + "\n")
     if status is not None and question.interview.scan_for_emojis:
-        a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
+        a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), a)
     a = html_filter(text_type(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
     #logmessage("before: " + a)
     if use_pandoc:
@@ -1232,13 +1234,13 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if do_terms and question is not None and term_start.search(result):
         if status is not None:
             if len(question.terms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status, question=question)), result)
             if len(question.autoterms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status, question=question)), result)
         if question.language in question.interview.terms and len(question.interview.terms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status)), result)
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status, question=question)), result)
         if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status)), result)
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = result[3:-4]
@@ -1271,10 +1273,10 @@ def noquote(string):
     #return json.dumps(string.replace('\n', ' ').rstrip())
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
-def add_terms(termname, terms, status=None):
+def add_terms(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status)) + '>' + text_type(termname) + '</a>')
+        return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return '[[' + termname + ']]'

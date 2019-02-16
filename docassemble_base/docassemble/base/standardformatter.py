@@ -1734,13 +1734,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if autocomplete_id:
         status.extra_scripts.append("""
 <script>
-  initAutocomplete(""" + json.dumps(autocomplete_id) + """);
+  daInitAutocomplete(""" + json.dumps(autocomplete_id) + """);
 </script>
 """)
     if len(status.maps):
         map_js = """\
     <script>
-      map_info = [""" + ", ".join(status.maps) + """];
+      daMapInfo = [""" + ", ".join(status.maps) + """];
     </script>
 """
         status.extra_scripts.append(map_js)
@@ -1761,14 +1761,14 @@ def add_validation(extra_scripts, validation_rules, field_error):
         error_mess = dict()
         for key, val in field_error.items():
             error_mess[key] = val
-        error_show = "\n  validator.showErrors(" + json.dumps(error_mess) + ");"
+        error_show = "\n  daValidator.showErrors(" + json.dumps(error_mess) + ");"
     extra_scripts.append("""<script>
-  var validation_rules = """ + json.dumps(validation_rules) + """;
-  validation_rules.submitHandler = daValidationHandler;
-  validation_rules.onfocusout = injectTrim($.validator.defaults.onfocusout);
+  var daValidationRules = """ + json.dumps(validation_rules) + """;
+  daValidationRules.submitHandler = daValidationHandler;
+  daValidationRules.onfocusout = daInjectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
     //console.log("Running validator")
-    var validator = $("#daform").validate(validation_rules);""" + error_show + """
+    var daValidator = $("#daform").validate(daValidationRules);""" + error_show + """
   }
 </script>""")
 

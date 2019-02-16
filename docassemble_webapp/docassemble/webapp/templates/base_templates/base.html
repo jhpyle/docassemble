@@ -100,7 +100,7 @@
     <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <script>
-      var whichButton = null;
+      var daWhichButton = null;
       $( document ).ready(function(){
         {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
         $("#email").focus();
@@ -116,7 +116,7 @@
           });
         }, 3000);
         $(".btn-da").click(function(){
-          whichButton = this;
+          daWhichButton = this;
         });
         $(".form").on('submit', function(){
           $(this).find(".btn-da").each(function(){
@@ -128,13 +128,13 @@
             setTimeout(function(){
               $(the_button).prop("disabled", true);
             }, 1);
-            if (this != whichButton){
+            if (this != daWhichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
               $(this).addClass("btn-secondary");
             }
             else{
-              $(whichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
-              $(whichButton).addClass("btn-success");
+              $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
+              $(daWhichButton).addClass("btn-success");
             }
           });
         });

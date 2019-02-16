@@ -1695,16 +1695,20 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
     #return (dict(peer=num_peer, help=len(potential_partners)))
     return result
     
-def do_redirect(url, is_ajax, is_json):
+def do_redirect(url, is_ajax, is_json, is_js):
     if is_ajax:
         return jsonify(action='redirect', url=url, csrf_token=generate_csrf())
-    else:
-        if is_json:
-            if re.search(r'\?', url):
-                url = url + '&json=1'
-            else:
-                url = url + '?json=1'
-        return redirect(url)
+    if is_json:
+        if re.search(r'\?', url):
+            url = url + '&json=1'
+        else:
+            url = url + '?json=1'
+    if is_js:
+        if re.search(r'\?', url):
+            url = url + '&js=1'
+        else:
+            url = url + '?js=1'
+    return redirect(url)
 
 def do_refresh(is_ajax, yaml_filename):
     if is_ajax:
@@ -1712,12 +1716,50 @@ def do_refresh(is_ajax, yaml_filename):
     else:
         return redirect(url_for('index', i=yaml_filename))
 
-def standard_scripts(interview_language=DEFAULT_LANGUAGE):
+def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
     if interview_language in ('ar', 'cs', 'et', 'he', 'ka', 'nl', 'ro', 'th', 'zh', 'az', 'da', 'fa', 'hu', 'kr', 'no', 'ru', 'tr', 'bg', 'de', 'fi', 'id', 'kz', 'pl', 'sk', 'uk', 'ca', 'el', 'fr', 'it', 'sl', 'uz', 'cr', 'es', 'gl', 'ja', 'lt', 'pt', 'sv', 'vi'):
-        fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js') + '"></script>'
+        fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js', _external=external) + '"></script>'
     else:
         fileinput_locale = ''
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js') + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + fileinput_locale + '\n    <script src="' + url_for('static', filename='app/app.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js') + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', _external=external) + '"></script>' + fileinput_locale + '\n    <script src="' + url_for('static', filename='app/app.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js', _external=external) + '"></script>'
+
+def additional_scripts(interview_status, yaml_filename):
+    scripts = ''
+    interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
+    interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
+    if 'google maps api key' in google_config:
+        api_key = google_config.get('google maps api key')
+    elif 'api key' in google_config:
+        api_key = google_config.get('api key')
+    else:
+        api_key = None
+    if 'analytics id' in google_config:
+        ga_id = google_config.get('analytics id')
+    else:
+        ga_id = None
+    if api_key is not None:
+        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+    if ga_id is not None:
+        scripts += """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      function daPageview(){
+        if (daQuestionID != null){
+          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID.replace(/[^A-Za-z0-9]+/g, '_')});
+        }
+      }
+    </script>
+"""
+    return scripts
+
+def additional_css(interview_status):
+    start_output = ''
+    if len(interview_status.extra_css):
+        start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+    return start_output
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
     if bootstrap_theme is None:
@@ -4861,9 +4903,26 @@ def title_converter(content, part, status):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
     return docassemble.base.util.markdown_to_html(content, status=status)
 
+#PPP
+@app.route("/test_embed", methods=['GET'])
+def test_embed():
+    if not DEBUG:
+        abort(404)
+    yaml_filename = request.args('i', final_default_yaml_filename)
+    user_dict = fresh_dictionary()
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web'))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except:
+        pass
+    css = global_css + additional_css(interview_status)
+    scripts = standard_scripts(external=True) + additional_scripts(interview_status, yaml_filename)
+    return render_template('pages/test_embed.html', interview_name=yaml_filename, scripts=scripts, css=css), 200
+
 @app.route("/interview", methods=['POST', 'GET'])
 def index():
-    if 'ajax' in request.form and int(request.form['ajax']):
+    if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
     else:
         is_ajax = False
@@ -4874,12 +4933,19 @@ def index():
         #     response.set_cookie('secret', session['newsecret'])
         #     del session['newsecret']
         #     return response
-    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if (request.method == 'POST' and 'json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         the_interface = 'json'
         is_json = True
+        is_js = False
+    elif 'js_target' in request.args and request.args['js_target'] != '':
+        the_interface = 'web'
+        js_target = request.args['js_target']
+        is_json = False
+        is_js = True
     else:
         the_interface = 'web'
         is_json = False
+        is_js = False        
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
     #logmessage("index: session uid is " + str(session_id))
@@ -4999,7 +5065,7 @@ def index():
                 del session['key_logged']
             need_to_resave = True
             need_to_reset = True
-        elif not (is_ajax or is_json):
+        elif not (is_ajax or is_json or is_js):
             #logmessage("index: need_to_reset is True because not ajax/json and yaml_parameter is None")
             need_to_reset = True
     if session_parameter is not None:
@@ -5085,7 +5151,7 @@ def index():
         #logmessage("index: there were args")
         if 'action' in request.args:
             session['action'] = request.args['action']
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json)
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, is_js)
             if set_cookie:
                 response.set_cookie('secret', secret)
             if expire_visitor_secret:
@@ -5112,7 +5178,7 @@ def index():
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, is_js)
         if set_cookie:
             response.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -6322,18 +6388,18 @@ def index():
     if interview_status.question.question_type == "signin":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
+        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, is_js)
     if interview_status.question.question_type == "register":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json)
+        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, is_js)
     if interview_status.question.question_type == "leave":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax, is_json)
+            return do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
         else:
-            return do_redirect(exit_page, is_ajax, is_json)
+            return do_redirect(exit_page, is_ajax, is_json, is_js)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
@@ -6348,9 +6414,9 @@ def index():
         delete_session_for_interview()
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            response = do_redirect(interview_status.questionText, is_ajax, is_json)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json)
+            response = do_redirect(exit_page, is_ajax, is_json, is_js)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout()
@@ -6361,9 +6427,9 @@ def index():
         release_lock(user_code, yaml_filename)
         delete_session()
         if interview_status.questionText != '':
-            response = do_redirect(interview_status.questionText, is_ajax, is_json)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json)
+            response = do_redirect(exit_page, is_ajax, is_json, is_js)
         if current_user.is_authenticated:
             flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
@@ -6419,7 +6485,7 @@ def index():
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json)
+        response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
     else:
         response_to_send = None
     # Why do this?  To prevent loops of redirects?
@@ -6478,36 +6544,8 @@ def index():
         question_id = interview_status.question.id
     else:
         question_id = None;
-    interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
-    interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
     if not is_ajax:
-        scripts = standard_scripts(interview_language=current_language)
-        if 'google maps api key' in google_config:
-            api_key = google_config.get('google maps api key')
-        elif 'api key' in google_config:
-            api_key = google_config.get('api key')
-        else:
-            api_key = None
-        if 'analytics id' in google_config:
-            ga_id = google_config.get('analytics id')
-        else:
-            ga_id = None
-        if api_key is not None:
-            scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
-        if ga_id is not None:
-            scripts += """
-    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      function daPageview(){
-        if (daQuestionID != null){
-          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID.replace(/[^A-Za-z0-9]+/g, '_')});
-        }
-      }
-    </script>
-"""
+        scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
         if 'javascript' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
@@ -6586,15 +6624,19 @@ def index():
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
 #      //var daNextAction = """ + json.dumps(next_action_review) + """;
-        scripts += """
-    <script type="text/javascript" charset="utf-8">
-      var map_info = null;
-      var whichButton = null;
-      var socket = null;
-      var chatHistory = [];
+        if 'analytics id' in google_config:
+            ga_id = google_config.get('analytics id')
+        else:
+            ga_id = None
+        the_js = """\
+      var daMapInfo = null;
+      var daWhichButton = null;
+      var daSocket = null;
+      var daChatHistory = [];
       var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
+      var daJsEmbed = """ + ('true' if is_js else 'false') + """;
       var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
@@ -6605,7 +6647,7 @@ def index():
       var daChatMode = """ + json.dumps(chat_mode) + """;
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
-      var notYetScrolled = true;
+      var daNotYetScrolled = true;
       var daBeingControlled = """ + being_controlled + """;
       var daInformedChanged = false;
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
@@ -6617,15 +6659,15 @@ def index():
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var fieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'];
-      var varlookup;
-      var varlookuprev;
-      var valLookup;
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'];
+      var daVarLookup;
+      var daVarLookupRev;
+      var daValLookup;
       function getField(fieldName){
-        if (typeof valLookup[fieldName] == "undefined"){
+        if (typeof daValLookup[fieldName] == "undefined"){
           var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof varlookup[btoa(fieldName)] != "undefined"){
-            fieldName = varlookup[btoa(fieldName)];
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName)] != "undefined"){
+            fieldName = daVarLookup[btoa(fieldName)];
             fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
           var varList = $("[name='" + fieldNameEscaped + "']");
@@ -6643,7 +6685,7 @@ def index():
           }
         }
         else {
-          elem = valLookup[fieldName];
+          elem = daValLookup[fieldName];
         }
         return elem;
       }
@@ -6728,18 +6770,18 @@ def index():
         }
         return theVal;
       }
-      function formAsJSON(){
+      function daFormAsJSON(){
         var formData = $("#daform").serializeArray();
         var data = Object();
         var n = formData.length;
         for (var i = 0; i < n; ++i){
           var key = formData[i]['name'];
           var val = formData[i]['value'];
-          if ($.inArray(key, fieldsToSkip) != -1 || key.startsWith('_ignore')){
+          if ($.inArray(key, daFieldsToSkip) != -1 || key.startsWith('_ignore')){
             continue;
           }
-          if (typeof varlookuprev[key] != "undefined"){
-            data[atob(varlookuprev[key])] = val;
+          if (typeof daVarLookupRev[key] != "undefined"){
+            data[atob(daVarLookupRev[key])] = val;
           }
           else{
             data[atob(key)] = val;
@@ -6748,12 +6790,12 @@ def index():
         return JSON.stringify(data);
       }
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
-      function preloadImage(url){
+      function daPreloadImage(url){
         var img = new Image();
         img.src = url;
       }
-      preloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
-      function show_help_tab(){
+      daPreloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
+      function daShowHelpTab(){
           $('#helptoggle').tab('show');
       }
       function flash(message, priority){
@@ -6803,7 +6845,7 @@ def index():
               args = {};
           }
           var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -6827,7 +6869,7 @@ def index():
               args = {};
           }
           var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -6860,7 +6902,7 @@ def index():
           }
         });
       }
-      function inform_about(subject){
+      function daInformAbout(subject){
         if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
           return;
         }
@@ -6902,12 +6944,12 @@ def index():
         }, waitPeriod);
       }
       // function daCloseSocket(){
-      //   if (typeof socket !== 'undefined' && socket.connected){
-      //     //socket.emit('terminate');
+      //   if (typeof daSocket !== 'undefined' && daSocket.connected){
+      //     //daSocket.emit('terminate');
       //     //io.unwatch();
       //   }
       // }
-      function publishMessage(data){
+      function daPublishMessage(data){
         var newDiv = document.createElement('li');
         $(newDiv).addClass("list-group-item");
         if (data.is_self){
@@ -6925,46 +6967,46 @@ def index():
         $(newDiv).html(data.message);
         $("#daCorrespondence").append(newDiv);
       }
-      function scrollChat(){
+      function daScrollChat(){
         var chatScroller = $("#daCorrespondence");
         if (chatScroller.length){
           var height = chatScroller[0].scrollHeight;
           //console.log("Slow scrolling to " + height);
           if (height == 0){
-            notYetScrolled = true;
+            daNotYetScrolled = true;
             return;
           }
           chatScroller.animate({scrollTop: height}, 800);
         }
         else{
-          console.log("scrollChat: error");
+          console.log("daScrollChat: error");
         }
       }
-      function scrollChatFast(){
+      function daScrollChatFast(){
         var chatScroller = $("#daCorrespondence");
         if (chatScroller.length){
           var height = chatScroller[0].scrollHeight;
           if (height == 0){
-            notYetScrolled = true;
+            daNotYetScrolled = true;
             return;
           }
           //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
           chatScroller.scrollTop(height);
         }
         else{
-          console.log("scrollChatFast: error");
+          console.log("daScrollChatFast: error");
         }
       }
       function daSender(){
         //console.log("daSender");
         if ($("#daMessage").val().length){
-          socket.emit('chatmessage', {data: $("#daMessage").val()});
+          daSocket.emit('chatmessage', {data: $("#daMessage").val()});
           $("#daMessage").val("");
           $("#daMessage").focus();
         }
         return false;
       }
-      function show_control(mode){
+      function daShowControl(mode){
         //console.log("You are now being controlled");
         if ($("body").hasClass("dacontrolled")){
           return;
@@ -6984,7 +7026,7 @@ def index():
           $(newDiv).show();
         }
       }
-      function hide_control(){
+      function daHideControl(){
         //console.log("You are no longer being controlled");
         if (! $("body").hasClass("dacontrolled")){
           return;
@@ -6999,120 +7041,120 @@ def index():
         }, 2000);
       }
       function daInitializeSocket(){
-        if (socket != null){
-            if (socket.connected){
+        if (daSocket != null){
+            if (daSocket.connected){
                 //console.log("Calling connectagain");
                 if (daChatStatus == 'ready'){
-                  socket.emit('connectagain', {data: 1});
+                  daSocket.emit('connectagain', {data: 1});
                 }
                 if (daBeingControlled){
-                    show_control('animated');
-                    socket.emit('start_being_controlled', {data: 1});
+                    daShowControl('animated');
+                    daSocket.emit('start_being_controlled', {data: 1});
                 }
             }
             else{
-                //console.log('daInitializeSocket: socket.connect()');
-                socket.connect();
+                //console.log('daInitializeSocket: daSocket.connect()');
+                daSocket.connect();
             }
             return;
         }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
+            daSocket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
+            daSocket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
         }
-        //console.log("daInitializeSocket: socket is " + socket);
-        if (socket != null){
-            socket.on('connect', function() {
-                if (socket == null){
+        //console.log("daInitializeSocket: socket is " + daSocket);
+        if (daSocket != null){
+            daSocket.on('connect', function() {
+                if (daSocket == null){
                     console.log("Error: socket is null");
                     return;
                 }
-                //console.log("Connected socket with sid " + socket.id);
+                //console.log("Connected socket with sid " + daSocket.id);
                 if (daChatStatus == 'ready'){
                     daChatStatus = 'on';
-                    display_chat();
-                    pushChanges();
+                    daDisplayChat();
+                    daPushChanges();
                     //daTurnOnChat();
                     //console.log("Emitting chat_log from on connect");
-                    socket.emit('chat_log', {data: 1});
+                    daSocket.emit('chat_log', {data: 1});
                 }
                 if (daBeingControlled){
-                    show_control('animated')
-                    socket.emit('start_being_controlled', {data: 1});
+                    daShowControl('animated')
+                    daSocket.emit('start_being_controlled', {data: 1});
                 }
             });
-            socket.on('chat_log', function(arg) {
+            daSocket.on('chat_log', function(arg) {
                 //console.log("Got chat_log");
                 $("#daCorrespondence").html('');
-                chatHistory = []; 
+                daChatHistory = []; 
                 var messages = arg.data;
                 for (var i = 0; i < messages.length; ++i){
-                    chatHistory.push(messages[i]);
-                    publishMessage(messages[i]);
+                    daChatHistory.push(messages[i]);
+                    daPublishMessage(messages[i]);
                 }
-                scrollChatFast();
+                daScrollChatFast();
             });
-            socket.on('chatready', function(data) {
+            daSocket.on('chatready', function(data) {
                 //var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                 //console.log('chatready');
             });
-            socket.on('terminate', function() {
+            daSocket.on('terminate', function() {
                 //console.log("interview: terminating socket");
-                socket.disconnect();
+                daSocket.disconnect();
             });
-            socket.on('controllerstart', function(){
+            daSocket.on('controllerstart', function(){
               daBeingControlled = true;
-              show_control('animated');
+              daShowControl('animated');
             });
-            socket.on('controllerexit', function(){
+            daSocket.on('controllerexit', function(){
               daBeingControlled = false;
               //console.log("Hiding control 2");
-              hide_control();
+              daHideControl();
               if (daChatStatus != 'on'){
-                if (socket != null && socket.connected){
+                if (daSocket != null && daSocket.connected){
                   //console.log('Terminating interview socket because control over');
-                  socket.emit('terminate');
+                  daSocket.emit('terminate');
                 }
               }
             });
-            socket.on('disconnect', function() {
+            daSocket.on('disconnect', function() {
                 //console.log("Disconnected socket");
-                //socket = null;
+                //daSocket = null;
             });
-            socket.on('reconnected', function() {
+            daSocket.on('reconnected', function() {
                 //console.log("Reconnected");
                 daChatStatus = 'on';
-                display_chat();
-                pushChanges();
+                daDisplayChat();
+                daPushChanges();
                 daTurnOnChat();
                 //console.log("Emitting chat_log from reconnected");
-                socket.emit('chat_log', {data: 1});
+                daSocket.emit('chat_log', {data: 1});
             });
-            socket.on('mymessage', function(arg) {
+            daSocket.on('mymessage', function(arg) {
                 //console.log("Received " + arg.data);
                 $("#daPushResult").html(arg.data);
             });
-            socket.on('departure', function(arg) {
+            daSocket.on('departure', function(arg) {
                 //console.log("Departure " + arg.numpartners);
                 if (arg.numpartners == 0){
                     daCloseChat();
                 }
             });
-            socket.on('chatmessage', function(arg) {
+            daSocket.on('chatmessage', function(arg) {
                 //console.log("Received chat message " + arg.data);
-                chatHistory.push(arg.data);
-                publishMessage(arg.data);
-                scrollChat();
-                inform_about('chatmessage');
+                daChatHistory.push(arg.data);
+                daPublishMessage(arg.data);
+                daScrollChat();
+                daInformAbout('chatmessage');
             });
-            socket.on('newpage', function(incoming) {
+            daSocket.on('newpage', function(incoming) {
                 //console.log("newpage received");
                 var data = incoming.obj;
                 daProcessAjax(data, $("#daform"), 1);
             });
-            socket.on('controllerchanges', function(data) {
+            daSocket.on('controllerchanges', function(data) {
                 //console.log("controllerchanges: " + data.parameters);
                 var valArray = Object();
                 var values = JSON.parse(data.parameters);
@@ -7191,19 +7233,19 @@ def index():
             });
         }
       }
-      var checkinSeconds = """ + str(the_checkin_interval) + """;
-      var checkinInterval = null;
+      var daCheckinSeconds = """ + str(the_checkin_interval) + """;
+      var daCheckinInterval = null;
       var daReloader = null;
-      var dadisable = null;
+      var daDisable = null;
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
-      function unfake_html_response(text){
+      function daUnfakeHtmlResponse(text){
         text = text.replace(/^.*ABCDABOUNDARYSTARTABC/, '');
         text = text.replace(/ABCDABOUNDARYENDABC.*/, '');
         text = atob(text);
         return text;
       }
-      function injectTrim(handler){
+      function daInjectTrim(handler){
         return function (element, event) {
           if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
             element.value = $.trim(element.value);
@@ -7229,33 +7271,33 @@ def index():
         });
         $(form).find("input[name='_visible']").val(btoa(JSON.stringify(visibleElements)));
         $(form).each(function(){
-          $(this).find(':input').off('change', pushChanges);
+          $(this).find(':input').off('change', daPushChanges);
         });
         $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0");
-        if (checkinInterval != null){
-          clearInterval(checkinInterval);
+        if (daCheckinInterval != null){
+          clearInterval(daCheckinInterval);
         }
-        dadisable = setTimeout(function(){
+        daDisable = setTimeout(function(){
           $(form).find('input[type="submit"]').prop("disabled", true);
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
-        if (whichButton != null){
+        if (daWhichButton != null){
           $(".btn-da").each(function(){
-            if (this != whichButton){
+            if (this != daWhichButton){
               $(this).removeClass("btn-primary btn-info btn-warning btn-danger btn-secondary");
               $(this).addClass("btn-light");
             }
           });
-          if ($(whichButton).hasClass("btn-success")){
-            $(whichButton).removeClass("btn-success");
-            $(whichButton).addClass("btn-primary");
+          if ($(daWhichButton).hasClass("btn-success")){
+            $(daWhichButton).removeClass("btn-success");
+            $(daWhichButton).addClass("btn-primary");
           }
           else{
-            $(whichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-success btn-light");
-            $(whichButton).addClass("btn-secondary");
+            $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-success btn-light");
+            $(daWhichButton).addClass("btn-secondary");
           }
         }
-        whichButton = null;
+        daWhichButton = null;
         if (daSubmitter != null){
           $('<input>').attr({
             type: 'hidden',
@@ -7275,7 +7317,7 @@ def index():
           name: 'ajax',
           value: '1'
         }).appendTo($(form));
-        daSpinnerTimeout = setTimeout(showSpinner, 1000);
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         var do_iframe_upload = false;
         if ($('input[name="_files"]').length){
           var filesToRead = 0;
@@ -7356,7 +7398,7 @@ def index():
                         //console.log("file read");
                         if (filesRead >= filesToRead){
                           //console.log("this is the last one!");
-                          resumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
+                          daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
                         }
                       };
                       image.src = reader.result;
@@ -7367,7 +7409,7 @@ def index():
                       filesRead++;
                       if (filesRead >= filesToRead){
                         //console.log("this is the last one!");
-                        resumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
+                        daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
                       }
                     }
                     //console.log("done checking type property");
@@ -7394,7 +7436,7 @@ def index():
           iframe.bind('load', function(){
             setTimeout(function(){
               try {
-                daProcessAjax($.parseJSON(unfake_html_response($("#uploadiframe").contents().text())), form, 1);
+                daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#uploadiframe").contents().text())), form, 1);
               }
               catch (e){
                 daShowErrorScreen(document.getElementById('uploadiframe').contentWindow.document.body.innerHTML);
@@ -7422,7 +7464,7 @@ def index():
         }
         return(false);
       }
-      function resumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
+      function daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
         $('<input>').attr({
           type: 'hidden',
           name: '_files_inline',
@@ -7461,21 +7503,21 @@ def index():
           });
         }
       }
-      function pushChanges(){
-        //console.log("pushChanges");
-        if (checkinSeconds == 0 || daShowIfInProcess){
+      function daPushChanges(){
+        //console.log("daPushChanges");
+        if (daCheckinSeconds == 0 || daShowIfInProcess){
           return;
         }
-        if (checkinInterval != null){
-          clearInterval(checkinInterval);
+        if (daCheckinInterval != null){
+          clearInterval(daCheckinInterval);
         }
         daCheckin();
-        checkinInterval = setInterval(daCheckin, checkinSeconds);
+        daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
       }
       function daProcessAjaxError(xhr, status, error){
         $("#dabody").html(xhr.responseText);
       }
-      function addScriptToHead(src){
+      function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
         var script = document.createElement("script");
         script.type = "text/javascript";
@@ -7512,8 +7554,8 @@ def index():
       }
       function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
-        if (dadisable != null){
-          clearTimeout(dadisable);
+        if (daDisable != null){
+          clearTimeout(daDisable);
         }
         daCsrf = data.csrf_token;
         if (data.action == 'body'){""" + forceFullScreen + """
@@ -7549,7 +7591,7 @@ def index():
             //console.log("Found one script");
             if (scripts[i].src != ""){
               //console.log("Added script to head");
-              addScriptToHead(scripts[i].src);
+              daAddScriptToHead(scripts[i].src);
             }
             else{
               eval(scripts[i].innerHTML);
@@ -7613,7 +7655,7 @@ def index():
           },
           dataType: 'json'
         });
-        daSpinnerTimeout = setTimeout(showSpinner, 1000);
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         e.preventDefault();
         return false;
       }
@@ -7626,17 +7668,17 @@ def index():
       }
       function daRingChat(){
         daChatStatus = 'ringing';
-        pushChanges();
+        daPushChanges();
       }
       function daTurnOnChat(){
         //console.log("Publishing from daTurnOnChat");
         $("#daChatOnButton").addClass("invisible");
         $("#daChatBox").removeClass("invisible");
         $("#daCorrespondence").html('');
-        for(var i = 0; i < chatHistory.length; i++){
-          publishMessage(chatHistory[i]);
+        for(var i = 0; i < daChatHistory.length; i++){
+          daPublishMessage(daChatHistory[i]);
         }
-        scrollChatFast();
+        daScrollChatFast();
         $("#daMessage").prop('disabled', false);
         if (daShowingHelp){
           $("#daMessage").focus();
@@ -7645,9 +7687,9 @@ def index():
       function daCloseChat(){
         //console.log('daCloseChat');
         daChatStatus = 'hangup';
-        pushChanges();
-        if (socket != null && socket.connected){
-          socket.disconnect();
+        daPushChanges();
+        if (daSocket != null && daSocket.connected){
+          daSocket.disconnect();
         }
       }
       // function daTurnOffChat(){
@@ -7658,7 +7700,7 @@ def index():
       //   $("#daSend").unbind();
       //   //daStartCheckingIn();
       // }
-      function display_chat(){
+      function daDisplayChat(){
         if (daChatStatus == 'off' || daChatStatus == 'observeonly'){
           $("#daChatBox").addClass("invisible");
           $("#daChatAvailable").addClass("invisible");
@@ -7676,7 +7718,7 @@ def index():
         }
         if (daChatStatus == 'waiting'){
           //console.log("I see waiting")
-          if (chatHistory.length > 0){
+          if (daChatHistory.length > 0){
             $("#daChatAvailable a i").removeClass("chat-active");
             $("#daChatAvailable a i").addClass("chat-inactive");
             $("#daChatAvailable").removeClass("invisible");
@@ -7700,7 +7742,7 @@ def index():
           $("#daChatOffButton").addClass("invisible");
           $("#daMessage").prop('disabled', true);
           $("#daSend").prop('disabled', true);
-          inform_about('chat');
+          daInformAbout('chat');
         }
         if (daChatStatus == 'on'){
           $("#daChatAvailable").removeClass("invisible");
@@ -7713,21 +7755,21 @@ def index():
             $("#daMessage").focus();
           }
           $("#daSend").prop('disabled', false);
-          inform_about('chat');
+          daInformAbout('chat');
         }
       }
       function daChatLogCallback(data){
         //console.log("daChatLogCallback: success is " + data.success);
         if (data.success){
           $("#daCorrespondence").html('');
-          chatHistory = []; 
+          daChatHistory = []; 
           var messages = data.messages;
           for (var i = 0; i < messages.length; ++i){
-            chatHistory.push(messages[i]);
-            publishMessage(messages[i]);
+            daChatHistory.push(messages[i]);
+            daPublishMessage(messages[i]);
           }
-          display_chat();
-          scrollChatFast();
+          daDisplayChat();
+          daScrollChatFast();
         }
       }
       function daRefreshSubmit(){
@@ -7822,7 +7864,7 @@ def index():
             $("#daPhoneMessage p").html(data.phone);
             $("#daPhoneAvailable").removeClass("invisible");
             daPhoneAvailable = true;
-            inform_about('phone');
+            daInformAbout('phone');
           }
           var statusChanged;
           if (daChatStatus == data.chat_status){
@@ -7833,7 +7875,7 @@ def index():
           }
           if (statusChanged){
             daChatStatus = data.chat_status;
-            display_chat();
+            daDisplayChat();
             if (daChatStatus == 'ready'){
               //console.log("calling initialize socket because ready");
               daInitializeSocket();
@@ -7869,11 +7911,11 @@ def index():
             if (!data.observerControl){
               daBeingControlled = false;
               //console.log("Hiding control 1");
-              hide_control();
+              daHideControl();
               if (daChatStatus != 'on'){
-                if (socket != null && socket.connected){
+                if (daSocket != null && daSocket.connected){
                   //console.log('Terminating interview socket because control is over');
-                  socket.emit('terminate');
+                  daSocket.emit('terminate');
                 }
               }
             }
@@ -7899,15 +7941,15 @@ def index():
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: formAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray())});
           }
         }
         else{
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: formAsJSON()});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: daFormAsJSON()});
           }
           else{
             datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode});
@@ -7935,11 +7977,11 @@ def index():
       }
       function daStopCheckingIn(){
         daCheckout();
-        if (checkinInterval != null){
-          clearInterval(checkinInterval);
+        if (daCheckinInterval != null){
+          clearInterval(daCheckinInterval);
         }
       }
-      function showSpinner(){
+      function daShowSpinner(){
         if ($("#question").length > 0){
           $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo("#dabody");
         }
@@ -7954,12 +7996,12 @@ def index():
         }
         daShowingSpinner = true;
       }
-      function hideSpinner(){
+      function daHideSpinner(){
         $("#daSpinner").remove();
         daShowingSpinner = false;
         daSpinnerTimeout = null;
       }
-      function adjustInputWidth(e){
+      function daAdjustInputWidth(e){
         var contents = $(this).val();
         var leftBracket = new RegExp('<', 'g');
         var rightBracket = new RegExp('>', 'g');
@@ -7973,7 +8015,7 @@ def index():
           $("#dawidth").remove();
         }, 0);
       }
-      function showNotifications(){
+      function daShowNotifications(){
         var n = daMessageLog.length;
         for (var i = 0; i < n; i++){
           var message = daMessageLog[i];
@@ -7988,7 +8030,7 @@ def index():
           }
         }
       }
-      function ignoreAllButTab(event){
+      function daIgnoreAllButTab(event){
         event = event || window.event;
         var code = event.keyCode;
         if (code != 9){
@@ -7999,7 +8041,7 @@ def index():
           return false;
         }
       }
-      function showIfCompare(theVal, showIfVal){
+      function daShowIfCompare(theVal, showIfVal){
         if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
           theVal = parseFloat(theVal);
         }
@@ -8024,9 +8066,9 @@ def index():
           daSpinnerTimeout = null;
         }
         if (daShowingSpinner){
-          hideSpinner();
+          daHideSpinner();
         }
-        notYetScrolled = true;
+        daNotYetScrolled = true;
         $(".helptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
@@ -8064,7 +8106,7 @@ def index():
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
-          whichButton = this;
+          daWhichButton = this;
         });
         $('#source').on('hide.bs.collapse', function (e) {
           $("#readability").slideUp();
@@ -8083,9 +8125,9 @@ def index():
         $('a[data-target="#help"], a[data-target="#question"]').on('shown.bs.tab', function (e) {
           if ($(this).data("target") == '#help'){
             daShowingHelp = 1;
-            if (notYetScrolled){
-              scrollChatFast();
-              notYetScrolled = false;
+            if (daNotYetScrolled){
+              daScrollChatFast();
+              daNotYetScrolled = false;
             }""" + debug_readability_help + """
           }
           else if ($(this).data("target") == '#question'){
@@ -8116,8 +8158,8 @@ def index():
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
         $("a.review-action").click(daReviewAction);
-        $("input.input-embedded").on('keyup', adjustInputWidth);
-        $("input.input-embedded").each(adjustInputWidth);
+        $("input.input-embedded").on('keyup', daAdjustInputWidth);
+        $("input.input-embedded").each(daAdjustInputWidth);
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
@@ -8165,7 +8207,7 @@ def index():
               }, 0);
             }
           });
-          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
           event.preventDefault();
         });
         $("#daChatOnButton").click(daRingChat);
@@ -8293,14 +8335,14 @@ def index():
           event.preventDefault();
           $('#questionlabel').tab('show');
         });
-        varlookup = Object();
-        varlookuprev = Object();
+        daVarLookup = Object();
+        daVarLookupRev = Object();
         if ($("input[name='_varnames']").length){
           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
-              varlookup[the_hash[key]] = key;
-              varlookuprev[key] = the_hash[key];
+              daVarLookup[the_hash[key]] = key;
+              daVarLookupRev[key] = the_hash[key];
             }
           }
         }
@@ -8315,8 +8357,8 @@ def index():
               if (checkboxName != baseName){
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof varlookup[btoa(transBaseName)] != "undefined")){
-                   transBaseName = atob(varlookup[btoa(transBaseName)]);
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName)] != "undefined")){
+                   transBaseName = atob(daVarLookup[btoa(transBaseName)]);
                 }
                 var convertedName;
                 try {
@@ -8325,16 +8367,16 @@ def index():
                 catch (e) {
                   continue;
                 }
-                varlookuprev[btoa(transBaseName + bracketPart)] = btoa(baseName + "['" + convertedName + "']");
-                varlookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
-                varlookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
-                varlookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
+                daVarLookupRev[btoa(transBaseName + bracketPart)] = btoa(baseName + "['" + convertedName + "']");
+                daVarLookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                daVarLookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
+                daVarLookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
               }
             }
           }
         }
         daShowIfInProcess = true;
-        valLookup = Object();
+        daValLookup = Object();
         $(".jsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
@@ -8344,8 +8386,8 @@ def index():
           for (var i = 0; i < n; ++i){
             var showIfVar = btoa(jsInfo['vars'][i]);
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[showIfVar] != "undefined"){
-              showIfVar = varlookup[showIfVar];
+            if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
+              showIfVar = daVarLookup[showIfVar];
               showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             }
             var varList = $("[name='" + showIfVarEscaped + "']");
@@ -8356,7 +8398,7 @@ def index():
               varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
             }
             if (varList.length > 0){
-              valLookup[jsInfo['vars'][i]] = varList[0];
+              daValLookup[jsInfo['vars'][i]] = varList[0];
             }
             else{
               console.log("ERROR: could not set " + jsInfo['vars'][i]);
@@ -8416,9 +8458,9 @@ def index():
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof varlookup[showIfVar] != "undefined"){
-            //console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + varlookup[showIfVar]);
-            showIfVar = varlookup[showIfVar];
+          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
+            //console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + daVarLookup[showIfVar]);
+            showIfVar = daVarLookup[showIfVar];
             showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
           //console.log("showIfVar is now " + showIfVar);
@@ -8452,7 +8494,7 @@ def index():
               theVal = $(this).val();
             }
             //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
-            if(showIfCompare(theVal, showIfVal)){
+            if(daShowIfCompare(theVal, showIfVal)){
               //console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
@@ -8538,14 +8580,14 @@ def index():
         if ((daChatStatus == 'off' || daChatStatus == 'observeonly') && daChatAvailable == 'available'){
           daChatStatus = 'waiting';
         }
-        display_chat();
+        daDisplayChat();
         if (daBeingControlled){
-          show_control('fast');
+          daShowControl('fast');
         }
         if (daChatStatus == 'ready' || daBeingControlled){
           daInitializeSocket();
         }
-        if (daInitialized == false && checkinSeconds > 0){ // why was this set to always retrieve the chat log?
+        if (daInitialized == false && daCheckinSeconds > 0){ // why was this set to always retrieve the chat log?
           setTimeout(function(){
             //console.log("daInitialize call to chat_log in checkin");
             $.ajax({
@@ -8560,8 +8602,8 @@ def index():
         if (daInitialized == true){
           //console.log("Publishing from memory");
           $("#daCorrespondence").html('');
-          for(var i = 0; i < chatHistory.length; i++){
-            publishMessage(chatHistory[i]);
+          for(var i = 0; i < daChatHistory.length; i++){
+            daPublishMessage(daChatHistory[i]);
           }
         }
         if (daChatStatus != 'off'){
@@ -8577,7 +8619,7 @@ def index():
         }
         if (daSendChanges){
           $("#daform").each(function(){
-            $(this).find(':input').change(pushChanges);
+            $(this).find(':input').change(daPushChanges);
           });
         }
         daInitialized = true;
@@ -8594,16 +8636,16 @@ def index():
           }, 10);
         }
         if (daShowingSpinner){
-          hideSpinner();
+          daHideSpinner();
         }
-        if (checkinInterval != null){
-          clearInterval(checkinInterval);
+        if (daCheckinInterval != null){
+          clearInterval(daCheckinInterval);
         }
-        if (checkinSeconds > 0){
+        if (daCheckinSeconds > 0){
           setTimeout(daCheckin, 100);
-          checkinInterval = setInterval(daCheckin, checkinSeconds);
+          daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
         }
-        showNotifications();
+        daShowNotifications();
         if (daUsingGA){
           daPageview();
         }
@@ -8624,9 +8666,9 @@ def index():
         };
         $( window ).bind('unload', function() {
           daStopCheckingIn();
-          if (socket != null && socket.connected){
+          if (daSocket != null && daSocket.connected){
             //console.log('Terminating interview socket because window unloaded');
-            socket.emit('terminate');
+            daSocket.emit('terminate');
           }
         });
       });
@@ -8678,9 +8720,9 @@ def index():
       }
       function daInitMap(){
         maps = [];
-        map_info_length = map_info.length;
-        for (var i = 0; i < map_info_length; i++){
-          the_map = map_info[i];
+        map_info_length = daMapInfo.length;
+        for (var i = 0; i < daMapInfo_length; i++){
+          the_map = daMapInfo[i];
           var bounds = new google.maps.LatLngBounds();
           maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
           marker_length = the_map.markers.length;
@@ -8710,7 +8752,7 @@ def index():
         errorClass: 'help-block',
         errorPlacement: function(error, element) {
             var elementName = $(element).attr("name");
-            var lastInGroup = $.map(validation_rules['groups'], function(thefields, thename){
+            var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
               var fieldsArr;
               if (thefields.indexOf(elementName) >= 0) {
                 fieldsArr = thefields.split(" ");
@@ -8852,7 +8894,10 @@ def index():
           }
         } catch (e) {}
         return false;
-      });
+      });"""
+        scripts += """
+    <script type="text/javascript" charset="utf-8">
+""" + the_js + """
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -9023,9 +9068,7 @@ def index():
                     start_output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
                 else:
                     logmessage("index: could not find css file " + str(fileref))
-        start_output += global_css
-        if len(interview_status.extra_css):
-            start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+        start_output += global_css + additional_css(interview_status)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
@@ -9154,6 +9197,10 @@ def index():
         if return_fake_html:
             response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
+    elif is_js:
+        output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip()
+        response = make_response(output.encode('utf8'), '200 OK')
+        response.headers['Content-type'] = 'text/html; charset=utf-8'
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -9631,25 +9678,25 @@ def observer():
     userid = request.args.get('userid', None)
     observation_script = """
     <script>
-      var whichButton = null;
+      var daWhichButton = null;
       var daSendChanges = false;
       var daNoConnectionCount = 0;
       var daConnected = false;
       var daConfirmed = false;
-      var observerChangesInterval = null;
+      var daObserverChangesInterval = null;
       var daInitialized = false;
       var daShowingHelp = false;
       var daInformedChanged = false;
-      var dadisable = null;
+      var daDisable = null;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
-      window.turnOnControl = function(){
+      window.daTurnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
         daNoConnectionCount = 0;
-        resetPushChanges();
-        socket.emit('observerStartControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
+        daResetPushChanges();
+        daSocket.emit('observerStartControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
       }
-      window.turnOffControl = function(){
+      window.daTurnOffControl = function(){
         //console.log("Turning off control");
         if (!daSendChanges){
           //console.log("Already turned off");
@@ -9657,11 +9704,11 @@ def observer():
         }
         daSendChanges = false;
         daConfirmed = false;
-        stopPushChanges();
-        socket.emit('observerStopControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
+        daStopPushChanges();
+        daSocket.emit('observerStopControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
         return;
       }
-      function injectTrim(handler){
+      function daInjectTrim(handler){
         return function (element, event) {
           if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
             element.value = $.trim(element.value);
@@ -9673,32 +9720,32 @@ def observer():
         //console.log("observer: daValidationHandler");
         return(false);
       }
-      function stopPushChanges(){
-        if (observerChangesInterval != null){
-          clearInterval(observerChangesInterval);
+      function daStopPushChanges(){
+        if (daObserverChangesInterval != null){
+          clearInterval(daObserverChangesInterval);
         }
       }
-      function resetPushChanges(){
-        if (observerChangesInterval != null){
-          clearInterval(observerChangesInterval);
+      function daResetPushChanges(){
+        if (daObserverChangesInterval != null){
+          clearInterval(daObserverChangesInterval);
         }
-        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
+        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
       }
-      function pushChanges(){
+      function daPushChanges(){
         //console.log("Pushing changes");
-        if (observerChangesInterval != null){
-          clearInterval(observerChangesInterval);
+        if (daObserverChangesInterval != null){
+          clearInterval(daObserverChangesInterval);
         }
         if (!daSendChanges || !daConnected){
           return;
         }
-        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
-        socket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
+        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
+        daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
         $("#dabody").html(xhr.responseText);
       }
-      function addScriptToHead(src){
+      function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
         var script = document.createElement("script");
         script.type = "text/javascript";
@@ -9748,10 +9795,10 @@ def observer():
           skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
         }
         //console.log("Need to click on " + skey);
-        if (observerChangesInterval != null && embeddedJs == null && theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
-          clearInterval(observerChangesInterval);
+        if (daObserverChangesInterval != null && embeddedJs == null && theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
+          clearInterval(daObserverChangesInterval);
         }
-        socket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
+        daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
         if (embeddedJs != null){
           //console.log("Running the embedded js");
           eval(decodeURIComponent(embeddedJs));
@@ -9761,7 +9808,7 @@ def observer():
           return false;
         }
       }
-      function adjustInputWidth(e){
+      function daAdjustInputWidth(e){
         var contents = $(this).val();
         var leftBracket = new RegExp('<', 'g');
         var rightBracket = new RegExp('>', 'g');
@@ -9775,7 +9822,7 @@ def observer():
           $("#dawidth").remove();
         }, 0);
       }
-      function show_help_tab(){
+      function daShowHelpTab(){
           $('#helptoggle').tab('show');
       }
       function flash(message, priority){
@@ -9829,7 +9876,7 @@ def observer():
               args = {};
           }
           var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -9854,7 +9901,7 @@ def observer():
               args = {};
           }
           var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(showSpinner, 1000);
+          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
@@ -9916,8 +9963,8 @@ def observer():
             }
           });
         });
-        $("input.input-embedded").on('keyup', adjustInputWidth);
-        $("input.input-embedded").each(adjustInputWidth);
+        $("input.input-embedded").on('keyup', daAdjustInputWidth);
+        $("input.input-embedded").each(daAdjustInputWidth);
         $(".helptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
@@ -9963,7 +10010,7 @@ def observer():
               theVal = $(this).val();
             }
             //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
-            if($(this).parent().is(":visible") && showIfCompare(theVal, showIfVal)){
+            if($(this).parent().is(":visible") && daShowIfCompare(theVal, showIfVal)){
               //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).show(speed);
@@ -10013,12 +10060,12 @@ def observer():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
-        // dadisable = setTimeout(function(){
+        // daDisable = setTimeout(function(){
         //   $("#daform").find('button[type="submit"]').prop("disabled", true);
         //   //$("#daform").find(':input').prop("disabled", true);
         // }, 1);
         $("#daform").each(function(){
-          $(this).find(':input').on('change', pushChanges);
+          $(this).find(':input').on('change', daPushChanges);
         });
         daInitialized = true;
         daShowingHelp = 0;
@@ -10032,54 +10079,54 @@ def observer():
       $( document ).ready(function(){
         daInitialize(1);
         $( window ).bind('unload', function() {
-          if (socket != null && socket.connected){
-            socket.emit('terminate');
+          if (daSocket != null && daSocket.connected){
+            daSocket.emit('terminate');
           }
         });
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
+            daSocket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
+            daSocket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
         }
-        if (typeof socket !== 'undefined') {
-            socket.on('connect', function() {
+        if (typeof daSocket !== 'undefined') {
+            daSocket.on('connect', function() {
                 //console.log("Connected!");
-                socket.emit('observe', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
+                daSocket.emit('observe', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
                 daConnected = true;
             });
-            socket.on('terminate', function() {
+            daSocket.on('terminate', function() {
                 //console.log("Terminating socket");
-                socket.disconnect();
+                daSocket.disconnect();
             });
-            socket.on('disconnect', function() {
+            daSocket.on('disconnect', function() {
                 //console.log("Disconnected socket");
-                //socket = null;
+                //daSocket = null;
             });
-            socket.on('stopcontrolling', function(data) {
-                window.parent.stopControlling(data.key);
+            daSocket.on('stopcontrolling', function(data) {
+                window.parent.daStopControlling(data.key);
             });
-            socket.on('start_being_controlled', function(data) {
+            daSocket.on('start_being_controlled', function(data) {
                 //console.log("Got start_being_controlled");
                 daConfirmed = true;
-                pushChanges();
-                window.parent.gotConfirmation(data.key);
+                daPushChanges();
+                window.parent.daGotConfirmation(data.key);
             });
-            socket.on('abortcontrolling', function(data) {
+            daSocket.on('abortcontrolling', function(data) {
                 //console.log("Got abortcontrolling");
                 //daSendChanges = false;
                 //daConfirmed = false;
-                //stopPushChanges();
-                window.parent.abortControlling(data.key);
+                //daStopPushChanges();
+                window.parent.daAbortControlling(data.key);
             });
-            socket.on('noconnection', function(data) {
+            daSocket.on('noconnection', function(data) {
                 //console.log("warning: no connection");
                 if (daNoConnectionCount++ > 2){
                     //console.log("error: no connection");
-                    window.parent.stopControlling(data.key);
+                    window.parent.daStopControlling(data.key);
                 }
             });
-            socket.on('newpage', function(incoming) {
+            daSocket.on('newpage', function(incoming) {
                 //console.log("Got newpage")
                 var data = incoming.obj;
                 $("#dabody").html(data.body);
@@ -10092,7 +10139,7 @@ def observer():
                 for (var i = 0; i < scripts.length; i++){
                   if (scripts[i].src != ""){
                     //console.log("Added script to head");
-                    addScriptToHead(scripts[i].src);
+                    daAddScriptToHead(scripts[i].src);
                   }
                   else{
                     eval(scripts[i].innerHTML);
@@ -10105,9 +10152,9 @@ def observer():
                 if ($("html").attr("lang") != data.lang){
                   $("html").attr("lang", data.lang);
                 }
-                pushChanges();
+                daPushChanges();
             });
-            socket.on('pushchanges', function(data) {
+            daSocket.on('pushchanges', function(data) {
                 //console.log("Got pushchanges: " + JSON.stringify(data));
                 var valArray = Object();
                 var values = data.parameters;
@@ -10169,7 +10216,7 @@ def observer():
                 });
             });
         }
-        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
+        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
     });
     </script>
 """
@@ -10228,8 +10275,8 @@ def monitor():
             call_forwarding_on = 'true'
     script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
       var daAudioContext = null;
-      var socket;
-      var soundBuffer = Object();
+      var daSocket;
+      var daSoundBuffer = Object();
       var daShowingNotif = false;
       var daUpdatedSessions = Object();
       var daUserid = """ + str(current_user.id) + """;
@@ -10246,36 +10293,36 @@ def monitor():
       var daAvailableForChat = """ + daAvailableForChat + """;
       var daPhoneNumber = """ + json.dumps(default_phone_number) + """;
       var daFirstTime = 1;
-      var updateMonitorInterval = null;
+      var daUpdateMonitorInterval = null;
       var daNotificationsEnabled = false;
       var daControlling = Object();
       var daBrowserTitle = """ + json.dumps(word('Monitor')) + """;
-      window.gotConfirmation = function(key){
+      window.daGotConfirmation = function(key){
           //console.log("Got confirmation in parent for key " + key);
           // daControlling[key] = 2;
           // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           // $("#listelement" + skey).find("a").each(function(){
-          //     if ($(this).data('name') == "stopControlling"){
+          //     if ($(this).data('name') == "stopcontrolling"){
           //         $(this).removeClass('invisible');
           //         console.log("Found it");
           //     }
           // });
       }
-      function faviconRegular(){
+      function daFaviconRegular(){
         var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
         link.type = 'image/x-icon';
         link.rel = 'shortcut icon';
         link.href = '""" + url_for('favicon', nocache="1") + """';
         document.getElementsByTagName('head')[0].appendChild(link);
       }
-      function faviconAlert(){
+      function daFaviconAlert(){
         var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
         link.type = 'image/x-icon';
         link.rel = 'shortcut icon';
         link.href = '""" + url_for('static', filename='app/chat.ico') + """?nocache=1';
         document.getElementsByTagName('head')[0].appendChild(link);
       }
-      function topMessage(message){
+      function daTopMessage(message){
           var newDiv = document.createElement('div');
           $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
           $(newDiv).html(message)
@@ -10288,18 +10335,18 @@ def monitor():
             });
           }, 2000);
       }
-      window.abortControlling = function(key){
-          topMessage(""" + json.dumps(word("That screen is already being controlled by another operator")) + """);
-          stopControlling(key);
+      window.daAbortControlling = function(key){
+          daTopMessage(""" + json.dumps(word("That screen is already being controlled by another operator")) + """);
+          daStopControlling(key);
       }
-      window.stopControlling = function(key){
-          //console.log("Got stopControlling in parent for key " + key);
+      window.daStopControlling = function(key){
+          //console.log("Got daStopControlling in parent for key " + key);
           // if (daControlling.hasOwnProperty(key)){
           //   delete daControlling[key];
           // }
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           $("#listelement" + skey).find("a").each(function(){
-              if ($(this).data('name') == "stopControlling"){
+              if ($(this).data('name') == "stopcontrolling"){
                   $(this).click();
                   //console.log("Found it");
               }
@@ -10308,8 +10355,8 @@ def monitor():
       function daOnError(){
           console.log('daOnError');
       }
-      function loadSoundBuffer(key, url_a, url_b){
-          //console.log("loadSoundBuffer");
+      function daLoadSoundBuffer(key, url_a, url_b){
+          //console.log("daLoadSoundBuffer");
           var pos = 0;
           if (daAudioContext == null){
               return;
@@ -10321,26 +10368,26 @@ def monitor():
               daAudioContext.decodeAudioData(request.response, function(buffer){
                   if (!buffer){
                       if (pos == 1){
-                          console.error('loadSoundBuffer: error decoding file data');
+                          console.error('daLoadSoundBuffer: error decoding file data');
                           return;
                       }
                       else {
                           pos = 1;
-                          console.info('loadSoundBuffer: error decoding file data, trying next source');
+                          console.info('daLoadSoundBuffer: error decoding file data, trying next source');
                           request.open("GET", url_b, true);
                           return request.send();
                       }
                   }
-                  soundBuffer[key] = buffer;
+                  daSoundBuffer[key] = buffer;
               },
               function(error){
                   if (pos == 1){
-                      console.error('loadSoundBuffer: decodeAudioData error');
+                      console.error('daLoadSoundBuffer: decodeAudioData error');
                       return;
                   }
                   else{
                       pos = 1;
-                      console.info('loadSoundBuffer: decodeAudioData error, trying next source');
+                      console.info('daLoadSoundBuffer: decodeAudioData error, trying next source');
                       request.open("GET", url_b, true);
                       return request.send();
                   }
@@ -10348,9 +10395,9 @@ def monitor():
           }
           request.send();
       }
-      function playSound(key) {
-          //console.log("playSound");
-          var buffer = soundBuffer[key];
+      function daPlaySound(key) {
+          //console.log("daPlaySound");
+          var buffer = daSoundBuffer[key];
           if (!daAudioContext || !buffer){
               return;
           }
@@ -10359,8 +10406,8 @@ def monitor():
           source.connect(daAudioContext.destination);
           source.start(0);
       }
-      function checkNotifications(){
-          //console.log("checkNotifications");
+      function daCheckNotifications(){
+          //console.log("daCheckNotifications");
           if (daNotificationsEnabled){
               return;
           }
@@ -10380,14 +10427,14 @@ def monitor():
               });
           }
       }
-      function notifyOperator(key, mode, message) {
-          //console.log("notifyOperator: " + key + " " + mode + " " + message);
+      function daNotifyOperator(key, mode, message) {
+          //console.log("daNotifyOperator: " + key + " " + mode + " " + message);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           if (mode == "chat"){
-            playSound('newmessage');
+            daPlaySound('newmessage');
           }
           else{
-            playSound('newconversation');
+            daPlaySound('newconversation');
           }
           if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
             if (mode == "chat"){
@@ -10399,7 +10446,7 @@ def monitor():
             //$("#chat-message-below").data('key', key);
             $("#chat-message-below").slideDown();
             daShowingNotif = true;
-            markAsUpdated(key);
+            daMarkAsUpdated(key);
           }
           else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
             if (mode == "chat"){
@@ -10411,7 +10458,7 @@ def monitor():
             //$("#chat-message-above").data('key', key);
             $("#chat-message-above").slideDown();
             daShowingNotif = true;
-            markAsUpdated(key);
+            daMarkAsUpdated(key);
           }
           else{
             //console.log("It is visible");
@@ -10435,8 +10482,8 @@ def monitor():
               });
           }
       }
-      function phoneNumberOk(){
-          //console.log("phoneNumberOk");
+      function daPhoneNumberOk(){
+          //console.log("daPhoneNumberOk");
           var phoneNumber = $("#daPhoneNumber").val();
           if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
               return true;
@@ -10445,14 +10492,14 @@ def monitor():
               return false;
           }
       }
-      function checkPhone(){
-          //console.log("checkPhone");
+      function daCheckPhone(){
+          //console.log("daCheckPhone");
           $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
           var the_number = $("#daPhoneNumber").val();
           if (the_number[0] != '+'){
               $("#daPhoneNumber").val('+' + the_number);
           }
-          if (phoneNumberOk()){
+          if (daPhoneNumberOk()){
               $("#daPhoneNumber").parent().removeClass("has-error");
               $("#daPhoneError").addClass("invisible");
               daPhoneNumber = $("#daPhoneNumber").val();
@@ -10474,8 +10521,8 @@ def monitor():
               $(".phone").addClass("invisible");
           }
       }
-      function allSessions(uid, yaml_filename){
-          //console.log("allSessions");
+      function daAllSessions(uid, yaml_filename){
+          //console.log("daAllSessions");
           var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
           var output = Array();
           for (var key in daSessions){
@@ -10485,17 +10532,17 @@ def monitor():
           }
           return(output);
       }
-      function scrollChat(key){
+      function daScrollChat(key){
           var chatScroller = $(key).find('ul').first();
           if (chatScroller.length){
               var height = chatScroller[0].scrollHeight;
               chatScroller.animate({scrollTop: height}, 800);
           }
           else{
-              console.log("scrollChat: error")
+              console.log("daScrollChat: error")
           }
       }
-      function scrollChatFast(key){
+      function daScrollChatFast(key){
           var chatScroller = $(key).find('ul').first();
           if (chatScroller.length){
             var height = chatScroller[0].scrollHeight;
@@ -10503,12 +10550,12 @@ def monitor():
               chatScroller.scrollTop(height);
             }
           else{
-              console.log("scrollChatFast: error")
+              console.log("daScrollChatFast: error")
           }
       }
-      function do_update_monitor(){
-          //console.log("do_update_monitor with " + daAvailableForChat);
-          if (phoneNumberOk()){
+      function daDoUpdateMonitor(){
+          //console.log("daDoUpdateMonitor with " + daAvailableForChat);
+          if (daPhoneNumberOk()){
             daPhoneNumber = $("#daPhoneNumber").val();
             if (daPhoneNumber == ''){
               daPhoneNumber = null;
@@ -10517,18 +10564,18 @@ def monitor():
           else{
             daPhoneNumber = null;
           }
-          socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
+          daSocket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
       }
-      function update_monitor(){
-          //console.log("update_monitor with " + daAvailableForChat);
-          if (updateMonitorInterval != null){
-              clearInterval(updateMonitorInterval);
+      function daUpdateMonitor(){
+          //console.log("daUpdateMonitor with " + daAvailableForChat);
+          if (daUpdateMonitorInterval != null){
+              clearInterval(daUpdateMonitorInterval);
           }
-          do_update_monitor();
-          updateMonitorInterval = setInterval(do_update_monitor, """ + str(CHECKIN_INTERVAL) + """);
-          //console.log("update_monitor");
+          daDoUpdateMonitor();
+          daUpdateMonitorInterval = setInterval(daDoUpdateMonitor, """ + str(CHECKIN_INTERVAL) + """);
+          //console.log("daUpdateMonitor");
       }
-      function isHidden(ref){
+      function daIsHidden(ref){
           if ($(ref).length){
               if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
                   return -1;
@@ -10544,40 +10591,40 @@ def monitor():
               return 0;
           }
       }
-      function markAsUpdated(key){
-          //console.log("markAsUpdated with " + key);
+      function daMarkAsUpdated(key){
+          //console.log("daMarkAsUpdated with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          if (isHidden("#listelement" + skey)){
+          if (daIsHidden("#listelement" + skey)){
               daUpdatedSessions["#listelement" + skey] = 1;
           }
       }
-      function activateChatArea(key){
-          //console.log("activateChatArea with " + key);
+      function daActivateChatArea(key){
+          //console.log("daActivateChatArea with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           if (!$("#chatarea" + skey).find('input').first().is(':focus')){
             $("#listelement" + skey).addClass("new-message");
             if (daBrowserTitle == document.title){
               document.title = '* ' + daBrowserTitle;
-              faviconAlert();
+              daFaviconAlert();
             }
           }
-          markAsUpdated(key);
+          daMarkAsUpdated(key);
           $("#chatarea" + skey).removeClass('invisible');
           $("#chatarea" + skey).find('input, button').prop("disabled", false);
           $("#chatarea" + skey).find('ul').html('');
-          socket.emit('chat_log', {key: key});
+          daSocket.emit('chat_log', {key: key});
       }
-      function deActivateChatArea(key){
+      function daDeActivateChatArea(key){
           //console.log("daActivateChatArea with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           $("#chatarea" + skey).find('input, button').prop("disabled", true);
           $("#listelement" + skey).removeClass("new-message");
           if (document.title != daBrowserTitle){
               document.title = daBrowserTitle;
-              faviconRegular();
+              daFaviconRegular();
           }
       }
-      function undraw_session(key){
+      function daUndrawSession(key){
           //console.log("Undrawing...");
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           var xButton = document.createElement('a');
@@ -10593,7 +10640,7 @@ def monitor():
           $(xButton).click(function(){
               $("#listelement" + skey).slideUp(300, function(){
                   $("#listelement" + skey).remove();
-                  check_if_empty();
+                  daCheckIfEmpty();
               });
           });
           $(xButton).appendTo($("#session" + skey));
@@ -10601,8 +10648,8 @@ def monitor():
           var theIframe = $("#iframe" + skey).find('iframe')[0];
           if (theIframe){
               $(theIframe).contents().find('body').addClass("dainactive");
-              if (theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                  theIframe.contentWindow.turnOffControl();
+              if (theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
+                  theIframe.contentWindow.daTurnOffControl();
               }
           }
           if (daControlling.hasOwnProperty(key)){
@@ -10610,11 +10657,11 @@ def monitor():
           }
           delete daSessions[key];
       }
-      function publish_chat_log(uid, yaml_filename, userid, mode, messages){
-          //console.log("publish_chat_log with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
+      function daPublishChatLog(uid, yaml_filename, userid, mode, messages){
+          //console.log("daPublishChatLog with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
           var keys; 
           //if (mode == 'peer' || mode == 'peerhelp'){
-          //    keys = allSessions(uid, yaml_filename);
+          //    keys = daAllSessions(uid, yaml_filename);
           //}
           //else{
               keys = ['da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid];
@@ -10636,10 +10683,10 @@ def monitor():
                   $(newLi).html(message.message);
                   $(newLi).appendTo(chatArea);
               }
-              scrollChatFast("#chatarea" + skey);
+              daScrollChatFast("#chatarea" + skey);
           }
       }
-      function check_if_empty(){
+      function daCheckIfEmpty(){
           if ($("#monitorsessions").find("li").length > 0){
               $("#emptylist").addClass("invisible");
           }
@@ -10647,8 +10694,8 @@ def monitor():
               $("#emptylist").removeClass("invisible");
           }
       }
-      function draw_session(key, obj){
-          //console.log("draw_session with " + key);
+      function daDrawSession(key, obj){
+          //console.log("daDrawSession with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           var the_html;
           var wants_to_chat;
@@ -10681,7 +10728,7 @@ def monitor():
               theChatArea = $("#chatarea" + skey).first();
               $(sessionDiv).empty();
               if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
-                  activateChatArea(key);
+                  daActivateChatArea(key);
               }
           }
           else{
@@ -10718,7 +10765,7 @@ def monitor():
                       //console.log("Message was blank");
                       return false;
                   }
-                  socket.emit('chatmessage', {key: key, data: input.val()});
+                  daSocket.emit('chatmessage', {key: key, data: input.val()});
                   input.val('');
                   return false;
               };
@@ -10731,12 +10778,12 @@ def monitor():
                   $(theListElement).removeClass("new-message");
                   if (document.title != daBrowserTitle){
                       document.title = daBrowserTitle;
-                      faviconRegular();
+                      daFaviconRegular();
                   }
               });
               $(theChatArea).appendTo($(theListElement));
               if (obj.chatstatus == 'on' && key in daChatPartners){
-                  activateChatArea(key);
+                  daActivateChatArea(key);
               }
           }
           var theText = document.createElement('span');
@@ -10796,7 +10843,7 @@ def monitor():
                 }
                 daTermPhonePartners[key] = 1;
               }
-              update_monitor();
+              daUpdateMonitor();
               return false;
             });
           }
@@ -10821,15 +10868,15 @@ def monitor():
           $(blockButton).click(function(e){
               $(unblockButton).removeClass("invisible");
               $(this).addClass("invisible");
-              deActivateChatArea(key);
-              socket.emit('block', {key: key});
+              daDeActivateChatArea(key);
+              daSocket.emit('block', {key: key});
               e.preventDefault();
               return false;
           });
           $(unblockButton).click(function(e){
               $(blockButton).removeClass("invisible");
               $(this).addClass("invisible");
-              socket.emit('unblock', {key: key});
+              daSocket.emit('unblock', {key: key});
               e.preventDefault();
               return false;
           });
@@ -10866,7 +10913,7 @@ def monitor():
               $(stopControllingButton).addClass("btn btn-secondary observebutton invisible");
               $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
               $(stopControllingButton).attr('href', '#');
-              $(stopControllingButton).data('name', 'stopControlling');
+              $(stopControllingButton).data('name', 'stopcontrolling');
               $(stopControllingButton).appendTo($(sessionDiv));
               $(controlButton).click(function(event){
                   event.preventDefault();
@@ -10876,7 +10923,7 @@ def monitor():
                   $(stopObservingButton).addClass("invisible");
                   var theIframe = $("#iframe" + skey).find('iframe')[0];
                   if (theIframe != null && theIframe.contentWindow){
-                      theIframe.contentWindow.turnOnControl();
+                      theIframe.contentWindow.daTurnOnControl();
                   }
                   else{
                       console.log("Cannot turn on control");
@@ -10888,8 +10935,8 @@ def monitor():
                   //console.log("Got click on stopControllingButton");
                   event.preventDefault();
                   var theIframe = $("#iframe" + skey).find('iframe')[0];
-                  if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                      theIframe.contentWindow.turnOffControl();
+                  if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
+                      theIframe.contentWindow.daTurnOffControl();
                   }
                   else{
                       console.log("Cannot turn off control");
@@ -10922,9 +10969,9 @@ def monitor():
                   var theIframe = $("#iframe" + skey).find('iframe')[0];
                   if (daControlling.hasOwnProperty(key)){
                       delete daControlling[key];
-                      if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
-                          //console.log("Calling turnOffControl in iframe");
-                          theIframe.contentWindow.turnOffControl();
+                      if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
+                          //console.log("Calling daTurnOffControl in iframe");
+                          theIframe.contentWindow.daTurnOffControl();
                       }
                   }
                   if (theIframe != null && theIframe.contentWindow){
@@ -10964,19 +11011,19 @@ def monitor():
           }
           $(theText).appendTo($(sessionDiv));
           if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
-              activateChatArea(key);
+              daActivateChatArea(key);
           }
           if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
-              deActivateChatArea(key);
+              daDeActivateChatArea(key);
           }
           else if (obj.blocked){
-              deActivateChatArea(key);
+              daDeActivateChatArea(key);
           }
       }
-      function onScrollResize(){
+      function daOnScrollResize(){
           if (document.title != daBrowserTitle){
               document.title = daBrowserTitle;
-              faviconRegular();
+              daFaviconRegular();
           }
           if (!daShowingNotif){
               return true;
@@ -10992,7 +11039,7 @@ def monitor():
           var firstElement = -1;
           var lastElement = -1;
           for (var i = 0; i < obj.length; ++i){
-              var result = isHidden(obj[i]);
+              var result = daIsHidden(obj[i]);
               if (result == 0){
                   delete daUpdatedSessions[obj[i]];
               }
@@ -11031,66 +11078,66 @@ def monitor():
           catch(e) {
               console.log('Web Audio API is not supported in this browser');
           }
-          loadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
-          loadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
-          loadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
+          daLoadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
+          daLoadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
+          daLoadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
           if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-              socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
+              daSocket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
           }
           if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-              socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
+              daSocket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
           }
-          //console.log("socket is " + socket)
-          if (typeof socket !== 'undefined') {
-              socket.on('connect', function() {
+          //console.log("socket is " + daSocket)
+          if (typeof daSocket !== 'undefined') {
+              daSocket.on('connect', function() {
                   //console.log("Connected!");
-                  update_monitor();
+                  daUpdateMonitor();
               });
-              socket.on('terminate', function() {
+              daSocket.on('terminate', function() {
                   //console.log("monitor: terminating socket");
-                  socket.disconnect();
+                  daSocket.disconnect();
               });
-              socket.on('disconnect', function() {
+              daSocket.on('disconnect', function() {
                   //console.log("monitor: disconnected socket");
-                  //socket = null;
+                  //daSocket = null;
               });
-              socket.on('refreshsessions', function(data) {
-                  update_monitor();
+              daSocket.on('refreshsessions', function(data) {
+                  daUpdateMonitor();
               });
-              // socket.on('abortcontroller', function(data) {
+              // daSocket.on('abortcontroller', function(data) {
               //     console.log("Got abortcontroller message for " + data.key);
               // });
-              socket.on('chatready', function(data) {
+              daSocket.on('chatready', function(data) {
                   var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                   //console.log('chatready: ' + key);
-                  activateChatArea(key);
-                  notifyOperator(key, "chatready", """ + json.dumps(word("New chat connection from")) + """ + ' ' + data.name)
+                  daActivateChatArea(key);
+                  daNotifyOperator(key, "chatready", """ + json.dumps(word("New chat connection from")) + """ + ' ' + data.name)
               });
-              socket.on('chatstop', function(data) {
+              daSocket.on('chatstop', function(data) {
                   var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                   //console.log('chatstop: ' + key);
                   if (key in daChatPartners){
                       delete daChatPartners[key];
                   }
-                  deActivateChatArea(key);
+                  daDeActivateChatArea(key);
               });
-              socket.on('chat_log', function(arg) {
+              daSocket.on('chat_log', function(arg) {
                   //console.log('chat_log: ' + arg.userid);
-                  publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
+                  daPublishChatLog(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
               });            
-              socket.on('block', function(arg) {
+              daSocket.on('block', function(arg) {
                   //console.log("back from blocking " + arg.key);
-                  update_monitor();
+                  daUpdateMonitor();
               });            
-              socket.on('unblock', function(arg) {
+              daSocket.on('unblock', function(arg) {
                   //console.log("back from unblocking " + arg.key);
-                  update_monitor();
+                  daUpdateMonitor();
               });            
-              socket.on('chatmessage', function(data) {
+              daSocket.on('chatmessage', function(data) {
                   //console.log("chatmessage");
                   var keys; 
                   if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
-                    keys = allSessions(data.uid, data.i);
+                    keys = daAllSessions(data.uid, data.i);
                   }
                   else{
                     keys = ['da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid];
@@ -11110,12 +11157,12 @@ def monitor():
                     }
                     $(newLi).html(data.data.message);
                     $(newLi).appendTo(chatArea);
-                    scrollChat("#chatarea" + skey);
+                    daScrollChat("#chatarea" + skey);
                     if (data.data.is_self){
                       $("#listelement" + skey).removeClass("new-message");
                       if (document.title != daBrowserTitle){
                         document.title = daBrowserTitle;
-                        faviconRegular();
+                        daFaviconRegular();
                       }
                     }
                     else{
@@ -11123,29 +11170,29 @@ def monitor():
                         $("#listelement" + skey).addClass("new-message");
                         if (daBrowserTitle == document.title){
                           document.title = '* ' + daBrowserTitle;
-                          faviconAlert();
+                          daFaviconAlert();
                         }
                       }
                       if (data.data.hasOwnProperty('temp_user_id')){
-                        notifyOperator(key, "chat", """ + json.dumps(word("anonymous visitor")) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
+                        daNotifyOperator(key, "chat", """ + json.dumps(word("anonymous visitor")) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
                       }
                       else{
                         if (data.data.first_name && data.data.first_name != ''){
-                          notifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
+                          daNotifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
                         }
                         else{
-                          notifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
+                          daNotifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
                         }
                       }
                     }
                   }
               });
-              socket.on('sessionupdate', function(data) {
+              daSocket.on('sessionupdate', function(data) {
                   //console.log("Got session update: " + data.session.chatstatus);
-                  draw_session(data.key, data.session);
-                  check_if_empty();
+                  daDrawSession(data.key, data.session);
+                  daCheckIfEmpty();
               });
-              socket.on('updatemonitor', function(data) {
+              daSocket.on('updatemonitor', function(data) {
                   //console.log("Got update monitor response");
                   //console.log("updatemonitor: chat partners are: " + data.chatPartners);
                   daChatPartners = data.chatPartners;
@@ -11196,7 +11243,7 @@ def monitor():
                                       delete daSubscribedRoles[key];
                                   }
                               }
-                              update_monitor();
+                              daUpdateMonitor();
                           });
                       }
                       else{
@@ -11217,7 +11264,7 @@ def monitor():
                           if (true || user_id != daUserid){
                               var obj = data.sessions[key];
                               newDaSessions[key] = obj;
-                              draw_session(key, obj);
+                              daDrawSession(key, obj);
                           }
                       }
                   }
@@ -11233,7 +11280,7 @@ def monitor():
                   }
                   for (var i = 0; i < toDelete.length; ++i){
                       var key = toDelete[i];
-                      undraw_session(key);
+                      daUndrawSession(key);
                   }
                   if ($("#monitorsessions").find("li").length > 0){
                       $("#emptylist").addClass("invisible");
@@ -11245,7 +11292,7 @@ def monitor():
           }
           if (daAvailableForChat){
               $("#daNotAvailable").addClass("invisible");
-              checkNotifications();
+              daCheckNotifications();
           }
           else{
               $("#daAvailable").addClass("invisible");
@@ -11255,34 +11302,34 @@ def monitor():
               $("#daNotAvailable").removeClass("invisible");
               daAvailableForChat = false;
               //console.log("daAvailableForChat: " + daAvailableForChat);
-              update_monitor();
-              playSound('signinout');
+              daUpdateMonitor();
+              daPlaySound('signinout');
           });
           $("#daNotAvailable").click(function(event){
-              checkNotifications();
+              daCheckNotifications();
               $("#daNotAvailable").addClass("invisible");
               $("#daAvailable").removeClass("invisible");
               daAvailableForChat = true;
               //console.log("daAvailableForChat: " + daAvailableForChat);
-              update_monitor();
-              playSound('signinout');
+              daUpdateMonitor();
+              daPlaySound('signinout');
           });
           $( window ).bind('unload', function() {
-            if (typeof socket !== 'undefined'){
-              socket.emit('terminate');
+            if (typeof daSocket !== 'undefined'){
+              daSocket.emit('terminate');
             }
           });
           if (daUsePhone){
             $("#daPhoneInfo").removeClass("invisible");
             $("#daPhoneNumber").val(daPhoneNumber);
-            $("#daPhoneNumber").change(checkPhone);
+            $("#daPhoneNumber").change(daCheckPhone);
             $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
               var theCode = e.which || e.keyCode;
               if(theCode == 13) { $(this).blur(); e.preventDefault(); }
             });
           }
-          $(window).on('scroll', onScrollResize);
-          $(window).on('resize', onScrollResize);
+          $(window).on('scroll', daOnScrollResize);
+          $(window).on('resize', daOnScrollResize);
           $(".chat-notifier").click(function(e){
               //var key = $(this).data('key');
               var direction = 0;
@@ -11331,7 +11378,7 @@ def update_package_wait():
     my_csrf = generate_csrf()
     script = """
     <script>
-      var checkinInterval = null;
+      var daCheckinInterval = null;
       var resultsAreIn = false;
       var pollDelay = 0;
       var pollPending = false;
@@ -11367,8 +11414,8 @@ def update_package_wait():
             }
             $("#resultsContainer").show();
             $("#resultsArea").html(data.summary);
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
             daRestart();
           }
@@ -11385,8 +11432,8 @@ def update_package_wait():
             else if (data.summary){
               $("#resultsArea").html(data.summary);
             }
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
           }
         }
@@ -11395,8 +11442,8 @@ def update_package_wait():
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (checkinInterval != null){
-            clearInterval(checkinInterval);
+          if (daCheckinInterval != null){
+            clearInterval(daCheckinInterval);
           }
         }
       }
@@ -11406,8 +11453,8 @@ def update_package_wait():
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (checkinInterval != null){
-            clearInterval(checkinInterval);
+          if (daCheckinInterval != null){
+            clearInterval(daCheckinInterval);
           }
           return;
         }
@@ -11431,7 +11478,7 @@ def update_package_wait():
       }
       $( document ).ready(function() {
         //console.log("page loaded");
-        checkinInterval = setInterval(daUpdate, 6000);
+        daCheckinInterval = setInterval(daUpdate, 6000);
       });
     </script>"""
     return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
@@ -11651,24 +11698,24 @@ def update_package():
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
 #     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
-#     var socket;
+#     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-#             socket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
+#             daSocket = io.connect("http://" + document.domain + "/wsinterview", {path: '/ws/socket.io'});
 #         }
 #         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-#             socket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
+#             daSocket = io.connect("https://" + document.domain + "/wsinterview" + location.port, {path: '/ws/socket.io'});
 #         }
-#         if (typeof socket !== 'undefined') {
-#             socket.on('connect', function() {
+#         if (typeof daSocket !== 'undefined') {
+#             daSocket.on('connect', function() {
 #                 //console.log("Connected!");
-#                 socket.emit('chat_log', {data: 1});
+#                 daSocket.emit('chat_log', {data: 1});
 #             });
-#             socket.on('mymessage', function(arg) {
+#             daSocket.on('mymessage', function(arg) {
 #                 //console.log("Received " + arg.data);
 #                 $("#daPushResult").html(arg.data);
 #             });
-#             socket.on('chatmessage', function(arg) {
+#             daSocket.on('chatmessage', function(arg) {
 #                 console.log("Received chat message " + arg.data);
 #                 var newDiv = document.createElement('div');
 #                 $(newDiv).html(arg.data.message);
@@ -12496,7 +12543,7 @@ def gd_sync_wait():
     my_csrf = generate_csrf()
     script = """
     <script>
-      var checkinInterval = null;
+      var daCheckinInterval = null;
       var autoNext = """ + json.dumps(auto_next_url) + """;
       var resultsAreIn = false;
       function daRestartCallback(data){
@@ -12533,8 +12580,8 @@ def gd_sync_wait():
             }
             $("#resultsContainer").show();
             $("#resultsArea").html(data.summary);
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
             if (data.restart){
               daRestart();
@@ -12553,8 +12600,8 @@ def gd_sync_wait():
             else if (data.summary){
               $("#resultsArea").html(data.summary);
             }
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
           }
         }
@@ -12563,8 +12610,8 @@ def gd_sync_wait():
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (checkinInterval != null){
-            clearInterval(checkinInterval);
+          if (daCheckinInterval != null){
+            clearInterval(daCheckinInterval);
           }
         }
       }
@@ -12583,7 +12630,7 @@ def gd_sync_wait():
       }
       $( document ).ready(function() {
         //console.log("page loaded");
-        checkinInterval = setInterval(daSync, 2000);
+        daCheckinInterval = setInterval(daSync, 2000);
       });
     </script>"""
     return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
@@ -12712,7 +12759,7 @@ def od_sync_wait():
     my_csrf = generate_csrf()
     script = """
     <script>
-      var checkinInterval = null;
+      var daCheckinInterval = null;
       var autoNext = """ + json.dumps(auto_next_url) + """;
       var resultsAreIn = false;
       function daRestartCallback(data){
@@ -12751,8 +12798,8 @@ def od_sync_wait():
             }
             $("#resultsContainer").show();
             $("#resultsArea").html(data.summary);
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
             if (data.restart){
               daRestart();
@@ -12776,8 +12823,8 @@ def od_sync_wait():
             else if (data.summary){
               $("#resultsArea").html(data.summary);
             }
-            if (checkinInterval != null){
-              clearInterval(checkinInterval);
+            if (daCheckinInterval != null){
+              clearInterval(daCheckinInterval);
             }
           }
         }
@@ -12786,8 +12833,8 @@ def od_sync_wait():
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (checkinInterval != null){
-            clearInterval(checkinInterval);
+          if (daCheckinInterval != null){
+            clearInterval(daCheckinInterval);
           }
         }
       }
@@ -12806,7 +12853,7 @@ def od_sync_wait():
       }
       $( document ).ready(function() {
         //console.log("page loaded");
-        checkinInterval = setInterval(daSync, 2000);
+        daCheckinInterval = setInterval(daSync, 2000);
       });
     </script>"""
     return render_template('pages/od_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
@@ -14651,10 +14698,10 @@ def playground_packages():
         extra_command = ""
     extra_command += upload_js() + """
         $("#daCancel").click(function(event){
-          var whichButton = this;
+          var daWhichButton = this;
           $("#commit_message_div").hide();
           $(".btn-da").each(function(){
-            if (this != whichButton && $(this).is(":hidden")){
+            if (this != daWhichButton && $(this).is(":hidden")){
               $(this).show();
             }
           });
@@ -14664,7 +14711,7 @@ def playground_packages():
           return false;
         });
         $("#daGitHub").click(function(event){
-          var whichButton = this;
+          var daWhichButton = this;
           if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
             if ($("#commit_message_div").is(":visible")){
               $("#commit_message").parent().addClass("has-error");
@@ -14672,7 +14719,7 @@ def playground_packages():
             else{
               $("#commit_message_div").show();
               $(".btn-da").each(function(){
-                if (this != whichButton && $(this).is(":visible")){
+                if (this != daWhichButton && $(this).is(":visible")){
                   $(this).hide();
                 }
               });
@@ -15856,7 +15903,7 @@ def server_error(the_error):
           }, 3000);
         }
       }
-      function showNotifications(){
+      function daShowNotifications(){
         var n = daMessageLog.length;
         for (var i = 0; i < n; i++){
           var message = daMessageLog[i];
@@ -15872,7 +15919,7 @@ def server_error(the_error):
         }
       }
       $( document ).ready(function() {
-        showNotifications();
+        daShowNotifications();
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
