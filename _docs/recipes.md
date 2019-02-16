@@ -7,7 +7,7 @@ short_title: Recipes
 This section contains miscellaneous recipes for solving problems in
 **docassemble**.
 
-# Require a checkbox to be checked
+# <a name="require checkbox"></a>Require a checkbox to be checked
 
 ## Using `validation code`
 
@@ -49,7 +49,7 @@ need: agrees_to_tos
 question: All done
 {% endhighlight %}
 
-# Use a variable to track when an interview has been completed
+# <a name="completion"></a>Use a variable to track when an interview has been completed
 
 One way to track whether an interview is completed is to set a
 variable when the interview is done.  That way, you can inspect the
@@ -125,7 +125,7 @@ buttons:
   Exit: exit
 {% endhighlight %}
 
-# Exit interview with a hyperlink rather than a redirect
+# <a name="exit hyperlink"></a>Exit interview with a hyperlink rather than a redirect
 
 Suppose you have a final screen in your interview that looks like this:
 
@@ -167,7 +167,40 @@ subquestion: |
   ${ action_button_html("https://example.com", size='md', color='primary', label='Exit', new_window=False) }
 {% endhighlight %}
 
-# Progresive disclosure
+# <a name="two fields match"></a>Ensure two fields match
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address_first
+    datatype: email
+  - note: |
+      Please enter your e-mail address again.
+    datatype: email
+  - E-mail: email_address
+    datatype: email
+  - note: |
+      Make sure the e-mail addresses match.
+    js hide if: |
+      val('email_address') != '' && val('email_address_first') == val('email_address')
+  - note: |
+      <span class="text-success">E-mail addresses match!</span>
+    js show if: |
+      val('email_address') != '' && val('email_address_first') == val('email_address')
+validation code: |
+  if email_address_first != email_address:
+    validation_error("You cannot continue until you confirm your e-mail address")
+---
+mandatory: True
+question: |
+  Your e-mail address is ${ email_address }.
+{% endhighlight %}
+
+# <a name="progressive disclosure"></a>Progresive disclosure
 
 {% include demo-side-by-side.html demo="progressive-disclosure" %}
 
@@ -207,4 +240,7 @@ def prog_disclose(template):
 """.format(the_id, template.subject, the_id, template.content)
 {% endhighlight %}
 
+This uses the [collapse feature] of [Bootstrap].
 
+[collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
+[Bootstrap]: https://getbootstrap.com/
