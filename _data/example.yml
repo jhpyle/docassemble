@@ -10638,6 +10638,13 @@
   mandatory: True
   question: |
     You sound ${ mood }.
+"progressive-disclosure": "modules:\n  - docassemble.base.util\n  - .progressivedisclosure\n\
+  ---\nfeatures:\n  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\n\
+  subject: |\n  Tell me more about fruit\ncontent: |\n  A fruit is the the sweet and\n\
+  \  fleshy product of a tree or\n  other plant that contains\n  seed and can be eaten\
+  \ as food.\n---\nquestion: |\n  What is your favorite fruit?\nsubquestion: |\n \
+  \ Everybody has a favorite fruit.\n  \n  ${ prog_disclose(fruit_explanation) }\n\
+  fields:\n  - Favorite fruit: favorite_fruit"
 "questionless": |-
   mandatory: True
   code: |
