@@ -15907,16 +15907,6 @@ def package_static(package, filename):
     response = send_file(the_file, mimetype=str(mimetype))
     return(response)
 
-# @app.route('/twiliotest', methods=['GET', 'POST'])
-# def twilio_test():
-#     account_sid = "ACfad8e668b5f9e15d499ab823523b9358"
-#     auth_token = "86549c9a407b25d32f21c758e7b09546"
-#     application_sid = "AP67affb53323193b8e2af0872aad387ad"
-#     capability = TwilioCapability(account_sid, auth_token)
-#     capability.allow_client_outgoing(application_sid)
-#     token = capability.generate()
-#     return render_template('pages/twiliotest.html', token=token)
-
 @app.route('/logfile/<filename>', methods=['GET'])
 @login_required
 @roles_required(['admin', 'developer'])

@@ -1,0 +1,35 @@
+metadata:
+  title: Progressive disclosure
+  short: Prog
+  example start: 1
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+  - .progressivedisclosure
+---
+features:
+  css: progressivedisclosure.css
+---
+template: fruit_explanation
+subject: |
+  Tell me more about fruit
+content: |
+  A fruit is the the sweet and
+  fleshy product of a tree or
+  other plant that contains
+  seed and can be eaten as food.
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  Everybody has a favorite fruit.
+  
+  ${ prog_disclose(fruit_explanation) }
+fields:
+  - Favorite fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }.

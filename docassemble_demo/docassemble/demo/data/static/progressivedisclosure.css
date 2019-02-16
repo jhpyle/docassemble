@@ -1,0 +1,15 @@
+a span.pdcaretopen {
+    display: inline;
+}
+
+a span.pdcaretclosed {
+    display: none;
+}
+
+a.collapsed .pdcaretopen {
+    display: none;
+}
+
+a.collapsed .pdcaretclosed {
+    display: inline;
+}
