@@ -245,5 +245,6 @@ def prog_disclose(template, classname=None):
 {% endhighlight %}
 
 This uses the [collapse feature] of [Bootstrap].
+
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
