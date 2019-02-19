@@ -1074,6 +1074,8 @@ class Question:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
+            if 'hide navbar' in data['features']:
+                self.interview.options['hide navbar'] = data['features']['hide navbar']
             if 'hide standard menu' in data['features']:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'checkin interval' in data['features']:
@@ -3787,7 +3789,7 @@ class Question:
                         result_dict['key'] = TextObject(value)
                 elif isinstance(value, dict):
                     result_dict['label'] = TextObject(key)
-                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), 'utf-8'))
+                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(bytearray(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), encoding='utf-8'), 'utf-8'))
                 elif isinstance(value, string_types):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
                         result_dict['label'] = TextObject(key)
@@ -4208,7 +4210,7 @@ class Question:
                                 modified_metadata[key] = data + text_type('[END]')
                             else:
                                 modified_metadata[key] = data
-                        the_markdown += u'---\n' + codecs.decode(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=True), 'utf-8') + u"...\n"
+                        the_markdown += u'---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=True), encoding='utf-8'), 'utf-8') + u"...\n"
                     the_markdown += attachment['content'].text(user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:

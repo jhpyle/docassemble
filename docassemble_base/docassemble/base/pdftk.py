@@ -446,7 +446,7 @@ def remove_nonprintable_bytes(byte_list):
     for the_int in byte_list:
         if chr(the_int) in string.printable:
             final += chr(the_int)
-    return final
+    return bytearray(final, 'utf-8')
 
 def remove_nonprintable_bytes_limited(byte_list):
     final = bytes()
@@ -455,12 +455,12 @@ def remove_nonprintable_bytes_limited(byte_list):
     for the_int in byte_list:
         if the_int > 0:
             final += bytes([the_int])
-    return final.decode()
+    return codecs.decode(final, 'latin1')
 
 def remove_nonprintable_limited(text):
     text = re.sub(r'^\xfe\xff', '', text)
     text = re.sub(r'\x00', '', text)
-    return text
+    return codecs.decode(text, 'latin1')
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
     #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
@@ -495,9 +495,15 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                 js_obj = obj.getObject()
                 if '/S' in js_obj and js_obj['/S'] == '/JavaScript' and '/JS' in js_obj:
                     if isinstance(js_obj['/JS'], pypdf.generic.ByteStringObject) or isinstance(js_obj['/JS'], pypdf.generic.TextStringObject):
-                        js_to_write.append((name, remove_nonprintable(js_obj['/JS'])))
+                        if PY2:
+                            js_to_write.append((name, remove_nonprintable(js_obj['/JS'])))
+                        else:
+                            js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'])))
                     elif isinstance(js_obj['/JS'], pypdf.generic.EncodedStreamObject) or isinstance(js_obj['/JS'], pypdf.generic.DecodedStreamObject):
-                        js_to_write.append((name, remove_nonprintable(js_obj['/JS'].getData())))
+                        if PY2:
+                            js_to_write.append((name, remove_nonprintable(js_obj['/JS'].getData())))
+                        else:
+                            js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'].getData())))
 
     if len(js_to_write) == 0 and len(co_field_names) == 0:
         #logmessage("Nothing to do here")
@@ -556,8 +562,8 @@ def replicate_js_and_calculations(template_filename, original_filename, password
             #logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
             writer.encrypt(str(user_password), owner_pwd=str(owner_password))
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    writer.write(outfile)
-    outfile.flush()
+    with open(outfile.name, 'wb') as fp:
+        writer.write(fp)
     shutil.move(outfile.name, original_filename)
 
 def flatten_pdf(filename):

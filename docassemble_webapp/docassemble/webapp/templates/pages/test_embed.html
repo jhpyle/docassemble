@@ -1,35 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-{%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
-    <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
-{%- endif %}{{ extra_meta }}
-    <title>{{ word("Test embedded interview") }}</title>
-    <link rel="shortcut icon" href="{{ url_for('favicon', external=True) }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon', external=True) }}">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_md', external=True) }}" sizes="32x32">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm', external=True) }}" sizes="16x16">
-    <link rel="manifest" href="{{ url_for('favicon_manifest_json', external=True) }}">
-    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab', external=True) }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
-    <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
-    <script defer src="{{ url_for('static', filename='fontawesome/js/all.js', external=True) }}"></script>
-    <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', external=True) }}{% endif %}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='app/app.css', external=True) }}" rel="stylesheet">{{ config['GLOBAL_CSS']|safe }}
+{{ start_part|safe }}
+    <title>{{ word("Embed test") }}</title>
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} pad-for-navbar">
     <div>
-      <p>{{ word("Here is some top matter") }}</p>
+      <p>{{ word("Here is some content before the interview.") }}</p>
     </div>
-    <div id="dablock" class="dabody pad-for-navbar">
+    <div style="width: 100%; padding: 40px">
+      <div id="dablock" class="dabody js-embedded hide-navbar" style="width: 100%; height: 80vh; border-style: solid; border-width: 1px; border-color: #777">
+      </div>
     </div>
     <div>
-      <p>{{ word("Here is some bottom matter") }}
+      <p>{{ word("Here is some content after the interview.") }}
     </div>
-    {{ scripts|safe }}{{ config['GLOBAL_JS']|safe }}
-    <script src="{{ url_for('index', i=interview_name, js_target='dablock', external=True) }}"></script>
+    {{ scripts|safe }}
+    <script src="{{ interview_url|safe }}"></script>
   </body>
 </html>

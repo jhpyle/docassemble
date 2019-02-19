@@ -541,7 +541,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     #     status.extra_scripts.append(status.question.script)
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
+        back_button = '\n                  <button type="button" class="btn btn-link ' + BUTTON_CLASS + ' questionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
         if status.extras['back button label text'] is not None:
             back_button += status.extras['back button label text']
         else:
@@ -609,7 +609,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += the_progress_bar
     if status.question.question_type == "signature":
         if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-            back_clear_button = '<button class="btn btn-sm btn-secondary signav-left signavbutton sigclear" id="questionbackbutton"><span>' + status.question.back() + '</span></button>'
+            back_clear_button = '<button type="button" class="btn btn-sm btn-link signav-left signavbutton questionbackbutton"><span>' + status.question.back() + '</span></button>'
         else:
             back_clear_button = '<a href="#" role="button" class="btn btn-sm btn-warning signav-left signavbutton sigclear">' + word('Clear') + '</a>'
         output += '            <div class="sigpage" id="sigpage">\n              <div class="sigshowsmallblock sigheader d-block d-md-none" id="sigheader">\n                <div class="siginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm btn-primary signav-right signavbutton sigsave">' + continue_label + '</a>\n                  <div id="sigtitle" class="sigtitle">'

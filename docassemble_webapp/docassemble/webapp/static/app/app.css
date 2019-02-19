@@ -1974,6 +1974,9 @@ div.constraintlist div + div {
     body.dasignature {
 	padding-top: 60px;
     }
+    body.dasignature.navbarhidden {
+	padding-top: 0px;
+    }
     .dasignature > div > .navbar {
         display: block;
     }
@@ -2085,4 +2088,12 @@ div.progress + div.audiovideo-control {
 
 .audio-control {
     width: 100%;
+}
+
+.js-embedded {
+    overflow: auto;
+}
+
+div.hide-navbar .navbar {
+    display: none;
 }

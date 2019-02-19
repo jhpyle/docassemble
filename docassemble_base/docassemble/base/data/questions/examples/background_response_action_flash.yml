@@ -28,7 +28,7 @@ code: |
 event: bg_resp
 code: |
   answer = action_argument('ans')
-  background_response("The answer is " + str(answer) + ".")
+  background_response("The answer is " + text_type(answer) + ".")
 ---
 event: waiting_screen
 question: |

@@ -56,6 +56,12 @@ def recursive_fix_pickle(the_object, seen):
             new_set.add(recursive_fix_pickle(item, seen=seen))
         seen.add(object_id)
         return new_set
+    if isinstance(the_object, tuple):
+        new_list = list()
+        for item in the_object:
+            new_list.append(recursive_fix_pickle(item, seen=seen))
+        seen.add(object_id)
+        return type(the_object)(new_list)
     the_object.__dict__ = dict((recursive_fix_pickle(k, seen=seen), recursive_fix_pickle(v, seen=seen)) for k, v in the_object.__dict__.items())
     seen.add(object_id)
     return the_object

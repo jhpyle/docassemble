@@ -36,7 +36,7 @@ import docassemble.base.parse
 import re
 import os
 import sys
-from flask import session, current_app, has_request_context, url_for
+from flask import session, current_app, has_request_context, url_for as base_url_for
 from flask_mail import Mail as FlaskMail, Message
 from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
@@ -186,6 +186,13 @@ else:
     except:
         DEFAULT_TIMEZONE = 'America/New_York'
 
+def url_for(*pargs, **kwargs):
+    if 'jsembed' in docassemble.base.functions.this_thread.misc:
+        kwargs['_external'] = True
+        if pargs[0] == 'index':
+            kwargs['js_target'] = docassemble.base.functions.this_thread.misc['jsembed']
+    return base_url_for(*pargs, **kwargs)
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
@@ -327,8 +334,12 @@ def unpad(the_string):
 def encrypt_phrase(phrase, secret):
     iv = random_bytes(16)
     encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
-    if isinstance(phrase, unicode):
-        phrase = phrase.encode('utf-8')
+    if PY2:
+        if isinstance(phrase, unicode):
+            phrase = phrase.encode('utf-8')
+    else:
+        if isinstance(phrase, text_type):
+            phrase = bytearray(phrase, 'utf-8')
     return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode('utf-8')
 
 def pack_phrase(phrase):

@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 import docassemble.base.functions
 from docassemble.webapp.core.models import Uploads
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
-from flask import session, has_request_context, url_for
+from flask import session, has_request_context
 from flask_login import current_user
 from sqlalchemy import or_, and_
 import docassemble.base.config

@@ -747,7 +747,6 @@ from pygments import highlight
 from pygments.lexers import YamlLexer, PythonLexer
 from pygments.formatters import HtmlFormatter
 from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
-from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
@@ -777,7 +776,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -1079,7 +1078,7 @@ def remove_question_package(args):
         del args['_question']
     if '_package' in args:
         del args['_package']
-    
+
 def get_url_from_file_reference(file_reference, **kwargs):
     if 'privileged' in kwargs:
         privileged = kwargs['privileged']
@@ -1368,7 +1367,7 @@ def encrypt_session(secret, user_code=None, filename=None):
         db.session.commit()
     return
 
-def substitute_secret(oldsecret, newsecret, user=None):
+def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     if user is None:
         user = current_user
     #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
@@ -1377,16 +1376,19 @@ def substitute_secret(oldsecret, newsecret, user=None):
         return newsecret
     #logmessage("substitute_secret: continuing")
     user_code = session.get('uid', None)
-    to_do = set()
-    if 'i' in session and user_code is not None:
-        to_do.add((session['i'], user_code))
-    for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id).group_by(UserDict.filename, UserDict.key).all():
-        to_do.add((the_record.filename, the_record.key))
-    for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter_by(user_id=user.id).group_by(UserDictKeys.filename, UserDictKeys.key).all():
-        to_do.add((the_record.filename, the_record.key))
-    if user_code:
-        for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
-            to_do.add((the_record.filename, user_code))
+    if to_convert is None:
+        to_do = set()
+        if 'i' in session and user_code is not None:
+            to_do.add((session['i'], user_code))
+        for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id, encrypted=True).group_by(UserDict.filename, UserDict.key).all():
+            to_do.add((the_record.filename, the_record.key))
+        for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id, UserDict.encrypted == True)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
+            to_do.add((the_record.filename, the_record.key))
+        if user_code:
+            for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
+                to_do.add((the_record.filename, user_code))
+    else:
+        to_do = set(to_convert)
     for (filename, user_code) in to_do:
         #obtain_lock(user_code, filename)
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
@@ -1695,7 +1697,7 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
     #return (dict(peer=num_peer, help=len(potential_partners)))
     return result
     
-def do_redirect(url, is_ajax, is_json, is_js):
+def do_redirect(url, is_ajax, is_json, js_target):
     if is_ajax:
         return jsonify(action='redirect', url=url, csrf_token=generate_csrf())
     if is_json:
@@ -1703,11 +1705,11 @@ def do_redirect(url, is_ajax, is_json, is_js):
             url = url + '&json=1'
         else:
             url = url + '?json=1'
-    if is_js:
+    if js_target and 'js_target=' not in url:
         if re.search(r'\?', url):
-            url = url + '&js=1'
+            url = url + '&js_target=' + js_target
         else:
-            url = url + '?js=1'
+            url = url + '?js_target=' + js_target
     return redirect(url)
 
 def do_refresh(is_ajax, yaml_filename):
@@ -1761,14 +1763,14 @@ def additional_css(interview_status):
         start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
     return start_output
 
-def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None):
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False):
     if bootstrap_theme is None:
-        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">'
+        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js') + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', _external=external) + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css', _external=external) + '" rel="stylesheet">'
     if debug:
-        output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+        output += '\n    <link href="' + url_for('static', filename='app/pygments.css', _external=external) + '" rel="stylesheet">'
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
@@ -1829,10 +1831,13 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     saved_file.finalize()
 
 def sub_temp_user_dict_key(temp_user_id, user_id):
+    temp_interviews = list()
     for record in UserDictKeys.query.filter_by(temp_user_id=temp_user_id).all():
         record.temp_user_id = None
         record.user_id = user_id
+        temp_interviews.append((record.filename, record.key))
     db.session.commit()
+    return temp_interviews
 
 def save_user_dict_key(session_id, filename, priors=False, user=None):
     if user is not None:
@@ -1853,13 +1858,14 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
     found = set()
     if priors:
         for the_record in db.session.query(UserDict.filename).filter_by(key=session_id).group_by(UserDict.filename).all():
-            # if the_record.filename not in interview_list:
-            #     logmessage("Other interview found: " + the_record.filename)
             interview_list.add(the_record.filename)
     for filename_to_search in interview_list:
-        the_record = UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, user_id=user_id).first()
-        if the_record:
-            found.add(filename_to_search)
+        if is_auth:
+            for the_record in UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, user_id=user_id):
+                found.add(filename_to_search)
+        else:
+            for the_record in UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, temp_user_id=user_id):
+                found.add(filename_to_search)
     for filename_to_save in (interview_list - found):
         if is_auth:
             new_record = UserDictKeys(key=session_id, filename=filename_to_save, user_id=user_id)
@@ -1918,19 +1924,19 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
 
 def process_bracket_expression(match):
     try:
-        inner = codecs.decode(bytearray(match.group(1), encoding='utf-8'), 'base64').decode('utf8')
+        inner = codecs.decode(bytearray(match.group(1), encoding='utf-8'), 'base64').decode('utf-8')
     except:
         inner = match.group(1)
     return("[" + re.sub(r'^u', r'', repr(inner)) + "]")
 
 def myb64unquote(the_string):
-    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf-8'))
 
 def safeid(text):
-    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf-8'))
 
 def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
@@ -2199,7 +2205,7 @@ def release_lock(user_code, filename):
     #sys.stderr.write("obtain_lock: releasing " + key + "\n")
     r.delete(key)
 
-def make_navbar(status, steps, show_login, chat_info, debug_mode):
+def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=None):
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
             inverse = 'navbar-dark bg-dark '
@@ -2209,8 +2215,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode):
         inverse = 'navbar-dark bg-dark '
     else:
         inverse = 'navbar-light-bg-light '
+    if 'jsembed' in docassemble.base.functions.this_thread.misc:
+        fixed_top = ''
+    else:
+        fixed_top = ' fixed-top'
+    if extra_class is not None:
+        fixed_top += ' ' + extra_class
     navbar = """\
-    <div class="navbar fixed-top navbar-expand-md """ + inverse + '"' + """>
+    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """>
       <div class="container danavcontainer justify-content-start">
 """
     if status.question.can_go_back and steps > 1:
@@ -3523,7 +3535,7 @@ class FacebookSignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None, None
         oauth_session = self.service.get_auth_session(
-            decoder=json.loads,
+            decoder=safe_json_loads,
             data={'code': request.args['code'],
                   'redirect_uri': self.get_callback_url()}
         )
@@ -3561,7 +3573,7 @@ class AzureSignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None, None
         oauth_session = self.service.get_auth_session(
-            decoder=json.loads,
+            decoder=safe_json_loads,
             data={'code': request.args['code'],
                   'client_id': self.consumer_id,
                   'client_secret': self.consumer_secret,
@@ -3578,7 +3590,12 @@ class AzureSignIn(OAuthSignIn):
              'last_name': me.get('surname', None),
              'name': me.get('displayName', me.get('userPrincipalName', None))}
         )
-    
+
+def safe_json_loads(data):
+    if PY3:
+        return json.loads(data.decode("utf-8", "strict"))
+    return json.loads(data)
+
 class Auth0SignIn(OAuthSignIn):
     def __init__(self):
         super(Auth0SignIn, self).__init__('auth0')
@@ -3603,7 +3620,7 @@ class Auth0SignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None, None
         oauth_session = self.service.get_auth_session(
-            decoder=json.loads,
+            decoder=safe_json_loads,
             data={'code': request.args['code'],
                   'grant_type': 'authorization_code',
                   'redirect_uri': self.get_callback_url()}
@@ -3700,7 +3717,7 @@ def auto_login():
     r.delete(the_key)
     info_text = info_text.decode()
     try:
-        info = json.loads(decrypt_phrase(info_text, decryption_key))
+        info = decrypt_dictionary(info_text, decryption_key)
     except:
         abort(403)
     user = UserModel.query.filter_by(id=info['user_id']).first()
@@ -3763,15 +3780,17 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
+    to_convert = list()
     if 'i' in session and 'uid' in session:
         #obtain_lock(session['uid'], session['i'])
         if 'tempuser' in session:
-            sub_temp_user_dict_key(session['tempuser'], user.id)
+            to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+        to_convert.append((session['i'], session['uid']))
         save_user_dict_key(session['uid'], session['i'], priors=True)
         session['key_logged'] = True
         #release_lock(session['uid'], session['i'])
     #logmessage("oauth_callback: calling substitute_secret")
-    secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
+    secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
     response = redirect(url_for('interview_list', from_login='1'))
     response.set_cookie('secret', secret)
     return response
@@ -3865,14 +3884,16 @@ def phone_login_verify():
                 db.session.commit()
             login_user(user, remember=False)
             r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
+            to_convert = list()
             if 'i' in session and 'uid' in session:
                 #obtain_lock(session['uid'], session['i'])
                 if 'tempuser' in session:
-                    sub_temp_user_dict_key(session['tempuser'], user.id)
+                    to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+                to_convert.append((session['i'], session['uid']))
                 save_user_dict_key(session['uid'], session['i'], priors=True)
                 session['key_logged'] = True
                 #release_lock(session['uid'], session['i'])
-            secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
+            secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
             response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret)
             return response
@@ -4903,12 +4924,11 @@ def title_converter(content, part, status):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
     return docassemble.base.util.markdown_to_html(content, status=status)
 
-#PPP
 @app.route("/test_embed", methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
 def test_embed():
-    if not DEBUG:
-        abort(404)
-    yaml_filename = request.args('i', final_default_yaml_filename)
+    yaml_filename = request.args.get('i', final_default_yaml_filename)
     user_dict = fresh_dictionary()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web'))
@@ -4916,9 +4936,10 @@ def test_embed():
         interview.assemble(user_dict, interview_status)
     except:
         pass
-    css = global_css + additional_css(interview_status)
-    scripts = standard_scripts(external=True) + additional_scripts(interview_status, yaml_filename)
-    return render_template('pages/test_embed.html', interview_name=yaml_filename, scripts=scripts, css=css), 200
+    current_language = docassemble.base.functions.get_language()
+    start_part = standard_html_start(interview_language=current_language, debug=False, bootstrap_theme=interview_status.question.interview.get_bootstrap_theme(), external=True) + global_css + additional_css(interview_status)
+    scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(interview_status, yaml_filename) + global_js
+    return render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True)), 200
 
 @app.route("/interview", methods=['POST', 'GET'])
 def index():
@@ -4927,25 +4948,25 @@ def index():
     else:
         is_ajax = False
     return_fake_html = False
-        # if 'newsecret' in session:
-        #     logmessage("interview_list: fixing cookie")
-        #     response = redirect(url_for('index'))
-        #     response.set_cookie('secret', session['newsecret'])
-        #     del session['newsecret']
-        #     return response
     if (request.method == 'POST' and 'json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
         the_interface = 'json'
         is_json = True
         is_js = False
+        js_target = False
     elif 'js_target' in request.args and request.args['js_target'] != '':
         the_interface = 'web'
-        js_target = request.args['js_target']
         is_json = False
-        is_js = True
+        docassemble.base.functions.this_thread.misc['jsembed'] = request.args['js_target']
+        if is_ajax:
+            js_target = False
+        else:
+            js_target = request.args['js_target']
+            is_js = True
     else:
         the_interface = 'web'
         is_json = False
-        is_js = False        
+        is_js = False
+        js_target = False
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
     #logmessage("index: session uid is " + str(session_id))
@@ -5151,7 +5172,7 @@ def index():
         #logmessage("index: there were args")
         if 'action' in request.args:
             session['action'] = request.args['action']
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, is_js)
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
             if set_cookie:
                 response.set_cookie('secret', secret)
             if expire_visitor_secret:
@@ -5160,7 +5181,7 @@ def index():
             #logmessage("index: returning action response")
             return response
         for argname in request.args:
-            if argname in ('i', 'json'):
+            if argname in ('i', 'json', 'js_target'):
                 continue
             if argname in ('from_list', 'session', 'cache', 'reset', 'new_session'):
                 # 'filename', 'question', 'format', 'index', 'action'
@@ -5178,7 +5199,7 @@ def index():
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, is_js)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if set_cookie:
             response.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -6388,18 +6409,18 @@ def index():
     if interview_status.question.question_type == "signin":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, is_js)
+        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
     if interview_status.question.question_type == "register":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, is_js)
+        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
     if interview_status.question.question_type == "leave":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
+            return do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            return do_redirect(exit_page, is_ajax, is_json, is_js)
+            return do_redirect(exit_page, is_ajax, is_json, js_target)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
@@ -6414,9 +6435,9 @@ def index():
         delete_session_for_interview()
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            response = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json, is_js)
+            response = do_redirect(exit_page, is_ajax, is_json, js_target)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout()
@@ -6427,9 +6448,9 @@ def index():
         release_lock(user_code, yaml_filename)
         delete_session()
         if interview_status.questionText != '':
-            response = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json, is_js)
+            response = do_redirect(exit_page, is_ajax, is_json, js_target)
         if current_user.is_authenticated:
             flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
@@ -6450,11 +6471,11 @@ def index():
                     include_internal = interview_status.question.include_internal
                 else:
                     include_internal = False
-                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
+                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), '200 OK')
             elif hasattr(interview_status.question, 'binaryresponse'):
                 response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
             else:
-                response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+                response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
             response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
@@ -6485,7 +6506,7 @@ def index():
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, is_js)
+        response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
     # Why do this?  To prevent loops of redirects?
@@ -6636,7 +6657,7 @@ def index():
       var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
-      var daJsEmbed = """ + ('true' if is_js else 'false') + """;
+      var daJsEmbed = """ + (json.dumps(js_target) if is_js else 'false') + """;
       var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
@@ -6663,6 +6684,14 @@ def index():
       var daVarLookup;
       var daVarLookupRev;
       var daValLookup;
+      var daTargetDiv;
+      var daPostURL = """ + json.dumps(url_for('index', i=yaml_filename, _external=True)) + """;
+      if (daJsEmbed){
+        daTargetDiv = '#' + daJsEmbed;
+      }
+      else{
+        daTargetDiv = "#dabody";
+      }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
           var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -6803,7 +6832,7 @@ def index():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
@@ -6829,9 +6858,16 @@ def index():
               callback = function(){};
           }
           var data = {action: action, arguments: args};
+          var url;
+          if (daJsEmbed){
+            url = daPostURL + "?action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          else{
+            url = "?action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
           $.ajax({
             type: "GET",
-            url: "?action=" + encodeURIComponent(btoa(JSON.stringify(data))),
+            url: url,
             success: callback,
             error: function(xhr, status, error){
               setTimeout(function(){
@@ -7018,7 +7054,7 @@ def index():
         $(newDiv).html(""" + json.dumps(word("Your screen is being controlled by an operator.")) + """)
         $(newDiv).attr('id', "controlAlert");
         $(newDiv).css("display", "none");
-        $(newDiv).appendTo($("#dabody"));
+        $(newDiv).appendTo($(daTargetDiv));
         if (mode == 'animated'){
           $(newDiv).slideDown();
         }
@@ -7431,7 +7467,7 @@ def index():
         if (do_iframe_upload){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
-          $("#dabody").append(iframe);
+          $(daTargetDiv).append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
@@ -7476,7 +7512,7 @@ def index():
         if (newFileList.length > 0){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
-          $("#dabody").append(iframe);
+          $(daTargetDiv).append(iframe);
           $(form).attr("target", "uploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
@@ -7515,7 +7551,7 @@ def index():
         daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
       }
       function daProcessAjaxError(xhr, status, error){
-        $("#dabody").html(xhr.responseText);
+        $(daTargetDiv).html(xhr.responseText);
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -7550,7 +7586,7 @@ def index():
         if ("activeElement" in document){
           document.activeElement.blur();
         }
-        $("#dabody").html(data);
+        $(daTargetDiv).html(data);
       }
       function daProcessAjax(data, form, doScroll){
         daInformedChanged = false;
@@ -7562,7 +7598,7 @@ def index():
           if ("activeElement" in document){
             document.activeElement.blur();
           }
-          $("#dabody").html(data.body);
+          $(daTargetDiv).html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
@@ -7574,11 +7610,13 @@ def index():
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
           //console.log("daProcessAjax: pushing " + daSteps);
-          if (daSteps > history.state.steps){
-            history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
-          }
-          else{
-            history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+          if (!daJsEmbed){
+            if (history.state != null && daSteps > history.state.steps){
+              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
+            }
+            else{
+              history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+            }
           }
           daAllowGoingBack = data.allow_going_back;
           daQuestionID = data.id;
@@ -7805,7 +7843,7 @@ def index():
               var command = data.commands[i];
               if (command.extra == 'flash'){
                 if (!$("#flash").length){
-                  $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+                  $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
                 }
                 $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + command.value + '<\/div>');
                 //console.log("command is " + command.value);
@@ -7983,7 +8021,7 @@ def index():
       }
       function daShowSpinner(){
         if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo("#dabody");
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
         }
         else{
           var newSpan = document.createElement('span');
@@ -8008,8 +8046,8 @@ def index():
         contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $("#dabody").css('background-color'));
-        $("#dawidth").css('color', $("#dabody").css('background-color'));
+        $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
+        $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
         $(this).width($('#dawidth').width() + 16);
         setTimeout(function(){
           $("#dawidth").remove();
@@ -8107,6 +8145,7 @@ def index():
         $(".to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
           daWhichButton = this;
+          return true;
         });
         $('#source').on('hide.bs.collapse', function (e) {
           $("#readability").slideUp();
@@ -8176,7 +8215,7 @@ def index():
           $('#helptoggle').tab('show');
           return false;
         });
-        $("#questionbackbutton").on('click', function(event){
+        $(".questionbackbutton").on('click', function(event){
           event.preventDefault();
           $("#backbutton").submit();
           return false;
@@ -8192,9 +8231,16 @@ def index():
           if (daInformedChanged){
             informed = '&informed=' + Object.keys(daInformed).join(',');
           }
+          var url;
+          if (daJsEmbed){
+            url = daPostURL;
+          }
+          else{
+            url = $("#backbutton").attr('action');
+          }
           $.ajax({
             type: "POST",
-            url: $("#backbutton").attr('action'),
+            url: url,
             data: $("#backbutton").serialize() + '&ajax=1' + informed, 
             success: function(data){
               setTimeout(function(){
@@ -8323,7 +8369,12 @@ def index():
           }
         });
         $("a[data-target='#help']").on("shown.bs.tab", function(){
-          window.scrollTo(0, 1);
+          if (daJsEmbed){
+            $(daTargetDiv)[0].scrollTo(0, 1);
+          }
+          else{
+            window.scrollTo(0, 1);
+          }
           $("#helptoggle span").removeClass('daactivetext')
           $("#helptoggle").blur();
         });
@@ -8632,7 +8683,12 @@ def index():
         }, 3000);
         if (doScroll){
           setTimeout(function () {
-            window.scrollTo(0, 1);
+            if (daJsEmbed){
+              $(daTargetDiv)[0].scrollTo(0, 1);
+            }
+            else{
+              window.scrollTo(0, 1);
+            }
           }, 10);
         }
         if (daShowingSpinner){
@@ -8654,7 +8710,9 @@ def index():
       $(document).ready(function(){
         daInitialize(1);
         //console.log("ready: replaceState " + daSteps);
-        history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+        if (!daJsEmbed){
+          history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+        }
         var daReloadAfter = """ + str(int(reload_after)) + """;
         if (daReloadAfter > 0){
           daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
@@ -8671,6 +8729,23 @@ def index():
             daSocket.emit('terminate');
           }
         });
+        if (daJsEmbed){
+          $.ajax({
+            type: "POST",
+            url: daPostURL,
+            data: 'csrf_token=' + daCsrf + '&ajax=1',
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, $("#daform"), 0);
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+        }
       });
       $(window).ready(daUpdateHeight);
       $(window).resize(daUpdateHeight);
@@ -8920,9 +8995,15 @@ def index():
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
-        bodyclass="dasignature"
+        if interview_status.question.interview.options.get('hide navbar', False):
+            bodyclass="dasignature navbarhidden"
+        else:
+            bodyclass="dasignature"
     else:
-        bodyclass="dabody pad-for-navbar"
+        if interview_status.question.interview.options.get('hide navbar', False):
+            bodyclass="dabody"
+        else:
+            bodyclass="dabody pad-for-navbar"
     if hasattr(interview_status.question, 'id'):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
         # if not is_ajax:
@@ -9007,7 +9088,7 @@ def index():
         for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
                 continue
-            phrase = to_text(interview_status.screen_reader_text[question_type]) #.encode('utf8')
+            phrase = to_text(interview_status.screen_reader_text[question_type]) #.encode('utf-8')
             if (not phrase) or len(phrase) < 10:
                 phrase = "The sky is blue."
             phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
@@ -9030,7 +9111,7 @@ def index():
                 readability_report += '          </table>' + "\n"
     if interview_status.using_screen_reader:
         for question_type in ('question', 'help'):
-            #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
+            #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
             if question_type not in interview_status.screen_reader_text:
                 continue
             phrase = to_text(interview_status.screen_reader_text[question_type])
@@ -9070,7 +9151,11 @@ def index():
                     logmessage("index: could not find css file " + str(fileref))
         start_output += global_css + additional_css(interview_status)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
-    output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode) + flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
+    if interview_status.question.interview.options.get('hide navbar', False):
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, extra_class='invisible')
+    else:
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode)
+    output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         output += the_nav_bar
     output += content
@@ -9161,7 +9246,7 @@ def index():
     output += '    </div>'
     if not is_ajax:
         end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>" + "\n  </body>\n</html>"
-    #logmessage(output.encode('utf8'))
+    #logmessage(output.encode('utf-8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
         key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
@@ -9198,12 +9283,12 @@ def index():
             response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
     elif is_js:
-        output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip()
-        response = make_response(output.encode('utf8'), '200 OK')
-        response.headers['Content-type'] = 'text/html; charset=utf-8'
+        output = the_js
+        response = make_response(output.encode('utf-8'), '200 OK')
+        response.headers['Content-type'] = 'application/javascript; charset=utf-8'
     else:
         output = start_output + output + end_output
-        response = make_response(output.encode('utf8'), '200 OK')
+        response = make_response(output.encode('utf-8'), '200 OK')
         response.headers['Content-type'] = 'text/html; charset=utf-8'
     if set_cookie:
         response.set_cookie('secret', secret)
@@ -9345,7 +9430,7 @@ def speak_file():
             url = voicerss_config.get('url', "https://api.voicerss.org/")
             #logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
-            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase.encode('utf-8'), hl=str(entry.language) + '-' + str(entry.dialect)))
+            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("speak_file: calling " + " ".join(call_array))
@@ -9689,6 +9774,7 @@ def observer():
       var daInformedChanged = false;
       var daDisable = null;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
+      var daTargetDiv = "#dabody";
       window.daTurnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
@@ -9743,7 +9829,7 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
-        $("#dabody").html(xhr.responseText);
+        $(daTargetDiv).html(xhr.responseText);
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -9815,8 +9901,8 @@ def observer():
         contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
         $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
         $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $("#dabody").css('background-color'));
-        $("#dawidth").css('color', $("#dabody").css('background-color'));
+        $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
+        $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
         $(this).width($('#dawidth').width() + 16);
         setTimeout(function(){
           $("#dawidth").remove();
@@ -9830,7 +9916,7 @@ def observer():
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
@@ -10129,7 +10215,7 @@ def observer():
             daSocket.on('newpage', function(incoming) {
                 //console.log("Got newpage")
                 var data = incoming.obj;
-                $("#dabody").html(data.body);
+                $(daTargetDiv).html(data.body);
                 $("body").removeClass();
                 $("body").addClass(data.bodyclass);
                 daInitialize(1);
@@ -10232,7 +10318,7 @@ def observer():
     output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody pad-for-navbar') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
     output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
-    response = make_response(output.encode('utf8'), '200 OK')
+    response = make_response(output.encode('utf-8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
 
@@ -10327,7 +10413,7 @@ def monitor():
           $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
           $(newDiv).html(message)
           $(newDiv).css("display", "none");
-          $(newDiv).appendTo($("#dabody"));
+          $(newDiv).appendTo($(daTargetDiv));
           $(newDiv).slideDown();
           setTimeout(function(){
             $(newDiv).slideUp(300, function(){
@@ -11789,6 +11875,26 @@ def create_playground_package():
             if repository['name'] in all_repositories and repository['owner']['login'] == github_user_name:
                 continue
             all_repositories[repository['name']] = repository
+        org_repositories = []
+        orgs_info = get_orgs_info(http)
+        for org_info in orgs_info:
+            resp, content = http.request("https://api.github.com/orgs/:" + str(org_info['login']) + '/repos', "GET")
+            if int(resp['status']) == 200:
+                org_repositories.extend(json.loads(content.decode()))
+                while True:
+                    next_link = get_next_link(resp)
+                    if next_link:
+                        resp, content = http.request(next_link, "GET")
+                        if int(resp['status']) != 200:
+                            raise DAError("get_user_repositories: could not get information from next URL")
+                        else:
+                            org_repositories.extend(json.loads(content.decode()))
+                    else:
+                        break
+        for repository in org_repositories:
+            if repository['name'] in all_repositories:
+                continue
+            all_repositories[repository['name']] = repository
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
@@ -11877,7 +11983,6 @@ def create_playground_package():
                     resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
                     if int(resp['status']) != 201:
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
-                    all_repositories[github_package_name] = json.loads(content.decode())
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -14306,7 +14411,7 @@ def playground_packages():
                     github_ssh = repo_info['ssh_url']
                     if repo_info['private']:
                         github_use_ssh = True
-                    github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on your GitHub account") + '</a>.'
+                    github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
                     on_github = True
                     branch_info = get_branch_info(http, repo_info['full_name'])
                     found = True
@@ -15892,7 +15997,7 @@ def server_error(the_error):
           priority = 'info'
         }
         if (!$("#flash").length){
-          $("#dabody").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
         }
         $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
@@ -17052,7 +17157,7 @@ def valid_date_key(x):
         return datetime.datetime.now()
     return x['dict']['_internal']['starttime']
     
-def fix_secret(user=None):
+def fix_secret(user=None, to_convert=None):
     #logmessage("fix_secret starting")
     if user is None:
         user = current_user
@@ -17063,7 +17168,7 @@ def fix_secret(user=None):
         if secret == 'None' or secret != newsecret:
             #logmessage("fix_secret: calling substitute_secret with " + str(secret) + ' and ' + str(newsecret))
             #logmessage("fix_secret: setting newsecret session")
-            session['newsecret'] = substitute_secret(str(secret), newsecret, user=user)
+            session['newsecret'] = substitute_secret(str(secret), newsecret, user=user, to_convert=to_convert)
         # else:
         #     logmessage("fix_secret: secrets are the same")
     else:
@@ -17071,14 +17176,16 @@ def fix_secret(user=None):
 
 def login_or_register(sender, user, **extra):
     #logmessage("login or register!")
+    to_convert = list()
     if 'i' in session and 'uid' in session:
         #obtain_lock(session['uid'], session['i'])
         if 'tempuser' in session:
-            sub_temp_user_dict_key(session['tempuser'], user.id)
+            to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+        to_convert.append((session['i'], session['uid']))
         save_user_dict_key(session['uid'], session['i'], priors=True, user=user)
         session['key_logged'] = True
         #release_lock(session['uid'], session['i'])
-    fix_secret(user=user)
+    fix_secret(user=user, to_convert=to_convert)
     if 'tempuser' in session:
         changed = False
         for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
@@ -19087,21 +19194,25 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci['encrypted'] = is_encrypted
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     #interview_status.checkin = True
-    old_language = docassemble.base.functions.get_language()
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
     try:
         interview.assemble(user_dict, interview_status=interview_status, old_user_dict=old_user_dict)
     except DAErrorMissingVariable as err:
         if use_lock:
             #save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=False, steps=steps)
             release_lock(session_id, yaml_filename)
-        docassemble.base.functions.set_language(old_language)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         return dict(questionType='undefined_variable', variable=err.variable, message_log=docassemble.base.functions.get_message_log())
     except Exception as e:
         if use_lock:
             release_lock(session_id, yaml_filename)
-        docassemble.base.functions.set_language(old_language)
-        raise Exception("Failure to assemble interview: " + str(e))
-    docassemble.base.functions.set_language(old_language)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
+        raise Exception("Failure to assemble interview: " + text_type(e))
+    restore_session(sbackup)
+    docassemble.base.functions.restore_thread_variables(tbackup)
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
         if user_dict.get('multi_user', False) is True and is_encrypted is True:
@@ -19118,11 +19229,11 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                 include_internal = interview_status.question.include_internal
             else:
                 include_internal = False
-            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), '200 OK')
         elif hasattr(interview_status.question, 'binaryresponse'):
             response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
         else:
-            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+            response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         return dict(questionType='response', response=response_to_send)
     elif interview_status.question.question_type == "sendfile":
@@ -19172,7 +19283,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     #    data['next_action'] = next_action_review
     if reload_after and reload_after > 0:
         data['reload_after'] = reload_after
-    for key in data.keys():
+    for key in list(data.keys()):
         if key == "_question_name":
             data['questionName'] = data[key]
             del data[key]
@@ -19239,11 +19350,11 @@ def api_session_action():
                 include_internal = interview_status.question.include_internal
             else:
                 include_internal = False
-            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf8'), '200 OK')
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), '200 OK')
         elif hasattr(interview_status.question, 'binaryresponse'):
             response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
         else:
-            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+            response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         return response_to_send
     elif interview_status.question.question_type == "sendfile":
@@ -19298,7 +19409,7 @@ def api_login_url():
         info['url_args'] = url_args
     code = random_string(24)
     encryption_key = random_string(16)
-    encrypted_text = encrypt_phrase(json.dumps(info), encryption_key)
+    encrypted_text = encrypt_dictionary(info, encryption_key)
     the_key = 'da:auto_login:' + code
     pipe = r.pipeline()
     pipe.set(the_key, encrypted_text)

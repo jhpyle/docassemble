@@ -105,7 +105,7 @@ def click_back_button(step):
 @step('I click the question back button')
 def click_question_back_button(step):
     do_wait()
-    world.browser.find_element_by_id('questionbackbutton').click()
+    world.browser.find_element_by_css_selector('.questionbackbutton').click()
     world.browser.wait_for_it()
 
 @step('I click the button "([^"]+)"')

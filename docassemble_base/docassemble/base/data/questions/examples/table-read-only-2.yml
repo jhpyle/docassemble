@@ -1,7 +1,7 @@
 metadata:
   title: Table with read only
   short title: Read only
-  documentation: "https://docassemble.org/docs/template.html#read only"
+  documentation: "https://docassemble.org/docs/groups.html#read only"
   example start: 3
   example end: 5
 ---

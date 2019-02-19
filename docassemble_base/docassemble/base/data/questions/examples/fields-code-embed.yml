@@ -34,15 +34,15 @@ code: |
   for index in range(people.number()):
     name_list.append(
       {"label": ordinal(index, capitalize=True) + " person's given name",
-       "field": "people[" + str(index) + "].name.first"
+       "field": "people[" + text_type(index) + "].name.first"
       })
     name_list.append(
       {"label": ordinal(index, capitalize=True) + " person's surname",
-       "field": "people[" + str(index) + "].name.last"
+       "field": "people[" + text_type(index) + "].name.last"
       })
     name_display += "The " + ordinal(index) + " person's name is "\
-                  + "[FIELD people[" + str(index) + "].name.first] "\
-                  + "[FIELD people[" + str(index) + "].name.last].\n\n"
+                  + "[FIELD people[" + text_type(index) + "].name.first] "\
+                  + "[FIELD people[" + text_type(index) + "].name.last].\n\n"
 ---
 mandatory: True
 question: |

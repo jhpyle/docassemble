@@ -482,7 +482,20 @@ class DAList(DAObject):
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         return super(DAList, self).init(*pargs, **kwargs)
-    
+    def gathered_and_complete(self):
+        """Pseudo-attribute that ensures all items in the list are complete and then returns True."""
+        if not hasattr(self, 'doing_gathered_and_complete'):
+            if self.complete_attribute == 'complete':
+                for item in self.elements:
+                    if hasattr(item, self.complete_attribute):
+                        delattr(item, self.complete_attribute)
+            if hasattr(self, 'gathered'):
+                del self.gathered
+            self.doing_gathered_and_complete = True
+        self.gather()
+        if hasattr(self, 'doing_gathered_and_complete'):
+            del self.doing_gathered_and_complete
+        return True
     def filter(self, *pargs, **kwargs):
         """Returns a filtered version of the list containing only items with particular values of attributes."""
         self._trigger_gather()
@@ -809,7 +822,7 @@ class DAList(DAObject):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         #sys.stderr.write("Gather\n")
         if hasattr(self, 'gathered') and self.gathered:
-            if len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
+            if self.auto_gather and len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
                 del self.gathered
             else:
                 return True
@@ -886,6 +899,8 @@ class DAList(DAObject):
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
+        if hasattr(self, 'doing_gathered_and_complete'):
+            del self.doing_gathered_and_complete
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
@@ -1066,9 +1081,13 @@ class DAList(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
-            items = [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
-            if self.complete_attribute is not None:
+            items = []
+            if self.complete_attribute == 'complete':
+                items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+            items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+            items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
@@ -1499,10 +1518,27 @@ class DADict(DAObject):
                 getattr(elem, complete_attribute)
             else:
                 text_type(elem)
+    def gathered_and_complete(self):
+        """Pseudo-attribute that ensures all items in the dictionary are complete and then returns True."""
+        if not hasattr(self, 'doing_gathered_and_complete'):
+            if self.complete_attribute == 'complete':
+                for item in list(self.elements.values()):
+                    if hasattr(item, self.complete_attribute):
+                        delattr(item, self.complete_attribute)
+            if hasattr(self, 'gathered'):
+                del self.gathered
+            self.doing_gathered_and_complete = True
+        self.gather()
+        if hasattr(self, 'doing_gathered_and_complete'):
+            del self.doing_gathered_and_complete
+        return True
     def gather(self, item_object_type=None, number=None, minimum=None, complete_attribute=None, keys=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
-            return True
+            if self.auto_gather and len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
+                del self.gathered
+            else:
+                return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             new_item_parameters = self.object_type_parameters
@@ -1785,10 +1821,13 @@ class DADict(DAObject):
                 use_edit = val.get('edit', True)
                 use_delete = val.get('delete', True)
         if use_edit:
-            items = [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
-            #items = [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]
-            if self.complete_attribute is not None:
+            items = []
+            if self.complete_attribute == 'complete':
+                items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+            items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+            items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
@@ -2043,7 +2082,10 @@ class DASet(DAObject):
 
         """
         if hasattr(self, 'gathered') and self.gathered:
-            return True
+            if self.auto_gather and len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
+                del self.gathered
+            else:
+                return True
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements):
             text_type(elem)
@@ -2079,7 +2121,7 @@ class DASet(DAObject):
         """Returns the items in the set, separated by commas, with 
         "and" before the last item."""
         self._trigger_gather()
-        return comma_and_list(sorted(map(str, self.elements)), **kwargs)
+        return comma_and_list(sorted(map(text_type, self.elements)), **kwargs)
     def __contains__(self, item):
         self._trigger_gather()
         return self.elements.__contains__(item)

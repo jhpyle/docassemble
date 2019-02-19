@@ -31,6 +31,6 @@ event: add_numbers
 code: |
   if action_argument('var_a') != '' and action_argument('var_b') != '':
     answer = float(action_argument('var_a')) * float(action_argument('var_b'))
-    background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
+    background_response('flash("Hint: C should be " + ' + text_type(answer) + ', "success")', 'javascript')
   background_response()
   

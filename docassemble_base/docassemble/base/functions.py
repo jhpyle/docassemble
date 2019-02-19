@@ -17,6 +17,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
 import locale
 import decimal
+import docassemble.base.astparser
 if PY2:
     from urllib import quote as urllibquote
     FileType = file
@@ -1289,7 +1290,6 @@ class ThreadVariables(threading.local):
     current_package = None
     interview = None
     interview_status = None
-    current_question = None
     evaluation_context = None
     docx_template = None
     gathering_mode = dict()
@@ -1304,11 +1304,7 @@ class ThreadVariables(threading.local):
     message_log = list()
     misc = dict()
     prevent_going_back = False
-    current_info = dict()
-    current_package = None
     current_question = None
-    internal = dict()
-    current_variable = list()
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -1319,13 +1315,13 @@ this_thread = ThreadVariables()
 
 def backup_thread_variables():
     backup = dict()
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars']:
+    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'current_question', 'evaluation_context', 'docx_template', 'gathering_mode', 'global_vars', 'current_variable', 'template_vars', 'open_files', 'saved_files', 'message_log', 'misc', 'prevent_going_back', 'current_info', 'current_package']:
         backup[key] = copy.deepcopy(getattr(this_thread, key))
     return backup
 
 def restore_thread_variables(backup):
     #logmessage("restore_thread_variables")
-    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars']:
+    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'current_question', 'evaluation_context', 'docx_template', 'gathering_mode', 'global_vars', 'current_variable', 'template_vars', 'open_files', 'saved_files', 'message_log', 'misc', 'prevent_going_back', 'current_info', 'current_package']:
         setattr(this_thread, key, backup[key])
 
 def background_response(*pargs, **kwargs):
@@ -2640,9 +2636,19 @@ def process_action():
         raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
+    elif the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
+        group_name = this_thread.current_info['arguments']['group']
+        if illegal_variable_name(group_name):
+            raise DAError("Illegal variable name")
+        value(group_name).gathered_and_complete()
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['group'] == group_name:
+            this_thread.internal['event_stack'][unique_id].pop(0)
+        raise ForcedReRun()
     elif the_action == '_da_list_complete' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        the_list._validate(the_list.object_type, the_list.complete_attribute)
+        #the_list._validate(the_list.object_type, the_list.complete_attribute)
+        the_list.gathered_and_complete()
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
@@ -2935,6 +2941,17 @@ def defined(var):
         #logmessage("Returning False4")
         return False
     return True
+
+def illegal_variable_name(var):
+    if re.search(r'[\n\r]', var):
+        return True
+    try:
+        t = ast.parse(var)
+    except:
+        return True
+    detector = docassemble.base.astparser.detectIllegal()
+    detector.visit(t)
+    return detector.illegal
 
 def value(var):
     """Returns the value of the variable given by the string 'var'."""

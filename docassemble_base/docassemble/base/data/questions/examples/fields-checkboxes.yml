@@ -2,8 +2,11 @@ metadata:
   title: Checkboxes within fields
   short title: Checkboxes
   documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
-  example start: 1
-  example end: 2
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
 ---
 question: |
   Please tell me what you think.
@@ -35,4 +38,4 @@ subquestion: |
 mandatory: True
 ---
 code: |
-  variable_as_code = str(likes_fruit.elements)
+  variable_as_code = text_type(likes_fruit.elements)

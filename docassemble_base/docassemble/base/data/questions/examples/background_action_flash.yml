@@ -1,8 +1,11 @@
 metadata:
   title: Return a value and show a message
-  example start: 2
-  example end: 4
+  example start: 3
+  example end: 5
   documentation: "https://docassemble.org/docs/background.html#ui_notification"
+---
+modules:
+  - docassemble.base.util
 ---
 mandatory: True
 code: |
@@ -22,7 +25,7 @@ fields:
 ---
 event: bg_task
 code: |
-  the_answer = str(553 + action_argument('additional'))
+  the_answer = text_type(553 + action_argument('additional'))
   background_response("The answer is " + the_answer + ".")
 ---
 event: waiting_screen

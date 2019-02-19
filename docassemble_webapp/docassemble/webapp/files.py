@@ -5,6 +5,7 @@ import re
 import json
 import pytz
 import shutil
+import requests
 from io import open
 if PY2:
     from urllib import urlencode, urlretrieve
@@ -166,7 +167,13 @@ class SavedFile(object):
     def fetch_url_post(self, url, post_args, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
-        urlretrieve(url, os.path.join(self.directory, filename), None, urlencode(post_args))
+        r = requests.post(url, data=post_args)
+        if r.status_code != 200:
+            raise DAError('fetch_url_post: retrieval from ' + url + 'failed')
+        with open(os.path.join(self.directory, filename), 'wb') as fp:
+            for block in r.iter_content(1024):
+                fp.write(block)
+        #urlretrieve(url, os.path.join(self.directory, filename), None, urlencode(post_args))
         self.save()
         return
     def size_in_bytes(self, **kwargs):

@@ -281,6 +281,7 @@ $.fn.drawMouse = function() {
     daWaiter = 0;
     move(e);
     clicked = 0;
+    return true;
   };
   $(this).on("mousedown", start);
   $(this).on("mousemove", move);

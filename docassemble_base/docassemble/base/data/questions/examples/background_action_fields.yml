@@ -1,8 +1,11 @@
 metadata:
   title: Return a value and populate fields
-  example start: 2
-  example end: 4
+  example start: 3
+  example end: 5
   documentation: "https://docassemble.org/docs/background.html#ui_notification"
+---
+modules:
+  - docassemble.base.util
 ---
 mandatory: True
 code: |
