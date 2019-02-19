@@ -7542,13 +7542,14 @@ def index():
       function daPushChanges(){
         //console.log("daPushChanges");
         if (daCheckinSeconds == 0 || daShowIfInProcess){
-          return;
+          return true;
         }
         if (daCheckinInterval != null){
           clearInterval(daCheckinInterval);
         }
         daCheckin();
         daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
+        return true;
       }
       function daProcessAjaxError(xhr, status, error){
         $(daTargetDiv).html(xhr.responseText);

@@ -1,0 +1,134 @@
+metadata:
+  title: New or existing object
+  short title: Object
+  documentation: "https://docassemble.org/docs/recipes.html#new or existing"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - boss: Individual
+  - employee: Individual
+  - customers: DAList.using(object_type=Individual)
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  The boss is ${ boss }.
+
+  The employee is ${ employee }.
+
+  The customers are ${ customers }.
+
+  % if boss in customers or employee in customers:
+  Either the boss or the employee is also a customer.
+  % else:
+  Neither the boss nor the employee is also a customer.
+  % endif
+---
+question: Are there any customers?
+yesno: customers.there_are_any
+---
+question: Is there another customer?
+yesno: customers.there_is_another
+---
+code: |
+  people = ([boss] if defined('boss') and boss.name.defined() else []) \
+         + ([employee] if defined('employee') and employee.name.defined() else []) \
+         + customers.complete_elements()
+---
+reconsider:
+  - people
+question: |
+  Who is the boss?
+fields:
+  - Existing or New: boss.existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: boss
+    show if:
+      variable: boss.existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: boss.name.first
+    show if:
+      variable: boss.existing_or_new
+      is: New
+  - Last Name: boss.name.last
+    show if:
+      variable: boss.existing_or_new
+      is: New
+  - Birthday: boss.birthdate
+    datatype: date
+    show if:
+      variable: boss.existing_or_new
+      is: New
+---
+reconsider:
+  - people
+question: |
+  Who is the employee?
+fields:
+  - Existing or New: employee.existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: employee
+    show if:
+      variable: employee.existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: employee.name.first
+    show if:
+      variable: employee.existing_or_new
+      is: New
+  - Last Name: employee.name.last
+    show if:
+      variable: employee.existing_or_new
+      is: New
+  - Birthday: employee.birthdate
+    datatype: date
+    show if:
+      variable: employee.existing_or_new
+      is: New
+---
+reconsider:
+  - people
+question: |
+  Who is the ${ ordinal(i) } customer?
+fields:
+  - Existing or New: customers[i].existing_or_new
+    datatype: radio
+    default: Existing
+    choices:
+      - Existing
+      - New
+  - Person: customers[i]
+    show if:
+      variable: customers[i].existing_or_new
+      is: Existing
+    datatype: object
+    choices: people
+  - First Name: customers[i].name.first
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
+  - Last Name: customers[i].name.last
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
+  - Birthday: customers[i].birthdate
+    datatype: date
+    show if:
+      variable: customers[i].existing_or_new
+      is: New
