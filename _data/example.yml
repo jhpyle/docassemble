@@ -193,7 +193,7 @@
   code: |
     if action_argument('var_a') != '' and action_argument('var_b') != '':
       answer = float(action_argument('var_a')) * float(action_argument('var_b'))
-      background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
+      background_response('flash("Hint: C should be " + ' + text_type(answer) + ', "success")', 'javascript')
     background_response()
 "ajax-flash": |-
   question: |
@@ -792,7 +792,7 @@
   ---
   event: bg_task
   code: |
-    the_answer = str(553 + action_argument('additional'))
+    the_answer = text_type(553 + action_argument('additional'))
     background_response("The answer is " + the_answer + ".")
 "background_action_javascript": |-
   code: |
@@ -806,7 +806,7 @@
   ---
   event: bg_task
   code: |
-    the_answer = str(553 + action_argument('additional'))
+    the_answer = text_type(553 + action_argument('additional'))
     background_response("alert('The answer is " + the_answer + ".');")
 "background_action_refresh": |-
   code: |
@@ -900,7 +900,7 @@
   event: bg_resp
   code: |
     answer = action_argument('ans')
-    background_response("The answer is " + str(answer) + ".")
+    background_response("The answer is " + text_type(answer) + ".")
 "blank-label-field": |-
   question: |
     What is your Zodiac sign?
@@ -1434,7 +1434,6 @@
 "comment-weather": "question: |\n  Do you agree the weather\n  is nice today? \nyesno:\
   \ day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this question.\n\
   \  It does not seem necessary."
-"complete-attribute-method": ""
 "continue": |-
   field: target_variable
   question: |
@@ -1854,9 +1853,9 @@
     code: fruits
 "database_storage": "mandatory: True\ncode: |\n  write_record('fruit', favorite_fruit)\n\
   ---\nreconsider: True\ncode: |\n  fruit_summary = ''\n  records = read_records('fruit')\n\
-  \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
-  ---\nmandatory: True\nquestion: |\n  Contents of database\nsubquestion: |\n  The\
-  \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
+  \  for id in records:\n    fruit_summary += \"* \" + text_type(records[id]) + \"\
+  \\n\"\n---\nmandatory: True\nquestion: |\n  Contents of database\nsubquestion: |\n\
+  \  The following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
 "date-and-time-fields": |-
   question: |
     When is your appointment?
@@ -2656,6 +2655,19 @@
   \  \n  ${ person.add_action() }\n---\ntable: person.table\nrows: person\ncolumns:\n\
   \  - Name: |\n      row_item.name.full()\n  - Fruit: |\n      row_item.favorite_fruit\n\
   edit:\n  - name.first\n  - favorite_fruit"
+"edit-list-complete-complex": "objects:\n  - person: DAList.using(object_type=Individual,\n\
+  \                         there_are_any=True,\n                         complete_attribute='complete')\n\
+  ---\ncode: |\n  person[i].name.first\n  if person[i].favorite_fruit == 'apple':\n\
+  \    person[i].favorite_apple\n  person[i].complete = True\n---\nquestion: |\n \
+  \ Who is the ${ ordinal(i) } person?\nfields:\n  - First Name: person[i].name.first\n\
+  \  - Last Name: person[i].name.last\n---\nquestion: |\n  What is ${ person[i].possessive('favorite\
+  \ fruit') }?\nfields:\n  - Fruit: person[i].favorite_fruit\n---\nquestion: |\n \
+  \ What is ${ person[i].possessive('favorite apple') }?\nfields:\n  - Variety: person[i].favorite_apple\n\
+  ---\nquestion: |\n  Are there any more people\n  you would like to mention?\nyesno:\
+  \ person.there_is_another\n---\nmandatory: true\nquestion: |\n  Summary of answers\n\
+  subquestion: |\n  ${ person.table }\n  \n  ${ person.add_action() }\n---\ntable:\
+  \ person.table\nrows: person\ncolumns:\n  - Name: |\n      row_item.name.full()\n\
+  \  - Fruit: |\n      row_item.favorite_fruit\nedit:\n  - name.first\n  - favorite_fruit"
 "edit-list-manual": "objects:\n  - person: DAList\n---\nmandatory: True\ncode: |\n\
   \  person.object_type = Individual\n  person.there_are_any = True\n  person.complete_attribute\
   \ = 'complete'\n---\ncode: |\n  person[i].name.first\n  person[i].favorite_fruit\n\
@@ -3584,11 +3596,11 @@
   question: |\n  What are the peoples' names?\nfields:\n  code: name_list\n---\ncode:\
   \ |\n  name_list = list()\n  for index in range(people.number()):\n    name_list.append(\n\
   \      {\"label\": ordinal(index, capitalize=True) + \" person's given name\",\n\
-  \       \"field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
-  \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
-  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n---\nmandatory:\
-  \ True\nquestion: |\n  List of people\nsubquestion: |\n  The people include:\n \
-  \ \n  % for person in people:\n  * ${ person }\n  % endfor"
+  \       \"field\": \"people[\" + text_type(index) + \"].name.first\"\n      })\n\
+  \    name_list.append(\n      {\"label\": ordinal(index, capitalize=True) + \" person's\
+  \ surname\",\n       \"field\": \"people[\" + text_type(index) + \"].name.last\"\
+  \n      })\n---\nmandatory: True\nquestion: |\n  List of people\nsubquestion: |\n\
+  \  The people include:\n  \n  % for person in people:\n  * ${ person }\n  % endfor"
 "fields-code-embed": "objects:\n  - people: DAList.using(object_type=Individual, ask_number=True)\n\
   ---\nquestion: |\n  How many people are there?\nfields:\n  - Number: people.target_number\n\
   \    datatype: integer\n    min: 1\n    max: 10\n---\nsets:\n  - people[i].name.first\n\
@@ -3596,14 +3608,14 @@
   fields:\n  code: name_list\n---\ncode: |\n  name_list = list()\n  name_display =\
   \ \"\"\n  for index in range(people.number()):\n    name_list.append(\n      {\"\
   label\": ordinal(index, capitalize=True) + \" person's given name\",\n       \"\
-  field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
+  field\": \"people[\" + text_type(index) + \"].name.first\"\n      })\n    name_list.append(\n\
   \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
-  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n    name_display\
-  \ += \"The \" + ordinal(index) + \" person's name is \"\\\n                  + \"\
-  [FIELD people[\" + str(index) + \"].name.first] \"\\\n                  + \"[FIELD\
-  \ people[\" + str(index) + \"].name.last].\\n\\n\"\n---\nmandatory: True\nquestion:\
-  \ |\n  List of people\nsubquestion: |\n  The people include:\n  \n  % for person\
-  \ in people:\n  * ${ person }\n  % endfor"
+  \     \"field\": \"people[\" + text_type(index) + \"].name.last\"\n      })\n  \
+  \  name_display += \"The \" + ordinal(index) + \" person's name is \"\\\n      \
+  \            + \"[FIELD people[\" + text_type(index) + \"].name.first] \"\\\n  \
+  \                + \"[FIELD people[\" + text_type(index) + \"].name.last].\\n\\\
+  n\"\n---\nmandatory: True\nquestion: |\n  List of people\nsubquestion: |\n  The\
+  \ people include:\n  \n  % for person in people:\n  * ${ person }\n  % endfor"
 "fields-mc": |-
   question: |
     What is your favorite fruit?
@@ -6142,7 +6154,7 @@
   ---
   reconsider: True
   code: |
-    current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + str(x) + '</a>', ml.dependent_in_use()))
+    current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + text_type(x) + '</a>', ml.dependent_in_use()))
 "ml-classify": |-
   code: |
     ml = SimpleTextMachineLearner(group_id='demo')

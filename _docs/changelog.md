@@ -28,6 +28,7 @@ short_title: Change Log
   logging in was inefficient.
 - API verification not working in Python 3.
 - Screen reader in Python 3.
+- Playground commit not pushing to organizational repositories.
 
 ## [0.4.4](https://github.com/jhpyle/docassemble/releases/tag/v0.4.4) - 2019-02-15
 
