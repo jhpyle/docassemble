@@ -71,6 +71,7 @@ used:
 * [`DAObject`]
 * [`DARedis`]
 * [`DATemplate`]
+* [`DALazyTemplate`]
 * [`Expense`]
 * [`FinancialList`]
 * [`Income`]
@@ -434,6 +435,9 @@ All others are available for you to use and to retrieve with
 * `index`: used for retrieving documents
 * `from_list`: indicates that interview was launched from the
   Interview List page
+* `js_target`: indicates that [JavaScript] should be returned that
+  places the interview into the element on the screen with an `id`
+  matching the given value.
 
 [function]: {{ site.baseurl }}/docs/functions.html
 [roles]: {{ site.baseurl }}/docs/roles.html
@@ -613,3 +617,4 @@ All others are available for you to use and to retrieve with
 [`row_item`]: {{ site.baseurl }}/docs/template.html#table
 [tables]: {{ site.baseurl }}/docs/template.html#table
 [`self`]: https://docs.python.org/2.7/tutorial/classes.html
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript

@@ -1311,7 +1311,7 @@ This function is integrated with other classes in
 * `html` expects text, or `None`.  Will set the (optional) [HTML]
   content of the e-mail.
 * `subject` expects text, or `None`.  Will set the subject of the e-mail.
-* `template` expects a [`DATemplate`] object, or `None`.  These
+* `template` expects a [template] object, or `None`.  These
   templates can be created in an interview file using the `template`
   specifier.  If this [keyword argument] is supplied, both the plain
   text and [HTML] contents of the e-mail will be set by converting the
@@ -4782,7 +4782,7 @@ This function is integrated with other classes in
   [`phonenumbers.PhoneNumber`], or a simple string containing a phone number.
 * `body` expects text, or `None`.  If provided, it will be the content
   of the message.  Markdown will be converted to plain text.
-* `template` expects a [`DATemplate`] object, or `None`.  These
+* `template` expects a [template] object, or `None`.  These
   templates can be created in an interview file using the `template`
   specifier.  The "subject" of the template, if provided, will be the first
   line of the message.
@@ -6031,7 +6031,6 @@ $(document).on('daPageLoad', function(){
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`DASet`]: {{ site.baseurl }}/docs/objects.html#DASet
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
-[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`IndividualName`]: {{ site.baseurl }}/docs/objects.html#IndividualName

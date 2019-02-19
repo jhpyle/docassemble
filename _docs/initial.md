@@ -1162,6 +1162,11 @@ inverted navbar, set the `inverse navbar` feature to `False`.
 To make this change at a global level, see the
 [`inverse navbar` configuration directive].
 
+## <a name="hide navbar"></a>Hiding the navbar
+
+By default, **docassemble** shows a navigation bar at the top of the
+screen.  To make it disappear, you can set `hide navbar: True`.
+
 ## <a name="table width"></a>Width of tables in attachments
 
 As explained more fully in the [tables] section, if you include a

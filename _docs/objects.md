@@ -624,6 +624,13 @@ Other methods available on a `DAList` are:
   useful when you have a list of objects, and some objects are still
   in a nascent state, and you only want to use the objects that are
   "complete."  (See the discussion of `.complete_attribute` below.)
+* <a name="DAList.gathered_and_complete"></a><a
+  name="DADict.gathered_and_complete"></a>`gathered_and_complete()` -
+  this effectively re-runs the gathering logic on the list to make
+  sure that the list is "complete."  This method is run automatically
+  when editing a list item using a [`table`].  If `complete_element`
+  is set to `'complete'`, this method will reset the "completeness" of
+  each item before re-running the gathering logic.
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
@@ -1649,30 +1656,48 @@ been defined, and `False` otherwise.
 
 A `DAEmailRecipientList` is a [`DAList`] of [`DAEmailRecipient`] objects.
 
-## <a name="DATemplate"></a>DATemplate
+## <a name="DALazyTemplate"></a>DALazyTemplate
 
 The [`template`] block allows you to store some text to a variable.  See
 [template].  The variable will be defined as an object of the
-`DATemplate` class.
+`DALazyTemplate` class.
 
-Objects of this type have two attributes:
+Objects of this type have two read-only attributes:
 
 * `content`
 * `subject`
 
-When **docassemble** defines a [template], it assembles any [Mako] in
+When **docassemble** shows a [template], it assembles any [Mako] in
 the `content` and optional `subject` attributes as the resulting text.
 Note that the text may have [Markdown]<span></span> [markup] in it.
 
-<a name="DATemplate.show"></a>If a template is a variable
+<a name="DALazyTemplate.show"></a>If a template is a variable
 `disclaimer`, the content can be inserted by writing 
 `${ disclaimer }`, `${ disclaimer.content }`, or 
 `${ disclaimer.show() }`.  The latter method facilitates the use of
-[`DATemplate`]s and [`DAFile`]s interchangably. 
+[`DALazyTemplate`]s and [`DAFile`]s interchangably. 
 
-For more information about using [`DATemplate`]s, see the
+<a name="DALazyTemplate.subject_as_html"></a><a
+name="DALazyTemplate.content_as_html"></a>If you write Python modules
+that generate [HTML], you may wish to use
+`disclaimer.subject_as_html()` and `disclaimer.content_as_html()`.
+These methods return [HTML] instead of [Markdown].
+
+The `DALazyTemplate` is called a "lazy" object because its `content`
+and `subject` attributes are evaluated not when the object is defined,
+but whenever it is displayed.  This allows you to define a template,
+the content of which depends on whatever the current state of the
+interview answers is, and you can re-use the template in a variety of
+contexts.
+
+For more information about using [`DALazyTemplate`]s, see the
 documentation for [templates].  Also, see the documentation for
 [`send_email()`] and [`send_sms()`].
+
+## <a name="DATemplate"></a><a name="DATemplate.show"></a>DATemplate
+
+The [`DATemplate`] is like the [`DALazyTemplate`], except that its
+`subject` and `content` attributes are static.
 
 ## <a name="DAEmpty"></a>DAEmpty
 

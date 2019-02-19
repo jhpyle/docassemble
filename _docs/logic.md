@@ -340,6 +340,8 @@ treated as mandatory if the expression evaluates to a true value.
 
 {% include side-by-side.html demo="mandatory-code" %}
 
+It is a best practice to tag all `mandatory` blocks with an [`id`].
+
 ## <a name="initial"></a>`initial`
 
 The `initial` modifier is very similar to [`mandatory`].  It can only
@@ -1078,6 +1080,7 @@ forget others.
 [`need` specifier]: #need
 [`reconsider`]: #reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
+[`id`]: {{ site.baseurl}}/docs/modifiers.html#id
 [`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
 [`order` initial block]: {{ site.baseurl }}/docs/initial.html#order
 [`if` modifier]: {{ site.baseurl}}/docs/modifiers.html#if

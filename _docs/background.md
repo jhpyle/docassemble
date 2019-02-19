@@ -736,7 +736,7 @@ The timeline for this process is as follows:
    `question_food`.  It finds a [`template`] that offers to define
    `question_food`.  This [`template`] has a `target`, so it will
    behave differently than ordinary [`template`]s.  Instead of setting
-   the variable `question_food` to a [`DATemplate`] object,
+   the variable `question_food` to a [`DALazyTemplate`] object,
    **docassemble** will return the `content` to the browser,
    indicating that it is "targeted" for the area on the screen called
    `feedback`.
@@ -1386,7 +1386,7 @@ privileges and user identity of the [cron user].
 [processes interim user input]: #check in
 [processing interim user input]: #check in
 [Python set]: https://docs.python.org/2/library/stdtypes.html#set
-[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict

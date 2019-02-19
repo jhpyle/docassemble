@@ -4,6 +4,31 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.5](https://github.com/jhpyle/docassemble/releases/tag/v0.4.5) - 2019-02-18
+
+### Changed
+- Group gathering with `ask_number=True` will use the value of
+  `there_are_any` if it is defined and set to false.
+- When editing list using a table, completeness of elements will be
+  re-evaluated.
+- Back button embedded in question is now "link" style.
+
+### Added
+- The `subject_as_html()` and `content_as_html()` methods of objects
+  generated from a `template`.
+- The `hide navbar` feature.
+- The `js_target` URL parameter for embedding the **docassemble**
+  interview into an element on another web site.
+- The `gathered_and_complete()` method of the `DAList` and `DADict`.
+
+### Fixed
+- Error logging in with Auth0 in Python 3.
+- The `comma_and_list()` function was not Unicode-friendly.
+- Method of adjusting encryption of interviews in session after
+  logging in was inefficient.
+- API verification not working in Python 3.
+- Screen reader in Python 3.
+
 ## [0.4.4](https://github.com/jhpyle/docassemble/releases/tag/v0.4.4) - 2019-02-15
 
 ### Added

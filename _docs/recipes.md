@@ -228,7 +228,6 @@ Add `progressivedisclosure.py` as a Python module file in your
 package.
 
 {% highlight python %}
-from docassemble.base.filter import markdown_to_html
 import re
 
 __all__ = ['prog_disclose']
@@ -242,12 +241,9 @@ def prog_disclose(template, classname=None):
     return u"""\
 <a class="collapsed" data-toggle="collapse" href="#{}" role="button" aria-expanded="false" aria-controls="collapseExample"><span class="pdcaretopen"><i class="fas fa-caret-down"></i></span><span class="pdcaretclosed"><i class="fas fa-caret-right"></i></span> {}</a>
 <div class="collapse" id="{}"><div class="card card-body{} pb-1">{}</div></div>\
-""".format(the_id, markdown_to_html(template.subject, trim=True), the_id, classname, markdown_to_html(template.content))
+""".format(the_id, template.subject_as_html(trim=True), the_id, classname, template.content_as_html())
 {% endhighlight %}
 
-This uses the [collapse feature] of [Bootstrap].  It also uses an
-(undocumented) function in `docassemble.base.filter` called
-`markdown_to_html()`.
-
+This uses the [collapse feature] of [Bootstrap].
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/

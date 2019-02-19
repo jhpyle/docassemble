@@ -276,7 +276,6 @@ work on the "core," while a large number of developers work on
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
-[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList

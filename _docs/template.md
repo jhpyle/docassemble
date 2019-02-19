@@ -36,11 +36,6 @@ it will look for a [`question`], [`code`], or `template` block that offers
 to define `disclaimer`.  If it finds the `template` block above, it
 will define the `disclaimer` variable.
 
-A template, once defined, is a variable of type [`DATemplate`].
-However, this variable will be undefined each time the screen loads.
-Therefore, if the variables that the template depends on are
-redefined, the template will change accordingly.
-
 Optionally, a `template` can have a `subject`:
 
 {% include side-by-side.html demo="template-subject" %}
@@ -51,6 +46,12 @@ You can refer to the two parts of the template by writing, e.g.,
 Note that writing `${ disclaimer }` has the same effect as writing `${
 disclaimer.content }`.  You can also write `${ disclaimer.show() }`
 (for interchangability with images).
+
+To convert the subject and the content to HTML, you can write
+`disclaimer.subject_as_html()` and `disclaimer.content_as_html()`.
+These methods take the optional keyword argument `trim`.  If `True`,
+the resulting HTML will not be in a `<p>` element.  (The default is
+`False`.)
 
 Templates are also useful for defining the content of e-mails.  See
 [`send_email()`] for more information on using templates with e-mails.
@@ -211,7 +212,7 @@ The advantages of using the `table` block are:
   sizes of the text will be in each column.
 
 The `table` block acts like a `template` block in that the variable it
-sets will be a [`DATemplate`] object.  The `.content` attribute will
+sets will be a **docassemble** object.  The `.content` attribute will
 be set to the text of the table in [Markdown] format.
 
 If the variable indicated by `rows` is empty, the table will display
@@ -224,7 +225,7 @@ empty string, `""`.
 If you would like a message to display in place of the table in the
 event that there are no `rows` to display, you can set `show if empty`
 to this message.  [Mako] and [Markdown] can be used.  The message will
-become the `.content` of the resulting [`DATemplate`].
+become the `.content` of the resulting object.
 
 {% include side-by-side.html demo="table-empty-message" %}
 
@@ -340,7 +341,6 @@ an already-gathered list] in the section on [groups].
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python]: https://www.python.org/
-[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [question]: {{ site.baseurl }}/docs/questions.html

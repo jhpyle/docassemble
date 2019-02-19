@@ -939,8 +939,8 @@ is longer than a certain length, you can give the [`DAList`] or
 
 {% include side-by-side.html demo="table-dict-edit-minimum-number" %}
 
-If you want specific items to be protected against editing and/or
-deletion, you can set a `read only` specifier:
+<a name="read only"></a>If you want specific items to be protected
+against editing and/or deletion, you can set a `read only` specifier:
 
 {% include side-by-side.html demo="table-read-only" %}
 
