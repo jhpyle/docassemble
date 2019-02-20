@@ -1313,7 +1313,7 @@ error notification email:
 
 Information about errors is also available in the [Logs].
 
-## <a name="verbose error messages"></a>
+## <a name="verbose error messages"></a>Whether error messages contain details
 
 By default, when the user sees an error on the screen, information
 about the error is shown.  To turn this off, set `verbose error
