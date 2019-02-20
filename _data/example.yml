@@ -3093,6 +3093,10 @@
       An error has occurred.
       Please contact
       [the administrator](mailto:admin@example.com).
+"error-help-language": "metadata:\n  error help:\n    en: |\n      We are sorry.\n\
+  \      An error has occurred.\n      Please contact\n      [the administrator](mailto:admin@example.com).\n\
+  \    es: |\n      Lo sentimos.\n      Se ha producido un error.\n      Por favor,\
+  \ p\xF3ngase en contacto con\n      [el administrador](mailto:admin@example.com)."
 "event-example": |-
   question: |
     This is a special screen.
@@ -10526,6 +10530,131 @@
   \ Here is the signed contract.\nattachment:\n  name: |\n    An agreement between\n\
   \    ${ firstparty } and\n    ${ secondparty }\n  filename: agreement\n  docx template\
   \ file: Agreement_To_Transfer.docx"
+"new-or-existing": |-
+  objects:
+    - boss: Individual
+    - employee: Individual
+    - customers: DAList.using(object_type=Individual)
+  ---
+  mandatory: True
+  question: |
+    Summary
+  subquestion: |
+    The boss is ${ boss }.
+
+    The employee is ${ employee }.
+
+    The customers are ${ customers }.
+
+    % if boss in customers or employee in customers:
+    Either the boss or the employee is also a customer.
+    % else:
+    Neither the boss nor the employee is also a customer.
+    % endif
+  ---
+  question: Are there any customers?
+  yesno: customers.there_are_any
+  ---
+  question: Is there another customer?
+  yesno: customers.there_is_another
+  ---
+  code: |
+    people = ([boss] if defined('boss') and boss.name.defined() else []) \
+           + ([employee] if defined('employee') and employee.name.defined() else []) \
+           + customers.complete_elements()
+  ---
+  reconsider:
+    - people
+  question: |
+    Who is the boss?
+  fields:
+    - Existing or New: boss.existing_or_new
+      datatype: radio
+      default: Existing
+      choices:
+        - Existing
+        - New
+    - Person: boss
+      show if:
+        variable: boss.existing_or_new
+        is: Existing
+      datatype: object
+      choices: people
+    - First Name: boss.name.first
+      show if:
+        variable: boss.existing_or_new
+        is: New
+    - Last Name: boss.name.last
+      show if:
+        variable: boss.existing_or_new
+        is: New
+    - Birthday: boss.birthdate
+      datatype: date
+      show if:
+        variable: boss.existing_or_new
+        is: New
+  ---
+  reconsider:
+    - people
+  question: |
+    Who is the employee?
+  fields:
+    - Existing or New: employee.existing_or_new
+      datatype: radio
+      default: Existing
+      choices:
+        - Existing
+        - New
+    - Person: employee
+      show if:
+        variable: employee.existing_or_new
+        is: Existing
+      datatype: object
+      choices: people
+    - First Name: employee.name.first
+      show if:
+        variable: employee.existing_or_new
+        is: New
+    - Last Name: employee.name.last
+      show if:
+        variable: employee.existing_or_new
+        is: New
+    - Birthday: employee.birthdate
+      datatype: date
+      show if:
+        variable: employee.existing_or_new
+        is: New
+  ---
+  reconsider:
+    - people
+  question: |
+    Who is the ${ ordinal(i) } customer?
+  fields:
+    - Existing or New: customers[i].existing_or_new
+      datatype: radio
+      default: Existing
+      choices:
+        - Existing
+        - New
+    - Person: customers[i]
+      show if:
+        variable: customers[i].existing_or_new
+        is: Existing
+      datatype: object
+      choices: people
+    - First Name: customers[i].name.first
+      show if:
+        variable: customers[i].existing_or_new
+        is: New
+    - Last Name: customers[i].name.last
+      show if:
+        variable: customers[i].existing_or_new
+        is: New
+    - Birthday: customers[i].birthdate
+      datatype: date
+      show if:
+        variable: customers[i].existing_or_new
+        is: New
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"

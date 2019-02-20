@@ -246,5 +246,29 @@ def prog_disclose(template, classname=None):
 
 This uses the [collapse feature] of [Bootstrap].
 
+# <a name="new or existing"></a>New object or existing object
+
+The [`object` datatype] combined with the [`disable others`] can be
+used to present a single question that asks the user either to select
+an object from a list or to enter information about a new object.
+
+Another way to do this is to use `show if` to show or hide fields.
+
+This recipe gives an example of how to do this in an interview that
+asks about individuals.
+
+{% include demo-side-by-side.html demo="new-or-existing" %}
+
+This recipe keeps a master list of individuals in an object called
+`people`.  Since this list changes throughout the interview, it is
+re-calculated whenever a question is asked that uses `people`.
+
+When individuals are treated as unitary objects, you can do things
+like use Python's `in` operator to test whether an individual is a
+part of a list.  This recipe illustrates this by testing whether
+`boss` is part of `customers` or `employee` is part of `customers`.
+
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
+[`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others
+[`object` datatype]: {{ site.baseurl }}/docs/fields.html#object

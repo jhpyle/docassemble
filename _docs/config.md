@@ -1313,6 +1313,19 @@ error notification email:
 
 Information about errors is also available in the [Logs].
 
+## <a name="verbose error messages"></a>
+
+By default, when the user sees an error on the screen, information
+about the error is shown.  To turn this off, set `verbose error
+messages` to `False`.
+
+{% highlight yaml %}
+verbose error messages: False
+{% endhighlight %}
+
+If you set `verbose error messages`, you should also set [`error
+help`] in your interviews or set the [`error help` directive].
+
 ## <a name="error notification variables"></a>Whether to include interview variables in error notification
 
 If `error notification variables` is set to true, then when an error
@@ -2988,6 +3001,7 @@ and Facebook API keys.
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`error help`]: {{ site.baseurl }}/docs/initial.html#error help
+[`error help` directive]: #error help
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [scheduled task]: {{ site.baseurl }}/docs/background.html#scheduled
 [enabled]: {{ site.baseurl }}/docs/background.html#enabling

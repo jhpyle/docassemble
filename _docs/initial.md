@@ -143,6 +143,15 @@ You can also provide this text on a server-wide basis using the
 
 {% include side-by-side.html demo="error-help" %}
 
+To support multiple languages, you can set `error help` to a
+dictionary where the keys are language codes and the values are the
+error text to be shown:
+
+{% include side-by-side.html demo="error-help-language" %}
+
+This will not always be reliable, because an error might happen before
+the user's language is known.
+
 <a name="show login">The [`metadata`] block also accepts the specifier
 `show login`, which can be `true` or `false`.  This controls whether
 the user sees a "Sign in or sign up to save answers" link in the upper
