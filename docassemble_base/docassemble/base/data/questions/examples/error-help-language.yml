@@ -1,0 +1,23 @@
+metadata:
+  title: Error help
+  documentation: "https://docassemble.org/docs/initial.html#error help"
+---
+metadata:
+  error help:
+    en: |
+      We are sorry.
+      An error has occurred.
+      Please contact
+      [the administrator](mailto:admin@example.com).
+    es: |
+      Lo sentimos.
+      Se ha producido un error.
+      Por favor, póngase en contacto con
+      [el administrador](mailto:admin@example.com).
+---
+code: |
+  answer = 5/0
+---
+mandatory: True
+question: |
+  The answer is ${ answer }.

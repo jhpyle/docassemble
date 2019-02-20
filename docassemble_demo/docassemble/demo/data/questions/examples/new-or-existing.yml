@@ -3,7 +3,7 @@ metadata:
   short title: Object
   documentation: "https://docassemble.org/docs/recipes.html#new or existing"
   example start: 2
-  example end: 3
+  example end: 9
 ---
 modules:
   - docassemble.base.util

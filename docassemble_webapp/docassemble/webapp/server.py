@@ -15968,6 +15968,16 @@ def server_error(the_error):
         the_vars = the_error.user_dict
     if hasattr(the_error, 'interview'):
         special_error_markdown = the_error.interview.consolidated_metadata.get('error help', None)
+        if isinstance(special_error_markdown, dict):
+            language = docassemble.base.functions.get_language()
+            if language in special_error_markdown:
+                special_error_markdown = special_error_markdown[language]
+            elif '*' in special_error_markdown:
+                special_error_markdown = special_error_markdown['*']
+            elif DEFAULT_LANGUAGE in special_error_markdown:
+                special_error_markdown = special_error_markdown[DEFAULT_LANGUAGE]
+            else:
+                special_error_markdown = None
     else:
         special_error_markdown = None
     if special_error_markdown is None:
@@ -16029,7 +16039,7 @@ def server_error(the_error):
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
-    return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
+    return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
     #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
 
 # @app.route('/testpost', methods=['GET', 'POST'])

@@ -1295,7 +1295,7 @@ class ThreadVariables(threading.local):
     gathering_mode = dict()
     global_vars = GenericObject()
     current_variable = list()
-    template_vars = list()
+    #template_vars = list()
     open_files = set()
     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
@@ -1315,13 +1315,15 @@ this_thread = ThreadVariables()
 
 def backup_thread_variables():
     backup = dict()
-    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'current_question', 'evaluation_context', 'docx_template', 'gathering_mode', 'global_vars', 'current_variable', 'template_vars', 'open_files', 'saved_files', 'message_log', 'misc', 'prevent_going_back', 'current_info', 'current_package']:
+    for key in ('interview', 'interview_status', 'open_files', 'docx_template', 'current_question', 'internal', 'global_vars'):
+        backup[key] = getattr(this_thread, key)
+    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars', 'current_package', 'initialized', 'session_id', 'evaluation_context', 'misc', 'prevent_going_back']:
         backup[key] = copy.deepcopy(getattr(this_thread, key))
     return backup
 
 def restore_thread_variables(backup):
     #logmessage("restore_thread_variables")
-    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'current_question', 'evaluation_context', 'docx_template', 'gathering_mode', 'global_vars', 'current_variable', 'template_vars', 'open_files', 'saved_files', 'message_log', 'misc', 'prevent_going_back', 'current_info', 'current_package']:
+    for key in list(backup.keys()):
         setattr(this_thread, key, backup[key])
 
 def background_response(*pargs, **kwargs):
@@ -1623,7 +1625,7 @@ def reset_local_variables():
     this_thread.gathering_mode = dict()
     this_thread.global_vars = GenericObject()
     this_thread.current_variable = list()
-    this_thread.template_vars = list()
+    #this_thread.template_vars = list()
     this_thread.open_files = set()
     this_thread.saved_files = dict()
     this_thread.message_log = list()

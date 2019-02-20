@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.6] - 2019-02-19
+### Changed
+- The `error help` metadata specifier now accepts a dictionary of
+  language codes and messages.
+### Added
+- The `verbose error messages` configuration directive.
+### Fixed
+- Unicode problem with Markdown documents.
+- Deep copy error with `get_question_data()`.
+
 ## [0.4.5] - 2019-02-18
 ### Changed
 - Group gathering with `ask_number=True` will use the value of
