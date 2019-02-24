@@ -5372,7 +5372,7 @@ class Interview:
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-                    logmessage("Forgiving " + origMissingVariable)
+                    #logmessage("Forgiving " + origMissingVariable)
                     docassemble.base.functions.pop_current_variable()
                     docassemble.base.functions.pop_event_stack(origMissingVariable)
                     return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
@@ -5613,7 +5613,7 @@ class Interview:
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-            logmessage("Forgiving " + missing_var + " and " + origMissingVariable)
+            #logmessage("Forgiving " + missing_var + " and " + origMissingVariable)
             docassemble.base.functions.pop_current_variable()
             docassemble.base.functions.pop_event_stack(origMissingVariable)
             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})

@@ -5326,13 +5326,17 @@ def index():
             if key_requires_preassembly.search(the_key):
                 if the_key == '_multiple_choice' and '_question_name' in post_data:
                     question_name = post_data.get('_question_name', -100)
-                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])].question_type in ('refresh', 'continue'):
+                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])].question_type in ('refresh', 'continue'):
                         continue
                 should_assemble = True
                 #logmessage("index: pre-assembly necessary for " + the_key)
                 break
-        except:
-            logmessage("index: bad key was " + text_type(key))
+        except Exception as the_err:
+            logmessage("index: bad key was " + text_type(key) + " and error was " + the_err.__class__.__name__)
+            try:
+                logmessage("index: bad key error message was " + text_type(the_err))
+            except:
+                pass
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = interview.debug

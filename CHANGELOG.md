@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.8] - 2019-02-24
+### Changed
+- Upgraded Font Awesome to 5.7.2.
+
 ## [0.4.7] - 2019-02-23
 ### Fixed
 - Unicode problem with user names.
