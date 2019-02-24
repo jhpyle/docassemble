@@ -5479,6 +5479,7 @@ def index():
                 exec(initial_string, user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + text_type(errMess)))
+            file_field_tr = sub_indices(file_field, user_dict)
             if '_success' in post_data and post_data['_success']:
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 filename = secure_filename('canvas.png')
@@ -5487,9 +5488,9 @@ def index():
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage, binary=True)
                 new_file.finalize()
-                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
+                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
-                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
+                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ")"
             #logmessage("0Doing " + the_string)
             vars_set.add(file_field)
             try:
@@ -5677,10 +5678,11 @@ def index():
                     vars_set.add(core_key_name)
                 else:
                     #logmessage("Checkbox object is " + whole_key)
+                    whole_key_tr = sub_indices(whole_key, user_dict)
                     if datatype == 'checkboxes':
-                        commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
+                        commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     elif datatype == 'object_checkboxes':
-                        commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key) + ', auto_gather=False, gathered=True)')
+                        commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     vars_set.add(whole_key)
                 for command in commands:
                     #logmessage("1Doing " + command)
@@ -5963,6 +5965,7 @@ def index():
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + text_type(errMess)))
+        key_tr = sub_indices(key, user_dict)
         if is_ml:
             #logmessage("index: doing import docassemble.base.util")
             try:
@@ -5977,16 +5980,16 @@ def index():
             else:
                 use_for_training = 'True'
             if orig_key in ml_info and 'group_id' in ml_info[orig_key]:
-                data = 'docassemble.base.util.DAModel(' + repr(key) + ', group_id=' + repr(ml_info[orig_key]['group_id']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+                data = 'docassemble.base.util.DAModel(' + repr(key_tr) + ', group_id=' + repr(ml_info[orig_key]['group_id']) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
             else:
-                data = 'docassemble.base.util.DAModel(' + repr(key) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
+                data = 'docassemble.base.util.DAModel(' + repr(key_tr) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
         if set_to_empty:
             if set_to_empty == 'checkboxes':
                 try:
                     exec("import docassemble.base.core", user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
-                data = 'docassemble.base.core.DADict(' + repr(key) + ', auto_gather=False, gathered=True)'
+                data = 'docassemble.base.core.DADict(' + repr(key_tr) + ', auto_gather=False, gathered=True)'
             else:
                 data = 'None'
         if do_append and not set_to_empty:
@@ -6145,18 +6148,19 @@ def index():
                             try:
                                 file_field = from_safeid(var_to_store)
                             except:
-                                error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
+                                error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
                                 break
                             if illegal_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                                 break
+                            file_field_tr = sub_indices(file_field, user_dict)
                             if len(files_to_process) > 0:
                                 elements = list()
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
                                 #logmessage("field_numbers is " + repr(field_numbers))
                                 #logmessage("orig_file_field is " + repr(orig_file_field))
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
@@ -6262,13 +6266,14 @@ def index():
                             if illegal_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                                 break
+                            file_field_tr = sub_indices(file_field, user_dict)
                             if len(files_to_process) > 0:
                                 elements = list()
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
                                 #logmessage("field_numbers is " + repr(field_numbers))
                                 #logmessage("orig_file_field is " + repr(orig_file_field))
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
@@ -9300,6 +9305,15 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
+def sub_indices(the_var, the_user_dict):
+    if the_var.startswith('x.') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
+        the_var = re.sub(r'^x\.', the_user_dict['x'].instanceName + '.', the_var)
+    if the_var.startswith('x[') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
+        the_var = re.sub(r'^x\[', the_user_dict['x'].instanceName + '[', the_var)
+    if re.search(r'\[[ijklmn]\]', the_var):
+        the_var = re.sub(r'\[([ijklmn])\]', lambda m: '[' + repr(the_user_dict[m.group(1)]) + ']', the_var)
+    return the_var
+
 def fixtext_type(data):
     return bytearray(data, encoding='utf-8').decode('utf-8', 'ignore').encode("utf-8")
 
@@ -11661,6 +11675,9 @@ def update_package():
                         else:
                             install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
+                        if existing_package.name == 'docassemble.webapp' and existing_package.limitation:
+                            existing_package.limitation = None
+                            db.session.commit()
                         install_pip_package(existing_package.name, existing_package.limitation)
         result = docassemble.webapp.worker.update_packages.delay()
         session['taskwait'] = result.id
@@ -17728,8 +17745,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 image = Image.new("RGBA", (200, 50))
                 image.save(temp_image_file.name, 'PNG')
                 (file_number, extension, mimetype) = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                saveas_tr = sub_indices(saveas, user_dict)
                 if inp_lower == word('x'):
-                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas_tr + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     logmessage("do_sms: doing import docassemble.base.core")
                     logmessage("do_sms: doing signature: " + the_string)
                     try:
@@ -17796,10 +17814,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     if len(files_to_process) > 0:
                         elements = list()
                         indexno = 0
+                        saveas_tr = sub_indices(saveas, user_dict)
                         for (filename, file_number, mimetype, extension) in files_to_process:
-                            elements.append("docassemble.base.core.DAFile(" + repr(saveas + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                            elements.append("docassemble.base.core.DAFile(" + repr(saveas_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                             indexno += 1
-                        the_string = saveas + " = docassemble.base.core.DAFileList(" + repr(saveas) + ", elements=[" + ", ".join(elements) + "])"
+                        the_string = saveas + " = docassemble.base.core.DAFileList(" + repr(saveas_tr) + ", elements=[" + ", ".join(elements) + "])"
                         logmessage("do_sms: doing import docassemble.base.core")
                         logmessage("do_sms: doing file: " + the_string)
                         try:
@@ -18908,6 +18927,8 @@ def api_session():
                     the_file.save(temp_file.name)
                     process_file(saved_file, temp_file.name, mimetype, extension)
                     files_to_process.append((filename, file_number, mimetype, extension))
+            if illegal_variable_name(file_field):
+                return jsonify_with_status("Malformed file variable.", 400)
             file_field = file_variables[filekey]
             if len(files_to_process) > 0:
                 elements = list()

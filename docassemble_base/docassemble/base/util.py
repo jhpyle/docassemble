@@ -2041,7 +2041,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         final_image.save(file_to_read, "PNG")
         file_to_read.seek(0)
         try:
-            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read).decode()
+            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read).decode('utf-8', 'ignore')
         except subprocess.CalledProcessError as err:
             raise Exception("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output.decode()))
         page_text.append(text)

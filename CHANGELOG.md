@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.7] - 2019-02-20
+### Fixed
+- Unicode problem with user names.
+- Unicode problem with OCR.
+
 ## [0.4.6] - 2019-02-19
 ### Changed
 - The `error help` metadata specifier now accepts a dictionary of
