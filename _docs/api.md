@@ -1063,6 +1063,7 @@ Responses on failure:
  - [400] "Malformed variables" if `variables` is not valid [JSON].
  - [400] "Malformed list of file variables" if `file_variables` is not
    valid [JSON].
+ - [400] "Malformed file variable" if a file variable is invalid.
  - [400] "Malformed list of delete variables" if `delete_variables` is
    not valid [JSON].
  - [400] "Malformed event list" if `event_list` is not valid [JSON].

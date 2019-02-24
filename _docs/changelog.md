@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.7](https://github.com/jhpyle/docassemble/releases/tag/v0.4.7) - 2019-02-23
+
+### Fixed
+- Unicode problem with user names.
+- Unicode problem with OCR.
+- SQL concurrency problem with row updates.
+- The `instanceName` on file uploads.
+
 ## [0.4.6](https://github.com/jhpyle/docassemble/releases/tag/v0.4.6) - 2019-02-19
 
 ### Changed

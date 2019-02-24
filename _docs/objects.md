@@ -2343,13 +2343,9 @@ objects:
   - president: Individual
 {% endhighlight %}
 
-then you will create an object with the following built-in attributes:
+then you will create an object with the following built-in attribute:
 
 * `president.name` (object of class [`IndividualName`])
-* `president.child` (object of class [`ChildList`])
-* `president.income` (object of class [`Income`])
-* `president.asset` (object of class [`Asset`])
-* `president.expense` (object of class [`Expense`])
 
 In addition, the following attributes will be defined by virtue of an
 `Individual` being a kind of [`Person`]:
