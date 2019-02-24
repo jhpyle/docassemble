@@ -340,7 +340,7 @@ def update_versions():
                 install_row.packageversion = package.version
                 db.session.commit()
             if package.version != package_by_name[package.key].packageversion:
-                package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).first()
+                package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).with_for_update().first()
                 package_row.packageversion = package.version
                 db.session.commit()
     return
@@ -384,15 +384,15 @@ def fix_names():
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
     installed_packages = [package.key for package in get_installed_distributions()]
-    for package in Package.query.filter_by(active=True).all():
+    for package in Package.query.filter_by(active=True).with_for_update().all():
         if package.name not in installed_packages:
             pip_info = get_pip_info(package.name)
             actual_name = pip_info['Name']
             if actual_name is not None:
                 package.name = actual_name
-                db.session.commit()
             else:
                 sys.stderr.write("fix_names: package " + package.name + " does not appear to be installed" + "\n")
+    db.session.commit()
 
 def splitall(path):
     allparts = []

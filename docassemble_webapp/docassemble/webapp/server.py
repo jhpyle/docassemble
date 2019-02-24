@@ -1286,14 +1286,11 @@ def decrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
-    changed = False
-    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
         phrase = decrypt_phrase(record.phrase, secret)
         record.phrase = pack_phrase(phrase)
         record.encrypted = False
-        changed = True
-    if changed:
-        db.session.commit()
+    db.session.commit()
     # changed = False
     # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
     #     if record.dictionary:
@@ -1304,23 +1301,17 @@ def decrypt_session(secret, user_code=None, filename=None):
     #         changed = True
     # if changed:
     #     db.session.commit()
-    changed = False
-    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
+    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
         the_dict = decrypt_dictionary(record.dictionary, secret)
         record.dictionary = pack_dictionary(the_dict)
         record.encrypted = False
         record.modtime = nowtime
-        changed = True
-    if changed:
-        db.session.commit()
-    changed = False
-    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+    db.session.commit()
+    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
         phrase = decrypt_phrase(record.message, secret)
         record.message = pack_phrase(phrase)
         record.encrypted = False
-        changed = True
-    if changed:
-        db.session.commit()
+    db.session.commit()
     return
 
 def encrypt_session(secret, user_code=None, filename=None):
@@ -1328,16 +1319,13 @@ def encrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
-    changed = False
-    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=False).with_for_update().all():
         logmessage("record.phrase is a " + record.phrase.__class__.__name__)
         phrase = unpack_phrase(record.phrase)
         logmessage("phrase is a " + phrase.__class__.__name__)
         record.phrase = encrypt_phrase(phrase, secret)
         record.encrypted = True
-        changed = True
-    if changed:
-        db.session.commit()
+    db.session.commit()
     # changed = False
     # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
     #     if record.dictionary:
@@ -1346,25 +1334,17 @@ def encrypt_session(secret, user_code=None, filename=None):
     #         record.encrypted = True
     #         record.modtime = nowtime
     #         changed = True
-    if changed:
-        db.session.commit()
-    changed = False
-    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).all():
+    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update().all():
         the_dict = unpack_dictionary(record.dictionary)
         record.dictionary = encrypt_dictionary(the_dict, secret)
         record.encrypted = True
         record.modtime = nowtime
-        changed = True
-    if changed:
-        db.session.commit()
-    changed = False
-    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+    db.session.commit()
+    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=False).with_for_update().all():
         phrase = unpack_phrase(record.message)
         record.message = encrypt_phrase(phrase, secret)
         record.encrypted = True
-        changed = True
-    if changed:
-        db.session.commit()
+    db.session.commit()
     return
 
 def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
@@ -1392,16 +1372,14 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     for (filename, user_code) in to_do:
         #obtain_lock(user_code, filename)
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
-        changed = False
-        for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
             try:
                 phrase = decrypt_phrase(record.phrase, oldsecret)
                 record.phrase = encrypt_phrase(phrase, newsecret)
                 changed = True
             except:
                 pass
-        if changed:
-            db.session.commit()
+        db.session.commit()
         # changed = False
         # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
         #     if record.dictionary:
@@ -1410,8 +1388,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         #         changed = True
         # if changed:
         #     db.session.commit()
-        changed = False
-        for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
+        for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
             #logmessage("substitute_secret: record was encrypted")
             try:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
@@ -1422,20 +1399,15 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
                 logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
                 continue
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
-            changed = True
-        if changed:
-            db.session.commit()
-        changed = False
-        for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        db.session.commit()
+        for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
             try:
                 phrase = decrypt_phrase(record.message, oldsecret)
             except Exception as e:
                 logmessage("substitute_secret: error decrypting phrase for filename " + filename + " and uid " + user_code)
                 continue
             record.message = encrypt_phrase(phrase, newsecret)
-            changed = True
-        if changed:
-            db.session.commit()
+        db.session.commit()
         #release_lock(user_code, filename)
     return newsecret
 
@@ -1832,7 +1804,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
 
 def sub_temp_user_dict_key(temp_user_id, user_id):
     temp_interviews = list()
-    for record in UserDictKeys.query.filter_by(temp_user_id=temp_user_id).all():
+    for record in UserDictKeys.query.filter_by(temp_user_id=temp_user_id).with_for_update().all():
         record.temp_user_id = None
         record.user_id = user_id
         temp_interviews.append((record.filename, record.key))
@@ -1910,7 +1882,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
             db.session.add(new_record)
             db.session.commit()
         else:
-            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
+            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).with_for_update().all():
                 if encrypt:
                     record.dictionary = encrypt_dictionary(user_dict, secret)
                     record.modtime = nowtime
@@ -2421,7 +2393,7 @@ def uninstall_package(packagename):
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
         return
-    for package in Package.query.filter_by(name=packagename, active=True).all():
+    for package in Package.query.filter_by(name=packagename, active=True).with_for_update().with_for_update().all():
         package.active = False
     db.session.commit()
     return
@@ -2438,7 +2410,7 @@ def summarize_results(results, logmessages):
 
 def install_zip_package(packagename, file_number):
     #logmessage("install_zip_package: " + packagename + " " + str(file_number))
-    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
+    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
@@ -2463,16 +2435,15 @@ def install_git_package(packagename, giturl, branch=None):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
     if branch is None or str(branch).lower().strip() in ('none', ''):
         branch = 'master'
-    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
+    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).with_for_update().first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
         db.session.add(package_auth)
         db.session.add(package_entry)
-        db.session.commit()
     else:
-        existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
+        existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
         if existing_package is None:
-            existing_package = Package.query.filter_by(giturl=giturl).order_by(Package.id.desc()).first()
+            existing_package = Package.query.filter_by(giturl=giturl).order_by(Package.id.desc()).with_for_update().first()
         if existing_package is not None:
             if existing_package.type == 'zip' and existing_package.upload is not None:
                 SavedFile(existing_package.upload).delete()
@@ -2487,19 +2458,18 @@ def install_git_package(packagename, giturl, branch=None):
             if branch:
                 existing_package.gitbranch = branch
             existing_package.type = 'git'
-            db.session.commit()
         else:
             logmessage("install_git_package: package " + str(giturl) + " appeared to exist but could not be found")
+    db.session.commit()
     return
 
 def install_pip_package(packagename, limitation):
-    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
+    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, version=1, active=True, type='pip')
         db.session.add(package_auth)
         db.session.add(package_entry)
-        db.session.commit()
     else:
         if existing_package.type == 'zip' and existing_package.upload is not None:
             SavedFile(existing_package.upload).delete()
@@ -2512,7 +2482,7 @@ def install_pip_package(packagename, limitation):
         existing_package.gitbranch = None
         existing_package.upload = None
         existing_package.active = True
-        db.session.commit()
+    db.session.commit()
     return
 
 def get_package_info(exclude_core=False):
@@ -9128,7 +9098,7 @@ def index():
                 the_phrase = pack_phrase(phrase)
             the_hash = MD5Hash(data=phrase).hexdigest()
             content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
-            existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
+            existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).with_for_update().first()
             if existing_entry:
                 if existing_entry.encrypted:
                     existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
@@ -9140,12 +9110,11 @@ def index():
                     existing_entry.phrase = the_phrase
                     existing_entry.upload = None
                     existing_entry.encrypted = encrypted
-                    db.session.commit()
             else:
                 logmessage("Adding speaklist entry where encrypted is " + repr(encrypted) + " and phrase is " + repr(the_phrase))
                 new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                 db.session.add(new_entry)
-                db.session.commit()
+            db.session.commit()
     if not is_ajax:
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
@@ -9431,7 +9400,6 @@ def speak_file():
         if existing_entry:
             logmessage("speak_file: found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
             entry.upload = existing_entry.upload
-            db.session.commit()
         else:
             if not VOICERSS_ENABLED:
                 logmessage("speak_file: could not serve speak file because voicerss not enabled")
@@ -9455,10 +9423,10 @@ def speak_file():
                     abort(404)
                 entry.upload = new_file_number
                 audio_file.finalize()
-                db.session.commit()
             else:
                 logmessage("speak_file: download from voicerss (" + url + ") failed")
                 abort(404)
+    db.session.commit()
     if not entry.upload:
         logmessage("speak_file: upload file number was not set")
         abort(404)
@@ -11677,8 +11645,8 @@ def update_package():
                     elif existing_package.type == 'pip':
                         if existing_package.name == 'docassemble.webapp' and existing_package.limitation:
                             existing_package.limitation = None
-                            db.session.commit()
                         install_pip_package(existing_package.name, existing_package.limitation)
+                db.session.commit()
         result = docassemble.webapp.worker.update_packages.delay()
         session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
@@ -17215,20 +17183,14 @@ def login_or_register(sender, user, **extra):
         #release_lock(session['uid'], session['i'])
     fix_secret(user=user, to_convert=to_convert)
     if 'tempuser' in session:
-        changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
+        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
             chat_entry.user_id = user.id
             chat_entry.temp_user_id = None
-            changed = True
-        if changed:
-            db.session.commit()
-        changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
+        db.session.commit()
+        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).with_for_update().all():
             chat_entry.owner_id = user.id
             chat_entry.temp_owner_id = None
-            changed = True
-        if changed:
-            db.session.commit()
+        db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id
     if user.language and user.language != DEFAULT_LANGUAGE:

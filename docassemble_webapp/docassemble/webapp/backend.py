@@ -653,19 +653,16 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
 
 #@elapsed('file_set_attributes')
 def file_set_attributes(file_number, **kwargs):
-    upload = Uploads.query.filter_by(indexno=file_number).first()
+    upload = Uploads.query.filter_by(indexno=file_number).with_for_update().first()
     if upload is None:
+        db.session.commit()
         raise Exception("file_set_attributes: file number " + str(file_number) + " not found.")
-    changed = False
     if 'private' in kwargs and kwargs['private'] in [True, False] and upload.private != kwargs['private']:
         upload.private = kwargs['private']
-        changed = True
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
         upload.persistent = kwargs['persistent']
-        changed = True
     if 'session' in kwargs and isinstance(kwargs['session'], string_types):
         upload.key = kwargs['session']
     if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
         upload.filename = kwargs['filename']
-    if changed:
-        db.session.commit()
+    db.session.commit()

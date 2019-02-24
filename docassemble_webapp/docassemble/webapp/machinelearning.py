@@ -240,8 +240,9 @@ class MachineLearner(object):
             self.reset()
     def set_dependent_by_id(self, the_id, the_dependent):
         self._initialize()
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
+        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).with_for_update().first()
         if existing_entry is None:
+            db.session.commit()
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         existing_entry.dependent = codecs.encode(pickle.dumps(the_dependent), 'base64').decode()
         existing_entry.modtime = datetime.datetime.utcnow()
