@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.8](https://github.com/jhpyle/docassemble/releases/tag/v0.4.8) - 2019-02-24
+
+### Changed
+- Upgraded Font Awesome to 5.7.2.
+
 ## [0.4.7](https://github.com/jhpyle/docassemble/releases/tag/v0.4.7) - 2019-02-23
 
 ### Fixed
