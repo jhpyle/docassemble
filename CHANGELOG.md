@@ -1,10 +1,10 @@
 # Change Log
 
-## [0.4.7] - 2019-02-
+## [0.4.7] - 2019-02-23
 ### Fixed
 - Unicode problem with user names.
 - Unicode problem with OCR.
-- SQL concurrency problem with some row updates.
+- SQL concurrency problem with row updates.
 - The `instanceName` on file uploads.
 
 ## [0.4.6] - 2019-02-19
