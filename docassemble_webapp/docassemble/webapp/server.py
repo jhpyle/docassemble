@@ -9423,10 +9423,10 @@ def speak_file():
                     abort(404)
                 entry.upload = new_file_number
                 audio_file.finalize()
+                db.session.commit()
             else:
                 logmessage("speak_file: download from voicerss (" + url + ") failed")
                 abort(404)
-    db.session.commit()
     if not entry.upload:
         logmessage("speak_file: upload file number was not set")
         abort(404)
