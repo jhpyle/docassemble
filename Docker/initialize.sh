@@ -1,4 +1,7 @@
-#! /bin/bash
+#!/bin/bash
+
+# run supervisord here, rather than in the dockerfile
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
 export HOME=/root
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
@@ -20,7 +23,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get clean &>/dev/null
 apt-get -q -y update &>/dev/null
 
-# echo "1"
+echo "1"
 
 if [ -f /var/run/apache2/apache2.pid ]; then
     APACHE_PID=$(</var/run/apache2/apache2.pid)
@@ -34,7 +37,7 @@ else
     APACHERUNNING=false
 fi
 
-# echo "2"
+echo "2"
 
 if redis-cli ping &>/dev/null; then
     REDISRUNNING=true
@@ -42,7 +45,7 @@ else
     REDISRUNNING=false
 fi
 
-# echo "3"
+echo "3"
 
 if rabbitmqctl status &>/dev/null; then
     RABBITMQRUNNING=true
@@ -50,7 +53,7 @@ else
     RABBITMQRUNNING=false
 fi
 
-# echo "4"
+echo "4"
 
 if [ -f /var/run/crond.pid ]; then
     CRON_PID=$(</var/run/crond.pid)
@@ -64,7 +67,7 @@ else
     CRONRUNNING=false
 fi
 
-# echo "5"
+echo "5"
 
 if [ "${USEHTTPS:-false}" == "false" ] && [ "${BEHINDHTTPSLOADBALANCER:-false}" == "false" ]; then
     URLROOT="http:\\/\\/"
@@ -72,7 +75,7 @@ else
     URLROOT="https:\\/\\/"
 fi
 
-# echo "6"
+echo "6"
 
 if [ "${DAHOSTNAME:-none}" != "none" ]; then
     URLROOT="${URLROOT}${DAHOSTNAME}"
@@ -85,26 +88,26 @@ else
     URLROOT="${URLROOT}${PUBLIC_HOSTNAME}"
 fi
 
-# echo "7"
+echo "7"
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
 
-# echo "8"
+echo "8"
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
-# echo "9"
+echo "9"
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
     export AZUREENABLE=true
 fi
 
-# echo "10"
+echo "10"
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(aws s3 ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
     TEMPKEYFILE=$(mktemp)
@@ -119,14 +122,14 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && 
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >>/etc/hosts
 fi
 
-# echo "11"
+echo "11"
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
-# echo "12"
+echo "12"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud ip-rabbitmq) ]]; then
     TEMPKEYFILE=$(mktemp)
@@ -143,7 +146,7 @@ if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] 
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >>/etc/hosts
 fi
 
-# echo "13"
+echo "13"
 
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(aws s3 ls s3://${S3BUCKET}/letsencrypt.tar.gz) ]]; then
@@ -243,11 +246,11 @@ else
     fi
 fi
 
-# echo "14"
+echo "14"
 
 DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 
-# echo "15"
+echo "15"
 
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
@@ -286,11 +289,11 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 fi
 chown www-data.www-data $DA_CONFIG_FILE
 
-# echo "16"
+echo "16"
 
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
-# echo "17"
+echo "17"
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(aws s3 ls s3://${S3BUCKET}/config.yml) ]]; then
     aws s3 cp $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml --quiet
@@ -315,21 +318,21 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(aws s3 ls s3://${S3BUCKET}/files
         done
     fi
 fi
-# echo "18"
+echo "18"
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
-# echo "19"
+echo "19"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
     echo "Saving config" >&2
     blob-cmd -f cp $DA_CONFIG_FILE "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
 fi
 
-# echo "19.5"
+echo "19.5"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud files) ]]; then
     if [ -d ${DA_ROOT}/files ]; then
@@ -354,7 +357,7 @@ if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.
     fi
 fi
 
-# echo "20"
+echo "20"
 
 if [ "${EC2:-false}" == "true" ]; then
     export LOCAL_HOSTNAME=$(curl -s http://169.254.169.254/latest/meta-data/local-hostname)
@@ -364,13 +367,13 @@ else
     export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
 fi
 
-# echo "21"
+echo "21"
 
 if [ "${DAHOSTNAME:-none}" == "none" ]; then
     export DAHOSTNAME=$PUBLIC_HOSTNAME
 fi
 
-# echo "22"
+echo "22"
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     a2dissite -q 000-default &>/dev/null || true
@@ -400,20 +403,20 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     a2ensite docassemble-http
 fi
 
-# echo "23"
+echo "23"
 
 if [ "${LOCALE:-undefined}" == "undefined" ]; then
     LOCALE="en_US.UTF-8 UTF-8"
 fi
 
-# echo "24"
+echo "24"
 
 set -- $LOCALE
 DA_LANGUAGE=$1
 grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >>/etc/locale.gen && locale-gen; }
 update-locale LANG=$DA_LANGUAGE
 
-# echo "25"
+echo "25"
 
 if [ -n "$OTHERLOCALES" ]; then
     NEWLOCALE=false
@@ -428,7 +431,7 @@ if [ -n "$OTHERLOCALES" ]; then
     fi
 fi
 
-# echo "26"
+echo "26"
 
 if [ -n "$PACKAGES" ]; then
     for PACKAGE in "${PACKAGES[@]}"; do
@@ -436,20 +439,20 @@ if [ -n "$PACKAGES" ]; then
     done
 fi
 
-# echo "27"
+echo "27"
 
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
     echo $TIMEZONE >/etc/timezone
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
-# echo "28"
+echo "28"
 
 if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_register $DA_CONFIG_FILE" www-data
 fi
 
-# echo "29"
+echo "29"
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
@@ -508,7 +511,7 @@ if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f ${DA_ROOT}/webapp/syslog-ng-or
     cp /etc/syslog-ng/syslog-ng.conf ${DA_ROOT}/webapp/syslog-ng-orig.conf
 fi
 
-# echo "32" >&2
+echo "32" >&2
 
 OTHERLOGSERVER=false
 
@@ -518,19 +521,19 @@ if [[ $CONTAINERROLE =~ .*:(web|celery):.* ]]; then
     fi
 fi
 
-# echo "33" >&2
+echo "33" >&2
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "${LOGSERVER:-undefined}" == "null" ]; then
     OTHERLOGSERVER=false
 fi
 
-# echo "34" >&2
+echo "34" >&2
 
 if [ "$OTHERLOGSERVER" = false ] && [ -f ${LOGDIRECTORY:-${DA_ROOT}/log}/docassemble.log ]; then
     chown www-data.www-data ${LOGDIRECTORY:-${DA_ROOT}/log}/docassemble.log
 fi
 
-# echo "35" >&2
+echo "35" >&2
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     if [ -d /etc/syslog-ng ]; then
@@ -543,6 +546,10 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
         fi
         supervisorctl --serverurl http://localhost:9001 start syslogng
     fi
+fi
+
+if [ "${WATCHDOGENABLE:-true}" == "true" ]; then
+    supervisorctl start watchdog
 fi
 
 echo "36" >&2
@@ -782,7 +789,8 @@ fi
 function deregister() {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then
-        su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data
+        # this breaks rolling deployments, as the old container will remove information about the new one
+        # su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
             aws s3 sync ${DA_ROOT}/log/ s3://${S3BUCKET}/log/ --quiet
         fi
@@ -812,7 +820,7 @@ function deregister() {
     exit 0
 }
 
-trap deregister SIGINT SIGTERM
+trap deregister SIGCHLD SIGINT SIGTERM
 
 echo "initialize finished" >&2
 sleep infinity &

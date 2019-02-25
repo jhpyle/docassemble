@@ -313,4 +313,4 @@ ENV CONTAINERROLE="all" \
     RABBITMQ=""
 
 
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
+ENTRYPOINT ["/usr/share/docassemble/webapp/initialize.sh"]
