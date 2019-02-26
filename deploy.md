@@ -12,7 +12,7 @@ internet.
 The easiest way to use **docassemble** is through a
 **docassemble-based** third-party service that provides interview
 development tools and hosting services.  Existing providers include
-[Community.lawyer] and [HelpSelf Legal].  (A third provider, [Clerical
+[Community.lawyer] and [Documate].  (A third provider, [Clerical
 Platform], is currently available in beta mode.)
 
 If you want to deploy **docassemble** yourself, the easiest way is to
@@ -39,6 +39,6 @@ and support needs are).
 [install]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Amazon Web Services]: https://aws.amazon.com
-[HelpSelf Legal]: https://www.helpselflegal.com/
+[Documate]: https://www.documate.org/
 [Clerical Platform]: http://clerical.ai/
 [Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
