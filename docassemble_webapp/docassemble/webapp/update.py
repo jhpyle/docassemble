@@ -531,15 +531,15 @@ def get_installed_distributions():
     sys.stderr.write("get_installed_distributions: starting\n")
     results = list()
     try:
-        output = subprocess.check_output(['pip', '--version']).decode()
+        output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
-        output = err.output.decode()
+        output = err.output.decode('utf-8', 'ignore')
     #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
     sys.stderr.write("get_installed_distributions: pip version:\n" + output)
     try:
-        output = subprocess.check_output(['pip', 'freeze']).decode()
+        output = subprocess.check_output(['pip', 'freeze']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
-        output = err.output.decode()
+        output = err.output.decode('utf-8', 'ignore')
     #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
     for line in output.split('\n'):
         a = line.split("==")
@@ -552,10 +552,10 @@ def get_installed_distributions():
 def get_pip_info(package_name):
     #sys.stderr.write("get_pip_info: " + package_name + "\n")
     try:
-        output = subprocess.check_output(['pip', 'show', package_name]).decode()
+        output = subprocess.check_output(['pip', 'show', package_name]).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = ""
-        sys.stderr.write("get_pip_info: error.  output was " + err.output.decode() + "\n")
+        sys.stderr.write("get_pip_info: error.  output was " + err.output.decode('utf-8', 'ignore') + "\n")
     # old_stdout = sys.stdout
     # sys.stdout = saved_stdout = StringIO()
     # pip.main(['show', package_name])
@@ -563,7 +563,7 @@ def get_pip_info(package_name):
     # output = saved_stdout.getvalue()
     results = dict()
     if not isinstance(output, text_type):
-        output = output.decode()
+        output = output.decode('utf-8', 'ignore')
     for line in output.split('\n'):
         #sys.stderr.write("Found line " + str(line) + "\n")
         a = line.split(": ")

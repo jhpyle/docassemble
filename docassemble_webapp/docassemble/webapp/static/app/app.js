@@ -329,6 +329,78 @@ function daInitAutocomplete(id) {
     }, timePeriod);
 }
 
+function daInitMap(daMapInfo){
+    var timePeriod = 0;
+    try {
+	google;
+    }
+    catch(e){
+	timePeriod = 1000;
+    }
+    setTimeout(function(){
+	maps = [];
+	var map_info_length = daMapInfo.length;
+	for (var i = 0; i < map_info_length; i++){
+	    the_map = daMapInfo[i];
+	    var bounds = new google.maps.LatLngBounds();
+	    maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
+	    marker_length = the_map.markers.length;
+	    if (marker_length == 1){
+		show_marker = true
+	    }
+	    else{
+		show_marker = false
+	    }
+	    for (var j = 0; j < marker_length; j++){
+		var new_marker = daAddMarker(maps[i], the_map.markers[j], show_marker);
+		bounds.extend(new_marker.getPosition());
+	    }
+	    if (marker_length > 1){
+		maps[i].map.fitBounds(bounds);
+	    }
+	}
+    }, timePeriod);
+}
+
+function daAddMap(map_num, center_lat, center_lon){
+    var map = new google.maps.Map(document.getElementById("map" + map_num), {
+	zoom: 11,
+	center: new google.maps.LatLng(center_lat, center_lon),
+	mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+    var infowindow = new google.maps.InfoWindow();
+    return({map: map, infowindow: infowindow});
+}
+function daAddMarker(map, marker_info, show_marker){
+    var marker;
+    if (marker_info.icon){
+	if (marker_info.icon.path){
+	    marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
+	}
+    }
+    else{
+	marker_info.icon = null;
+    }
+    marker = new google.maps.Marker({
+	position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
+	map: map.map,
+	icon: marker_info.icon
+    });
+    if(marker_info.info){
+	google.maps.event.addListener(marker, 'click', (function(marker, info) {
+	    return function() {
+		map.infowindow.setContent(info);
+		map.infowindow.open(map.map, marker);
+	    }
+	})(marker, marker_info.info));
+    }
+    if(show_marker){
+        map.infowindow.setContent(marker_info.info);
+        map.infowindow.open(map.map, marker);
+    }
+    return marker;
+}
+
 function daFillInAddress() {
   var base_varname = atob(daBaseId).replace(/.address$/, '');
   base_varname = base_varname.replace(/[\[\]]/g, '.');

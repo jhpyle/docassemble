@@ -1238,6 +1238,8 @@ class Person(DAObject):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
             the_number = self.mobile_number
+            if hasattr(self, 'uses_whatsapp'):
+                the_number = 'whatsapp:' + text_type(self.mobile_number)
         else:
             the_number = self.phone_number
         if hasattr(self, 'country'):
@@ -1724,13 +1726,17 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         for recipient in to:
             phone_number = phone_string(recipient)
             if phone_number is not None:
+                if phone_number.startswith('whatsapp:'):
+                    from_number = 'whatsapp:' + tconfig.get('whatsapp number', tconfig['number'])
+                else:
+                    from_number = tconfig['number']
                 try:
                     if len(media):
-                        message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body, media_url=media)
+                        message = twilio_client.messages.create(to=phone_number, from_=from_number, body=body, media_url=media)
                     else:
-                        message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
+                        message = twilio_client.messages.create(to=phone_number, from_=from_number, body=body)
                 except Exception as errstr:
-                    logmessage("send_sms: failed to send message: " + text_type(errstr))
+                    logmessage("send_sms: failed to send message from " + from_number + " to " + phone_number + ": " + text_type(errstr))
                     return False
     if success and task is not None:
         mark_task_as_performed(task)

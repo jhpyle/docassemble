@@ -3146,11 +3146,19 @@ def phone_number_in_e164(number, country=None):
     ensure_definition(number, country)
     if country is None:
         country = get_country()
+    use_whatsapp = False
+    if isinstance(number, string_types):
+        m = re.search(r'^whatsapp:(.*)', number)
+        if m:
+            number = m.group(1)
+            use_whatsapp = True
     try:
         pn = phonenumbers.parse(number, country)
         output = phonenumbers.format_number(pn, phonenumbers.PhoneNumberFormat.E164)
     except:
         return None
+    if use_whatsapp:
+        return 'whatsapp:' + output
     return output
         
 def phone_number_is_valid(number, country=None):
@@ -3158,6 +3166,10 @@ def phone_number_is_valid(number, country=None):
     ensure_definition(number, country)
     if country is None:
         country = get_country()
+    if isinstance(number, string_types):
+        m = re.search(r'^whatsapp:(.*)', number)
+        if m:
+            number = m.group(1)
     try:
         pn = phonenumbers.parse(number, country)
     except:
@@ -3170,6 +3182,10 @@ def phone_number_part(number, part, country=None):
     ensure_definition(number, part, country)
     if country is None:
         country = get_country()
+    if isinstance(number, string_types):
+        m = re.search(r'^whatsapp:(.*)', number)
+        if m:
+            number = m.group(1)
     try:
         pn = phonenumbers.parse(number, country)
     except:

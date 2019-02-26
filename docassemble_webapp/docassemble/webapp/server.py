@@ -1499,7 +1499,10 @@ def copy_playground_modules():
                 shutil.rmtree(local_dir)
             except:
                 pass
-        os.makedirs(local_dir)
+        if PY3:
+            os.makedirs(local_dir, exist_ok=True)
+        elif not os.path.isdir(local_dir):
+            os.makedirs(local_dir)
         #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
         for f in [f for f in os.listdir(mod_dir.directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
             shutil.copyfile(os.path.join(mod_dir.directory, f), os.path.join(local_dir, f))
@@ -6047,11 +6050,12 @@ def index():
             file_fields = fileDict['keys']
             has_invalid_fields = False
             should_assemble_now = False
+            empty_file_vars = set()
             for orig_file_field in file_fields:
                 if orig_file_field in known_varnames:
                     orig_file_field = known_varnames[orig_file_field]
                 if orig_file_field not in visible_fields:
-                    continue
+                    empty_file_vars.add(orig_file_field)
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
@@ -6077,7 +6081,9 @@ def index():
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
                     if orig_file_field_raw not in visible_fields:
-                        continue
+                        set_empty = True
+                    else:
+                        set_empty = False
                     if not validated:
                         break
                     orig_file_field = orig_file_field_raw
@@ -6167,15 +6173,36 @@ def index():
                             except Exception as errMess:
                                 sys.stderr.write("Error: " + text_type(errMess) + "\n")
                                 error_messages.append(("error", "Error: " + text_type(errMess)))
+                    else:
+                        try:
+                            file_field = from_safeid(var_to_store)
+                        except:
+                            error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
+                            break
+                        if illegal_variable_name(file_field):
+                            error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
+                            break
+                        the_string = file_field + " = None"
+                        vars_set.add(file_field)
+                        try:
+                            exec(the_string, user_dict)
+                            if not changed:
+                                steps += 1
+                                user_dict['_internal']['steps'] = steps
+                                changed = True
+                        except Exception as errMess:
+                            sys.stderr.write("Error: " + text_type(errMess) + "\n")
+                            error_messages.append(("error", "Error: " + text_type(errMess)))
         if '_files' in post_data:
             file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
             has_invalid_fields = False
             should_assemble_now = False
+            empty_file_vars = set()
             for orig_file_field in file_fields:
                 if orig_file_field in known_varnames:
                     orig_file_field = known_varnames[orig_file_field]
                 if orig_file_field not in visible_fields:
-                    continue
+                    empty_file_vars.add(orig_file_field)
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
@@ -6281,6 +6308,26 @@ def index():
                                 except Exception as errMess:
                                     sys.stderr.write("Error: " + text_type(errMess) + "\n")
                                     error_messages.append(("error", "Error: " + text_type(errMess)))
+                    else:
+                        try:
+                            file_field = from_safeid(var_to_store)
+                        except:
+                            error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
+                            break
+                        if illegal_variable_name(file_field):
+                            error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
+                            break
+                        the_string = file_field + " = None"
+                        vars_set.add(file_field)
+                        try:
+                            exec(the_string, user_dict)
+                            if not changed:
+                                steps += 1
+                                user_dict['_internal']['steps'] = steps
+                                changed = True
+                        except Exception as errMess:
+                            sys.stderr.write("Error: " + text_type(errMess) + "\n")
+                            error_messages.append(("error", "Error: " + text_type(errMess)))
         if validated:
             if 'informed' in request.form:
                 user_dict['_internal']['informed'][the_user_id] = dict()
@@ -7437,7 +7484,7 @@ def index():
             return;
           }
           if (newFileList.length == 0){
-            $('input[name="_files"]').remove();
+            //$('input[name="_files"]').remove();
           }
           else{
             do_iframe_upload = true;            
@@ -8734,67 +8781,6 @@ def index():
           var size = $( this ).width();
           $( this ).css('height', size);
         });
-      }
-      function daAddMap(map_num, center_lat, center_lon){
-        var map = new google.maps.Map(document.getElementById("map" + map_num), {
-          zoom: 11,
-          center: new google.maps.LatLng(center_lat, center_lon),
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        });
-        var infowindow = new google.maps.InfoWindow();
-        return({map: map, infowindow: infowindow});
-      }
-      function daAddMarker(map, marker_info, show_marker){
-        var marker;
-        if (marker_info.icon){
-          if (marker_info.icon.path){
-            marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
-          }
-        }
-        else{
-          marker_info.icon = null;
-        }
-        marker = new google.maps.Marker({
-          position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
-          map: map.map,
-          icon: marker_info.icon
-        });
-        if(marker_info.info){
-          google.maps.event.addListener(marker, 'click', (function(marker, info) {
-            return function() {
-              map.infowindow.setContent(info);
-              map.infowindow.open(map.map, marker);
-            }
-          })(marker, marker_info.info));
-        }
-        if(show_marker){
-          map.infowindow.setContent(marker_info.info);
-          map.infowindow.open(map.map, marker);
-        }
-        return marker;
-      }
-      function daInitMap(){
-        maps = [];
-        map_info_length = daMapInfo.length;
-        for (var i = 0; i < daMapInfo_length; i++){
-          the_map = daMapInfo[i];
-          var bounds = new google.maps.LatLngBounds();
-          maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
-          marker_length = the_map.markers.length;
-          if (marker_length == 1){
-            show_marker = true
-          }
-          else{
-            show_marker = false
-          }
-          for (var j = 0; j < marker_length; j++){
-            var new_marker = daAddMarker(maps[i], the_map.markers[j], show_marker);
-            bounds.extend(new_marker.getPosition());
-          }
-          if (marker_length > 1){
-            maps[i].map.fitBounds(bounds);
-          }
-        }
       }
       $.validator.setDefaults({
         highlight: function(element) {
@@ -12323,13 +12309,21 @@ class Fruit(DAObject):
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
             staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
             sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
-            if not os.path.isdir(questionsdir):
+            if PY3:
+                os.makedirs(questionsdir, exist_ok=True)
+            elif not os.path.isdir(questionsdir):
                 os.makedirs(questionsdir)
-            if not os.path.isdir(templatesdir):
+            if PY3:
+                os.makedirs(templatesdir, exist_ok=True)
+            elif not os.path.isdir(templatesdir):
                 os.makedirs(templatesdir)
-            if not os.path.isdir(staticdir):
+            if PY3:
+                os.makedirs(staticdir, exist_ok=True)
+            elif not os.path.isdir(staticdir):
                 os.makedirs(staticdir)
-            if not os.path.isdir(sourcesdir):
+            if PY3:
+                os.makedirs(sourcesdir, exist_ok=True)
+            elif not os.path.isdir(sourcesdir):
                 os.makedirs(sourcesdir)
             with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
                 the_file.write(readme)
@@ -20123,7 +20117,10 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
 for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:
-            os.makedirs(path)
+            if PY3:
+                os.makedirs(path, exist_ok=True)
+            else:
+                os.makedirs(path)
         except:
             sys.exit("Could not create path: " + path)
     if not os.access(path, os.W_OK):
