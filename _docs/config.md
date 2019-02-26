@@ -2747,6 +2747,7 @@ twilio:
   account sid: ACfad8e668d876f5473fb232a311243b58
   auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
+  twilio number: "+12762268342"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
@@ -2772,6 +2773,10 @@ use the [`send_sms()`] function or the [phone login] feature.
 The `number` is the phone number you purchased.  The phone number
 must be written in [E.164] format.  This is the phone number with
 which your users will exchange [SMS] messages.
+
+The `whatsapp number` (optional) is the phone number you use for
+sending [WhatsApp] messages.  The number must be written in [E.164]
+format.
 
 The `dispatch` configuration allows you to direct users to different
 interviews.  For example, with the above configuration, you can tell
@@ -3187,3 +3192,4 @@ and Facebook API keys.
 [ConvertAPI]: https://www.convertapi.com
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
+[WhatsApp]: https://www.twilio.com/whatsapp

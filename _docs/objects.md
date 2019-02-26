@@ -2196,6 +2196,7 @@ The following attributes are also used, but undefined by default:
 * `email` (see [`.email_address()`] and [`send_email()`])
 * `phone_number` (see [`.sms_number()`] and [`send_sms()`] )
 * `mobile_number` (see [`.sms_number()`] and [`send_sms()`])
+* `uses_whatsapp` (see [`.sms_number()`] and [`send_sms()`])
 
 The following methods can be used:
 
@@ -2314,6 +2315,10 @@ use of `defendant.country` to format the phone number, since the
 number.  If the `.country` attribute is not defined, the method will
 call [`get_country()`].  The `.country` attribute is expected to be a
 two-letter, capitalized abbreviation of a country.
+
+If a `mobile_number` attribute exists and a `uses_whatsapp` number
+also exists and is `True`, then [WhatsApp] will be used to send messages
+to the number.
 
 ### <a name="Organization"></a>Organization
 
@@ -4135,3 +4140,4 @@ of the original [`DADateTime`] object.  See
 [alt text]: https://moz.com/learn/seo/alt-text
 [note above]: #set_info
 [using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute
+[WhatsApp]: https://www.twilio.com/whatsapp

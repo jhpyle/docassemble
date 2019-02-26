@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.9](https://github.com/jhpyle/docassemble/releases/tag/v0.4.9) - 2019-02-25
+
+### Added
+- Support for sending text messages using WhatsApp using `send_sms`.
+
+### Changed
+- Non-required file upload variables will be set to `None` instead of
+  being ignored.
+
+### Fixed
+- Unicode error during package upgrade when `pip show` returns bytes
+  that cannot be decoded as UTF-8.
+- JavaScript error with Google Maps.
+
 ## [0.4.8](https://github.com/jhpyle/docassemble/releases/tag/v0.4.8) - 2019-02-24
 
 ### Changed

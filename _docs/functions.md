@@ -4779,7 +4779,10 @@ This function is integrated with other classes in
 
 * `to` expects a [list] of recipients.  The list can consist of
   [`Individual`]s (or any other [`Person`]s), objects of type
-  [`phonenumbers.PhoneNumber`], or a simple string containing a phone number.
+  [`phonenumbers.PhoneNumber`], or a simple string containing a phone
+  number.  If the number begins with `whatsapp:`, then [WhatsApp] will
+  be used to send the message.  If the recipient is a [`Person`], then
+  the [`sms_number()`] method will be used to obtain the person's number.
 * `body` expects text, or `None`.  If provided, it will be the content
   of the message.  Markdown will be converted to plain text.
 * `template` expects a [template] object, or `None`.  These
@@ -6413,3 +6416,5 @@ $(document).on('daPageLoad', function(){
 [upgrade to Python 3]: {{ site.baseurl }}/docs/twotothree.html
 [six]: https://pypi.org/project/six/
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[`sms_number()`]: {{ site.baseurl }}/docs/objects.html#Person.sms_number
+[WhatsApp]: https://www.twilio.com/whatsapp
