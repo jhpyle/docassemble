@@ -2506,6 +2506,17 @@ pdf/a: True
 The default is `False`.  The setting can also be made on a
 per-interview basis by setting the [`pdf/a` features setting].
 
+<a name="tagged pdf"></a>When using [`docx template file`], you also
+have the option of creating a "tagged PDF," which is similar to
+[PDF/A].  You can set this as a server-wide default:
+
+{% highlight yaml %}
+tagged pdf: True
+{% endhighlight %}
+
+This setting can also be made on a per-interview basis by setting the
+[`tagged pdf` features setting].
+
 ## <a name="maximum image size"></a>Limiting size of uploaded images
 
 If your users upload digital photos into your interviews, the uploads
@@ -3100,6 +3111,7 @@ and Facebook API keys.
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
+[`tagged pdf` features setting]: {{ site.baseurl }}/docs/initial.html#tagged pdf
 [Jinja2]: http://jinja.pocoo.org/docs/2.9/
 [Flask]: http://flask.pocoo.org/
 [`interviews.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/interviews.html

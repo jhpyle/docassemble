@@ -1214,6 +1214,19 @@ The default is determined by the [`pdf/a` configuration directive].
 The setting can also be made on a per-attachment basis by setting the
 [`pdf/a` attachment setting].
 
+<a name="tagged pdf"></a>When using [`docx template file`], you also
+have the option of creating a "tagged PDF," which is similar to
+[PDF/A].  You can set this as an interview-wide default:
+
+{% highlight yaml %}
+features:
+  tagged pdf: True
+{% endhighlight %}
+
+The default is determined by the [`tagged pdf` configuration directive].
+This setting can also be made on a per-attachment basis by setting the
+[`tagged pdf` attachment setting].
+
 ## <a name="maximum image size"></a>Limiting size of uploaded images
 
 If your users upload digital photos into your interviews, the uploads
@@ -1300,7 +1313,9 @@ features:
 [`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [`pdf/a` attachment setting]: {{ site.baseurl }}/docs/documents.html#pdfa
+[`tagged pdf` attachment setting]: {{ site.baseurl }}/docs/documents.html#tagged pdf
 [`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
+[`tagged pdf` configuration directive]: {{ site.baseurl }}/docs/config.html#tagged pdf
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [table]: {{ site.baseurl }}/docs/template.html#table
 [tables]: {{ site.baseurl }}/docs/template.html#table
@@ -1427,3 +1442,4 @@ features:
 [privileges]: {{ site.baseurl }}/docs/users.html
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`defined()`]: {{ site.baseurl}}/docs/functions.html#defined
+[`docx template file`]: {{ site.baseurl}}/docs/documents.html#docx template file

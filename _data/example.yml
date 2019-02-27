@@ -11058,6 +11058,20 @@
     name: A document
     filename: final_document
     docx template file: main_document.docx
+"tagged-pdf": |-
+  question: Your document is ready.
+  subquestion: |
+    The file is tagged PDF.
+  attachment:
+    - name: A hello world document
+      filename: Hello_World_Document
+      valid formats:
+        - pdf
+      description: |
+        A document with a classic message
+      docx template file: tagged.docx
+      tagged pdf: True
+  mandatory: True
 "testcooking": |-
   modules:
     - .objects
