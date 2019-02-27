@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.10] - 2019-02-27
+### Added
+- The `tagged pdf` option for `docx template file` document assembly.
+### Changed
+- The `pdf/a` options now create PDF/A documents directly with
+  LibreOffice.
+- The `comma_list()` and `comma_and_list()` now work with a wider
+  variety of iterables.
+
 ## [0.4.9] - 2019-02-25
 ### Added
 - Support for sending text messages using WhatsApp using `send_sms`.

@@ -1070,6 +1070,8 @@ class Question:
                 self.interview.recursion_limit = data['features']['recursion limit']
             if 'pdf/a' in data['features'] and data['features']['pdf/a'] in (True, False):
                 self.interview.use_pdf_a = data['features']['pdf/a']
+            if 'tagged pdf' in data['features'] and data['features']['tagged pdf'] in (True, False):
+                self.interview.use_tagged_pdf = data['features']['tagged pdf']
             if 'bootstrap theme' in data['features'] and data['features']['bootstrap theme']:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
@@ -3083,10 +3085,18 @@ class Question:
                 if isinstance(target['pdf/a'], bool):
                     options['pdf_a'] = target['pdf/a']
                 elif isinstance(target['pdf/a'], string_types):
-                    options['pdf_a'] = compile(target['pdf/a'], '<expression>', 'eval')
+                    options['pdf_a'] = compile(target['pdf/a'], '<pdfa expression>', 'eval')
                     self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
+            if 'tagged pdf' in target:
+                if isinstance(target['tagged pdf'], bool):
+                    options['tagged_pdf'] = target['tagged pdf']
+                elif isinstance(target['tagged pdf'], string_types):
+                    options['tagged_pdf'] = compile(target['tagged pdf'], '<tagged pdf expression>', 'eval')
+                    self.find_fields_in(target['tagged pdf'])
+                else:
+                    raise DAError('Unknown data type in attachment tagged pdf.' + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
@@ -3836,7 +3846,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references'):
                     if key in result:
                         del result[key]
                 return result
@@ -3852,7 +3862,7 @@ class Question:
                         docassemble.base.functions.set_context('pdf')
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references'):
+                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references'):
                             if key in result:
                                 del result[key]
                         docassemble.base.functions.reset_context()
@@ -3885,9 +3895,9 @@ class Question:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_references=result['update_references'])
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_references=result['update_references'], tagged=result['convert_to_tagged_pdf'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'password', 'template_password', 'update_references']:
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references']:
                             if key in result:
                                 del result[key]
                 else:
@@ -3941,7 +3951,7 @@ class Question:
             the_filename = attachment['filename'].text(user_dict).strip()
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False))
+            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False))
             exec(variable_name + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
@@ -4018,6 +4028,13 @@ class Question:
                 result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
+        if 'tagged_pdf' in attachment['options']:
+            if isinstance(attachment['options']['tagged_pdf'], bool):
+                result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
+            else:
+                result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], user_dict)
+        else:
+            result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
         if 'update_references' in attachment['options']:
             if isinstance(attachment['options']['update_references'], bool):
                 result['update_references'] = attachment['options']['update_references']
@@ -4317,6 +4334,7 @@ class Interview:
         self.navigation_back_button = True
         self.force_fullscreen = False
         self.use_pdf_a = get_config('pdf/a', False)
+        self.use_tagged_pdf = get_config('tagged pdf', False)
         self.loop_limit = get_config('loop limit', 500)
         self.recursion_limit = get_config('recursion limit', 500)
         self.cache_documents = True

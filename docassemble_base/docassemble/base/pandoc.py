@@ -37,17 +37,29 @@ def get_pandoc_version():
     version_content = re.sub(r'\n.*', '', version_content)
     version_content = re.sub(r'^pandoc ', '', version_content)
     return version_content
-    
-PANDOC_VERSION = get_pandoc_version()
-if PANDOC_VERSION.startswith('1'):
-    PANDOC_OLD = True
-    PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
-else:
-    PANDOC_OLD = False
-    PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+
+PANDOC_INITIALIZED = False
+PANDOC_OLD = False
+PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+
+def initialize_pandoc():
+    if PANDOC_INITIALIZED:
+        return
+    global PANDOC_OLD
+    global PANDOC_ENGINE
+    global PANDOC_INITIALIZED
+    PANDOC_VERSION = get_pandoc_version()
+    if PANDOC_VERSION.startswith('1'):
+        PANDOC_OLD = True
+        PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+    else:
+        PANDOC_OLD = False
+        PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+    PANDOC_INITIALIZED = True
 
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
 LIBREOFFICE_MACRO_PATH = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
+LIBREOFFICE_INITIALIZED = False
 
 convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
 convertible_extensions = {"docx": "docx", "odt": "odt"}
@@ -64,6 +76,7 @@ if daconfig.get('libreoffice', 'libreoffice') is not None:
 
 class MyPandoc(object):
     def __init__(self, **kwargs):
+        initialize_pandoc()
         if 'pdfa' in kwargs and kwargs['pdfa']:
             self.pdfa = True
         else:
@@ -229,12 +242,18 @@ class MyPandoc(object):
             self.output_content = self.output_content.decode()
         return
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_references=False):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_references=False, tagged=False):
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
     shutil.copyfile(in_file, from_file)
     tries = 0
+    if pdfa:
+        method = 'pdfa'
+    elif tagged:
+        method = 'tagged'
+    else:
+        method = 'default'
     while tries < 5:
         use_libreoffice = True
         if update_references:
@@ -248,7 +267,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     result = 1
                 use_libreoffice = False
             else:
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexerPdf(' + from_file + ',' + to_file + ')']
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
         elif daconfig.get('convertapi secret', None) is not None:
             try:
                 convertapi_to_pdf(from_file, to_file)
@@ -258,8 +277,13 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 result = 1
             use_libreoffice = False
         else:
-            subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+            if method == 'default':
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+            else:
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:
+            initialize_libreoffice()
+            #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
             p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
             result = p.wait()
         if os.path.isfile(to_file):
@@ -273,8 +297,6 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             logmessage("Retrying convertapi")
         continue
     if result == 0:
-        if pdfa:
-            pdf_to_pdfa(to_file)
         if password:
             pdf_encrypt(to_file, password)
         shutil.copyfile(to_file, out_file)
@@ -285,6 +307,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     return True
 
 def rtf_to_docx(in_file, out_file):
+    initialize_libreoffice()
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file.rtf")
     to_file = os.path.join(tempdir, "file.docx")
@@ -303,6 +326,7 @@ def rtf_to_docx(in_file, out_file):
     return True
 
 def word_to_markdown(in_file, in_format):
+    initialize_libreoffice()
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     if in_format not in ['docx', 'odt']:
         tempdir = tempfile.mkdtemp()
@@ -353,6 +377,7 @@ def get_rtf_styles(filename):
     return styles
     
 def update_references(filename):
+    initialize_libreoffice()
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexer(' + filename + ')']
     p = subprocess.Popen(subprocess_arguments, cwd=tempfile.gettempdir())
     result = p.wait()
@@ -360,15 +385,25 @@ def update_references(filename):
         return False
     return True
 
-if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
-    logmessage("No LibreOffice macro path exists")
-    temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
-    word_file = docassemble.base.functions.package_template_filename('docassemble.demo:data/templates/template_test.docx')
-    word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None)
-    del temp_file
-    del word_file
-if os.path.isfile(LIBREOFFICE_MACRO_PATH):
-    shutil.copyfile(docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba'), LIBREOFFICE_MACRO_PATH)
+def initialize_libreoffice():
+    if LIBREOFFICE_INITIALIZED:
+        return
+    if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
+        logmessage("No LibreOffice macro path exists")
+        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
+        word_file = docassemble.base.functions.package_template_filename('docassemble.demo:data/templates/template_test.docx')
+        word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None)
+        del temp_file
+        del word_file
+    try:
+        assert os.path.isdir(os.path.dirname(LIBREOFFICE_MACRO_PATH))
+        orig_path = docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba')
+        logmessage("Copying LibreOffice macro from " + orig_path)
+        shutil.copyfile(orig_path, LIBREOFFICE_MACRO_PATH)
+    except:
+        logmessage("Could not copy LibreOffice macro into place")
+    global LIBREOFFICE_INITIALIZED
+    LIBREOFFICE_INITIALIZED = True
 
 def concatenate_files(path_list, pdfa=False, password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)

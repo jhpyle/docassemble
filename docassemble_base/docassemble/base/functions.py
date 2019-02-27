@@ -1140,7 +1140,7 @@ def url_of(file_reference, **kwargs):
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
     result = dict(sms=False, fax=False, google_login=False, facebook_login=False, auth0_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
-    if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
+    if 'twilio' in server.daconfig and isinstance(server.daconfig['twilio'], (list, dict)):
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
         else:
@@ -1702,17 +1702,16 @@ def comma_list_en(*pargs, **kwargs):
         comma_string = kwargs['comma_string']
     else:
         comma_string = u", "
-    if (len(pargs) == 0):
-        return text_type('')
-    elif (len(pargs) == 1):
-        if type(pargs[0]) == list:
-            pargs = pargs[0]
-    if (len(pargs) == 0):
-        return text_type('')
-    elif (len(pargs) == 1):
-        return(text_type(pargs[0]))
-    else:
-        return(comma_string.join(pargs))
+    the_list = list()
+    for parg in pargs:
+        if isinstance(parg, string_types):
+            the_list.append(parg)
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+            for sub_parg in parg:
+                the_list.append(text_type(sub_parg))
+        else:
+            the_list.append(text_type(parg))
+    return comma_string.join(the_list)
 
 def comma_and_list_es(*pargs, **kwargs):
     if 'and_string' not in kwargs:
@@ -1745,21 +1744,23 @@ def comma_and_list_en(*pargs, **kwargs):
         after_and = kwargs['after_and']
     else:
         after_and = u" "
-    if (len(pargs) == 0):
+    the_list = list()
+    for parg in pargs:
+        if isinstance(parg, string_types):
+            the_list.append(parg)
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+            for sub_parg in parg:
+                the_list.append(text_type(sub_parg))
+        else:
+            the_list.append(text_type(parg))
+    if len(the_list) == 0:
         return text_type('')
-    elif (len(pargs) == 1):
-        if type(pargs[0]) == list:
-            pargs = pargs[0]
-        elif type(pargs[0]) == set:
-            pargs = list(pargs[0])
-    if (len(pargs) == 0):
-        return text_type('')
-    elif (len(pargs) == 1):
-        return(text_type(pargs[0]))
-    elif (len(pargs) == 2):
-        return(text_type(pargs[0]) + before_and + and_string + after_and + text_type(pargs[1]))
+    elif len(the_list) == 1:
+        return the_list[0]
+    elif len(the_list) == 2:
+        return the_list[0] + before_and + and_string + after_and + the_list[1]
     else:
-        return(comma_string.join(map(text_type, pargs[:-1])) + extracomma + before_and + and_string + after_and + text_type(pargs[-1]))
+        return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
 
 def need(*pargs):
     """Given one or more variables, this function instructs docassemble 

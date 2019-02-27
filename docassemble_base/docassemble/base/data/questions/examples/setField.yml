@@ -51,7 +51,7 @@ subquestion: |
   * ${ cold_cereal }
   * ${ hot_cereal }
   % if juice_varieties.any_true():
-  * ${ comma_list(juice_varieties.true_values()) } juice
+  * ${ comma_and_list(juice_varieties.true_values()) } juice
   % endif
   * ${ other_groceries }
 mandatory: True

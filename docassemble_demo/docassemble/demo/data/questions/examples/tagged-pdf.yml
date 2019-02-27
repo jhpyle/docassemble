@@ -1,0 +1,20 @@
+metadata:
+  title: Tagged PDF file
+  short title: Tagged
+  documentation: "https://docassemble.org/docs/documents.html#tagged"
+  example start: 1
+  example end: 1
+---
+question: Your document is ready.
+subquestion: |
+  The file is tagged PDF.
+attachment:
+  - name: A hello world document
+    filename: Hello_World_Document
+    valid formats:
+      - pdf
+    description: |
+      A document with a classic message
+    docx template file: tagged.docx
+    tagged pdf: True
+mandatory: True

@@ -1,6 +1,7 @@
 #! /bin/bash
 
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
 if [ "${DAPYTHONVERSION}" == "2" ]; then
     export DA_DEFAULT_LOCAL="local"
 else
