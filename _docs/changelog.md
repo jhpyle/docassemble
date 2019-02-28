@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.11](https://github.com/jhpyle/docassemble/releases/tag/v0.4.11) - 2019-02-28
+
+### Added
+- The `error action` specifier in `metadata`.
+
 ## [0.4.10](https://github.com/jhpyle/docassemble/releases/tag/v0.4.10) - 2019-02-27
 
 ### Added
