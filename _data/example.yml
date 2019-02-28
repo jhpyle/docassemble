@@ -3086,6 +3086,42 @@
     % endif
   buttons:
     - Restart: restart
+"error-action": |-
+  metadata:
+    error action: on_error
+  ---
+  event: on_error
+  question: |
+    Sorry, we have encountered an error.
+  buttons:
+    - Exit: exit
+      url: https://docassemble.org
+"error-action-2": |-
+  metadata:
+    error action: on_error
+  ---
+  event: on_error
+  code: |
+    healthy = False
+  ---
+  mandatory: True
+  code: |
+    if not healthy:
+      fail_safe
+    favorite_fruit
+    favorite_vegetable
+    favorite_number
+    final_screen
+  ---
+  sets: fail_safe
+  code: |
+    if not defined('favorite_fruit'):
+      favorite_fruit = '_________'
+    if not defined('favorite_vegetable'):
+      favorite_vegetable = '_________'
+    if not defined('favorite_number'):
+      favorite_number = '____'
+    final_screen
 "error-help": |-
   metadata:
     error help: |
@@ -10783,9 +10819,10 @@
   ---\nfeatures:\n  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\n\
   subject: |\n  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n \
   \ \n  A fruit is the the sweet and\n  fleshy product of a tree or\n  other plant\
-  \ that contains\n  seed and can be eaten as food.\n---\nquestion: |\n  What is your\
-  \ favorite fruit?\nsubquestion: |\n  Everybody has a favorite fruit.\n  \n  ${ prog_disclose(fruit_explanation)\
-  \ }\nfields:\n  - Favorite fruit: favorite_fruit"
+  \ that contains\n  seed and can be eaten as food.\n---\ntemplate: favorite_explanation\n\
+  subject: |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n  If\
+  \ you have a favorite something,\n  that means you like it more than\n  you like\
+  \ other things of a similar\n  nature."
 "questionless": |-
   mandatory: True
   code: |
@@ -11009,6 +11046,30 @@
   \ ['-v'])\n---\nmandatory: True\nquestion: |\n  Result of unit tests\nsubquestion:\
   \ |\n  % if return_code == 0:\n  Command succeeded.\n  % else:\n  Command failed!\n\
   \  % endif\n  \n  ${ indent(output) }"
+"save-continue-later": "default screen parts:\n  under: |\n    % if show_save_resume_message:\n\
+  \    [Save and resume later](${ url_action('save_and_resume') })\n    % endif\n\
+  ---\nmandatory: True\ncode: |\n  target = 'normal'\n  show_save_resume_message =\
+  \ True\n  multi_user = True\n---\nmandatory: True\nscan for variables: False\ncode:\
+  \ |\n  if target == 'save_and_resume':\n    if wants_email:\n      if email_sent:\n\
+  \        log(\"We sent an e-mail to your e-mail address.\", \"info\")\n      else:\n\
+  \        log(\"There was a problem with e-mailing.\", \"danger\")\n      show_save_resume_message\
+  \ = False\n    undefine('wants_email')\n    undefine('email_sent')\n    target =\
+  \ 'normal'\n  final_screen\n---\nquestion: |\n  What is your favorite fruit?\nfields:\n\
+  \  - Favorite fruit: favorite_fruit\n---\nquestion: |\n  What is your favorite vegetable?\n\
+  fields:\n  - Favorite vegetable: favorite_vegetable\n---\nquestion: |\n  What is\
+  \ your favorite legume?\nfields:\n  - Favorite legume: favorite_legume\n---\nevent:\
+  \ final_screen\nquestion: |\n  I would like you to cook a\n  ${ favorite_fruit },\n\
+  \  ${ favorite_vegetable }, and\n  ${ favorite_legume } stew.\n---\nevent: save_and_resume\n\
+  code: |\n  target = 'save_and_resume'\n---\ncode: |\n  send_email(to=user_email_address,\
+  \ template=save_resume_template)\n  email_sent = True\n---\nquestion: |\n  How to\
+  \ resume your interview later\nsubquestion: |\n  If you want to resume your interview\
+  \ later, we can\n  e-mail you a link that you can click on to resume\n  your interview\
+  \ at a later time.\nfields:\n  - no label: wants_email\n    input type: radio\n\
+  \    choices:\n      - \"Ok, e-mail me\": True\n      - \"No thanks\": False\n \
+  \   default: True\n  - E-mail address: user_email_address\n    datatype: email\n\
+  \    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\nsubject:\
+  \ |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click here](${\
+  \ interview_url() })."
 "someone-already-mentioned": |-
   objects:
     cook: Individual

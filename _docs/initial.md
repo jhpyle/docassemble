@@ -113,6 +113,33 @@ improperly.  The `allow non-idempotent questions` currently defaults
 to `True`, but in the future, it will default to `False`, which may
 break some interviews.
 
+<a name="error action"></a>You can set an `error action` if you want
+your interview to do something substantive in the event that your
+interview encounters an error that it would otherwise show to the
+user.
+
+A simple application of `error action` would be to replace the error
+screen with a [`question`]:
+
+{% include side-by-side.html demo="error-action" %}
+
+When the interview encounters an error, the interview will run the
+[action] given by `error action`.  In this case, `error action` is
+`on_error`, and calling this [action] shows a [`question`] to the
+user.
+
+An [action] can also run code that changes the interview logic.  For
+example, an `error action` could skip through the remainder of the
+questions and present a final screen:
+
+{% include side-by-side.html demo="error-action-2" %}
+
+If the attempt to run the error action also results in an error, the
+latter error is shown on the screen in the usual fashion.
+
+See [`error help`] and [`verbose error messages`] for other ways to
+customize error messages.
+
 <a name="pre"></a><a name="submit"></a><a name="post"></a>The
 [`metadata`] block also accepts specifiers for default content to be
 inserted into various parts of the screen.
@@ -1443,3 +1470,5 @@ features:
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`defined()`]: {{ site.baseurl}}/docs/functions.html#defined
 [`docx template file`]: {{ site.baseurl}}/docs/documents.html#docx template file
+[`error help`]: #error help
+[`verbose error messages`]: {{ site.baseurl}}/docs/config.html#verbose error messages

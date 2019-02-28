@@ -268,7 +268,16 @@ like use Python's `in` operator to test whether an individual is a
 part of a list.  This recipe illustrates this by testing whether
 `boss` is part of `customers` or `employee` is part of `customers`.
 
+# <a name="resume via email"></a>E-mailing the user a link for resuming the interview later
+
+If you want users to be able to resume their interviews later, but you
+don't want to use the username and password system, you can e-mail
+your users a URL created with [`interview_url()`].
+
+{% include demo-side-by-side.html demo="save-continue-later" %}
+
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
 [`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others
 [`object` datatype]: {{ site.baseurl }}/docs/fields.html#object
+[`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
