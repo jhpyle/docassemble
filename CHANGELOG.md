@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.11] - 2019-
+
+### Added
+- The `error action` specifier in `metadata`.
+
 ## [0.4.10] - 2019-02-27
 ### Added
 - The `tagged pdf` option for `docx template file` document assembly.

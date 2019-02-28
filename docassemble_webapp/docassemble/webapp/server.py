@@ -5138,12 +5138,12 @@ def index():
         #logmessage("index: action in session")
         action = json.loads(myb64unquote(session['action']))
         del session['action']
-    if '_action' in request.form:
+    if '_action' in request.form and 'in error' not in session:
         action = json.loads(myb64unquote(request.form['_action']))
         #logmessage("index: action from _action is " + str(action))
     if len(request.args):
         #logmessage("index: there were args")
-        if 'action' in request.args:
+        if 'action' in request.args and 'in error' not in session:
             session['action'] = request.args['action']
             response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
             if set_cookie:
@@ -9260,6 +9260,8 @@ def index():
     if expire_visitor_secret:
         response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
+    if 'in error' in session:
+        del session['in error']
     #logmessage("Request time final: " + str(g.request_time()))
     #sys.stderr.write("11\n")
     return response
@@ -15888,22 +15890,6 @@ $( document ).ready(function() {
         kbLoad = ''
     return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
-# nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
-
-# def mydump(data_dict):
-#     output = ""
-#     for key, val in data_dict.items():
-#         output += "      exampleData[" + str(repr(key)) + "] = " + str(json.dumps(val)) + "\n"
-#     return output
-
-# @app.route('/packages', methods=['GET', 'POST'])
-# @login_required
-# @roles_required(['admin', 'developer'])
-# def package_page():
-#     if request.method == 'GET' and needs_to_change_password():
-#         return redirect(url_for('user.change_password', next=url_for('interview_list')))
-#     return render_template('pages/packages.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Package Management"), page_title=word("Package Management")), 200
-
 @app.errorhandler(404)
 def page_not_found_error(the_error):
     return render_template('pages/404.html'), 404
@@ -15921,8 +15907,6 @@ def server_error(the_error):
         logmessage(errmess)
     elif isinstance(the_error, TemplateError):
         errmess = text_type(the_error)
-        # if hasattr(the_error, 'lineno') and the_error.lineno is not None:
-        #     errmess += "; lineno: " + text_type(the_error.lineno)
         if hasattr(the_error, 'name') and the_error.name is not None:
             errmess += "\nName: " + text_type(the_error.name)
         if hasattr(the_error, 'filename') and the_error.filename is not None:
@@ -15977,7 +15961,6 @@ def server_error(the_error):
                     flask_logtext = []
                 flask_logtext.append(line)
     orig_errmess = errmess
-    #errmess = the_error.__class__.__name__ + ": " + noquote(errmess)
     errmess = noquote(errmess)
     if re.search(r'\n', errmess):
         errmess = '<pre>' + errmess + '</pre>'
@@ -16022,20 +16005,11 @@ def server_error(the_error):
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
+    if request.path.endswith('/interview') and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
+        session['in error'] = True
+        session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
+        return index()
     return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
-    #return render_template('pages/501.html', version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=None, logtext=str(the_trace)), error_code
-
-# @app.route('/testpost', methods=['GET', 'POST'])
-# def test_post():
-#     errmess = "Hello, " + str(request.method) + "!"
-#     is_redir = request.args.get('redir', None)
-#     if is_redir or request.method == 'GET':
-#         return render_template('pages/testpost.html', error=errmess), 200
-#     newargs = dict(request.args)
-#     newargs['redir'] = '1'
-#     logtext = url_for('test_post', **newargs)
-#     #return render_template('pages/testpost.html', error=errmess, logtext=logtext), 200
-#     return redirect(logtext, code=307)
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):

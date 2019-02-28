@@ -22,12 +22,29 @@ content: |
   other plant that contains
   seed and can be eaten as food.
 ---
+template: favorite_explanation
+subject: |
+  Explain favorites
+content: |
+  ##### What is a favorite?
+
+  If you have a favorite something,
+  that means you like it more than
+  you like other things of a similar
+  nature.
+---
 question: |
   What is your favorite fruit?
 subquestion: |
   Everybody has a favorite fruit.
   
   ${ prog_disclose(fruit_explanation) }
+
+  Don't you have a favorite fruit?
+
+  ${ prog_disclose(favorite_explanation) }
+
+  You must have a favorite.
 fields:
   - Favorite fruit: favorite_fruit
 ---

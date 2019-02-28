@@ -1,0 +1,81 @@
+metadata:
+  title: Error action
+  short title: Error
+  example start: 2
+  example end: 3
+  documentation: https://docassemble.org/docs/initial.html#error action
+---
+modules:
+  - docassemble.base.util
+---
+metadata:
+  error action: on_error
+---
+event: on_error
+code: |
+  healthy = False
+---
+code: |
+  healthy = True
+---
+mandatory: True
+code: |
+  if not healthy:
+    fail_safe
+  favorite_fruit
+  favorite_vegetable
+  favorite_number
+  final_screen
+---
+sets: fail_safe
+code: |
+  if not defined('favorite_fruit'):
+    favorite_fruit = '_________'
+  if not defined('favorite_vegetable'):
+    favorite_vegetable = '_________'
+  if not defined('favorite_number'):
+    favorite_number = '____'
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+question: |
+  What is your favorite number?
+subquestion: |
+  My favorite number is
+  ${ best_number }
+fields:
+  - Number: favorite_number
+---
+code: |
+  best_number = 92843.2/0.0
+---
+event: final_screen
+question: |
+  Here is your document.
+subquestion: |
+  % if not healthy:
+  We encountered an error, so
+  we did the best we could
+  to fill out the document.
+  % endif
+attachment:
+  name: Your document
+  filename: your_document
+  content: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+
+    Your favorite vegetable
+    is ${ favorite_vegetable }.
+
+    Your favorite number is
+    ${ favorite_number }.

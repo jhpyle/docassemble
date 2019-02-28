@@ -1,0 +1,29 @@
+metadata:
+  title: Error action
+  short title: Error
+  example start: 2
+  example end: 3
+  documentation: https://docassemble.org/docs/initial.html#error action
+---
+modules:
+  - docassemble.base.util
+---
+metadata:
+  error action: on_error
+---
+event: on_error
+question: |
+  Sorry, we have encountered an error.
+buttons:
+  - Exit: exit
+    url: https://docassemble.org
+---
+mandatory: True
+question: |
+  This interview will encounter
+  an error when you press Continue.
+field: intro
+---
+mandatory: True
+code: |
+  a = 5 / 0

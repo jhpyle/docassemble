@@ -1,0 +1,91 @@
+metadata:
+  title: Resume via e-mail link
+  short title: Resume
+  example start: 2
+  example end: 12
+  documentation: https://docassemble.org/docs/recipes.html#resume via email
+---
+modules:
+  - docassemble.base.util
+---
+default screen parts:
+  under: |
+    % if show_save_resume_message:
+    [Save and resume later](${ url_action('save_and_resume') })
+    % endif
+---
+mandatory: True
+code: |
+  target = 'normal'
+  show_save_resume_message = True
+  multi_user = True
+---
+mandatory: True
+scan for variables: False
+code: |
+  if target == 'save_and_resume':
+    if wants_email:
+      if email_sent:
+        log("We sent an e-mail to your e-mail address.", "info")
+      else:
+        log("There was a problem with e-mailing.", "danger")
+      show_save_resume_message = False
+    undefine('wants_email')
+    undefine('email_sent')
+    target = 'normal'
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+question: |
+  What is your favorite legume?
+fields:
+  - Favorite legume: favorite_legume
+---
+event: final_screen
+question: |
+  I would like you to cook a
+  ${ favorite_fruit },
+  ${ favorite_vegetable }, and
+  ${ favorite_legume } stew.
+---
+event: save_and_resume
+code: |
+  target = 'save_and_resume'
+---
+code: |
+  send_email(to=user_email_address, template=save_resume_template)
+  email_sent = True
+---
+question: |
+  How to resume your interview later
+subquestion: |
+  If you want to resume your interview later, we can
+  e-mail you a link that you can click on to resume
+  your interview at a later time.
+fields:
+  - no label: wants_email
+    input type: radio
+    choices:
+      - "Ok, e-mail me": True
+      - "No thanks": False
+    default: True
+  - E-mail address: user_email_address
+    datatype: email
+    show if: wants_email
+under: ""
+---
+template: save_resume_template
+subject: |
+  Your interview
+content: |
+  To resume your interview, 
+  [click here](${ interview_url() }).
