@@ -131,6 +131,7 @@ do
          "$file" = "show-login" -o \
          "$file" = "branch-error" -o \
          "$file" = "error-help" -o \
+         "$file" = "error-help-language" -o \
          "$file" = "set-title" -o \
          "$file" = "set-logo-title" -o \
          "$file" = "question-help-button" -o \

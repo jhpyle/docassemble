@@ -1,12 +1,15 @@
 metadata:
   title: Error action
   short title: Error
-  example start: 2
-  example end: 3
+  example start: 3
+  example end: 6
   documentation: https://docassemble.org/docs/initial.html#error action
 ---
 modules:
   - docassemble.base.util
+---
+code: |
+  healthy = True
 ---
 metadata:
   error action: on_error
@@ -14,9 +17,6 @@ metadata:
 event: on_error
 code: |
   healthy = False
----
-code: |
-  healthy = True
 ---
 mandatory: True
 code: |

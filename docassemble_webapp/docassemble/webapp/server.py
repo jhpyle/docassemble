@@ -8138,6 +8138,15 @@ def index():
           e.preventDefault();
           $(this).tab('show');
         });
+        $(".datableup,.databledown").click(function(){
+          var row = $(this).parents("tr").first();
+          if ($(this).is(".datableup")) {
+            row.insertBefore(row.prev());
+          }
+          else {
+            row.insertAfter(row.next());
+          }
+        });
         $('#questionlabel').click(function(e) {
           e.preventDefault();
           $(this).tab('show');

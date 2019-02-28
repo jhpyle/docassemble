@@ -2097,3 +2097,7 @@ div.progress + div.audiovideo-control {
 div.hide-navbar .navbar {
     display: none;
 }
+
+tr:first-child .datableup, tr:last-child .databledown {
+    visibility: hidden;
+}

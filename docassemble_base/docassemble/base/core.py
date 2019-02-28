@@ -1091,6 +1091,7 @@ class DAList(DAObject):
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+        #output += ' <a href="#" class="btn btn-sm btn-primary datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + text_type(index) + '"><i class="fas fa-sort-up"></i></a> <a href="#" class="btn btn-sm btn-primary databledown"><i class="fas fa-sort-down"></i></a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):

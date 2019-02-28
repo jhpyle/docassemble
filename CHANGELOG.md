@@ -1,7 +1,6 @@
 # Change Log
 
-## [0.4.11] - 2019-
-
+## [0.4.11] - 2019-02-28
 ### Added
 - The `error action` specifier in `metadata`.
 
