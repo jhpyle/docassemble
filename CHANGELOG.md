@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.12] - 2019-03-01
+### Added
+- The `allow reordering` specifier in `table`.
+
 ## [0.4.11] - 2019-02-28
 ### Added
 - The `error action` specifier in `metadata`.

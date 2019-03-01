@@ -1,0 +1,62 @@
+metadata:
+  title: Table reordering
+  short title: Table
+  documentation: "https://docassemble.org/docs/groups.html#reordering"
+  example start: 7
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - fruit: DAList
+---
+mandatory: true
+code: |
+  fruit.object_type = Thing
+---
+question: |
+  Information about fruit
+subquestion: |
+  Here is a fruity summary.
+
+  ${ fruit_table }
+field: table_edited
+---
+event: final_screen
+question: |
+  All done
+subquestion: |
+  Here are your fruits.
+
+  ${ fruit_table.show(editable=False) }
+---
+mandatory: True
+code: |
+  table_edited
+  final_screen
+---
+table: fruit_table
+rows: fruit
+columns:
+  - Fruit Name: row_item.name
+  - Seeds: row_item.seeds
+edit:
+  - name
+allow reordering: True
+---
+code: |
+  fruit.there_are_any = True
+---
+question: |
+  What fruit should be added to the list?
+fields:
+  - Fruit: fruit[i].name.text
+  - Number of seeds: fruit[i].seeds
+    datatype: integer
+    min: 0
+---
+question: |
+  So far, the fruits include ${ fruit }.
+  Are there any others?
+yesno: fruit.there_is_another

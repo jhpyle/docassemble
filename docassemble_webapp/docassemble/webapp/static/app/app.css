@@ -2099,5 +2099,11 @@ div.hide-navbar .navbar {
 }
 
 tr:first-child .datableup, tr:last-child .databledown {
-    visibility: hidden;
+    opacity: 0.5;
+    cursor: default;
+}
+
+.datablehighlighted {
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 102, 102, .6);
+          box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 102, 102, .6);
 }

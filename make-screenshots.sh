@@ -35,7 +35,7 @@ do
     elif [ "$file" = "radio-list-mobile" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 385x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
-    elif [ "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-mako" ]
+    elif [ "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-mako" -o "$file" = "table-reorder" ]
     then
 	echo -e -n "\n    And I set \"Fruit\" to \"apples\"\n    And I set \"Number of seeds\" to \"10\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"oranges\"\n    And I set \"Number of seeds\" to \"6\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"pears\"\n    And I set \"Number of seeds\" to \"0\"\n    And I click the button \"Continue\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "table-python" ]

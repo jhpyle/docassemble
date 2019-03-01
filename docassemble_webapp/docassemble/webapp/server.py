@@ -5509,7 +5509,7 @@ def index():
         the_question = None
     #known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -5551,7 +5551,7 @@ def index():
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
         #logmessage("The data type is " + text_type(type(data)))
@@ -6043,6 +6043,18 @@ def index():
                 error_messages.append(("error", the_error_message))
                 validated = False
     if validated:
+        if '_order_changes' in post_data:
+            orderChanges = json.loads(post_data['_order_changes'])
+            for tableName, changes in orderChanges.items():
+                tableName = myb64unquote(tableName)
+                if illegal_variable_name(tableName):
+                    error_messages.append(("error", "Error: Invalid character in table reorder: " + text_type(tableName)))
+                    continue
+                for item in changes:
+                    if not (isinstance(item, list) and len(item) == 2 and isinstance(item[0], int) and isinstance(item[1], int)):
+                        error_messages.append(("error", "Error: Invalid row number in table reorder: " + text_type(tableName) + " " + text_type(item)))
+                        break
+                exec(tableName + '._reorder(' + ', '.join([repr(item) for item in changes]) + ')', user_dict)
         if '_files_inline' in post_data:
             fileDict = json.loads(myb64unquote(post_data['_files_inline']))
             if not isinstance(fileDict, dict):
@@ -6706,7 +6718,7 @@ def index():
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes'];
       var daVarLookup;
       var daVarLookupRev;
       var daValLookup;
@@ -7358,6 +7370,37 @@ def index():
             $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-success btn-light");
             $(daWhichButton).addClass("btn-secondary");
           }
+        }
+        var tableOrder = {};
+        var tableOrderChanges = {};
+        $("a.datableup").each(function(){
+          var tableName = $(this).data('tablename');
+          if (!tableOrder.hasOwnProperty(tableName)){
+            tableOrder[tableName] = [];
+          }
+          tableOrder[tableName].push(parseInt($(this).data('tableitem')));
+        });
+        var tableChanged = false;
+        for (var tableName in tableOrder){
+          if (tableOrder.hasOwnProperty(tableName)){
+            var n = tableOrder[tableName].length;
+            for (var i = 0; i < n; ++i){
+              if (i != tableOrder[tableName][i]){
+                tableChanged = true;
+                if (!tableOrderChanges.hasOwnProperty(tableName)){
+                  tableOrderChanges[tableName] = [];
+                }
+                tableOrderChanges[tableName].push([tableOrder[tableName][i], i])
+              }
+            }
+          }
+        }
+        if (tableChanged){
+          $('<input>').attr({
+            type: 'hidden',
+            name: '_order_changes',
+            value: JSON.stringify(tableOrderChanges)
+          }).appendTo($(form));
         }
         daWhichButton = null;
         if (daSubmitter != null){
@@ -8138,14 +8181,34 @@ def index():
           e.preventDefault();
           $(this).tab('show');
         });
-        $(".datableup,.databledown").click(function(){
+        $(".datableup,.databledown").click(function(e){
+          e.preventDefault();
+          $(this).blur();
           var row = $(this).parents("tr").first();
           if ($(this).is(".datableup")) {
-            row.insertBefore(row.prev());
+            var prev = row.prev();
+            if (prev.length == 0){
+              return false;
+            }
+            row.addClass("datablehighlighted");
+            setTimeout(function(){
+              row.insertBefore(prev);
+            }, 200);
           }
           else {
-            row.insertAfter(row.next());
+            var next = row.next();
+            if (next.length == 0){
+              return false;
+            }
+            row.addClass("datablehighlighted");
+            setTimeout(function(){
+              row.insertAfter(row.next());
+            }, 200);
           }
+          setTimeout(function(){
+            row.removeClass("datablehighlighted");
+          }, 1000);
+          return false;
         });
         $('#questionlabel').click(function(e) {
           e.preventDefault();

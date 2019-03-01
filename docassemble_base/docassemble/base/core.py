@@ -18,6 +18,7 @@ import shutil
 import inspect
 import yaml
 import pycurl
+import json
 import types
 import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
@@ -1059,12 +1060,21 @@ class DAList(DAObject):
             return(capitalize(output))
         else:
             return(output)
+    def _reorder(self, *pargs):
+        old_elements = self.elements
+        self.elements = copy.copy(self.elements)
+        maximum = len(self.elements)
+        for item in pargs:
+            if item[0] < maximum and item[1] < maximum:
+                self.elements[item[1]] = old_elements[item[0]]
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
         item = the_args.pop(0)
         index = the_args.pop(0)
         output = ''
+        if kwargs.get('reorder', False):
+            output += '<a href="#" role="button" class="btn btn-sm btn-info btn-revisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + text_type(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm btn-info btn-revisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a> '
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -1088,10 +1098,9 @@ class DAList(DAObject):
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
-        #output += ' <a href="#" class="btn btn-sm btn-primary datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + text_type(index) + '"><i class="fas fa-sort-up"></i></a> <a href="#" class="btn btn-sm btn-primary databledown"><i class="fas fa-sort-down"></i></a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -1829,9 +1838,9 @@ class DADict(DAObject):
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm btn-secondary btn-revisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-revisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):

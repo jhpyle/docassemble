@@ -1968,20 +1968,13 @@ class Question:
             data['rows'] = data['rows'].strip()
             if not isinstance(data['columns'], list):
                 raise DAError("The column part of a table definition must be a list." + self.idebug(data))
-            # if 'header' in data:
-            #     if not isinstance(data['header'], list):
-            #         raise DAError("The header part of a table definition must be a list." + self.idebug(data))
-            #     if len(data['header']) != len(data['column']):
-            #         raise DAError("The header part of a table definition must be the same length as the column part." + self.idebug(data))
-            #     header = list(map(lambda x: TextObject(definitions + text_type(x), names_used=self.mako_names), data['header']))
-            # else:
-            #     header = list(map(lambda x: TextObject('&nbsp;'), data['column']))
             row = compile(data['rows'], '<row code>', 'eval')
             self.find_fields_in(data['rows'])
             header = list()
             column = list()
             read_only = dict(edit=True, delete=True)
             is_editable = False
+            is_reorderable = False
             for col in data['columns']:
                 if not isinstance(col, dict):
                     raise DAError("The column items in a table definition must be dictionaries." + self.idebug(data))
@@ -2001,6 +1994,10 @@ class Question:
                     header.append(TextObject(definitions + text_type(header_text), names_used=self.mako_names))
                 self.find_fields_in(cell_text)
                 column.append(compile(cell_text, '<column code>', 'eval'))
+            if 'allow reordering' in data and data['allow reordering'] is not False:
+                reorder = True
+            else:
+                reorder = False
             if 'edit' in data and data['edit'] is not False:
                 is_editable = True
                 if not isinstance(data['edit'], list) or len(data['edit']) == 0:
@@ -2015,7 +2012,7 @@ class Question:
                     if not isinstance(data['read only'], string_types):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
-                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ')', '<edit code>', 'eval'))
+                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], string_types):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2025,14 +2022,17 @@ class Question:
                         header.append(TextObject(definitions + text_type(data['edit header']), names_used=self.mako_names))
                 else:
                     header.append(TextObject(word("Actions")))
-            elif 'delete buttons' in data and data['delete buttons']:
+            elif ('delete buttons' in data and data['delete buttons']) or reorder:
                 is_editable = True
                 keyword_args = ''
                 if 'read only' in data:
                     if not isinstance(data['read only'], string_types):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
-                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ')', '<delete button code>', 'eval'))
+                if 'delete buttons' in data and data['delete buttons']:
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ')', '<delete button code>', 'eval'))
+                else:
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', delete=False, reorder=' + repr(reorder) + ')', '<reorder buttons code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], string_types):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2042,19 +2042,16 @@ class Question:
                         header.append(TextObject(definitions + text_type(data['edit header']), names_used=self.mako_names))
                 else:
                     header.append(TextObject(word("Actions")))
-            #column = list(map(lambda x: compile(x, '<expression>', 'eval'), data['column']))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
                 empty_message = TextObject(definitions + text_type(empty_message), names_used=self.mako_names)
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable)}
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, is_reorderable=is_reorderable)}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
             self.question_type = 'table'
-            #if self.scan_for_variables:
-            #    self.reset_list = self.fields_used
         if 'template' in data and 'content file' in data:
             if not isinstance(data['content file'], list):
                 data['content file'] = [data['content file']]
@@ -5301,6 +5298,7 @@ class Interview:
                         table_info = TableInfo()
                         table_info.header = question.fields[0].extras['header']
                         table_info.is_editable = question.fields[0].extras['is_editable']
+                        table_info.is_reorderable = question.fields[0].extras['is_reorderable']
                         table_info.row = question.fields[0].extras['row']
                         table_info.column = question.fields[0].extras['column']
                         table_info.indent = " " * (4 * int(question.fields[0].extras['indent']))
