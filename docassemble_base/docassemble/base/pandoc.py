@@ -1,7 +1,10 @@
 import os
 import os.path
 from six import string_types, text_type, PY2, PY3
-import subprocess
+if PY2:
+    import subprocess32 as subprocess
+else:
+    import subprocess
 import docassemble.base.filter
 import docassemble.base.functions
 import tempfile
@@ -54,7 +57,15 @@ def initialize_pandoc():
         PANDOC_ENGINE = '--latex-engine=' + daconfig.get('pandoc engine', 'pdflatex')
     else:
         PANDOC_OLD = False
-        PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
+        try:
+            msg = subprocess.check_output(['xelatex', '--help'], stderr=subprocess.STDOUT)
+            xelatex_supported = True
+        except:
+            xelatex_supported = False
+        if xelatex_supported:
+            PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'xelatex')
+        else:
+            PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
     PANDOC_INITIALIZED = True
 
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
@@ -174,7 +185,7 @@ class MyPandoc(object):
         #logmessage("Arguments are " + str(subprocess_arguments))
         the_temp_dir = tempfile.gettempdir()
         try:
-            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT).decode()
+            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT).decode('utf-8', 'ignore')
         except subprocess.CalledProcessError as err:
             raise Exception("Failed to assemble file: " + err.output.decode())
         if msg:

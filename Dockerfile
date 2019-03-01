@@ -19,8 +19,17 @@ git \
 locales \
 pandoc \
 texlive \
+texlive-xetex \
+texlive-latex-recommended \
 texlive-latex-extra \
 texlive-font-utils \
+texlive-lang-cyrillic \
+texlive-lang-french \
+texlive-lang-italian \
+texlive-lang-portuguese \
+texlive-lang-german \
+texlive-lang-european \
+texlive-lang-spanish \
 texlive-extra-utils \
 apache2 \
 postgresql \
