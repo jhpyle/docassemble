@@ -9617,6 +9617,15 @@
   edit:
     - name.text
   read only: important
+"table-reorder": |-
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item.name
+    - Seeds: row_item.seeds
+  edit:
+    - name
+  allow reordering: True
 "table-width": |-
   features:
     table width: 35

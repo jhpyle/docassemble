@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.12](https://github.com/jhpyle/docassemble/releases/tag/v0.4.12) - 2019-03-01
+
+### Added
+- The `allow reordering` specifier in `table`.
+
+### Fixed
+- Unicode problem reading S3 keys as strings.
+
 ## [0.4.11](https://github.com/jhpyle/docassemble/releases/tag/v0.4.11) - 2019-02-28
 
 ### Added

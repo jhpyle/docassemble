@@ -970,6 +970,16 @@ the editing features.
 
 {% include side-by-side.html demo="edit-list-non-editable" %}
 
+## <a name="reordering"></a>Reorder an already-gathered list
+
+If you have a [`DAList`] and you want to allow the user to change the
+order of items in the list, you can set `allow reordering` to `True`:
+
+{% include side-by-side.html demo="table-reorder" %}
+
+The changes to the order of elements will be saved when the user
+presses Continue.
+
 # <a name="for loop"></a>For loop
 
 In computer programming, a "for loop" allows you to do something
