@@ -54,7 +54,7 @@ class s3key(object):
         else:
             self.does_exist = False
     def get_contents_as_string(self):
-        return self.key_obj.get()['Body'].read()
+        return self.key_obj.get()['Body'].read().decode()
     def exists(self):
         try:
             self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name)
