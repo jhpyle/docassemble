@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.13] - 2019-03-
+### Changed
+- Better support for Unicode characters in Markdown-to-PDF document
+  assembly.
+
 ## [0.4.12] - 2019-03-01
 ### Added
 - The `allow reordering` specifier in `table`.

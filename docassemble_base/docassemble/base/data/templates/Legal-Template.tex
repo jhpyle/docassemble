@@ -88,6 +88,11 @@ $endif$
   \else
     \usepackage{fontspec}
   \fi
+$if(fontfamily)$
+  \setmainfont{$fontfamily$}
+$else$
+  \setmainfont{Times New Roman}
+$endif$
   \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
   \newcommand{\euro}{€}
 $if(mainfont)$

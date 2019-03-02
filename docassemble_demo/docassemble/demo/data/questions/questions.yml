@@ -677,7 +677,7 @@ subquestion: |
 
   (Note: the option to see documents in Markdown format is
   hidden when **docassemble** is configured as a production server.
-  End users will not see these options.)
+  End users will not see this option.)
 help: |
   This is the end of the interview, ${ client }.  You can exit or
   restart.
