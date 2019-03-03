@@ -1,11 +1,8 @@
 metadata:
   title: Force asking a question
   example start: 1
-  example end: 5
+  example end: 4
   documentation: "https://docassemble.org/docs/functions.html#force_ask"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Are you a communist?

@@ -1,11 +1,8 @@
 metadata:
   title: Salutation
   documentation: "https://docassemble.org/docs/objects.html#Individual.salutation"
-  example start: 3
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 2
 ---
 objects:
   - client: Individual

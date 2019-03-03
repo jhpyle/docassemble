@@ -1,11 +1,8 @@
 metadata:
   title: Flash message
   documentation: "https://docassemble.org/docs/background.html#check in"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 question: |
   What is your favorite food?

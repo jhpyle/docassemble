@@ -1,11 +1,8 @@
 metadata:
   title: PDF fill-in with signature
   documentation: "https://docassemble.org/docs/documents.html#signature"
-  example start: 7
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 6
+  example end: 7
 ---
 objects:
   - user: Individual

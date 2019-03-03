@@ -3,9 +3,6 @@ metadata:
 ---
 default language: en
 ---
-modules:
-  - docassemble.base.util
----
 initial: True
 code: |
   set_language('en')

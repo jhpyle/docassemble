@@ -1,11 +1,8 @@
 metadata:
   title: Predictive analytics
   documentation: "https://docassemble.org/docs/ml.html#RandomForestMachineLearner"
-  example start: 2
-  example end: 14
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 13
 ---
 objects:
   - characteristics: DADict.using(gathered=True)

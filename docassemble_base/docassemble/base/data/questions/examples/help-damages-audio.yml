@@ -17,9 +17,6 @@ help:
   audio: |
     message_re_damages.mp3
 ---
-modules:
-  - docassemble.base.util
----
 code: |
   defendant = "Dastardly Defendant"
 ---

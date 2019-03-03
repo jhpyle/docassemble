@@ -1,11 +1,6 @@
 metadata:
   title: Capitalize
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#capitalize"
----
-modules:
-  - docassemble.base.util  
 ---
 question: |
   ${ capitalize(color) } is your

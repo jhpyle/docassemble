@@ -7,7 +7,6 @@ metadata:
 ---
 modules:
   - docassemble.demo.ein
-  - docassemble.base.util
 ---
 objects:
   first_company: Organization

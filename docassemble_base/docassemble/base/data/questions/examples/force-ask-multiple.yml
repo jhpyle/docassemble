@@ -2,11 +2,8 @@ metadata:
   title: Force asking several questions
   short title: Force
   example start: 1
-  example end: 8
+  example end: 7
   documentation: "https://docassemble.org/docs/functions.html#force_ask"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

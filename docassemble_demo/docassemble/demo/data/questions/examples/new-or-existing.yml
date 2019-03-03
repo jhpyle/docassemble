@@ -2,11 +2,8 @@ metadata:
   title: New or existing object
   short title: Object
   documentation: "https://docassemble.org/docs/recipes.html#new or existing"
-  example start: 2
-  example end: 9
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 8
 ---
 objects:
   - boss: Individual

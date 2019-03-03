@@ -1,9 +1,5 @@
----
 imports:
   - us
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   It's a nice evening, isn't it?

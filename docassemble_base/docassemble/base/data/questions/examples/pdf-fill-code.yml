@@ -1,10 +1,7 @@
 metadata:
   title: PDF fill-in with code
   documentation: "https://docassemble.org/docs/documents.html#template code"
-  example start: 9
----
-modules:
-  - docassemble.base.util
+  example start: 8
 ---
 objects:
   - user: Individual

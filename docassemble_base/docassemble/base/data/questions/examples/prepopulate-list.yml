@@ -1,11 +1,8 @@
 metadata:
   title: Prepopulate lists
   documentation: "https://docassemble.org/docs/groups.html#prepopulate"
-  example start: 2
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 7
 ---
 objects:
   - user: Individual

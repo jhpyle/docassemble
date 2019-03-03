@@ -3,9 +3,6 @@ metadata:
   short title: Interviews
   documentation: "https://docassemble.org/docs/functions.html#interview_list"
 ---
-modules:
-  - docassemble.base.util
----
 question: |
   My interviews
 subquestion: |

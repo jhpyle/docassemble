@@ -3,7 +3,7 @@ metadata:
   short title: Navigation
   documentation: "https://docassemble.org/docs/initial.html#navigation bar"
   example start: 1
-  example end: 16
+  example end: 15
 ---
 sections:
   - Introduction
@@ -16,9 +16,6 @@ sections:
 features:
   navigation: True
   progress bar: True
----
-modules:
-  docassemble.base.util
 ---
 mandatory: True
 code: |

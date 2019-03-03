@@ -1,11 +1,8 @@
 metadata:
   title: Language
   documentation: "https://docassemble.org/docs/modifiers.html#language"
-  example start: 3
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 3
 ---
 initial: True
 code: |

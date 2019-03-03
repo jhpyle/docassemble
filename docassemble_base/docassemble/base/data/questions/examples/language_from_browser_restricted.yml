@@ -2,11 +2,6 @@ metadata:
   title: User language from browser (restricted)
   short title: Browser language (restricted)
   documentation: "https://docassemble.org/docs/functions.html#language_from_browser"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   % if language_from_browser('es', 'fr') is None:

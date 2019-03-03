@@ -2,10 +2,7 @@ metadata:
   title: Object oriented
   documentation: "https://docassemble.org/docs/objects.html"
   example start: 1
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example end: 3
 ---
 objects:
   - user: Individual

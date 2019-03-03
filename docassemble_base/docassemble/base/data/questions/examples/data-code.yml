@@ -2,11 +2,8 @@ metadata:
   title: Data structure from code
   short title: Data code
   documentation: "https://docassemble.org/docs/initial.html#data from code"
-  example start: 3
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 6
 ---
 mandatory: True
 code: |

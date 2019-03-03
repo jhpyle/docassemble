@@ -3,10 +3,7 @@ metadata:
   short title: "List"
   documentation: "https://docassemble.org/docs/groups.html#manual"
   example start: 1
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example end: 7
 ---
 objects:
   - fruit: DAList

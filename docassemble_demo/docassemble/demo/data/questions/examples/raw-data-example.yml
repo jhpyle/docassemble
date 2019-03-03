@@ -2,11 +2,8 @@ metadata:
   title: Objects from file
   short title: Import
   documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 code: |
   raw_data = objects_from_file("raw_data.yml", recursive=False)

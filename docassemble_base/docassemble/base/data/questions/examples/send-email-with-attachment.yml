@@ -2,11 +2,8 @@ metadata:
   title: Send e-mail with attachment
   short title: Mail
   documentation: "https://docassemble.org/docs/functions.html#send_email"
-  example start: 4
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 3
+  example end: 4
 ---
 objects:
   - user: Individual

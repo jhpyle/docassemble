@@ -3,9 +3,6 @@ metadata:
   short title: Checkboxes
   documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   - foods: DADict.using(object_type=DAList.using(object_type=Thing), keys=('fr.uit', 've.get$able'), there_is_another=False, complete_attribute='complete')
 ---

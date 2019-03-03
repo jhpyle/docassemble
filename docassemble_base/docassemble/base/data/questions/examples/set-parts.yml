@@ -3,12 +3,9 @@ metadata:
   short title: Title
   tab title: The Title
   subtitle: The subtitle
-  example start: 2
-  example end: 5
+  example start: 1
+  example end: 4
   documentation: "https://docassemble.org/docs/functions.html#set_parts"
----
-modules:
-  - docassemble.base.util
 ---
 metadata:
   title: Set the interview title

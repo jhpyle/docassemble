@@ -1,11 +1,6 @@
 metadata:
   title: Export to JSON
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/ml.html#SimpleTextMachineLearner.export_training_set"
----
-modules:
-  - docassemble.base.util
 ---
 initial: True
 code: |

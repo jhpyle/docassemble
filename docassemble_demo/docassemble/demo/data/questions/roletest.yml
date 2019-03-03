@@ -1,7 +1,3 @@
----
-modules:
-  - docassemble.base.util
----
 default role: organizer
 code: |
   multi_user = True

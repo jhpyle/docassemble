@@ -1,8 +1,3 @@
----
-modules:
-  - docassemble.base.core
-  - docassemble.base.util
----
 objects:
   - respondents: DADict
 ---

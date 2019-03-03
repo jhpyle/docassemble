@@ -1,11 +1,8 @@
 metadata:
   title: Auto reload
-  example start: 4
-  example end: 4
+  example start: 3
+  example end: 3
   documentation: "https://docassemble.org/docs/modifiers.html#reload"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

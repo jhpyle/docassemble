@@ -2,11 +2,8 @@ metadata:
   title: Fill fields with variables
   short title: Fill
   documentation: "https://docassemble.org/docs/documents.html#template code"
-  example start: 8
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 7
+  example end: 7
 ---
 question: |
   Assembling a document from a PDF

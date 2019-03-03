@@ -1,7 +1,3 @@
----
-modules:
-  - docassemble.base.util
----
 initial: True
 code: |
   set_language(user_language)

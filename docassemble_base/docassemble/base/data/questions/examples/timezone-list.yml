@@ -1,10 +1,6 @@
 metadata:
   title: Selecting a timezone
-  example start: 2
   documentation: "https://docassemble.org/docs/functions.html#timezone_list"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   What is your time zone?

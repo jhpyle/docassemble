@@ -1,11 +1,8 @@
 metadata:
   title: generic objects
   documentation: "https://docassemble.org/docs/modifiers.html#generic object"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 objects:
   - grantor: Individual

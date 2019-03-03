@@ -2,11 +2,8 @@ metadata:
   title: Notes on review side
   short title: Note
   documentation: "https://docassemble.org/docs/fields.html#note"
-  example start: 4
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 3
+  example end: 3
 ---
 objects:
   - user: Individual

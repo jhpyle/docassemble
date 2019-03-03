@@ -2,11 +2,8 @@ metadata:
   title: E-mailing the interview
   short title: E-mail
   example start: 1
-  example end: 3
+  example end: 2
   documentation: "https://docassemble.org/docs/background.html#email"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   E-mailing to the interview

@@ -1,11 +1,8 @@
 metadata:
   title: Define variable
   documentation: "https://docassemble.org/docs/functions.html#define"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 code: |
   define('favorite_fruit', 'apple')

@@ -1,11 +1,8 @@
 metadata:
   title: Zip files
   documentation: "https://docassemble.org/docs/functions.html#zip_file"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 objects:
   - coins_picture: DAStaticFile.using(filename='coins36.png')

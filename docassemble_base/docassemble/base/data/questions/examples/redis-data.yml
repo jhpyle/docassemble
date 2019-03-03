@@ -1,11 +1,8 @@
 metadata:
   title: Redis with objects
-  example start: 2
-  example end: 7
+  example start: 1
+  example end: 6
   documentation: "https://docassemble.org/docs/objects.html#DARedis"
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - r: DARedis

@@ -2,11 +2,8 @@ metadata:
   title: Going full screen
   short title: Fullscreen
   documentation: "https://docassemble.org/docs/initial.html#go full screen"
-  example start: 2
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 7
 ---
 features:
   go full screen: mobile

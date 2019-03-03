@@ -2,9 +2,6 @@
 imports:
   - us
 ---
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   need(final_screen)

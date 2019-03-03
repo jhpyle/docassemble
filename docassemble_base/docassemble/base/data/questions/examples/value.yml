@@ -1,10 +1,6 @@
 metadata:
   title: Value of a variable
   documentation: "https://docassemble.org/docs/functions.html#value"
-  example start: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: Summary
 subquestion: |

@@ -2,9 +2,6 @@ metadata:
   title: List of objects the hard way
   short title: List of objects
 ---
-modules:
-  - docassemble.base.util
----
 mandatory: True
 question: |
   Summary of the parties in this case

@@ -3,10 +3,7 @@ metadata:
   short title: "Dictionary: gather keys, values"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example end: 6
 ---
 objects:
   - fruit: DADict

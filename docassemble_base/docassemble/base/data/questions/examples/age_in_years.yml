@@ -1,11 +1,8 @@
 metadata:
   title: Age of Individual
   documentation: "https://docassemble.org/docs/objects.html#Individual.age_in_years"
-  example start: 3
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 3
 ---
 objects:
   - user: Individual

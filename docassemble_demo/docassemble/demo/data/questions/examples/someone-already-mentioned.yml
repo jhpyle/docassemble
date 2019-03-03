@@ -2,11 +2,8 @@ metadata:
   title: Object with disable others
   short title: Object
   documentation: "https://docassemble.org/docs/fields#object"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 objects:
   cook: Individual

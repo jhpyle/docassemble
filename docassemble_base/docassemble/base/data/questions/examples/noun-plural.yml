@@ -5,7 +5,6 @@ metadata:
   documentation: "https://docassemble.org/docs/functions.html#noun_plural"
 ---
 modules:
-  - docassemble.base.util
   - random
 ---
 question: |

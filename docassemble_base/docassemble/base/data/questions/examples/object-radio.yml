@@ -2,11 +2,8 @@ metadata:
   title: Object radio buttons
   short title: Object radio buttons
   documentation: "https://docassemble.org/docs/fields.html#object_radio"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 objects:
   protagonist: Individual

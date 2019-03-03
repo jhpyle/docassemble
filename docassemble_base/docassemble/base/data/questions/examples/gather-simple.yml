@@ -3,10 +3,7 @@ metadata:
   short title: Gather
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example end: 4
 ---
 objects:
   - fruit: DAList

@@ -1,11 +1,6 @@
 metadata:
   title: Define objects
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/initial.html#objects"
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - hero: Individual

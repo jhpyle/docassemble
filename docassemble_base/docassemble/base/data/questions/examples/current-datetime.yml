@@ -1,10 +1,6 @@
 metadata:
   title: Current date and time
-  example start: 2
   documentation: "https://docassemble.org/docs/functions.html#current_datetime"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   % if current_datetime() < as_datetime('October 14, 1066'):

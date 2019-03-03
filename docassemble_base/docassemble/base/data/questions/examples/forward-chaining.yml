@@ -1,9 +1,6 @@
 metadata:
   title: Forward chaining
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   pet: Thing
 ---

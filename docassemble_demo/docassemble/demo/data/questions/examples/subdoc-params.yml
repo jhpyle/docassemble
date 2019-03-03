@@ -2,11 +2,8 @@ metadata:
   title: .docx include with parameters
   short title: Sub documents
   documentation: "https://docassemble.org/docs/functions.html#include_docx_template"
-  example start: 5
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 4
+  example end: 4
 ---
 mandatory: True
 question: |

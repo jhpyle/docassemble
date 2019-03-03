@@ -5,7 +5,6 @@ metadata:
   example end: 4
 ---
 modules:
-  - docassemble.base.util
   - .progressivedisclosure
 ---
 features:

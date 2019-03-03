@@ -2,11 +2,8 @@ metadata:
   title: Code-generated fields
   short title: Fields with code
   documentation: "https://docassemble.org/docs/fields.html#fields code"
-  example start: 2
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 5
 ---
 objects:
   - people: DAList.using(object_type=Individual, ask_number=True)

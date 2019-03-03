@@ -2,11 +2,6 @@ metadata:
   title: Minimum number
   short title: Delete
   documentation: "https://docassemble.org/docs/groups.html#custom editing"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - income: DADict.using(object_type=DAObject,

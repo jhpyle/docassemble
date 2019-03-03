@@ -2,11 +2,8 @@ metadata:
   title: Interview inside interview
   short title: Menu
   documentation: "https://docassemble.org/docs/logic.html#subinterview"
-  example start: 2
-  example end: 16
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 15
 ---
 objects:
   - user_global: Individual

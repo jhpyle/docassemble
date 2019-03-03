@@ -2,11 +2,8 @@ metadata:
   title: Import and gather more
   short title: Import
   documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
-  example start: 2
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 4
 ---
 code: |
   fruitseeds = objects_from_file("fruitseeds.yml", gathered=False, name='fruitseeds')

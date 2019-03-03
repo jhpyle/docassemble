@@ -1,10 +1,6 @@
 metadata:
   title: Quantity of noun
-  example start: 2
   documentation: "https://docassemble.org/docs/functions.html#quantity_noun"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |

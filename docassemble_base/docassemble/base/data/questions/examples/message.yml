@@ -1,10 +1,6 @@
 metadata:
   title: Question generated with code
   documentation: "https://docassemble.org/docs/functions.html#message"
-  example start: 2
----
-modules:
-  - docassemble.base.util
 ---
 code: |
   message("The interview is over.", "Better luck next time!")

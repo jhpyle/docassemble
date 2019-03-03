@@ -2,9 +2,6 @@ metadata:
   title: Basic lists
   documentation: "https://docassemble.org/docs/groups.html"
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   - thing: DAList
 ---

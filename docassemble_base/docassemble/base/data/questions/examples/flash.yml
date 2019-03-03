@@ -1,8 +1,8 @@
 metadata:
   title: Flash messages
   documentation: "https://docassemble.org/docs/functions.html#flash"
-  example start: 3
-  example end: 3
+  example start: 2
+  example end: 2
 ---
 image sets:
   freepik:
@@ -10,9 +10,6 @@ image sets:
       Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
     images:
       coins: coins36.svg
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 decoration: coins

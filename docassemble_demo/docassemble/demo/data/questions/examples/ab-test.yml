@@ -2,11 +2,6 @@ metadata:
   title: A/B Test
   short title: A/B
   documentation: "https://docassemble.org/docs/logic.html#multiple interviews redirect"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: true
 code: |

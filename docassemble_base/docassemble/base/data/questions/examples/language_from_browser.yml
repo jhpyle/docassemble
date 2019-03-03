@@ -2,11 +2,6 @@ metadata:
   title: User language from browser
   short title: Browser language
   documentation: "https://docassemble.org/docs/functions.html#language_from_browser"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   I think your language code is

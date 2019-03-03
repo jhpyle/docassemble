@@ -2,11 +2,8 @@ metadata:
   title: Normalize address
   short title: Normalize
   documentation: "https://docassemble.org/docs/objects.html#Address.normalize"
-  example start: 2
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 4
 ---
 objects:
   - the_address: Address

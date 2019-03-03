@@ -2,11 +2,8 @@ metadata:
   title: Google Chart
   short title: Chart
   documentation: "https://docassemble.org/docs/initial.html#javascript"
-  example start: 5
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 4
+  example end: 6
 ---
 imports:
   - json

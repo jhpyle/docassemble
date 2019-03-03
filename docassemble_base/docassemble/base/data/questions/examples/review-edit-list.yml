@@ -2,11 +2,8 @@ metadata:
   title: Edit list
   short title: Edit list
   documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 9
-  example end: 12
----
-modules:
-  - docassemble.base.util
+  example start: 8
+  example end: 11
 ---
 objects:
   - person: DAList.using(object_type=Individual,

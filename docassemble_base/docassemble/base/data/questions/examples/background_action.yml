@@ -1,11 +1,8 @@
 metadata:
   title: Return a value
-  example start: 2
-  example end: 7
+  example start: 1
+  example end: 6
   documentation: "https://docassemble.org/docs/background.html#background_action"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

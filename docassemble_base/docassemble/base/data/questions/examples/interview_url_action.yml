@@ -1,11 +1,8 @@
 metadata:
   title: Action from anywhere
   example start: 1
-  example end: 6
+  example end: 5
   documentation: "https://docassemble.org/docs/functions.html#interview_url_action"
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - user: Individual

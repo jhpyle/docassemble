@@ -2,10 +2,7 @@ metadata:
   title: DAObject
   documentation: "https://docassemble.org/docs/objects.html"
   example start: 1
-  example end: 5
----
-modules:
-  - docassemble.base.core
+  example end: 4
 ---
 objects:
   - park: DAObject

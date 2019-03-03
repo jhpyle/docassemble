@@ -2,11 +2,8 @@ metadata:
   title: Geolocate from address
   short title: Geolocate
   documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
-  example start: 2
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 4
 ---
 objects:
   - the_address: Address

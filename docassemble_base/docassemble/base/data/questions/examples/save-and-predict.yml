@@ -1,12 +1,9 @@
 metadata:
   title: Save for classification
   short title: Predict and save
-  example start: 3
-  example end: 3
+  example start: 2
+  example end: 2
   documentation: "https://docassemble.org/docs/ml.html#SimpleTextMachineLearner.new_entry"
----
-modules:
-  - docassemble.base.util
 ---
 code: |
   ml = SVMMachineLearner(group_id='demo')

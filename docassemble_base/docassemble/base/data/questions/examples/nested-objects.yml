@@ -1,11 +1,8 @@
 metadata:
   title: Nested groups
   documentation: "https://docassemble.org/docs/groups.html#nested objects"
-  example start: 2
-  example end: 12
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 11
 ---
 objects:
   - user: Individual

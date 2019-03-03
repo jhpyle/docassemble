@@ -1,11 +1,8 @@
 metadata:
   title: Shallow copy
   documentation: "https://docassemble.org/docs/objects.html#DAObject.copy_shallow"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 objects:
   - orig_company: DAObject

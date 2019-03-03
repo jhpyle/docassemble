@@ -2,11 +2,6 @@ metadata:
   title: For loop
   short title: For loop
   documentation: "https://docassemble.org/docs/markup.html#for"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |

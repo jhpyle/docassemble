@@ -2,11 +2,8 @@ metadata:
   title: Destination interview
   short title: Destination
   example start: 1
-  example end: 5
+  example end: 4
   documentation: "https://docassemble.org/docs/functions.html#interview_url"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

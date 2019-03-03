@@ -1,11 +1,8 @@
 metadata:
   title: Re-ask a question with del
-  example start: 3
-  example end: 3
+  example start: 2
+  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#force_ask"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Are you a communist?

@@ -3,10 +3,7 @@ metadata:
   short title: Multi
   documentation: "https://docassemble.org/docs/roles.html#twouser"
   example start: 1
-  example end: 14
----
-modules:
-  - docassemble.base.util
+  example end: 13
 ---
 objects:
   firstparty: Individual

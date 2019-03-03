@@ -14,9 +14,6 @@ help: |
   for a million dollars, since you
   want ${ defendant } to suffer.
 ---
-modules:
-  - docassemble.base.util
----
 code: |
   defendant = "Dastardly Defendant"
 ---

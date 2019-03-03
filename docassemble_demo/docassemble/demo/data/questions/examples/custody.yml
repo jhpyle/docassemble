@@ -2,9 +2,6 @@ metadata:
   title: Custody
   see: http://www.legis.state.pa.us/WU01/LI/LI/CT/HTM/23/00.053..HTM
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   - has_standing: DADict.using(auto_gather=False)
 ---

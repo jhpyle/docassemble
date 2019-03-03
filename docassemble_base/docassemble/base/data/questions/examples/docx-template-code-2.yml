@@ -2,11 +2,8 @@ metadata:
   title: Fill fields in a DOCX template with code
   short title: DOCX
   documentation: "https://docassemble.org/docs/documents.html#template code"
-  example start: 10
-  example end: 10
----
-modules:
-  - docassemble.base.util
+  example start: 9
+  example end: 9
 ---
 objects:
   user: Individual

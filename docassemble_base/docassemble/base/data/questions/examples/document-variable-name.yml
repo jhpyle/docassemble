@@ -1,11 +1,8 @@
 metadata:
   title: Document as variable
   documentation: "https://docassemble.org/docs/documents.html#variable name"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 objects:
   - authority: Individual

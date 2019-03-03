@@ -2,11 +2,8 @@ metadata:
   title: Input validation
   short title: Valid
   documentation: "https://docassemble.org/docs/fields#input validation"
-  example start: 3
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 2
 ---
 mandatory: True
 question: |

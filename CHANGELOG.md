@@ -4,6 +4,7 @@
 ### Changed
 - The `none of the above` specifier can be used with `datatype:
   object_radio`.
+- The `docassemble.base.util` is now loaded by default.
 - Switched to LuaLaTeX for better Cyrillic support.  Requires server restart.
 
 ## [0.4.12] - 2019-03-01

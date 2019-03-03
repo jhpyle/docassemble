@@ -1,11 +1,8 @@
 metadata:
   title: Number format
-  example start: 2
-  example end: 3
+  example start: 1
+  example end: 2
   documentation: "https://docassemble.org/docs/markup.html#formatting"
----
-modules:
-  - docassemble.base.util
 ---
 code: |
   monthly_income = 43143.26/12

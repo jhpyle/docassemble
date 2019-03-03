@@ -1,11 +1,8 @@
 metadata:
   title: Assets
   documentation: "https://docassemble.org/docs/objects.html#Asset"
-  example start: 2
-  example end: 10
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 9
 ---
 objects:
   - decedent: Individual

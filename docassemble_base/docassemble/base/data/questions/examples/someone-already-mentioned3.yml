@@ -2,11 +2,8 @@ metadata:
   title: Disable others radio
   short title: Disable
   documentation: "https://docassemble.org/docs/fields.html#object_radio"
-  example start: 4
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 3
+  example end: 3
 ---
 mandatory: True
 objects:

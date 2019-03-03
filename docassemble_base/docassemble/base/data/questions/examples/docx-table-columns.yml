@@ -2,11 +2,8 @@ metadata:
   title: Looping over columns in .docx
   short title: Columns
   documentation: "https://docassemble.org/docs/documents.html#docx template file"
-  example start: 8
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 7
+  example end: 7
 ---
 objects:
   - grantor: Individual

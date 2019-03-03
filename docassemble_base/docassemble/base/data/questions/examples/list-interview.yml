@@ -1,11 +1,8 @@
 metadata:
   title: Available interviews
   documentation: "https://docassemble.org/docs/config.html#dispatch interview"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 code: |
   available_interviews = interview_menu()

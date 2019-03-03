@@ -1,11 +1,8 @@
 metadata:
   title: PDF Concatenation
   documentation: "https://docassemble.org/docs/functions.html#pdf_concatenate"
-  example start: 2
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 5
 ---
 objects:
   - static_file: DAStaticFile.using(filename='star.pdf')

@@ -2,11 +2,8 @@ metadata:
   title: Tables in a DOCX template
   short title: Tables
   documentation: "https://docassemble.org/docs/documents.html#docx tables"
-  example start: 3
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 6
 ---
 question: |
   Assembling a document from a .docx

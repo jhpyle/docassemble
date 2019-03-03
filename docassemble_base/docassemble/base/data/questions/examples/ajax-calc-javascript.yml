@@ -2,11 +2,8 @@ metadata:
   title: Alter fields with Javascript
   short title: Alter fields
   documentation: "https://docassemble.org/docs/background.html"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 question: |
   Let's calculate some stuff.

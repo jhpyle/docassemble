@@ -1,11 +1,8 @@
 metadata:
   title: Set a variable and refresh the screen
-  example start: 3
-  example end: 6
+  example start: 2
+  example end: 5
   documentation: "https://docassemble.org/docs/background.html#ui_notification"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

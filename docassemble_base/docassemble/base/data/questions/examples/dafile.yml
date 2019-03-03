@@ -1,11 +1,8 @@
 metadata:
   title: Create file with code
   example start: 1
-  example end: 5
+  example end: 4
   documentation: "https://docassemble.org/docs/objects.html#DAFile"
----
-modules:
-  - docassemble.base.core
 ---
 imports:
   - PIL

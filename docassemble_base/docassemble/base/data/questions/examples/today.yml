@@ -1,10 +1,6 @@
 metadata:
   title: "Today's date"
   documentation: "https://docassemble.org/docs/functions.html#today"
-  example start: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Today's date is ${ today() }.

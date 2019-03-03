@@ -1,11 +1,6 @@
 metadata:
   title: CSS
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/modifiers.html#css"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Do you want to build a snowman?

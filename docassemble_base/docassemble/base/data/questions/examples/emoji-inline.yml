@@ -1,11 +1,8 @@
 metadata:
   title: Inline emoji
   documentation: "https://docassemble.org/docs/markup.html#emoji"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 image sets:
   freepik:

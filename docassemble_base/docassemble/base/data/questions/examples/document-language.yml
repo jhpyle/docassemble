@@ -1,11 +1,8 @@
 metadata:
   title: Language
   documentation: "https://docassemble.org/docs/documents.html#language"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 initial: True
 code: |

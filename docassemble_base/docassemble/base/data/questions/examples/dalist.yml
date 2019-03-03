@@ -2,7 +2,7 @@ metadata:
   title: List of objects
   documentation: "https://docassemble.org/docs/groups.html"
   example start: 1
-  example end: 6
+  example end: 5
 ---
 modules:
   - docassemble.base.legal

@@ -55,8 +55,8 @@ RangeType = type(range(1,2))
 NoneType = type(None)
 
 debug = True
-import_core = "import docassemble.base.core"
-import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '<code block>', 'exec')
+import_core = compile("import docassemble.base.core", '<code block>', 'exec')
+import_util = compile('from docassemble.base.util import *', '<code block>', 'exec')
 run_process_action = compile('process_action()', '<code block>', 'exec')
 match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
@@ -4724,11 +4724,10 @@ class Interview:
                 #else:
                 #    logmessage("assemble: there is no action in the current_info")
                 try:
-                    if (self.imports_util or self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
-                        if self.imports_util:
-                            exec(run_process_action, user_dict)
-                        else:
-                            exec(import_and_run_process_action, user_dict)
+                    if not self.imports_util:
+                        exec(import_util, user_dict)
+                    if not self.calls_process_action:
+                        exec(run_process_action, user_dict)
                     for question in self.questions_list:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
                             #logmessage("Running some initial code:\n\n" + question.sourcecode)

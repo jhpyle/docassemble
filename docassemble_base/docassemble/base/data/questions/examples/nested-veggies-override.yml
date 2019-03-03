@@ -2,11 +2,8 @@ metadata:
   title: Specific and general index variable questions
   short title: Specific
   documentation: "https://docassemble.org/docs/logic.html#variablesearching"
-  example start: 5
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 4
+  example end: 5
 ---
 objects:
   veggies: DADict

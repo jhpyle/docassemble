@@ -1,16 +1,9 @@
 metadata:
   title: Review answers
   short title: Review
-  example start: 4
-  example end: 4
+  example start: 2
+  example end: 2
   documentation: "https://docassemble.org/docs/fields.html#review"
----
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
 ---
 code: |
   fruit = "apples"

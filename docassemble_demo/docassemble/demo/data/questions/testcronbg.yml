@@ -8,9 +8,6 @@ code: |
   status = 'normal'
   counter = 0
 ---
-modules:
-  - docassemble.base.util
----
 initial: True
 code: |
   counter += 1

@@ -1,10 +1,6 @@
 metadata:
   title: Whether variable is defined
   documentation: "https://docassemble.org/docs/functions.html#defined"
-  example start: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: Summary
 subquestion: |

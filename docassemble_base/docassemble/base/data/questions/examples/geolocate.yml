@@ -2,14 +2,11 @@ metadata:
   title: Geolocate address
   short title: Geolocate
   documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
-  example start: 3
-  example end: 6
+  example start: 2
+  example end: 5
 ---
 imports:
   - json
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   - the_address: Address

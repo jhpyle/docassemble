@@ -2,11 +2,8 @@ metadata:
   title: Questionless interview
   short title: Questionless
   documentation: "https://docassemble.org/docs/api.html#questionless"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 mandatory: True
 code: |

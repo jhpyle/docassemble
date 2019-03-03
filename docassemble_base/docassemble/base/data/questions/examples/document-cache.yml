@@ -2,11 +2,8 @@ metadata:
   title: Document caching
   short title: Cache
   documentation: "https://docassemble.org/docs/documents.html#caching"
-  example start: 2
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 7
 ---
 question: |
   What is your name?

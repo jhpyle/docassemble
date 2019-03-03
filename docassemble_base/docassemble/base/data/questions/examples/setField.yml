@@ -1,11 +1,6 @@
 metadata:
   title: Set field
   documentation: "https://docassemble.org/docs/functions.html#js_setField"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   What groceries should we buy for

@@ -1,14 +1,11 @@
 metadata:
   title: Default screen parts
   short title: Parts
-  example start: 5
-  example end: 5
+  example start: 4
+  example end: 4
   documentation: "https://docassemble.org/docs/initial.html#default screen parts"
   under: |
     Actually I am the under
----
-modules:
-  - docassemble.base.util
 ---
 default screen parts:
   under: |

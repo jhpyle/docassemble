@@ -1,11 +1,8 @@
 metadata:
   title: Currency
-  example start: 3
-  example end: 3
+  example start: 2
+  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#currency"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

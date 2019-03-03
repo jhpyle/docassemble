@@ -2,11 +2,8 @@ metadata:
   title: Delete buttons
   short title: Delete
   documentation: "https://docassemble.org/docs/groups.html#custom editing"
-  example start: 5
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 4
+  example end: 4
 ---
 objects:
   - income: DADict.using(object_type=DAObject,

@@ -3,10 +3,7 @@ metadata:
   short title: "Mixed list"
   documentation: "https://docassemble.org/docs/groups.html#mixed object types"
   example start: 1
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example end: 7
 ---
 objects:
   - location: DAList

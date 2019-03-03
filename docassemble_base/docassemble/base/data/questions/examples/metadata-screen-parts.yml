@@ -33,9 +33,6 @@ metadata:
   back button label: |
     Back button label
 ---
-modules:
-  - docassemble.base.util
----
 features:
   question back button: True
   question help button: True

@@ -2,8 +2,8 @@ metadata:
   title: Message log
   short title: Log
   documentation: "https://docassemble.org/docs/functions.html#log"
-  example start: 3
-  example end: 4
+  example start: 2
+  example end: 3
 ---
 image sets:
   freepik:
@@ -11,9 +11,6 @@ image sets:
       Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
     images:
       coins: coins36.svg
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

@@ -1,6 +1,5 @@
 modules:
   - docassemble.webapp.playground
-  - docassemble.base.util
   - docassemble.base.logger
 ---
 objects:

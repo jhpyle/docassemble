@@ -2,11 +2,8 @@ metadata:
   title: "List: gather with minimum number"
   short title: "List: minimum number"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
-  example start: 3
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 2
 ---
 objects:
   - fruit: DAList

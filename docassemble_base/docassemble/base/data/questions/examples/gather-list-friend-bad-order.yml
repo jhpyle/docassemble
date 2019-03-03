@@ -3,10 +3,7 @@ metadata:
   short title: People list
   documentation: "https://docassemble.org/docs/groups.html#list of objects"
   example start: 1
-  example end: 8
----
-modules:
-  - docassemble.base.util
+  example end: 7
 ---
 objects:
   - friend: DAList

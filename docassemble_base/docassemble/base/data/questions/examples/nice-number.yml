@@ -5,7 +5,6 @@ metadata:
   documentation: "https://docassemble.org/docs/functions.html#nice_number"
 ---
 modules:
-  - docassemble.base.util
   - random
 ---
 question: |

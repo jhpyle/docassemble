@@ -1,11 +1,8 @@
 metadata:
   title: Documents as links
   documentation: "https://docassemble.org/docs/documents.html#variable name"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 attachment:
   filename: Hello_World

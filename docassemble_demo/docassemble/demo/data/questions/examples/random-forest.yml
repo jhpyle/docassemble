@@ -1,11 +1,8 @@
 metadata:
   title: Predictive analytics
   documentation: "https://docassemble.org/docs/ml.html#RandomForestMachineLearner"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 mandatory: True
 code: |

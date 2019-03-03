@@ -1,11 +1,8 @@
 metadata:
   title: Classify
-  example start: 2
-  example end: 5
+  example start: 1
+  example end: 4
   documentation: "https://docassemble.org/docs/ml.html#save"
----
-modules:
-  - docassemble.base.util
 ---
 code: |
   ml = SimpleTextMachineLearner(group_id='demo')

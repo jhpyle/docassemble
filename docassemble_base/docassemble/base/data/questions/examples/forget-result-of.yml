@@ -2,11 +2,8 @@ metadata:
   title: Redo multiple choice
   short title: Redo
   documentation: "https://docassemble.org/docs/functions.html#forget_result_of"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 question: |
   I give up.  Just tell me your favorite food.

@@ -2,11 +2,8 @@ metadata:
   title: Optical character recognition in the background
   short title: OCR
   documentation: "https://docassemble.org/docs/functions.html#ocr_file_in_background"
-  example start: 2
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 5
 ---
 mandatory: true
 code: |

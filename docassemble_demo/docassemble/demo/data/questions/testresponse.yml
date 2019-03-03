@@ -3,13 +3,6 @@ mandatory: True
 response: |
   Hello, ${ world }!
 ---
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
----
 question: |
   What is the world?
 fields:

@@ -1,13 +1,10 @@
 metadata:
   title: Config screen parts
   short: Parts
-  example start: 5
-  example end: 5
+  example start: 4
+  example end: 4
   documentation: "https://docassemble.org/docs/config.html#main page pre"
   show login: False
----
-modules:
-  - docassemble.base.util
 ---
 features:
   question back button: True

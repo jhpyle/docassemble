@@ -1,11 +1,6 @@
 metadata:
   title: Title case
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#title_case"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Title of your book

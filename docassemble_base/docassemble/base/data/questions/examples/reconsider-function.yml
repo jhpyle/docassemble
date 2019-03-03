@@ -2,11 +2,8 @@ metadata:
   title: Reconsidering computed values
   short title: Reconsider
   documentation: "https://docassemble.org/docs/functions.html#reconsider"
-  example start: 5
-  example end: 9
----
-modules:
-  - docassemble.base.util
+  example start: 4
+  example end: 8
 ---
 question: How many cats do you have?
 fields:

@@ -2,9 +2,6 @@ metadata:
   title: Two columns
   documentation: "https://docassemble.org/docs/documents.html#twocol"
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
 ---

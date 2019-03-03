@@ -1,11 +1,6 @@
 metadata:
   title: User IP
   documentation: "https://docassemble.org/docs/functions.html#device"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Your IP address is

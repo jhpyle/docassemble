@@ -3,9 +3,6 @@ metadata:
   short title: Suggestions
   documentation: "https://docassemble.org/docs/ml.html"
 ---
-modules:
-  - docassemble.base.util
----
 features:
   javascript: suggestions.js
 ---

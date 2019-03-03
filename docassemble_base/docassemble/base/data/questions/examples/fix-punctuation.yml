@@ -2,11 +2,8 @@ metadata:
   title: End-of-sentence punctuation
   short title: Punctuation
   documentation: "https://docassemble.org/docs/functions.html#fix_punctuation"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 mandatory: true
 question: |

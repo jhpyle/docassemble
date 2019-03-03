@@ -2,11 +2,8 @@ metadata:
   title: Table reordering
   short title: Table
   documentation: "https://docassemble.org/docs/groups.html#reordering"
-  example start: 7
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 6
+  example end: 6
 ---
 objects:
   - fruit: DAList

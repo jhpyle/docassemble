@@ -1,11 +1,8 @@
 metadata:
   title: Action links
   documentation: "https://docassemble.org/docs/functions.html#js_url_action"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 initial: True
 code: |

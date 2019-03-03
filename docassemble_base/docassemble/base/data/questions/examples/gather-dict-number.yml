@@ -3,10 +3,7 @@ metadata:
   short title: "Dictionary: ask number"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example end: 5
 ---
 objects:
   - fruit: DADict

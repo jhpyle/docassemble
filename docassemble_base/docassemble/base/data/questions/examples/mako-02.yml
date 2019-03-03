@@ -2,11 +2,6 @@ metadata:
   title: If statement
   short title: If statement
   documentation: "https://docassemble.org/docs/markup.html#mako"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |

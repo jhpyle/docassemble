@@ -1,11 +1,6 @@
 metadata:
   title: Live chat partners
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/livehelp.html#chat_partners_available"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |

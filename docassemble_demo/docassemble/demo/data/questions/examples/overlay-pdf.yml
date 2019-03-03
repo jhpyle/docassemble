@@ -1,10 +1,7 @@
 metadata:
   title: Overlay
   example start: 1
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example end: 6
 ---
 question: |
   What is your favorite fruit?

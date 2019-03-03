@@ -2,11 +2,8 @@ metadata:
   title: Database storage
   short title: Database storage
   documentation: "https://docassemble.org/docs/functions.html#write_record"
-  example start: 2
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 3
 ---
 mandatory: True
 code: |

@@ -2,11 +2,8 @@ metadata:
   title: Objects have independent existence
   short title: Objects
   documentation: "https://docassemble.org/docs/objects.html"
-  example start: 4
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 3
+  example end: 3
 ---
 objects:
   - user: Individual

@@ -2,11 +2,8 @@ metadata:
   title: Raise validation error
   short title: Validation
   documentation: "https://docassemble.org/docs/functions.html#validation_error"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 question: Repeat after me.
 subquestion: |

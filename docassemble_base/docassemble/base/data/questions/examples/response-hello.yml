@@ -1,10 +1,6 @@
 metadata:
   title: Custom response
-  example start: 2
   documentation: "https://docassemble.org/docs/functions.html#response"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

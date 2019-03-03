@@ -3,10 +3,7 @@ metadata:
   short title: Groups
   documentation: "https://docassemble.org/docs/groups.html"
   example start: 1
-  example end: 4
----
-modules:
-  - docassemble.base.core
+  example end: 3
 ---
 mandatory: True
 objects:

@@ -1,12 +1,9 @@
 metadata:
   title: Computed template filename
   short title: Computed
-  example start: 3
-  example end: 4
+  example start: 2
+  example end: 3
   documentation: "https://docassemble.org/docs/documents.html#template file code"
----
-modules:
-  - docassemble.base.util
 ---
 objects:
   user: Individual

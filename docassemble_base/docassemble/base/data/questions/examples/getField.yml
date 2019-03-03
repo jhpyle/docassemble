@@ -1,11 +1,6 @@
 metadata:
   title: Field element
   documentation: "https://docassemble.org/docs/functions.html#js_getField"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   What do you want for

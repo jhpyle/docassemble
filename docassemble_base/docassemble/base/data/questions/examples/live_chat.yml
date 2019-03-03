@@ -2,9 +2,6 @@ metadata:
   title: Live chat
   documentation: "https://docassemble.org/docs/livehelp.html#chat"
 ---
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])

@@ -1,19 +1,12 @@
 metadata:
   title: Action
-  example start: 3
-  example end: 4
+  example start: 2
+  example end: 3
   documentation: "https://docassemble.org/docs/functions.html#process_action"
 ---
 mandatory: True
 code: |
   color = 'blue'
----
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
 ---
 question: |
   Review your information.

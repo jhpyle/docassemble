@@ -2,11 +2,6 @@ metadata:
   title: Require user to log in
   short title: Log in
   documentation: "https://docassemble.org/docs/functions.html#user_logged_in"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 initial: True
 code: |

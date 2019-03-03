@@ -17,9 +17,6 @@ features:
   navigation: horizontal
   progress bar: True
 ---
-modules:
-  docassemble.base.util
----
 mandatory: True
 code: |
   menu_items = [ action_menu_item('Roadmap', 'road_map') ]

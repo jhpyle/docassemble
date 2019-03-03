@@ -6,7 +6,6 @@ metadata:
 ---
 modules:
   - docassemble.webapp.playground
-  - docassemble.base.util
 ---
 initial: True
 code: |

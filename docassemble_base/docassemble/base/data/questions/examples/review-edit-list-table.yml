@@ -2,11 +2,8 @@ metadata:
   title: Review table
   short title: Review
   documentation: "https://docassemble.org/docs/groups.html#editing"
-  example start: 8
-  example end: 10
----
-modules:
-  - docassemble.base.util
+  example start: 7
+  example end: 9
 ---
 objects:
   - person: DAList.using(object_type=Individual,

@@ -2,10 +2,7 @@ metadata:
   title: PDF fill-in
   short title: PDF Fill
   documentation: "https://docassemble.org/docs/documents.html#pdf template file"
-  example start: 11
----
-modules:
-  - docassemble.base.util
+  example start: 10
 ---
 objects:
   - user: Individual

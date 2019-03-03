@@ -1,11 +1,8 @@
 metadata:
   title: Continue option
   documentation: "https://docassemble.org/docs/questions.html#continue"
-  example start: 3
-  example end: 4
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 3
 ---
 question: |
   I give up.  Just tell me your favorite food.

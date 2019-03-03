@@ -2,11 +2,8 @@ metadata:
   title: Run a Python module
   short title: Module
   documentation: "https://docassemble.org/docs/functions.html#run_python_module"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 code: |
   output, return_code = run_python_module('tests.py', ['-v'])

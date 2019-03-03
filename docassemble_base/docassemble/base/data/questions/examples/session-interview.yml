@@ -1,11 +1,8 @@
 metadata:
   title: Interviews
   documentation: "https://docassemble.org/docs/config.html#session list interview"
-  example start: 2
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 6
 ---
 initial: True
 code: |

@@ -2,11 +2,8 @@ metadata:
   title: File path and MIME type
   short title: Path
   documentation: "https://docassemble.org/docs/functions.html#path_and_mimetype"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 code: |
   (filename_a, mimetype_a) = path_and_mimetype('data/static/hello.pdf')

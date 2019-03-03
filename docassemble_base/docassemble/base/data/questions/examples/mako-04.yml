@@ -2,11 +2,6 @@ metadata:
   title: Nested if/else
   short title: Nested if/else
   documentation: "https://docassemble.org/docs/markup.html#mako"
-  example start: 2
-  example end: 2
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |

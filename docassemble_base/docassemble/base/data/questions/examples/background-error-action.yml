@@ -1,11 +1,8 @@
 metadata:
   title: Background error callback
-  example start: 2
-  example end: 10
+  example start: 1
+  example end: 9
   documentation: "https://docassemble.org/docs/background.html#background_error_action"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 code: |

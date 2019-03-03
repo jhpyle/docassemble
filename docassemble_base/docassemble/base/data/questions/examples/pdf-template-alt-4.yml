@@ -2,11 +2,8 @@ metadata:
   title: Fill fields with code
   short title: Fill
   documentation: "https://docassemble.org/docs/documents.html#template code"
-  example start: 9
-  example end: 10
----
-modules:
-  - docassemble.base.util
+  example start: 8
+  example end: 9
 ---
 objects:
   recipient: Individual

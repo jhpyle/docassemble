@@ -1,13 +1,10 @@
 metadata:
   title: Fields example
-  example start: 4
+  example start: 3
   documentation: "https://docassemble.org/docs/fields.html#fields"
 ---
 imports:
   - us
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: All done

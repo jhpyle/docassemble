@@ -1,11 +1,8 @@
 metadata:
   title: Progress meter
-  example start: 3
-  example end: 5
+  example start: 2
+  example end: 4
   documentation: "https://docassemble.org/docs/modifiers.html#progress"
----
-modules:
-  - docassemble.base.util
 ---
 features:
   progress bar: True

@@ -2,13 +2,6 @@ metadata:
   title: Scheduled task
   documentation: "https://docassemble.org/docs/background.html#scheduled"
 ---
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
----
 mandatory: True
 code: |
   email_sent = False

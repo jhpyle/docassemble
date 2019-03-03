@@ -2,8 +2,6 @@ metadata:
   title: Infinite loop
   short title: Infinite
 ---
-modules: docassemble.base.util
----
 mandatory: True
 question: |
   The variable is

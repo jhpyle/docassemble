@@ -1,11 +1,8 @@
 metadata:
   title: Postpopulate lists
   documentation: "https://docassemble.org/docs/groups.html#postpopulate"
-  example start: 2
-  example end: 10
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 9
 ---
 objects:
   - user: Individual

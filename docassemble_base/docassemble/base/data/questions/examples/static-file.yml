@@ -1,11 +1,8 @@
 metadata:
   title: Static file
   documentation: "https://docassemble.org/docs/objects.html#DAStaticFile"
-  example start: 4
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 3
+  example end: 5
 ---
 objects:
   - user: Individual

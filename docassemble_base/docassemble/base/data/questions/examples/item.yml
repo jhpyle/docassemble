@@ -1,11 +1,8 @@
 metadata:
   title: The item method
   documentation: "https://docassemble.org/docs/objects.html#DAList.item"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 objects:
   - fruit: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='name')

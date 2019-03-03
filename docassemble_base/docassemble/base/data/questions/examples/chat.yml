@@ -1,11 +1,6 @@
 metadata:
   title: Live chat
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/livehelp.html#chat"
----
-modules:
-  - docassemble.base.util
 ---
 interview help: |
   This is the interview help.

@@ -2,9 +2,6 @@ metadata:
   title: Immediate file
   documentation: "https://docassemble.org/docs/functions.html#response"
 ---
-modules:
-  - docassemble.base.util
----
 attachment:
   name: A file
   file: test_file

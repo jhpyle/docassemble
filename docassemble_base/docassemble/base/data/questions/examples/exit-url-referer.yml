@@ -2,11 +2,8 @@ metadata:
   title: Exit to referring URL
   short title: Referring URL
   documentation: "https://docassemble.org/docs/functions.html#referring_url"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 question: |
   We are on a quest.

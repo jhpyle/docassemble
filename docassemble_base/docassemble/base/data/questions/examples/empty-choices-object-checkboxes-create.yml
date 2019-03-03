@@ -2,11 +2,8 @@ metadata:
   title: Empty object checkboxes
   short title: Empty
   documentation: "https://docassemble.org/docs/fields.html#object_checkboxes"
-  example start: 2
-  example end: 6
----
-modules:
-  - docassemble.base.legal
+  example start: 1
+  example end: 4
 ---
 objects:
   protagonist: Individual

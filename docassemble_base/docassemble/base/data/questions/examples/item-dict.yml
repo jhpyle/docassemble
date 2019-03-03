@@ -2,11 +2,8 @@ metadata:
   title: "Dictionary: gather keys, values"
   short title: "Dictionary: gather keys, values"
   documentation: "https://docassemble.org/docs/objects.html#DADict.item"
-  example start: 3
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 6
 ---
 objects:
   - pet: DADict.using(there_are_any=True, object_type=DAObject, complete_attribute='name')

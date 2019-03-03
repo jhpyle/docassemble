@@ -2,11 +2,8 @@ metadata:
   title: Nested index variables
   short title: Nested
   documentation: "https://docassemble.org/docs/fields.html#index variables"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 objects:
   veggies: DADict

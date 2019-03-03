@@ -2,11 +2,8 @@ metadata:
   title: Table with read only
   short title: Read only
   documentation: "https://docassemble.org/docs/groups.html#read only"
-  example start: 3
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 4
 ---
 objects:
   - fruit: DAList.using(object_type=Thing)

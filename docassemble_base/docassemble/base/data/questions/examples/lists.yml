@@ -1,17 +1,11 @@
 metadata:
   title: Lists
-  example start: 4
-  example end: 5
+  example start: 2
+  example end: 3
   documentation: "https://docassemble.org/docs/functions.html#comma_and_list"
----
-modules:
-  - docassemble.base.core
 ---
 objects:
   fears: DAList
----
-modules:
-  - docassemble.base.util  
 ---
 mandatory: True
 code: |

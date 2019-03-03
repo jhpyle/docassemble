@@ -1,11 +1,6 @@
 metadata:
   title: Link to static file
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#url_of"
----
-modules:
-  - docassemble.base.util
 ---
 question: |
   Read more about this interview.

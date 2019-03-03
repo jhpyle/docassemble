@@ -2,10 +2,6 @@
 modules:
   - docassemble.base.util
 ---
-initial: True
-code: |
-  process_action()
----
 mandatory: True
 code: |
   need(test_screen)

@@ -6,7 +6,6 @@ metadata:
   example end: 1
 ---
 modules:
-  - docassemble.base.util
   - .google_drive
 ---
 mandatory: True

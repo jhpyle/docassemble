@@ -2,11 +2,8 @@ metadata:
   title: Fill fields in a DOCX template
   short title: DOCX
   documentation: "https://docassemble.org/docs/documents.html#docx template file"
-  example start: 6
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 5
+  example end: 5
 ---
 question: |
   Assembling a document from a .docx

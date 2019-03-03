@@ -2,11 +2,8 @@ metadata:
   title: "List: the .gather method"
   short title: "List: the .gather method"
   documentation: "https://docassemble.org/docs/groups.html#manual"
-  example start: 3
-  example end: 6
----
-modules:
-  - docassemble.base.util
+  example start: 2
+  example end: 5
 ---
 objects:
   - fruit: DAList

@@ -9,9 +9,6 @@ question: |
   Does ${ x } like cats?
 yesno: x.likes_cats
 ---
-modules:
-  - docassemble.base.util
----
 objects:
   - person_one: Individual
   - person_two: Individual

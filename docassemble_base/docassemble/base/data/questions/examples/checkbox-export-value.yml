@@ -2,10 +2,7 @@ metadata:
   title: Checkbox export value
   short title: Checkbox value
   documentation: "https://docassemble.org/docs/documents.html#pdf template file"
-  example start: 11
----
-modules:
-  - docassemble.base.util
+  example start: 10
 ---
 objects:
   - user: Individual

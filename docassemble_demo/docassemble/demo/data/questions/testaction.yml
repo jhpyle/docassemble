@@ -1,11 +1,3 @@
----
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
----
 mandatory: True
 code: |
   if lucky_information_confirmed:

@@ -2,11 +2,8 @@ metadata:
   title: Redo mandatory
   short title: Redo
   documentation: "https://docassemble.org/docs/functions.html#forget_result_of"
-  example start: 2
-  example end: 7
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 6
 ---
 mandatory: True
 code: |

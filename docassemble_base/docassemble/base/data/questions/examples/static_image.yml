@@ -3,10 +3,7 @@ metadata:
   short title: Insert image with code
   documentation: "https://docassemble.org/docs/functions.html#static_image"
   example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example end: 2
 ---
 code: |
   image_name = 'court'

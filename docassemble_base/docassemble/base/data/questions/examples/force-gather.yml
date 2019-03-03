@@ -1,11 +1,8 @@
 metadata:
   title: "Insist question be asked"
   documentation: "https://docassemble.org/docs/functions.html#force_gather"
-  example start: 2
-  example end: 3
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 2
 ---
 initial: True
 code: |

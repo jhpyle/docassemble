@@ -2,11 +2,8 @@ metadata:
   title: Save URL to file
   short title: URL
   documentation: "https://docassemble.org/docs/functions.html#path_and_mimetype"
-  example start: 2
-  example end: 5
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 4
 ---
 mandatory: True
 objects:

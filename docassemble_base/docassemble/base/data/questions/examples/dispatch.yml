@@ -1,11 +1,8 @@
 metadata:
   title: Dispatch
   documentation: "https://docassemble.org/docs/functions.html#dispatch"
-  example start: 2
-  example end: 14
----
-modules:
-  - docassemble.base.util
+  example start: 1
+  example end: 13
 ---
 mandatory: True
 code: |

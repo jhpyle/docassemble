@@ -1,11 +1,6 @@
 metadata:
   title: Date parts
-  example start: 2
-  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#month_of"
----
-modules:
-  - docassemble.base.util
 ---
 mandatory: True
 question: |
