@@ -1,6 +1,12 @@
+metadata:
+  title: Disable others radio
+  short title: Disable
+  documentation: "https://docassemble.org/docs/fields.html#object_radio"
+  example start: 4
+  example end: 4
 ---
-include:
-  - basic-questions.yml
+modules:
+  - docassemble.base.util
 ---
 mandatory: True
 objects:
@@ -22,9 +28,10 @@ fields:
 question: |
   Who is the conservator?
 fields:
-  - Somebody already mentioned: conservator
-    datatype: object
+  - no label: conservator
+    datatype: object_radio
     disable others: True
+    none of the above: Someone else
     choices:
       - successor_agent
   - First Name: conservator.name.first
@@ -38,9 +45,10 @@ fields:
 question: |
   Who is the guardian?
 fields:
-  - Somebody already mentioned: guardian
-    datatype: object
+  - no label: guardian
+    datatype: object_radio
     disable others: True
+    none of the above: Someone else
     choices:
       - successor_agent
       - conservator

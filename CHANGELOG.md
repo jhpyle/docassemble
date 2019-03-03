@@ -1,9 +1,10 @@
 # Change Log
 
-## [0.4.13] - 2019-03-
+## [0.4.13] - 2019-03-03
 ### Changed
-- Better support for Unicode characters in Markdown-to-PDF document
-  assembly.
+- The `none of the above` specifier can be used with `datatype:
+  object_radio`.
+- Switched to LuaLaTeX for better Cyrillic support.  Requires server restart.
 
 ## [0.4.12] - 2019-03-01
 ### Added

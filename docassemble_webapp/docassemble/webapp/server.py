@@ -8163,6 +8163,9 @@ def index():
           showIfVal = parseInt(showIfVal);
         }
         if (typeof theVal == 'string' || typeof showIfVal == 'string'){
+          if (String(showIfVal) == 'None' && String(theVal) == ''){
+            return true;
+          }
           return (String(theVal) == String(showIfVal));
         }
         return (theVal == showIfVal);
@@ -8639,9 +8642,23 @@ def index():
               if (typeof(theVal) == 'undefined'){
                 theVal = '';
               }
+              else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
+                try{
+                  theVal = atob(theVal);
+                }
+                catch(e){
+                }
+              }
             }
             else{
               theVal = $(this).val();
+              if (theVal != '' && $(this).hasClass("daobject")){
+                try{
+                  theVal = atob(theVal);
+                }
+                catch(e){
+                }
+              }
             }
             //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
             if(daShowIfCompare(theVal, showIfVal)){

@@ -58,12 +58,12 @@ def initialize_pandoc():
     else:
         PANDOC_OLD = False
         try:
-            msg = subprocess.check_output(['xelatex', '--help'], stderr=subprocess.STDOUT)
-            xelatex_supported = True
+            msg = subprocess.check_output(['lualatex', '--help'], stderr=subprocess.STDOUT)
+            lualatex_supported = True
         except:
-            xelatex_supported = False
-        if xelatex_supported:
-            PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'xelatex')
+            lualatex_supported = False
+        if lualatex_supported:
+            PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'lualatex')
         else:
             PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
     PANDOC_INITIALIZED = True
@@ -182,10 +182,9 @@ class MyPandoc(object):
         subprocess_arguments.extend(['-s', '-o', temp_outfile.name])
         subprocess_arguments.extend([temp_file.name])
         subprocess_arguments.extend(self.arguments)
-        #logmessage("Arguments are " + str(subprocess_arguments))
-        the_temp_dir = tempfile.gettempdir()
+        #logmessage("Arguments are " + str(subprocess_arguments) + " and directory is " + tempfile.gettempdir())
         try:
-            msg = subprocess.check_output(subprocess_arguments, cwd=the_temp_dir, stderr=subprocess.STDOUT).decode('utf-8', 'ignore')
+            msg = subprocess.check_output(subprocess_arguments, cwd=tempfile.gettempdir(), stderr=subprocess.STDOUT).decode('utf-8', 'ignore')
         except subprocess.CalledProcessError as err:
             raise Exception("Failed to assemble file: " + err.output.decode())
         if msg:

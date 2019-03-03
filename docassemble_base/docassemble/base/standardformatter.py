@@ -1823,9 +1823,14 @@ def input_for(status, field, wide=False, embedded=False):
             title_text = ' title=' + json.dumps(label_text)
         else:
             title_text = ''
+        if hasattr(field, 'datatype') and field.datatype == 'object':
+            extra_class += ' daobject'
     else:
         extra_style = ''
-        extra_class = ''
+        if hasattr(field, 'datatype') and field.datatype == 'object':
+            extra_class = 'daobject'
+        else:
+            extra_class = ''
         extra_checkbox = ''
         extra_radio = ''
         title_text = ''
@@ -1883,7 +1888,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     inner_fieldlist.append(help_wrap('<div>' + markdown_to_html(pair['label'], status=status) + '</div>', helptext, status))
                 id_index += 1
-            if 'nota' in status.extras and status.extras['nota'][field.number] is not False:
+            if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
                     ischecked = ' checked'
                 else:
@@ -1915,6 +1920,7 @@ def input_for(status, field, wide=False, embedded=False):
                 defaultvalue_printable = None
                 defaultvalue_is_printable = False
             if embedded:
+                default_selected = False
                 for pair in pairlist:
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
@@ -1923,14 +1929,27 @@ def input_for(status, field, wide=False, embedded=False):
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_printable and text_type(pair['label']) == defaultvalue_printable):
                         ischecked = ' checked="checked"'
+                        default_selected = True
                     else:
                         ischecked = ''
                     inner_fieldlist.append('<input class="radio-embedded" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                     id_index += 1
+                if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
+                    if status.extras['nota'][field.number] is True:
+                        formatted_item = word("None of the above")
+                    else:
+                        formatted_item = markdown_to_html(text_type(status.extras['nota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                    if not default_selected:
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    the_icon = ''
+                    inner_fieldlist.append('<input class="radio-embedded daobject" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="" checked="checked"' + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                 output += '<span class="embed-radio-wrapper">'
                 output += " ".join(inner_fieldlist)
                 output += '</span>'
             else:
+                default_selected = False
                 output += '<fieldset class="field-radio"><legend class="sr-only">' + word('Choices:') + '</legend>'
                 for pair in pairlist:
                     if 'image' in pair:
@@ -1943,20 +1962,36 @@ def input_for(status, field, wide=False, embedded=False):
                         formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable):
                             ischecked = ' checked="checked"'
+                            default_selected = True
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty daobject radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                     else:
                         inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(text_type(pair['label']), status=status) + '</div>', helptext, status))
                     id_index += 1
+                if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
+                    if status.extras['nota'][field.number] is True:
+                        formatted_item = word("None of the above")
+                    else:
+                        formatted_item = markdown_to_html(text_type(status.extras['nota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                    if not default_selected:
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    the_icon = ''
+                    inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=""' + ischecked + disable_others_data + '/>', helptext, status))
                 if embedded:
                     output += '<span class="embed-radio-wrapper">' + " ".join(inner_fieldlist) + '</span>'
                 else:
                     output += "".join(inner_fieldlist)
                 output += "</fieldset>"
         else:
+            if hasattr(field, 'datatype') and field.datatype == 'object':
+                daobject = ' daobject'
+            else:
+                daobject = ''
             if embedded:
-                emb_text = 'class="input-embedded" '
+                emb_text = 'class="input-embedded' + daobject + '" '
                 if inline_width is not None:
                     emb_text += 'style="min-width: ' + text_type(inline_width) + '" '
                 label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
@@ -1965,9 +2000,9 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
                 if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
-                    emb_text = 'class="form-control combobox" '
+                    emb_text = 'class="form-control combobox' + daobject + '" '
                 else:
-                    emb_text = 'class="form-control" '
+                    emb_text = 'class="form-control' + daobject + '" '
             if embedded:
                 output += '<span class="inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" ' + disable_others_data + '>'

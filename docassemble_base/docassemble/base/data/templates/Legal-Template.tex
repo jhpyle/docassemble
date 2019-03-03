@@ -7,6 +7,10 @@ $if(pdfa)$
 \end{filecontents*}
 $endif$
 \documentclass[$if(fontsize)$$fontsize$$else$12pt$endif$,$if(lang)$$lang$,$endif$$if(papersize)$$papersize$$else$letterpaper$endif$$for(classoption)$,$classoption$$sep$$endfor$]{$if(documentclass)$$documentclass$$else$article$endif$}
+\usepackage{ifxetex,ifluatex}
+\ifluatex
+\usepackage{luatexbase}
+\fi
 \usepackage{filecontents}
 \usepackage{ifthen}
 $if(pdfa)$
@@ -68,7 +72,6 @@ $if(linestretch)$
 \setstretch{$linestretch$}
 $endif$
 \usepackage{amssymb,amsmath}
-\usepackage{ifxetex,ifluatex}
 \usepackage{fixltx2e} % provides \textsubscript
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}

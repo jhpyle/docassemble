@@ -19,7 +19,7 @@ git \
 locales \
 pandoc \
 texlive \
-texlive-xetex \
+texlive-luatex \
 texlive-latex-recommended \
 texlive-latex-extra \
 texlive-font-utils \

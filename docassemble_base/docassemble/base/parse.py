@@ -2359,7 +2359,7 @@ class Question:
                             #     field_info['extras'][key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
-                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes'):
+                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
                                 if isinstance(field[key], bool):
                                     field_info['nota'] = field[key]
                                 else:
@@ -2390,6 +2390,8 @@ class Question:
                         if 'type' in field_info:
                             if field_info['type'] in ('checkboxes', 'object_checkboxes') and 'nota' not in field_info:
                                 field_info['nota'] = True
+                            if field_info['type'] == 'object_radio' and 'nota' not in field_info:
+                                field_info['nota'] = False
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_checkboxes'):
                             if 'choices' not in field:
                                 raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
