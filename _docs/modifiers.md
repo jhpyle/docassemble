@@ -927,8 +927,8 @@ by **docassemble**, so it can contain any valid [YAML].
 [`question back button`]: {{ site.baseurl}}/docs/initial.html#question back button
 [`back button`]: #back button
 [`forget_result_of()`]: {{ site.baseurl}}/docs/functions.html#forget_result_of
-[`template`]: {{ site.baseurl}}/docs/template.html#template
-[`table`]: {{ site.baseurl}}/docs/template.html#table
+[`template`]: {{ site.baseurl}}/docs/initial.html#template
+[`table`]: {{ site.baseurl}}/docs/initial.html#table
 [`attachment`]: {{ site.baseurl}}/docs/documents.html#attachment
 [`objects`]: {{ site.baseurl}}/docs/initial.html#objects
 [`objects from file`]: {{ site.baseurl}}/docs/initial.html#objects from file

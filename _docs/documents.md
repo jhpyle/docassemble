@@ -4,38 +4,30 @@ title: Assembling documents
 short_title: Documents
 ---
 
-# <a name="attachment"></a><a name="attachments"></a>The `attachments` specifier
-
-The `attachments` block (which can also be written `attachment`)
-creates documents that users can download and/or e-mail.
-
-It can be used within a [`question`] or outside of a [`question`].
-
-{% include side-by-side.html demo="attachment-simple" %}
-
-The `name`, `filename`, and `description` items can contain [Mako]
-templates.  The `name` and `description` filenames can also contain
-[Markdown].  (The `filename` cannot contain [Markdown], since it's a
-filename, after all.)
-
 # <a name="oview"></a>Overview of document creation methods
 
 There are several ways to make downloadable documents using the
-`attachments` block.  Each has its own features and limitations.
+`attachment` block.  Each has its own features and limitations.
 
 ## <a name="scratch"></a>Method 1: generating documents from scratch using Markdown
 
 First, you can [generate attachments from Markdown](#from markdown).
 In the same way that you format the text of questions, you can format
-the text of attachments.  This document source:
+the text of attachments.  Suppose you write this in the document source:
 
-{% highlight markdown %}
+{% highlight text %}
 Hello, ${ user }.  This text is in **bold face**.
+
+% if user.age_in_years() > 30:
+You cannot be trusted!
+% endif
 {% endhighlight %}
 
-would become this document content:
+This become the following in the resulting document:
 
 > Hello, John Doe.  This text is in **bold face**.
+>
+> You cannot be trusted!
 
 In this way, you can produce documents in [PDF](#pdf), [RTF](#rtf),
 and [DOCX](#docx) format.
@@ -44,42 +36,60 @@ In addition to using [Markdown], you can use **docassemble**-specific
 [markup](#markup) codes to do things like center text, insert a page
 break, or insert a case caption.
 
-## <a name="filling"></a>Method 2: filling in fields
+## <a name="scratch"></a>Method 2: generating documents from DOCX templates
 
-The second way to make attachments is to generate [PDF](#pdf template
-file) or [DOCX](#docx template file) using templates that you prepare
-in [Adobe Acrobat Pro] or [Microsoft Word].  You put the template file
-in the `data/templates` folder of a [package] (or the
-["Templates" folder] in the [Playground]).  The `attachments` block
+The second method of assembling documents is to prepare a document
+template in [DOCX](#docx template file) format and use the [Jinja2]
+template language to plug in variables from your interview.
+
+For example, suppose you write this in the [DOCX](#docx template file)
+template file:
+
+> Hello, {% raw %}{{ user }}{% endraw %}.  This text is in **bold face**.
+> 
+> {% raw %}{%p if user.age_in_years() > 30 %}{% endraw %}<br>
+> You cannot be trusted!<br>
+> {% raw %}{%p endif %}{% endraw %}
+
+The document content would look like this:
+
+> Hello, John Doe.  This text is in **bold face**.
+>
+> You cannot be trusted!
+
+From the [DOCX](#docx template file) template, you can generate PDF or
+DOCX output.
+
+## <a name="filling"></a>Method 3: filling in fields in a PDF
+
+The third way to assemble documents is to generate [PDF](#pdf template
+file) files using templates that you prepare in [Adobe Acrobat Pro] or
+other software that can edit PDF form fields.  You put the template
+file in the `data/templates` folder of a [package] (or the
+["Templates" folder] in the [Playground]).  The `attachment` block
 will take the template and "[fill in the blanks](#fill-in forms)"
 using values from interview variables, providing the user with a
 filled-in version of the template.
-
-Here is an example that generates a PDF file:
-
-{% include side-by-side.html demo="pdf-fill" %}
-
-Here is an example that generates a .docx file:
-
-{% include side-by-side.html demo="docx-template" %}
 
 ## <a name="comparison"></a>Comparison of the methods
 
 Each method has benefits.
 
-The advantage of the [fill-in-fields method](#fill-in forms) is that
-you have more direct, [WYSIWYG] control over document formatting.
+The advantage of the [DOCX](#docx template file) and [PDF](#pdf
+template file) methods is that you have more direct, [WYSIWYG] control
+over document formatting.
 
 The advantage of the [Markdown](#from markdown) method is that you can
 concentrate on the content and let **docassemble** handle the
 formatting.  For example, there are automatic methods for generating
 case captions in legal documents created from [Markdown], whereas if
-you create your legal document in .docx format, you will need to
-construct your caption in the [.docx template file](#docx template
-file) and make sure that it gets filled in correctly.  The
-[Markdown](#from markdown) method allows for more readable embedded
-if/then/else statements.  In the [.docx template](#docx template file)
-method, you have to write:
+you create your legal document in [DOCX](#docx template file) format,
+you will need to construct your caption in the [.docx template
+file](#docx template file) and make sure that it gets filled in
+correctly.  The [Markdown](#from markdown) method allows for more
+flexible formatting of the if/then/else statements within paragraphs.
+In the [.docx template](#docx template file) method, you have to
+write:
 
 > I {% raw %}{% if employed %}have a job.{% else %}am unemployed.{% endif %}{% endraw %}
 
@@ -107,9 +117,10 @@ content will fit into the provided fields.  Also, the
 an itemized list of fields in your document and the values you want
 those fields to have.  [Markdown](#from markdown) documents and
 [DOCX fill-in forms](#docx template file) are more flexible because
-they do not require this itemization of fields.  Also, note that the
-[DOCX fill-in forms](#docx template file) method provides not only a
-.docx file, but a PDF version of that .docx file.
+they do not require this itemization of fields.
+
+All three of these methods make use of the [`attachment`] specifier to
+indicate how a document should be made.
 
 # <a name="from markdown"></a>Creating files from Markdown
 
@@ -173,7 +184,7 @@ which is described [below](#docx template file).
 
 If the content of your document is lengthy and you would rather not
 type it into the interview [YAML] file as a `content` specifier within
-an `attachments` block, you can import the content from a separate
+an `attachment` block, you can import the content from a separate
 file using `content file`:
 
 {% include side-by-side.html demo="document-file" %}
@@ -489,144 +500,7 @@ If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
 by providing specific options within the question block.
 
-# <a name="fill-in forms"></a>Creating files by filling in a template
-
-## <a name="pdf template file"></a>Filling PDF templates
-
-If you have a PDF file that contains fillable fields (e.g. fields
-added using [Adobe Acrobat Pro] or a similar application),
-**docassemble** can fill in the fields of the PDF file using
-information from an interview and provide the user with a copy of that
-PDF file with the fields filled in.  To do this, use the
-[`attachments`] specifier as above, but instead of providing `content`
-or `content file`, provide a `pdf template file` and a dictionary of
-`fields`.
-
-For example, here is an interview that populates fields in a file
-called [sample-form.pdf]:
-
-{% include side-by-side.html demo="pdf-fill" %}
-
-The `pdf template file` is assumed to reside in the `data/templates`
-directory of your package, unless a specific package name is
-specified.  For example, you could refer to a file in another package
-by writing:
-
-{% highlight yaml %}
-pdf template file: docassemble.missouri-family-law:data/templates/form.pdf
-{% endhighlight %}
-
-In [Adobe Acrobat Pro]'s "Add or Edit Fields" mode, the PDF file looks
-like this:
-
-![sample form]({{ site.baseurl }}/img/sample-form.png){: .maybe-full-width }
-
-The `fields` must be in the form of a [YAML] list of dictionaries, or
-a single dictionary.  The names of the fields listed in `fields` must
-correspond _exactly_ with the names of the fields in the PDF file.
-Luckiliy, there is [a tool] that will help you extract the literal
-field names from a PDF file.
-
-If your PDF document has many fields, it is strongly recommended that
-you use [Adobe Acrobat Pro] to give each field a concise, meaningful,
-and accurate field name (as well as a helpful tooltip).  [Adobe
-Acrobat Pro] has a feature for automatically assigning names to
-fields, but this tool often assigns incorrect names.  You should go
-through this process _before_ you [generate] the `attachment`
-specifier for filling fields in the PDF file.
-
-While it is legal for a PDF file to contain more than one field with
-the same name, please note that **docassemble** is unable to populate
-such fields.  You must give each field in your PDF file a unique name.
-
-When writing the values of the fields, you can use [Mako], but not
-[Markdown].  If you use [Markdown], it will be interpreted literally.
-Checkbox fields will be checked if and only if the value evaluates to
-"True" or "Yes."
-
-The section below on [passing values using code](#template code)
-explains alternative ways that you can populate the values of fields
-in a PDF file.
-
-You have a choice whether to list fields as a single dictionary or a
-list of dictionary items.  Providing the fields in the form of a list
-is usually preferable because it provides an order in which the fields
-should be evaluated; if you only provide a single dictionary, the
-items will be evaluated in a random order.
-
-The section below on [using code to find a template file] explains how
-you can use code to determine what template file to use with `pdf
-template file`.
-
-### <a name="editable"></a>Making PDF files non-editable
-
-By default, the PDF files created by filling in
-forms in a `pdf template file` can be edited by the user; the fill-in
-form boxes will still exist in the resulting document.
-
-If you want to prevent users from editing the forms created through
-`pdf template file`, set the `editable` specifier to `False`.  For
-example:
-
-{% include side-by-side.html demo="pdf-fill-not-editable" %}
-
-### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
-
-To add a signature or other image to a fillable PDF file, use
-[Adobe Acrobat Pro] to insert a "Digital Signature" into the document
-where you want the signature to appear.  Give it the height and width
-you want the image to have.  Give the field a unique name.
-
-Then, the image will be a field, just like a checkbox or a text box is
-a fill-in field.  In your `pdf template file`, set the field to `${
-user.signature }` or another reference to an image.  **docassemble**
-will trim whitespace from the edges of the image and fit the image
-into the "Digital Signature" box.
-
-For example, here is an interview that populates text fields and
-inserts a signature into the template [Transfer-of-Ownership.pdf]:
-
-{% include side-by-side.html demo="pdf-fill-signature" %}
-
-It is important that each "Digital Signature" field have a unique
-name.  If there is more than one field in the PDF template with the
-same name, **docassemble** will not be able to locate it.  If you want
-to insert the same signature in more than one spot in a document, you
-can do so as long as each "Digital Signature" field has a different
-name.  For example:
-
-{% highlight yaml %}
-    fields:
-      - first signature: ${ user.signature }
-      - second signature: ${ user.signature }
-      - third signature: ${ user.signature }
-{% endhighlight %}
-
-### <a name="checkbox export value"></a>Changing the "export value" of checkbox fields
-
-By default, when populating checkboxes, **docassemble** sets the
-checkbox value to `'Yes'` if the checkbox should be checked.  This is
-the default "Export Value" of a checked checkbox in Adobe Acrobat.
-
-If your PDF file uses a different "Export Value," you can set it
-manually by using an expression like 
-`${ 'affirmative' if likes_toast else 'negative }`.
-
-You can also set the `checkbox export value` option to the value you
-want to use.  This example uses `'yes'` instead of `'Yes'`.
-
-{% include side-by-side.html demo="checkbox-export-value" %}
-
-When `checkbox export value` is set, then if the value of a PDF field
-evaluates to `True`, the `checkbox export value` will be substituted.
-In addition, [`yesno()`] and [`noyes()`] will return the `checkbox
-export value` instead of `'Yes'`.
-
-The `checkbox export value` can contain [Mako].  If the value you want
-to use has special meaning in [YAML], as `yes` does, make sure to
-quote the value.
-
-## <a name="docx template file"></a>Filling DOCX templates
+# <a name="docx template file"></a>Filling DOCX templates
 
 You can fill in fields in DOCX template files by referring to a `docx
 template file`.
@@ -824,7 +698,7 @@ The section below on [using code to find a template file] explains how
 you can use code to determine what template file to use with `docx
 template file`.
 
-### <a name="include_docx_template"></a>Inserting other DOCX files into DOCX templates
+## <a name="include_docx_template"></a>Inserting other DOCX files into DOCX templates
 
 You can include the paragraphs of a DOCX file inside of your DOCX
 template.
@@ -846,7 +720,7 @@ or just
 
 > {% raw %}{{p the_file }}{% endraw %}
 
-### <a name="docx tables"></a>Inserting tables into DOCX templates
+## <a name="docx tables"></a>Inserting tables into DOCX templates
 
 You can assemble tables in a DOCX template using a [Jinja2] "for loop."
 
@@ -884,7 +758,7 @@ illustrates this.
 
 {% include side-by-side.html demo="docx-table-columns" %}
 
-### <a name="particfields"></a>Passing values only for particular fields
+## <a name="particfields"></a>Passing values only for particular fields
 
 By default, all of the variables in your interview will be available
 in the DOCX template.  If you do not want this, perhaps because your
@@ -910,6 +784,249 @@ DOCX file that uses the above data structure:
 
 For more information on using [Jinja2] in DOCX templates, see the
 documentation of [`python-docx-template`].
+
+## <a name="raw field variables"></a>Turning off automatic conversion of DOCX variables
+
+Normally, all values that you transfer to a DOCX template using
+`fields`, `field variables`, and `field code` are converted so that
+they display appropriately in your DOCX file.  For example, if the
+value is a [`DAFile`] graphics image, it will be converted so that it
+displays in the DOCX file as an image.  Or, if the value contains
+[document markup] codes that indicate line breaks, these will display
+as actual line breaks in the DOCX file, rather than as codes like
+`[BR]`.
+
+However, if your DOCX file uses [Jinja2] templating to do complicated
+things like for loops, this conversion might cause problems.
+
+For example, suppose you have a variable `vegetable_list` that is
+defined as a [`DAList`] with items `['potatoes', 'beets']`, and you
+pass it to a DOCX template as follows.
+
+{% highlight yaml %}
+event: document_shown
+question: |
+  Here are your instructions.
+attachment:
+  docx template file: instruction_template.docx
+  field variables:
+    - vegetable_list
+{% endhighlight %}
+
+This will work as intended if your template uses `vegetable_list` in a
+context like:
+
+{% highlight text %}
+make sure to bring {% raw %}{{ vegetable_list }}{% endraw %} to the party
+{% endhighlight %}
+
+This will result in:
+
+> make sure to bring potatoes and beets to the party
+
+When the [`DAList`] is converted, the [`.comma_and_list()`] method is
+automatically applied to make the data structure "presentable."
+
+However, suppose you wanted to write:
+
+{% highlight text %}
+{% raw %}{%p for vegetable in vegetable_list: %}
+Don't forget to bring {{ vegetable }}!
+{%p endfor %}{% endraw %}
+{% endhighlight %}
+
+In this case, since the variable `vegetable_list` has been converted
+into a literal piece of text, `potatoes and beets`, the `for` loop
+will loop over each character, not over each vegetable.  You will get:
+
+> Don't forget to bring p!
+>
+> Don't forget to bring o!
+>
+> Don't forget to bring t!
+>
+> Don't forget to bring a!
+>
+> Don't forget to bring t!
+
+and so on.
+
+You can prevent the conversion of `vegetable_list` into text by using `raw
+field variables` instead of `field variables`.  For example:
+
+{% highlight yaml %}
+event: document_shown
+question: |
+  Here are your instructions.
+attachment:
+  docx template file: instruction_template.docx
+  raw field variables:
+    - vegetable_list
+{% endhighlight %}
+
+Now, the `vegetable_list` variable in the DOCX template will be a
+real list that [Jinja2] can process.  The output will be what you expected:
+
+> Don't forget to bring potatoes!
+> Don't forget to bring beets!
+
+The conversion to text is also done if you use `field code` or `code`
+to pass variables to a DOCX template.  In order to pass variables in
+"raw" form using `field code` or `code`, you can wrap the code in the
+[`raw()`] function.  For more information, see the
+[documentation for the `raw()` function].
+
+## <a name="update references"></a>Using tables of contents and other references in DOCX files
+
+If you are using `docx template file` and your template file uses a
+table of contents or other page references that will change depending
+on how the document is assembled, set `update references` to `True`.
+
+{% include demo-side-by-side.html demo="update-references" %}
+
+This will cause [LibreOffice] to update all of the references in the
+document before saving it and converting it to PDF.
+
+You can also set `update references` to a [Python] expression.  If the
+expression evaluates to a `True` value, the references will be updated.
+
+If `update references` is not specified, the default behavior is not
+to update the references.
+
+# <a name="pdf template file"></a>Filling PDF templates
+
+If you have a PDF file that contains fillable fields (e.g. fields
+added using [Adobe Acrobat Pro] or a similar application),
+**docassemble** can fill in the fields of the PDF file using
+information from an interview and provide the user with a copy of that
+PDF file with the fields filled in.  To do this, use the
+[`attachment`] specifier as above, but instead of providing `content`
+or `content file`, provide a `pdf template file` and a dictionary of
+`fields`.
+
+For example, here is an interview that populates fields in a file
+called [sample-form.pdf]:
+
+{% include side-by-side.html demo="pdf-fill" %}
+
+The `pdf template file` is assumed to reside in the `data/templates`
+directory of your package, unless a specific package name is
+specified.  For example, you could refer to a file in another package
+by writing:
+
+{% highlight yaml %}
+pdf template file: docassemble.missouri-family-law:data/templates/form.pdf
+{% endhighlight %}
+
+In [Adobe Acrobat Pro]'s "Add or Edit Fields" mode, the PDF file looks
+like this:
+
+![sample form]({{ site.baseurl }}/img/sample-form.png){: .maybe-full-width }
+
+The `fields` must be in the form of a [YAML] list of dictionaries, or
+a single dictionary.  The names of the fields listed in `fields` must
+correspond _exactly_ with the names of the fields in the PDF file.
+Luckiliy, there is [a tool] that will help you extract the literal
+field names from a PDF file.
+
+If your PDF document has many fields, it is strongly recommended that
+you use [Adobe Acrobat Pro] to give each field a concise, meaningful,
+and accurate field name (as well as a helpful tooltip).  [Adobe
+Acrobat Pro] has a feature for automatically assigning names to
+fields, but this tool often assigns incorrect names.  You should go
+through this process _before_ you [generate] the `attachment`
+specifier for filling fields in the PDF file.
+
+While it is legal for a PDF file to contain more than one field with
+the same name, please note that **docassemble** is unable to populate
+such fields.  You must give each field in your PDF file a unique name.
+
+When writing the values of the fields, you can use [Mako], but not
+[Markdown].  If you use [Markdown], it will be interpreted literally.
+Checkbox fields will be checked if and only if the value evaluates to
+"True" or "Yes."
+
+The section below on [passing values using code](#template code)
+explains alternative ways that you can populate the values of fields
+in a PDF file.
+
+You have a choice whether to list fields as a single dictionary or a
+list of dictionary items.  Providing the fields in the form of a list
+is usually preferable because it provides an order in which the fields
+should be evaluated; if you only provide a single dictionary, the
+items will be evaluated in a random order.
+
+The section below on [using code to find a template file] explains how
+you can use code to determine what template file to use with `pdf
+template file`.
+
+## <a name="editable"></a>Making PDF files non-editable
+
+By default, the PDF files created by filling in
+forms in a `pdf template file` can be edited by the user; the fill-in
+form boxes will still exist in the resulting document.
+
+If you want to prevent users from editing the forms created through
+`pdf template file`, set the `editable` specifier to `False`.  For
+example:
+
+{% include side-by-side.html demo="pdf-fill-not-editable" %}
+
+## <a name="signature"></a>How to insert signatures or other images into fillable PDF files
+
+To add a signature or other image to a fillable PDF file, use
+[Adobe Acrobat Pro] to insert a "Digital Signature" into the document
+where you want the signature to appear.  Give it the height and width
+you want the image to have.  Give the field a unique name.
+
+Then, the image will be a field, just like a checkbox or a text box is
+a fill-in field.  In your `pdf template file`, set the field to `${
+user.signature }` or another reference to an image.  **docassemble**
+will trim whitespace from the edges of the image and fit the image
+into the "Digital Signature" box.
+
+For example, here is an interview that populates text fields and
+inserts a signature into the template [Transfer-of-Ownership.pdf]:
+
+{% include side-by-side.html demo="pdf-fill-signature" %}
+
+It is important that each "Digital Signature" field have a unique
+name.  If there is more than one field in the PDF template with the
+same name, **docassemble** will not be able to locate it.  If you want
+to insert the same signature in more than one spot in a document, you
+can do so as long as each "Digital Signature" field has a different
+name.  For example:
+
+{% highlight yaml %}
+    fields:
+      - first signature: ${ user.signature }
+      - second signature: ${ user.signature }
+      - third signature: ${ user.signature }
+{% endhighlight %}
+
+## <a name="checkbox export value"></a>Changing the "export value" of checkbox fields
+
+By default, when populating checkboxes, **docassemble** sets the
+checkbox value to `'Yes'` if the checkbox should be checked.  This is
+the default "Export Value" of a checked checkbox in Adobe Acrobat.
+
+If your PDF file uses a different "Export Value," you can set it
+manually by using an expression like 
+`${ 'affirmative' if likes_toast else 'negative }`.
+
+You can also set the `checkbox export value` option to the value you
+want to use.  This example uses `'yes'` instead of `'Yes'`.
+
+{% include side-by-side.html demo="checkbox-export-value" %}
+
+When `checkbox export value` is set, then if the value of a PDF field
+evaluates to `True`, the `checkbox export value` will be substituted.
+In addition, [`yesno()`] and [`noyes()`] will return the `checkbox
+export value` instead of `'Yes'`.
+
+The `checkbox export value` can contain [Mako].  If the value you want
+to use has special meaning in [YAML], as `yes` does, make sure to
+quote the value.
 
 ## <a name="template code"></a>Passing values using code
 
@@ -1037,98 +1154,7 @@ variables`.  In other cases, you will need to manually format your
 numbers, for example by writing something like `${ '%.3f' %
 ounces_of_gold }`.
 
-### <a name="raw field variables"></a>Turning off automatic conversion of DOCX variables
-
-Normally, all values that you transfer to a DOCX template using
-`fields`, `field variables`, and `field code` are converted so that
-they display appropriately in your DOCX file.  For example, if the
-value is a [`DAFile`] graphics image, it will be converted so that it
-displays in the DOCX file as an image.  Or, if the value contains
-[document markup] codes that indicate line breaks, these will display
-as actual line breaks in the DOCX file, rather than as codes like
-`[BR]`.
-
-However, if your DOCX file uses [Jinja2] templating to do complicated
-things like for loops, this conversion might cause problems.
-
-For example, suppose you have a variable `vegetable_list` that is
-defined as a [`DAList`] with items `['potatoes', 'beets']`, and you
-pass it to a DOCX template as follows.
-
-{% highlight yaml %}
-event: document_shown
-question: |
-  Here are your instructions.
-attachment:
-  docx template file: instruction_template.docx
-  field variables:
-    - vegetable_list
-{% endhighlight %}
-
-This will work as intended if your template uses `vegetable_list` in a
-context like:
-
-{% highlight text %}
-make sure to bring {% raw %}{{ vegetable_list }}{% endraw %} to the party
-{% endhighlight %}
-
-This will result in:
-
-> make sure to bring potatoes and beets to the party
-
-When the [`DAList`] is converted, the [`.comma_and_list()`] method is
-automatically applied to make the data structure "presentable."
-
-However, suppose you wanted to write:
-
-{% highlight text %}
-{% raw %}{%p for vegetable in vegetable_list: %}
-Don't forget to bring {{ vegetable }}!
-{%p endfor %}{% endraw %}
-{% endhighlight %}
-
-In this case, since the variable `vegetable_list` has been converted
-into a literal piece of text, `potatoes and beets`, the `for` loop
-will loop over each character, not over each vegetable.  You will get:
-
-> Don't forget to bring p!
->
-> Don't forget to bring o!
->
-> Don't forget to bring t!
->
-> Don't forget to bring a!
->
-> Don't forget to bring t!
-
-and so on.
-
-You can prevent the conversion of `vegetable_list` into text by using `raw
-field variables` instead of `field variables`.  For example:
-
-{% highlight yaml %}
-event: document_shown
-question: |
-  Here are your instructions.
-attachment:
-  docx template file: instruction_template.docx
-  raw field variables:
-    - vegetable_list
-{% endhighlight %}
-
-Now, the `vegetable_list` variable in the DOCX template will be a
-real list that [Jinja2] can process.  The output will be what you expected:
-
-> Don't forget to bring potatoes!
-> Don't forget to bring beets!
-
-The conversion to text is also done if you use `field code` or `code`
-to pass variables to a DOCX template.  In order to pass variables in
-"raw" form using `field code` or `code`, you can wrap the code in the
-[`raw()`] function.  For more information, see the
-[documentation for the `raw()` function].
-
-## <a name="list field names"></a>How to get a list of field names in a PDF or DOCX file
+## <a name="list field names"></a>How to get a list of field names in a PDF file
 
 When logged in to your server as a developer, you can go to
 "Utilities" from the menu and, under "Get list of fields from PDF/DOCX
@@ -1159,9 +1185,23 @@ attachment:
 ---
 {% endhighlight %}
 
-# <a name="variable name"></a>Saving documents as variables
+# <a name="attachment"></a><a name="attachments"></a>The `attachment` specifier
 
-Including an `attachments` section in a [`question`] block will offer
+The `attachment` specifier (which can also be written `attachments`)
+creates documents that users can download and/or e-mail.
+
+It can be used within a [`question`] or outside of a [`question`] (standalone).
+
+{% include side-by-side.html demo="attachment-simple" %}
+
+The `name`, `filename`, and `description` items can contain [Mako]
+templates.  The `name` and `description` filenames can also contain
+[Markdown].  (The `filename` cannot contain [Markdown], since it's a
+filename, after all.)
+
+## <a name="variable name"></a>Saving documents as variables
+
+Including an `attachment` section in a [`question`] block will offer
 the user a chance to download an assembled document and e-mail it to
 themselves.
 
@@ -1174,10 +1214,10 @@ a `variable name` key to an attachment.  For example:
 {% include side-by-side.html demo="document-variable-name" %}
 
 You can also assemble a document and save it to a variable without
-presenting it to the user.  You do not need to use [`attachments`]
+presenting it to the user.  You do not need to use [`attachment`]
 with a [`question`]; it can stand on its own, and it will be evaluated
 when **docassemble** needs the definition of the variable indicated by
-a `variable name` within the [`attachments`] block.
+a `variable name` within the [`attachment`] block.
 
 The following example creates a PDF file and an RTF file containing
 the message "Hello, world!" and offers the files as hyperlinks.
@@ -1201,22 +1241,9 @@ following attributes:
 See [objects] for an explanation of the [`DAFile`] and
 [`DAFileCollection`] classes.
 
-# <a name="attachment code"></a>Using code to generate the list of attachments
+## <a name="valid formats"></a>Limiting availability of file formats
 
-The list of attachments shown in a question can be generated by
-[Python] code that returns a list of [`DAFileCollection`] objects.  If
-`attachment code` is included in the question, the value will be
-evaluated as [Python] code.
-
-In the following example, the [Python] code returns an array of three
-[`DAFileCollection`] objects, each of which was generated with a
-separate [`attachment`] block.
-
-{% include side-by-side.html demo="attachment-code" %}
-
-# <a name="valid formats"></a>Limiting availability of file formats
-
-You limit the file formats that are generated by `attachments`.
+You limit the file formats that are generated by `attachment`.
 
 {% include side-by-side.html demo="valid-formats" %}
 
@@ -1228,9 +1255,9 @@ provided with both a PDF file and a DOCX file.  The PDF file is
 generated by converting the DOCX file to PDF format.  To hide the PDF
 file, set `valid formats` to `docx` only.
 
-# <a name="template file code"></a>Using code to find a template file
+## <a name="template file code"></a>Using code to find a template file
 
-Typically, when you refer to a filename in an `attachments` block
+Typically, when you refer to a filename in an `attachment` block
 using `pdf template file` or `docx template file`, you refer to a file
 in the `data/templates` directory of a [package], or the ["Templates"
 folder] of the [Playground].
@@ -1258,50 +1285,7 @@ name).  The expression can return:
   * If the text is `docassemble.missouri:data/static/sample_form.pdf`,
     that file will be retrieved from the `docassemble.missouri` package.
 
-# <a name="display"></a>Alternative ways of displaying documents
-
-There are alternatives to using [`attachment`] or [`attachment code`]
-for displaying assembled files to the user.  If you use [`variable
-name`] within an [`attachment`] to create a [`DAFileCollection`]
-object that represents the assembled file, you can use this variable
-to provide the file to the user in the context of a [`question`] in a
-number of different ways:
-
-{% include side-by-side.html demo="document-links" %}
-
-The [`.url_for()`] method works on [`DAFileCollection`] and [`DAFile`]
-objects.
-
-If a [`DAFile`] is inserted into a template 
-(e.g., with `${ complaint }`), and the [`DAFile`] is a PDF, a shrunken
-image of the first page is shown.  If the [`DAFile`] is an RTF or a
-DOCX file, a link is shown.
-
-If a [`DAFileCollection`] object is inserted into a template, each
-file type is inserted.  If you use [`valid formats`] to limit the file
-types created, only the specified file types will be inserted.  For
-example:
-
-{% include side-by-side.html demo="document-links-limited" %}
-
-# <a name="update references"></a>Using tables of contents and other references in DOCX files
-
-If you are using `docx template file` and your template file uses a
-table of contents or other page references that will change depending
-on how the document is assembled, set `update references` to `True`.
-
-{% include demo-side-by-side.html demo="update-references" %}
-
-This will cause [LibreOffice] to update all of the references in the
-document before saving it and converting it to PDF.
-
-You can also set `update references` to a [Python] expression.  If the
-expression evaluates to a `True` value, the references will be updated.
-
-If `update references` is not specified, the default behavior is not
-to update the references.
-
-# <a name="pdfa"></a>Producing PDF/A files
+## <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] file produced by an attachment to be in
 [PDF/A] format, you can set `pdf/a` to `True`:
@@ -1326,7 +1310,7 @@ a `True` value, a tagged PDF will be produced.
 If `tagged pdf` is not specified, the default behavior is determined
 by the interview's [`tagged pdf` features setting].
 
-# <a name="password"></a>Protecting PDF files with a password
+## <a name="password"></a>Protecting PDF files with a password
 
 If you want the [PDF] file produced by an attachment to be protected
 with a password, you can set a `password`, and the [PDF] file will be
@@ -1355,7 +1339,7 @@ The `password` can be specified in the following ways:
 If the user password and the owner password are the same, then only
 the "user" password will be set.
 
-# <a name="template password"></a>Using encrypted templates
+## <a name="template password"></a>Using encrypted templates
 
 If your template file uses encryption, you can set a `template
 password` to the password of the PDF template so that it can be
@@ -1375,7 +1359,7 @@ attachment:
   template password: ""
 {% endhighlight %}
 
-# <a name="language"></a>Assembling documents in a different language than the current language
+## <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
 user's language, then the [linguistic functions] may operate in a way
@@ -1397,7 +1381,7 @@ With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
 
-# <a name="redact"></a>Redacting information from documents
+## <a name="redact"></a>Redacting information from documents
 
 If you want to assemble a document but redact certain pieces of
 information from it, you can use the [`redact()`] function on the
@@ -1410,7 +1394,22 @@ document, assemble it with `redact: False`.
 For more information about this feature, see the documentation for the
 [`redact()`] function.
 
-# <a name="enable emailing"></a>Enabling the e-mailing of documents
+# <a name="attachment code"></a>Using code to generate the list of attachments
+
+The list of attachments shown in a question can be generated by
+[Python] code that returns a list of [`DAFileCollection`] objects.  If
+`attachment code` is included in the question, the value will be
+evaluated as [Python] code.
+
+In the following example, the [Python] code returns an array of three
+[`DAFileCollection`] objects, each of which was generated with a
+separate [`attachment`] block.
+
+{% include side-by-side.html demo="attachment-code" %}
+
+# <a name="customization"></a>Customizing the display of documents
+
+## <a name="enable emailing"></a>Enabling the e-mailing of documents
 
 Most internet service providers block e-mail communications as part of
 their efforts to combat [spam], so when you first set up your
@@ -1423,7 +1422,7 @@ enable e-mailing is to use the [Mailgun API] (which is free), but you
 can also use an [external SMTP server] hosted by [Mailgun] or another
 provider.
 
-# <a name="allow emailing"></a>Preventing the user from e-mailing documents
+## <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
 When [`attachments`] are included in a [`question`], the user will be
 given an option to e-mail the documents to an e-mail address.  If you
@@ -1439,7 +1438,7 @@ Including `allow emailing: False` will disable this:
 
 You can also use a [Python] expression instead of `True` or `False`.
 
-# <a name="allow downloading"></a>Allowing the user to download all files at once
+## <a name="allow downloading"></a>Allowing the user to download all files at once
 
 If you would like users to be able to download all of the
 [`attachments`] as a single [ZIP file], set `allow downloading` to
@@ -1453,6 +1452,32 @@ You can customize the name of the [ZIP file] by setting a `zip
 filename`:
 
 {% include side-by-side.html demo="allow-downloading-true-zip-filename" %}
+
+## <a name="display"></a>Alternative ways of displaying documents
+
+There are alternatives to using [`attachment`] or [`attachment code`]
+for displaying assembled files to the user.  If you use [`variable
+name`] within an [`attachment`] to create a [`DAFileCollection`]
+object that represents the assembled file, you can use this variable
+to provide the file to the user in the context of a [`question`] in a
+number of different ways:
+
+{% include side-by-side.html demo="document-links" %}
+
+The [`.url_for()`] method works on [`DAFileCollection`] and [`DAFile`]
+objects.
+
+If a [`DAFile`] is inserted into a template 
+(e.g., with `${ complaint }`), and the [`DAFile`] is a PDF, a shrunken
+image of the first page is shown.  If the [`DAFile`] is an RTF or a
+DOCX file, a link is shown.
+
+If a [`DAFileCollection`] object is inserted into a template, each
+file type is inserted.  If you use [`valid formats`] to limit the file
+types created, only the specified file types will be inserted.  For
+example:
+
+{% include side-by-side.html demo="document-links-limited" %}
 
 # <a name="caching"></a>Document caching and regeneration
 
@@ -1572,3 +1597,4 @@ interview, see the [`cache documents` feature].
 [`redact()`]: {{ site.baseurl }}/docs/functions.html#redact
 [docx-table-columns.docx]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/docx-table-columns.docx
 [using code to find a template file]: #template file code
+[`attachment code`]: #attachment code

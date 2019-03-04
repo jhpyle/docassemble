@@ -1293,7 +1293,7 @@ send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subjec
 * `html` expects text, or `None`.  Will set the (optional) [HTML]
   content of the e-mail.
 * `subject` expects text, or `None`.  Will set the subject of the e-mail.
-* `template` expects a [template] object, or `None`.  These
+* `template` expects a [`template`] object, or `None`.  These
   templates can be created in an interview file using the `template`
   specifier.  If this [keyword argument] is supplied, both the plain
   text and [HTML] contents of the e-mail will be set by converting the
@@ -4714,7 +4714,7 @@ modules:
 {% endhighlight %}
 
 Then you can call the `mmdc()` function on a text string or a
-[template].
+[`template`] object.
 
 {% include side-by-side.html demo="mermaid" %}
 
@@ -4750,7 +4750,7 @@ send_sms(to=None, body=None, template=None, task=None, attachments=None, config=
   the [`sms_number()`] method will be used to obtain the person's number.
 * `body` expects text, or `None`.  If provided, it will be the content
   of the message.  Markdown will be converted to plain text.
-* `template` expects a [template] object, or `None`.  These
+* `template` expects a [`template`] object, or `None`.  These
   templates can be created in an interview file using the `template`
   specifier.  The "subject" of the template, if provided, will be the first
   line of the message.
@@ -6225,7 +6225,7 @@ $(document).on('daPageLoad', function(){
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [`nav.set_sections()`]: #DANav.set_sections
 [`DANav`]: #DANav.set_sections
-[table]: {{ site.baseurl }}/docs/template.html#table
+[table]: {{ site.baseurl }}/docs/initial.html#table
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [JSON interface]: {{ site.baseurl }}/docs/frontend.html
@@ -6362,7 +6362,7 @@ $(document).on('daPageLoad', function(){
 [`word()`]: #word
 [Font Awesome]: https://fontawesome.com
 [mermaid]: https://github.com/mermaidjs/mermaid.cli
-[template]: {{ site.baseurl }}/docs/template.html#template
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [write your own functions]: #yourown
 [`create_user()`]: #create_user

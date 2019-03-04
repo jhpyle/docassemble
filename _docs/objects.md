@@ -1655,16 +1655,16 @@ A `DAEmailRecipientList` is a [`DAList`] of [`DAEmailRecipient`] objects.
 
 ## <a name="DALazyTemplate"></a>DALazyTemplate
 
-The [`template`] block allows you to store some text to a variable.  See
-[template].  The variable will be defined as an object of the
-`DALazyTemplate` class.
+The [`template`] block allows you to store some text to a variable.
+The variable will be defined as an object of the `DALazyTemplate`
+class.
 
 Objects of this type have two read-only attributes:
 
 * `content`
 * `subject`
 
-When **docassemble** shows a [template], it assembles any [Mako] in
+When **docassemble** shows a [`template`], it assembles any [Mako] in
 the `content` and optional `subject` attributes as the resulting text.
 Note that the text may have [Markdown]<span></span> [markup] in it.
 
@@ -1688,7 +1688,7 @@ interview answers is, and you can re-use the template in a variety of
 contexts.
 
 For more information about using [`DALazyTemplate`]s, see the
-documentation for [templates].  Also, see the documentation for
+documentation on the [`template`].  Also, see the documentation for
 [`send_email()`] and [`send_sms()`].
 
 ## <a name="DATemplate"></a><a name="DATemplate.show"></a>DATemplate
@@ -3960,8 +3960,8 @@ of the original [`DADateTime`] object.  See
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
-[`template`]: {{ site.baseurl }}/docs/template.html
-[`table`]: {{ site.baseurl }}/docs/template.html#table
+[`template`]: {{ site.baseurl }}/docs/initial.html
+[`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [classes]: https://docs.python.org/2/tutorial/classes.html
@@ -3987,8 +3987,6 @@ of the original [`DADateTime`] object.  See
 [source code]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [special variable]: {{ site.baseurl }}/docs/special.html
 [str() function]: https://docs.python.org/2/library/functions.html#str
-[template]: {{ site.baseurl }}/docs/template.html
-[templates]: {{ site.baseurl }}/docs/template.html
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
 [threading module]: https://docs.python.org/2/library/threading.html
 [user login system]: {{ site.baseurl }}/docs/users.html

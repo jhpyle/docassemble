@@ -12,19 +12,16 @@
     - code
     - logic
     - markup
-    - template
     - documents
     - objects
     - groups
     - functions
     - legal
     - special
-    - reserved
-    - accessibility
-    - recipes
 - title: Special features
   docs:
     - language
+    - accessibility
     - roles
     - background
     - ml
@@ -42,6 +39,7 @@
     - packages
     - errors
     - support
+    - recipes
 - title: Administration
   docs:
     - admin

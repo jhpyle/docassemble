@@ -1052,7 +1052,7 @@ forget others.
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
-[`template`]: {{ site.baseurl }}/docs/template.html
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [special screen]: {{ site.baseurl }}/docs/fields.html#event
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action

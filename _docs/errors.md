@@ -173,7 +173,7 @@ out the problem.
 [**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
 [issues page]: {{ site.github.repository_url }}/issues
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
-[reserved variable names]: {{ site.baseurl }}/docs/reserved.html
+[reserved variable names]: {{ site.baseurl }}/docs/special.html#reserved
 [Flask]: http://flask.pocoo.org/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Mako]: http://www.makotemplates.org/

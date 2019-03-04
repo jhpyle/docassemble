@@ -2106,7 +2106,7 @@ why this needs to be done manually as opposed to automatically:
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
-[reserved variable names]: {{ site.baseurl }}/docs/reserved.html
+[reserved variable names]: {{ site.baseurl }}/docs/special.html#reserved
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
 [function]: {{ site.baseurl }}/docs/functions.html
@@ -2227,8 +2227,8 @@ why this needs to be done manually as opposed to automatically:
 [`forget_result_of()`]: {{ site.baseurl }}/docs/functions.html#forget_result_of
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
 [`if`]: {{ site.baseurl }}/docs/modifiers.html#if
-[`template`]: {{ site.baseurl }}/docs/template.html#template
-[`table`]: {{ site.baseurl }}/docs/template.html#table
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
+[`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file

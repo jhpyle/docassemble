@@ -115,9 +115,6 @@ you can write.  These blocks are explained in the following sections:
   **docassemble** processes your interview [YAML] to produce an interview.
 * [Markup] - Explains how to change the formatting of text in
   **docassemble**.
-* [Templates] - Explains `template` blocks, which allow you to assign
-  text to a variable and then include it by reference in a question or
-  document.
 * [Documents] - Explains how to assemble documents in PDF and RTF
   format based on the user's answers to the interview questions.
 * [Objects] - Explains the use of Python objects to simplify the way
@@ -128,8 +125,8 @@ you can write.  These blocks are explained in the following sections:
   simplify and generalize the way questions are asked.
 * [Legal Applications] - Explains some special objects types that are
   useful for interviews created by legal practitioners.
-* [Special Variables] - Describes variables that have special properties
-* [Reserved Names] - Lists the variable names you aren't allowed to use
+* [Special Variables] - Describes variables that have special
+  properties, as well as variable names you aren't allowed to use
   because they would conflict with the functionality of
   **docassemble** and [Python].
 
@@ -631,7 +628,6 @@ For more information about [YAML], see the [YAML specification].
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
-[Templates]: {{ site.baseurl }}/docs/template.html
 [Code]: {{ site.baseurl }}/docs/code.html
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
 [Objects]: {{ site.baseurl }}/docs/objects.html
@@ -640,7 +636,6 @@ For more information about [YAML], see the [YAML specification].
 [Functions]: {{ site.baseurl }}/docs/functions.html
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Roles]: {{ site.baseurl }}/docs/roles.html
-[Reserved Names]: {{ site.baseurl }}/docs/reserved.html
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [username and password system]: {{ site.baseurl }}/docs/users.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

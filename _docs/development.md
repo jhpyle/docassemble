@@ -1433,7 +1433,7 @@ staff member who knows a lot about the subject matter.
 
 [Mako]: http://www.makotemplates.org/
 [`comment`]: {{ site.baseurl }}/docs/modifiers.html#comment
-[`template`]: {{ site.baseurl }}/docs/template.html#template
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript

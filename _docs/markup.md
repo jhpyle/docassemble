@@ -415,7 +415,7 @@ information about this feature, see the section on
 [Processing interim user input].
 
 [document markup]: {{ site.baseurl }}/docs/documents.html#markup
-[`table` block]: {{ site.baseurl }}/docs/template.html#table
+[`table` block]: {{ site.baseurl }}/docs/initial.html#table
 [raw LaTeX]: https://en.wikibooks.org/wiki/LaTeX/Tables
 [raw HTML]: https://www.w3schools.com/html/html_tables.asp
 [PHP Markdown Extra]: https://michelf.ca/projects/php-markdown/extra/#table

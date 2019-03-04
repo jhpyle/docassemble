@@ -1343,7 +1343,7 @@ privileges and user identity of the [cron user].
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#tasks
-[`template`]: {{ site.baseurl }}/docs/template.html
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`allow_cron`]: {{ site.baseurl }}/docs/special.html#allow_cron

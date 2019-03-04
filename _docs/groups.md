@@ -1090,7 +1090,7 @@ For more information about "for loops" in [Mako], see the
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
 [`del`]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[`table`]: {{ site.baseurl }}/docs/template.html#table
+[`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`minimum_number`]: #minimum_number
 [`complete_attribute`]: #complete_attribute

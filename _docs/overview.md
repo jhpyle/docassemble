@@ -69,7 +69,6 @@ its own.
 A popular use of interviews is the assembly of [Documents] (hence the
 name **docassemble**).  You write documents the same way you write
 questions, in plain text with [Markup] to indicate formatting.
-You can re-use text in different contexts using [Templates].
 
 When collecting information from users, it is useful to store the
 information in a structured way using [Objects].  When you want to
@@ -162,7 +161,6 @@ free software available with a highly permissive open-source
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Code]: {{ site.baseurl }}/docs/code.html
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
-[Templates]: {{ site.baseurl }}/docs/template.html
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Markup]: {{ site.baseurl }}/docs/markup.html
 [Objects]: {{ site.baseurl }}/docs/objects.html
@@ -174,7 +172,6 @@ free software available with a highly permissive open-source
 [Special Variables]: {{ site.baseurl }}/docs/special.html
 [Background Tasks]: {{ site.baseurl }}/docs/background.html
 [Machine Learning]: {{ site.baseurl }}/docs/ml.html
-[Reserved Names]: {{ site.baseurl }}/docs/reserved.html
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [Language Support]: {{ site.baseurl }}/docs/language.html
 [User Login]: {{ site.baseurl }}/docs/users.html
@@ -190,3 +187,4 @@ free software available with a highly permissive open-source
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [GitHub]: https://github.com/
+[Reserved Names]: {{ site.baseurl }}/docs/special.html#reserved
