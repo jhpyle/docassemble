@@ -398,6 +398,8 @@ def update_references(filename):
 def initialize_libreoffice():
     if LIBREOFFICE_INITIALIZED:
         return
+    global LIBREOFFICE_INITIALIZED
+    LIBREOFFICE_INITIALIZED = True
     if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
         logmessage("No LibreOffice macro path exists")
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
@@ -412,8 +414,6 @@ def initialize_libreoffice():
         shutil.copyfile(orig_path, LIBREOFFICE_MACRO_PATH)
     except:
         logmessage("Could not copy LibreOffice macro into place")
-    global LIBREOFFICE_INITIALIZED
-    LIBREOFFICE_INITIALIZED = True
 
 def concatenate_files(path_list, pdfa=False, password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)

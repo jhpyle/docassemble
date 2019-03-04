@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.14] - 2019-03-04
+### Fixed
+- LibreOffice initialization encountered circularity.
+
 ## [0.4.13] - 2019-03-03
 ### Changed
 - The `none of the above` specifier can be used with `datatype:
