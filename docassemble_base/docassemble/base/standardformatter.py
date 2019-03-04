@@ -1911,6 +1911,10 @@ def input_for(status, field, wide=False, embedded=False):
             if field.datatype in ['object_checkboxes']:                
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
+            if field.datatype == 'object':
+                daobject = ' daobject'
+            else:
+                daobject = ''
             inner_fieldlist = list()
             id_index = 0
             try:
@@ -1944,7 +1948,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         ischecked = ''
                     the_icon = ''
-                    inner_fieldlist.append('<input class="radio-embedded daobject" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="" checked="checked"' + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
+                    inner_fieldlist.append('<input class="radio-embedded' + daobject + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="" checked="checked"' + disable_others_data + '>&nbsp;<label for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                 output += '<span class="embed-radio-wrapper">'
                 output += " ".join(inner_fieldlist)
                 output += '</span>'
@@ -1965,7 +1969,7 @@ def input_for(status, field, wide=False, embedded=False):
                             default_selected = True
                         else:
                             ischecked = ''
-                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty daobject radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
+                        inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="to-labelauty' + daobject + ' radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + disable_others_data + '/>', helptext, status))
                     else:
                         inner_fieldlist.append(help_wrap('<div>' + the_icon + markdown_to_html(text_type(pair['label']), status=status) + '</div>', helptext, status))
                     id_index += 1

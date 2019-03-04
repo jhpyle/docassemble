@@ -57,6 +57,7 @@ NoneType = type(None)
 debug = True
 import_core = compile("import docassemble.base.core", '<code block>', 'exec')
 import_util = compile('from docassemble.base.util import *', '<code block>', 'exec')
+import_process_action = compile('from docassemble.base.util import process_action', '<code block>', 'exec')
 run_process_action = compile('process_action()', '<code block>', 'exec')
 match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
@@ -4725,7 +4726,10 @@ class Interview:
                 #    logmessage("assemble: there is no action in the current_info")
                 try:
                     if not self.imports_util:
-                        exec(import_util, user_dict)
+                        if self.consolidated_metadata.get('suppress loading util', False):
+                            exec(import_process_action, user_dict)
+                        else:
+                            exec(import_util, user_dict)
                     if not self.calls_process_action:
                         exec(run_process_action, user_dict)
                     for question in self.questions_list:

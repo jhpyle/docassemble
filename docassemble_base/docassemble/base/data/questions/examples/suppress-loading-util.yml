@@ -1,0 +1,24 @@
+metadata:
+  title: Suppress loading util
+  short: Suppress
+  documentation: https://docassemble.org/docs/initial.yml#suppress loading util
+  example start: 1
+  example end: 3
+---
+metadata:
+  suppress loading util: True
+---
+code: |
+  try:
+    Individual
+    individual_defined = True
+  except:
+    individual_defined = False
+---
+mandatory: True
+question: |
+  % if individual_defined:
+  `Individual` is defined.
+  % else:
+  `Individual` is not defined.
+  % endif

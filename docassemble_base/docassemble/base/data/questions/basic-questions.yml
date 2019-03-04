@@ -20,12 +20,6 @@ comment: |
   A "modules" section imports class names and function names from
   Python modules.  The docassemble.base.legal module defines some
   object classes and functions that are useful in legal applications.
-  
-  Using docassemble.base.legal in "modules" also has the effect of
-  importing all of the class names and function names that are in
-  docassemble.base.util.  So you never need to include both
-  docassemble.base.legal and docassemble.base.util together in the
-  same "modules" block.
 ---
 default role: client
 code: |

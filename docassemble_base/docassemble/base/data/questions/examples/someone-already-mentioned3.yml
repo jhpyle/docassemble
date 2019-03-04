@@ -7,60 +7,60 @@ metadata:
 ---
 mandatory: True
 objects:
-  successor_agent: Individual
-  conservator: Individual
-  guardian: Individual
+  agent: Individual
+  trustee: Individual
+  beneficiary: Individual
 ---
 question: |
-  Who is the successor agent?
+  Who is the agent?
 fields:
-  - First Name: successor_agent.name.first
-  - Middle Name: successor_agent.name.middle
+  - First name: agent.name.first
+  - Middle name: agent.name.middle
     required: False
-  - Last Name: successor_agent.name.last
-  - Suffix: successor_agent.name.suffix
+  - Last name: agent.name.last
+  - Suffix: agent.name.suffix
     required: False
     code: name_suffix()
 ---
 question: |
-  Who is the conservator?
+  Who is the trustee?
 fields:
-  - no label: conservator
+  - no label: trustee
     datatype: object_radio
     disable others: True
     none of the above: Someone else
     choices:
-      - successor_agent
-  - First Name: conservator.name.first
-  - Middle Name: conservator.name.middle
+      - agent
+  - First name: trustee.name.first
+  - Middle name: trustee.name.middle
     required: False
-  - Last Name: conservator.name.last
-  - Suffix: conservator.name.suffix
+  - Last name: trustee.name.last
+  - Suffix: trustee.name.suffix
     required: False
     code: name_suffix()
 ---
 question: |
-  Who is the guardian?
+  Who is the beneficiary?
 fields:
-  - no label: guardian
+  - no label: beneficiary
     datatype: object_radio
     disable others: True
     none of the above: Someone else
     choices:
-      - successor_agent
-      - conservator
-  - First Name: guardian.name.first
-  - Middle Name: guardian.name.middle
+      - agent
+      - trustee
+  - First name: beneficiary.name.first
+  - Middle name: beneficiary.name.middle
     required: False
-  - Last Name: guardian.name.last
-  - Suffix: guardian.name.suffix
+  - Last name: beneficiary.name.last
+  - Suffix: beneficiary.name.suffix
     required: False
     code: name_suffix()
 ---
 mandatory: True
 question: |
-  The successor agent is ${ successor_agent }.
+  The agent is ${ agent }.
 
-  The conservator is ${ conservator }.
+  The trustee is ${ trustee }.
 
-  The guardian is ${ guardian }.
+  The beneficiary is ${ beneficiary }.
