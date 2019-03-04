@@ -18,22 +18,14 @@ functions.  If you know how to write [Python] code, you can [write your
 own functions] and include them in your interview using a [`modules`]
 block.
 
-# <a name="howtouse"></a>How to use functions
+These functions are available automatically in **docassemble**
+interviews (unless you set [`suppress loading util`]).  To use them in
+a [Python module], put a line like this at the top of your .py file to
+indicate which functions you want to import:
 
-To use the functions described in this section in your interviews, you
-need to include them from the [`docassemble.base.util`] module by
-writing the following somewhere in your interview:
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
+{% highlight python %}
+from docassemble.base.util import send_email, quote_paragraphs
 {% endhighlight %}
-
-Unless otherwise instructed, you can assume that all of the functions
-discussed in this section are available if and when you include this
-[`modules`] block.
 
 # <a name="functions"></a>Functions for working with variable values
 
@@ -561,13 +553,10 @@ returns data in [JSON] format.
 
 Note the following about this interview.
 
-1. We load [`docassemble.base.util`] so that the
-   [`interview_url_action()`], [`process_action()`], and
-   [`url_action()`] functions are available.
-2. We set [`multi_user`] to `True` in order to disable server-side
+1. We set [`multi_user`] to `True` in order to disable server-side
    encrpytion.  This allows an external application to access the
    interview without logging in as the user.
-3. The `query_fruit` [`event`] code will be run as an [action] when
+2. The `query_fruit` [`event`] code will be run as an [action] when
    someone accesses the link created by [`interview_url_action()`].
 
 The `response()` command can be used to integrate a **docassemble**
@@ -579,10 +568,6 @@ through the URLs, but would not ask any questions.  It would instead
 return an assembled document using `response()`.
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 attachment:
   name: A file
   file: test_file
@@ -1298,9 +1283,6 @@ defaults of which are:
 send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None)
 {% endhighlight %}
 
-This function is integrated with other classes in
-[`docassemble.base.util`] and [`docassemble.base.core`].
-
 * `to` expects a [list] of [`Individual`]s.
 * `sender` expects a single [`Individual`].  If not set, the
   `default_sender` information from the [configuration] is used.
@@ -1429,9 +1411,6 @@ a [`twilio`] configuration in which `fax` is set to `True`.
 `send_fax()` takes two arguments, a destination and a file.
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
 ---
@@ -1737,17 +1716,17 @@ code: |
 ---
 {% endhighlight %}
 
-Some of the [functions] and [methods] of [`docassemble.base.util`]
-will behave differently depending on who the interviewee is and what
-the interviewee's role is.  For example, if `trustee` is an object of
-the class [`Individual`], and you call `trustee.do_question('have')`,
-the result will be "do you have" if if the interviewee is the trustee,
-but otherwise the result will be "does Fred Jones have" (or whatever
-the trustee's name is).
+Some of the [functions] and [methods] will behave differently
+depending on who the interviewee is and what the interviewee's role
+is.  For example, if `trustee` is an object of the class
+[`Individual`], and you call `trustee.do_question('have')`, the result
+will be "do you have" if if the interviewee is the trustee, but
+otherwise the result will be "does Fred Jones have" (or whatever the
+trustee's name is).
 
-In order for the [`docassemble.base.util`] module to know this
-background information, you need to include an [`initial`] code block
-(or a [`default role`] block containing [`code`]) that:
+In order for **docassemble** to know this background information, you
+need to include an [`initial`] code block (or a [`default role`] block
+containing [`code`]) that:
 
 1. Defines `user` as an object of the class [`Individual`];
 2. Defines `role` as a text value (e.g., `'advocate'`); and
@@ -2072,10 +2051,6 @@ set in the [configuration], you need to call `set_language()` within
 [`initial`] code.  For example:
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 initial: True
 code: |
   set_language(user_language)
@@ -2972,10 +2947,6 @@ Here is a question that asks for the user's name with an optional
 suffix:
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 question: |
   What is your name?
 fields:
@@ -3039,22 +3010,19 @@ will be capitalized.
 * `possessify_long('Fred', 'cat')` returns `the cat of Fred`.
 * `the('apple')` returns `the apple`.
 
-Note that unlike other functions in [`docassemble.base.util`], these
-functions are *not* available for use within interviews.  If you do:
+Note that unlike other functions, these functions are *not* available
+for use within interviews.
 
-{% highlight yaml %}
-modules:
-  - docassemble.base.util
-{% endhighlight %}
-
-you will *not* be able to write things like `${ her('dog') }`.
-
-These functions are intended to be used from within [Python modules], where you
-can import them by doing:
+These functions are intended to be used from within [Python modules],
+where you can import them by doing:
 
 {% highlight python %}
 from docassemble.base.util import his, her
 {% endhighlight %}
+
+Note that doing `from docassemble.base.util import *` will not work,
+because these functions are not automatically exported by
+[`docassemble.base.util`].
 
 You can customize the functions for different languages:
 
@@ -3925,7 +3893,7 @@ For example, suppose you defined some classes with a [Python module]
 called [`fish.py`]:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 class Halibut(DAObject):
     pass
@@ -4774,9 +4742,6 @@ are:
 send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default')
 {% endhighlight %}
 
-This function is integrated with other classes in
-[`docassemble.base.util`] and [`docassemble.base.core`].
-
 * `to` expects a [list] of recipients.  The list can consist of
   [`Individual`]s (or any other [`Person`]s), objects of type
   [`phonenumbers.PhoneNumber`], or a simple string containing a phone
@@ -4914,9 +4879,6 @@ is made.
 Here is an example interview that solicits input through [SMS].
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   if interface() == 'sms':
@@ -5048,9 +5010,6 @@ Here is an example:
 {% highlight yaml %}
 metadata:
   title: Side of the bed
----
-modules:
-  - docassemble.base.util
 ---
 code: |
   user_key = 'workers_comp_user:' + user_info().email
@@ -5240,9 +5199,6 @@ You can avoid this problem by using [`include`].  You can create a
 following:
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
 ---
@@ -6047,7 +6003,6 @@ $(document).on('daPageLoad', function(){
 [`currency_symbol()`]: #currency_symbol
 [`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
-[`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
@@ -6418,3 +6373,4 @@ $(document).on('daPageLoad', function(){
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`sms_number()`]: {{ site.baseurl }}/docs/objects.html#Person.sms_number
 [WhatsApp]: https://www.twilio.com/whatsapp
+[`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util

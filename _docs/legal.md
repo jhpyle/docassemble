@@ -33,11 +33,6 @@ include:
 ---
 {% endhighlight %}
 
-Note that if you include `docassemble.base.legal` or
-`basic-questions.yml`, you don't need to include
-`docassemble.base.util`, because all of the functionality of
-`docassemble.base.util` is incorporated by reference in `docassemble.base.legal`.
-
 The best way to understand what these resources offer is to read the
 source code of [`legal.py`] and [`basic-questions.yml`].
 

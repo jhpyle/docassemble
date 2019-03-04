@@ -323,9 +323,6 @@ user if they are a new user or a returning user.  If they are a
 returning user.
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 question: |
   Are you here for the first time, or returning?
 field: user_new_or_returning

@@ -362,7 +362,9 @@ the next section).
 
 * `HangingIndent` - set this to `True` if you want text in lists to
   using hanging indentation.
-* `fontfamily` - default is `mathptmx` (Times Roman).
+* `fontfamily` - default is `Times New Roman`, but if you installed
+  your system before version 0.4.13, the default is `mathptmx`, which
+  is a variant of Times Roman.
 * `lang` and `mainlang` - not defined by default.  If defined,
   [polyglossia] (for [XeTeX]) or [babel] is loaded and the language is
   set to `mainlang` if [polyglossia] is loaded and `lang` if [babel]
@@ -1382,9 +1384,8 @@ you do not want them to operate.
 For example, if your user is Spanish-speaking, but you need to produce
 an English language document, you may find that a word or two in the
 English language document has been translated into Spanish.  (E.g.,
-this can happen if your document template uses [linguistic functions]
-from [`docassemble.base.util`]).  You can remedy this by defining a
-`language` for the `attachment`.
+this can happen if your document template uses [linguistic functions].
+You can remedy this by defining a `language` for the `attachment`.
 
 {% include side-by-side.html demo="document-language" %}
 
@@ -1507,7 +1508,6 @@ interview, see the [`cache documents` feature].
 [`Asset`]: #Asset
 [`Expense`]: #Expense
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile

@@ -11,9 +11,9 @@ internet.
 
 The easiest way to use **docassemble** is through a
 **docassemble-based** third-party service that provides interview
-development tools and hosting services.  Existing providers include
-[Community.lawyer] and [Documate].  (A third provider, [Clerical
-Platform], is currently available in beta mode.)
+development tools.  Existing providers include [Community.lawyer] and
+[Documate].  (A third provider, [Clerical Platform], is currently
+available in beta mode.)
 
 If you want to deploy **docassemble** yourself, the easiest way is to
 install it using [Docker] on whatever machine you wish to use.
@@ -30,8 +30,8 @@ group].  Consultants who are available for projects include:
 
 Since **docassemble** is free software, there are no fees for using
 it, but hosting a server on the internet will cost money (between $10
-and $300 per month depending on what your performance, availability,
-and support needs are).
+and $40 per month, or more, depending on what your performance,
+availability, and support needs are).
 
 [Lemma Legal Consulting]: https://lemmalegal.com
 [clusters]: {{ site.baseurl }}/docs/scalability.html 

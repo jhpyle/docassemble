@@ -492,19 +492,6 @@ developers, however, will be able to use machine learning with the `ml`
 and `mlarea` data types, as described in the
 [previous section](#howtouse).
 
-To access **docassemble**'s machine learning system, make sure you
-include the following at the start of your interview, just as you do
-when using [functions].
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-{% endhighlight %}
-
-This makes the `SimpleTextMachineLearner` available in your interview.
-
 ## <a name="predicting"></a>Predicting
 
 Here is an example of the use of `SimpleTextMachineLearner` to predict
@@ -997,7 +984,6 @@ administrator for this to work.)
 ---
 modules:
   - docassemble.webapp.playground
-  - docassemble.base.util
 ---
 initial: True
 code: |

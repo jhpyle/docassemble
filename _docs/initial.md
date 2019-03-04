@@ -188,6 +188,20 @@ login`] determines whether this link is available.
 
 {% include side-by-side.html demo="show-login" %}
 
+<a name="suppress loading util"></a>By default, all of the functions
+and classes of [`docassemble.base.util`] are imported into the
+namespace of a **docassemble** interview.  If you want to load names
+manually using a [`modules`] block, you can set `suppress loading
+util` to `True`:
+
+{% highlight yaml %}
+metadata:
+  suppress loading util: True
+{% endhighlight %}
+
+If `suppress loading util` is `True`, the only name that will be
+imported into your interview is [`process_action`].
+
 # <a name="objects"></a>Creating `objects`
 
 {% highlight yaml %}
@@ -683,10 +697,6 @@ may or may not want this extra newline.
 # <a name="default role"></a>Setting the `default role`
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 default role: client
 code: |
   if user_logged_in() and user_has_privilege('advocate'):
@@ -718,12 +728,10 @@ In the example above, the interview has two roles: "client" and
 `code` block, which is executed every time the interview logic is
 processed.
 
-In addition, the [`set_info()`] function from
-[`docassemble.base.util`] is called.  This lets the linguistic
-functions in [`docassemble.base.util`] know who the user is, so that
-questions can ask "What is your date of birth?" or "What is John
-Smith's date of birth" depending on whether the current user is John
-Smith or not.
+In addition, the [`set_info()`] function is called.  This lets the
+linguistic functions know who the user is, so that questions can ask
+"What is your date of birth?" or "What is John Smith's date of birth"
+depending on whether the current user is John Smith or not.
 
 # <a name="default language"></a>Setting the `default language`
 
@@ -1366,7 +1374,6 @@ features:
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`my-functions.js`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-functions.js
 [`my-styles.css`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-styles.css
 [`set_info()`]: {{ site.baseurl}}/docs/functions.html#set_info
@@ -1472,3 +1479,6 @@ features:
 [`docx template file`]: {{ site.baseurl}}/docs/documents.html#docx template file
 [`error help`]: #error help
 [`verbose error messages`]: {{ site.baseurl}}/docs/config.html#verbose error messages
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`modules`]: #modules
+[`process_action`]: {{ site.baseurl}}/docs/functions.html#process_action

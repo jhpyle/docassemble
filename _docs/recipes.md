@@ -12,9 +12,6 @@ This section contains miscellaneous recipes for solving problems in
 ## Using `validation code`
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 question: |
   You must agree to the terms of service.
 fields:
@@ -56,9 +53,6 @@ variable when the interview is done.  That way, you can inspect the
 interview answers and test for the presence of this variable.
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
 ---
@@ -87,9 +81,6 @@ buttons:
 You could also use Redis to store the status of an interview.
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
   - r: DARedis
@@ -130,9 +121,6 @@ buttons:
 Suppose you have a final screen in your interview that looks like this:
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   kick_out
@@ -154,9 +142,6 @@ the button sends the user directly to the URL, you can make the button
 this way:
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   kick_out
@@ -170,9 +155,6 @@ subquestion: |
 # <a name="two fields match"></a>Ensure two fields match
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 question: |
   What is your e-mail address?
 fields:

@@ -59,10 +59,6 @@ made yet (except for bidders who haven't bid yet, who will be asked
 for their bids).
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 default role: organizer
 code: |
   multi_user = True
@@ -282,10 +278,6 @@ ways to handle multi-user interviews.
 Consider the following example, which uses [generic objects]:
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 objects:
   - respondents: DADict
 ---
@@ -354,10 +346,10 @@ it is not necessary to set user roles.
 The [`initial`] code block makes sure that the user is logged in, and
 sets the `user` variable to a [`DAObject`].
 
-A [`DAObject`] is the most basic type of **docassemble** object.  Its
-definition is in [`docassemble.base.util`].  The fact that the `user`
-is a [`DAObject`] means that the `user` can have [attributes] and
-those [attributes] can be gathered with [generic object] questions.
+A [`DAObject`] is the most basic type of **docassemble** object.  The
+fact that the `user` is a [`DAObject`] means that the `user` can have
+[attributes] and those [attributes] can be gathered with [generic
+object] questions.
 
 The [`initial`] code block also keeps track of all the users that have
 used the interview (i.e. by either starting the interview from scratch
@@ -466,4 +458,3 @@ interview where two users each sign a document:
 [`user_privileges()`]: {{ site.baseurl }}/docs/functions.html#user_privileges
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
 [function]: {{ site.baseurl }}/docs/functions.html
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py

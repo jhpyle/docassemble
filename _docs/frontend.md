@@ -36,8 +36,7 @@ POST request with parameters where the keys are [base64]-encoded
 variable names and the values are the values you want to assign to the
 variables.  In [Javascript], you can use the [`atob()`] and [`btoa()`]
 functions to convert between [base64] and text.  In [Python], you can use
-the [`encode_name()`] and [`decode_name()`] functions from
-[`docassemble.base.util`].
+the [`encode_name()`] and [`decode_name()`] functions.
 
 For example, if you want to set the variable `favorite_fruit` to
 `'apple'`, you would convert `favorite_fruit` to [base64] using
@@ -431,7 +430,6 @@ Using the [API] avoids issues with [CORS].
 [`datatype`]: {{ site.baseurl }}/docs/fields.html#datatype
 [`atob()`]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/atob
 [`btoa()`]: https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`encode_name()`]: {{ site.baseurl }}/docs/functions.html#encode_name
 [`decode_name()`]: {{ site.baseurl }}/docs/functions.html#decode_name
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript

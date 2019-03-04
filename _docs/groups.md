@@ -119,10 +119,7 @@ much like [Python set]s.
 # <a name="gathering"></a>Lists, dictionaries, and sets in **docassemble**
 
 In **docassemble**, you can track groups of things using objects of
-types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
-[`docassemble.base.core`] module.  They are also available if you use
-[`docassemble.base.util`] or [`docassemble.base.legal`] as
-[`modules`], or if you [`include`] the file [`basic-questions.yml`].
+types [`DAList`], [`DADict`], or [`DASet`].
 
 {% include side-by-side.html demo="object-demo" %}
 
@@ -153,15 +150,7 @@ The following interview populates a list of fruits.
 
 {% include side-by-side.html demo="gather-fruit" %}
 
-First, the module [`docassemble.base.util`] is brought in, because it
-contains the definition of the [`DAList`] object.
-
-{% highlight yaml %}
-modules:
-  - docassemble.base.util
-{% endhighlight %}
-
-Second, the variable `fruit` is defined as a [`DAList`] <span></span>
+The variable `fruit` is defined as a [`DAList`] <span></span>
 [object].
 
 {% highlight yaml %}
@@ -1061,9 +1050,6 @@ For more information about "for loops" in [Mako], see the
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
-[`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
-[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList

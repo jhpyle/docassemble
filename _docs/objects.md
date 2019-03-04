@@ -34,11 +34,8 @@ text, like `user_first_name` is, the variable `user` is an "object"
 that is an "instance" of the "class" known as [`Individual`].
 
 Using objects in **docassemble** requires a little bit of setup using
-[initial blocks].  [`Individual`] is defined in the
-[`docassemble.base.util`]<span></span> [Python module], so it was necessary to
-bring that module into the interview with a [`modules`] block.  It was
-also necessary to use an [`objects`] block to declare that `user` is
-an instance of the class [`Individual`].
+[initial blocks].  The [`objects`] block declares that `user` is an
+instance of the class [`Individual`].
 
 Objects have "attributes."  In the above example, `name` is an
 attribute of the object `user`.  And `name` is itself an object (it is
@@ -142,18 +139,20 @@ already defined.
 
 # <a name="stdclasses"></a>Standard docassemble classes
 
-To use the classes described in this section in your interviews, you
-need to include them from the [`docassemble.base.util`] module by
-writing the following somewhere in your interview:
+The classes in this section are automatically available for use in
+**docassemble** interviews (unless you set [`suppress loading util`]).
 
-{% highlight yaml %}
-modules:
-  - docassemble.base.util
+To use them within a [Python module], include a line like the
+following at the top of your .py file:
+
+{% highlight python %}
+from docassemble.base.util import Individual
 {% endhighlight %}
 
-Unless otherwise instructed, you can assume that all of the classes
-discussed in this section are available in interviews when you include
-this [`modules`] block.
+When you use objects from non-standard packages, you will need to
+include a `modules` block to import the names from the package into
+your interview, so that you can use the objects that are available
+from that package.
 
 ## <a name="DAObject"></a>DAObject
 
@@ -194,7 +193,7 @@ Since `foo` is a [Python] object, you can create other names
 for the same object, but the `instanceName` attribute will not change.
 
 {% highlight python %}
->>> from docassemble.base.core import DAObject
+>>> from docassemble.base.util import DAObject
 >>> foo = DAObject()
 >>> foo.instanceName
 'foo'
@@ -341,11 +340,10 @@ return `the latch of the front gate in the park`.
 
 The `DAObject` is the most basic object, and all other **docassemble**
 objects inherit from it.  These objects will have different methods
-and behaviors.  For example, if `friend` is an [`Individual`] (from
-[`docassemble.base.util`]), calling `${ friend }` in a [Mako] template
-will not return `friend.object_name()`; rather, it will return
-`friend.full_name()`, which may require asking the user for the
-`friend`'s name.
+and behaviors.  For example, if `friend` is an [`Individual`], calling
+`${ friend }` in a [Mako] template will not return
+`friend.object_name()`; rather, it will return `friend.full_name()`,
+which may require asking the user for the `friend`'s name.
 
 <a name="DAObject.initializeAttribute"></a>A [`DAObject`] can have any
 attributes you want to give it.  When those attributes are objects
@@ -655,14 +653,13 @@ Other methods available on a `DAList` are:
 
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
-  `verb_present()` function from [`docassemble.base.util`], except
-  that it uses the singular or plural form depending on whether the
-  list has more than one item or not.
+  `verb_present()` function, except that it uses the singular or
+  plural form depending on whether the list has more than one item or
+  not.
 * <a name="DAList.did_verb"></a><a name="DADict.did_verb"></a><a
   name="DASet.did_verb"></a>`did_verb(verb)` - like the `verb_past()`
-  function from [`docassemble.base.util`], except that it uses the
-  singular or plural form depending on whether the list has more than
-  one item or not.
+  function, except that it uses the singular or plural form depending
+  on whether the list has more than one item or not.
 * <a name="DAList.as_singular_noun"></a><a
   name="DADict.as_singular_noun"></a><a
   name="DASet.as_singular_noun"></a>`as_singular_noun()` - if the
@@ -2035,7 +2032,6 @@ folder called "DADemo".  It assumes the module is a file called
 
 {% highlight yaml %}
 modules:
-  - docassemble.base.util
   - .google_drive
 ---
 mandatory: True
@@ -2950,9 +2946,6 @@ code blocks of the [`basic-questions.yml`] file in your interview, you
 can do:
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - user: Individual
 ---
@@ -3169,9 +3162,6 @@ It has one method:
 Here is an example that demonstrates its use:
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 objects:
   - client: Individual
   - advocate: Individual
@@ -3395,7 +3385,7 @@ would create this file in the `docassemble/cooking` directory in your
 package.  You would set the contents of `objects.py` to the following:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 class Recipe(DAObject):
     def summary(self):
@@ -3430,8 +3420,7 @@ By the way, there is way to write the `summary()` method that is more
 friendly to other interview developers:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
-from docassemble.base.functions import word
+from docassemble.base.util import DAObject, word
 
 class Recipe(DAObject):
     def summary(self):
@@ -3459,7 +3448,6 @@ interview itself, you can do:
 {% highlight yaml %}
 modules:
   - docassemble.cooking
-  - docassemble.base.util
 ---
 objects:
   - dinner: Recipe
@@ -3471,7 +3459,6 @@ Or, you could use [`sets`] in combination with [`initializeAttribute()`]:
 {% highlight yaml %}
 modules:
   - docassemble.cooking
-  - docassemble.base.util
 ---
 objects:
   - dinner: Recipe
@@ -3535,7 +3522,7 @@ whether to use Celsius or Fahrenheit when talking about temperatures,
 you might be tempted to write:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 temperature_type = 'Celsius'
 
@@ -3592,8 +3579,7 @@ problem is to use the [`set_info()`] and [`get_info()`] functions from
 [`docassemble.base.util`]:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
-from docassemble.base.util import get_info
+from docassemble.base.util import DAObject, get_info
 
 class Recipe(DAObject):
     def summary(self):
@@ -3607,13 +3593,11 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-Then from your interview you can include [`docassemble.base.util`] as
-one of the [`modules`] and then run [`set_info()`] in [`initial`]
+Then from your interview you can run [`set_info()`] in [`initial`]
 code:
 
 {% highlight yaml %}
 modules:
-  - docassemble.base.util
   - docassemble.cooking.objects
 ---
 initial: True
@@ -3636,7 +3620,7 @@ If you are an advanced programmer, you can do what
 store global variables.
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 import threading
 
 __all__ = ['set_temperature_type', 'get_temperature_type', 'Recipe']
@@ -3694,7 +3678,7 @@ temperature type from the **docassemble** [configuration], you could
 do the following in your [Python module]:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 from docassemble.webapp.config import daconfig
 temperature_type = daconfig.get('temperature type', 'Celsius')
@@ -3707,7 +3691,7 @@ you are willing to pass the temperature type as an argument to
 `get_oven_temperature`:
 
 {% highlight python %}
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 class Recipe(DAObject):
     def get_oven_temperature(self, type):
@@ -3769,13 +3753,9 @@ This allows you to write an interview like the following:
 
 {% include side-by-side.html demo="attorney" %}
 
-Note that the `lawyer` object works just like an [`Individual`] object.
-The `is_are_you()` method, which is defined in
-[`docassemble.base.util`], works on the `Attorney` object, despite the
-fact that the interview does not explicitly refer to
-[`docassemble.base.util`] anywhere.  (The module
-`docassemble.missouri_family_law.objects` imports
-[`docassemble.base.util`].)
+Note that the `lawyer` object works just like an [`Individual`]
+object.  The `is_are_you()` method works on the `Attorney` object just
+as it works on any [`Individual`].
 
 Note that the `can_practice_in()` method is only available for
 `Attorney` objects.  If you added the following to the above
@@ -4141,3 +4121,4 @@ of the original [`DADateTime`] object.  See
 [note above]: #set_info
 [using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute
 [WhatsApp]: https://www.twilio.com/whatsapp
+[`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util

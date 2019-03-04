@@ -56,9 +56,7 @@ experience errors or unexpected results.
 * <span></span>[`x`]: used as a reference to the underlying object when
   [generic objects] are defined.
 
-If you include a [`modules`] block including
-[`docassemble.base.util`], the following additional names will be
-used:
+The following names are imported automatically, unless you 
 
 * [`Address`]
 * [`Asset`]
@@ -601,7 +599,6 @@ All others are available for you to use and to retrieve with
 [`user_privileges`]: {{ site.baseurl }}/docs/functions.html#user_privileges
 [`year_of`]: {{ site.baseurl }}/docs/functions.html#year_of
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`DARedis`]: {{ site.baseurl }}/docs/functions.html#redis
 [`currency_symbol`]: {{ site.baseurl }}/docs/functions.html#currency_symbol

@@ -1461,9 +1461,6 @@ The following interview, which is in the [`docassemble.demo`] package,
 contains no [`question`] blocks, but it is still usable through an API.
 
 {% highlight yaml %}
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   json_response({'final': True, 'inhabitants': inhabitant_count})

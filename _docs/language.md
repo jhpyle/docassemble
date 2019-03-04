@@ -6,8 +6,8 @@ short_title: Language Support
 
 **docassemble** allows you to write a single interview that asks
 questions differently depending on the user's language and locale.  It
-also allows [Unicode] to be used in user-facing text and
-user input.  With these features, **docassemble** should be fully
+also allows [Unicode] to be used in user-facing text, user input, and
+documents.  With these features, **docassemble** should be fully
 usable in languages other than English.
 
 # Configuration
@@ -25,10 +25,10 @@ prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
 installed on your system.  (See the [`other os locales`] configuration
 directive.)
 
-Within interviews, the functions [`set_language()`] and [`set_locale()`] from
-[`docassemble.base.util`] will change the active language, locale, and
-dialect.  (The dialect is relevant only for the text-to-speech
-feature, which is controlled by the [special variable `speak_text`].)
+Within interviews, the functions [`set_language()`] and
+[`set_locale()`] will change the active language, locale, and dialect.
+(The dialect is relevant only for the text-to-speech feature, which is
+controlled by the [special variable `speak_text`].)
 
 If you write functions that need to know the current language or
 locale, use the [`get_language()`] and [`get_locale()`] function from
@@ -269,3 +269,7 @@ support your language.
 [special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
 [`other os locales`]: {{ site.baseurl }}/docs/config.html#other os locales
 [`words`]: {{ site.baseurl }}/docs/config.html#words
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[selection]: {{ site.baseurl }}/docs/documents.html#metadata pdf
+[additional software packages]: https://packages.debian.org/stretch/texlive-lang-all

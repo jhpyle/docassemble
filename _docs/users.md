@@ -249,16 +249,11 @@ interview processing when you want the [actions] to be processed.  If
 your screening process prevents [`process_action()`] from running, the
 [action] will be ignored.
 
-Note that [`process_action()`] is a function within the
-[`docassemble.base.util`] module, so you will need to include a
-[`modules` block] in order to call it.
-
 If you do not include a call to [`process_action()`] within a [`code`]
-block in your interview, **docassemble** will automatically import the
-[`docassemble.base.util`] module and run [`process_action()`]
-immediately.  (The [`process_action()`] function will run after
-[`imports`] and [`modules`], but before [`initial`] and
-[`mandatory`]<span></span>[`code`] blocks.)
+block in your interview, **docassemble** will automatically run
+[`process_action()`] immediately.  (The [`process_action()`] function
+will run after [`imports`] and [`modules`] blocks, but before
+[`initial`] and [`mandatory`]<span></span>[`code`] blocks.)
 
 [`modules` block]: {{ site.baseurl }}/docs/initial.html#modules
 [`interview_url_action()`]: {{ site.baseurl }}/docs/functions.html#interview_url_action

@@ -1329,7 +1329,6 @@ privileges and user identity of the [cron user].
 [`cron_weekly`]: {{ site.baseurl }}/docs/special.html#cron_weekly
 [`current_datetime()`]: {{ site.baseurl }}/docs/functions.html#current_datetime
 [`date_difference()`]: {{ site.baseurl }}/docs/functions.html#date_difference
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.webapp.cron`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/cron.py
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`exit`]: {{ site.baseurl }}/docs/questions.html#exit

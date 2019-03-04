@@ -1,8 +1,4 @@
 "actions": |-
-  initial: True
-  code: |
-    process_action()
-  ---
   question: |
     Review your information.
   subquestion: |
@@ -10,6 +6,11 @@
     ${ color }.
     [Change this]( ${ url_action('color') } )
   field: info_is_verified
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Favorite Color: color
 "actions-parameters": |-
   initial: True
   code: |
@@ -241,8 +242,12 @@
       background_response('refresh')
     background_response()
 "alarm-clock": |-
-  modules:
-    - docassemble.base.util
+  mandatory: True
+  code: |
+    email_sent = False
+    multi_user = True
+    allow_cron = True
+    counter = 0
 "alignment": |-
   question: Here is your document.
   subquestion: It has aligned text.
@@ -907,9 +912,6 @@
   fields:
     - "": target_variable
 "branch-error": |-
-  modules:
-    - docassemble.base.core
-  ---
   objects:
     - tree: DAObject
     - long_branch: DAObject
@@ -928,9 +930,6 @@
   fields:
     - Length: tree.branch.length
 "branch-no-error": |-
-  modules:
-    - docassemble.base.core
-  ---
   objects:
     - tree: DAObject
     - tree.branch: DAObject
@@ -1190,8 +1189,8 @@
     Your draft choices were
     ${ comma_and_list(drafts) }.
 "checkbox-dict-dict": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - foods: DADict.using(object_type=DAList.using(object_type=Thing), keys=('fr.uit', 've.get$able'), there_is_another=False, complete_attribute='complete')
 "checkbox-export-value": |-
   question: |
     Here is your PDF form
@@ -1567,9 +1566,6 @@
     % endif
   mandatory: True
 "dadict": |-
-  modules:
-    - docassemble.base.core
-  ---
   objects:
     - player: DADict
   ---
@@ -1597,9 +1593,6 @@
     - First Name: x[i].firstname
     - Last Name: x[i].lastname
 "dafile": |-
-  modules:
-    - docassemble.base.core
-  ---
   imports:
     - PIL
   ---
@@ -1706,19 +1699,10 @@
   subquestion: |
     So far you have told me about ${ people }.
   yesno: people.there_is_another
-  ---
-  mandatory: True
-  question: |
-    Here is your list of people.
-  subquestion: |
-    ${ people }
 "dalist2": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - thing: DAList
 "daobject": |-
-  modules:
-    - docassemble.base.core
-  ---
   objects:
     - park: DAObject
     - turnip: DAObject
@@ -2648,8 +2632,27 @@
     You walk into a stinky swamp.
   event: bad_luck
 "dual-dict": |-
-  objects:
-    fruit: DADict
+  mandatory: True
+  code: |
+    veggies = DADict('veggies')
+    veggies.object_type = DAList
+    veggies.initializeObject('potato')
+    veggies.initializeObject('turnip')
+    fruit.object_type = DAObject
+    fruit.initializeObject('a')
+    fruit['a'].seed_info = DAObject("fruit['a']")
+    fruit['a'].seed_info.tally = dict()
+    fruit['a'].seed_info.tally['b'] = DAObject("fruit['a'].seed_info.tally['b']")
+    fruit['a'].seed_info.tally['b'].molecules = DAList("fruit['a'].seed_info.tally['b'].molecules")
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[0]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[1]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[2]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[3]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[4]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[5]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[6]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[7]"))
+    fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[8]"))
 "edit-list": "mandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The people\
   \ are ${ person }.\n\n  Your favorite is ${ favorite }.\n  \n  ${ person.table }\n\
   \  \n  ${ person.add_action() }\n---\ntable: person.table\nrows: person\ncolumns:\n\
@@ -2726,16 +2729,15 @@
   \ processes the\n  # e-mail can go here.\n  background_response_action('save_email',\
   \ email=action_argument('email'))\n---\nevent: save_email\ncode: |\n  email = action_argument('email')\n\
   \  background_response()"
-"email-to-case-simple": "modules:\n  - docassemble.base.util\n---\nquestion: |\n \
-  \ E-mailing to the interview\nsubquestion: |\n  When you press continue, you will\
-  \ be\n  provided with an e-mail address to\n  which you can send an email.\nfield:\
-  \ intro_seen\n---\nneed: intro_seen\nmandatory: true\nquestion: |\n  E-mails sent\
-  \ to case\nsubquestion: |\n  Send an e-mail to\n  ${ interview_email() }\n  and\
-  \ click Refresh.\n  \n  Be patient, though.  It takes a\n  few seconds for e-mails\
-  \ to travel\n  and be processed.\n  \n  % for item in get_emails():\n    % if len(item.emails):\n\
-  \  Subject lines of all e-mails sent\n  to ${ item.address }:\n  \n      % for mail_item\
-  \ in item.emails:\n  * ${ mail_item.subject }\n      % endfor\n    % endif\n  %\
-  \ endfor\nbuttons:\n  - Refresh: refresh"
+"email-to-case-simple": "question: |\n  E-mailing to the interview\nsubquestion: |\n\
+  \  When you press continue, you will be\n  provided with an e-mail address to\n\
+  \  which you can send an email.\nfield: intro_seen\n---\nneed: intro_seen\nmandatory:\
+  \ true\nquestion: |\n  E-mails sent to case\nsubquestion: |\n  Send an e-mail to\n\
+  \  ${ interview_email() }\n  and click Refresh.\n  \n  Be patient, though.  It takes\
+  \ a\n  few seconds for e-mails to travel\n  and be processed.\n  \n  % for item\
+  \ in get_emails():\n    % if len(item.emails):\n  Subject lines of all e-mails sent\n\
+  \  to ${ item.address }:\n  \n      % for mail_item in item.emails:\n  * ${ mail_item.subject\
+  \ }\n      % endfor\n    % endif\n  % endfor\nbuttons:\n  - Refresh: refresh"
 "embed": |-
   question: |
     Fill in the blanks.
@@ -2988,24 +2990,6 @@
     - no label: villain
       datatype: object_checkboxes
       choices: the_choices
-  ---
-  mandatory: True
-  question: |
-    % if villain.number() == 0:
-    There are no villains here.
-    % else:
-    The ${ villain.as_noun() }
-    ${ villain.does_verb("include") }
-    ${ villain }.
-    % endif
-    % if len(the_choices) == 0:
-    In fact, no villains ever existed.
-    % endif
-  subquestion: |
-    Your favorite fruit is
-    ${ favorite_fruit }.
-  buttons:
-    - Restart: restart
 "empty-choices-object-checkboxes-solo": |-
   objects:
     protagonist: Individual
@@ -3147,9 +3131,6 @@
   buttons:
     - Exit: leave
 "exists": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - real_estate_holdings: Value
   ---
@@ -4044,9 +4025,6 @@
       user_reconsidering_communism = False
       force_ask('user_is_communist')
 "force-ask-full": |-
-  modules:
-    - docassemble.base.util
-  ---
   question: |
     Are you a communist?
   yesno: user_is_communist
@@ -4072,9 +4050,6 @@
     % endif
   mandatory: True
 "force-ask-multiple": |-
-  modules:
-    - docassemble.base.util
-  ---
   mandatory: True
   code: |
     favorite_fruit
@@ -4256,8 +4231,8 @@
   \ great\n      additional buildings for the\n      business of the government.\n\
   mandatory: True"
 "forward-chaining": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    pet: Thing
 "forward-chaining-assumptions": |-
   generic object: DAObject
   question: |
@@ -4324,9 +4299,6 @@
     ${ person } is a witness.
     % endfor
 "gather-another": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4369,9 +4341,6 @@
     * ${ item }
     % endfor
 "gather-dict": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DADict
   ---
@@ -4411,9 +4380,6 @@
     any others?
   yesno: fruit.there_is_another
 "gather-dict-number": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DADict
   ---
@@ -4446,20 +4412,17 @@
     the database?
   fields:
     - Fruit: fruit.new_item_name
-"gather-dict-object": "modules:\n  - docassemble.base.util\n---\nobjects:\n  - pet:\
-  \ DADict\n---\nmandatory: True\ncode: |\n  pet.object_type = DAObject\n---\nmandatory:\
-  \ True\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
-  \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item].name } has\
-  \ \n  ${ pet[item].feet } feet.\n  % endfor\n---\nquestion: |\n  Do you have any\
-  \ pets?\nyesno: pet.there_are_any\n---\nquestion: |\n  What kind of pet do you have?\n\
-  fields:\n  - Type of pet: pet.new_item_name\n---\nquestion: |\n  Describe your pet\
-  \ ${ i }.\nfields:\n  - Name: pet[i].name\n  - Number of feet: pet[i].feet\n   \
-  \ datatype: integer\n    min: 0\n---\nquestion: |\n  So far, you have told me about\
-  \ your\n  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another"
+"gather-dict-object": "objects:\n  - pet: DADict\n---\nmandatory: True\ncode: |\n\
+  \  pet.object_type = DAObject\n---\nmandatory: True\nquestion: |\n  You have ${\
+  \ pet.number_as_word() }\n  pets.\nsubquestion: |\n  % for item in pet:\n  Your\
+  \ pet ${ item } named\n  ${ pet[item].name } has \n  ${ pet[item].feet } feet.\n\
+  \  % endfor\n---\nquestion: |\n  Do you have any pets?\nyesno: pet.there_are_any\n\
+  ---\nquestion: |\n  What kind of pet do you have?\nfields:\n  - Type of pet: pet.new_item_name\n\
+  ---\nquestion: |\n  Describe your pet ${ i }.\nfields:\n  - Name: pet[i].name\n\
+  \  - Number of feet: pet[i].feet\n    datatype: integer\n    min: 0\n---\nquestion:\
+  \ |\n  So far, you have told me about your\n  ${ pet }.  Do you have any other\n\
+  \  pets?\nyesno: pet.there_is_another"
 "gather-dict-value": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DADict
   ---
@@ -4491,9 +4454,6 @@
     any others?
   yesno: fruit.there_is_another
 "gather-fruit": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4541,9 +4501,6 @@
   question: |
     The fruits are ${ fruit }.
 "gather-fruit-incomplete": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4554,9 +4511,6 @@
   subquestion: |
     The fruits are ${ fruit }.
 "gather-fruit-number": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4588,9 +4542,6 @@
   subquestion: |
     The fruits are ${ fruit }.
 "gather-list-email-recipients": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - recipient: DAEmailRecipientList
   ---
@@ -4598,9 +4549,6 @@
   code: |
     recipient.there_are_any = True
 "gather-list-friend-bad-order": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - friend: DAList
   ---
@@ -4644,9 +4592,6 @@
     Do you have any other friends?
   yesno: friend.there_is_another
 "gather-list-friend-good-order": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - friend: DAList
   ---
@@ -4696,9 +4641,6 @@
     Do you have any other friends?
   yesno: friend.there_is_another
 "gather-list-objects": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - location: DAList
   ---
@@ -4745,9 +4687,6 @@
   question: |
     The fruits are ${ fruit }.
 "gather-manual-gathered-object": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4794,9 +4733,6 @@
     ${ item.seeds } seeds.
     % endfor
 "gather-manual-gathered-object-simple": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -4838,9 +4774,6 @@
     ${ item.seeds } seeds.
     % endfor
 "gather-set": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DASet
   ---
@@ -4868,9 +4801,6 @@
     any others?
   yesno: fruit.there_is_another
 "gather-set-number": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DASet
   ---
@@ -4899,9 +4829,6 @@
   fields:
     - Fruit: fruit.new_item
 "gather-set-object": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DASet
     - my_favorites: DASet
@@ -4961,9 +4888,6 @@
     fruits you like?
   yesno: fruit.there_is_another
 "gather-simple": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - fruit: DAList
   ---
@@ -5110,9 +5034,6 @@
     Hello, ${ user_first_name } ${ user_last_name }!
   mandatory: True
 "hello-oop": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - user: Individual
   ---
@@ -5252,8 +5173,14 @@
     star: star.svg
     diamond: bluediamond.svg
 "immediate_file": |-
-  modules:
-    - docassemble.base.util
+  attachment:
+    name: A file
+    file: test_file
+    variable name: the_file
+    valid formats:
+      - pdf
+    content: |
+      Hello, ${ url_args.get('name', 'you') }!
 "imports": |-
   imports:
     - re
@@ -5316,9 +5243,14 @@
     - First: people[i].name.first
     - Last: people[i].name.last
 "infinite-loop": |-
-  modules: docassemble.base.util
+  mandatory: True
+  question: |
+    The variable is
+    ${ target_variable }.
 "infinite-loop-2": |-
-  modules: docassemble.base.util
+  mandatory: True
+  question: |
+    I need ${ foo }.
 "initial": |-
   mandatory: True
   code: |
@@ -5387,12 +5319,16 @@
       ability.  If you do not know the answer
       to any question, panic.
 "interview-list": |-
-  modules:
-    - docassemble.base.util
+  question: |
+    My interviews
+  subquestion: |
+    % for interview in interview_list():
+    * ${ interview['title'] }
+      started at
+      ${ interview['starttime'] }.
+    % endfor
+  field: my_interviews
 "interview-url": |-
-  modules:
-    - docassemble.base.util
-  ---
   mandatory: True
   code: |
     multi_user = True
@@ -5426,16 +5362,13 @@
     [Fruit]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-fruit.yml') }
     [Vegetables]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-vegetables.yml') }
     [Flowers]: ${ interview_url(i='docassemble.demo:data/questions/interview-about-flowers.yml') }
-"interview-url-session": "modules:\n  - docassemble.base.util\n---\nmandatory: True\n\
-  code: |\n  multi_user = False\n---\nquestion: |\n  Ready to proceed?\nsubquestion:\
-  \ |\n  Here is an interview URL that launches another interview.\n  \n  `${ interview_url(i='docassemble.base:data/questions/examples/interview-url-session-two.yml')\
+"interview-url-session": "mandatory: True\ncode: |\n  multi_user = False\n---\nquestion:\
+  \ |\n  Ready to proceed?\nsubquestion: |\n  Here is an interview URL that launches\
+  \ another interview.\n  \n  `${ interview_url(i='docassemble.base:data/questions/examples/interview-url-session-two.yml')\
   \ }`\n\n  To proceed with the interview,\n  click \"Yes.\"\nyesno: ready_to_proceed\n\
   ---\nquestion: All done\nsubquestion: |\n  Now we are done with the interview.\n\
   sets: final_screen"
 "interview-url-session-two": |-
-  modules:
-    - docassemble.base.util
-  ---
   mandatory: True
   code: |
     multi_user = False
@@ -5459,9 +5392,6 @@
   fields:
     - Fruit: favorite_vegetable
 "interview_url_action": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - user: Individual
   ---
@@ -5720,8 +5650,9 @@
     You are afraid of
     ${ comma_and_list(fears) }.
 "live_chat": |-
-  modules:
-    - docassemble.base.util
+  mandatory: True
+  code: |
+    set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 "loading-legal": |-
   modules:
     - docassemble.base.legal
@@ -6116,9 +6047,6 @@
       minlength: 5
       maxlength: 15
 "mixed-list": |-
-  modules:
-    - docassemble.base.util
-  ---
   objects:
     - location: DAList
   ---
@@ -6174,12 +6102,9 @@
     Would you like to add another location?
   yesno: location.there_is_another
 "ml-ajax": |-
-  modules:
-    - docassemble.base.util
+  features:
+    javascript: suggestions.js
 "ml-ajax-classify": |-
-  modules:
-    - docassemble.base.util
-  ---
   code: |
     ml = SimpleTextMachineLearner(group_id='sug')
   ---
@@ -6195,6 +6120,21 @@
   reconsider: True
   code: |
     current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + text_type(x) + '</a>', ml.dependent_in_use()))
+  ---
+  question: |
+    How should this be classified?
+  subquestion: |
+    > ${ entry_to_classify.independent }
+
+    ${ current_keys }.
+  fields:
+    - no label: classification
+  ---
+  mandatory: True
+  question: |
+    There is nothing left to classify.
+  buttons:
+    - Check again: refresh
 "ml-classify": |-
   code: |
     ml = SimpleTextMachineLearner(group_id='demo')
@@ -6245,7 +6185,6 @@
 "ml-export-playground": |-
   modules:
     - docassemble.webapp.playground
-    - docassemble.base.util
   ---
   initial: True
   code: |
@@ -6726,9 +6665,6 @@
       - protagonist
       - antagonist
 "object-demo": |-
-  modules:
-    - docassemble.base.core
-  ---
   mandatory: True
   objects:
     - fruit: DAList
@@ -6814,6 +6750,24 @@
       choices:
         - protagonist
         - antagonist
+"object-radio-nota": |-
+  question: Who is the villain?
+  fields:
+    - The villain is: villain
+      datatype: object_radio
+      default: antagonist
+      none of the above: Someone else
+      choices:
+        - protagonist
+        - antagonist
+    - First name: villain.name.first
+      show if:
+        variable: villain
+        is: null
+    - Last name: villain.name.last
+      show if:
+        variable: villain
+        is: null
 "object-selections": |-
   objects:
     protagonist: Individual
@@ -6894,10 +6848,6 @@
     - File: the_file
       datatype: files
 "ocr-background": |-
-  initial: True
-  code: |
-    process_action()
-  ---
   mandatory: True
   code: |
     the_file
@@ -7422,9 +7372,6 @@
     letter_variables['recipient_address'] = recipient.address_block()
   reconsider: True
 "periodic-amount": |-
-  modules:
-    - docassemble.base.util
-  ---
   question: |
     What is your salary?
   fields:
@@ -7433,6 +7380,14 @@
     - Period: period
       code: |
         period_list()
+  ---
+  question: Result of question
+  subquestion: |
+    user_salary is
+    ${ user_salary }
+    and period is
+    ${ period }.
+  mandatory: True
 "periodic-value": |-
   objects:
     - user_salary: PeriodicValue
@@ -8584,14 +8539,13 @@
     </script>
 "sections": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n   \
   \ - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n  navigation:\
-  \ True\n  progress bar: True\n---\nmodules:\n  docassemble.base.util\n---\nmandatory:\
-  \ True\ncode: |\n  menu_items = [ action_menu_item('Roadmap', 'road_map') ]\n---\n\
-  initial: True\ncode: |\n  if returning_user(minutes=0.5):\n    welcome_back\n---\n\
-  mandatory: True\nquestion: |\n  Welcome to the interview\nsubquestion: |\n  If you\
-  \ are not on a\n  smartphone-sized device,\n  you should see a navigation\n  bar\
-  \ to the left.\nfield: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I am going\
-  \ to ask you some\n  questions about yourself.\nfield: intro_to_about_you\nsection:\
-  \ About you\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n\
+  \ True\n  progress bar: True\n---\nmandatory: True\ncode: |\n  menu_items = [ action_menu_item('Roadmap',\
+  \ 'road_map') ]\n---\ninitial: True\ncode: |\n  if returning_user(minutes=0.5):\n\
+  \    welcome_back\n---\nmandatory: True\nquestion: |\n  Welcome to the interview\n\
+  subquestion: |\n  If you are not on a\n  smartphone-sized device,\n  you should\
+  \ see a navigation\n  bar to the left.\nfield: sees_nav_bar\n---\nmandatory: True\n\
+  question: |\n  I am going to ask you some\n  questions about yourself.\nfield: intro_to_about_you\n\
+  section: About you\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n\
   \  - First Name: first_name\n  - Last Name: last_name\nsection: Contact info\n---\n\
   mandatory: True\nquestion: |\n  What is your e-mail address?\nfields:\n  - E-mail:\
   \ email_address\n    datatype: email\n---\nmandatory: True\nquestion: |\n  What\
@@ -8866,8 +8820,8 @@
   code: |
     success_sending_email = send_email(to=[user], template=hello_email, attachments=[the_file])
 "send-sms": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    client: Individual
 "server-capabilities": |-
   mandatory: True
   question: |
@@ -9234,6 +9188,23 @@
     successor_agent: Individual
     conservator: Individual
     guardian: Individual
+"someone-already-mentioned3": |-
+  question: |
+    Who is the conservator?
+  fields:
+    - no label: conservator
+      datatype: object_radio
+      disable others: True
+      none of the above: Someone else
+      choices:
+        - successor_agent
+    - First Name: conservator.name.first
+    - Middle Name: conservator.name.middle
+      required: False
+    - Last Name: conservator.name.last
+    - Suffix: conservator.name.suffix
+      required: False
+      code: name_suffix()
 "space-underscore": |-
   question: |
     Removing spaces
@@ -9272,9 +9243,6 @@
   subquestion: |
     ${ the_icon }
 "static_image": |-
-  code: |
-    image_name = 'court'
-  ---
   mandatory: True
   question: |
     An image created by code
@@ -9345,6 +9313,24 @@
   question: |
     Your favorite fruit is
     ${ favorite_fruit }.
+"suppress-loading-util": |-
+  metadata:
+    suppress loading util: True
+  ---
+  code: |
+    try:
+      Individual
+      individual_defined = True
+    except:
+      individual_defined = False
+  ---
+  mandatory: True
+  question: |
+    % if individual_defined:
+    `Individual` is defined.
+    % else:
+    `Individual` is not defined.
+    % endif
 "table": |-
   objects:
     - fruit: DAList
@@ -9994,8 +9980,8 @@
     You like
     ${ likes_fruit.true_values() }.
 "twocol": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - user: Individual
 "umbrella-interview": |-
   include:
     - interview-fruit.yml
@@ -10385,11 +10371,10 @@
     bootstrap theme: lumen.min.css
 "complete-attribute-method": |-
   modules:
-    - docassemble.base.util
     - .fishlist
 "custody": |-
-  modules:
-    - docassemble.base.util
+  objects:
+    - has_standing: DADict.using(auto_gather=False)
 "discovery": |-
   template: discovery['rent records']
   content: |
@@ -10400,7 +10385,6 @@
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
 "google-drive": |-
   modules:
-    - docassemble.base.util
     - .google_drive
 "google-sheet": |-
   modules:
@@ -10543,12 +10527,12 @@
   \n  Here is a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n\
   \  Here is your document.\nattachment:\n  - name: Your attachment\n    filename:\
   \ the_file\n    docx template file: markdown_template_demo.docx"
-"multi-user": "modules:\n  - docassemble.base.util\n---\nobjects:\n  firstparty: Individual\n\
-  \  secondparty: Individual\n---\ninitial: true\ncode: |\n  multi_user = True\n \
-  \ if user_logged_in():\n    if not defined('firstparty.email'):\n      firstparty.email\
-  \ = user_info().email\n    if user_info().email == firstparty.email:\n      firstparty.endpoint\
-  \      \n    elif user_info().email == secondparty.email:\n      secondparty.endpoint\n\
-  \    else:\n      user_kicked_out\n  else:\n    user_must_log_in\n---\nevent: firstparty.endpoint\n\
+"multi-user": "objects:\n  firstparty: Individual\n  secondparty: Individual\n---\n\
+  initial: true\ncode: |\n  multi_user = True\n  if user_logged_in():\n    if not\
+  \ defined('firstparty.email'):\n      firstparty.email = user_info().email\n   \
+  \ if user_info().email == firstparty.email:\n      firstparty.endpoint      \n \
+  \   elif user_info().email == secondparty.email:\n      secondparty.endpoint\n \
+  \   else:\n      user_kicked_out\n  else:\n    user_must_log_in\n---\nevent: firstparty.endpoint\n\
   code: |\n  firstparty.name.first\n  secondparty.name.first\n  firstparty.thing\n\
   \  firstparty.signature\n  if not defined('secondparty.signature'):\n    waiting_on_second_party\n\
   \  final_screen\n---\nevent: secondparty.endpoint\ncode: |\n  secondparty.consents\n\
@@ -10725,9 +10709,6 @@
     - First: client.name.first
     - Last: client.name.last
 "overlay-pdf": |-
-  modules:
-    - docassemble.base.util
-  ---
   question: |
     What is your favorite fruit?
   fields:
@@ -10824,14 +10805,14 @@
   mandatory: True
   question: |
     You sound ${ mood }.
-"progressive-disclosure": "modules:\n  - docassemble.base.util\n  - .progressivedisclosure\n\
-  ---\nfeatures:\n  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\n\
-  subject: |\n  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n \
-  \ \n  A fruit is the the sweet and\n  fleshy product of a tree or\n  other plant\
-  \ that contains\n  seed and can be eaten as food.\n---\ntemplate: favorite_explanation\n\
-  subject: |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n  If\
-  \ you have a favorite something,\n  that means you like it more than\n  you like\
-  \ other things of a similar\n  nature."
+"progressive-disclosure": "modules:\n  - .progressivedisclosure\n---\nfeatures:\n\
+  \  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\nsubject: |\n\
+  \  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n  \n  A fruit\
+  \ is the the sweet and\n  fleshy product of a tree or\n  other plant that contains\n\
+  \  seed and can be eaten as food.\n---\ntemplate: favorite_explanation\nsubject:\
+  \ |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n  If you have\
+  \ a favorite something,\n  that means you like it more than\n  you like other things\
+  \ of a similar\n  nature."
 "questionless": |-
   mandatory: True
   code: |
@@ -10869,15 +10850,6 @@
   code: |
     sample_data = dict(a=1, b=3.8, c=3.1, d='B')
     predictions = rf.predict(sample_data, probabilities=True)
-  ---
-  mandatory: True
-  question: |
-    The prediction
-  subquestion: |
-    With
-    ${ '{0:.1f}%'.format(predictions[0][1]*100) }
-    certainty, I think it is an
-    ${ predictions[0][0] }.
 "random-forest-interview": |-
   objects:
     - characteristics: DADict.using(gathered=True)
@@ -11249,8 +11221,8 @@
       datatype: integer
       validate: is_multiple_of_four
 "wc_common": |-
-  objects:
-    - user: Individual
+  code: |
+    user_key = 'workers_comp_user:' + user_info().email
 "wc_side_of_bed": |-
   include:
     - wc_common.yml

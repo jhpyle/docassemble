@@ -1008,6 +1008,21 @@ text you want to be displayed.
 
 {% include side-by-side.html demo="fields-mc-nota" %}
 
+If you use [`datatype: object_radio`](#object_radio), you can use
+`none of the above` in the same way.  If the user selects the "none of
+the above option," the variable will not be defined when the user
+presses Continue.
+
+This option can be useful when you are using the [`disable others`]
+feature:
+
+{% include side-by-side.html demo="someone-already-mentioned3" %}
+
+You can also use [`datatype: object_radio`](#object_radio) and `none
+of the above` in combination with [`show if`](#show if):
+
+{% include side-by-side.html demo="object-radio-nota" %}
+
 ## <a name="shuffle"></a>`shuffle`
 
 `shuffle` can be used on multiple-choice fields (defined with
@@ -1433,7 +1448,8 @@ as `case.parties()` or `case.all_known_people()`.
 
 The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
-the [`datatype`] to `object_radio`.
+the [`datatype`] to [`object_radio`].  The [`object_radio`] data type
+allows the use of a [`none of the above`] option.
 
 <a name="object labeler"></a>By default, the objects listed in the
 user interface are labeled by their textual representations.  For

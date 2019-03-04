@@ -1856,7 +1856,7 @@ currency symbol: €
 
 This symbol will be used in the user interface when a [field] has the
 `datatype` of [`currency`].  It will also be used in the
-[`currency_symbol()`] function defined in [`docassemble.base.util`].
+[`currency_symbol()`] function.
 
 ## <a name="fileserver"></a>URL to central file server
 
@@ -2920,14 +2920,9 @@ You can also change these limits on a per-interview basis with the
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
-your code.  To retrieve their values, use the [`get_config()`] function from
-[`docassemble.base.util`]:
+your code.  To retrieve their values, use the [`get_config()`] function:
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 code: |
   trello_api_key = get_config('trello api key')
 {% endhighlight %}
@@ -3010,7 +3005,6 @@ and Facebook API keys.
 [`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [`create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [`docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble.wsgi
-[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`root`]: #root
 [Pandoc]: http://johnmacfarlane.net/pandoc/
