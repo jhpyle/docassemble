@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.15] - 2019-03-04
+### Fixed
+- LuaLaTeX was not properly being detected.
+
 ## [0.4.14] - 2019-03-04
 ### Fixed
 - LibreOffice initialization encountered circularity.

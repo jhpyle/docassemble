@@ -59,6 +59,7 @@ def initialize_pandoc():
         PANDOC_OLD = False
         try:
             msg = subprocess.check_output(['lualatex', '--help'], stderr=subprocess.STDOUT)
+            assert os.path.isfile('/usr/share/texlive/texmf-dist/tex/luatex/luatexbase/luatexbase.sty')
             lualatex_supported = True
         except:
             lualatex_supported = False
