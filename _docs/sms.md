@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: Text messaging interface
-short_title: Text Messaging
+short_title: SMS Interface
 ---
 
 # Introduction
