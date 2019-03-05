@@ -42,7 +42,7 @@ adjust their answers to previous questions.
 
 In **docassemble**, "actions" are used to trigger deviations from the
 main path of the [interview logic].  For example, suppose that under
-the [main path] of the [interview logic], the next piece of
+the main path of the [interview logic], the next piece of
 information that is necessary to gather is `favorite_legume`.  The
 interview will show a [`question`] that offers to define
 `favorite_legume`.  But suppose you want the user to be able to go
@@ -83,28 +83,196 @@ quickly enough.
 
 ## <a name="push"></a>Pushing information into a session
 
-Typically, users launch actions by clicking hyperlinks
+Typically, users launch actions by clicking hyperlinks within the
+**docassemble** application.  However, it is also possible to click
+hyperlinks outside of the application that run actions inside the
+session.
 
+For more information about this feature, see the
+[`interview_url_action()`] function.  This function creates a URL that
+embeds the session ID.
+
+[`interview_url_action()`]: {{ site.baseurl }}/docs/functions.html#interview_url_action
 
 ## <a name="pull"></a>Pulling information out of a session
+
+The [`interview_url_action()`] function also allows the extraction of
+information from an interview.  You can call
+[`interview_url_action()`] with a reference to an [`event`] that runs
+[`json_response()`] to return selected information in a
+machine-readable format.  This allows you to create a customizable
+"API" for your interview.
+
+{% include side-by-side.html demo="response-json" %}
+
+If you go through the interview and obtain the URL, you can try
+loading it in a different browser to verify that another application
+(not having the same browser cookies) can access the information in
+[JSON] format.
+
+[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
+[`event`]: {{ site.baseurl }}/docs/fields.html#event
+
+# <a name="api"></a>Using the API
+
+You can also manipulate interview sessions using the **docassemble** [API].
+
+[API]: {{ site.baseurl }}/docs/api.html
 
 # <a name="email from"></a>E-mail
 
 ## <a name="email from"></a>Sending e-mail from a session
 
+You can use the [`send_email()`] function to send e-mails from an
+interview session to the outside world.  You will first need to
+[configure your server]({{ site.baseurl }}/docs/config.html#mail) to
+send e-mail.
+
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+
 ## <a name="email to"></a>Sending e-mail to a session
+
+If you are using [Docker] to deploy your server, and you have
+[configured your server to receive e-mail]({{ site.baseurl }}/docs/config.html#setup_email), 
+you can use **docassemble**'s e-mail-to-session feature.
+
+This involves generating a special e-mail address using
+[`interview_email()`].  Any e-mails sent to that address and received
+by the server will be processed and made available in the interview
+session for retrieval using [`get_emails()`].
+
+[Docker]: {{ site.baseurl }}/docs/docker.html
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
 
 # <a name="sms"></a>Sending text messages from a session
 
+You can use the [`send_sms()`] function to send text messages from an
+interview session to the outside world.  You will first need to
+[configure your server]({{ site.baseurl }}/docs/config.html#twilio) to
+send text messages.  Despite the function name ("SMS"), this function
+can be used to send messages through [Twilio]'s [WhatsApp API].
+
+[`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[Twilio]: https://twilio.com
+[WhatsApp API]: https://www.twilio.com/whatsapp
+
 # <a name="persist data"></a>Persisting data
 
-## <a name="sql"></a>Saving to SQL
+## <a name="persist sessions"></a>Persistent interview sessions
 
-## <a name="redis"></a>Saving to Redis
+The interview answers in an interview session are stored in encrypted
+form inside of rows in a SQL table.  Documents are stored on the
+server or in a cloud storage system.  If a user who is not logged in
+completes an interview, they will not be able to access their
+interview session again after closing their browser, because the
+encryption key will be lost.  However, if they log in, their interview
+session will be tied to their account, and their password will become
+the decryption key for the session.
+
+The encryption of interview answers makes it impossible for someone
+other than the original user to access the data in the interview
+session, unless the decryption key (the user's password) is known.
+However, if the interview sets [`multi_user`] to `False`, then
+functions like [`interview_url_action()`] can be used to access the data
+in the interview as long as the interview session exists.
+
+By default, interview sessions are deleted after 90 days of
+inactivity.  This feature can be modified or turned off using the
+[`interview delete days`] configuration directive.
+
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[`interview delete days`]: {{ site.baseurl }}/docs/config.html#interview delete days
 
 ## <a name="persist files"></a>Persistent files
 
-# <a name="api"></a>Using the API
+When an interview session is deleted, the files associated with the
+interview session are also deleted.
+
+If you want a file to continue exist after its associated interview
+session has been deleted, you can use the [`.set_attributes()`] method
+of the [`DAFile`] object in order to indicate that the file should not
+be deleted when the interview session is deleted.
+
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
+
+## <a name="sql"></a>Saving to SQL
+
+A session's interview answers are stored in a SQL server, but not in a
+way that is easily accessible across interview sessions.  Interview
+sessions are not persistent; the user can delete a session, and a
+session may be deleted due to inactivity (unless the [`interview
+delete days`] configuration directive is set to disable automatic
+deletion).
+
+If you want to save information in SQL in a way that will persist
+indefinitely and that will not be encrypted, you can use the
+[`write_record()`], [`delete_record()`] and [`read_records()`]
+functions to store data (including Python objects) in SQL records.
+
+[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
+[`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
+[`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
+
+## <a name="redis"></a>Saving to Redis
+
+Instead of saving to the SQL database, you can write persistent data
+to [Redis] using an instance of the [`DARedis`] object.
+
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[Redis]: https://redis.io/
 
 # <a name="third party api"></a>Using third-party APIs
 
+Your interview can also communicate with the outside world using any
+[Python] module that provides the functionality you want.
+
+Here is a simple example that calls the [World Clock API] to obtain
+the current time (which you don't really need an API to do).
+
+The API call is in a [Python module] called [`gettime.py`] in the
+[`docassemble.demo`] package.  The contents of this file are:
+
+{% highlight python %}
+import requests
+
+def get_time():
+    r = requests.get('http://worldclockapi.com/api/json/est/now')
+    if r.status_code != 200:
+        raise Exception("Could not obtain the time")
+    return r.json()['currentDateTime']
+{% endhighlight %}
+
+The [World Clock API] returns output in [JSON] format, such as:
+
+{% highlight javascript %}
+{"$id":"1","currentDateTime":"2019-03-04T22:43-05:00","utcOffset":"-05:00:00","isDayLightSavingsTime":false,"dayOfTheWeek":"Monday","timeZoneName":"Eastern Standard Time","currentFileTime":131962129911877536,"ordinalDate":"2019-63","serviceResponse":null}
+{% endhighlight %}
+
+The `get_time()` function uses the [`requests`] library.  The variable
+`r` represents the response of the [World Clock API]'s server to the
+attempt to your code's attempt to obtain the contents of the given
+URL.  This object has a handy method `.json()` that converts the
+output of the request to a data structure, assuming that the request
+returns [JSON].  The `get_time()` function returns the
+`currentDateTime` part of the [World Clock API]'s response.
+
+Here is an interview that calls the `get_time()` function:
+
+{% include demo-side-by-side.html demo="get-time" %}
+
+For more complex examples, see the [sample interviews in the
+documentation] that read data from a [Google Sheet] and write data to
+a [Google Sheet].
+
+[JSON]: https://en.wikipedia.org/wiki/JSON
+[`requests`]: http://docs.python-requests.org/en/master/
+[`gettime.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/gettime.py
+[`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
+[Python module]: https://docs.python.org/2/tutorial/modules.html
+[World Clock API]: http://worldclockapi.com/
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[sample interviews in the documentation]: {{ site.baseurl }}/docs/functions.html#google sheets example
+[Google Sheets]: https://sheets.google.com
+[Google Sheet]: https://sheets.google.com

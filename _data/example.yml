@@ -5520,6 +5520,15 @@
         }
       });
     </script>
+"json-response": |-
+  mandatory: True
+  code: |
+    multi_user = True
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
 "jsshowif": "question: |\n  Please fill in the following information.\nsubquestion:\
   \ |\n  Try setting \"Favorite fruit\" to \n  \"apple\" or \"mango\" (and unfocus\
   \ the \n  field) to see what happens.\nfields:\n  - Favorite fruit: fruit\n  - Favorite\
@@ -9190,19 +9199,19 @@
     guardian: Individual
 "someone-already-mentioned3": |-
   question: |
-    Who is the conservator?
+    Who is the trustee?
   fields:
-    - no label: conservator
+    - no label: trustee
       datatype: object_radio
       disable others: True
       none of the above: Someone else
       choices:
-        - successor_agent
-    - First Name: conservator.name.first
-    - Middle Name: conservator.name.middle
+        - agent
+    - First name: trustee.name.first
+    - Middle name: trustee.name.middle
       required: False
-    - Last Name: conservator.name.last
-    - Suffix: conservator.name.suffix
+    - Last name: trustee.name.last
+    - Suffix: trustee.name.suffix
       required: False
       code: name_suffix()
 "space-underscore": |-
@@ -10383,6 +10392,17 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"get-time": |-
+  modules:
+    - docassemble.demo.gettime
+  ---
+  mandatory: True
+  question: |
+    The time
+  subquestion: |
+    According to the World Clock API, the
+    current time in the Eastern time zone is
+    ${ get_time() }.
 "google-drive": |-
   modules:
     - .google_drive

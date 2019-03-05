@@ -999,15 +999,10 @@ share the URL with other people, or run it unattended.
 
 {% include side-by-side.html demo="interview_url_action" %}
 
-Note the following about this example:
-
-* [`multi_user`] must be set to `True`.  This disables server-side
-  encryption of answers.  This is necessary because the encryption
-  uses the user's password, and the password should not be embedded in
-  a URL.
-* [`initial`] code also runs [`process_action()`], which indicates when
-  the action (in this case, `check_update_status`) should be done
-  relative to other [`initial`] and [`mandatory`] code.
+Note that in this example, [`multi_user`] is set to `True`.  This
+disables server-side encryption of answers.  This is necessary because
+the encryption uses an decryption key, and a decryption key should not
+be embedded in a URL.
 
 ## <a name="interview_url_action_as_qr"></a>interview_url_action_as_qr()
 
