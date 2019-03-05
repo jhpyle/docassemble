@@ -161,9 +161,13 @@ exit_page = daconfig.get('exitpage', 'https://docassemble.org')
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 #PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
-FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
+if PY2:
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
+    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
+else:
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
+    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python3.5', 'site-packages')
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 #PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 

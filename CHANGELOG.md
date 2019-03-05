@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.16] - 2019-03-04
+### Fixed
+- Playground packages copied to wrong location on Python 3.
+
 ## [0.4.15] - 2019-03-04
 ### Fixed
 - LuaLaTeX was not properly being detected.

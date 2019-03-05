@@ -1,0 +1,38 @@
+metadata:
+  title: JSON response
+  short: JSON
+  documentation: https://docassemble.org/docs/external.html#pull
+  example start: 1
+  example end: 2
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+need:
+  - favorite_fruit
+  - favorite_vegetable
+mandatory: True
+question: |
+  Your preferences
+subquestion: |
+  If you would like the world to
+  know your favorites in a machine
+  readable way, share
+  [this URL](${ interview_url_action('prefs') })
+  with them.
+---
+event: prefs
+code: |
+  json_response({'fruit': favorite_fruit, 'vegetable': favorite_vegetable})
+  

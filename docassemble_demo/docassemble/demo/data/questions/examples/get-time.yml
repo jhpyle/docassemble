@@ -1,0 +1,16 @@
+metadata:
+  title: API
+  documentation: https://docassemble.org/docs/external.html#third party api
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.demo.gettime
+---
+mandatory: True
+question: |
+  The time
+subquestion: |
+  According to the World Clock API, the
+  current time in the Eastern time zone is
+  ${ get_time() }.
