@@ -1,8 +1,11 @@
 ---
 layout: docs
 title: External data
-short_title: External data
+short_title: External Data
 ---
+
+There are a variety of ways that you can move information into and out
+of interview sessions, besides obtaining information from the user.
 
 # <a name="url_args"></a>URL arguments
 
