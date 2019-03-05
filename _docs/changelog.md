@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.16](https://github.com/jhpyle/docassemble/releases/tag/v0.4.16) - 2019-03-04
+
+### Fixed
+- Playground packages copied to wrong location on Python 3.
+
 ## [0.4.15](https://github.com/jhpyle/docassemble/releases/tag/v0.4.15) - 2019-03-04
 
 ### Fixed
