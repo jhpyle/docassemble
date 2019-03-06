@@ -19,7 +19,7 @@ can get your own **docassemble** instance up and running.  You can
 install **docassemble** on a server using [Docker] or (if you are an
 expert) follow the detailed [Installation] instructions.
 
-# <a name="interviews"></a>How a **docassemble** interview is made
+# <a name="intro"></a>Introduction to **docassemble**
 
 Interview developers write interviews in [YAML] format, a plain-text
 format that is human-readable but also machine-readable.
@@ -95,8 +95,6 @@ the "interview developers' [Playground]."
 
 Once you get a **docassemble** server up and running, go through the
 [Hello World] tutorial to learn more about how interviews work.
-
-# <a name="special"></a>Special features
 
 One of **docassemble**'s most powerful features is its ability to
 operate multi-user interviews through the [Roles] feature.  For
@@ -177,7 +175,7 @@ There is also a full-featured sample interview linked from the
 for the question and an explanation of the path **docassemble** took
 to decide to ask that question.
 
-# Table of contents
+# <a name="toc"></a>Sections of the documentation
 
 <ul class="interiortoc">
 {% for section in site.data.docs %}
@@ -239,3 +237,4 @@ to decide to ask that question.
 [file uploads]: {{ site.baseurl }}/docs/fields.html#file
 [touchscreen signatures]: {{ site.baseurl }}/docs/fields.html#signature
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[Deploy]: {{ site.baseurl }}/deploy.html
