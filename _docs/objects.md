@@ -702,7 +702,7 @@ Other methods available on a `DAList` are:
   there is more than one item in the list.
 * <a name="DAList.pronoun"></a><a name="DADict.pronoun"></a><a
   name="DASet.pronoun"></a>`pronoun()` - returns a pronoun like "you,"
-  "her," or "him," "it", or "them," as appropriate, depending on the
+  "her," "him," or "them" "it", or "them," as appropriate, depending on the
   number of items in the list.
 * <a name="DAList.pronoun_objective"></a><a
   name="DADict.pronoun_objective"></a><a
@@ -2363,7 +2363,7 @@ The following attributes are also used, but undefined by default:
   the [`age_in_years()`] method if the [`age`] attribute has not been
   defined.
 * <a name="Individual.gender"></a>`gender` - this should be set to
-  `'male'`, `'female'`, or something else.  It is used by a variety of
+  `'male'`, `'female'`, or `'other'`.  It is used by a variety of
   methods such as [`pronoun()`].
 
 <a name="set_info"></a>A number of useful methods can be applied to
@@ -2541,10 +2541,10 @@ docassemble.base.util.update_language_function('*', 'salutation', my_salutation)
 
 If the individual is `client`, then
 `client.pronoun_possessive('fish')` returns "your fish," "his fish,"
-or "her fish," depending on whether `client` is the user (see the
+"her fish," or "their fish" depending on whether `client` is the user (see the
 [note above]) and depending on the value of `client.gender`.
 `client.pronoun_possessive('fish', capitalize=True)` returns "Your
-fish," "His fish," or "Her fish."
+fish," "His fish," "Her fish," or "Their fish."
 
 If you want to refer to the individual in the third person even if the
 individual is the user, write `client.pronoun_possessive('fish',
@@ -2556,7 +2556,7 @@ pronoun may be different depending on what the noun is.
 
 ### <a name="Individual.pronoun"></a>`.pronoun()`
 
-Returns "you," "him," or "her," depending on whether the individual is
+Returns "you," "him," "her," or "them," depending on whether the individual is
 the user (see the [note above]) and depending on the value of the
 `gender` attribute.  If called with `capitalize=True`, the word will
 be capitalized (for use at the beginning of a sentence).
@@ -2569,7 +2569,7 @@ as `pronoun`.  (Other classes returns "it.")  If called with
 
 ### <a name="Individual.pronoun_subjective"></a>`.pronoun_subjective()`
 
-Returns "you," "he," or "she," depending on whether the individual is
+Returns "you," "he," "she," or "they," depending on whether the individual is
 the user (see the [note above]) and depending on the value of the
 `gender` attribute.
 
