@@ -1452,7 +1452,7 @@ staff member who knows a lot about the subject matter.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [extension package]: {{ site.baseurl }}/docs/packages.html
 [Docker Hub]: https://hub.docker.com/
-[documentation]: {{ site.baseurl }}/docs/overview.html
+[documentation]: {{ site.baseurl }}/docs.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [examples area]: {{ site.baseurl }}/docs/playground.html#examples

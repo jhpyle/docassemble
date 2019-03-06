@@ -11186,6 +11186,14 @@
   question: Map of you and your enemy
   subquestion: |
     ${ map_of(user, enemy) }
+"turnips-worms": |-
+  question: Do you like turnips?
+  yesno: likes_turnips
+  ---
+  question: When did you stop idolizing worms?
+  fields:
+    - Date: worm_idolizing_stop_date
+      datatype: date
 "update-references": |-
   mandatory: True
   question: Here is your document
