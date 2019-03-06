@@ -2124,7 +2124,7 @@ def progress_bar(progress, interview):
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
     while True:
-        newname = random_string(32)
+        newname = random_alphanumeric(32)
         obtain_lock(newname, filename)
         existing_key = UserDict.query.filter_by(key=newname).first()
         if existing_key:
@@ -2724,7 +2724,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     user_dict = fresh_dictionary()
     has_no_endpoint = False
     if 'uid' not in session:
-        session['uid'] = random_string(32)
+        session['uid'] = random_alphanumeric(32)
     if debug_mode:
         has_error = True
         error_message = "Not checking variables because in debug mode."

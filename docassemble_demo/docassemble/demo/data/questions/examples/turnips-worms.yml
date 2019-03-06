@@ -1,0 +1,31 @@
+metadata:
+  title: Sample
+  example start: 1
+  example end: 2
+---
+question: Do you like turnips?
+yesno: likes_turnips
+---
+question: When did you stop idolizing worms?
+fields:
+  - Date: worm_idolizing_stop_date
+    datatype: date
+---
+mandatory: True
+question: |
+  % if likes_turnips:
+  Turnips are gross.
+  % else:
+  I can't believe you don't like turnips.
+  % endif
+subquestion: |
+  % if worm_idolizing_stop_date > today():
+  So, you idolize worms now, but
+  plan to stop on
+  ${ worm_idolizing_stop_date }.
+  
+  Interesting.
+  % else:
+  Wow, you idolize worms.  That is
+  very odd!
+  % endif
