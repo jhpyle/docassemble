@@ -769,8 +769,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if hasattr(status.question, 'fields_saveas'):
             datatypes[safeid(status.question.fields_saveas)] = "boolean"
         field_list = status.get_field_list()
-        saveas_to_use = dict()
-        saveas_by_number = dict()
+        status.saveas_to_use = dict()
+        status.saveas_by_number = dict()
         for field in field_list:
             if 'html' in status.extras and field.number in status.extras['html']:
                 note_fields[field.number] = status.extras['html'][field.number].rstrip()
@@ -784,8 +784,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
                     the_saveas = field.saveas
-                saveas_to_use[field.saveas] = the_saveas
-                saveas_by_number[field.number] = the_saveas
+                status.saveas_to_use[field.saveas] = the_saveas
+                status.saveas_by_number[field.number] = the_saveas
                 if the_saveas not in validation_rules['rules']:
                     validation_rules['rules'][the_saveas] = dict()
                 if the_saveas not in validation_rules['messages']:
@@ -804,7 +804,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 for orig_var in field.disableothers:
                     for the_field in field_list:
                         if the_field is not field and hasattr(the_field, 'saveas') and from_safeid(the_field.saveas) == orig_var:
-                            status.extras['disableothers'][field.number].append(saveas_by_number[the_field.number])
+                            status.extras['disableothers'][field.number].append(status.saveas_by_number[the_field.number])
                             break
             if is_empty_mc(status, field):
                 if hasattr(field, 'datatype'):
@@ -895,8 +895,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 onchange.append(safeid('_field_' + str(field.number)))
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
-                #the_saveas = saveas_to_use[field.saveas]
-                the_saveas = saveas_by_number[field.number]
+                #the_saveas = status.saveas_to_use[field.saveas]
+                the_saveas = status.saveas_by_number[field.number]
                 if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
                     label_saveas = the_saveas
                 else:
@@ -916,27 +916,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     if field.uncheckothers is True:
                         the_query = '.uncheckable:checked, .uncheckothers:checked'
-                        uncheck_list = [saveas_to_use[y.saveas] for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
+                        uncheck_list = [status.saveas_to_use[y.saveas] for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
                     else:
-                        uncheck_list = [saveas_to_use[safeid(y)] for y in field.uncheckothers if safeid(y) in saveas_to_use]
+                        uncheck_list = [status.saveas_to_use[safeid(y)] for y in field.uncheckothers if safeid(y) in status.saveas_to_use]
                         the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [the_saveas]])
-                        the_js = """\
-<script>
-  $( document ).ready(function() {
-    $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).on("change", function(){
-      if ($(this).is(":checked")){
-        $('#""" + escape_for_jquery(the_saveas) + """').prop("checked", false);
-      }
-    });
-    $('#""" + escape_for_jquery(the_saveas) + """').on("change", function(){
-      if ($(this).is(":checked")){
-        $(""" + '"' + ', '.join(['#' + escape_for_jquery(x) for x in uncheck_list]) + '"' + """).prop("checked", false);
-      }
-    });
-  });
-</script>
-"""
-                        status.extra_scripts.append(the_js)
                     for y in uncheck_list + [the_saveas]:
                         validation_rules['rules'][y]['checkone'] = [1, the_query]
                         validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([status.labels[field.number]]))
@@ -2092,11 +2075,15 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     if isinstance(field.uncheckothers, list):
-                        uncheck = ''
+                        uncheck = ' uncheckspecificothers'
+                        uncheck_list = [status.saveas_to_use[safeid(y)] for y in field.uncheckothers if safeid(y) in status.saveas_to_use]
+                        uncheckdata = ' data-unchecklist=' + myb64doublequote(json.dumps(uncheck_list))
                     else:
                         uncheck = ' uncheckothers'
+                        uncheckdata = ''
                 else:
                     uncheck = ' uncheckable'
+                    uncheckdata = ''
                 if defaultvalue in ('False', 'false', 'FALSE', 'no', 'No', 'NO', 'Off', 'off', 'OFF', 'Null', 'null', 'NULL'):
                     defaultvalue = False
                 if (defaultvalue and field.sign > 0) or (defaultvalue is False and field.sign < 0):
@@ -2109,14 +2096,14 @@ def input_for(status, field, wide=False, embedded=False):
                     output += '<fieldset class="field-checkbox"><legend class="sr-only">' + word('Choices:') + '</legend>'
                 if field.sign > 0:
                     if embedded:
-                        output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="True" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
+                        output += '<input class="checkbox-embedded' + uncheck + '"' + uncheckdata + ' type="checkbox" value="True" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
                     else:
-                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
+                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + uncheckdata + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
                 else:
                     if embedded:
-                        output += '<input class="checkbox-embedded' + uncheck + '" type="checkbox" value="False" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
+                        output += '<input class="checkbox-embedded' + uncheck + '"' + uncheckdata + ' type="checkbox" value="False" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/>&nbsp;<label for="' + escape_id(saveas_string) + '">' + label_text + '</label>'
                     else:
-                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
+                        output += '<input aria-label="' + label_text + '" alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + uncheck + '"' + title_text + uncheckdata + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + docheck + disable_others_data + '/> '
                 if embedded:
                     output += '</span>'
                 else:

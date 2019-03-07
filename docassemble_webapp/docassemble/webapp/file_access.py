@@ -179,15 +179,21 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 return dict()
         #logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']) and not has_info:
-            add_info_about_file(result['fullpath'], result)
+            add_info_about_file(result['fullpath'], result['path'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
 
-def add_info_about_file(filename, result):
+def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
         try:
             reader = PyPDF2.PdfFileReader(open(filename, 'rb'))
+            result['pages'] = reader.getNumPages()
+        except:
+            result['pages'] = 1
+    elif os.path.isfile(basename + '.pdf'):
+        try:
+            reader = PyPDF2.PdfFileReader(open(basename + '.pdf', 'rb'))
             result['pages'] = reader.getNumPages()
         except:
             result['pages'] = 1
@@ -240,7 +246,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
         return result
     final_filename = result['path'] + '.' + result['extension']
     if os.path.isfile(final_filename):
-        add_info_about_file(final_filename, result)
+        add_info_about_file(final_filename, result['path'], result)
     # else:
     #     logmessage("Filename " + final_filename + "did not exist.")
     return(result)

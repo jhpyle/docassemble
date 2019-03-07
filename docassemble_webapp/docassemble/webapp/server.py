@@ -8456,6 +8456,17 @@ def index():
             }, 0);
           }
         }
+        $(".uncheckspecificothers").on('change', function(){
+          if ($(this).is(":checked")){
+            var theIds = $.parseJSON(atob($(this).data('unchecklist')));
+            var n = theIds.length;
+            for (var i = 0; i < n; ++i){
+              var elem = document.getElementById(theIds[i]);
+              $(elem).prop("checked", false);
+              $(elem).trigger('change');
+            }
+          }
+        });
         $(".uncheckothers").on('change', function(){
           if ($(this).is(":checked")){
             $(".uncheckable").prop("checked", false);
@@ -9776,11 +9787,9 @@ def serve_uploaded_pagescreen(number, page):
     else:
         try:
             the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
-            # max_pages = 1 + int(file_info['pages'])
-            # formatter = '%0' + str(len(str(max_pages))) + 'd'
-            # filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
             filename = the_file.page_path(page, 'screen')
         except:
+            logmessage("Could not make thumbnail")
             filename = None
         if filename is None:
             the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')

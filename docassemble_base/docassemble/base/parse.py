@@ -10,7 +10,7 @@ from jinja2.environment import Environment
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
 from jinja2.lexer import Token
-from jinja2.utils import internalcode, missing
+from jinja2.utils import internalcode, missing, object_type_repr
 from jinja2.ext import Extension
 import ast
 import ruamel.yaml as yaml

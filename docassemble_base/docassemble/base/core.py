@@ -515,6 +515,9 @@ class DAList(DAObject):
             new_instance_name = self.instanceName
         new_list = self.copy_shallow(new_instance_name)
         new_list.elements = new_elements
+        new_list.gathered = True
+        if len(new_list.elements) == 0:
+            new_list.there_are_any = False
         return new_list
         
     def _trigger_gather(self):
@@ -1379,6 +1382,8 @@ class DADict(DAObject):
         else:
             new_dict.elements = {key: self.elements[key] for key in pargs if key in self.elements}
         new_dict.gathered = True
+        if len(new_dict.elements) == 0:
+            new_dict.there_are_any = False
         return new_dict
     def has_been_gathered(self):
         """Returns whether the dictionary has been gathered"""
@@ -1936,6 +1941,9 @@ class DASet(DAObject):
             new_instance_name = self.instanceName
         new_set = self.copy_shallow(new_instance_name)
         new_set.elements = new_elements
+        new_list.gathered = True
+        if len(new_list.elements) == 0:
+            new_list.there_are_any = False
         return new_set
     def _trigger_gather(self):
         """Triggers the gathering process."""
