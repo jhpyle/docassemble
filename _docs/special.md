@@ -299,6 +299,8 @@ experience errors or unexpected results.
   part of the [scheduled tasks] system.
 * <span></span>[`cron_weekly`]: a special variable that is used as
   part of the [scheduled tasks] system.
+* <span></span>[`caller`]: within [Mako] the variable `caller` has a
+  special meaning.
 * <span></span>[`loop`]: within a [Mako] "for" loop, this variable has
   special meaning.
 * <span></span>[`i`], [`j`], [`k`], [`l`], [`m`], [`n`]: used as iterators when

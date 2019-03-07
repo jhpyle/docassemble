@@ -28,11 +28,12 @@ maintaining these components.
 
 As much as [Docker] simplifies the process of installing
 **docassemble**, it takes some time to understand the concepts behind
-"running," "stopping," and "starting" containers.  If you are not
-familiar with [Docker] or with hosting web applications, and you want
-to get up and running fast, you may want to use one of the [third
-party providers] that provide **docassemble**-based interview
-development platforms.
+"running," "stopping," and "starting" containers.
+
+If you are not familiar with [Docker] or with hosting web
+applications, and you want to get up and running fast, you may want to
+use one of the [third party providers] that provide
+**docassemble**-based interview development platforms.
 
 [Docker] can also be used to deploy even the most complex
 **docassemble** installations.  For example, Amazon's [EC2 Container
@@ -41,6 +42,38 @@ server instances, created from [Docker] images, that communicate with
 a central server.  For information about how to install
 **docassemble** in a multi-server arrangement on [EC2 Container
 Service] ("[ECS]"), see the [scalability] section.
+
+[Docker] is a complex and powerful tool, and the **docassemble**
+documentation is not a substitute for [Docker] documentation.  If you
+are new to [Docker], you should learn about [Docker] by reading
+tutorials or watching videos.  Here is a brief cheat sheet based on
+loose real-world analogies:
+
+* Doing [`docker run`] is analogous to getting a Windows
+  installation DVD, installing it on a computer with an empty hard
+  drive, and then booting the computer for the first time.
+* Doing [`docker pull`] is analogous to going to a store and obtaining
+  a Windows installation DVD.
+* Doing [`docker stop`] is analogous to turning off a computer (and
+  forcibly unplugging it after a certain number of seconds after you
+  initiate the shutdown from the Windows "start" menu).
+* Doing [`docker start`] is analogous to turning on a computer.
+* Doing [`docker rm`] is analogous to tossing a computer into a
+  trash incinerator.
+* Doing [`docker rmi`] is analogous to tossing a Windows installation
+  DVD into a trash incinerator.
+* Doing [`docker exec`] is analogous to sitting down at your computer
+  and opening up PowerShell.
+* Doing [`docker ps`] is analogous to walking around your house and
+  making a list of your computers.
+* Doing [`docker volume`] is analogous to doing things with USB drives.
+* Doing [`docker build`] is analogous to creating a Windows
+  installation DVD based on the Windows source code.
+
+In these analogies, a [Docker] "image" is analogous to a Windows
+installation DVD, a [Docker] "container" is analogous to a particular
+computer that runs Windows, and a [Docker] "volume" is (very loosely)
+analogous to a USB drive.
 
 # <a name="where"></a>Choosing where to run Docker
 
@@ -147,10 +180,11 @@ of your machine.
 
 It will take several minutes for **docassemble** to download, and once
 the [`docker run`] command finishes, **docassemble** will start to
-run.  After a few minutes, you can point your web browser to the
-hostname of the machine that is running [Docker].  If you are running
-[Docker] on your own computer, this address is probably
-http://localhost.
+run.  After a few minutes (the number of minutes depends on the speed
+of the network connection; it may take up to 20 minutes), you can point
+your web browser to the hostname of the machine that is running
+[Docker].  If you are running [Docker] on your own computer, this
+address is probably http://localhost.
 
 If you are running [Docker] on [AWS], the address will be something
 like `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check
@@ -181,7 +215,7 @@ minor version of **docassemble** increases.
 
 ## <a name="shutdown"></a>Shutting down
 
-Shut down the container by running:
+You can shut down the container by running:
 
 {% highlight bash %}
 docker stop -t 60 <containerid>
@@ -209,6 +243,17 @@ initialization.
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
 
+## <a name="starting after shutdown"></a>Restarting the container after a shutdown
+
+If you have shut down a [Docker] container using [`docker stop`], you
+can start the container again 
+
+{% highlight bash %}
+docker start <containerid>
+{% endhighlight %}
+
+
+
 # <a name="overview"></a>Overview of the Docker container
 
 There are a variety of ways to deploy **docassemble** with [Docker],
@@ -217,14 +262,15 @@ which is to use a single [Docker] container hosted on a cloud
 provider.
 
 When you run [`docker run`] on the "image" `jhpyle/docassemble`,
-[Docker] will go onto the internet and download the
-`jhpyle/docassemble` image, and then "start" a new container using
-that image.  However, first it will check to see if a copy of the
-`jhpyle/docassemble` image has already been downloaded, and if there
-is a copy already downloaded, it will start the container using that
-copy.  This is important to keep in mind; when you run `docker run`,
-you might be thinking you will always get the most recent version, but
-that is not the case.  (See [upgrading], below, for more information.)
+[Docker] will go onto the internet, download ("pull") the
+`jhpyle/docassemble` image, create a new container using that image,
+and then "start" that container.  However, first it will check to see
+if a copy of the `jhpyle/docassemble` image has already been
+downloaded, and if there is a copy already downloaded, it will create
+the container using that copy.  This is important to keep in mind;
+when you run `docker run`, you might be thinking you will always get
+the most recent version, but that is not the case.  (See [upgrading],
+below, for more information.)
 
 When the **docassemble** container starts, it runs one command:
 
@@ -1714,6 +1760,7 @@ line), as the containers depend on the images.
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [`docker rmi`]: https://docs.docker.com/engine/reference/commandline/rmi/
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
+[`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
@@ -1767,3 +1814,4 @@ line), as the containers depend on the images.
 [Flask]: http://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
 [migration from Python 2.7 to Python 3.5]: {{ site.baseurl }}/docs/twotothree.html
+[`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
