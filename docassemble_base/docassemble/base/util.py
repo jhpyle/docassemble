@@ -1403,6 +1403,8 @@ class Individual(Person):
             output = your(target, **kwargs)
         elif self.gender == 'female':
             output = her(target, **kwargs)
+        elif self.gender == 'other':
+            output = their(target, **kwargs)
         else:
             output = his(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1415,6 +1417,8 @@ class Individual(Person):
             output = word('you', **kwargs)
         if self.gender == 'female':
             output = word('her', **kwargs)
+        elif self.gender == 'other':
+            output = word('them', **kwargs)
         else:
             output = word('him', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1430,6 +1434,8 @@ class Individual(Person):
             output = word('you', **kwargs)
         elif self.gender == 'female':
             output = word('she', **kwargs)
+        elif self.gender == 'other':
+            output = word('they', **kwargs)
         else:
             output = word('he', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
