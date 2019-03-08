@@ -1378,6 +1378,20 @@ debian packages:
 
 These packages will be installed when the [Docker] container starts.
 
+## <a name="python packages"></a>Python packages to install
+
+On [Docker], you can ensure that particular [Python] packages are
+installed by providing a list of packages to the `python packages`
+directive:
+
+{% highlight yaml %}
+python packages:
+  - stripe
+  - slackclient
+{% endhighlight %}
+
+These packages will be installed when the [Docker] container starts.
+
 ## <a name="default admin account"></a>Default administrator account credentials
 
 When a **docassemble** SQL database is first initialized, an

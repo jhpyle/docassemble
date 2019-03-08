@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.17](https://github.com/jhpyle/docassemble/releases/tag/v0.4.17) - 2019-03-08
+
+### Added
+- The `python packages` Configuration directive and the
+  `PYTHONPACKAGES` Docker environment variable.
+
+### Fixed
+- Error when updating references in .docx file.
+- `object_type_repr` error raised from Jinja2.
+- `filter()` returning zero elements from non-empty list caused
+  re-gathering.
+- Dueling `uncheck others` fields had wrong CSS after unchecking.
+- Thumbnails for .docx files.
+- Blanking of dates in Firefox on blur.
+
 ## [0.4.16](https://github.com/jhpyle/docassemble/releases/tag/v0.4.16) - 2019-03-04
 
 ### Fixed

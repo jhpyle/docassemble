@@ -650,8 +650,13 @@ container for the new configuration to take effect.
   depends on certain [Debian] packages being installed, you can
   provide a comma-separated list of [Debian] packages in the
   `PACKAGES` environment variable.  The packages will be installed
-  when the image is run.  See the [`debian packages`] configuration
-  directive.
+  when the container is started.  See the [`debian packages`]
+  configuration directive.
+* <a name="PYTHONPACKAGES"></a>`PYTHONPACKAGES`: If you want to
+  install certain Python packages during the container start process,
+  you can provide a comma-separated list of packages in the
+  `PYTHONPACKAGES` environment variable.  See the [`python packages`]
+  configuration directive.
 * <a name="DASECRETKEY"></a>`DASECRETKEY`: The secret key for protecting
   against cross-site forgery.  See the [`secretkey`] configuration
   directive.  If `DASECRETKEY` is not set, a random secret key will be
@@ -1604,6 +1609,27 @@ Then, run whatever `docker run` command you use to launch
 Technically, the [`docker pull`] command can be omitted, because
 [`docker run`] will pull the latest image if it cannot be found on the
 system.
+
+# <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
+
+When you do `docker run` or `docker pull` with the
+`jhpyle/docassemble` image, the only image available is the "latest"
+image.  To install an earlier version, you can make your own image
+using [git].
+
+{% highlight bash %}
+git clone jhpyle/docassemble
+cd docassemble
+git checkout v0.3.21
+docker build -t yourname/mydocassemble .
+cd ..
+docker run -d -p 80:80 -p 443:443 yourname/mydocassemble
+{% endhighlight %}
+
+The [`docker run`] command that you use may have other options; this
+is simply an illustration of creating an image called
+`yourname/mydocassemble` and then creating a container from it using
+[`docker run`].
 
 # <a name="cleanup"></a>Cleaning up after Docker
 
