@@ -1,8 +1,6 @@
 # Change Log
 
-## [0.4.17] - 2019-03-07
-### Changed
-- Docker image made smaller.
+## [0.4.17] - 2019-03-08
 ### Fixed
 - Error when updating references in .docx file.
 - `object_type_repr` error raised from Jinja2.

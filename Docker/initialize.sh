@@ -23,112 +23,6 @@ echo "1" >&2
 export DEBIAN_FRONTEND=noninteractive
 apt-get clean &> /dev/null
 apt-get -q -y update &> /dev/null
-apt-get -y install imagemagick \
-pdftk \
-pacpl \
-texlive \
-texlive-luatex \
-texlive-latex-recommended \
-texlive-latex-extra \
-texlive-font-utils \
-texlive-lang-cyrillic \
-texlive-lang-french \
-texlive-lang-italian \
-texlive-lang-portuguese \
-texlive-lang-german \
-texlive-lang-european \
-texlive-lang-spanish \
-texlive-extra-utils \
-poppler-utils \
-libaudio-flac-header-perl \
-libaudio-musepack-perl \
-libmp3-tag-perl \
-libogg-vorbis-header-pureperl-perl \
-libvorbis-dev \
-libcddb-perl \
-libcddb-get-perl \
-libmp3-tag-perl \
-libaudio-scan-perl \
-libaudio-flac-header-perl \
-libav-tools \
-tesseract-ocr \
-tesseract-ocr-dev \
-tesseract-ocr-afr \
-tesseract-ocr-ara \
-tesseract-ocr-aze \
-tesseract-ocr-bel \
-tesseract-ocr-ben \
-tesseract-ocr-bul \
-tesseract-ocr-cat \
-tesseract-ocr-ces \
-tesseract-ocr-chi-sim \
-tesseract-ocr-chi-tra \
-tesseract-ocr-chr \
-tesseract-ocr-dan \
-tesseract-ocr-deu \
-tesseract-ocr-deu-frak \
-tesseract-ocr-ell \
-tesseract-ocr-eng \
-tesseract-ocr-enm \
-tesseract-ocr-epo \
-tesseract-ocr-equ \
-tesseract-ocr-est \
-tesseract-ocr-eus \
-tesseract-ocr-fin \
-tesseract-ocr-fra \
-tesseract-ocr-frk \
-tesseract-ocr-frm \
-tesseract-ocr-glg \
-tesseract-ocr-grc \
-tesseract-ocr-heb \
-tesseract-ocr-hin \
-tesseract-ocr-hrv \
-tesseract-ocr-hun \
-tesseract-ocr-ind \
-tesseract-ocr-isl \
-tesseract-ocr-ita \
-tesseract-ocr-ita-old \
-tesseract-ocr-jpn \
-tesseract-ocr-kan \
-tesseract-ocr-kor \
-tesseract-ocr-lav \
-tesseract-ocr-lit \
-tesseract-ocr-mal \
-tesseract-ocr-mkd \
-tesseract-ocr-mlt \
-tesseract-ocr-msa \
-tesseract-ocr-nld \
-tesseract-ocr-nor \
-tesseract-ocr-osd \
-tesseract-ocr-pol \
-tesseract-ocr-por \
-tesseract-ocr-ron \
-tesseract-ocr-rus \
-tesseract-ocr-slk \
-tesseract-ocr-slk-frak \
-tesseract-ocr-slv \
-tesseract-ocr-spa \
-tesseract-ocr-spa-old \
-tesseract-ocr-sqi \
-tesseract-ocr-srp \
-tesseract-ocr-swa \
-tesseract-ocr-swe \
-tesseract-ocr-tam \
-tesseract-ocr-tel \
-tesseract-ocr-tgl \
-tesseract-ocr-tha \
-tesseract-ocr-tur \
-tesseract-ocr-ukr \
-tesseract-ocr-vie \
-ttf-mscorefonts-installer \
-fonts-ebgaramond-extra \
-ghostscript \
-ttf-liberation \
-fonts-liberation \
-cm-super \
-qpdf
-
-apt-get -q -y install -t stretch-backports libreoffice &> /dev/null
 
 pandoc --help &> /dev/null || apt-get -q -y install pandoc
 
@@ -136,7 +30,7 @@ PANDOC_VERSION=`pandoc --version | head -n1`
 
 if [ "${PANDOC_VERSION}" != "pandoc 2.7" ]; then
    cd /tmp \
-   && wget https://github.com/jgm/pandoc/releases/download/2.7/pandoc-2.7-1-amd64.deb \
+   && wget -q https://github.com/jgm/pandoc/releases/download/2.7/pandoc-2.7-1-amd64.deb \
    && dpkg -i pandoc-2.7-1-amd64.deb \
    && rm pandoc-2.7-1-amd64.deb
 fi
@@ -731,7 +625,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	if [ "${DAPYTHONVERSION}" == "2" ]; then
 	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
 	    if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
-		cd /tmp && wget http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
+		cd /tmp && wget -q http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
 	    fi
 	else
 	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
