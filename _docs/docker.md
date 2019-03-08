@@ -180,11 +180,17 @@ of your machine.
 
 It will take several minutes for **docassemble** to download, and once
 the [`docker run`] command finishes, **docassemble** will start to
-run.  After a few minutes (the number of minutes depends on the speed
-of the network connection; it may take up to 20 minutes), you can point
-your web browser to the hostname of the machine that is running
-[Docker].  If you are running [Docker] on your own computer, this
-address is probably http://localhost.
+run.  After a few minutes, you can point your web browser to the
+hostname of the machine that is running [Docker].  If you are running
+[Docker] on your own computer, this address is probably
+http://localhost.
+
+The number of minutes **docassemble** takes to start up depends on the
+speed of the network connection.  A number of things happen during the
+boot process, but the main bottleneck is the updating of software
+packages.  On some systems it may take up to 20 minutes for
+**docassemble** to boot.  If you want to investigate what is happening
+on the server, see the [troubleshooting] shooting.
 
 If you are running [Docker] on [AWS], the address will be something
 like `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check
@@ -1840,4 +1846,5 @@ line), as the containers depend on the images.
 [Flask]: http://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
 [migration from Python 2.7 to Python 3.5]: {{ site.baseurl }}/docs/twotothree.html
+[troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
