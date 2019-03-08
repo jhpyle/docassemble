@@ -7325,7 +7325,7 @@ def index():
       }
       function daInjectTrim(handler){
         return function (element, event) {
-          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
+          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime")) {
             element.value = $.trim(element.value);
           }
           return handler.call(this, element, event);

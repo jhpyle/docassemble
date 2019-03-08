@@ -10,7 +10,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
 bash -c \
 "until apt-get -q -y install \
 apt-utils \
-pandoc \
 tzdata \
 python \
 python-dev \
@@ -71,13 +70,9 @@ exim4-daemon-heavy \
 python3-venv \
 python3-dev; \
 do sleep 5; \
-done; \
-apt-get -q -y install -t stretch-backports libreoffice"
+done;"
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 cd /tmp \
-&& wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb \
-&& dpkg -i pandoc-2.5-1-amd64.deb \
-&& rm pandoc-2.5-1-amd64.deb \
 && mkdir -p /etc/ssl/docassemble \
    /usr/share/docassemble/local \
    /usr/share/docassemble/local3.5 \
