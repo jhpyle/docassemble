@@ -48,6 +48,22 @@ if __name__ == "__main__":
             for package in map(lambda x: x.strip(), separator.split(packages_variable)):
                 print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
                 indexno += 1
+    if 'python packages' in daconfig and type(daconfig['python packages']) is list:
+        print('declare -a PYTHONPACKAGES')
+        print('export PYTHONPACKAGES')
+        indexno = 0
+        for package in daconfig['python packages']:
+            print('PYTHONPACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+            indexno += 1
+    else:
+        packages_variable = os.getenv('PYTHONPACKAGES', None)
+        if packages_variable is not None and packages_variable != 'null':
+            print('declare -a PYTHONPACKAGES')
+            print('export PYTHONPACKAGES')
+            indexno = 0
+            for package in map(lambda x: x.strip(), separator.split(packages_variable)):
+                print('PYTHONPACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+                indexno += 1
     if 'db' in daconfig:
         if 'prefix' in daconfig['db'] and daconfig['db']['prefix'] is not None:
             if daconfig['db']['prefix'].startswith('postgresql'):

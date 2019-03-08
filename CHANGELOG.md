@@ -1,6 +1,9 @@
 # Change Log
 
 ## [0.4.17] - 2019-03-08
+### Added
+- The `python packages` Configuration directive and the
+  `PYTHONPACKAGES` Docker environment variable.
 ### Fixed
 - Error when updating references in .docx file.
 - `object_type_repr` error raised from Jinja2.

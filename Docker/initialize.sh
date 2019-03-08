@@ -442,6 +442,14 @@ if [ -n "$PACKAGES" ]; then
     done
 fi
 
+echo "26.5" >&2
+
+if [ -n "$PYTHONPACKAGES" ]; then
+    for PACKAGE in "${PYTHONPACKAGES[@]}"; do
+        su -c "source $DA_ACTIVATE && pip install $PACKAGE" www-data
+    done
+fi
+
 echo "27" >&2
 
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
