@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.17] - 2019-03-07
+### Fixed
+- Error when updating references in .docx file.
+- `object_type_repr` error raised from Jinja2.
+- `filter()` returning zero elements from non-empty list caused
+  re-gathering.
+- Dueling `uncheck others` fields had wrong CSS after unchecking.
+- Thumbnails for .docx files.
+
 ## [0.4.16] - 2019-03-04
 ### Fixed
 - Playground packages copied to wrong location on Python 3.
