@@ -1848,3 +1848,4 @@ line), as the containers depend on the images.
 [migration from Python 2.7 to Python 3.5]: {{ site.baseurl }}/docs/twotothree.html
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
+[`python packages`]: {{ site.baseurl }}/docs/config.html#python packages
