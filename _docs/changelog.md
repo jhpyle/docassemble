@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.18](https://github.com/jhpyle/docassemble/releases/tag/v0.4.18) - 2019-03-09
+
+### Added
+- Fullscreen option for code editing.
+
+### Fixed
+- Python 3 errors during GitHub integration process.
+
 ## [0.4.17](https://github.com/jhpyle/docassemble/releases/tag/v0.4.17) - 2019-03-08
 
 ### Added

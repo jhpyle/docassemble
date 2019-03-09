@@ -19,6 +19,9 @@ with which you can edit [YAML]&nbsp;[interview] files.
 
 ![playground]({{ site.baseurl }}/img/playground-main.png){: .maybe-full-width }
 
+When using the editor, you can press the F11 key to enter full-screen
+mode.  Press the Esc key to exit full-screen mode.
+
 To create a new [YAML] file, click the <i class="glyphicon
 glyphicon-plus-sign" aria-hidden="true"></i> icon.
 
