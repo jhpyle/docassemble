@@ -251,6 +251,7 @@
 "Modules": Null
 "Monitor": Null
 "month": Null
+"Move down": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "My Interviews": Null
@@ -376,6 +377,8 @@
 "Reconfigure": Null
 "Registration is invite only": Null
 "Remove": Null
+"Reorder by moving down": Null
+"Reorder by moving up": Null
 "Restarting": Null
 "Restart": Null
 "Resume": Null
