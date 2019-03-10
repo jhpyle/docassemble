@@ -1378,6 +1378,35 @@ debian packages:
 
 These packages will be installed when the [Docker] container starts.
 
+## <a name="allow non-idempotent questions"></a> Non-idempotent question check
+
+You can set `allow non-idempotent questions: False` in order to
+enforce strict idempotency of [`question`]s with generic objects,
+iterators, or multiple choice selections.  If an interview has
+non-idempotent logic, there is a risk that variables will be set
+improperly.
+
+The `allow non-idempotent questions` directive currently defaults to
+`True`, but in the future, it will default to `False`, which may break
+some interviews.
+
+To make sure you are ready for this change, set the following on your
+development server:
+
+{% highlight yaml %}
+allow non-idempotent questions: False
+{% endhighlight %}
+
+Then test your interviews to see if you get this error message:
+
+> Error: interview logic was not idempotent, but must be if a generic
+> object, index variable, or multiple choice question is used."
+
+If you get this error, take a close look at the logic of your
+interview.  You probably have some logic that changes a variable in
+such a way that if the user refreshed the screen, they would not see
+the same question.
+
 ## <a name="python packages"></a>Python packages to install
 
 On [Docker], you can ensure that particular [Python] packages are
@@ -3213,3 +3242,4 @@ and Facebook API keys.
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [WhatsApp]: https://www.twilio.com/whatsapp
+[`allow non-idempotent questions`]: {{ site.baseurl }}/docs/initial.html#allow non-idempotent questions

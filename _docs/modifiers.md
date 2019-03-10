@@ -671,6 +671,30 @@ code: |
 ---
 {% endhighlight %}
 
+# <a name="only sets"></a>Indicating that a block only sets certain variables
+
+The `only sets` modifier acts like `sets`, but also indicates `scan
+for variables: False`.
+
+The following two blocks are equivalent.
+
+{% highlight yaml %}
+scan for variables: False
+sets: property_assessed
+code: |
+  if total_property > 50000
+    property_deduction_available = False
+  property_assessed = True
+{% endhighlight %}
+
+{% highlight yaml %}
+only sets: property_assessed
+code: |
+  if total_property > 50000
+    property_deduction_available = False
+  property_assessed = True
+{% endhighlight %}
+
 # <a name="precedence"></a>Changing order of precedence
 
 As explained in [how **docassemble** finds questions for variables],
@@ -817,6 +841,11 @@ the [`code`] block should only be used for determining the definition
 of `best_thing`, we were able to get the interview to behave the way
 we wanted it to.
 
+If you want to use `scan for variables: False` along with [`sets`], a
+shorthand is to use [`only sets`].
+
+{% include side-by-side.html demo="only-sets" %}
+
 # <a name="sets"></a>Specifying which variables a block `sets`
 
 As discussed in the previous section, **docassemble** looks at every
@@ -937,3 +966,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [CSS custom class]: {{ site.baseurl}}/docs/initial.html#css customization
 [Google Analytics integration]: {{ site.baseurl}}/docs/config.html#google analytics
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[`only sets`]: #only sets

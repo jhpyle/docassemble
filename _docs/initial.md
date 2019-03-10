@@ -104,15 +104,6 @@ of any earlier [`metadata`] blocks.
 For more information about the `/list` page, see the documentation for
 the [`dispatch`] configuration directive.
 
-<a name="allow non-idempotent questions"></a>You can set `allow
-non-idempotent questions: False` in the [`metadata`] in order to
-enforce strict idempotency of [`question`]s with generic objects,
-iterators, or multiple choice selections.  If your interview has
-non-idempotent logic, there is a risk that variables will be set
-improperly.  The `allow non-idempotent questions` currently defaults
-to `True`, but in the future, it will default to `False`, which may
-break some interviews.
-
 <a name="error action"></a>You can set an `error action` if you want
 your interview to do something substantive in the event that your
 interview encounters an error that it would otherwise show to the

@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.19](https://github.com/jhpyle/docassemble/releases/tag/v0.4.19) - 2019-03-10
+
+### Added
+- The `only sets` modifier.
+
+### Changed
+- The `allow non-idempotent questions` specifier in `metadata` was
+  removed and replaced with a Configuration directive.
+- The `allow non-idempotent questions` Configuration directive is set
+  to `False` by default in the default Configuration.  This will
+  affect new servers but not existing servers.
+- The API validation `Referer` constraint checks against the `Origin` if
+  there is no `Referer`.
+
 ## [0.4.18](https://github.com/jhpyle/docassemble/releases/tag/v0.4.18) - 2019-03-09
 
 ### Added
