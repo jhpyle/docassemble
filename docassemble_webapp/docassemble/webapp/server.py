@@ -18301,7 +18301,6 @@ def api_verify(req, roles=None):
                 constraint = re.sub(r'\\\*+', '.*', constraint)
                 the_referer = re.sub(r'\?.*', '', the_referer)
                 the_referer = re.sub(r'^https?://([^/]*)/', r'\1', the_referer)
-                logmessage("Referer is " + the_referer)
                 if re.search(constraint, the_referer):
                     matched = True
                     break
