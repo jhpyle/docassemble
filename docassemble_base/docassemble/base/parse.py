@@ -1104,6 +1104,15 @@ class Question:
                 self.scan_for_variables = True
             else:
                 self.scan_for_variables = False
+        if 'only sets' in data:
+            if isinstance(data['only sets'], string_types):
+                self.fields_used.add(data['only sets'])
+            elif isinstance(data['only sets'], list):
+                for key in data['only sets']:
+                    self.fields_used.add(key)
+            else:
+                raise DAError("An only sets phrase must be text or a list." + self.idebug(data))
+            self.scan_for_variables = False
         if 'question' in data and 'code' in data:
             raise DAError("A block can be a question block or a code block but cannot be both at the same time." + self.idebug(data))
         if 'event' in data:

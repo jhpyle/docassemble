@@ -1856,9 +1856,10 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
-    #for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
-    #    if var_name in user_dict:
-    #        del user_dict[var_name]
+    if not daconfig.get('allow non-idempotent questions', True):
+        for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+            if var_name in user_dict:
+                del user_dict[var_name]
     nowtime = datetime.datetime.utcnow()
     if steps is not None:
         user_dict['_internal']['steps'] = steps
@@ -5360,7 +5361,7 @@ def index():
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
-            if not interview.consolidated_metadata.get('allow non-idempotent questions', True):
+            if not daconfig.get('allow non-idempotent questions', True):
                 raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
     error_messages = list()
@@ -5451,7 +5452,7 @@ def index():
         if illegal_variable_name(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
         else:
-            if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
+            if (not something_changed) and (not should_assemble) and key_requires_preassembly.search(file_field):
                 #logmessage("index: assemble 2")
                 interview.assemble(user_dict, interview_status)
             initial_string = 'import docassemble.base.core'
@@ -6090,7 +6091,7 @@ def index():
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
-                if something_changed and should_assemble_now and not should_assemble:
+                if (not something_changed) and (not should_assemble) and should_assemble_now:
                     #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
@@ -6236,7 +6237,7 @@ def index():
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
-                if something_changed and should_assemble_now and not should_assemble:
+                if (not something_changed) and (not should_assemble) and should_assemble_now:
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
@@ -9371,12 +9372,16 @@ def index():
     return response
 
 def sub_indices(the_var, the_user_dict):
-    if the_var.startswith('x.') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
-        the_var = re.sub(r'^x\.', the_user_dict['x'].instanceName + '.', the_var)
-    if the_var.startswith('x[') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
-        the_var = re.sub(r'^x\[', the_user_dict['x'].instanceName + '[', the_var)
-    if re.search(r'\[[ijklmn]\]', the_var):
-        the_var = re.sub(r'\[([ijklmn])\]', lambda m: '[' + repr(the_user_dict[m.group(1)]) + ']', the_var)
+    try:
+        if the_var.startswith('x.') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
+            the_var = re.sub(r'^x\.', the_user_dict['x'].instanceName + '.', the_var)
+        if the_var.startswith('x[') and 'x' in the_user_dict and isinstance(the_user_dict['x'], DAObject):
+            the_var = re.sub(r'^x\[', the_user_dict['x'].instanceName + '[', the_var)
+        if re.search(r'\[[ijklmn]\]', the_var):
+            the_var = re.sub(r'\[([ijklmn])\]', lambda m: '[' + repr(the_user_dict[m.group(1)]) + ']', the_var)
+    except KeyError as the_err:
+        missing_var = text_type(the_err)
+        raise DAError("Reference to variable " + missing_var + " that was not defined")
     return the_var
 
 def fixtext_type(data):
@@ -18283,19 +18288,25 @@ def api_verify(req, roles=None):
             return False
         if info['method'] == 'referer':
             if not request.referrer:
-                logmessage("api_verify: could not authorize based on referer because no referer provided")
-                return False
+                the_referer = request.headers.get('Origin', None)
+                if not the_referer:
+                    logmessage("api_verify: could not authorize based on referer because no referer provided")
+                    return False
+            else:
+                 the_referer = request.referrer
             matched = False
             for constraint in info['constraints']:
                 constraint = re.sub(r'^[\*]+|[\*]+$', '', constraint)
                 constraint = re.escape(constraint)
                 constraint = re.sub(r'\\\*+', '.*', constraint)
-                referer = re.sub(r'\?.*', '', request.referrer)
-                if re.search(constraint, referer):
+                the_referer = re.sub(r'\?.*', '', the_referer)
+                the_referer = re.sub(r'^https?://([^/]*)/', r'\1', the_referer)
+                logmessage("Referer is " + the_referer)
+                if re.search(constraint, the_referer):
                     matched = True
                     break
             if not matched:
-                logmessage("api_verify: authorization failure referer " + str(request.referrer) + " could not be matched")
+                logmessage("api_verify: authorization failure referer " + str(the_referer) + " could not be matched")
                 return False
     user = UserModel.query.filter_by(id=user_id).first()
     if user is None:

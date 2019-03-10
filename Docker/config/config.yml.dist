@@ -80,3 +80,4 @@ external hostname: {{DAHOSTNAME}}
 root: {{POSTURLROOT}}
 words:
   - docassemble.base:data/sources/us-words.yml
+allow non-idempotent questions: False
