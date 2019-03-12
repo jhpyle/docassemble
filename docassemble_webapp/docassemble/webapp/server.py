@@ -2331,26 +2331,26 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     return(navbar)
 
 def delete_session_for_interview():
-    for key in ('i', 'uid', 'key_logged', 'action', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
+    for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
         if key in session:
             del session[key]
     return
 
 def delete_session():
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
         if key in backup:
             session[key] = backup[key]
 
@@ -2361,8 +2361,8 @@ def reset_session(yaml_filename, secret, retain_code=False):
         session['uid'] = get_unique_name(yaml_filename, secret)
     if 'key_logged' in session:
         del session['key_logged']
-    if 'action' in session:
-        del session['action']
+    #if 'action' in session:
+    #    del session['action']
     user_code = session['uid']
     #logmessage("reset_session: user_code is " + str(user_code))
     user_dict = fresh_dictionary()
@@ -4920,7 +4920,7 @@ def test_embed():
     return render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True)), 200
 
 @app.route("/interview", methods=['POST', 'GET'])
-def index():
+def index(action_argument=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
     else:
@@ -5064,7 +5064,7 @@ def index():
                 del session['key_logged']
             need_to_resave = True
             need_to_reset = True
-        elif not (is_ajax or is_json or is_js):
+        elif session_id is None and not (is_ajax or is_json or is_js):
             #logmessage("index: need_to_reset is True because not ajax/json and yaml_parameter is None")
             need_to_reset = True
     if session_parameter is not None:
@@ -5139,36 +5139,40 @@ def index():
         #logmessage("index: need to save user dict key")
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True
-    if 'action' in session:
-        #logmessage("index: action in session")
-        action = json.loads(myb64unquote(session['action']))
-        del session['action']
+    #if 'action' in session:
+    #    #logmessage("index: action in session")
+    #    action = json.loads(myb64unquote(session['action']))
+    #    del session['action']
     if '_action' in request.form and 'in error' not in session:
         action = json.loads(myb64unquote(request.form['_action']))
         #logmessage("index: action from _action is " + str(action))
+    elif 'action' in request.args and 'in error' not in session:
+        #logmessage("index: action in session")
+        action = json.loads(myb64unquote(request.args['action']))
+    elif action_argument:
+        action = action_argument
+    url_args_changed = False
     if len(request.args):
         #logmessage("index: there were args")
-        if 'action' in request.args and 'in error' not in session:
-            session['action'] = request.args['action']
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
-            if set_cookie:
-                response.set_cookie('secret', secret)
-            if expire_visitor_secret:
-                response.set_cookie('visitor_secret', '', expires=0)
-            release_lock(user_code, yaml_filename)
-            #logmessage("index: returning action response")
-            return response
+        # if 'action' in request.args and 'in error' not in session:
+        #     session['action'] = request.args['action']
+        #     response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+        #     if set_cookie:
+        #         response.set_cookie('secret', secret)
+        #     if expire_visitor_secret:
+        #         response.set_cookie('visitor_secret', '', expires=0)
+        #     release_lock(user_code, yaml_filename)
+        #     #logmessage("index: returning action response")
+        #     return response
         for argname in request.args:
-            if argname in ('i', 'json', 'js_target'):
-                continue
-            if argname in ('from_list', 'session', 'cache', 'reset', 'new_session'):
-                # 'filename', 'question', 'format', 'index', 'action'
-                need_to_reset = True
+            if argname in ('i', 'json', 'js_target', 'from_list', 'session', 'cache', 'reset', 'new_session', 'action'):
+                # 'filename', 'question', 'format', 'index'
                 continue
             exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
                 #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
-            need_to_resave = True
-            need_to_reset = True
+            #need_to_resave = True
+            #need_to_reset = True
+            url_args_changed = True
     if need_to_reset:
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
@@ -6007,10 +6011,7 @@ def index():
         #logmessage("2Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
-            if not changed:
-                steps += 1
-                user_dict['_internal']['steps'] = steps
-                changed = True
+            changed = True
         except Exception as errMess:
             error_messages.append(("error", "Error: " + text_type(errMess)))
             try:
@@ -6183,10 +6184,7 @@ def index():
                             vars_set.add(file_field)
                             try:
                                 exec(the_string, user_dict)
-                                if not changed:
-                                    steps += 1
-                                    user_dict['_internal']['steps'] = steps
-                                    changed = True
+                                changed = True
                             except Exception as errMess:
                                 sys.stderr.write("Error: " + text_type(errMess) + "\n")
                                 error_messages.append(("error", "Error: " + text_type(errMess)))
@@ -6203,10 +6201,7 @@ def index():
                         vars_set.add(file_field)
                         try:
                             exec(the_string, user_dict)
-                            if not changed:
-                                steps += 1
-                                user_dict['_internal']['steps'] = steps
-                                changed = True
+                            changed = True
                         except Exception as errMess:
                             sys.stderr.write("Error: " + text_type(errMess) + "\n")
                             error_messages.append(("error", "Error: " + text_type(errMess)))
@@ -6318,10 +6313,7 @@ def index():
                             if validated:
                                 try:
                                     exec(the_string, user_dict)
-                                    if not changed:
-                                        steps += 1
-                                        user_dict['_internal']['steps'] = steps
-                                        changed = True
+                                    changed = True
                                 except Exception as errMess:
                                     sys.stderr.write("Error: " + text_type(errMess) + "\n")
                                     error_messages.append(("error", "Error: " + text_type(errMess)))
@@ -6338,10 +6330,7 @@ def index():
                         vars_set.add(file_field)
                         try:
                             exec(the_string, user_dict)
-                            if not changed:
-                                steps += 1
-                                user_dict['_internal']['steps'] = steps
-                                changed = True
+                            changed = True
                         except Exception as errMess:
                             sys.stderr.write("Error: " + text_type(errMess) + "\n")
                             error_messages.append(("error", "Error: " + text_type(errMess)))
@@ -6411,6 +6400,9 @@ def index():
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     #else:
     #    next_action_review = None
+    if not changed and url_args_changed:
+        changed = True
+    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "new_session":
         manual_checkout()
         referer = user_dict['_internal'].get('referer', None)
@@ -6466,9 +6458,9 @@ def index():
             return do_redirect(exit_page, is_ajax, is_json, js_target)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
-    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
-        if user_dict['nav'].set_section(interview_status.question.section):
-            pass
+    #if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
+        #if user_dict['nav'].set_section(interview_status.question.section):
+        #    pass
             #logmessage("Section changed")
             #changed = True
             #steps += 1
@@ -6560,30 +6552,36 @@ def index():
     # Not sure we need this anymore
     # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
     #     del user_dict['_internal']['answers'][interview_status.question.name]
+    if changed:
+        if save_status == 'new':
+            steps += 1
+            user_dict['_internal']['steps'] = steps
     if action and not changed:
         changed = True
-        steps += 1
-        user_dict['_internal']['steps'] = steps
+        if save_status == 'new':
+            steps += 1
+            user_dict['_internal']['steps'] = steps
         #logmessage("Incrementing steps because action")
-    if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None:
+    if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
         advance_progress(user_dict)
     #logmessage("index: saving user dict where encrypted is " + str(encrypted))
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
-    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
-    if user_dict.get('multi_user', False) is True and encrypted is True:
-        #logmessage("index: post interview, encryption should be False")
-        encrypted = False
-        session['encrypted'] = encrypted
-        decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
-    # else:
-    #     logmessage("index: post interview, no detection of encryption should be False")
-    if user_dict.get('multi_user', False) is False and encrypted is False:
-        #logmessage("index: post interview, encryption should be True")
-        encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
-        encrypted = True
-        session['encrypted'] = encrypted
-    # else:
-    #     logmessage("index: post interview, no detection of encryption should be True")
+    if save_status != 'ignore':
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
+        if user_dict.get('multi_user', False) is True and encrypted is True:
+            #logmessage("index: post interview, encryption should be False")
+            encrypted = False
+            session['encrypted'] = encrypted
+            decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+        # else:
+        #     logmessage("index: post interview, no detection of encryption should be False")
+        if user_dict.get('multi_user', False) is False and encrypted is False:
+            #logmessage("index: post interview, encryption should be True")
+            encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+            encrypted = True
+            session['encrypted'] = encrypted
+        # else:
+        #     logmessage("index: post interview, no detection of encryption should be True")
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
         return response_to_send
@@ -6728,6 +6726,7 @@ def index():
       var daVarLookupRev;
       var daValLookup;
       var daTargetDiv;
+      var locationBar = """ + json.dumps(url_for('index', i=yaml_filename)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=yaml_filename, _external=True)) + """;
       if (daJsEmbed){
         daTargetDiv = '#' + daJsEmbed;
@@ -7326,7 +7325,7 @@ def index():
       }
       function daInjectTrim(handler){
         return function (element, event) {
-          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime")) {
+          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime" && element.type !== "file")) {
             element.value = $.trim(element.value);
           }
           return handler.call(this, element, event);
@@ -7687,10 +7686,10 @@ def index():
           //console.log("daProcessAjax: pushing " + daSteps);
           if (!daJsEmbed){
             if (history.state != null && daSteps > history.state.steps){
-              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
+              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, locationBar + "#page" + daSteps);
             }
             else{
-              history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+              history.replaceState({steps: daSteps}, "", locationBar + "#page" + daSteps);
             }
           }
           daAllowGoingBack = data.allow_going_back;
@@ -8843,7 +8842,7 @@ def index():
         daInitialize(1);
         //console.log("ready: replaceState " + daSteps);
         if (!daJsEmbed){
-          history.replaceState({steps: daSteps}, "", "#page" + daSteps);
+          history.replaceState({steps: daSteps}, "", locationBar + "#page" + daSteps);
         }
         var daReloadAfter = """ + str(int(reload_after)) + """;
         if (daReloadAfter > 0){
@@ -16114,8 +16113,8 @@ def server_error(the_error):
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if request.path.endswith('/interview') and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
         session['in error'] = True
-        session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
-        return index()
+        #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
+        return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)})
     return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])

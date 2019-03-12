@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.20] - 2019-03-
+### Added
+- The `set_save_status()` function.
+- The `id_tag` option to `action_button_html()`.
+### Changed
+- Removed redirects after non-standard URL parameters.
+### Fixed
+- Field trim JavaScript was affecting file variables and triggering an
+  error.
+
 ## [0.4.19] - 2019-03-10
 ### Added
 - The `only sets` modifier.
