@@ -56,10 +56,11 @@ knowledgeable developers on the [**docassemble** Slack group].  If you
 find a bug, you can [submit an issue on GitHub].  You can also [e-mail
 the developer].
 
-On June 22, 2018, the docassemble community convened in Chicago for <a
-href="https://docacon.com">Docacon</a>, a one-day docassemble
+On June 21, 2019, the docassemble community will convene in Brookyln,
+New York
+for <a href="https://docacon.com">Docacon</a>, a one-day docassemble
 conference (see <a
-href="https://twitter.com/search?q=%23docacon18">#docacon18</a> on
+href="https://twitter.com/search?q=%23docacon19">#docacon19</a> on
 Twitter).  For more information about <a
 href="https://docacon.com">Docacon</a>, see the <a
 href="https://docacon.com">Docacon web site</a>.

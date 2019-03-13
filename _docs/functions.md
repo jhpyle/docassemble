@@ -1161,6 +1161,8 @@ The `action_button_html()` function returns the HTML of a
 Bootstrap-formatted button that visits a given URL.  It is typically
 given the output of [`url_ask()`] or [`url_action()`].
 
+{% include side-by-side.html demo="action-button-html" %}
+
 It accepts the following optional keyword arguments:
 
 * `icon` - this is the name of the [Font Awesome] icon to use at the
@@ -1183,6 +1185,13 @@ It accepts the following optional keyword arguments:
 * `new_window` - set this to `False` if you don't want the button to
   open a new tab.  The default is for external links to open in a new
   tab.
+* `id_tag` - if you want your button to have an `id` so that you can
+  manipulate it with [JavaScript], set `id_tag` to the `id` you want
+  to use.  For example, if you don't want the button to actually visit
+  a link, you can do `action_button_html('#', label="Click me",
+  id="mybutton")` and then write [JavaScript] code that does something
+  like `$("#mybutton").click(function(e){e.preventDefault();
+  console.log("Hello"); return false;})`.
 
 # <a name="qrfunctions"></a>QR code functions
 
@@ -1896,6 +1905,32 @@ question: |
 yesno: email_is_best
 ---
 {% endhighlight %}
+
+## <a name="set_save_status"></a>set_save_status()
+
+The `set_save_status()` function is useful in `code` that replies to
+[actions].  By default, running an [action] will create a new step in
+the interview history (which the user can undo by clicking the Back
+button).  However, sometimes this can be a source of confusion.  When
+the user undoes something, the user will expect to see something
+different; but if you are using [actions], undoing an [action] might
+not change anything visibly on the screen.  You can use
+`set_save_status()` to tell the interview to save the result of the
+action, but not create a new step.  Or, if you want to run a "read
+only" action that does not change the interview answers at all, you
+can use `set_save_status()` for that.  This can be useful for
+actions that return a JSON response.
+
+The function takes one of three parameters:
+
+* `set_save_status('new')` - the changes made during the processing of
+  the interview logic are saved, and a new step is created in the
+  interview history.  This is the default.
+* `set_save_status('overwrite')` - the changes made during the
+  processing of the interview logic are saved, but the
+  current step is overwritten.
+* `set_save_status('ignore')` - the changes made during the processing
+  of the interview logic are not saved.
 
 ## <a name="set_parts"></a>set_parts()
 
