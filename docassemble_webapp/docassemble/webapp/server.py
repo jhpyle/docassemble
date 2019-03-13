@@ -5181,7 +5181,10 @@ def index(action_argument=None):
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+        if action:
+            response = do_redirect(url_for('index', i=yaml_filename, action=safeid(json.dumps(action))), is_ajax, is_json, js_target)
+        else:
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if set_cookie:
             response.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -16030,8 +16033,11 @@ def server_error(the_error):
             the_trace = the_error.traceback
         else:
             the_trace = traceback.format_exc()
+        if 'current_field' in docassemble.base.functions.this_thread.misc:
+            errmess += "\nIn field index number " + text_type(docassemble.base.functions.this_thread.misc['current_field'])
         if hasattr(the_error, 'da_line_with_error'):
             errmess += "\nIn line: " + text_type(the_error.da_line_with_error)
+
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code

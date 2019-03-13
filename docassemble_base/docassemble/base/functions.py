@@ -2675,7 +2675,10 @@ def process_action():
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        the_list.appendObject()
+        if the_list.ask_object_type:
+            the_list.append(None)
+        else:
+            the_list.appendObject()
         the_list.reset_gathered()
         the_list.there_are_any = True
         the_list.there_is_another = False

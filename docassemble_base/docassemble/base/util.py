@@ -2384,10 +2384,12 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         icon = '<i class="' + icon + '"></i> '
     else:
         icon = ''
-    if new_window:
+    if new_window is True:
         target = ''
-    else:
+    elif new_window is False:
         target = 'target="_self" '
+    else:
+        target = 'target="' + text_type(new_window) + '" '
     if id_tag is None:
         id_tag = ''
     else:

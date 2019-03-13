@@ -3308,6 +3308,7 @@ class Question:
                 skip_undefined = True
             extras['ok'] = dict()
             for field in self.fields:
+                docassemble.base.functions.this_thread.misc['current_field'] = field.number
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
                     failed = False
@@ -3373,10 +3374,13 @@ class Question:
                     else:
                         labels[field.number] = field.label.text(user_dict)
                 extras['ok'][field.number] = True
+            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['current_field']
         else:
             only_empty_fields_exist = True
             commands_to_run = list()
             for field in self.fields:
+                docassemble.base.functions.this_thread.misc['current_field'] = field.number
                 if hasattr(field, 'has_code') and field.has_code:
                     # standalone multiple-choice questions
                     selectcompute[field.number] = list()
@@ -3524,8 +3528,11 @@ class Question:
                     if complications.search(var) or var not in user_dict:
                         eval(var, user_dict)
                 raise CodeExecute(commands_to_run, self)
+            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['current_field']
             extras['ok'] = dict()
             for field in self.fields:
+                docassemble.base.functions.this_thread.misc['current_field'] = field.number
                 if hasattr(field, 'showif_code'):
                     result = eval(field.showif_code, user_dict)
                     if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
@@ -3672,12 +3679,15 @@ class Question:
                         helptexts[field.number] = field.helptext.text(user_dict)
                     if hasattr(field, 'hint'):
                         hints[field.number] = field.hint.text(user_dict)
+            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
         assumed_objects = set()
         for field in self.fields:
+            docassemble.base.functions.this_thread.misc['current_field'] = field.number
             if hasattr(field, 'saveas'):
                 # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
                 # if m and m.group(1) != 'x':
@@ -3689,6 +3699,8 @@ class Question:
                     assumed_objects.add(parse_result['objects'][-1])
                 if len(parse_result['bracket_objects']):
                     assumed_objects.add(parse_result['bracket_objects'][-1])
+        if 'current_field' in docassemble.base.functions.this_thread.misc:
+            del docassemble.base.functions.this_thread.misc['current_field']
         for var in assumed_objects:
             if complications.search(var) or var not in user_dict:
                 eval(var, user_dict)
