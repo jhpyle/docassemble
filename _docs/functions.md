@@ -3475,7 +3475,7 @@ set_user_info(email='jsmith@example.com', organization='Example, Inc.')
 
 Users with `admin` [privileges] can disable user accounts by setting the
 `active` keyword parameter to `False` (or enable a disabled account by
-setting `active` to `True`.
+setting `active` to `True`).
 
 In addition, users with `admin` [privileges] can change the [privileges]
 of a user by setting the `privileges` keyword parameter to the list of

@@ -4,14 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.4.20](https://github.com/jhpyle/docassemble/releases/tag/v0.4.20) - 2019-03-12
+## [0.4.20](https://github.com/jhpyle/docassemble/releases/tag/v0.4.20) - 2019-03-13
 
 ### Added
 - The `set_save_status()` function.
 - The `id_tag` option to `action_button_html()`.
+- Field number in error messages.
 
 ### Changed
 - Removed redirects after non-standard URL parameters.
+- The `add_action()` button behaves more consistently with `.gather()`.
+- The `new_window` option to `action_button_html()` can be used to set
+  the `target` of the hyperlink.
 
 ### Fixed
 - Field trim JavaScript was affecting file variables and triggering an
