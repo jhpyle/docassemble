@@ -1158,8 +1158,9 @@ subsection on [customizing the display of `review` options].
 ## <a name="action_button_html"></a>action_button_html()
 
 The `action_button_html()` function returns the HTML of a
-Bootstrap-formatted button that visits a given URL.  It is typically
-given the output of [`url_ask()`] or [`url_action()`].
+Bootstrap-formatted button (an `<a>` tag styled as a button) that
+visits a given URL.  It is often given the output of [`url_ask()`] or
+[`url_action()`], but you can give it any URL.
 
 {% include side-by-side.html demo="action-button-html" %}
 
@@ -1183,8 +1184,9 @@ It accepts the following optional keyword arguments:
   [`word()`]  function, so you can use the translation system to
   handle different languages.
 * `new_window` - set this to `False` if you don't want the button to
-  open a new tab.  The default is for external links to open in a new
-  tab.
+  open a new tab.  The default value is `True`, which means external
+  links will open in a new tab.  If you use a value other than `True`
+  or `False`, it will be used as the `target` of the hyperlink.
 * `id_tag` - if you want your button to have an `id` so that you can
   manipulate it with [JavaScript], set `id_tag` to the `id` you want
   to use.  For example, if you don't want the button to actually visit

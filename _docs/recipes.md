@@ -258,6 +258,119 @@ your users a URL created with [`interview_url()`].
 
 {% include demo-side-by-side.html demo="save-continue-later" %}
 
+# <a name="hybrid"></a>E-mailing or texting the user a link for purposes of using the touchscreen
+
+Using a desktop computer is generally very good for answering
+questions, but it is difficult to write a signature using a mouse.
+
+Here is an example of an interview that allows the user to use a
+desktop computer for answering questions, but use a mobile device with
+a touchscreen for writing the signature.
+
+{% include demo-side-by-side.html demo="food-with-sig" %}
+
+This interview includes a [YAML] file called
+[`signature-diversion.yml`], the contents of which are:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  Sign your name
+subquestion: |
+  % if not device().is_touch_capable:
+  Please sign your name below with your mouse.
+  % endif
+signature: user.signature
+under: |
+  ${ user }
+---
+sets: user.signature
+code: |
+  signature_intro
+  if not device().is_touch_capable and user.has_mobile_device:
+    if user.can_text:
+      sig_diversion_sms_message_sent
+      sig_diversion_post_sms_screen
+    elif user.can_email:
+      sig_diversion_email_message_sent
+      sig_diversion_post_email_screen
+---
+question: |
+  Do you have a mobile device?
+yesno: user.has_mobile_device
+---
+question: |
+  Can you receive text messages on your mobile device?
+yesno: user.can_text
+---
+question: |
+  Can you receive e-mail messages on your mobile device?
+yesno: user.can_email
+---
+code: |
+  send_sms(user, body="Click on this link to sign your name: " + interview_url_action('mobile_sig'))
+  sig_diversion_sms_message_sent = True
+---
+code: |
+  send_email(user, template=sig_diversion_email_template)
+  sig_diversion_email_message_sent = True
+---
+template: sig_diversion_email_template
+subject: Sign your name with your mobile device
+content: |
+  Make sure you are using your
+  mobile device.  Then
+  [click here](${ interview_url_action('mobile_sig') })
+  to sign your name with
+  the touchscreen.
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: user.email
+---
+question: |
+  What is your mobile number?
+fields:
+  - Number: user.phone_number
+---
+event: sig_diversion_post_sms_screen
+question: |
+  Check your text messages.
+subquestion: |
+  We just sent you a text message containing a link.  Click the link
+  and sign your name.
+
+  Once we have your signature, you will move on automatically.
+reload: 5
+---
+event: sig_diversion_post_email_screen
+question: |
+  Check your e-mail on your mobile device.
+subquestion: |
+  We just sent you an email containing a link.  With your mobile
+  device, click the link and sign your name.
+
+  Once we have your signature, you will move on automatically.
+reload: 5
+---
+event: mobile_sig
+need: user.signature
+question: |
+  Thanks!
+subquestion: |
+  We got your signature:
+
+  ${ user.signature }
+  
+  You can now resume the interview on your computer.
+{% endhighlight %}
+
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
 [`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others

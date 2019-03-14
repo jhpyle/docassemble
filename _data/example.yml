@@ -2039,6 +2039,12 @@
     % else:
     Your device is: ${ device() }.
     % endif
+  subquestion: |
+    % if device().is_touch_capable:
+    You are using a touchscreen device.
+    % else:
+    You are not using a touchscreen device.
+    % endif
   mandatory: True
 "device-ip": |-
   question: |
@@ -10431,6 +10437,13 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"food-with-sig": "include:\n  - docassemble.demo:data/questions/examples/signature-diversion.yml\n\
+  ---\nmandatory: True\nquestion: |\n  Here is your document.\nattachment:\n  name:\
+  \ Summary of food\n  filename: food\n  content: |\n    [BOLDCENTER] Food Attestation\n\
+  \n    My name is ${ user }.\n    \n    My favorite fruit is\n    ${ favorite_fruit\
+  \ }.\n\n    My favorite vegetable is\n    ${ favorite_vegetable }.\n\n    I solemnly\
+  \ swear that the\n    foregoing is true and\n    correct.\n\n    ${ user.signature.show(width=\"\
+  2in\") }\n\n    ${ user }"
 "get-time": |-
   modules:
     - docassemble.demo.gettime
@@ -11110,6 +11123,16 @@
   \    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\nsubject:\
   \ |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click here](${\
   \ interview_url() })."
+"signature-diversion": |-
+  question: |
+    Sign your name
+  subquestion: |
+    % if not device().is_touch_capable:
+    Please sign your name below with your mouse.
+    % endif
+  signature: user.signature
+  under: |
+    ${ user }
 "someone-already-mentioned": |-
   objects:
     cook: Individual

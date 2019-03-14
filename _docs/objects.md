@@ -756,18 +756,19 @@ Other methods available on a `DAList` are:
   <a name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
   `True` if the group has been gathered yet.  Does not trigger the
   gathering process.
-* <a name="DAList.add_action"></a><a name="DADict.add_action"></a>`add_action()` -
-  returns HTML for a button that adds a new item to the list.  This
-  will set up a queue of actions for the user that will ensure that a
-  new item will be added and its elements gathered.  See the [groups]
-  section for details of how [`DAList`] and [`DADict`] gathering
-  works.  By default, the text of the button is "Add an item" if the
-  list is empty, and "Add another" if the list is non-empty.  The
-  message can be overridden with the optional keyword parameter
-  `message`.  The `message` passes through the [`word()`] function, so
-  you can use the translation system to handle different languages.
-  If you just want the URL for the action, not the HTML for the
-  button, set the optional keyword parameter `url_only` to `True`.
+* <a name="DAList.add_action"></a><a
+  name="DADict.add_action"></a>`add_action()` - returns HTML for a
+  button that adds a new item to the list.  This will set up a queue
+  of actions for the user that will ensure that a new item will be
+  added and its elements gathered.  See the [groups] section for
+  details of how [`DAList`] and [`DADict`] gathering works.  By
+  default, the text of the button is "Add an item" if the list is
+  empty, and "Add another" if the list is non-empty.  The message can
+  be overridden with the optional keyword parameter `message`.  The
+  `message` passes through the [`word()`] function, so you can use the
+  translation system to handle different languages.  If you set the
+  optional keyword parameter `url_only` to `True`, the method will
+  return only the URL for the action, not the HTML for a button.
 * <a name="DAList.item_actions"></a><a
   name="DADict.item_actions"></a>`item_actions()` - returns HTML for "Edit" and
   "Delete" buttons.  This method is primarily used internally; there
