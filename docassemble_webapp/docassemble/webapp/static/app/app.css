@@ -2100,7 +2100,7 @@ div.hide-navbar .navbar {
 
 tr:first-child .datableup, tr:last-child .databledown {
     opacity: 0.5;
-    cursor: default;
+    cursor: not-allowed !important;
 }
 
 .datablehighlighted {

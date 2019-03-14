@@ -7329,7 +7329,9 @@ def index(action_argument=None):
       function daInjectTrim(handler){
         return function (element, event) {
           if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime" && element.type !== "file")) {
-            element.value = $.trim(element.value);
+            setTimeout(function(){
+              element.value = $.trim(element.value);
+            }, 10);
           }
           return handler.call(this, element, event);
         };
@@ -9880,8 +9882,10 @@ def observer():
       }
       function daInjectTrim(handler){
         return function (element, event) {
-          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password")) {
-            element.value = $.trim(element.value);
+          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime" && element.type !== "file")) {
+            setTimeout(function(){
+              element.value = $.trim(element.value);
+            }, 10);
           }
           return handler.call(this, element, event);
         };

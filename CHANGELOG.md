@@ -7,8 +7,7 @@
 - Field number in error messages.
 ### Changed
 - Removed redirects after non-standard URL parameters.
-- The `add_action()` button will ask about object type if
-  `ask_object_type` is `True`.
+- The `add_action()` button behaves more consistently with `.gather()`.
 - The `new_window` option to `action_button_html()` can be used to set
   the `target` of the hyperlink.
 ### Fixed

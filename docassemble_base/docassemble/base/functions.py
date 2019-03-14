@@ -2675,13 +2675,22 @@ def process_action():
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        if the_list.ask_object_type:
-            the_list.append(None)
-        else:
-            the_list.appendObject()
-        the_list.reset_gathered()
-        the_list.there_are_any = True
-        the_list.there_is_another = False
+        #if the_list.ask_object_type:
+        #    the_list.append(None)
+        #else:
+        #    the_list.appendObject()
+        if the_list.has_been_gathered():
+            the_list.reset_gathered()
+            if the_list.auto_gather:
+                if the_list.ask_number:
+                    if hasattr(the_list, 'target_number'):
+                        the_list.target_number += 1
+                else:
+                    the_list.there_is_another = False
+                    if len(the_list.elements) > 0:
+                        the_list.there_is_one_other = True
+        if the_list.auto_gather and not the_list.ask_number:
+            the_list.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
             this_thread.internal['event_stack'] = dict()
@@ -2697,9 +2706,18 @@ def process_action():
     elif the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
-        the_dict.reset_gathered()
-        the_dict.there_are_any = True
-        the_dict.there_is_another = True
+        if the_dict.has_been_gathered():
+            the_dict.reset_gathered()
+            if the_dict.auto_gather:
+                if the_dict.ask_number:
+                    if hasattr(the_dict, 'target_number'):
+                        the_dict.target_number += 1
+                else:
+                    the_dict.there_is_another = False
+                    if len(the_dict.elements) > 0:
+                        the_dict.there_is_one_other = True
+        if the_dict.auto_gather and not the_dict.ask_number:
+            the_dict.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
             this_thread.internal['event_stack'] = dict()
