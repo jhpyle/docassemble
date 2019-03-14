@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.4.20] - 2019-03-
+## [0.4.20] - 2019-03-13
 ### Added
 - The `set_save_status()` function.
 - The `id_tag` option to `action_button_html()`.
