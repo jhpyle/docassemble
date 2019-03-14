@@ -2163,6 +2163,7 @@ class Question:
             else:
                 field_number = 0
                 for field in data['fields']:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field_number
                     if isinstance(field, dict):
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
@@ -2482,6 +2483,8 @@ class Question:
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
         else:
             if 'continue button field' in data:
                 raise DAError("A continue button field can only be used with a fields directive." + self.idebug(data))

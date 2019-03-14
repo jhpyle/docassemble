@@ -14,5 +14,11 @@ question: |
   % else:
   Your device is: ${ device() }.
   % endif
+subquestion: |
+  % if device().is_touch_capable:
+  You are using a touchscreen device.
+  % else:
+  You are not using a touchscreen device.
+  % endif
 mandatory: True
 

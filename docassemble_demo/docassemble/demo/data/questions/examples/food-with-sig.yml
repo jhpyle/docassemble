@@ -1,0 +1,70 @@
+metadata:
+  title: Hybrid desktop/smartphone
+  short: Hybrid
+  documentation: https://docassemble.org/docs/recipes.html#hybrid
+  example start: 2
+  example end: 3
+---
+objects:
+  - user: Individual
+---
+include:
+  - docassemble.demo:data/questions/examples/signature-diversion.yml
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  name: Summary of food
+  filename: food
+  content: |
+    [BOLDCENTER] Food Attestation
+
+    My name is ${ user }.
+    
+    My favorite fruit is
+    ${ favorite_fruit }.
+
+    My favorite vegetable is
+    ${ favorite_vegetable }.
+
+    I solemnly swear that the
+    foregoing is true and
+    correct.
+
+    ${ user.signature.show(width="2in") }
+
+    ${ user }
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+sets: user.signature
+code: |
+  signature_intro
+---
+question: |
+  Now we need your signature.
+subquestion: |
+  Now that we have information
+  about your fruit and vegetable
+  preferences, we will need
+  you to sign a statement attesting
+  that you like
+  ${ favorite_fruit }
+  and
+  ${ favorite_vegetable }.
+field: signature_intro
