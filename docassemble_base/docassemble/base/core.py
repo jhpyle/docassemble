@@ -832,6 +832,8 @@ class DAList(DAObject):
                 del self.gathered
             else:
                 return True
+        if not self.auto_gather:
+            return self.gathered
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters
@@ -1561,6 +1563,8 @@ class DADict(DAObject):
                 del self.gathered
             else:
                 return True
+        if not self.auto_gather:
+            return self.gathered
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             new_item_parameters = self.object_type_parameters
@@ -2123,6 +2127,8 @@ class DASet(DAObject):
                 del self.gathered
             else:
                 return True
+        if not self.auto_gather:
+            return self.gathered
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements):
             text_type(elem)

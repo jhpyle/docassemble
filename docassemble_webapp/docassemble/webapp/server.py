@@ -6361,7 +6361,6 @@ def index(action_argument=None):
                                     del interview_status.current_info['action']
                                     if 'arguments' in interview_status.current_info:
                                         del interview_status.current_info['arguments']
-                                #logmessage("popped!")
                                 break
             #logmessage("vars_set was " + repr(vars_set))
             if len(vars_set) and 'event_stack' in user_dict['_internal']:
@@ -9139,7 +9138,7 @@ def index(action_argument=None):
         the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview_status.question.interview)
     else:
         the_progress_bar = None
-    if interview_status.question.interview.use_navigation:
+    if interview_status.question.interview.use_navigation and user_dict['nav'].visible():
         if interview_status.question.interview.use_navigation == 'horizontal':
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
@@ -13879,6 +13878,7 @@ def playground_files():
         if 'uploadfile' in request.files:
             the_files = request.files.getlist('uploadfile')
             if the_files:
+                need_to_restart = False
                 for up_file in the_files:
                     try:
                         filename = secure_filename(up_file.filename)
@@ -13894,10 +13894,12 @@ def playground_files():
                             r.incr(key.decode())
                         area.finalize()
                         if section == 'modules':
-                            flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
-                            return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
+                            need_to_restart = True
                     except Exception as errMess:
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+                if need_to_restart:
+                    flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
+                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                 flash(word("Upload successful"), "success")
         if formtwo.delete.data:
             if the_file != '':

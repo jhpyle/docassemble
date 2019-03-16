@@ -27,7 +27,6 @@ else:
     import pickle
 import codecs
 from sqlalchemy import or_, and_
-#import docassemble.webapp.worker
 
 set_request_active(False)
 
@@ -46,8 +45,8 @@ def clear_old_interviews():
     stale = list()
     nowtime = datetime.datetime.utcnow()
     #sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
-    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
-    results = db.session.query(UserDict.key, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).subquery()
+    results = db.session.query(UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
     for record in results:
         delta = nowtime - record.modtime
         #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
@@ -65,16 +64,20 @@ def run_cron(cron_type):
     cron_user = get_cron_user()
     user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     to_do = list()
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
+    results = db.session.query(UserDict.key, UserDict.filename, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
     for record in results:
+        dict_result = db.session.query(UserDict.dictionary).filter(UserDict.indexno == record.indexno).first()
         try:
-            the_dict = unpack_dictionary(record.dictionary)
+            the_dict = unpack_dictionary(dict_result.dictionary)
         except:
             continue
         if 'allow_cron' in the_dict:
             if the_dict['allow_cron']:
-                to_do.append(dict(key=record.key, user_id=record.user_id, filename=record.filename))
+                to_do.append(dict(key=record.key, filename=record.filename))
+        del the_dict
+        del dict_result
+    del results
     with app.app_context():
         with app.test_request_context():
             login_user(cron_user, remember=False)

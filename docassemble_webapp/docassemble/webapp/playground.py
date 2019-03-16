@@ -1,5 +1,5 @@
 import os
-from six import string_types, text_type
+from six import string_types, text_type, PY2
 import re
 import copy
 import sys
@@ -21,7 +21,7 @@ TypeType = type(type(None))
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
-always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav"])
+always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav", "PY2", "string_types"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
 start_spaces = re.compile(r'^ +')
 end_spaces = re.compile(r' +$')
@@ -37,10 +37,10 @@ class DADecoration(DAObject):
 
 class DADecorationDict(DADict):
     def init(self, **kwargs):
+        super(DADecorationDict, self).init(**kwargs)
         self.object_type = DADecoration
         self.auto_gather = False
         self.there_are_any = True
-        return super(DADecorationDict, self).init(**kwargs)
 
 class DAAttachment(DAObject):
     def init(self, **kwargs):
@@ -48,9 +48,9 @@ class DAAttachment(DAObject):
 
 class DAAttachmentList(DAList):
     def init(self, **kwargs):
+        super(DAAttachmentList, self).init(**kwargs)
         self.object_type = DAAttachment
         self.auto_gather = False
-        return super(DAAttachmentList, self).init(**kwargs)
     def url_list(self):
         output_list = list()
         for x in self.elements:
@@ -283,11 +283,11 @@ class DAQuestion(DAObject):
 
 class DAQuestionDict(DADict):
     def init(self, **kwargs):
+        super(DAQuestionDict, self).init(**kwargs)
         self.object_type = DAQuestion
         self.auto_gather = False
         self.gathered = True
         self.is_mandatory = False
-        return super(DAQuestionDict, self).init(**kwargs)
 
 class PlaygroundSection(object):
     def __init__(self, section=''):
@@ -415,7 +415,10 @@ class Playground(PlaygroundSection):
     def interview_url(self, filename):
         return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
     def write_package(self, pkgname, info):
-        the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|').decode()
+        if PY2:
+            the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|').decode()
+        else:
+            the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
         pg_packages = PlaygroundSection('packages')
         pg_packages.write_file(pkgname, the_yaml)
     def get_package_as_zip(self, pkgname):

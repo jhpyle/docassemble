@@ -3022,8 +3022,11 @@ class Question:
                 target['content'] = ''
                 options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if template_type == 'docx' and isinstance(target[template_type + ' template file'], string_types):
+                    the_docx_path = options['docx_template_file'].path()
+                    if not os.path.isfile(the_docx_path):
+                        raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
                     try:
-                        docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
+                        docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
                         the_env = custom_jinja_env()
                         the_xml = docx_template.get_xml()
                         the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)

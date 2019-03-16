@@ -779,6 +779,7 @@ class DANav(object):
         self.sections = None
         self.current = None
         self.progressive = True
+        self.hidden = False
 
     def __unicode__(self):
         return self.show_sections()
@@ -885,6 +886,20 @@ class DANav(object):
                     break
         return current_title
 
+    def hide(self):
+        """Hides the navigation bar, except if it is displayed inline."""
+        self.hidden = True
+
+    def unhide(self):
+        """Unhides the navigation bar if it was hidden."""
+        self.hidden = False
+
+    def visible(self, language=None):
+        """Returns False if the navigation bar is hidden, and True otherwise."""
+        if self.sections is None or len(self.get_sections(language=language)) == 0:
+            return False
+        return not (hasattr(self, 'hidden') and self.hidden)
+
     def set_sections(self, sections, language=None):
         """Sets the sections of the navigation to the given list."""
         if language is None:
@@ -909,6 +924,8 @@ class DANav(object):
             interior_class = 'dainlineinside'
             a_class = "btn btn-secondary danavlink "
         else:
+            if not self.visible():
+                return ''
             the_class = 'danavlinks'
             interior_class = None
             a_class = None
