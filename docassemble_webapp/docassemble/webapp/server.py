@@ -12020,7 +12020,7 @@ def create_playground_package():
             info = dict()
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
-                info = yaml.load(content)
+                info = yaml.load(content, Loader=yaml.FullLoader)
             for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
                     info[field] = list()
@@ -13559,7 +13559,7 @@ def config_page():
     if request.method == 'POST':
         if form.submit.data and form.config_content.data:
             try:
-                yaml.load(form.config_content.data)
+                yaml.load(form.config_content.data, Loader=yaml.FullLoader)
             except Exception as errMess:
                 ok = False
                 content = form.config_content.data
@@ -14545,7 +14545,7 @@ def playground_packages():
             filename = os.path.join(area['playgroundpackages'].directory, the_file)
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
-                old_info = yaml.load(content)
+                old_info = yaml.load(content, Loader=yaml.FullLoader)
                 if isinstance(old_info, dict):
                     github_url_from_file = old_info.get('github_url', None)
                     pypi_package_from_file = old_info.get('pypi_package_name', None)

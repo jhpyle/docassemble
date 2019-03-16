@@ -426,7 +426,7 @@ class Playground(PlaygroundSection):
         content = pg_packages.read_file(pkgname)
         if content is None:
             raise Exception("package " + str(pkgname) + " not found")
-        info = yaml.load(content)
+        info = yaml.load(content, Loader=yaml.FullLoader)
         author_info = dict()
         author_info['author name'] = self.current_info['user']['firstname'] + " " + self.current_info['user']['lastname']
         author_info['author email'] = self.current_info['user']['email']

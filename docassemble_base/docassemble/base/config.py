@@ -58,7 +58,7 @@ def load(**kwargs):
     if not os.path.isfile(filename):
         sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
     with open(filename, 'rU', encoding='utf-8') as stream:
-        raw_daconfig = yaml.load(stream)
+        raw_daconfig = yaml.load(stream, Loader=yaml.FullLoader)
     if raw_daconfig is None:
         sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
         with open(filename, 'rU', encoding='utf-8') as fp:

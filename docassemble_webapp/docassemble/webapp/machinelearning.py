@@ -131,7 +131,7 @@ class MachineLearner(object):
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
             aref = json.loads(content)
         elif 'extension' in file_info and file_info['extension'].lower() in ['yaml', 'yml']:
-            aref = yaml.load(content)
+            aref = yaml.load(content, Loader=yaml.FullLoader)
         if type(aref) is dict and hasattr(self, 'group_id'):
             the_group_id = re.sub(r'.*:', '', self.group_id)
             if the_group_id in aref:

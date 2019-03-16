@@ -130,7 +130,7 @@ def read_fields_pdftk(pdffile):
     fields = list()
     if not len(output) > 0:
         return None
-    for field in yaml.load_all(output):
+    for field in yaml.load_all(output, Loader=yaml.FullLoader):
         if 'FieldType' in field and field['FieldType'] == 'Button':
             default = "No"
         else:
