@@ -4688,8 +4688,6 @@ class Interview:
         docassemble.base.functions.this_thread.interview = self
         docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        #if 'nav' not in user_dict: # waste of CPU cycles; eventually take out!
-        #    user_dict['nav'] = docassemble.base.functions.DANav()
         if user_dict['nav'].sections is None:
             user_dict['nav'].sections = self.sections
             if hasattr(self, 'sections_progressive'):

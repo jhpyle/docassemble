@@ -853,7 +853,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 return(worker_controller.functions.ReturnValue(extra=extra))
             start_time = time.time()
             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, action=action['action'], interface='worker', arguments=action['arguments']))
-            old_language = docassemble.base.functions.get_language()
+            old_language = worker_controller.functions.get_language()
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
@@ -889,9 +889,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
                 else:
                     sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time))
-                    docassemble.base.functions.set_language(old_language)
+                    worker_controller.functions.set_language(old_language)
                     return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
-            docassemble.base.functions.set_language(old_language)
+            worker_controller.functions.set_language(old_language)
             sys.stderr.write("Time in background action was " + str(time.time() - start_time))
             if not hasattr(interview_status, 'question'):
                 #sys.stderr.write("background_action: status had no question\n")
@@ -925,7 +925,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 worker_controller.obtain_lock(session_code, yaml_filename)
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
                 interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
-                old_language = docassemble.base.functions.get_language()
+                old_language = worker_controller.functions.get_language()
                 try:
                     interview.assemble(user_dict, interview_status)
                     has_error = False
@@ -946,8 +946,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     worker_controller.error_notification(e, message=error_message, trace=error_trace)
                     has_error = True
                 # is this right?  Save even though there was an error on assembly?
-                docassemble.base.functions.set_language(old_language)
-                if not has_error:
+                worker_controller.functions.set_language(old_language)
+                save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
+                if (not has_error) and save_status != 'ignore':
                     if str(user_info.get('the_user_id', None)).startswith('t'):
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
                     else:
@@ -997,7 +998,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     worker_controller.obtain_lock(session_code, yaml_filename)
     steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
     interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
-    old_language = docassemble.base.functions.get_language()
+    old_language = worker_controller.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
     except Exception as e:
@@ -1014,12 +1015,14 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         else:
             error_trace = None
         worker_controller.error_notification(e, message=error_message, trace=error_trace)
-    docassemble.base.functions.set_language(old_language)
+    worker_controller.functions.set_language(old_language)
     # is this right?
-    if str(user_info.get('the_user_id', None)).startswith('t'):
-        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-    else:
-        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+    save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
+    if save_status != 'ignore':
+        if str(user_info.get('the_user_id', None)).startswith('t'):
+            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+        else:
+            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
     worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.22] - 2019-03-17
+### Fixed
+- Section setting error.
+
 ## [0.4.21] - 2019-03-16
 ### Added
 - The `nav.hide()`, `nav.unhide()`, and `nav.visible()` methods.

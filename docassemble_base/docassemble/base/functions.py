@@ -907,7 +907,6 @@ class DANav(object):
         if sections is None:
             sections = []
         self.sections[language] = sections
-        #self.past = set()
 
     def get_sections(self, language=None):
         """Returns the sections of the navigation as a list."""
@@ -1656,6 +1655,7 @@ def reset_local_variables():
     this_thread.current_package = None
     this_thread.current_question = None
     this_thread.internal = dict()
+    this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     this_thread.prevent_going_back = False
 
 def prevent_going_back():
@@ -3288,7 +3288,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
     if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current)
+        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else False))
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()

@@ -6460,12 +6460,8 @@ def index(action_argument=None):
             return do_redirect(exit_page, is_ajax, is_json, js_target)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
-    #if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
-        #if user_dict['nav'].set_section(interview_status.question.section):
-        #    pass
-            #logmessage("Section changed")
-            #changed = True
-            #steps += 1
+    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
+        user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "exit":
         manual_checkout()
         reset_user_dict(user_code, yaml_filename)
@@ -6517,7 +6513,7 @@ def index(action_argument=None):
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
         if expire_visitor_secret:
-            response.set_cookie('visitor_secret', '', expires=0)
+            response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
@@ -6539,7 +6535,7 @@ def index(action_argument=None):
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
         if expire_visitor_secret:
-            response.set_cookie('visitor_secret', '', expires=0)
+            response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
