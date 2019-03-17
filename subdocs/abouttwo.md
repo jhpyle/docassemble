@@ -1,4 +1,4 @@
-Interviews are authored as [YAML] files.  Within the [YAML] files, the
+Interviews are developered as [YAML] files.  Within the [YAML] files, the
 text of the interview questions and documents is formatted with
 [Markdown], and the logic of the interview flow is expressed with
 if/then/else statements in [Python].
@@ -35,10 +35,11 @@ then you get text that looks like this:
 > as possible.
 
 [Python] is a language designed to be readable and easy to learn.
-Authors do not need to have any prior experience with [Python] or
-computer programming in order to create **docassemble** interviews.
-The only [Python] statements authors may need to write are if/then/else
-statements that are very close to plain English.  For example:
+Interview developers do not need to have any prior experience with
+[Python] or computer programming in order to create **docassemble**
+interviews.  The only [Python] statements developers may need to write
+are if/then/else statements that are very close to plain English.  For
+example:
 
 {% highlight python %}
 if user.is_citizen or user.is_legal_permanent_resident:
@@ -56,10 +57,9 @@ knowledgeable developers on the [**docassemble** Slack group].  If you
 find a bug, you can [submit an issue on GitHub].  You can also [e-mail
 the developer].
 
-On June 21, 2019, the docassemble community will convene in Brooklyn,
-New York
-for <a href="https://docacon.com">Docacon</a>, a one-day docassemble
-conference (see <a
+On Friday, June 21, 2019, the **docassemble** community will convene
+in Brooklyn, New York for <a href="https://docacon.com">Docacon</a>, a
+one-day docassemble conference (see <a
 href="https://twitter.com/search?q=%23docacon19">#docacon19</a> on
 Twitter).  For more information about <a
 href="https://docacon.com">Docacon</a>, see the <a

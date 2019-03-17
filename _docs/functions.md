@@ -1692,6 +1692,28 @@ keyword arguments `style`, the options for which are `None` or
 `'inline'`, and `show_links`, which you can set to `True` if you want
 users to be able to click on section names.
 
+## <a name="DANav.hide"></a>nav.hide()
+
+If you want to hide the main navigation bar, run `nav.hide()`.  The
+sections system will still work, and you can still insert `nav` into
+the body of a question, but the main navigation bar will not be shown
+on the screen.  The navigation bar is shown by default if sections are
+defined.
+
+## <a name="DANav.unhide"></a>nav.unhide()
+
+Calling `nav.unhide()` will undo the effect of `nav.hide()`.
+
+## <a name="DANav.visible"></a>nav.visible()
+
+The result of `nav.visible()` will be `False` if the navigation bar
+has been hidden with `nav.hide()`, and it will return `False` if no
+sections have been defined.  `nav.visible()` takes an optional keyword
+argument `language`, and when determining whether no sections have
+been defined, it will look to that language.  If sections are defined
+and the navigation bar has not been hidden with `nav.hide()`,
+`nav.visible()` will return `True`.
+
 # <a name="globalvars"></a>Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions

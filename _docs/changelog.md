@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.21](https://github.com/jhpyle/docassemble/releases/tag/v0.4.21) - 2019-03-16
+
+### Added
+- The `nav.hide()`, `nav.unhide()`, and `nav.visible()` methods.
+
+### Fixed
+- Excessive memory usage while looking for cron tasks.
+- Could not upload more than one module file to Playground at the same time.
+- Playground Wizard errors.
+
 ## [0.4.20](https://github.com/jhpyle/docassemble/releases/tag/v0.4.20) - 2019-03-13
 
 ### Added

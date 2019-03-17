@@ -1808,8 +1808,8 @@ a special screen that the user would not ordinarily encounter in the
 course of the interview.  You can create such a screen using an
 `event` specifier.
 
-An `event` specifier acts just like [`sets`]: it advertises that the
-question will potentially define a variable.
+An `event` specifier acts much like [`sets`]: it advertises that the
+question will potentially define a variable (although it actually doesn't).
 
 In the following example, the variable `show_date` is never defined;
 it is simply sought.  The [`task_not_yet_performed()`] function is
@@ -1839,6 +1839,20 @@ question above.
 from the menu or from hyperlinks embedded in question text.  For
 information and examples, see [url_action()], [process_action()],
 [action_menu_item()], and [menu_items].
+
+However, `event` is not appropriate for `question`s that set
+variables.  If you want to take the user to a screen that sets a
+variable, refer to an undefined variable so that **docassemble** will
+seek out the definition of the variable and show the `question` that
+defines the variable.  Or, if the variable is already defined, use
+`force_ask()`.  The [interview logic] system in **docassemble** is not
+like a flow chart, where you "go to" question 1 and then "go to"
+question 2; it is based on seeking definitions of variables and
+satisfying prerequisites.
+
+The `event` modifier can also be used on `code` blocks, where the
+meaning is similar, but the purpose is not necessarily to show a
+special screen.
 
 ## <a name="review"></a>Creating a special screen where the user can review his or her answers
 
