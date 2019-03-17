@@ -493,7 +493,10 @@ class DAList(DAObject):
             if hasattr(self, 'gathered'):
                 del self.gathered
             self.doing_gathered_and_complete = True
-        self.gather()
+        if self.auto_gather:
+            self.gather()
+        else:
+            self.gathered
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
@@ -832,8 +835,6 @@ class DAList(DAObject):
                 del self.gathered
             else:
                 return True
-        if not self.auto_gather:
-            return self.gathered
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters
@@ -1552,7 +1553,10 @@ class DADict(DAObject):
             if hasattr(self, 'gathered'):
                 del self.gathered
             self.doing_gathered_and_complete = True
-        self.gather()
+        if self.auto_gather:
+            self.gather()
+        else:
+            self.gathered
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
@@ -2924,13 +2928,13 @@ def export_safe(text):
 
 def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     table_content = "\n"
-    user_dict = copy.copy(orig_user_dict)
-    user_dict.update(temp_vars)
-    #logmessage("i is " + text_type(user_dict['i']))
-    header_output = [table_safe(x.text(user_dict)) for x in table_info.header]
+    user_dict_copy = copy.copy(orig_user_dict)
+    user_dict_copy.update(temp_vars)
+    #logmessage("i is " + text_type(user_dict_copy['i']))
+    header_output = [table_safe(x.text(user_dict_copy)) for x in table_info.header]
     if table_info.is_editable and not editable:
         header_output.pop()
-    the_iterable = eval(table_info.row, user_dict)
+    the_iterable = eval(table_info.row, user_dict_copy)
     if not isinstance(the_iterable, (list, dict, DAList, DADict)):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
     if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
@@ -2938,21 +2942,21 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     contents = list()
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
         for key in sorted(the_iterable):
-            user_dict['row_item'] = the_iterable[key]
-            user_dict['row_index'] = key
-            contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
+            user_dict_copy['row_item'] = the_iterable[key]
+            user_dict_copy['row_index'] = key
+            contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
     else:
         indexno = 0
         for item in the_iterable:
-            user_dict['row_item'] = item
-            user_dict['row_index'] = indexno
-            contents.append([table_safe(eval(x, user_dict)) for x in table_info.column])
+            user_dict_copy['row_item'] = item
+            user_dict_copy['row_index'] = indexno
+            contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
             indexno += 1
     if table_info.is_editable and not editable:
         for cols in contents:
             cols.pop()
-    user_dict.pop('row_item', None)
-    user_dict.pop('row_index', None)
+    user_dict_copy.pop('row_item', None)
+    user_dict_copy.pop('row_index', None)
     max_chars = [0 for x in header_output]
     max_word = [0 for x in header_output]
     for indexno in range(len(header_output)):
@@ -2992,7 +2996,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
         if table_info.empty_message in (False, None):
             table_content = "\n"
         else:
-            table_content = table_info.empty_message.text(user_dict) + "\n"
+            table_content = table_info.empty_message.text(user_dict_copy) + "\n"
     table_content += "\n"
     return table_content
 
@@ -3023,23 +3027,23 @@ class DALazyTemplate(DAObject):
     def subject(self):
         if not hasattr(self, 'source_subject'):
             raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
-        user_dict = copy.copy(self.user_dict)
-        user_dict.update(self.temp_vars)
-        return self.source_subject.text(user_dict).rstrip()
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        return self.source_subject.text(user_dict_copy).rstrip()
     @property
     def content(self):
         if not hasattr(self, 'source_content'):
             raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
-        user_dict = copy.copy(self.user_dict)
-        user_dict.update(self.temp_vars)
-        return self.source_content.text(user_dict).rstrip()
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        return self.source_content.text(user_dict_copy).rstrip()
     @property
     def decorations(self):
         if not hasattr(self, 'source_decorations'):
             raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
-        user_dict = copy.copy(self.user_dict)
-        user_dict.update(self.temp_vars)
-        return [dec.text(user_dict).rstrip for dec in self.source_decorations]
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        return [dec.text(user_dict_copy).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
@@ -3072,12 +3076,12 @@ class DALazyTableTemplate(DALazyTemplate):
             return text_type(self.content)
         if not hasattr(self, 'table_info'):
             raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
-        return text_of_table(self.table_info, self.user_dict, self.temp_vars, editable=False)
+        return text_of_table(self.table_info, self.userdict, self.tempvars, editable=False)
     @property
     def content(self):
         if not hasattr(self, 'table_info'):
             raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
-        return text_of_table(self.table_info, self.user_dict, self.temp_vars)
+        return text_of_table(self.table_info, self.userdict, self.tempvars)
     def export(self, filename=None, file_format=None, title=None, freeze_panes=True):
         if file_format is None:
             if filename is not None:
@@ -3113,12 +3117,12 @@ class DALazyTableTemplate(DALazyTemplate):
         outfile.retrieve()
         return outfile
     def header_and_contents(self):
-        user_dict = copy.copy(self.user_dict)
-        user_dict.update(self.temp_vars)
-        header_output = [export_safe(x.text(user_dict)) for x in self.table_info.header]
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        header_output = [export_safe(x.text(user_dict_copy)) for x in self.table_info.header]
         if self.table_info.is_editable:
             header_output.pop()
-        the_iterable = eval(self.table_info.row, user_dict)
+        the_iterable = eval(self.table_info.row, user_dict_copy)
         if not isinstance(the_iterable, (list, dict, DAList, DADict)):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
         if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
@@ -3126,21 +3130,21 @@ class DALazyTableTemplate(DALazyTemplate):
         contents = list()
         if hasattr(the_iterable, 'items') and callable(the_iterable.items):
             for key in sorted(the_iterable):
-                user_dict['row_item'] = the_iterable[key]
-                user_dict['row_index'] = key
-                contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
+                user_dict_copy['row_item'] = the_iterable[key]
+                user_dict_copy['row_index'] = key
+                contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
         else:
             indexno = 0
             for item in the_iterable:
-                user_dict['row_item'] = item
-                user_dict['row_index'] = indexno
-                contents.append([export_safe(eval(x, user_dict)) for x in self.table_info.column])
+                user_dict_copy['row_item'] = item
+                user_dict_copy['row_index'] = indexno
+                contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
                 indexno += 1
         if self.table_info.is_editable:
             for cols in contents:
                 cols.pop()
-        user_dict.pop('row_item', None)
-        user_dict.pop('row_index', None)
+        user_dict_copy.pop('row_item', None)
+        user_dict_copy.pop('row_index', None)
         return header_output, contents
 
 def selections(*pargs, **kwargs):
@@ -3216,7 +3220,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
     objects.revisit = True
     is_singular = True
     with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
-        for document in yaml.load_all(fp):
+        for document in yaml.load_all(fp, Loader=yaml.FullLoader):
             new_objects = recurse_obj(document, recursive=recursive)
             if type(new_objects) is list:
                 is_singular = False

@@ -23,10 +23,6 @@ if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "nul
     blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    ${DA_ROOT}/webapp/run-cron.sh cron_daily
-fi
-
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "true" ]; then
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -71,6 +67,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	    fi
 	fi
     fi
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+    ${DA_ROOT}/webapp/run-cron.sh cron_daily
 fi
 
 MONTHDAY=$(date +%m-%d)
