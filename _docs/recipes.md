@@ -369,6 +369,26 @@ subquestion: |
   You can now resume the interview on your computer.
 {% endhighlight %}
 
+# <a name="document signing"></a>Multi-user interview for getting a client's signature
+
+This is an example of a multi-user interview where one person (e.g.,
+an attorney) writes a document that they want a second person (e.g, a
+client) to sign.  It is a multi-user interview (with `multi_user` set
+to `True`).  The attorney inputs the attorney's e-mail address and
+uploads a DOCX file containing:
+
+> {% raw %}{{ signature }}{% endraw %}
+
+where the client's signature should go.  The attorney then receives a
+hyperlink that the attorney can send to the client.
+
+When the client clicks on the link, the client can read the unsigned
+document, then agree to sign it, then sign it, then download the
+signed document.  After the client signs the document, it is e-mailed
+to the attorney's e-mail address.
+
+{% include demo-side-by-side.html demo="sign" %}
+
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/

@@ -223,16 +223,12 @@ question that has already been asked.
 
 {% include side-by-side.html demo="force-ask-full" %}
 
-This may be useful in particular circumstances.  However, the effect
-of `force_ask()` is temporary.  If the user refreshes the screen while
-looking at the `user_is_communist` question a second time, it will be
-as though `force_ask` never happened.
+This may be useful in particular circumstances.  However,
+`force_ask()` cannot be used with all types of questions.  For
+example, it cannot be relied upon to re-ask questions that:
 
-Since the effect of `force_ask()` is temporary, it cannot be used with
-all types of questions.  Questions that use the [`generic object`]
-modifier, for example, can fail if they are asked through
-`force_ask()`, unless you carefully arrange for the asking of the
-question.
+* Use the [`generic object`] modifier or iterators (`i`, `j`, etc.);
+* Contain [embedded blocks].
 
 Because of these complications, the use of `force_ask()` is
 discouraged, unless you are an expert and you know what you are doing.
@@ -279,37 +275,41 @@ each variable one after another.
 The second and subsequent arguments to `force_ask()` can specify
 [actions] with arguments.  If an argument to `force_ask()` is a
 [Python dictionary] with keys `action` and `arguments`, the specified
-action will be run.  (Internally, **docassemble** is using the
-[actions] mechanism to force the interview to ask these questions.)
+action will be run.  (Internally, **docassemble** uses the [actions]
+mechanism to force the interview to ask these questions.)
+
+A function that is related to `force_ask()` is [`force_gather()`].
+[`force_gather()`] cannot force the-reasking of a question to define a
+variable that has already been defined, but it does not have the
+limitations on question types that `force_ask()` has.
 
 ## <a name="force_gather"></a>force_gather()
 
 The `force_gather()` function is similar to [`force_ask()`], except it
-is not only asks a question, but insists that a variable be defined.
+is not only asks a question, but changes the [interview logic] so that
+the first priority of the [interview logic] is to define the given
+variable or variables.
 
 In addition to doing what [`force_ask()`] does, `force_gather()`
 engages the assistance of the [`process_action()`] function to make
-sure that the variable is defined.  The [`process_action()`] function
-will not finish until the variable is defined.
+sure that the variable is defined.  The [`process_action()`] function,
+which runs every time the screen loads, will not finish until the
+variable is defined.
 
 {% include side-by-side.html demo="force-gather" %}
 
-In this example, [`force_ask()`] would not have worked in place of
-`force_gather()`, because if the user selects "Something else," the
-interview would not continue on to the next question that offers to
-define `favorite_food`.  Calling `force_ask('favorite_food')` means
-"look for a question that offers to define `favorite_food`, and
-present it to the user, whereas calling
-`force_gather('favorite_food')` means "until `favorite_food` is
-defined, keep asking questions that offer to define `favorite_food`."
+Calling `force_gather('favorite_food')` means "until `favorite_food`
+is defined, keep asking questions that offer to define
+`favorite_food`, and satisfy any prerequisites that these questions
+require."
 
 Normally, you will not need to use either [`force_ask()`] or
 [`force_gather()`]; you can just mention the name of a variable in
-your [`question`]s or [`code`] blocks, and **docassemble** will make
-sure that the variables get defined.  The [`force_ask()`] and
-[`force_gather()`] functions are primarily useful when you are using
-[actions] to do things that are outside the normal course of the
-[interview logic].
+your [`question`]s or [`code`] blocks, as part of your [interview
+logic], and **docassemble** will make sure that the variables get
+defined.  The [`force_ask()`] and [`force_gather()`] functions are
+primarily useful when you are using [actions] to do things that are
+outside the normal course of the [interview logic].
 
 ## <a name="dispatch"></a>dispatch()
 

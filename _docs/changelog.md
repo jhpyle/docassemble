@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.23](https://github.com/jhpyle/docassemble/releases/tag/v0.4.23) - 2019-03-
+
+### Changed
+- Embedded blocks can use generic objects and iterators.
+
+## [0.4.22](https://github.com/jhpyle/docassemble/releases/tag/v0.4.22) - 2019-03-17
+
+### Fixed
+- Section setting error.
+
 ## [0.4.21](https://github.com/jhpyle/docassemble/releases/tag/v0.4.21) - 2019-03-16
 
 ### Added

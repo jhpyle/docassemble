@@ -985,6 +985,12 @@
         buttons:
           - Dark Green
           - Light Green
+"buttons-code-color-iterator": |-
+  objects:
+    person: DAList.using(object_type=Individual, there_are_any=True)
+"buttons-code-iterator": |-
+  objects:
+    person: DAList.using(object_type=Individual, there_are_any=True)
 "buttons-code-list": |-
   field: target_variable
   question: |
@@ -11123,6 +11129,28 @@
   \    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\nsubject:\
   \ |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click here](${\
   \ interview_url() })."
+"sign": |-
+  mandatory: True
+  code: |
+    multi_user = True
+    signature = '(Your signature will go here)'
+  ---
+  mandatory: True
+  code: |
+    intro_seen
+    email_address
+    template_file
+    notified_of_url
+    agrees_to_sign
+    signature_reset
+    signature
+    document_emailed
+    final_screen
+  ---
+  code: |
+    notified_of_url = True
+    prevent_going_back()
+    force_ask('screen_with_link')
 "signature-diversion": |-
   question: |
     Sign your name
