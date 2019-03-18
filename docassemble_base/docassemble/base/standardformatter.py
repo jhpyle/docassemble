@@ -118,12 +118,12 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
 #     add_validation(status.extra_scripts, validation_rules)
 #     return output
 
-def get_choices_with_abb(status, field, terms=None, links=None):
+def get_choices_with_abb(status, field, the_user_dict, terms=None, links=None):
     if terms is None:
         terms = dict()
     if links is None:
         links = list()
-    choice_list = status.get_choices(field)
+    choice_list = status.get_choices(field, the_user_dict)
     data = dict()
     while True:
         success = True
@@ -183,7 +183,7 @@ def try_to_abbreviate(label, flabel, data, length):
     data['label'].append(flabel[0:startpoint] + "[" + prospective_key + ']' + flabel[endpoint:])
     return True
 
-def as_sms(status, links=None, menu_items=None):
+def as_sms(status, the_user_dict, links=None, menu_items=None):
     if links is None:
         links = list()
     if menu_items is None:
@@ -286,7 +286,7 @@ def as_sms(status, links=None, menu_items=None):
         elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'object_checkboxes']):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
-            data, choice_list = get_choices_with_abb(status, field, terms=terms, links=links)
+            data, choice_list = get_choices_with_abb(status, field, the_user_dict, terms=terms, links=links)
             qoutput += "\n" + word("Choices:")
             if hasattr(field, 'shuffle') and field.shuffle:
                 random.shuffle(data['label'])

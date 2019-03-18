@@ -396,7 +396,7 @@ class InterviewStatus(object):
         self.orig_sought = question_result['orig_sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
-    def as_data(self, encode=True):
+    def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
         if self.question.language in self.question.interview.default_validation_messages:
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
@@ -511,7 +511,7 @@ class InterviewStatus(object):
             else:
                 the_default = None
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
-                the_field['choices'] = self.get_choices_data(field, the_default, encode=encode)
+                the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = self.extras['nota'][field.number]
             the_field['active'] = self.extras['ok'][field.number]
@@ -554,7 +554,7 @@ class InterviewStatus(object):
         if 'track_location' in self.extras and self.extras['track_location']:
             result['track_location'] = True
         return result
-    def get_choices(self, field):
+    def get_choices(self, field, the_user_dict):
         question = self.question
         choice_list = list()
         if hasattr(field, 'saveas') and field.saveas is not None:
@@ -590,7 +590,7 @@ class InterviewStatus(object):
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                choice_list.append([choice['label'], '_internal["answers"][' + repr(question.name) + ']', indexno])
+                choice_list.append([choice['label'], '_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', indexno])
                 indexno += 1
         return choice_list
     def icon_url(self, name):
@@ -601,7 +601,7 @@ class InterviewStatus(object):
             self.attributions.add(the_image.attribution)
         url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
         return url
-    def get_choices_data(self, field, defaultvalue, encode=True):
+    def get_choices_data(self, field, defaultvalue, the_user_dict, encode=True):
         question = self.question
         choice_list = list()
         if hasattr(field, 'saveas') and field.saveas is not None:
@@ -671,9 +671,9 @@ class InterviewStatus(object):
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.name) + ']', value=indexno)
+                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', value=indexno)
                 if encode:
-                    item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.name) + ']')
+                    item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']')
                 if 'image' in choice:
                     the_image = self.icon_url(choice['image'])
                     if the_image:
@@ -1005,6 +1005,7 @@ class Question:
         self.autoterms = dict()
         self.need = None
         self.scan_for_variables = True
+        self.embeds = False
         self.helptext = None
         self.subcontent = None
         self.reload_after = None
@@ -3779,7 +3780,7 @@ class Question:
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
-                #     attachment = self.interview.questions_by_name[the_att.info['attachment']['name']].attachments[the_att.info['attachment']['number']] #PPP
+                #     attachment = self.interview.questions_by_name[the_att.info['attachment']['name']].attachments[the_att.info['attachment']['number']]
                 #     items.append([attachment, self.prepare_attachment(attachment, the_user_dict, **kwargs)])
         if self.interview.cache_documents and hasattr(self, 'name'):
             if self.name + '__SEEKING__' + seeking_var not in the_user_dict['_internal']['doc_cache']:
@@ -3826,6 +3827,7 @@ class Question:
                         result_dict['key'] = TextObject(value)
                 elif isinstance(value, dict):
                     result_dict['label'] = TextObject(key)
+                    self.embeds = True
                     if PY3:
                         result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(bytearray(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), encoding='utf-8'), 'utf-8'))
                     else:
@@ -3852,13 +3854,57 @@ class Question:
     def mark_as_answered(self, the_user_dict):
         if self.is_mandatory or self.mandatory_code is not None:
             the_user_dict['_internal']['answered'].add(self.name)
-    def follow_multiple_choice(self, the_user_dict, interview_status):
-        if self.name and self.name in the_user_dict['_internal']['answers']:
+    def sub_fields_used(self):
+        all_fields_used = set()
+        for var_name in self.fields_used:
+            all_fields_used.add(var_name)
+        if len(self.fields) > 0 and hasattr(self.fields[0], 'choices'):
+            for choice in self.fields[0].choices:
+                if isinstance(choice['key'], Question):
+                    all_fields_used.update(choice['key'].sub_fields_used())
+        return all_fields_used
+    def extended_question_name(self, the_user_dict):
+        if not self.name:
+            return self.name
+        the_name = self.name
+        uses = set()
+        for var_name in self.sub_fields_used():
+            if re.search(r'^x\b', var_name):
+                uses.add('x')
+            for iterator in re.findall(r'\[([ijklmn])\]', var_name):
+                uses.add(iterator)
+        if len(uses) > 0:
+            ok_to_use_extra = True
+            for var_name in uses:
+                if var_name not in the_user_dict:
+                    ok_to_use_extra = False
+            if ok_to_use_extra and 'x' in uses and not hasattr(the_user_dict['x'], 'instanceName'):
+                ok_to_use_extra = False
+            if ok_to_use_extra:
+                extras = []
+                if 'x' in uses:
+                    extras.append(the_user_dict['x'].instanceName)
+                for var_name in ['i', 'j', 'k', 'l', 'm', 'n']:
+                    if var_name in uses:
+                        extras.append(text_type(the_user_dict[var_name]))
+                the_name += "|WITH|" + '|'.join(extras)
+        return the_name
+    def follow_multiple_choice(self, the_user_dict, interview_status, is_generic, the_x, iterators):
+        if not self.embeds:
+            return(self)
+        if is_generic:
+            if the_x != 'None':
+                exec("x = " + the_x, the_user_dict)
+        if len(iterators):
+            for indexno in range(len(iterators)):
+                exec(list_of_indices[indexno] + " = " + iterators[indexno], the_user_dict)
+        the_name = self.extended_question_name(the_user_dict)
+        if the_name and the_name in the_user_dict['_internal']['answers']:
             interview_status.followed_mc = True
             interview_status.tentatively_answered.add(self)
-            qtarget = self.fields[0].choices[the_user_dict['_internal']['answers'][self.name]].get('key', False)
+            qtarget = self.fields[0].choices[the_user_dict['_internal']['answers'][the_name]].get('key', False)
             if isinstance(qtarget, Question):
-                return(qtarget.follow_multiple_choice(the_user_dict, interview_status))
+                return(qtarget.follow_multiple_choice(the_user_dict, interview_status, is_generic, the_x, iterators))
         return(self)
     def finalize_attachment(self, attachment, result, the_user_dict):
         if self.interview.cache_documents and attachment['variable_name']:
@@ -4776,7 +4822,7 @@ class Interview:
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)
-                        if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
+                        if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
@@ -4825,10 +4871,7 @@ class Interview:
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory question', 'time': time.time()})
                                 if question.name and question.name in user_dict['_internal']['answers']:
-                                    #logmessage("in answers")
-                                    #question.mark_as_answered(user_dict)
-                                    #interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None, None))
-                                    the_question = question.follow_multiple_choice(user_dict, interview_status)
+                                    the_question = question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
                                         exec_with_trap(the_question, user_dict)
@@ -5181,12 +5224,9 @@ class Interview:
                         # logmessage("Skipping question " + the_question.name)
                         continue
                     current_question = the_question
-                    if follow_mc:
-                        question = the_question.follow_multiple_choice(user_dict, interview_status)
-                    else:
-                        question = the_question
                     if self.debug:
-                        seeking.append({'question': question, 'reason': 'considering', 'time': time.time()})
+                        seeking.append({'question': the_question, 'reason': 'considering', 'time': time.time()})
+                    question = current_question
                     if len(question.condition) > 0:
                         if is_generic:
                             if the_x != 'None':
@@ -5201,6 +5241,25 @@ class Interview:
                                 break
                         if not condition_success:
                             continue
+                    if follow_mc:
+                        question = the_question.follow_multiple_choice(user_dict, interview_status, is_generic, the_x, iterators)
+                    else:
+                        question = the_question
+                    if question is not current_question:
+                        if len(question.condition) > 0:
+                            if is_generic:
+                                if the_x != 'None':
+                                    exec("x = " + the_x, user_dict)
+                            if len(iterators):
+                                for indexno in range(len(iterators)):
+                                    exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                            condition_success = True
+                            for condition in question.condition:
+                                if not eval(condition, user_dict):
+                                    condition_success = False
+                                    break
+                            if not condition_success:
+                                continue
                     if self.debug:
                         seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":

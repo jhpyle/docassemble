@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.23] - 2019-03-
+### Changed
+- Embedded blocks can use generic objects and iterators.
+
 ## [0.4.22] - 2019-03-17
 ### Fixed
 - Section setting error.

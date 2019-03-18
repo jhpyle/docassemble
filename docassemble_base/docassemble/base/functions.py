@@ -3288,7 +3288,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
     if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else False))
+        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else True))
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()
@@ -3679,8 +3679,9 @@ def forget_result_of(*pargs):
     """Resets the user's answer to an embedded code question or mandatory code block."""
     for id_name in pargs:
         key = 'ID ' + id_name
-        if key in this_thread.internal['answers']:
-            del this_thread.internal['answers'][key]
+        for key_item in list(this_thread.internal['answers'].keys()):
+            if key_item == key or key_item.startswith(key + '|WITH|'):
+                del this_thread.internal['answers'][key_item]
         if key in this_thread.internal['answered']:
             this_thread.internal['answered'].remove(key)
 

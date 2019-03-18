@@ -5341,7 +5341,7 @@ def index(action_argument=None):
             if key_requires_preassembly.search(the_key):
                 if the_key == '_multiple_choice' and '_question_name' in post_data:
                     question_name = post_data.get('_question_name', -100)
-                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])].question_type in ('refresh', 'continue'):
+                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
                         continue
                 should_assemble = True
                 #logmessage("index: pre-assembly necessary for " + the_key)
@@ -5940,14 +5940,8 @@ def index(action_argument=None):
             #logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
             data = repr(data)
         if key == "_multiple_choice":
-            #interview.assemble(user_dict, interview_status)
-            #if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
-                #key = '_internal["answers"]["' + interview_status.question.name + '"]'
             if '_question_name' in post_data:
-                key = '_internal["answers"][' + repr(post_data['_question_name']) + ']'
-            #else:
-                #continue
-                #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
+                key = '_internal["answers"][' + repr(interview.questions_by_name[post_data['_question_name']].extended_question_name(user_dict)) + ']'
         if is_date:
             #logmessage("index: doing import docassemble.base.util")
             try:
@@ -9332,7 +9326,7 @@ def index(action_argument=None):
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
         data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
-        data.update(interview_status.as_data())
+        data.update(interview_status.as_data(user_dict))
         #if next_action_review:
         #    data['next_action'] = next_action_review
         if reload_after and reload_after > 0:
@@ -17672,7 +17666,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             selection_number = int(m.group(2)) - 1
             links = list()
             menu_items = list()
-            sms_info = as_sms(interview_status, links=links, menu_items=menu_items)
+            sms_info = as_sms(interview_status, user_dict, links=links, menu_items=menu_items)
             target_url = None
             if selection_type == word('menu') and selection_number < len(menu_items):
                 (target_url, label) = menu_items[selection_number]
@@ -17727,7 +17721,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     nothing_more = False
     if accepting_input:
         if inp_lower == word('?'):
-            sms_info = as_sms(interview_status)
+            sms_info = as_sms(interview_status, user_dict)
             message = ''
             if sms_info['help'] is None:
                 message += word('Sorry, no help is available for this question.')
@@ -18204,11 +18198,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             user_dict['_internal']['answers'].clear()
         # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
         #     del user_dict['_internal']['answers'][interview_status.question.name]
-        #logmessage("do_sms: " + as_sms(interview_status))
+        #logmessage("do_sms: " + as_sms(interview_status, user_dict))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
-        #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status))
+        #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status, user_dict))
         logmessage("do_sms: calling as_sms")
-        sms_info = as_sms(interview_status)
+        sms_info = as_sms(interview_status, user_dict)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:
             logmessage("do_sms: next variable is " + sms_info['next'])
@@ -19355,7 +19349,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     else:
         allow_going_back = False
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
-    data.update(interview_status.as_data(encode=False))
+    data.update(interview_status.as_data(user_dict, encode=False))
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     #else:

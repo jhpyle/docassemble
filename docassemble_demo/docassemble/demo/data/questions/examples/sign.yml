@@ -1,5 +1,8 @@
 metadata:
   title: Sign
+  documentation: "https://docassemble.org/docs/recipes.html#document signing"
+  example start: 1
+  example end: 15
 ---
 mandatory: True
 code: |
