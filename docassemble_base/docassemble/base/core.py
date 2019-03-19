@@ -486,13 +486,13 @@ class DAList(DAObject):
     def gathered_and_complete(self):
         """Ensures all items in the list are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
-            if self.complete_attribute == 'complete':
+            self.doing_gathered_and_complete = True
+            if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
                 for item in self.elements:
                     if hasattr(item, self.complete_attribute):
                         delattr(item, self.complete_attribute)
             if hasattr(self, 'gathered'):
                 del self.gathered
-            self.doing_gathered_and_complete = True
         if self.auto_gather:
             self.gather()
         else:
@@ -911,8 +911,8 @@ class DAList(DAObject):
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
-        if hasattr(self, 'doing_gathered_and_complete'):
-            del self.doing_gathered_and_complete
+        #if hasattr(self, 'doing_gathered_and_complete'):
+        #    del self.doing_gathered_and_complete
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
@@ -1103,8 +1103,8 @@ class DAList(DAObject):
                 use_delete = val.get('delete', True)
         if use_edit:
             items = []
-            if self.complete_attribute == 'complete':
-                items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+            #if self.complete_attribute == 'complete':
+            #    items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
@@ -1546,13 +1546,13 @@ class DADict(DAObject):
     def gathered_and_complete(self):
         """Ensures all items in the dictionary are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
+            self.doing_gathered_and_complete = True
             if self.complete_attribute == 'complete':
                 for item in list(self.elements.values()):
                     if hasattr(item, self.complete_attribute):
                         delattr(item, self.complete_attribute)
             if hasattr(self, 'gathered'):
                 del self.gathered
-            self.doing_gathered_and_complete = True
         if self.auto_gather:
             self.gather()
         else:

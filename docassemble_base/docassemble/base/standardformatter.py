@@ -554,7 +554,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button class="btn btn-secondary ' + BUTTON_CLASS + ' " id="questionhelpbutton"><span>' + help_label + '</span></button>'
+        help_button = '\n                  <button class="btn btn-info ' + BUTTON_CLASS + ' " id="questionhelpbutton"><span>' + help_label + '</span></button>'
     else:
         help_button = ''
     if status.audiovideo is not None:

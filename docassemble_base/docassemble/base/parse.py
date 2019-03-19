@@ -1048,6 +1048,12 @@ class Question:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
             if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
                 self.interview.show_progress_bar_percentage = True
+            if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], text_type):
+                self.interview.progress_bar_method = data['features']['progress bar method']
+            if 'progress bar multiplier' in data['features'] and isinstance(data['features']['progress bar multiplier'], (int, float)):
+                if data['features']['progress bar multiplier'] <= 0.0 or data['features']['progress bar multiplier'] >= 1.0:
+                    raise DAError("progress bar multiplier in features must be between 0 and 1." + self.idebug(data))
+                self.interview.progress_bar_method = data['features']['progress bar multiplier']
             if 'question back button' in data['features']:
                 self.interview.question_back_button = True if data['features']['question back button'] else False
             if 'question help button' in data['features']:
@@ -1683,7 +1689,11 @@ class Question:
         #     else:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
-            self.progress = data['progress']
+            try:
+                self.progress = int(data['progress'])
+                self.interview.progress_points.add(self.progress)
+            except:
+                logmessage("Invalid progress number " + repr(data['progress']))
         if 'zip filename' in data:
             self.zip_filename = TextObject(definitions + text_type(data['zip filename']), names_used=self.mako_names)
         if 'action' in data:
@@ -3834,9 +3844,11 @@ class Question:
                         result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), 'utf-8'))
                 elif isinstance(value, string_types):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
+                        self.embeds = True
                         result_dict['label'] = TextObject(key)
                         result_dict['key'] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ('continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'logout', 'exit_logout', 'leave', 'new_session'):
+                        self.embeds = True
                         result_dict['label'] = TextObject(key)
                         result_dict['key'] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
@@ -4381,6 +4393,7 @@ class Interview:
         self.questions_by_id = dict()
         self.questions_by_name = dict()
         self.questions_list = list()
+        self.progress_points = set()
         self.ids_in_use = set()
         self.id_orderings = list()
         self.orderings = list()
@@ -4648,7 +4661,6 @@ class Interview:
                     continue
                 if parts.get('main page ' + title_name, '') != '':
                     self.default_title[lang][title_abb] = parts['main page ' + title_name]
-
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K(object):

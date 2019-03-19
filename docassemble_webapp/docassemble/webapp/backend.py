@@ -492,8 +492,20 @@ def fetch_previous_user_dict(user_code, filename, secret):
         db.session.commit()
     return fetch_user_dict(user_code, filename, secret=secret)
 
-def advance_progress(user_dict):
-    user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
+def advance_progress(user_dict, interview):
+    if hasattr(interview, 'progress_bar_multiplier'):
+        multiplier = interview.progress_bar_multiplier
+    else:
+        multiplier = 0.05
+    if hasattr(interview, 'progress_bar_method') and interview.progress_bar_method == 'stepped':
+        next_part = 100.0
+        for value in sorted(interview.progress_points):
+            if value > user_dict['_internal']['progress']:
+                next_part = value
+                break
+        user_dict['_internal']['progress'] += multiplier*(next_part-user_dict['_internal']['progress'])
+    else:
+        user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
     return
 
 #@elapsed('reset_user_dict')

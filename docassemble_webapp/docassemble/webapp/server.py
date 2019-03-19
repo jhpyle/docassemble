@@ -6539,6 +6539,7 @@ def index(action_argument=None):
     # Why do this?  To prevent loops of redirects?
     # Commenting this line out is necessary for force-gather.yml to work.
     # user_dict['_internal']['answers'] = dict()
+    # Why is this necessary?
     if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
         user_dict['_internal']['answers'].clear()
     # Not sure we need this anymore
@@ -6555,7 +6556,7 @@ def index(action_argument=None):
             user_dict['_internal']['steps'] = steps
         #logmessage("Incrementing steps because action")
     if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
-        advance_progress(user_dict)
+        advance_progress(user_dict, interview)
     #logmessage("index: saving user dict where encrypted is " + str(encrypted))
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     if save_status != 'ignore':
@@ -18194,6 +18195,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             user_dict['_internal']['steps_offset'] = steps
         #I had commented this out in do_sms(), but not in index()
         #user_dict['_internal']['answers'] = dict()
+        #Why do this?
         if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
             user_dict['_internal']['answers'].clear()
         # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
@@ -18974,9 +18976,9 @@ def api_session():
                     the_file.save(temp_file.name)
                     process_file(saved_file, temp_file.name, mimetype, extension)
                     files_to_process.append((filename, file_number, mimetype, extension))
+            file_field = file_variables[filekey]
             if illegal_variable_name(file_field):
                 return jsonify_with_status("Malformed file variable.", 400)
-            file_field = file_variables[filekey]
             if len(files_to_process) > 0:
                 elements = list()
                 indexno = 0
