@@ -4,10 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.4.23](https://github.com/jhpyle/docassemble/releases/tag/v0.4.23) - 2019-03-
+## [0.4.23](https://github.com/jhpyle/docassemble/releases/tag/v0.4.23) - 2019-03-19
+
+### Added
+- The `progress bar multiplier` and `progress bar method` features.
 
 ### Changed
 - Embedded blocks can use generic objects and iterators.
+- Help buttons are now "info" color instead of "secondary" color.
+
+### Fixed
+- Error when uploading files through the API.
+- Error resulting from `add_action()` under some circumstances.
 
 ## [0.4.22](https://github.com/jhpyle/docassemble/releases/tag/v0.4.22) - 2019-03-17
 

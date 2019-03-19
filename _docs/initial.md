@@ -1267,6 +1267,48 @@ progress bar percentage: True`:
 
 {% include side-by-side.html demo="progress-features-percentage" %}
 
+By default, if you do not set the [`progress`] modifier on a
+[`question`], then each time the user takes a step, the progress bar
+will advance 5% of the way toward the end.
+
+The 5% figure is known as the `progress bar multiplier` and it is
+configurable:
+
+{% highlight yaml %}
+features:
+  progress bar: True
+  progress bar multiplier: 0.01
+{% endhighlight %}
+
+The default is 0.05. 
+
+If you set `progress bar method: stepped`, the progress bar advances a
+different way when there is no [`progress`] modifier.
+
+{% highlight yaml %}
+features:
+  progress bar: True
+  progress bar method: stepped
+{% endhighlight %}
+
+Instead of advancing toward 100%, it advances toward the next greatest
+[`progress`] value that is defined on a [`question`] in the interview.
+(Note that **docassemble** cannot predict the future, so whether the
+[`question`] with the next highest [`progress`] value will actually be
+reached is unknown; **docassemble** just looks at all the
+[`question`]s in the interview that have [`progress`] values defined.)
+The amount by which it advances is determined by `progress bar
+multiplier`.
+
+To use the default method for advancing the progress bar, omit
+`progress bar method`, or set it to `default`.
+
+{% highlight yaml %}
+features:
+  progress bar: True
+  progress bar method: default
+{% endhighlight %}
+
 ## <a name="navigation bar"></a>Navigation bar
 
 The `navigation` feature controls whether a navigation bar is
