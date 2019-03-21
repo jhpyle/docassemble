@@ -171,7 +171,7 @@ provider's instructions for using [SSH] to connect to your machine.
 From the command line, simply type in:
 
 {% highlight bash %}
-docker run -d -p 80:80 --443:443 --env DAPYTHONVERSION=3 jhpyle/docassemble
+docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 jhpyle/docassemble
 {% endhighlight %}
 
 The [`docker run`] command will download and run **docassemble**,

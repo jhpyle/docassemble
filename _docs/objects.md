@@ -2308,10 +2308,12 @@ exist, it will use `defendant.phone_number`.
 
 The method formats the phone number in [E.164] format.  It will make
 use of `defendant.country` to format the phone number, since the
-[E.164] format contains the international country code of the phone
-number.  If the `.country` attribute is not defined, the method will
-call [`get_country()`].  The `.country` attribute is expected to be a
-two-letter, capitalized abbreviation of a country.
+[E.164] format contains the international [country calling code] of
+the phone number.  If the `.country` attribute is not defined,
+`.address.country` will be tried, but if that is not defined either,
+the method will call [`get_country()`].  The country is expected to be
+a two-letter, capitalized abbreviation of a country ([ISO 3166-1
+alpha-2] format).
 
 If a `mobile_number` attribute exists and a `uses_whatsapp` number
 also exists and is `True`, then [WhatsApp] will be used to send messages
@@ -2707,7 +2709,7 @@ An `Address` has the following text attributes:
 * `city`: e.g., "Springfield"
 * `state`: e.g., "MA"
 * `zip`: e.g. "01199"
-* `country`: e.g., 'US'
+* `country`: e.g., 'US' ([ISO 3166-1 alpha-2] format)
 * `city_only`: defaults to `False`.  See [`City`], below.
 
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
@@ -2791,7 +2793,7 @@ determine the value by calling the API:
 * `myaddress.county` - the county (known as `administrative_area_level_2`).
 * `myaddress.state` - the state (known as `administrative_area_level_1`).
 * `myaddress.zip` - the Zip code (known as `postal_code`).
-* `myaddress.country` - the country (e.g., `US`).
+* `myaddress.country` - the country (e.g., `US`) in [ISO 3166-1 alpha-2] format.
 
 In addition, the following attributes will be set to the "long" form
 of the values returned from the [Google Maps Geocoding API], if applicable:
@@ -4121,3 +4123,5 @@ of the original [`DADateTime`] object.  See
 [using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute
 [WhatsApp]: https://www.twilio.com/whatsapp
 [`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util
+[ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes

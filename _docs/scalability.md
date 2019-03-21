@@ -369,20 +369,21 @@ few manual changes to it.
 
 In the "Load Balancers" section, select the `docassembleLb` load
 balancer, and open the "Listeners" tab.  Select the "HTTP : 80"
-listener and do Actions, Edit.  Set the "Default target group" to
-"http-redirect," if it is not selected already.
+listener and click Edit.  Under "Default action(s)," make sure that
+step 1 is "Forward to http-redirect."
 
-Once those changes are saved, click "View/edit rules" for the "HTTPS :
-443" listener.
+Once those changes (if any) are saved, select the "HTTPS :
+443" listener and click Edit.
 
-There will be one default rule set up, and it will incorrectly say
-that requests should be routed to the `http-redirect` target group.  This
-is the proper setting for HTTP (port 80), but not for HTTPS (port
-443), so you need to change it.  Click the button to edit rules, and
-edit the default rule.  Change it so that it forwards to the `web`
-target group.  Then press "Update" to save your changes.
+Under "Default action(s)," it will incorrectly say that requests
+should be forwarded to the `http-redirect` target group.  This is the
+proper setting for HTTP (port 80), but not for HTTPS (port 443), so
+you need to change it.  Click the edit button (pencil icon) and hange
+it so that it forwards to the `web` target group.  Then press "Update"
+to save your changes.
 
-We need to make one more change on this screen.  Click the button to
+Then go back to the list of listeners, and under "HTTPS : 443," click
+"View/edit rules."  Click the "+" button at the top of the screen to
 add a new rule.  Make it the first rule in the list of rules.
 Construct the new rule so that it says, in effect, "if the path is
 `/ws/*`, forward the request to the `websocket` target group."  Then
@@ -475,7 +476,7 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
       "environment": [
         {
           "name": "CONTAINERROLE",
-          "value": "sql:redis:rabbitmq:log:cron"
+          "value": "sql:redis:rabbitmq:log:cron:mail"
         },
         {
           "name": "DAHOSTNAME",

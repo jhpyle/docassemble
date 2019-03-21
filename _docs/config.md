@@ -1259,7 +1259,7 @@ country: US
 
 The country is primarily relevant for interpreting telephone numbers.
 The code needs to be a valid country code accepted by the
-[phonenumbers] library.
+[phonenumbers] library ([ISO 3166-1 alpha-2] format).
 
 ## <a name="os locale"></a>Operating system locale
 
@@ -3243,3 +3243,4 @@ and Facebook API keys.
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [WhatsApp]: https://www.twilio.com/whatsapp
 [`allow non-idempotent questions`]: {{ site.baseurl }}/docs/initial.html#allow non-idempotent questions
+[ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2

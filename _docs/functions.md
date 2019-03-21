@@ -1449,12 +1449,15 @@ reload: True
 The destination can be a [`Person`] or a fax number.  If it is a
 [`Person`], the fax number will be obtained from the `fax_number`
 attribute of the object.  The `send_fax()` function will convert the
-fax number to [E.164] format.  To do so, it will need a country code.
-This country code will be obtained from the `country` attribute of the
-object, or the `address.country` attribute, but if neither of these
-attributes is already defined, the value of [`get_country()`] will be
-used.  If you want to use a specific country, you can call
-`send_fax()` with the optional keyword parameter `country`.
+fax number to [E.164] format.  To do so, it will need to determine the
+appropriate [country calling code] for the phone number.  This country
+code will be based on the `country` attribute of the object, or the
+`address.country` attribute, but if neither of these attributes is
+already defined, the value of [`get_country()`] will be used.  If you
+want to use a specific country, you can call `send_fax()` with the
+optional keyword parameter `country`.  The format of the `country`
+attribute and the keyword parameter is expected to be [ISO 3166-1
+alpha-2] format.
 
 The second argument, the file, must be a file object such as a
 [`DAFile`], [`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`]
@@ -1572,9 +1575,9 @@ English) based on the two-letter, capitalized country abbreviation.
 {% include side-by-side.html demo="country" %}
 
 When working with countries, it is a good idea to store country names
-in this two-letter, capitalized format.  The country code is used by
-the [`send_sms()`] function to determine the appropriate universal
-formatting of phone numbers.
+in this two-letter, capitalized format ([ISO 3166-1 alpha-2] format).
+The country code is used by the [`send_sms()`] function to determine
+the appropriate universal formatting of phone numbers.
 
 The data come from the [`pycountry` package].
 
@@ -1586,14 +1589,14 @@ abbreviation to the name of a state.  This function is primarily
 useful when asking a user to specify his or her state.
 
 The function takes an optional keyword argument `country`, which is
-expected to be a country abbreviation (e.g., `'SE'` for Sweden).  If
-the `country` is not provided, it is assumed to be the default country
-(the value returned by [`get_country()`]).  For countries other than
-the United States, the geographic areas returned are the first-level
-subdivisions within the country.  The name of these subdivisions
-varies.  The [`subdivision_type()`] function can be used to find the
-name of the major subdivision, and also to find if the
-country has any subdivisions at all.
+expected to be a country abbreviation ([ISO 3166-1 alpha-2], e.g.,
+`'SE'` for Sweden).  If the `country` is not provided, it is assumed
+to be the default country (the value returned by [`get_country()`]).
+For countries other than the United States, the geographic areas
+returned are the first-level subdivisions within the country.  The
+name of these subdivisions varies.  The [`subdivision_type()`]
+function can be used to find the name of the major subdivision, and
+also to find if the country has any subdivisions at all.
 
 The `state_name()` function returns the name of a state based on the
 state abbreviation provided.
@@ -1607,8 +1610,8 @@ The data come from the [`pycountry` package].
 
 ## <a name="subdivision_type"></a>subdivision_type()
 
-Given a country code, `subdivision_type()` returns the name of the
-primary subdivision within that country.
+Given a country code ([ISO 3166-1 alpha-2]), `subdivision_type()`
+returns the name of the primary subdivision within that country.
 
 {% include side-by-side.html demo="subdivision-type" %}
 
@@ -1905,7 +1908,7 @@ attributes describing the current user:
 * `first_name`
 * `last_name`
 * `email`
-* `country` (will be an official [country code] like `us`)
+* `country` (will be an official [ISO 3166-1 alpha-2] country code like `US`)
 * `subdivision_first` (e.g., state)
 * `subdivision_second` (e.g., county)
 * `subdivision_third` (e.g., municipality)
@@ -2149,14 +2152,14 @@ to the [`set_language()`] function.
 
 ## <a name="get_country"></a>get_country()
 
-Returns the current country as a two-digit country code.  The default
-country is `'US'`, unless a different default is set using the
-[`country` configuration setting].
+Returns the current country as a two-digit [ISO 3166-1 alpha-2]
+country code.  The default country is `'US'`, unless a different
+default is set using the [`country` configuration setting].
 
 ## <a name="set_country"></a>set_country()
 
 Sets the current country.  Expects a two-digit, uppercase country code
-such as `'US'`, `'GB'`, or `'DE'`.
+([ISO 3166-1 alpha-2] format) such as `'US'`, `'GB'`, or `'DE'`.
 
 ## <a name="get_locale"></a>get_locale()
 
@@ -2589,11 +2592,12 @@ on the [`phonenumbers`] package in [Python].
 
 The `phone_number_in_e164()` function takes a phone number and formats
 it into [E.164] format.  It takes an optional keyword argument
-`country`, which is expected to be a country abbreviation (e.g.,
-`'SE'` for Sweden).  (See the [`pycountry` package] for the list of
-codes.)  The `country` code is used to determine the country code for
-the phone number.  If `country` is not provided, the [`get_country()`]
-function is used to determine the applicable country.
+`country`, which is expected to be a country abbreviation ([ISO 3166-1
+alpha-2] format, e.g., `'SE'` for Sweden).  (See the [`pycountry`
+package] for the list of codes.)  The `country` code is used to
+determine the country code for the phone number.  If `country` is not
+provided, the [`get_country()`] function is used to determine the
+applicable country.
 
 ## <a name="phone_number_is_valid"></a>phone_number_is_valid()
 
@@ -2601,7 +2605,8 @@ The `phone_number_is_valid()` function takes a phone number and
 returns `True` or `False` depending on whether the phone number is
 valid.  It takes an optional keyword argument `country` that is used
 to determine the country whose phone number standards should be used
-to determine the validity of the phone number.  If `country` is not
+to determine the validity of the phone number.  The `country` must be
+expressed in [ISO 3166-1 alpha-2] format.  If `country` is not
 provided, the [`get_country()`] function is used to determine the
 applicable country.
 
@@ -2614,10 +2619,11 @@ of a phone number.
 * `phone_number_part("555-212-5623", 1)` returns `'212'`.
 * `phone_number_part("555-212-5623", 2)` returns `'5623'`.
 
-The function takes an optional keyword argument `country` that is used
-to format the phone number according to the national conventions.  If
-`country` is not provided, the [`get_country()`] function is used to
-determine the applicable country.
+The function takes an optional keyword argument `country`, a [ISO
+3166-1 alpha-2] country code, that is used to format the phone number
+according to the national conventions.  If `country` is not provided,
+the [`get_country()`] function is used to determine the applicable
+country.
 
 # <a name="tasks"></a>Functions for tracking tasks
 
@@ -3381,7 +3387,7 @@ The function also accepts an optional keyword parameter `info`, which
 is expected to be a dictionary containing information about the new
 user.  The `info` dictionary can contain any of the following keys:
 
- - `country`: user's country code.
+ - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `first_name`: user's first name.
  - `language`: user's language code.
  - `last_name`: user's last name.
@@ -3409,7 +3415,7 @@ each dictionary has the following keys:
 
  - `active`: whether the user is active.  This is only included if the
    `include_inactive` parameter is set.
- - `country`: user's country code.
+ - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
  - `id`: the integer ID of the user. 
@@ -3454,7 +3460,7 @@ The [`set_user_info()`] function writes information to user profiles.
 It accepts the following keyword parameters, all of which
 are optional:
 
- - `country`: user's country code.
+ - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `first_name`: user's first name.
  - `language`: user's language code.
  - `last_name`: user's last name.
@@ -4837,18 +4843,18 @@ Otherwise, the `phone_number` attribute will be used, and sought if it
 is not already defined.
 
 Note that [Twilio] expects the phone number to be expressed in [E.164]
-format, which includes the country code (e.g., 1 for the United
-States).  However, users do not typically write phone numbers in such
-a way.  Therefore, the [`phonenumbers`] package is used to convert
-phone numbers to [E.164] based on the applicable country.  If an
-[`Individual`] or [`Person`] is the recipient, the `country`
+format, which includes the [country calling code] (e.g., 1 for the
+United States).  However, users do not typically write phone numbers
+in such a way.  Therefore, the [`phonenumbers`] package is used to
+convert phone numbers to [E.164] based on the applicable country.  If
+an [`Individual`] or [`Person`] is the recipient, the `country`
 attribute, if it exists, will be used to determine the country.
 Otherwise, the [`get_country()`] function is used to determine the
 applicable country.  Your interview can use [`set_country()`] in
 [`initial`] code to set a default country, or you can set a default on
 a server level by setting the [`country` configuration directive].
 The country must be specified as a two-letter, capitalized
-abbreviation.
+abbreviation ([ISO 3166-1 alpha-2] format).
 
 `send_sms()` returns `False` if an error prevented the message from
 being sent; otherwise it returns `True`.
@@ -6145,7 +6151,6 @@ $(document).on('daPageLoad', function(){
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [QR code]: https://en.wikipedia.org/wiki/QR_code
 [Profile page]: {{ site.baseurl }}/docs/users.html#profile
-[country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [`task_performed()`]: #task_performed
 [`task_not_yet_performed()`]: #task_not_yet_performed
 [`mark_task_as_performed()`]: #mark_task_as_performed
@@ -6428,3 +6433,5 @@ $(document).on('daPageLoad', function(){
 [`sms_number()`]: {{ site.baseurl }}/docs/objects.html#Person.sms_number
 [WhatsApp]: https://www.twilio.com/whatsapp
 [`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util
+[ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes
