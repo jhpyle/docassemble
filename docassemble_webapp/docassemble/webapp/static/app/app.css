@@ -2111,3 +2111,10 @@ tr:first-child .datableup, tr:last-child .databledown {
 .CodeMirror-fullscreen {
   margin-top: 55px;
 }
+
+@media (max-width: 767px) {
+    .navbar-brand {
+	max-width: 70%;
+	overflow: hidden;
+    }
+}

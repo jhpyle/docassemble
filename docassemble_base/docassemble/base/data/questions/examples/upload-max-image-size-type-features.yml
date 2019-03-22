@@ -1,16 +1,19 @@
 metadata:
-  title: Maximum image size
-  short title: Resize
+  title: Image upload type
+  short title: Upload
   example start: 1
-  example end: 2
-  documentation: "https://docassemble.org/docs/fields.html#maximum image size"
+  example end: 1
+  documentation: "https://docassemble.org/docs/initial.html#image upload type"
+---
+features:
+  maximum image size: 100
+  image upload type: jpeg
 ---
 question: |
   Please upload a picture of yourself.
 fields:
   - Picture: user_picture
     datatype: file
-    maximum image size: 100
 ---
 question: |
   You're so small!

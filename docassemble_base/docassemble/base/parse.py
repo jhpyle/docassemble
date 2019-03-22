@@ -521,6 +521,8 @@ class InterviewStatus(object):
                 the_field['validation_messages'].update(self.extras['validation messages'][field.number])
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
+            if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'image_type' in self.extras and self.extras['image_type']:
+                the_field['image_type'] = self.extras['image_type']
             if hasattr(field, 'extras'):
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     the_field['ml_info'] = dict()
@@ -759,6 +761,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
+        if 'image_type' in data:
+            self.image_type = data['image_type']
         if 'accept' in data:
             self.accept = data['accept']
         if 'rows' in data:
@@ -1068,6 +1072,8 @@ class Question:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
+            if 'image upload type' in data['features']:
+                self.interview.image_type = str(data['features']['image upload type'])
             if 'debug' in data['features'] and isinstance(data['features']['debug'], bool):
                 self.interview.debug = data['features']['debug']
             if 'cache documents' in data['features']:
@@ -2225,10 +2231,15 @@ class Question:
                             elif 'datatype' in field and field['datatype'] == 'area' and key == 'rows':
                                 field_info['rows'] = {'compute': compile(text_type(field[key]), '<rows code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
+                            elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                                 field_info['max_image_size'] = {'compute': compile(text_type(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'accept':
+                            elif key == 'image upload type' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if field[key].lower().strip() in ('jpeg', 'jpg', 'bmp', 'png'):
+                                    field_info['image_type'] = {'compute': compile(repr(field[key]), '<image upload type code>', 'eval'), 'sourcecode': repr(field[key])}
+                                else:
+                                    field_info['image_type'] = {'compute': compile(text_type(field[key]), '<image upload type code>', 'eval'), 'sourcecode': text_type(field[key])}
+                            elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                                 field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
                             elif key == 'object labeler':
@@ -3574,6 +3585,8 @@ class Question:
                     extras['required'][field.number] = eval(field.required['compute'], user_dict)
                 if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
+                if hasattr(field, 'image_type') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                    extras['image_type'] = eval(field.image_type['compute'], user_dict)
                 if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                     if 'accept' not in extras:
                         extras['accept'] = dict()
@@ -4427,6 +4440,7 @@ class Interview:
         self.use_navigation = False
         self.flush_left = False
         self.max_image_size = get_config('maximum image size', None)
+        self.image_type = get_config('image upload type', None)
         self.bootstrap_theme = get_config('bootstrap theme', None)
         self.sections = dict()
         self.names_used = set()

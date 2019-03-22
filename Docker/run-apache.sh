@@ -79,6 +79,9 @@ else
     a2dismod ssl
     a2dissite -q docassemble-ssl &> /dev/null
 fi
+if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
+    echo "Listen 8080" >> /etc/apache2/ports.conf
+fi
 
 function stopfunc {
     /usr/sbin/apache2ctl stop

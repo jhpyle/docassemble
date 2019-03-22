@@ -5079,23 +5079,23 @@ def index(action_argument=None):
         #logmessage("index: resetting because session_parameter not none")
         need_to_reset = True
     if session_id:
-        #logmessage("index: session_id is defined")
         user_code = session_id
         obtain_lock(user_code, yaml_filename)
-        #sys.stderr.write("index: calling fetch_user_dict1\n")
-        #try:
-        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        #except Exception as the_err:
-        #    sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + ": " + text_type(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
-        #    release_lock(user_code, yaml_filename)
-        #    logmessage("index: dictionary fetch failed, resetting without retain_code")
-        #    user_code, user_dict = reset_session(yaml_filename, secret)
-        #    add_referer(user_dict)
-        #    encrypted = False
-        #    session['encrypted'] = encrypted
-        #    is_encrypted = encrypted
-        #    need_to_resave = True
-        #    need_to_reset = True
+        try:
+            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+        except Exception as the_err:
+            try:
+                sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + ": " + text_type(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+            except:
+                sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+            release_lock(user_code, yaml_filename)
+            logmessage("index: dictionary fetch failed, resetting without retain_code")
+            for key in ['encrypted', 'key_logged', 'uid']:
+                if key in session:
+                    del session[key]
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+            flash(word("Unable to decrypt interview.  Starting a new session instead."), "error")
+            return response
         if encrypted != is_encrypted:
             #logmessage("index: change in encryption; encrypted is " + str(encrypted) + " but is_encrypted is " + str(is_encrypted))
             encrypted = is_encrypted
@@ -7466,17 +7466,37 @@ def index(action_argument=None):
               var fileInfoList = fileArray.values[inline_file_list[i]];
               var file_input = $('#' + inline_file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
               var max_size = parseInt($(file_input).data('maximagesize'));
+              var image_type = $(file_input).data('imagetype');
+              var image_mime_type = null;
+              if (image_type){
+                if (image_type == 'png'){
+                  image_mime_type = 'image/png';
+                }
+                else if (image_type == 'bmp'){
+                  image_mime_type = 'image/bmp';
+                }
+                else {
+                  image_mime_type = 'image/jpeg';
+                  image_type = 'jpg';
+                }
+              }
               for (var j = 0; j < file_input.files.length; j++){
                 var the_file = file_input.files[j];
                 var tempFunc = function(the_file, max_size){
                   var reader = new FileReader();
                   var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
                   fileInfoList.push(thisFileInfo);
-                  //console.log("need to check type property " + the_file.type + " for " + the_file.name);
                   reader.onload = function(readerEvent){
-                    //console.log("checking type property " + the_file.type + " for " + the_file.name);
                     if (the_file.type.match(/image.*/) && !the_file.type.startsWith('image/svg')){
-                      //console.log("this one is an image");
+                      var convertedName = the_file.name;
+                      var convertedType = the_file.type;
+                      if (image_type){
+                        var pos = the_file.name.lastIndexOf(".");
+                        convertedName = the_file.name.substr(0, pos < 0 ? the_file.name.length : pos) + "." + image_type;
+                        convertedType = image_mime_type;
+                        thisFileInfo.name = convertedName;
+                        thisFileInfo.type = convertedType;
+                      }
                       var image = new Image();
                       image.onload = function(imageEvent) {
                         var canvas = document.createElement('canvas'),
@@ -7497,26 +7517,21 @@ def index(action_argument=None):
                         canvas.width = width;
                         canvas.height = height;
                         canvas.getContext('2d').drawImage(image, 0, 0, width, height);
-                        thisFileInfo['content'] = canvas.toDataURL(the_file.type);
+                        thisFileInfo['content'] = canvas.toDataURL(convertedType);
                         filesRead++;
-                        //console.log("file read");
                         if (filesRead >= filesToRead){
-                          //console.log("this is the last one!");
                           daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
                         }
                       };
                       image.src = reader.result;
                     }
                     else{
-                      //console.log("this one is not an image");
                       thisFileInfo['content'] = reader.result;
                       filesRead++;
                       if (filesRead >= filesToRead){
-                        //console.log("this is the last one!");
                         daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
                       }
                     }
-                    //console.log("done checking type property");
                   };
                   reader.readAsDataURL(the_file);
                 };

@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.24] - 2019-03-21
+### Added
+- The `maximum content length` configuration directive.
+- The `image upload type` configuration directive, feature, and field
+  specifier.
+### Fixed
+- Error in `log` service.
+- A long interview title could cause wrapping in the navigation bar on
+  mobile.
+
 ## [0.4.23] - 2019-03-19
 ### Added
 - The `progress bar multiplier` and `progress bar method` features.
