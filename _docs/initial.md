@@ -1633,6 +1633,14 @@ set the [`maximum image size` field modifier] to `None`.
 If you want to use a site-side default value, set the
 [`maximum image size` in the configuration].
 
+## <a name="image upload type"></a>Converting the format of uploaded images
+
+If you are using `maximum image size`, you can also cause images to be
+converted to [PNG], [JPEG], or [BMP] by the browser during the upload
+process by setting the `image upload type` to `png`, `jpeg`, or `bmp`.
+
+{% include side-by-side.html demo="upload-max-image-size-type-features" %}
+
 ## <a name="go full screen"></a>Going full screen when interview is embedded
 
 It is possible to embed a **docassemble** interview in a web page
@@ -1763,6 +1771,8 @@ features:
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[JPEG]: https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
+[BMP]: https://en.wikipedia.org/wiki/BMP_file_format
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`using()`]: {{ site.baseurl }}/docs/objects.html#DAObject.using
 [Bootstrap]: http://getbootstrap.com/

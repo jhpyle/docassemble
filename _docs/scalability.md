@@ -230,10 +230,9 @@ up.  The [AMI]s will not be listed in any useful order, so you have to
 look carefully at the names, which contain the dates the [AMI]s were
 created.  There is also a [page on Amazon's web site] that lists the
 ECS-optimized AMIs by region.  As of this writing, the most recent
-ECS-optimzed [AMI] is "amzn-ami-2017.09.c-amazon-ecs-optimized."  If
+ECS-optimzed [AMI] is "amzn-ami-2018.03.o-amazon-ecs-optimized."  If
 you use a different AMI, make sure that you give the machine at least
-20GB of storage.  The ECS-optimized [AMI]s provide 30GB of storage in
-total, which should be sufficient.
+30GB of storage.
 
 In the "Choose Instance Type" section, select an instance type that
 has at least 2GB of RAM (e.g., t2.small).

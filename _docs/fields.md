@@ -562,6 +562,13 @@ the [`maximum image size` configuration directive].  If you have a
 default set up, but you want to override it for a particular field,
 you can set the `maximum image size` field modifier to `None`.
 
+<a name="image upload type"></a>If you are using `maximum image size`,
+you can also cause images to be converted to [PNG], [JPEG], or [BMP]
+by the browser during the upload process by setting the `image upload
+type` to `png`, `jpeg`, or `bmp`.
+
+{% include side-by-side.html demo="upload-max-image-size-type" %}
+
 There are a few other data types that result in file uploads:
 
 <a name="camera"></a>`datatype: camera` is just like `file`, except
@@ -2200,6 +2207,8 @@ why this needs to be done manually as opposed to automatically:
 [`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[JPEG]: https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
+[BMP]: https://en.wikipedia.org/wiki/BMP_file_format
 [embeds]: #embed
 [`label` and `field`]: #label
 [`str()`]: https://docs.python.org/2/library/functions.html#str

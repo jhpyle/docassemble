@@ -1503,6 +1503,16 @@ require referer: False
 
 The default setting is `True`.
 
+## <a name="maximum content length"></a>Limiting size of HTTP requests
+
+By default, as a security precaution, the web application rejects any
+HTTP request larger than 16 megabytes.  This limit can be extended by
+setting `maximum content length` to a different number of bytes.
+
+{% highlight yaml %}
+maximum content length: 25165824
+{% endhighlight %}
+
 ## <a name="png resolution"></a><a name="png screen resolution"></a>Image conversion resolution
 
 When users supply PDF files and **docassemble** includes those files
@@ -1515,7 +1525,7 @@ but at a lower resolution.  The `png screen resolution` directive
 defines the dots per inch to be used for conversion of PDF pages to
 PNG files for display in the web browser.
 
-<a name="ocr dpi"></a>OCR resolution
+## <a name="ocr dpi"></a>OCR resolution
 
 If you use the [`ocr_file()`] function, the pages of the PDF file will
 be converted to images before being read by the OCR engine.  By
@@ -2589,6 +2599,16 @@ can be overridden for a given field using the
 order to allow image uploads of any resolution, use `None` as the
 override value.
 
+## <a name="image upload type"></a>Converting the format of uploaded images
+
+If you are using `maximum image size`, you can also cause images to be
+converted to [PNG], [JPEG], or [BMP] by the browser during the upload
+process by setting the `image upload type` to `png`, `jpeg`, or `bmp`.
+
+{% highlight yaml %}
+image upload type: jpeg
+{% endhighlight %}
+
 ## <a name="celery processes"></a>Number of concurrent background tasks
 
 **docassemble** uses [Celery] to execute background tasks.  The
@@ -3183,6 +3203,8 @@ and Facebook API keys.
 [image buttons]: {{ site.baseurl }}/docs/fields.html#image button
 [MySQL]: https://en.wikipedia.org/wiki/MySQL
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
+[JPEG]: https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
+[BMP]: https://en.wikipedia.org/wiki/BMP_file_format
 [customizing]: #start page template
 [`interview_list()`]: {{ site.baseurl }}/docs/functions.html#interview_list
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
