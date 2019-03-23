@@ -7,6 +7,7 @@ import sys
 import tempfile
 import ruamel.yaml
 import tarfile
+import types
 from io import open
 from textstat.textstat import textstat
 import docassemble.base.config
@@ -18,11 +19,13 @@ if PY2:
     from urllib import unquote as urllibunquote
     from urllib import urlencode, urlretrieve
     from urlparse import urlparse, parse_qsl, urlunparse
+    the_method_type = types.MethodType
 else:
     from urllib.parse import quote as urllibquote
     from urllib.parse import unquote as urllibunquote
     from urllib.parse import urlparse, urlunparse, urlencode, urlsplit, parse_qsl
     from urllib.request import urlretrieve
+    the_method_type = types.FunctionType
 
 TypeType = type(type(None))
     
@@ -716,7 +719,6 @@ import shutil
 import filecmp
 import codecs
 import weakref
-import types
 import stat
 import pkg_resources
 import babel.dates
@@ -2568,9 +2570,20 @@ def make_example_html(examples, first_id, example_html, data_dict):
     example_html.append('          </ul>')
 
 def public_method(method, the_class):
-    if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
+    if isinstance(method, the_method_type) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
         return True
     return False
+
+def noquotetrunc(string):
+    string = noquote(string)
+    if string is not None:
+        try:
+            text_type('') + string
+        except:
+            string = ''
+        if len(string) > 163:
+            string = string[:160] + '...'
+    return string
 
 def noquote(string):
     if string is None:
@@ -2799,12 +2812,12 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
             if val not in pg_code_cache:
-                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
+                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
             name_info[val] = copy.copy(pg_code_cache[val])
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
             if val not in pg_code_cache:
-                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
+                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
             name_info[val] = copy.copy(pg_code_cache[val])
         elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
@@ -2816,8 +2829,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
                 method_list = list()
                 for name, value in methods:
-                    method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
-                pg_code_cache[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
+                    method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
+                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
             name_info[val] = copy.copy(pg_code_cache[val])
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
@@ -5563,7 +5576,7 @@ def index(action_argument=None):
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
         #logmessage("The data type is " + text_type(type(data)))
@@ -7312,7 +7325,7 @@ def index(action_argument=None):
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daUnfakeHtmlResponse(text){
         text = text.replace(/^.*ABCDABOUNDARYSTARTABC/, '');
-        text = text.replace(/ABCDABOUNDARYENDABC.*/, '');
+        text = text.replace(/ABCDABOUNDARYENDABC.*/, '').replace(/\s/g, '');;
         text = atob(text);
         return text;
       }
@@ -12079,6 +12092,9 @@ def create_playground_package():
                     resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
                     if int(resp['status']) != 201:
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
+                    for repository in get_user_repositories(http):
+                        if repository['name'] == github_package_name:
+                            all_repositories[repository['name']] = repository
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -12707,7 +12723,7 @@ def trash_gd_file(section, filename):
         logmessage('trash_gd_file: section ' + str(section) + ' could not be found')
         return False
     id_of_filename = None
-    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and trashed=false and name='" + str(filename) + "' and '" + str(subdir) + "' in parents").execute()
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and name='" + str(filename) + "' and '" + str(subdir) + "' in parents").execute()
     for the_file in response.get('files', []):
         if 'id' in the_file:
             id_of_filename = the_file['id']
@@ -12715,10 +12731,11 @@ def trash_gd_file(section, filename):
     if id_of_filename is None:
         logmessage('trash_gd_file: file ' + str(filename) + ' could not be found in ' + str(section))
         return False
-    file_metadata = { 'trashed': True }
-    service.files().update(fileId=id_of_filename,
-                           body=file_metadata).execute()
-    logmessage('trash_gd_file: file ' + str(filename) + ' trashed from '  + str(section))
+    #file_metadata = { 'trashed': True }
+    # service.files().update(fileId=id_of_filename,
+    #                        body=file_metadata).execute()
+    service.files().delete(fileId=id_of_filename).execute()
+    logmessage('trash_gd_file: file ' + str(filename) + ' permanently deleted from '  + str(section))
     return True
 
 @app.route('/sync_with_google_drive', methods=['GET'])
@@ -16040,7 +16057,10 @@ def server_error(the_error):
         except:
             logmessage("Could not log the error message")
     else:
-        errmess = text_type(type(the_error).__name__) + ": " + text_type(the_error)
+        try:
+            errmess = text_type(type(the_error).__name__) + ": " + text_type(the_error)
+        except:
+            errmess = text_type(type(the_error).__name__)
         if hasattr(the_error, 'traceback'):
             the_trace = the_error.traceback
         else:

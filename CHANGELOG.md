@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.4.25] - 2019-03-22
+### Changed
+- When using Google Drive Sync, deleting file from Playground now
+  permanently deletes file from Google Drive, rather than send it to
+  the Trash.
+### Fixed
+- KeyError during initial GitHub repository creation.
+- Exception could be raised if docstring in a dependency module was
+  bytes.
+- Methods not appearing in Playground sidebar in Python 3.
+- File uploads failing in Internet Explorer.
+
 ## [0.4.24] - 2019-03-21
 ### Added
 - The `maximum content length` configuration directive.

@@ -363,12 +363,12 @@ class SavedFile(object):
                     self.modtimes[filename] = key.get_epoch_modtime()
         for filename, key in self.keydict.items():
             if filename not in existing_files:
-                #sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 try:
                     key.delete()
                 except:
                     pass
-        #sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
         
 def get_ext_and_mimetype(filename):
