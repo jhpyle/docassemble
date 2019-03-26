@@ -366,8 +366,54 @@ class InterviewStatus(object):
                     field_list.extend(self.extras['sub_fields'][field.number])
                 else:
                     field_list.append(field)
+        else:
+            field_list = self.question.fields
+        if 'list_collect' in self.extras:
+            full_field_list = list()
+            allow_append = self.extras['list_collect_allow_append']
+            iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
+            list_len = len(self.extras['list_collect'].elements)
+            if self.extras['list_collect'].ask_object_type or not allow_append:
+                extra_amount = 0
+            else:
+                extra_amount = get_config('list collect extra count', 15)
+            for list_indexno in range(list_len + extra_amount):
+                header_field = Field({'type': 'html', 'extras': {'html': TextObject('')}})
+                if list_indexno >= list_len:
+                    header_field.collect_type = 'extraheader'
+                elif list_indexno == 0:
+                    header_field.collect_type = 'firstheader'
+                else:
+                    header_field.collect_type = 'header'
+                header_field.collect_number = list_indexno
+                header_field.number = str(list_indexno)
+                full_field_list.append(header_field)
+                self.extras['ok'][str(list_indexno)] = True
+                self.extras['required'][str(list_indexno)] = False
+                for field in field_list:
+                    the_field = copy.deepcopy(field)
+                    the_field.number = str(list_indexno) + '_' + str(the_field.number)
+                    if hasattr(the_field, 'saveas'):
+                        the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                    if list_indexno >= list_len:
+                        the_field.collect_type = 'extra'
+                    else:
+                        the_field.collect_type = 'mid'
+                    the_field.collect_number = list_indexno
+                    full_field_list.append(the_field)
+                post_header_field = Field({'type': 'html', 'extras': {'html': TextObject('')}})
+                if extra_amount > 0 and list_indexno == list_len + extra_amount - 1:
+                    post_header_field.collect_type = 'extrafinalpostheader'
+                elif list_indexno >= list_len:
+                    post_header_field.collect_type = 'extrapostheader'
+                else:
+                    post_header_field.collect_type = 'postheader'
+                post_header_field.collect_number = list_indexno
+                post_header_field.number = str(list_indexno)
+                full_field_list.append(post_header_field)
+            return full_field_list
+        else:
             return field_list
-        return self.question.fields
     def mark_tentative_as_answered(self, the_user_dict):
         for question in self.tentatively_answered:
             question.mark_as_answered(the_user_dict)
@@ -1212,6 +1258,14 @@ class Question:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
             if not data['skip undefined']:
                 self.skip_undefined = False
+        if 'list collect' in data:
+            if 'fields' not in data:
+                raise DAError("You cannot set list collect without a fields specifier." + self.idebug(data))
+            self.list_collect = TextObject(definitions + text_type(data['list collect']), names_used=self.mako_names)
+        if 'list collect is final' in data:
+            self.list_collect_is_final = compile(text_type(data['list collect is final']), '<list collect final code>', 'eval')
+        if 'list collect allow append' in data:
+            self.list_collect_allow_append = compile(text_type(data['list collect allow append']), '<list collect allow append code>', 'eval')
         if 'mandatory' in data:
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
@@ -3142,8 +3196,25 @@ class Question:
             return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
             raise DAError("Unknown data type in attachment")
-
-    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought):
+    def get_question_for_field_with_sub_fields(self, field, user_dict):
+        field_list = eval(field.extras['fields_code'], user_dict)
+        if not isinstance(field_list, list):
+            raise DAError("A code directive that defines items in fields must return a list")
+        new_interview_source = InterviewSourceString(content='')
+        new_interview = new_interview_source.get_interview()
+        reproduce_basics(self.interview, new_interview)
+        return Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
+    def get_fields_and_sub_fields(self, user_dict):
+        all_fields = list()
+        for field in self.fields:
+            if hasattr(field, 'extras') and 'fields_code' in field.extras:
+                the_question = self.get_question_for_field_with_sub_fields(field, user_dict)
+                for sub_field in the_question.fields:
+                    all_fields.append(sub_field)
+            else:
+                all_fields.append(field)
+        return all_fields
+    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought, process_list_collect=True):
         #logmessage("ask: orig_sought is " + text_type(orig_sought) + " and q is " + self.name)
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
@@ -3405,312 +3476,385 @@ class Question:
             if 'current_field' in docassemble.base.functions.this_thread.misc:
                 del docassemble.base.functions.this_thread.misc['current_field']
         else:
-            only_empty_fields_exist = True
-            commands_to_run = list()
-            for field in self.fields:
-                docassemble.base.functions.this_thread.misc['current_field'] = field.number
-                if hasattr(field, 'has_code') and field.has_code:
-                    # standalone multiple-choice questions
-                    selectcompute[field.number] = list()
-                    for choice in field.choices:
-                        if 'compute' in choice and isinstance(choice['compute'], CodeType):
-                            selectcompute[field.number].extend(process_selections(eval(choice['compute'], user_dict)))
-                        else:
-                            new_item = dict()
-                            if 'image' in choice:
-                                new_item['image'] = choice['image']
-                            if 'help' in choice:
-                                new_item['help'] = choice['help'].text(user_dict)
-                            if 'default' in choice:
-                                new_item['default'] = choice['default']
-                            new_item['key'] = choice['key'].text(user_dict)
-                            new_item['label'] = choice['label'].text(user_dict)
-                            selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
-                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
-                            commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
-                        else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                    # multiple choice field in choices
-                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
-                        exec("import docassemble.base.core", user_dict)
-                    if hasattr(field, 'object_labeler'):
-                        labeler_func = eval(field.object_labeler['compute'], user_dict)
-                        if not isinstance(labeler_func, types.FunctionType):
-                            raise DAError("The object labeler was not a function")
-                        user_dict['_DAOBJECTLABELER'] = labeler_func
-                    else:
-                        labeler_func = None
-                    to_compute = field.selections['compute']
-                    if field.datatype == 'object_checkboxes':
-                        default_exists = False
-                        #logmessage("Testing for " + from_safeid(field.saveas))
-                        try:
-                            eval(from_safeid(field.saveas), user_dict)
-                            default_to_use = from_safeid(field.saveas)
-                        except:
-                            default_to_use = 'None'
-                        #logmessage("Running " + '_DAOBJECTDEFAULTDA = ' + default_to_use)
-                        exec('_DAOBJECTDEFAULTDA = ' + default_to_use, user_dict)
-                    if 'exclude' in field.selections:
-                        exclude_list = list()
-                        for x in field.selections['exclude']:
-                            exclude_list.append(eval(x, user_dict))
-                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict), exclude=exclude_list)
-                    else:
-                        #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
-                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
-                    if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
-                        del user_dict['_DAOBJECTDEFAULTDA']
-                    if labeler_func is not None:
-                        del user_dict['_DAOBJECTLABELER']
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
-                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
-                            commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
-                        else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
-                    if 'exclude' in field.selections:
-                        to_exclude = list()
-                        for x in field.selections['exclude']:
-                            to_exclude.append(eval(x, user_dict))
-                        to_exclude = unpack_list(to_exclude)
+            if hasattr(self, 'list_collect') and process_list_collect:
+                fields_to_scan = self.get_fields_and_sub_fields(user_dict)
+                indexno = 0
+                common_var = None
+                for field in fields_to_scan:
+                    if not hasattr(field, 'saveas'):
+                        continue
+                    the_saveas = from_safeid(field.saveas)
+                    if common_var is None:
+                        common_var = the_saveas
+                        continue
+                    for char_index in range(len(common_var)):
+                        if the_saveas[char_index] != common_var[char_index]:
+                            break
+                    common_var = common_var[0:char_index]
+                common_var = re.sub(r'[^\]]*$', '', common_var)
+                m = re.search(r'^(.*)\[([ijklmn])\]$', common_var)
+                if not m:
+                    raise DAError("Cannot use list collect on these fields.  " + common_var)
+                the_list_varname = m.group(1)
+                if hasattr(self, 'list_collect_is_final'):
+                    extras['list_collect_is_final'] = eval(self.list_collect_is_final, user_dict)
+                else:
+                    extras['list_collect_is_final'] = True
+                if hasattr(self, 'list_collect_allow_append'):
+                    extras['list_collect_allow_append'] = eval(self.list_collect_allow_append, user_dict)
+                else:
+                    extras['list_collect_allow_append'] = True
+                extras['list_iterator'] = m.group(2)
+                the_list = eval(the_list_varname, user_dict)
+                if 'DAList' not in text_type(type(the_list)) or not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
+                    raise DAError("Cannot use list collect on a variable that is not a DAList.")
+                extras['list_collect'] = the_list
+                extras['list_message'] = self.list_collect.text(user_dict)
+                iterator_index = list_of_indices.index(extras['list_iterator'])
+                length_to_use = len(the_list.elements)
+                if length_to_use == 0:
+                    length_to_use = 1
+                if the_list.ask_object_type or not extras['list_collect_allow_append']:
+                    extra_amount = 0
+                else:
+                    extra_amount = get_config('list collect extra count', 15)
+                for list_indexno in range(length_to_use):
+                    new_iterators = copy.copy(iterators)
+                    new_iterators[iterator_index] = str(list_indexno)
+                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False)
+                    for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
+                        for field_num, val in ask_result[key].items():
+                            if key == 'selectcompute':
+                                selectcompute[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    selectcompute[str(list_indexno + 1) + '_' + str(field_num)] = val
+                            elif key == 'defaults':
+                                defaults[str(list_indexno) + '_' + str(field_num)] = val
+                            elif key == 'hints':
+                                hints[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        hints[str(list_indexno + ii) + '_' + str(field_num)] = val
+                            elif key == 'helptexts':
+                                helptexts[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        helptexts[str(list_indexno + ii) + '_' + str(field_num)] = val
+                            elif key == 'labels':
+                                labels[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        labels[str(list_indexno + ii) + '_' + str(field_num)] = val
+                    for key, possible_dict in ask_result['extras'].items():
+                        if isinstance(possible_dict, dict):
+                            if key not in extras:
+                                extras[key] = dict()
+                            for field_num, val in possible_dict.items():
+                                extras[key][str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        extras[key][str(list_indexno + ii) + '_' + str(field_num)] = val
+            else:
+                only_empty_fields_exist = True
+                commands_to_run = list()
+                for field in self.fields:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    if hasattr(field, 'has_code') and field.has_code:
+                        # standalone multiple-choice questions
                         selectcompute[field.number] = list()
-                        for candidate in field.selections['values']:
-                            new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
-                            if 'image' in candidate:
-                                new_item['image'] = candidate['image']
-                            if 'help' in candidate:
-                                new_item['help'] = candidate['help'].text(user_dict)
-                            if 'default' in candidate:
-                                new_item['default'] = candidate['default']
-                            if new_item['key'] not in to_exclude:
+                        for choice in field.choices:
+                            if 'compute' in choice and isinstance(choice['compute'], CodeType):
+                                selectcompute[field.number].extend(process_selections(eval(choice['compute'], user_dict)))
+                            else:
+                                new_item = dict()
+                                if 'image' in choice:
+                                    new_item['image'] = choice['image']
+                                if 'help' in choice:
+                                    new_item['help'] = choice['help'].text(user_dict)
+                                if 'default' in choice:
+                                    new_item['default'] = choice['default']
+                                new_item['key'] = choice['key'].text(user_dict)
+                                new_item['label'] = choice['label'].text(user_dict)
                                 selectcompute[field.number].append(new_item)
-                    else:
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                                ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
+                                commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
+                            else:
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
+                        # multiple choice field in choices
+                        if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
+                            exec("import docassemble.base.core", user_dict)
+                        if hasattr(field, 'object_labeler'):
+                            labeler_func = eval(field.object_labeler['compute'], user_dict)
+                            if not isinstance(labeler_func, types.FunctionType):
+                                raise DAError("The object labeler was not a function")
+                            user_dict['_DAOBJECTLABELER'] = labeler_func
+                        else:
+                            labeler_func = None
+                        to_compute = field.selections['compute']
+                        if field.datatype == 'object_checkboxes':
+                            default_exists = False
+                            #logmessage("Testing for " + from_safeid(field.saveas))
+                            try:
+                                eval(from_safeid(field.saveas), user_dict)
+                                default_to_use = from_safeid(field.saveas)
+                            except:
+                                default_to_use = 'None'
+                            #logmessage("Running " + '_DAOBJECTDEFAULTDA = ' + default_to_use)
+                            exec('_DAOBJECTDEFAULTDA = ' + default_to_use, user_dict)
+                        if 'exclude' in field.selections:
+                            exclude_list = list()
+                            for x in field.selections['exclude']:
+                                exclude_list.append(eval(x, user_dict))
+                            selectcompute[field.number] = process_selections(eval(to_compute, user_dict), exclude=exclude_list)
+                        else:
+                            #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
+                            selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
+                        if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
+                            del user_dict['_DAOBJECTDEFAULTDA']
+                        if labeler_func is not None:
+                            del user_dict['_DAOBJECTLABELER']
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                                ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
+                                commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
+                            else:
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
+                        if 'exclude' in field.selections:
+                            to_exclude = list()
+                            for x in field.selections['exclude']:
+                                to_exclude.append(eval(x, user_dict))
+                            to_exclude = unpack_list(to_exclude)
+                            selectcompute[field.number] = list()
+                            for candidate in field.selections['values']:
+                                new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
+                                if 'image' in candidate:
+                                    new_item['image'] = candidate['image']
+                                if 'help' in candidate:
+                                    new_item['help'] = candidate['help'].text(user_dict)
+                                if 'default' in candidate:
+                                    new_item['default'] = candidate['default']
+                                if new_item['key'] not in to_exclude:
+                                    selectcompute[field.number].append(new_item)
+                        else:
+                            selectcompute[field.number] = list()
+                            for item in field.selections['values']:
+                                new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                                if 'image' in item:
+                                    new_item['image'] = item['image']
+                                if 'help' in item:
+                                    new_item['help'] = item['help'].text(user_dict)
+                                if 'default' in item:
+                                    new_item['default'] = item['default']
+                                selectcompute[field.number].append(new_item)
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
                         selectcompute[field.number] = list()
-                        for item in field.selections['values']:
-                            new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                        for item in field.choices:
+                            new_item = dict()
                             if 'image' in item:
                                 new_item['image'] = item['image']
                             if 'help' in item:
                                 new_item['help'] = item['help'].text(user_dict)
                             if 'default' in item:
                                 new_item['default'] = item['default']
+                            new_item['key'] = item['key'].text(user_dict)
+                            new_item['label'] = item['label'].text(user_dict)
                             selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
-                    selectcompute[field.number] = list()
-                    for item in field.choices:
-                        new_item = dict()
-                        if 'image' in item:
-                            new_item['image'] = item['image']
-                        if 'help' in item:
-                            new_item['help'] = item['help'].text(user_dict)
-                        if 'default' in item:
-                            new_item['default'] = item['default']
-                        new_item['key'] = item['key'].text(user_dict)
-                        new_item['label'] = item['label'].text(user_dict)
-                        selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif self.question_type == "multiple_choice":
-                    selectcompute[field.number] = list()
-                    for item in field.choices:
-                        new_item = dict()
-                        if 'image' in item:
-                            new_item['image'] = item['image']
-                        if 'help' in item:
-                            new_item['help'] = item['help'].text(user_dict)
-                        if 'default' in item:
-                            new_item['default'] = item['default']
-                        new_item['label'] = item['label'].text(user_dict)
-                        new_item['key'] = item['key']
-                        selectcompute[field.number].append(new_item)
-                    only_empty_fields_exist = False
-                else:
-                    only_empty_fields_exist = False
-            if len(self.fields) > 0 and only_empty_fields_exist:
-                assumed_objects = set()
-                for field in self.fields:
-                    if hasattr(field, 'saveas'):
-                        parse_result = parse_var_name(from_safeid(field.saveas))
-                        if not parse_result['valid']:
-                            raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
-                        if len(parse_result['objects']):
-                            assumed_objects.add(parse_result['objects'][-1])
-                        if len(parse_result['bracket_objects']):
-                            assumed_objects.add(parse_result['bracket_objects'][-1])
-                for var in assumed_objects:
-                    if complications.search(var) or var not in user_dict:
-                        eval(var, user_dict)
-                raise CodeExecute(commands_to_run, self)
-            if 'current_field' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['current_field']
-            extras['ok'] = dict()
-            for field in self.fields:
-                docassemble.base.functions.this_thread.misc['current_field'] = field.number
-                if hasattr(field, 'showif_code'):
-                    result = eval(field.showif_code, user_dict)
-                    if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
-                        if result:
-                            extras['ok'][field.number] = False
-                            continue
-                    else:
-                        if not result:
-                            extras['ok'][field.number] = False
-                            continue
-                extras['ok'][field.number] = True
-                if hasattr(field, 'nota'):
-                    if 'nota' not in extras:
-                        extras['nota'] = dict()
-                    if isinstance(field.nota, bool):
-                        extras['nota'][field.number] = field.nota
-                    else:
-                        extras['nota'][field.number] = field.nota.text(user_dict)
-                if isinstance(field.required, bool):
-                    extras['required'][field.number] = field.required
-                else:
-                    extras['required'][field.number] = eval(field.required['compute'], user_dict)
-                if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
-                if hasattr(field, 'image_type') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    extras['image_type'] = eval(field.image_type['compute'], user_dict)
-                if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    if 'accept' not in extras:
-                        extras['accept'] = dict()
-                    extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
-                if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
-                    if 'rows' not in extras:
-                        extras['rows'] = dict()
-                    extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
-                if hasattr(field, 'validation_messages'):
-                    if 'validation messages' not in extras:
-                        extras['validation messages'] = dict()
-                    extras['validation messages'][field.number] = dict()
-                    for validation_key, validation_message_template in field.validation_messages.items():
-                        extras['validation messages'][field.number][validation_key] = validation_message_template.text(user_dict)
-                if hasattr(field, 'validate'):
-                    the_func = eval(field.validate['compute'], user_dict)
-                    try:
-                        if hasattr(field, 'datatype'):
-                            if field.datatype in ('number', 'integer', 'currency', 'range'):
-                                the_func(0)
-                            elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
-                                the_func('')
-                            elif field.datatype == 'date':
-                                the_func('01/01/1970')
-                            elif field.datatype == 'time':
-                                the_func('12:00 AM')
-                            elif field.datatype == 'datetime':
-                                the_func('01/01/1970 12:00 AM')
-                            elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
-                                the_func(True)
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
                         else:
-                            the_func('')
-                    except DAValidationError as err:
-                        pass
-                if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
-                    if field.number not in selectcompute:
-                        raise DAError("datatype was set to object but no code or selections was provided")
-                    string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
-                    # logmessage("Doing " + string)
-                    try:
-                        exec(string, user_dict)
-                        for selection in selectcompute[field.number]:
-                            key = selection['key']
-                            #logmessage("key is " + str(key))
-                            real_key = codecs.decode(bytearray(key, encoding='utf-8'), 'base64').decode('utf8')
-                            string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
-                            #logmessage("Doing " + string)
+                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif self.question_type == "multiple_choice":
+                        selectcompute[field.number] = list()
+                        for item in field.choices:
+                            new_item = dict()
+                            if 'image' in item:
+                                new_item['image'] = item['image']
+                            if 'help' in item:
+                                new_item['help'] = item['help'].text(user_dict)
+                            if 'default' in item:
+                                new_item['default'] = item['default']
+                            new_item['label'] = item['label'].text(user_dict)
+                            new_item['key'] = item['key']
+                            selectcompute[field.number].append(new_item)
+                        only_empty_fields_exist = False
+                    else:
+                        only_empty_fields_exist = False
+                if len(self.fields) > 0 and only_empty_fields_exist:
+                    assumed_objects = set()
+                    for field in self.fields:
+                        if hasattr(field, 'saveas'):
+                            parse_result = parse_var_name(from_safeid(field.saveas))
+                            if not parse_result['valid']:
+                                raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                            if len(parse_result['objects']):
+                                assumed_objects.add(parse_result['objects'][-1])
+                            if len(parse_result['bracket_objects']):
+                                assumed_objects.add(parse_result['bracket_objects'][-1])
+                    for var in assumed_objects:
+                        if complications.search(var) or var not in user_dict:
+                            eval(var, user_dict)
+                    raise CodeExecute(commands_to_run, self)
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
+                extras['ok'] = dict()
+                for field in self.fields:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    if hasattr(field, 'showif_code'):
+                        result = eval(field.showif_code, user_dict)
+                        if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                            if result:
+                                extras['ok'][field.number] = False
+                                continue
+                        else:
+                            if not result:
+                                extras['ok'][field.number] = False
+                                continue
+                    extras['ok'][field.number] = True
+                    if hasattr(field, 'nota'):
+                        if 'nota' not in extras:
+                            extras['nota'] = dict()
+                        if isinstance(field.nota, bool):
+                            extras['nota'][field.number] = field.nota
+                        else:
+                            extras['nota'][field.number] = field.nota.text(user_dict)
+                    if isinstance(field.required, bool):
+                        extras['required'][field.number] = field.required
+                    else:
+                        extras['required'][field.number] = eval(field.required['compute'], user_dict)
+                    if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
+                    if hasattr(field, 'image_type') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        extras['image_type'] = eval(field.image_type['compute'], user_dict)
+                    if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        if 'accept' not in extras:
+                            extras['accept'] = dict()
+                        extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
+                    if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
+                        if 'rows' not in extras:
+                            extras['rows'] = dict()
+                        extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
+                    if hasattr(field, 'validation_messages'):
+                        if 'validation messages' not in extras:
+                            extras['validation messages'] = dict()
+                        extras['validation messages'][field.number] = dict()
+                        for validation_key, validation_message_template in field.validation_messages.items():
+                            extras['validation messages'][field.number][validation_key] = validation_message_template.text(user_dict)
+                    if hasattr(field, 'validate'):
+                        the_func = eval(field.validate['compute'], user_dict)
+                        try:
+                            if hasattr(field, 'datatype'):
+                                if field.datatype in ('number', 'integer', 'currency', 'range'):
+                                    the_func(0)
+                                elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
+                                    the_func('')
+                                elif field.datatype == 'date':
+                                    the_func('01/01/1970')
+                                elif field.datatype == 'time':
+                                    the_func('12:00 AM')
+                                elif field.datatype == 'datetime':
+                                    the_func('01/01/1970 12:00 AM')
+                                elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
+                                    the_func(True)
+                            else:
+                                the_func('')
+                        except DAValidationError as err:
+                            pass
+                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
+                        if field.number not in selectcompute:
+                            raise DAError("datatype was set to object but no code or selections was provided")
+                        string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
+                        # logmessage("Doing " + string)
+                        try:
                             exec(string, user_dict)
-                    except Exception as err:
-                        raise DAError("Failure while processing field with datatype of object: " + str(err))
-                if hasattr(field, 'label'):
-                    labels[field.number] = field.label.text(user_dict)
-                if hasattr(field, 'extras'):
-                    if 'fields_code' in field.extras:
-                        field_list = eval(field.extras['fields_code'], user_dict)
-                        if not isinstance(field_list, list):
-                            raise DAError("A code directive that defines items in fields must return a list")
-                        new_interview_source = InterviewSourceString(content='')
-                        new_interview = new_interview_source.get_interview()
-                        reproduce_basics(self.interview, new_interview)
-                        the_question = Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
-                        ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought, orig_sought)
-                        for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
-                            for field_num, val in ask_result[key].items():
-                                if key == 'selectcompute':
-                                    selectcompute[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'defaults':
-                                    defaults[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'hints':
-                                    hints[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'helptexts':
-                                    helptexts[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'labels':
-                                    labels[str(field.number) + '_' + str(field_num)] = val
-                        for key, possible_dict in ask_result['extras'].items():
-                            #logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
-                            if isinstance(possible_dict, dict):
-                                #logmessage("key points to a dict")
+                            for selection in selectcompute[field.number]:
+                                key = selection['key']
+                                #logmessage("key is " + str(key))
+                                real_key = codecs.decode(bytearray(key, encoding='utf-8'), 'base64').decode('utf8')
+                                string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
+                                #logmessage("Doing " + string)
+                                exec(string, user_dict)
+                        except Exception as err:
+                            raise DAError("Failure while processing field with datatype of object: " + str(err))
+                    if hasattr(field, 'label'):
+                        labels[field.number] = field.label.text(user_dict)
+                    if hasattr(field, 'extras'):
+                        if 'fields_code' in field.extras:
+                            the_question = self.get_question_for_field_with_sub_fields(field, user_dict)
+                            ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought, orig_sought)
+                            for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
+                                for field_num, val in ask_result[key].items():
+                                    if key == 'selectcompute':
+                                        selectcompute[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'defaults':
+                                        defaults[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'hints':
+                                        hints[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'helptexts':
+                                        helptexts[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'labels':
+                                        labels[str(field.number) + '_' + str(field_num)] = val
+                            for key, possible_dict in ask_result['extras'].items():
+                                #logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
+                                if isinstance(possible_dict, dict):
+                                    #logmessage("key points to a dict")
+                                    if key not in extras:
+                                        extras[key] = dict()
+                                    for field_num, val in possible_dict.items():
+                                        #logmessage("Setting " + str(field.number) + '_' + str(field_num))
+                                        extras[key][str(field.number) + '_' + str(field_num)] = val
+                            for sub_field in the_question.fields:
+                                sub_field.number = str(field.number) + '_' + str(sub_field.number)
+                            if 'sub_fields' not in extras:
+                                extras['sub_fields'] = dict()
+                            extras['sub_fields'][field.number] = the_question.fields
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
+                            if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
-                                for field_num, val in possible_dict.items():
-                                    #logmessage("Setting " + str(field.number) + '_' + str(field_num))
-                                    extras[key][str(field.number) + '_' + str(field_num)] = val
-                        for sub_field in the_question.fields:
-                            sub_field.number = str(field.number) + '_' + str(sub_field.number)
-                        if 'sub_fields' not in extras:
-                            extras['sub_fields'] = dict()
-                        extras['sub_fields'][field.number] = the_question.fields
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
-                        if key in field.extras:
-                            if key not in extras:
-                                extras[key] = dict()
-                            extras[key][field.number] = field.extras[key].text(user_dict)
-                    for key in ('ml_train',):
-                        if key in field.extras:
-                            if key not in extras:
-                                extras[key] = dict()
-                            if isinstance(field.extras[key], bool):
-                                extras[key][field.number] = field.extras[key]
+                                extras[key][field.number] = field.extras[key].text(user_dict)
+                        for key in ('ml_train',):
+                            if key in field.extras:
+                                if key not in extras:
+                                    extras[key] = dict()
+                                if isinstance(field.extras[key], bool):
+                                    extras[key][field.number] = field.extras[key]
+                                else:
+                                    extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
+                    if hasattr(field, 'saveas'):
+                        try:
+                            if old_user_dict is not None:
+                                try:
+                                    defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
+                                except:
+                                    defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                             else:
-                                extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
-                if hasattr(field, 'saveas'):
-                    try:
-                        if old_user_dict is not None:
-                            try:
-                                defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
-                            except:
                                 defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
-                        else:
-                            defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
-                    except:
-                        if hasattr(field, 'default'):
-                            if isinstance(field.default, TextObject):
-                                defaults[field.number] = field.default.text(user_dict).strip()
-                            else:
-                                defaults[field.number] = field.default
-                        elif hasattr(field, 'extras') and 'default' in field.extras:
-                            defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
-                    if hasattr(field, 'helptext'):
-                        helptexts[field.number] = field.helptext.text(user_dict)
-                    if hasattr(field, 'hint'):
-                        hints[field.number] = field.hint.text(user_dict)
-            if 'current_field' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['current_field']
+                        except:
+                            if hasattr(field, 'default'):
+                                if isinstance(field.default, TextObject):
+                                    defaults[field.number] = field.default.text(user_dict).strip()
+                                else:
+                                    defaults[field.number] = field.default
+                            elif hasattr(field, 'extras') and 'default' in field.extras:
+                                defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
+                        if hasattr(field, 'helptext'):
+                            helptexts[field.number] = field.helptext.text(user_dict)
+                        if hasattr(field, 'hint'):
+                            hints[field.number] = field.hint.text(user_dict)
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:

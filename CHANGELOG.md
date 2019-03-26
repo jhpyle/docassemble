@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.26] - 2019-03-25
+### Fixed
+- Enter key caused browsers to press the `question back button`.
+- Newest version of `textstat` not compatible with Python 2.7.
+
 ## [0.4.25] - 2019-03-22
 ### Changed
 - When using Google Drive Sync, deleting file from Playground now

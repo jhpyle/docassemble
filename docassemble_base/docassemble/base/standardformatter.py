@@ -554,7 +554,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button class="btn btn-info ' + BUTTON_CLASS + ' " id="questionhelpbutton"><span>' + help_label + '</span></button>'
+        help_button = '\n                  <button type="button" class="btn btn-info ' + BUTTON_CLASS + ' " id="questionhelpbutton"><span>' + help_label + '</span></button>'
     else:
         help_button = ''
     if status.audiovideo is not None:
@@ -790,7 +790,23 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['rules'][the_saveas] = dict()
                 if the_saveas not in validation_rules['messages']:
                     validation_rules['messages'][the_saveas] = dict()
+        seen_extra_header = False
         for field in field_list:
+            if hasattr(field, 'collect_type'):
+                data_def = 'data-collectnum="' + str(field.collect_number) + '" data-collecttype="' + field.collect_type + '" '
+                class_def = ' dacollect' + field.collect_type
+                if field.collect_type in ('extra', 'extraheader', 'extrapostheader', 'extrafinalpostheader'):
+                    if field.collect_type == 'extraheader' and not seen_extra_header:
+                        seen_extra_header = True
+                        style_def = ''
+                    else:
+                        style_def = 'style="display: none;" '
+                else:
+                    style_def = ''
+            else:
+                data_def = ''
+                class_def = ''
+                style_def = ''
             if field.number in note_fields:
                 side_note = '<div class="col rlap">' + note_fields[field.number] + '</div>'
                 side_note_parent = ' rlap-parent'
@@ -847,10 +863,24 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             if hasattr(field, 'datatype'):
                 field_class = ' field-container field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
-                    fieldlist.append('                <div class="form-group row field-container field-container-note"><div class="col-md-12"><div>' + note_fields[field.number] + '</div></div></div>\n')
+                    if hasattr(field, 'collect_type'):
+                        if field.collect_type == 'extraheader':
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum invisible">' + status.extras['list_message'] + ' ' + str(field.collect_number + 1) + '.</span><span class="dacollectremoved text-danger invisible"> ' + word("(Removed)") + '</span><button type="button" class="btn btn-sm btn-danger float-right invisible dacollectremove">' + word("Remove") + '</button><button type="button" class="btn btn-sm btn-info float-right invisible dacollectunremove">' + word("Unremove") + '</button><button type="button" class="btn btn-sm btn-success float-right dacollectadd">' + word("Add another") + '</button></div></div>\n')
+                        elif field.collect_type == 'postheader':
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
+                        elif field.collect_type == 'extrapostheader':
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
+                        elif field.collect_type == 'extrafinalpostheader':
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><button type="submit" name="_collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm btn-success float-right">' + word("Add another") + '</button></div></div>\n')
+                        elif field.collect_type == 'firstheader':
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><span class="dacollectnum">' + status.extras['list_message'] + ' ' + str(field.collect_number + 1) + '.</span><span class="dacollectremoved text-danger invisible"> ' + word("(Removed)") + '</span><button type="button" class="btn btn-sm btn-info float-right invisible dacollectunremove">' + word("Unremove") + '</button><button type="button" class="btn btn-sm btn-danger float-right dacollectremoveexisting">' + word("Remove") + '</button></div></div>\n')
+                        else:
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum">' + status.extras['list_message'] + ' ' + str(field.collect_number + 1) + '.</span><span class="dacollectremoved text-danger invisible"> ' + word("(Removed)") + '</span><button type="button" class="btn btn-sm btn-info float-right invisible dacollectunremove">' + word("Unremove") + '</button><button type="button" class="btn btn-sm btn-danger float-right dacollectremoveexisting">' + word("Remove") + '</button></div></div>\n')
+                    else:
+                        fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row field-container field-container-note' + class_def + '"><div class="col-md-12"><div>' + note_fields[field.number] + '</div></div></div>\n')
                     #continue
                 elif field.datatype == 'note':
-                    fieldlist.append('                <div class="form-group row field-container field-container-note"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row field-container field-container-note' + class_def + '"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
                     #fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     #continue
                 # elif field.datatype in ['script', 'css']:
@@ -1047,20 +1077,21 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         if pair['key'] is not None:
                             checkboxes[safeid(from_safeid(field.saveas) + "[" + myb64quote(pair['key']) + "]")] = 'False'
                 elif not status.extras['required'][field.number]:
-                    checkboxes[field.saveas] = 'None'
+                    if hasattr(field, 'saveas'):
+                        checkboxes[field.saveas] = 'None'
             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                 continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + field_class + ' field-container-nolabel"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="col widecol">' + input_for(status, field, wide=True) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' field-container-nolabel"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="col widecol">' + input_for(status, field, wide=True) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="form-group row yesnospacing ' + side_note_parent + field_class + ' field-container-nolabel"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="col widecol">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row yesnospacing ' + side_note_parent + field_class + ' field-container-nolabel' + class_def + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="col widecol">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group row yesnospacing' + side_note_parent + req_tag + field_class + ' field-container-emptylabel"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row yesnospacing' + side_note_parent + req_tag + field_class + ' field-container-emptylabel' + class_def + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Check if applicable") + '</label><div class="offset-md-4 col-md-8">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 elif status.labels[field.number] == '':
-                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + field_class + ' field-container-emptylabel"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + side_note_parent + req_tag + field_class + ' field-container-emptylabel' + class_def + '"><label for="' + escape_id(label_saveas) + '" class="sr-only">' + word("Answer here") + '</label><div class="offset-md-4 col-md-8 fieldpart nolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group row' + side_note_parent + req_tag + field_class + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + side_note_parent + req_tag + field_class + class_def + '"><label for="' + escape_id(label_saveas) + '" class="col-md-4 col-form-label datext-right">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-md-8 fieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
             if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre
@@ -1078,6 +1109,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         #else:
         #    output += "                <p>Error: no fields</p>\n"
         #output += '</div>\n'
+        if status.extras.get('list_collect', False):
+            output += '                <input type="hidden" name="_list_collect_list" value=' + myb64doublequote(json.dumps(status.extras['list_collect'].instanceName)) + '/>\n'
+        if status.extras.get('list_collect_is_final', False) and status.extras['list_collect'].auto_gather:
+            if status.extras['list_collect'].ask_number:
+                output += '                <input type="hidden" name="' + escape_id(safeid(status.extras['list_collect'].instanceName + ".target_number"))  + '" value="0"/>\n'
+            else:
+                output += '                <input type="hidden" name="' + escape_id(safeid(status.extras['list_collect'].instanceName + ".there_is_another"))  + '" value="False"/>\n'
         if len(checkboxes):
             output += '                <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '/>\n'
         if len(hiddens):
@@ -1103,6 +1141,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
+        if status.extras.get('list_collect_is_final', False):
+            if status.extras['list_collect'].ask_number:
+                datatypes[safeid(status.extras['list_collect'].instanceName + ".target_number")] = 'integer'
+            else:
+                datatypes[safeid(status.extras['list_collect'].instanceName + ".there_is_another")] = 'boolean'
         output += datatype_tag(datatypes)
         status.datatypes = datatypes
         output += varname_tag(varnames)

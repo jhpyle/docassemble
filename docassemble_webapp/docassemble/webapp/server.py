@@ -5310,6 +5310,12 @@ def index(action_argument=None):
     #logmessage("known_varnames is " + repr(known_varnames))
     #logmessage("Visible fields is " + repr(visible_fields))
     #logmessage("Numbered fields is " + repr(numbered_fields))
+    list_collect_list = None
+    if '_list_collect_list' in post_data:
+        the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
+        if not illegal_variable_name(the_list):
+            list_collect_list = the_list
+            exec(list_collect_list + '._allow_appending()' , user_dict)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         #logmessage("checkbox_fields is " + repr(checkbox_fields))
@@ -5534,7 +5540,7 @@ def index(action_argument=None):
         the_question = None
     #known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -5576,7 +5582,7 @@ def index(action_argument=None):
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
         #logmessage("The data type is " + text_type(type(data)))
@@ -6384,6 +6390,25 @@ def index(action_argument=None):
     else:
         #sys.stderr.write("index: calling fetch_user_dict4\n")
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+    if validated:
+        if '_collect_delete' in post_data:
+            to_delete = json.loads(post_data['_collect_delete'])
+            is_ok = True
+            for item in to_delete:
+                if not isinstance(item, int):
+                    is_ok = False
+            if is_ok:
+                the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
+                if not illegal_variable_name(the_list):
+                    exec(the_list + ' ._remove_items_by_number(' + ', '.join(map(lambda y: text_type(y), to_delete)) + ')' , user_dict)
+                    changed = True
+        if '_collect' in post_data:
+            collect = json.loads(myb64unquote(post_data['_collect']))
+            if not illegal_variable_name(collect['list']):
+                if collect['function'] == 'add':
+                    add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': collect['list']})
+    if list_collect_list is not None:
+        exec(list_collect_list + '._disallow_appending()' , user_dict)
     # restore this, maybe
     #if next_action:
     #    the_next_action = next_action.pop(0)
@@ -6727,7 +6752,7 @@ def index(action_argument=None):
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
       var daVarLookup;
       var daVarLookupRev;
       var daValLookup;
@@ -7414,6 +7439,23 @@ def index(action_argument=None):
             value: JSON.stringify(tableOrderChanges)
           }).appendTo($(form));
         }
+        var collectToDelete = [];
+        $(".dacollectunremove:visible").each(function(){
+          collectToDelete.push(parseInt($(this).parent().parent().data('collectnum')));
+        });
+        var lastOk = parseInt($(".dacollectremove:visible, .dacollectremoveexisting:visible").last().parent().parent().data('collectnum'));
+        $(".dacollectremove, .dacollectremoveexisting").each(function(){
+          if (parseInt($(this).parent().parent().data('collectnum')) > lastOk){
+            collectToDelete.push(parseInt($(this).parent().parent().data('collectnum')));
+          }
+        });
+        if (collectToDelete.length > 0){
+          $('<input>').attr({
+            type: 'hidden',
+            name: '_collect_delete',
+            value: JSON.stringify(collectToDelete)
+          }).appendTo($(form));
+        }
         daWhichButton = null;
         if (daSubmitter != null){
           $('<input>').attr({
@@ -7661,12 +7703,19 @@ def index(action_argument=None):
       }
       $(document).on('keydown', function(e){
         if (e.which == 13){
-          if (daShowingHelp == 0 && $("#daform button").length == 1){
+          if (daShowingHelp == 0){
             var tag = $( document.activeElement ).prop("tagName");
+            if ($("#daform button.questionbackbutton").length > 0 && (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON")){
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
             if (tag != "INPUT" && tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
               e.preventDefault();
               e.stopPropagation();
-              $("#daform button").click();
+              if ($("#daform button").length == 1){
+                $("#daform button").click();
+              }
               return false;
             }
           }
@@ -8197,6 +8246,38 @@ def index(action_argument=None):
         }
         return (theVal == showIfVal);
       }
+      function rationalizeListCollect(){
+        var finalNum = $(".dacollectextraheader").last().data('collectnum');
+        var num = $(".dacollectextraheader:visible").last().data('collectnum');
+        if (parseInt(num) < parseInt(finalNum)){
+          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('invisible')){
+            $('div.dacollectextraheader[data-collectnum="' + (num + 1) + '"]').show('fast');
+          }
+        }
+        var n = parseInt(finalNum);
+        var firstNum = parseInt($(".dacollectextraheader").first().data('collectnum'));
+        while (n-- > firstNum){
+          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('invisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('invisible')){
+              $('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').hide();
+            }
+          }
+        }
+        var n = parseInt(finalNum);
+        var seenAddAnother = false;
+        while (n-- > firstNum){
+          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('invisible')){
+              seenAddAnother = true;
+            }
+            var current = $('div.dacollectextraheader[data-collectnum="' + n + '"]');
+            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('invisible')){
+              $(current).find(".dacollectadd").addClass('invisible');
+              $(current).find(".dacollectunremove").removeClass('invisible');
+            }
+          }
+        }
+      }
       function daInitialize(doScroll){
         daResetCheckinCode();
         if (daSpinnerTimeout != null){
@@ -8238,6 +8319,54 @@ def index(action_argument=None):
           setTimeout(function(){
             row.removeClass("datablehighlighted");
           }, 1000);
+          return false;
+        });
+        $(".dacollectextra").find('input, textarea, select').prop("disabled", true);
+        $(".dacollectadd").on('click', function(e){
+          e.preventDefault();
+          if ($("#daform").valid()){
+            var num = $(this).parent().parent().data('collectnum');
+            $('div[data-collectnum="' + num + '"]').show('fast');
+            $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+            $(this).parent().find("button.dacollectremove").removeClass("invisible");
+            $(this).parent().find("span.dacollectnum").removeClass("invisible");
+            $(this).addClass("invisible");
+            rationalizeListCollect();
+          }
+          return false;
+        });
+        $(".dacollectremove").on('click', function(e){
+          e.preventDefault();
+          var num = $(this).parent().parent().data('collectnum');
+          $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
+          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $(this).parent().find("button.dacollectadd").removeClass("invisible");
+          $(this).parent().find("span.dacollectnum").addClass("invisible");
+          $(this).addClass("invisible");
+          rationalizeListCollect();
+          return false;
+        });
+        $(".dacollectremoveexisting").on('click', function(e){
+          e.preventDefault();
+          var num = $(this).parent().parent().data('collectnum');
+          $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
+          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $(this).parent().find("button.dacollectunremove").removeClass("invisible");
+          $(this).parent().find("span.dacollectremoved").removeClass("invisible");
+          $(this).addClass("invisible");
+          rationalizeListCollect();
+          return false;
+        });
+        $(".dacollectunremove").on('click', function(e){
+          e.preventDefault();
+          var num = $(this).parent().parent().data('collectnum');
+          $('div[data-collectnum="' + num + '"]').show('fast');
+          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+          $(this).parent().find("button.dacollectremoveexisting").removeClass("invisible");
+          $(this).parent().find("button.dacollectremove").removeClass("invisible");
+          $(this).parent().find("span.dacollectremoved").addClass("invisible");
+          $(this).addClass("invisible");
+          rationalizeListCollect();
           return false;
         });
         $('#questionlabel').click(function(e) {
@@ -9392,6 +9521,16 @@ def index(action_argument=None):
     #logmessage("Request time final: " + str(g.request_time()))
     #sys.stderr.write("11\n")
     return response
+
+def add_action_to_stack(interview_status, user_dict, action, arguments):
+    unique_id = interview_status.current_info['user']['session_uid']
+    if 'event_stack' not in user_dict['_internal']:
+        user_dict['_internal']['event_stack'] = dict()
+    if unique_id not in user_dict['_internal']['event_stack']:
+        user_dict['_internal']['event_stack'][unique_id] = list()
+    if len(user_dict['_internal']['event_stack'][unique_id]) and user_dict['_internal']['event_stack'][unique_id][0]['action'] == action and user_dict['_internal']['event_stack'][unique_id][0]['arguments'] == arguments:
+        user_dict['_internal']['event_stack'][unique_id].pop(0)
+    user_dict['_internal']['event_stack'][unique_id].insert(0, {'action': action, 'arguments': arguments})
 
 def sub_indices(the_var, the_user_dict):
     try:

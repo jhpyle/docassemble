@@ -2697,15 +2697,21 @@ def process_action():
         #else:
         #    the_list.appendObject()
         if the_list.has_been_gathered():
+            was_gathered = True
             the_list.reset_gathered()
-            if the_list.auto_gather:
-                if the_list.ask_number:
-                    if hasattr(the_list, 'target_number'):
-                        the_list.target_number += 1
-                else:
+        else:
+            was_gathered = False
+        if the_list.auto_gather:
+            if the_list.ask_number:
+                if hasattr(the_list, 'target_number'):
+                    the_list.target_number += 1
+            else:
+                if was_gathered:
                     the_list.there_is_another = False
                     if len(the_list.elements) > 0:
                         the_list.there_is_one_other = True
+                else:
+                    the_list.there_is_another = True
         if the_list.auto_gather and not the_list.ask_number:
             the_list.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']

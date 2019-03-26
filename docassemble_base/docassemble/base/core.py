@@ -675,6 +675,19 @@ class DAList(DAObject):
         self._reset_instance_names()
         if something_removed and len(self.elements) == 0 and hasattr(self, 'there_are_any'):
             self.there_are_any = False
+    def _remove_items_by_number(self, *pargs):
+        """Removes items from the list, by index number"""
+        new_list = list()
+        list_truncated = False
+        for indexno in range(len(self.elements)):
+            if indexno not in pargs:
+                new_list.append(self.elements[indexno])
+            else:
+                list_truncated = True
+        self.elements = new_list
+        self._reset_instance_names()
+        if list_truncated and hasattr(self, '_necessary_length'):
+            del self._necessary_length
     def extend(self, the_list):
         """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
@@ -827,6 +840,11 @@ class DAList(DAObject):
                 getattr(elem, complete_attribute)
             else:
                 text_type(elem)
+    def _allow_appending(self):
+        self._appending_allowed = True
+    def _disallow_appending(self):
+        if hasattr(self, '_appending_allowed'):
+            del self._appending_allowed
     def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         #sys.stderr.write("Gather\n")
@@ -972,7 +990,7 @@ class DAList(DAObject):
         try:
             return self.elements[index]
         except:
-            if self.auto_gather and hasattr(self, 'gathered'):
+            if self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed):
                 try:
                     logmessage("list index " + text_type(index) + " out of range on " + text_type(self.instanceName))
                 except:
