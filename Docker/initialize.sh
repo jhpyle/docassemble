@@ -120,6 +120,7 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && 
         sed -i "/$HOSTNAMERABBITMQ/d" /etc/hosts
     fi
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >>/etc/hosts
+    echo "RabbitMq host and IP files found with values IP: $IPRABBITMQ and Host: $HOSTNAMERABBITMQ"
 fi
 
 echo "11"
@@ -456,6 +457,7 @@ echo "29"
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
+    echo "Starting postgres on server url http://localhost:9001"
     sleep 4
     su -c "while ! pg_isready -q; do sleep 1; done" postgres
     roleexists=$(su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER:-docassemble}'\"" postgres)
@@ -545,6 +547,7 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
             cp ${DA_ROOT}/webapp/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
         fi
         supervisorctl --serverurl http://localhost:9001 start syslogng
+        echo "Start syslogng on server url http://localhost:9001"
     fi
 fi
 
@@ -556,12 +559,14 @@ echo "36" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start redis
+    echo "Starting redis on server url http://localhost:9001"
 fi
 
 echo "37" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
+    echo "starting rabbitmq on server url http://localhost:9001"
 fi
 
 echo "38" >&2
@@ -580,6 +585,7 @@ echo "40" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start celery
+    echo "Starting celery on server url http://localhost:9001"
 fi
 
 echo "41" >&2
@@ -616,11 +622,15 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
         find / -group $OLDGID -exec chgrp -h www-data {} \;
         if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
             supervisorctl --serverurl http://localhost:9001 stop celery
+            echo "Stopping celery on server url http://localhost:9001"
         fi
         supervisorctl --serverurl http://localhost:9001 reread
+        echo "Reread server url http://localhost:9001"
         supervisorctl --serverurl http://localhost:9001 update
+        echo "Update server url http://localhost:9001"
         if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
             supervisorctl --serverurl http://localhost:9001 start celery
+            echo "starting celery on server url http://localhost:9001"
         fi
     fi
 
@@ -695,6 +705,7 @@ echo "46" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
+    echo "Starting apache2 on server url http://localhost:9001"
 fi
 
 echo "47" >&2
@@ -722,6 +733,7 @@ if [ "$CRONRUNNING" = false ]; then
         bash -c "set | grep -e '^CONTAINERROLE=' -e '^DA_PYTHON=' -e '^DA_CONFIG=' -e '^DA_ROOT='; cat /etc/crontab" >/tmp/crontab && cat /tmp/crontab >/etc/crontab && rm -f /tmp/crontab
     fi
     supervisorctl --serverurl http://localhost:9001 start cron
+    echo "Starting cron on server url http://localhost:9001"
 fi
 
 echo "50" >&2
@@ -778,6 +790,7 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE == "postgresql" || $DBTYPE 
     fi
     chmod og-rwx /etc/exim4/dbinfo
     supervisorctl --serverurl http://localhost:9001 start exim4
+    echo "Starting exim4 on server url http://localhost:9001"
 fi
 
 echo "51" >&2
