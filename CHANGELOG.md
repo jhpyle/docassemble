@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.27] - 2019-03-27
+### Added
+- The `list collect` feature for allowing users to add multiple items
+  of `DAList` on one screen.
+### Fixed
+- GitHub error with packages that have dependency packages with null
+  attributes.
+
 ## [0.4.26] - 2019-03-25
 ### Fixed
 - Enter key caused browsers to press the `question back button`.

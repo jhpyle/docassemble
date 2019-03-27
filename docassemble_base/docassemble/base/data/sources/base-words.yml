@@ -92,6 +92,7 @@
 "Deleted file: ": Null
 "Deleted interview": Null
 "Deleted interviews": Null
+"(Deleted)": Null
 "Deleted package": Null
 "Delete": Null
 "Dependencies": Null
@@ -376,7 +377,6 @@
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
 "Registration is invite only": Null
-"(Removed)": Null
 "Remove": Null
 "Reorder by moving down": Null
 "Reorder by moving up": Null
@@ -552,10 +552,10 @@
 "unavailable": Null
 "Unblock": Null
 "Undefined names": Null
+"Undelete": Null
 "Unit": Null
 "Unknown": Null
 "Unnamed User": Null
-"Unremove": Null
 "Untitled": Null
 "Update": Null
 "Updating": Null

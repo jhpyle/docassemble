@@ -2696,17 +2696,17 @@ def process_action():
         #    the_list.append(None)
         #else:
         #    the_list.appendObject()
-        if the_list.has_been_gathered():
-            was_gathered = True
+        if hasattr(the_list, 'gathered') and the_list.gathered:
+            the_list.was_gathered = True
             the_list.reset_gathered()
         else:
-            was_gathered = False
+            the_list.was_gathered = False
         if the_list.auto_gather:
             if the_list.ask_number:
                 if hasattr(the_list, 'target_number'):
                     the_list.target_number += 1
             else:
-                if was_gathered:
+                if the_list.was_gathered:
                     the_list.there_is_another = False
                     if len(the_list.elements) > 0:
                         the_list.there_is_one_other = True
@@ -2729,7 +2729,7 @@ def process_action():
     elif the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
-        if the_dict.has_been_gathered():
+        if hasattr(the_dict, 'gathered') and the_dict.gathered:
             the_dict.reset_gathered()
             if the_dict.auto_gather:
                 if the_dict.ask_number:

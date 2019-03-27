@@ -554,6 +554,8 @@ class DAList(DAObject):
         """Returns whether the list has been gathered"""
         if hasattr(self, 'gathered'):
             return True
+        if hasattr(self, 'was_gathered') and self.was_gathered:
+            return True
         return False
     def pop(self, *pargs):
         """Remove an item the list and return it."""
@@ -931,6 +933,8 @@ class DAList(DAObject):
             self.revisit = True
         #if hasattr(self, 'doing_gathered_and_complete'):
         #    del self.doing_gathered_and_complete
+        if hasattr(self, 'was_gathered'):
+            del self.was_gathered
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
@@ -1416,6 +1420,8 @@ class DADict(DAObject):
     def has_been_gathered(self):
         """Returns whether the dictionary has been gathered"""
         if hasattr(self, 'gathered'):
+            return True
+        if hasattr(self, 'was_gathered') and self.was_gathered:
             return True
         return False
     def does_verb(self, the_verb, **kwargs):

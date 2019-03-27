@@ -1261,11 +1261,23 @@ class Question:
         if 'list collect' in data:
             if 'fields' not in data:
                 raise DAError("You cannot set list collect without a fields specifier." + self.idebug(data))
-            self.list_collect = TextObject(definitions + text_type(data['list collect']), names_used=self.mako_names)
-        if 'list collect is final' in data:
-            self.list_collect_is_final = compile(text_type(data['list collect is final']), '<list collect final code>', 'eval')
-        if 'list collect allow append' in data:
-            self.list_collect_allow_append = compile(text_type(data['list collect allow append']), '<list collect allow append code>', 'eval')
+            if isinstance(data['list collect'], (string_types, bool)):
+                self.list_collect = compile(text_type(data['list collect']), '<list collect code>', 'eval')
+            elif isinstance(data['list collect'], dict):
+                if 'enable' in data['list collect']:
+                    self.list_collect = compile(text_type(data['list collect']['enable']), '<list collect code>', 'eval')
+                else:
+                    self.list_collect = compile('True', '<list collect code>', 'eval')
+                if 'label' in data['list collect']:
+                    self.list_collect_label = TextObject(definitions + text_type(data['list collect']['label']), names_used=self.mako_names)
+                if 'is final' in data['list collect']:
+                    self.list_collect_is_final = compile(text_type(data['list collect']['is final']), '<list collect final code>', 'eval')
+                if 'allow append' in data['list collect']:
+                    self.list_collect_allow_append = compile(text_type(data['list collect']['allow append']), '<list collect allow append code>', 'eval')
+                if 'allow delete' in data['list collect']:
+                    self.list_collect_allow_delete = compile(text_type(data['list collect']['allow delete']), '<list collect allow delete code>', 'eval')
+            else:
+                raise DAError("Invalid data under list collect." + self.idebug(data))
         if 'mandatory' in data:
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
@@ -3476,7 +3488,7 @@ class Question:
             if 'current_field' in docassemble.base.functions.this_thread.misc:
                 del docassemble.base.functions.this_thread.misc['current_field']
         else:
-            if hasattr(self, 'list_collect') and process_list_collect:
+            if hasattr(self, 'list_collect') and process_list_collect and eval(self.list_collect, user_dict):
                 fields_to_scan = self.get_fields_and_sub_fields(user_dict)
                 indexno = 0
                 common_var = None
@@ -3504,12 +3516,21 @@ class Question:
                     extras['list_collect_allow_append'] = eval(self.list_collect_allow_append, user_dict)
                 else:
                     extras['list_collect_allow_append'] = True
+                if hasattr(self, 'list_collect_allow_delete'):
+                    extras['list_collect_allow_delete'] = eval(self.list_collect_allow_delete, user_dict)
+                else:
+                    extras['list_collect_allow_delete'] = True
                 extras['list_iterator'] = m.group(2)
                 the_list = eval(the_list_varname, user_dict)
                 if 'DAList' not in text_type(type(the_list)) or not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
                     raise DAError("Cannot use list collect on a variable that is not a DAList.")
                 extras['list_collect'] = the_list
-                extras['list_message'] = self.list_collect.text(user_dict)
+                if hasattr(self, 'list_collect_label'):
+                    extras['list_message'] = self.list_collect_label.text(user_dict)
+                else:
+                    extras['list_message'] = ''
+                if hasattr(the_list, 'minimum_number') and the_list.minimum_number:
+                    extras['list_minimum'] = the_list.minimum_number
                 iterator_index = list_of_indices.index(extras['list_iterator'])
                 length_to_use = len(the_list.elements)
                 if length_to_use == 0:

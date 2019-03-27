@@ -229,9 +229,9 @@ def set_field(step, label, value):
 @step('I set the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)" to "([^"]*)"')
 def set_nth_field(step, ordinal, label, value):
     try:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
     except:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']/parent::label').get_attribute("for"))
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
     try:
         elem.clear()
     except:
@@ -395,3 +395,8 @@ def change_window_size(step, xdimen, ydimen):
 @step('I unfocus')
 def unfocus(step):
     world.browser.find_element_by_id('pagetitle').click()
+
+@step('I click the final link "([^"]+)"')
+def finally_click_link(step, link_name):
+    do_wait()
+    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()

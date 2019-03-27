@@ -1,0 +1,43 @@
+metadata:
+  title: Collect
+  documentation: "https://docassemble.org/docs/groups.html#list collect"
+  example start: 3
+  example end: 3
+---
+objects:
+  fruit: DAList.using(object_type=Thing, there_are_any=True)
+---
+mandatory: True
+code: |
+  fruit.appendObject()
+  fruit[-1].name.text = "apple"
+  fruit[-1].seeds = 10
+  fruit.appendObject()
+---
+question: |
+  Tell me about the fruit.
+fields:
+  - Fruit name: fruit[i].name.text
+  - Number of seeds: fruit[i].seeds
+    datatype: number
+list collect: True
+---
+question: |
+  Are there any more fruit?
+yesno: fruit.there_is_another
+---
+table: fruit.table
+rows: fruit
+columns:
+  - Fruit Name: row_item.name
+  - Seeds: row_item.seeds
+edit:
+  - name.text
+---
+mandatory: True
+question: |
+  Summary of fruit
+subquestion: |
+  ${ fruit.table }
+
+  ${ fruit.add_action() }

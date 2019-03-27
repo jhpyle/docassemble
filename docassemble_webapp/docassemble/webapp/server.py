@@ -8332,6 +8332,7 @@ def index(action_argument=None):
             $(this).parent().find("span.dacollectnum").removeClass("invisible");
             $(this).addClass("invisible");
             rationalizeListCollect();
+            $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
           }
           return false;
         });
@@ -12183,22 +12184,22 @@ def create_playground_package():
                 if field not in info:
                     info[field] = list()
             info['dependencies'] = [x for x in info['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
-            for package in info['dependencies']:
-                logmessage("create_playground_package: considering " + str(package))
-                existing_package = Package.query.filter_by(name=package, active=True).first()
-                if existing_package is not None:
-                    logmessage("create_playground_package: package " + str(package) + " exists")
-                    if existing_package.giturl is None or existing_package.giturl == 'https://github.com/jhpyle/docassemble':
-                        logmessage("create_playground_package: package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
-                        continue
-                    # https://github.com/jhpyle/docassemble-helloworld
-                    # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
-                    #the_package_name = re.sub(r'.*/', '', existing_package.giturl)
-                    #the_package_name = re.sub(r'-', '_', the_package_name)
-                    #new_url = existing_package.giturl + '/archive/master.zip'
-                    new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
-                else:
-                    logmessage("create_playground_package: package " + str(package) + " does not exist")
+            # for package in info['dependencies']:
+            #     logmessage("create_playground_package: considering " + str(package))
+            #     existing_package = Package.query.filter_by(name=package, active=True).first()
+            #     if existing_package is not None:
+            #         logmessage("create_playground_package: package " + str(package) + " exists")
+            #         if existing_package.giturl is None or existing_package.giturl == 'https://github.com/jhpyle/docassemble':
+            #             logmessage("create_playground_package: package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
+            #             continue
+            #         # https://github.com/jhpyle/docassemble-helloworld
+            #         # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
+            #         #the_package_name = re.sub(r'.*/', '', existing_package.giturl)
+            #         #the_package_name = re.sub(r'-', '_', the_package_name)
+            #         #new_url = existing_package.giturl + '/archive/master.zip'
+            #         #new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
+            #     else:
+            #         logmessage("create_playground_package: package " + str(package) + " does not exist")
             info['modtime'] = os.path.getmtime(filename)
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
