@@ -5648,6 +5648,27 @@
   buttons:
     - Stanford: "http://stanford.edu/"
     - Harvard: "http://www.harvard.edu/"
+"list-collect": |-
+  question: |
+    Tell me about the fruit.
+  fields:
+    - Fruit name: fruit[i].name.text
+    - Number of seeds: fruit[i].seeds
+      datatype: number
+  list collect: True
+"list-collect-options": |-
+  question: |
+    Tell me about the fruit.
+  fields:
+    - Fruit name: fruit[i].name.text
+    - Number of seeds: fruit[i].seeds
+      datatype: number
+  list collect:
+    enable: not fruit.has_been_gathered()
+    is final: False
+    allow delete: False
+    label: |
+      ${ fruit_name }
 "list-interview": |-
   code: |
     available_interviews = interview_menu()

@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.27](https://github.com/jhpyle/docassemble/releases/tag/v0.4.27) - 2019-03-27
+
+### Added
+- The `list collect` feature for allowing users to add multiple items
+  of `DAList` on one screen.
+
+### Fixed
+- GitHub error with packages that have dependency packages with null
+  attributes.
+
 ## [0.4.26](https://github.com/jhpyle/docassemble/releases/tag/v0.4.26) - 2019-03-25
 
 ### Fixed

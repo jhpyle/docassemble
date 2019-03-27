@@ -781,195 +781,7 @@ Here is a complete example:
 
 {% include side-by-side.html demo="gather-fruit" %}
 
-# <a name="examples"></a>Examples
-
-## <a name="nested objects"></a>List of dictionaries from checkbox
-
-Here is an example of an interview that uses a checkbox to determine
-which items to use in a dictionary.
-
-{% include side-by-side.html demo="nested-objects" %}
-
-## <a name="prepopulate"></a>Prepopulate a list
-
-Here is an example of an interview that populates a list with two
-entries before allowing the user to add other entries.
-
-{% include side-by-side.html demo="prepopulate-list" %}
-
-This interview takes advantage of the fact that the automatic
-gathering process will seek a definition of the `.there_are_any`
-attribute.  It uses the code block that defines `.there_are_any` to
-populate the list of objects.
-
-Note that `user.favorite_things.clear()` is called.  This line happens
-to be unnecessary in this interview, but it illustrates a good
-practice.  Code blocks in **docassemble** often need to be
-[idempotent]; they should be able to be run from the beginning more
-than once without causing unwanted side effects.  Code blocks often
-restart because when an undefined variable is encountered and the
-definition is retrieved from the user or from another code block, the
-original code block does not pick up where it left off, but rather
-starts at the beginning again.
-
-Alternatively, you could prepopulate a list by using [`mandatory`]
-code at the beginning of an interview to append items to the list.
-Then the interview will never even seek a definition of the
-`.there_are_any` attribute.  The method described above is helpful,
-however, in cases where the list being initialized does not exist at
-the start of the interview, as would be the case if the list was
-`user.sibling[i].favorite_things`.
-
-## <a name="postpopulate"></a>Postpopulate a list
-
-Here is an example of an interview that populates a list with two
-entries after the user is done adding entries.
-
-{% include side-by-side.html demo="postpopulate-list" %}
-
-This interview uses code blocks to determine
-`user.favorite_things.there_are_any` and
-`user.favorite_things.there_is_another`.  Instead of asking the user
-questions that define these variables directly, the interview asks
-questions that set the variables `user.likes_something` and
-`user.likes_another_thing`.  It can then use code to do things
-depending on what the answers are.
-
-If the user says he has no favorite things, the interview adds Mom and
-apple pie to `user.favorite_things`.  If the user does describe some
-favorite things, and then says that he has no other favorite things,
-the interview will then add Mom and apple pie to the list.
-
-Note that if the user says he has no favorite things, the interview
-sets `.there_is_another` to `False`.  This is necessary to persuade the
-automatic gathering feature that the list is fully gathered.
-
-Note the use of [`del`] to undefine `user.likes_another_thing` as soon
-as it is set to `True`.  This is because the automatic gathering
-system will need to ask the question again, and if
-`user.likes_another_thing` is already set to `True`, the list of the
-user's favorite things will be infinite!  Similarly, behind the
-scenes, the automatic gathering process undefines `.there_is_another`
-after it is defined.
-
-## <a name="editing"></a>Edit an already-gathered list
-
-It is possible to allow your users to edit a [`DAList`] list that has
-already been gathered.  Here is an example.
-
-{% include side-by-side.html demo="edit-list" %}
-
-This works using two features:
-
-1. The `edit` specifier on the [`table`] block, which adds an
-   "Actions" column to the table and indicates which screens should be
-   shown when the user clicks the "Edit" button.  First a screen will
-   be shown that asks for the the attribute `.name.first`.  Then a
-   screen will be shown that asks for the attribute `.favorite_fruit`.
-2. The `.add_action()` method on the [`DAList`] inserts HTML for a
-   button that the user can press in order to add an entry to an
-   already-gathered list.
-
-You can allow your users to edit a [`DAList`] from an edit button in a
-[`review`] page.
-
-{% include side-by-side.html demo="review-edit-list" %}
-
-The attribute `.revisit` of a [`DAList`] is special; it is undefined
-by default and is set to `True` by the auto-gathering process at the
-same time that `.gathered` is set to `True`.  Because `.revisit` is
-undefined at first, the [`review`] block will not show the "Edit"
-button for the list until the list is gathered.  When the list has
-been gathered, and the user clicks the "Edit" button associated with
-`.revisit`, the user is taken to the block with `field:
-person.revisit`.  On this screen, you can show the list as a table
-and provide the `.add_action()` button if you want users to be able to
-add entries.
-
-Putting an editable table directly into a review page is also
-possible.
-
-{% include side-by-side.html demo="review-edit-list-table" %}
-
-The line `need: person.table` is important here.  An item in a
-`review` list will not be shown if it contains any undefined
-variables.  The presence of an undefined variable in a `review` list
-item will not cause **docassemble** to seek a definition of that
-variable (unless the specifier `skip undefined: False` is used).
-Therefore, if you want a `review` item containing a `table` to be
-displayed, you need to make sure that the variable representing the
-`table` gets defined by the time that you want the table to be
-editable.  In this example, `need: person.table` ensures that the
-variable representing the table is defined before the user is given
-the opportunity to review his or her answers.
-
-While the above examples have all featured tables for editing `DAList`
-objects, the `edit` feature can also be used when the `rows` of the
-[`table`] refer to a [`DADict`]:
-
-{% include side-by-side.html demo="table-dict-edit" %}
-
-### <a name="custom editing"></a>Customizing the editing interface
-
-If you do not want your users to be able to delete items, you can add
-`delete buttons: False` to the [`table`].
-
-{% include side-by-side.html demo="table-dict-edit-delete-buttons" %}
-
-Or, if you want your users to be able to delete items, but not edit
-items, you can include `delete buttons: True` and do not include
-`edit`:
-
-{% include side-by-side.html demo="table-dict-delete-buttons" %}
-
-If you want to allow your users to delete items, but only if the group
-is longer than a certain length, you can give the [`DAList`] or
-[`DADict`] a [`minimum_number`] attribute.
-
-{% include side-by-side.html demo="table-dict-edit-minimum-number" %}
-
-<a name="read only"></a>If you want specific items to be protected
-against editing and/or deletion, you can set a `read only` specifier:
-
-{% include side-by-side.html demo="table-read-only" %}
-
-In this example, the attribute `important` of the table `fruit`
-determines whether the item is "read only" or not.  The first two
-items in the `DAList`, which are added to the list in a `code` block,
-have the `important` attribute set to `True`, while items that are
-added by the user have the `important` attribute set to `False`.
-Since `read only` is set to `important`, the `Edit` and `Delete`
-buttons are not available for the items that have the `important`
-attribute set to `True`.
-
-If you want to allow editing but not deletion, or vice versa, the
-value of the attribute can be set to a [Python] dictionary rather than
-the value `True` or `False`.  If the value of the key `edit` is false,
-the "Edit" button will not be shown.  If the value of the key
-`delete` is false, the "Delete" button will not be shown.
-
-{% include side-by-side.html demo="table-read-only-2" %}
-
-<a name="editable"></a>If you have a `table` definition that includes
-editable elements (i.e. `edit`, `delete buttons`), but you want to
-present the table with the editing features in some contexts, but
-without the editing features in other contexts, you can include the
-table by calling the method `.show()` with `editable=False` to hide
-the editing features.
-
-{% include side-by-side.html demo="edit-list-non-editable" %}
-
-## <a name="reordering"></a>Reorder an already-gathered list
-
-If you have a [`DAList`] and you want to allow the user to change the
-order of items in the list, you can set `allow reordering` to `True`:
-
-{% include side-by-side.html demo="table-reorder" %}
-
-The changes to the order of elements will be saved when the user
-presses Continue.
-
-# <a name="for loop"></a>For loop
+# <a name="for loop"></a>Using "for loops"
 
 In computer programming, a "for loop" allows you to do something
 repeatedly, such as iterating through each item in a list.
@@ -1046,6 +858,255 @@ question: |
 For more information about "for loops" in [Mako], see the
 [markup section].
 
+# <a name="editing"></a>Edit an already-gathered list
+
+It is possible to allow your users to edit a [`DAList`] list that has
+already been gathered.  Here is an example.
+
+{% include side-by-side.html demo="edit-list" %}
+
+This works using two features:
+
+1. The `edit` specifier on the [`table`] block, which adds an
+   "Actions" column to the table and indicates which screens should be
+   shown when the user clicks the "Edit" button.  First a screen will
+   be shown that asks for the the attribute `.name.first`.  Then a
+   screen will be shown that asks for the attribute `.favorite_fruit`.
+2. The `.add_action()` method on the [`DAList`] inserts HTML for a
+   button that the user can press in order to add an entry to an
+   already-gathered list.
+
+You can allow your users to edit a [`DAList`] from an edit button in a
+[`review`] page.
+
+{% include side-by-side.html demo="review-edit-list" %}
+
+The attribute `.revisit` of a [`DAList`] is special; it is undefined
+by default and is set to `True` by the auto-gathering process at the
+same time that `.gathered` is set to `True`.  Because `.revisit` is
+undefined at first, the [`review`] block will not show the "Edit"
+button for the list until the list is gathered.  When the list has
+been gathered, and the user clicks the "Edit" button associated with
+`.revisit`, the user is taken to the block with `field:
+person.revisit`.  On this screen, you can show the list as a table
+and provide the `.add_action()` button if you want users to be able to
+add entries.
+
+Putting an editable table directly into a review page is also
+possible.
+
+{% include side-by-side.html demo="review-edit-list-table" %}
+
+The line `need: person.table` is important here.  An item in a
+`review` list will not be shown if it contains any undefined
+variables.  The presence of an undefined variable in a `review` list
+item will not cause **docassemble** to seek a definition of that
+variable (unless the specifier `skip undefined: False` is used).
+Therefore, if you want a `review` item containing a `table` to be
+displayed, you need to make sure that the variable representing the
+`table` gets defined by the time that you want the table to be
+editable.  In this example, `need: person.table` ensures that the
+variable representing the table is defined before the user is given
+the opportunity to review his or her answers.
+
+While the above examples have all featured tables for editing `DAList`
+objects, the `edit` feature can also be used when the `rows` of the
+[`table`] refer to a [`DADict`]:
+
+{% include side-by-side.html demo="table-dict-edit" %}
+
+## <a name="custom editing"></a>Customizing the editing interface
+
+If you do not want your users to be able to delete items, you can add
+`delete buttons: False` to the [`table`].
+
+{% include side-by-side.html demo="table-dict-edit-delete-buttons" %}
+
+Or, if you want your users to be able to delete items, but not edit
+items, you can include `delete buttons: True` and do not include
+`edit`:
+
+{% include side-by-side.html demo="table-dict-delete-buttons" %}
+
+If you want to allow your users to delete items, but only if the group
+is longer than a certain length, you can give the [`DAList`] or
+[`DADict`] a [`minimum_number`] attribute.
+
+{% include side-by-side.html demo="table-dict-edit-minimum-number" %}
+
+<a name="read only"></a>If you want specific items to be protected
+against editing and/or deletion, you can set a `read only` specifier:
+
+{% include side-by-side.html demo="table-read-only" %}
+
+In this example, the attribute `important` of the table `fruit`
+determines whether the item is "read only" or not.  The first two
+items in the `DAList`, which are added to the list in a `code` block,
+have the `important` attribute set to `True`, while items that are
+added by the user have the `important` attribute set to `False`.
+Since `read only` is set to `important`, the `Edit` and `Delete`
+buttons are not available for the items that have the `important`
+attribute set to `True`.
+
+If you want to allow editing but not deletion, or vice versa, the
+value of the attribute can be set to a [Python] dictionary rather than
+the value `True` or `False`.  If the value of the key `edit` is false,
+the "Edit" button will not be shown.  If the value of the key
+`delete` is false, the "Delete" button will not be shown.
+
+{% include side-by-side.html demo="table-read-only-2" %}
+
+<a name="editable"></a>If you have a `table` definition that includes
+editable elements (i.e. `edit`, `delete buttons`), but you want to
+present the table with the editing features in some contexts, but
+without the editing features in other contexts, you can include the
+table by calling the method `.show()` with `editable=False` to hide
+the editing features.
+
+{% include side-by-side.html demo="edit-list-non-editable" %}
+
+# <a name="reordering"></a>Reorder an already-gathered list
+
+If you have a [`DAList`] and you want to allow the user to change the
+order of items in the list, you can set `allow reordering` to `True`:
+
+{% include side-by-side.html demo="table-reorder" %}
+
+The changes to the order of elements will be saved when the user
+presses Continue.
+
+# <a name="list collect"></a>Collect all items on one page
+
+By default, when gathering or editing a list item, **docassemble**
+asks about only one list item at a time.  If you have a [`question`]
+that contains a [`fields`] specifier and that uses iterator variables
+(`i`, `j`, `k` etc.) in the variable names, you can use `list collect`
+to expand this [`question`] on the screen so that the user can enter
+answers for multiple list items on one screen.
+
+{% include side-by-side.html demo="list-collect" %}
+
+The `list collect` specifier can be set to `True`, `False`, or
+[Python] code that evaluates to a true or false value.  If the value
+is true, the [`question`] will be expanded; if it is false, the
+[`question`] will not be expanded.
+
+You can customize the behavior of the [`question`] by setting `list
+collect` to a dictionary.
+
+The available keys for the dictionary are:
+
+* `enable`: this can be `True`, `False`, or [Python] code that
+  evaluates to a true or false value.  If the value is true, the
+  [`question`] will be expanded; if it is false, the [`question`] will
+  not be expanded.  (This is the same as the value for the shorthand
+  version of `list collect` discussed above.)  If `list collect` is a
+  dictionary and `enable` is omitted, the default value is `True`.
+* `label`: this can be set to a text label for each item on the
+  screen.  If it is "Fruit," the items will be labeled "Fruit 1,"
+  "Fruit 2," etc.  [Mako] templating can be used.
+* `is final`: this can be `True`, `False`, or [Python] code that
+  evaluates to a true or false value.  If the value is true, then the
+  `there_is_another` attribute will be set to `True` when the user
+  presses the Continue button.  The default value is `True`.
+* `allow append`: this can be `True`, `False`, or [Python] code that
+  evaluates to a true or false value.  If the value is true, then the
+  user is allowed to add additional items to the list.  If the value
+  is false, the user can only edit the existing items.  The default
+  value is `True`.
+* `allow delete`: this can be `True`, `False`, or [Python] code that
+  evaluates to a true or false value.  If the value is true, then the
+  user is allowed to delete existing items from the list.  If it is
+  false, the user will not see any "Delete" buttons except on items
+  that appear because the user clicked the "Add another" button.
+
+Here is an example:
+
+{% include side-by-side.html demo="list-collect-options" %}
+
+This example demonstrates how you can use the `enable` attribute to
+indicate that the multiple-item collection method should be used to
+gather the list initially, but that the ordinary one-item-per-screen
+method should be used for editing list elements or adding new list
+elements after the list is initially gathered.
+
+If you set a the `minimum_number` attribute on the [`DAList`] to 3,
+the first three items in the list will not have Delete buttons.
+
+The `list collect` specifier only works on [`DAList`] variables, not
+on [`DADict`] or [`DASet`] variables.
+
+# <a name="examples"></a>Examples
+
+## <a name="nested objects"></a>List of dictionaries from checkbox
+
+Here is an example of an interview that uses a checkbox to determine
+which items to use in a dictionary.
+
+{% include side-by-side.html demo="nested-objects" %}
+
+## <a name="prepopulate"></a>Prepopulate a list
+
+Here is an example of an interview that populates a list with two
+entries before allowing the user to add other entries.
+
+{% include side-by-side.html demo="prepopulate-list" %}
+
+This interview takes advantage of the fact that the automatic
+gathering process will seek a definition of the `.there_are_any`
+attribute.  It uses the code block that defines `.there_are_any` to
+populate the list of objects.
+
+Note that `user.favorite_things.clear()` is called.  This line happens
+to be unnecessary in this interview, but it illustrates a good
+practice.  Code blocks in **docassemble** often need to be
+[idempotent]; they should be able to be run from the beginning more
+than once without causing unwanted side effects.  Code blocks often
+restart because when an undefined variable is encountered and the
+definition is retrieved from the user or from another code block, the
+original code block does not pick up where it left off, but rather
+starts at the beginning again.
+
+Alternatively, you could prepopulate a list by using [`mandatory`]
+code at the beginning of an interview to append items to the list.
+Then the interview will never even seek a definition of the
+`.there_are_any` attribute.  The method described above is helpful,
+however, in cases where the list being initialized does not exist at
+the start of the interview, as would be the case if the list was
+`user.sibling[i].favorite_things`.
+
+## <a name="postpopulate"></a>Postpopulate a list
+
+Here is an example of an interview that populates a list with two
+entries after the user is done adding entries.
+
+{% include side-by-side.html demo="postpopulate-list" %}
+
+This interview uses code blocks to determine
+`user.favorite_things.there_are_any` and
+`user.favorite_things.there_is_another`.  Instead of asking the user
+questions that define these variables directly, the interview asks
+questions that set the variables `user.likes_something` and
+`user.likes_another_thing`.  It can then use code to do things
+depending on what the answers are.
+
+If the user says he has no favorite things, the interview adds Mom and
+apple pie to `user.favorite_things`.  If the user does describe some
+favorite things, and then says that he has no other favorite things,
+the interview will then add Mom and apple pie to the list.
+
+Note that if the user says he has no favorite things, the interview
+sets `.there_is_another` to `False`.  This is necessary to persuade the
+automatic gathering feature that the list is fully gathered.
+
+Note the use of [`del`] to undefine `user.likes_another_thing` as soon
+as it is set to `True`.  This is because the automatic gathering
+system will need to ask the question again, and if
+`user.likes_another_thing` is already set to `True`, the list of the
+user's favorite things will be infinite!  Similarly, behind the
+scenes, the automatic gathering process undefines `.there_is_another`
+after it is defined.
+
 [markup section]: {{ site.baseurl }}/docs/markup.html#for
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/
@@ -1096,3 +1157,4 @@ For more information about "for loops" in [Mako], see the
 [`complete_attribute`]: #complete_attribute
 [`DAOrderedDict`]: {{ site.baseurl }}/docs/objects.html#DAOrderedDict
 [set theory]: https://en.wikipedia.org/wiki/Set_theory
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields
