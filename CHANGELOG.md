@@ -1,8 +1,11 @@
 # Change Log
 
 ## [0.4.28] - 2019-03-28
+### Added
+- Portuguese translations.
 ### Fixed
 - Swagger-generated setup.py files in ZIP files could not be parsed.
+- Error with gender set to "other"
 
 ## [0.4.27] - 2019-03-27
 ### Added
