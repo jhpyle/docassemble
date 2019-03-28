@@ -2426,6 +2426,11 @@ class DAFile(DAObject):
         self.mimetype = self.file_info.get('mimetype', None)
         self.persistent = self.file_info['persistent']
         self.private = self.file_info['private']
+    def size_in_bytes(self):
+        """Returns the number of bytes in the file."""
+        self.retrieve()
+        the_path = self.path()
+        return os.path.getsize(the_path)
     def slurp(self, auto_decode=True):
         """Returns the contents of the file."""
         self.retrieve()
@@ -2725,6 +2730,12 @@ class DAFileList(DAList):
             if element.ok:
                 result += element.num_pages()
         return result        
+    def size_in_bytes(self):
+        """Returns the number of bytes in the first file."""
+        the_file = self._first_file()
+        if the_file is None:
+            return None
+        return the_file.size_in_bytes()
     def slurp(self, auto_decode=True):
         """Returns the contents of the first file."""
         if len(self.elements) == 0:
@@ -2810,6 +2821,10 @@ class DAStaticFile(DAObject):
         file_info['path'] = os.path.splitext(pdf_file.name)[0]
         shutil.copyfile(self.path(), pdf_file.name)
         return docassemble.base.file_docx.pdf_pages(file_info, width)
+    def size_in_bytes(self):
+        """Returns the number of bytes in the first file."""
+        the_path = self.path()
+        return os.path.getsize(the_path)
     def slurp(self, auto_decode=True):
         """Returns the contents of the file."""
         the_path = self.path()

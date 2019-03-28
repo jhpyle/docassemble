@@ -1,0 +1,17 @@
+metadata:
+  title: Upload file size
+  short: Upload
+  documentation: "https://docassemble.org/docs/recipes.html#upload validation"
+---
+question: |
+  Please upload a file.
+fields:
+  File: uploaded_file
+  datatype: file
+validation code: |
+  if uploaded_file.size_in_bytes() > 100000:
+    validation_error("That file is way too big!  Upload a smaller file.")
+---
+mandatory: True
+need: uploaded_file
+question: Thank you for uploading that file.

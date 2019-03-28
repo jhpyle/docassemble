@@ -6055,15 +6055,6 @@ def index(action_argument=None):
                     eval(key, user_dict)
                 except:
                     exec(key + ' = None' , user_dict)
-        if the_question is not None and the_question.validation_code:
-            try:
-                exec(the_question.validation_code, user_dict)
-            except Exception as validation_error:
-                the_error_message = text_type(validation_error)
-                if the_error_message == '':
-                    the_error_message = word("Please enter a valid value.")
-                error_messages.append(("error", the_error_message))
-                validated = False
     if validated:
         if '_order_changes' in post_data:
             orderChanges = json.loads(post_data['_order_changes'])
@@ -6407,8 +6398,19 @@ def index(action_argument=None):
             if not illegal_variable_name(collect['list']):
                 if collect['function'] == 'add':
                     add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': collect['list']})
-    if list_collect_list is not None:
-        exec(list_collect_list + '._disallow_appending()' , user_dict)
+        if list_collect_list is not None:
+            exec(list_collect_list + '._disallow_appending()' , user_dict)
+        if the_question is not None and the_question.validation_code:
+            try:
+                exec(the_question.validation_code, user_dict)
+            except Exception as validation_error:
+                the_error_message = text_type(validation_error)
+                logmessage(the_error_message)
+                if the_error_message == '':
+                    the_error_message = word("Please enter a valid value.")
+                error_messages.append(("error", the_error_message))
+                validated = False
+                steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     # restore this, maybe
     #if next_action:
     #    the_next_action = next_action.pop(0)

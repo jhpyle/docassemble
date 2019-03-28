@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.29] - 2019-03-28
+### Added
+- The `.size_in_bytes()` method for `DAFile`.
+### Fixed
+- Python3 could not write to S3.
+
 ## [0.4.28] - 2019-03-28
 ### Added
 - Portuguese translations.
