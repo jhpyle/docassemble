@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.28] - 2019-03-28
+### Fixed
+- Swagger-generated setup.py files in ZIP files could not be parsed.
+
 ## [0.4.27] - 2019-03-27
 ### Added
 - The `list collect` feature for allowing users to add multiple items

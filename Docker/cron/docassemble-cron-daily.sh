@@ -128,8 +128,10 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; then
-    for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
-        rm -rf "$old_dir"
-    done
+    if [ -d /tmp/files ]; then
+	for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
+            rm -rf "$old_dir"
+	done
+    fi
 fi
 

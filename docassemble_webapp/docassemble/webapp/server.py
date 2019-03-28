@@ -8,7 +8,7 @@ import tempfile
 import ruamel.yaml
 import tarfile
 import types
-from io import open
+from io import open, TextIOWrapper
 from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
@@ -11856,7 +11856,22 @@ def get_package_name_from_zip(zippath):
                     min_level = len(parts)
         if setup_py is None:
             raise Exception("Not a Python package zip file")
-        contents = zf.read(setup_py)
+        with zf.open(setup_py) as f:
+            the_file = TextIOWrapper(f, encoding='utf8')
+            contents = the_file.read()
+    extracted = dict()
+    for line in contents.splitlines():
+        m = re.search(r"^NAME *= *\(?u?'(.*)'", line)
+        if m:
+            extracted['name'] = m.group(1)
+        m = re.search(r'^NAME *= *\(?u?"(.*)"', line)
+        if m:
+            extracted['name'] = m.group(1)
+        m = re.search(r'^NAME *= *\[(.*)\]', line)
+        if m:
+            extracted['name'] = m.group(1)
+    if 'name' in extracted:
+        return extracted['name']
     contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
     extracted = dict()
     for line in contents.splitlines():
@@ -11867,9 +11882,11 @@ def get_package_name_from_zip(zippath):
         if m:
             extracted[m.group(1)] = m.group(2)
         m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
     if 'name' not in extracted:
         raise Exception("Could not find name of Python package")
-    return extracted['name']    
+    return extracted['name']
     
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required

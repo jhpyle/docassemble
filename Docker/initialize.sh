@@ -18,6 +18,8 @@ export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-${DA_ROOT}/config/config.yml.
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
+echo "config.yml is at " $DA_CONFIG_FILE >&2
+
 echo "1" >&2
 
 export DEBIAN_FRONTEND=noninteractive
@@ -108,6 +110,7 @@ fi
 echo "9" >&2
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
+    echo "Enable azure" >&2
     export AZUREENABLE=true
 fi
 
@@ -186,12 +189,12 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache) ]]; then
-	echo "There are apache files on Azure" >&2
+        echo "There are apache files on Azure" >&2
 	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
 	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-  		echo "Copying apache" >&2
+                echo "Copying apache file" $target_file >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "/etc/apache2/sites-available/${target_file}"
 	    fi
 	done
@@ -213,6 +216,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
   	echo "Copying config.yml" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
+	ls -l $DA_CONFIG_FILE >&2
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
 	echo "Copying redis" >&2
@@ -257,6 +261,7 @@ DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 echo "15" >&2
 
 if [ ! -f $DA_CONFIG_FILE ]; then
+    echo "There is no config file.  Creating one from source." >&2
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
 	-e 's/{{DBUSER}}/'"${DBUSER:-docassemble}"'/' \
@@ -629,6 +634,7 @@ python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 echo "43" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
+    echo "Listen 80" > /etc/apache2/ports.conf
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	if [ "${DAPYTHONVERSION}" == "2" ]; then
 	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
@@ -683,7 +689,6 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     if [ -n "${CROSSSITEDOMAIN}" ]; then
 	echo "Define DACROSSSITEDOMAIN ${CROSSSITEDOMAIN}" >> /etc/apache2/conf-available/docassemble.conf
     fi
-    echo "Listen 80" >> /etc/apache2/ports.conf
     if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
 	echo "Listen 8081" >> /etc/apache2/ports.conf
 	a2ensite docassemble-redirect
