@@ -11331,6 +11331,15 @@
     filename: brief
     update references: True
     docx template file: doc-with-toc.docx
+"upload-file-size": |-
+  question: |
+    Please upload a file.
+  fields:
+    File: uploaded_file
+    datatype: file
+  validation code: |
+    if uploaded_file.size_in_bytes() > 100000:
+      validation_error("That file is way too big!  Upload a smaller file.")
 "validation-code": |-
   question: |
     There are 10 fruit in all.

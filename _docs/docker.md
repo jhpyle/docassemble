@@ -854,19 +854,17 @@ your [S3] bucket.
 Using [Microsoft Azure] is very similar to using [S3].  From the
 [Azure Portal] dashboard, search for "Storage accounts" in the
 "Resources."  Click "Add" to create a new storage account.  Under
-"Deployment model," choose
-"Resource manager."  Under "Account kind," choose "Blob storage."
-Under Performance, choose "Access tier," you can choose either "Cool"
-or "Hot," but you may have to pay more for "Hot."
+"Account kind," choose "BlobStorage."  Under "Access tier," you can
+choose either "Cool" or "Hot," but you may have to pay more for "Hot."
 
-Once the storage account is created, go into it and click "+
-Container" to add a new container.  Set the "Access type" to
-"Private."  The name of the container corresponds with the
-[`AZURECONTAINER`] environment variable.  Back at the storage account,
-click "Access keys."  The "Storage account name" corresponds with the
-environment variable [`AZUREACCOUNTNAME`].  The "key1" corresponds
-with the [`AZUREACCOUNTKEY`] environment variable.  (You can also use
-"key2.")
+Once the storage account is created, go into your "Blobs" service in
+the storage account and click "+ Container" to add a new container.
+Set the "Access type" to "Private."  The name of the container
+corresponds with the [`AZURECONTAINER`] environment variable.  Back at
+the storage account, click "Access keys."  The "Storage account name"
+corresponds with the environment variable [`AZUREACCOUNTNAME`].  The
+"key1" corresponds with the [`AZUREACCOUNTKEY`] environment variable.
+(You can also use "key2.")
 
 If you enable both [S3](#persistent s3) and
 [Azure blob storage](#persistent azure), only [S3] will be used.

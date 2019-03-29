@@ -524,17 +524,13 @@ You can also use `terms` and `auto terms` as [question modifiers], in which
 case the terms will apply only to the question, not to the interview
 as a whole.
 
+# <a name="template"></a>The `template` block
+
 The word "template" has a number of different meanings.  If you are
 interested in how to insert variables into the text of your questions
 or documents using the [Mako] templating syntax, see [markup].  If you
-are interested in PDF or DOCX templates for downloadable documents,
-see [fill-in forms].  If you are interested in the RTF, LaTeX, or DOCX
-templates that determine the formatting of downloadable documents
-generated from [Markdown] content, see
-[customization of document formatting].  The only purpose of this
-section is to describe the `template` and `table` blocks.
-
-# <a name="template"></a>The `template` block
+are interested in document assembly based on forms or document
+templates, see the [Documents] section.
 
 A `template` block allows you to assign text to a variable and then
 re-use the text by referring to a variable.
@@ -1838,3 +1834,30 @@ features:
 [`modules`]: #modules
 [`process_action`]: {{ site.baseurl}}/docs/functions.html#process_action
 [`template`]: #template
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`Thing`]: {{ site.baseurl }}/docs/objects.html#Thing
+[`pandas`]: https://pandas.pydata.org/
+[editing an already-gathered list]: {{ site.baseurl }}/docs/groups.html#editing
+[groups]: {{ site.baseurl }}/docs/groups.html
+[Documents]: {{ site.baseurl }}/docs/documents.html
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[label and field]: {{ site.baseurl }}/docs/fields.html#label
+[variable name]: {{ site.baseurl }}/docs/fields.html#variable names
+[`send_email()`]: {{ site.baseurl}}/docs/functions.html#send_email
+[`docassemble.demo:data/templates/hello_template.md`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/templates/hello_template.md
+[`docassemble.base:data/questions/examples/template-file.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/template-file.yml
+[`docassemble.base:data/templates/disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
+[`disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
+[expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[`table width`]: {{ site.baseurl }}/docs/initial.html#table width
+[`features`]: {{ site.baseurl }}/docs/initial.html#features
+[document]: {{ site.baseurl }}/docs/documents.html
+[list]: https://docs.python.org/2.7/tutorial/datastructures.html
+[dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
+[set]: https://docs.python.org/2/library/stdtypes.html#set
+[group]: {{ site.baseurl }}/docs/groups.html
+[`label` and `field`]: {{ site.baseurl }}/docs/fields.html#label
+[question]: {{ site.baseurl }}/docs/questions.html

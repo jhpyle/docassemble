@@ -389,6 +389,13 @@ to the attorney's e-mail address.
 
 {% include demo-side-by-side.html demo="sign" %}
 
+# <a name="upload validation">Validating uploaded files</a>
+
+Here is an interview that makes the user upload a different file if
+the file the user uploads is too large.
+
+{% include demo-side-by-side.html demo="upload-file-size" %}
+
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/

@@ -1236,6 +1236,9 @@ To read the values of the attributes for a variable like
 [`.retrieve()`](#DAFile.retrieve).  Setting these attributes directly
 has no effect; you need to use [`.set_attributes()`] to set them.
 
+<a name="DAFile.size_in_bytes"></a>The `.size_in_bytes()` method
+returns the number of bytes in the file.
+
 <a name="DAFile.slurp"></a>The `.slurp()` method reads the contents of
 the file and returns them as a text value.
 
@@ -1448,9 +1451,16 @@ element in it.
 <a name="DAFileList.path"></a>The `.path()` method returns a complete
 file path that you can use to access the first file in the collection.
 
-<a name="DAFileList.num_pages"></a>The `.num_pages()` method returns the
-total number of pages in all PDF files in the list.  If a file is not a PDF file, it
-counts as 1 page.
+<a name="DAFileList.size_in_bytes"></a>The `.size_in_bytes()` method
+returns the number of bytes in the first file in the collection.
+
+<a name="DAFileList.slurp"></a>The `.slurp()` method reads the
+contents of the first file in the collection and returns them as a
+text value.
+
+<a name="DAFileList.num_pages"></a>The `.num_pages()` method returns
+the total number of pages in all PDF files in the list.  If a file is
+not a PDF file, it counts as 1 page.
 
 <a name="DAFileList.set_attributes"></a>The `.set_attributes()` method
 calls [`.set_attributes()`] on each of the [`DAFile`]s in the list,
@@ -1540,6 +1550,9 @@ will be used.
 
 When included in a [Mako] template, a `DAStaticFile` object will effectively
 call `show()` on itself.
+
+<a name="DAStaticFile.size_in_bytes"></a>The `.size_in_bytes()` method
+returns the number of bytes in the file.
 
 <a name="DAStaticFile.slurp"></a>The `.slurp()` method reads the contents of
 the file and returns them as a text value.

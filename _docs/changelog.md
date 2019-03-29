@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.29](https://github.com/jhpyle/docassemble/releases/tag/v0.4.29) - 2019-03-28
+
+### Added
+- The `.size_in_bytes()` method for `DAFile`.
+
+### Fixed
+- Python3 could not write to S3.
+
+## [0.4.28](https://github.com/jhpyle/docassemble/releases/tag/v0.4.28) - 2019-03-28
+
+### Added
+- Portuguese translations.
+
+### Fixed
+- Swagger-generated setup.py files in ZIP files could not be parsed.
+- Error with gender set to "other"
+
 ## [0.4.27](https://github.com/jhpyle/docassemble/releases/tag/v0.4.27) - 2019-03-27
 
 ### Added
