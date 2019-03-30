@@ -379,7 +379,7 @@ def sync_with_onedrive(user_id):
                 else:
                     trashed = False
             if trashed is True:
-                logmessage('trash_gd_file: folder did not exist')
+                sys.stderr.write('trash_gd_file: folder did not exist' + "\n")
                 return False
             if trashed is True or 'folder' not in info:
                 return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
@@ -583,7 +583,10 @@ def sync_with_onedrive(user_id):
             do_restart = False
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except Exception as e:
-        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
+        if PY2:
+            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e)), restart=False)
+        else:
+            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
 
 def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=None):
     headers = { 'Content-Type': 'application/json' }
@@ -597,13 +600,15 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         #    return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
         #new_item_id = json.loads(content)['id']
         #sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     else:
         is_new = False    
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
-    r, content = try_request(http, the_url, 'POST')
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
+    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
+    body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace", "description": data['description'], "fileSystemInfo": { "@odata.type": "microsoft.graph.fileSystemInfo" }, "name": data['name']}}
+    r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data))
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url, restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + repr(data) + " and is_new is " + repr(is_new), restart=False)
     sys.stderr.write("Upload session created.\n")
     upload_url = json.loads(content.decode())["uploadUrl"]
     sys.stderr.write("Upload url obtained.\n")

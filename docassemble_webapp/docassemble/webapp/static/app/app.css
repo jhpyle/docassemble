@@ -2113,7 +2113,7 @@ tr:first-child .datableup, tr:last-child .databledown {
 }
 
 @media (max-width: 767px) {
-    .navbar-brand {
+    .navbar-title {
 	max-width: 70%;
 	overflow: hidden;
     }
