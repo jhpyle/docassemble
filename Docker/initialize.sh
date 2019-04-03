@@ -467,6 +467,8 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     if [ "${S3ENABLE:-false}" == "true" ] && [[ $(aws s3 ls s3://${S3BUCKET}/postgres) ]]; then
         PGBACKUPDIR=$(mktemp -d)
         aws s3 sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/" --quiet
+        echo "Postgres directory found in the following S3 bucket ${S3BUCKET}"
+        echo "Postgres directory in S3 synced into temp folder at $PGBACKUPDIR/"
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
         echo "There are postgres files on Azure" >&2
         PGBACKUPDIR=$(mktemp -d)
