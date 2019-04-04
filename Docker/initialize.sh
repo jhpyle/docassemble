@@ -292,6 +292,7 @@ chown www-data.www-data $DA_CONFIG_FILE
 echo "16"
 
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+env | sort
 
 echo "17"
 
