@@ -1,5 +1,19 @@
 # Change Log
 
+## [0.4.30] - 2019-04-07
+### Added
+- The `editable mimetypes` and `editable extensions` configuration
+  directives.
+### Changed
+- The `worker.log` no longer exempt from backup.
+- The Redis database now backed up to rolling backup.
+- Relaxed some restrictions on multiple developers working on same
+  package in their Playgrounds.
+### Fixed
+- Problem with `write()` method of `DAFile`.
+- Problem with creating packages when author not defined.
+- Problem with `source_code` when `debug` mode not in effect.
+
 ## [0.4.29] - 2019-03-28
 ### Added
 - The `.size_in_bytes()` method for `DAFile`.

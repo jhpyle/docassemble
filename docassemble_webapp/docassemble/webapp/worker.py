@@ -584,7 +584,7 @@ def sync_with_onedrive(user_id):
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except Exception as e:
         if PY2:
-            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e)), restart=False)
+            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
         else:
             return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
 

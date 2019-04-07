@@ -85,6 +85,20 @@ code: |
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css", 'text/html': 'htmlmixed'}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed"}
 
+try:
+    if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
+        for item in daconfig['editable mimetypes']:
+            ok_mimetypes[item] = 'null'
+except:
+    pass
+
+try:
+    if 'editable extensions' in daconfig and isinstance(daconfig['editable extensions'], list):
+        for item in daconfig['editable extensions']:
+            ok_extensions[item] = 'null'
+except:
+    pass
+
 default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
@@ -9442,7 +9456,7 @@ def index(action_argument=None):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
         output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
-        if interview_status.question.source_code is None:
+        if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
             output += word('unavailable')
         else:
             output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
@@ -9578,7 +9592,7 @@ def get_history(interview, interview_status):
                     output += "          <h5>Considered asking question" + the_time + "</h5>\n"
                 if stage['question'].from_source.path != interview.source.path:
                     output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
-                if stage['question'].source_code is None:
+                if (not hasattr(stage['question'], 'source_code')) or stage['question'].source_code is None:
                     output += word('(embedded question, source code not available)')
                 else:
                     output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
@@ -12182,9 +12196,9 @@ def create_playground_package():
             flash("form did not validate with " + str(form.name.data) + " " + str(the_error) + " among " + str(form.name.choices), 'error')
     if current_package is not None:
         pkgname = re.sub(r'^docassemble-', r'', current_package)
-        if not user_can_edit_package(pkgname='docassemble.' + pkgname):
-            flash(word('That package name is already in use by someone else.  Please change the name.'), 'error')
-            current_package = None
+        #if not user_can_edit_package(pkgname='docassemble.' + pkgname):
+        #    flash(word('That package name is already in use by someone else.  Please change the name.'), 'error')
+        #    current_package = None
     if current_package is not None and current_package not in file_list['playgroundpackages']:
         flash(word('Sorry, that package name does not exist in the playground'), 'error')
         current_package = None
@@ -12413,7 +12427,7 @@ def create_package():
     form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
-        if not user_can_edit_package(pkgname='docassemble.' + pkgname):
+        if False and not user_can_edit_package(pkgname='docassemble.' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
             #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
@@ -14624,9 +14638,9 @@ def playground_packages():
                 the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 the_file = ''
-    if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
-        flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
-        validated = False
+    #if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
+    #    flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
+    #    validated = False
     if request.method == 'GET' and the_file in editable_file_listing:
         session['playgroundpackages'] = the_file
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
@@ -14788,9 +14802,13 @@ def playground_packages():
                                         shutil.copyfileobj(source_fp, target_fp)
                                     os.utime(target_filename, (the_time, the_time))
                             if filename == 'README.md' and len(levels) == 0:
-                                readme_text = zf.read(zinfo)
+                                with zf.open(zinfo) as f:
+                                    the_file = TextIOWrapper(f, encoding='utf8')
+                                    readme_text = the_file.read()
                             if filename == 'setup.py' and len(levels) == 0:
-                                setup_py = zf.read(zinfo)
+                                with zf.open(zinfo) as f:
+                                    the_file = TextIOWrapper(f, encoding='utf8')
+                                    setup_py = the_file.read()
                             elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
@@ -14978,12 +14996,12 @@ def playground_packages():
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
-        if not user_can_edit_package(pkgname='docassemble.' + package_name):
-            index = 1
-            orig_package_name = package_name
-            while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
-                index += 1
-                package_name = orig_package_name + str(index)
+        # if not user_can_edit_package(pkgname='docassemble.' + package_name):
+        #     index = 1
+        #     orig_package_name = package_name
+        #     while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
+        #         index += 1
+        #         package_name = orig_package_name + str(index)
         with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
             fp.write(text_type(the_yaml))

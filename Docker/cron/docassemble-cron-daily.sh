@@ -80,7 +80,12 @@ mkdir -p $BACKUPDIR
 if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
     rsync -au ${DA_ROOT}/files $BACKUPDIR/
     rsync -au ${DA_ROOT}/config $BACKUPDIR/
-    rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
+    #rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
+    rsync -au ${DA_ROOT}/log $BACKUPDIR/
+fi
+
+if [ -f /var/lib/redis/dump.rdb ]; then
+    cp /var/lib/redis/dump.rdb $BACKUPDIR/redis.rdb
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then

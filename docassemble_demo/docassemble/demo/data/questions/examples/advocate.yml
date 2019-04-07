@@ -1,0 +1,65 @@
+metadata:
+  title: Advice
+---
+objects:
+  - child: Individual
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  What is your child's name?
+fields:
+  - First name: child.name.first
+---
+initial: True
+code: |
+  if user_has_privilege('admin', 'advocate'):
+    if not defined('factor_four'):
+      waiting_screen
+    factor_four_valid
+  else:
+    factor_four
+    if not defined('factor_four_valid'):
+      waiting_screen
+  assessment_screen
+---
+question: |
+  Please explain how the custody arrangement you propose would meet
+  ${ child.possessive('need') } for stability and continuity in her
+  education, family life and community life.
+fields:
+  no label: factor_four
+  datatype: area
+---
+question:
+  Factor four
+subquestion: |
+  The client has given the following reason in support of factor four,
+  "The need for stability and continuity in the child's education,
+  family life and community life."
+
+  ${ quote_paragraphs(factor_four) }
+
+  Does this reason support factor four?
+yesno: factor_four_valid
+---
+event: assessment_screen
+question: |
+  % if user_has_privilege('admin', 'advocate'):
+  The client has
+  % else:
+  You have
+  % endif
+  % if factor_four_valid:
+  a valid claim.
+  % else:
+  no valid claim.
+  % endif
+---
+reload: True
+event: waiting_screen
+question: Please wait.
+subquestion: |
+  The URL for this session is [here](${ interview_url() }).

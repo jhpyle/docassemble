@@ -532,13 +532,13 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 
 """
     setuppy += u"setup(name='docassemble." + str(pkgname) + "',\n" + """\
-      version=""" + repr(info['version']) + """,
-      description=(""" + repr(info['description']) + """),
+      version=""" + repr(info.get('version', '')) + """,
+      description=(""" + repr(info.get('description', '')) + """),
       long_description=""" + repr(readme) + """,
       long_description_content_type='text/markdown',
-      author=""" + repr(info['author_name']) + """,
-      author_email=""" + repr(info['author_email']) + """,
-      license=""" + repr(info['license']) + """,
+      author=""" + repr(info.get('author_name', '')) + """,
+      author_email=""" + repr(info.get('author_email', '')) + """,
+      license=""" + repr(info.get('license', '')) + """,
       url=""" + repr(info['url'] if info['url'] else 'https://docassemble.org') + """,
       packages=find_packages(),
       namespace_packages=['docassemble'],

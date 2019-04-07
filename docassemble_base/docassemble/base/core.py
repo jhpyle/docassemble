@@ -2459,7 +2459,7 @@ class DAFile(DAObject):
             with open(the_path, 'wb') as f:
                 f.write(content)
         else:
-            with open(the_path, 'wU', encoding='utf-8') as f:
+            with open(the_path, 'w', encoding='utf-8') as f:
                 f.write(content)
         self.retrieve()
     def copy_into(self, other_file):

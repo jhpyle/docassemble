@@ -6,9 +6,8 @@ objects:
   client: Individual
 ---
 template: my_message
-subject: Hello, world!
 content: |
-  Hi there, planet.
+  Hello, world!
 ---
 question: |
   What is your phone number?
