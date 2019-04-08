@@ -2068,7 +2068,14 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
         return word("(Not a DAFile or DAFileList object)")
     if isinstance(image_file, DAFile):
         image_file = [image_file]
+    pdf_to_ppm = get_config("pdftoppm")
+    if pdf_to_ppm is None:
+        pdf_to_ppm = 'pdftoppm'
+    ocr_resolution = get_config("ocr dpi")
+    if ocr_resolution is None:
+        ocr_resolution = '300'
     file_list = list()
+    temp_directory_list = list()
     for doc in image_file:
         if hasattr(doc, 'extension'):
             if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
@@ -2100,9 +2107,18 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
             file_list.append(path)
     codes = list()
     for page in file_list:
-        qr = qrtools.QR()
-        qr.decode(page)
-        codes.append(qr.data)
+        if PY2:
+            try:
+                from qrtools import QR
+            except ImportError:
+                from qrtools.qrtools import QR
+            qr = QR()
+            qr.decode(page)
+            codes.append(qr.data)
+        else:
+            from pyzbar.pyzbar import decode
+            for result in decode(Image.open(page)):
+                codes.append(result.data.decode())
     return codes
 
 def path_and_mimetype(file_ref):

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.31] - 2019-04-07
+### Fixed
+- Errors with `read_qr()`.
+
 ## [0.4.30] - 2019-04-07
 ### Added
 - The `editable mimetypes` and `editable extensions` configuration
