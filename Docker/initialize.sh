@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # run supervisord here, rather than in the dockerfile
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
