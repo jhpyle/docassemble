@@ -10,7 +10,7 @@ hardest part about using it is figuring out how to deploy it on the
 internet.
 
 The easiest way to use **docassemble** is through a
-**docassemble-based** third-party service that provides interview
+**docassemble**-based third-party service that provides interview
 development tools.  Existing providers include [Community.lawyer] and
 [Documate].  (A third provider, [Clerical Platform], is currently
 available in beta mode.)

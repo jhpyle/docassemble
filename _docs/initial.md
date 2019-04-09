@@ -822,6 +822,16 @@ Here are some examples of usage:
 * `fruit_table.export()`: returns a Microsoft Excel file called
   `file.xlsx`.
 
+## <a name="as_df"></a>Converting tables to a pandas dataframe
+
+If you want to work with your table as a [`pandas`] dataframe, you can
+call `fruit_table.as_df()` to obtain the information for the table as
+a [`pandas`] dataframe object.  However, note that objects from the
+[`pandas`] package cannot necessarily be "pickled" by Python, so it is
+best if you call this method from functions in Python modules, or in
+such a way that the results do not get saved to variables in the
+interview.
+
 ## <a name="groups edit"></a>Using tables to edit groups
 
 You can use a `table` to provide the user with an interface for

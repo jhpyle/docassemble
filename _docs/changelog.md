@@ -4,6 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.31](https://github.com/jhpyle/docassemble/releases/tag/v0.4.31) - 2019-04-07
+
+### Fixed
+- Errors with `read_qr()`.
+
+## [0.4.30](https://github.com/jhpyle/docassemble/releases/tag/v0.4.30) - 2019-04-07
+
+### Added
+- The `editable mimetypes` and `editable extensions` configuration
+  directives.
+
+### Changed
+- The `worker.log` no longer exempt from backup.
+- The Redis database now backed up to rolling backup.
+- Relaxed some restrictions on multiple developers working on same
+  package in their Playgrounds.
+
+### Fixed
+- Problem with `write()` method of `DAFile`.
+- Problem with creating packages when author not defined.
+- Problem with `source_code` when `debug` mode not in effect.
+
 ## [0.4.29](https://github.com/jhpyle/docassemble/releases/tag/v0.4.29) - 2019-03-28
 
 ### Added

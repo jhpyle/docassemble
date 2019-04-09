@@ -2821,7 +2821,7 @@ twilio:
   account sid: ACfad8e668d876f5473fb232a311243b58
   auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
-  twilio number: "+12762268342"
+  whatsapp number: "+12762268342"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
@@ -2979,6 +2979,31 @@ cause the system to crash.
 
 You can also change these limits on a per-interview basis with the
 [`loop limit` and `recursion limit` features]
+
+## <a name="editable mimetypes"></a><a name="editable extensions"></a>Editable file types
+
+By default, the only file types that can be edited in the folders of
+the Playground are `text` [MIME] types and file types that are used in
+**docassemble**, like [YAML], [CSS], [JavaScript], and [HTML].  Other
+types are presumed to be non-editable, and there is no "Edit" button
+next to the file in the Playground folder.
+
+You can make additional file types editable using `editable mimetypes`
+or `editable extensions`.  For example, if you wanted to be able to
+edit RTF files in the Playground folders, you could add:
+
+{% highlight yaml %}
+editable mimetypes:
+  - application/rtf
+{% endhighlight %}
+
+Or if you had a text file format that was not associated with a [MIME]
+type and that ended in `.law`, you could add:
+
+{% highlight yaml %}
+editable extensions:
+  - law
+{% endhighlight %}
 
 # <a name="get_config"></a>Adding your own configuration variables
 
@@ -3266,3 +3291,4 @@ and Facebook API keys.
 [WhatsApp]: https://www.twilio.com/whatsapp
 [`allow non-idempotent questions`]: {{ site.baseurl }}/docs/initial.html#allow non-idempotent questions
 [ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[MIME]: https://en.wikipedia.org/wiki/Media_type

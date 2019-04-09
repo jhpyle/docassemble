@@ -10,6 +10,16 @@ with centralized services.  The limit to scalability will then be a
 question of how responsive a single SQL server can be and how
 responsive a single [Redis] server can be.
 
+You probably do not need to deploy **docassemble** with multiple
+application servers.  A single application server can handle a lot of
+traffic, and if it starts to get overloaded, you can always upgrade to
+a more powerful machine.  Deploying **docassemble** on a single server
+involves far fewer steps than setting up a multi-server arrangement.
+The slightest deviation from the instructions in this section could
+cause your cluster not to function, and the reasons could be
+mysterious.  Unless you really understand the technologies, it might
+be difficult for you to debug issues with multi-server arrangements.
+
 # Multi-server configuration on EC2 Container Service
 
 If you want to run **docassemble** in a scalable

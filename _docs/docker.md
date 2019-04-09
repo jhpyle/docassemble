@@ -190,7 +190,7 @@ speed of the network connection.  A number of things happen during the
 boot process, but the main bottleneck is the updating of software
 packages.  On some systems it may take up to 20 minutes for
 **docassemble** to boot.  If you want to investigate what is happening
-on the server, see the [troubleshooting] shooting.
+on the server, see the [troubleshooting] section.
 
 If you are running [Docker] on [AWS], the address will be something
 like `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check
@@ -765,18 +765,20 @@ There are two ways around this problem.  The first, and most
 preferable solution, is to get an account on [Amazon Web Services]
 ([AWS]) or [Microsoft Azure].  If you use [AWS], create an [S3 bucket]
 for your data, and then when you launch your container, set the
-[`S3BUCKET`] and associated [environment variables].  If you use
-[Microsoft Azure], create an [Azure blob storage] resource, and a
-[blob storage container] within it, and then when you launch your
-container, set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and
-[`AZURECONTAINER`]<span></span> [environment variables].  When
-[`docker stop`] is run, **docassemble** will backup the SQL database,
-the [Redis] database, the [configuration], and your uploaded files to
-your [S3 bucket] or [blob storage container].  Then, when you issue a
-[`docker run`] command with [environment variables] pointing
+[`S3BUCKET`] and associated [environment variables].
+
+If you use [Microsoft Azure], create an [Azure blob storage] resource,
+and a [blob storage container] within it, and then when you launch
+your container, set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and
+[`AZURECONTAINER`]<span></span> [environment variables].
+
+When [`docker stop`] is run, **docassemble** will backup the SQL
+database, the [Redis] database, the [configuration], and your uploaded
+files to your [S3 bucket] or [blob storage container].  Then, when you
+issue a [`docker run`] command with [environment variables] pointing
 **docassemble** to your [S3 bucket]/[Azure blob storage] resource,
-**docassemble** will make restore from the backup.  You can
-[`docker rm`] your container and your data will persist in the cloud.
+**docassemble** will make restore from the backup.  You can [`docker
+rm`] your container and your data will persist in the cloud.
 
 The second way is to use [persistent volumes], which is a feature of
 [Docker].  This will store the data in directories on the [Docker]
@@ -803,7 +805,23 @@ to the user.
 
 When you run a **docassemble** [Docker] container, set the
 [configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
-and [`S3SECRETACCESSKEY`].
+and [`S3SECRETACCESSKEY`].  For example, you might use an `env.list`
+file such as:
+
+{% highlight text %}
+DAHOSTNAME=interviews.example.com
+S3ENABLE=true
+S3BUCKET=interviews-example-com
+S3ACCESSKEY=YERWERGDFSGERGSDFGSW
+S3SECRETACCESSKEY=WERWR36dddeg3udjfRT1+rweRTHRTookiMVASDAS
+S3REGION=us-east-2
+TIMEZONE=America/New_York
+USEHTTPS=true
+EC2=true
+USELETSENCRYPT=true
+LETSENCRYPTEMAIL=dev@example.com
+DAPYTHONVERSION=3
+{% endhighlight %}
 
 Note that if you run **docassemble** on [EC2], you can launch your
 [EC2] instances with an [IAM] role that allows **docassemble** to
@@ -864,7 +882,21 @@ corresponds with the [`AZURECONTAINER`] environment variable.  Back at
 the storage account, click "Access keys."  The "Storage account name"
 corresponds with the environment variable [`AZUREACCOUNTNAME`].  The
 "key1" corresponds with the [`AZUREACCOUNTKEY`] environment variable.
-(You can also use "key2.")
+(You can also use "key2.").  For example, you might use an `env.list`
+file such as:
+
+{% highlight text %}
+DAHOSTNAME=interviews.example.com
+AZUREENABLE=true
+AZUREACCOUNTNAME=exampledotcom
+AZUREACCOUNTKEY=98f89asdfjwew/YosdfojweafASDFErgergDFGsergagaweWRTIQgqERGs243rergE4534tERgEFBDRGferEEB==
+AZURECONTAINER=interviews-example-com
+TIMEZONE=America/New_York
+USEHTTPS=true
+USELETSENCRYPT=true
+LETSENCRYPTEMAIL=dev@example.com
+DAPYTHONVERSION=3
+{% endhighlight %}
 
 If you enable both [S3](#persistent s3) and
 [Azure blob storage](#persistent azure), only [S3] will be used.
