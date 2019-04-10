@@ -1753,7 +1753,23 @@ def additional_scripts(interview_status, yaml_filename):
     return scripts
 
 def additional_css(interview_status):
+    if 'segment id' in daconfig:
+        segment_id = daconfig['segment id']
+    else:
+        segment_id = None
     start_output = ''
+    if segment_id is not None:
+        start_output += """    <script>
+      !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
+      analytics.load(""" + json.dumps(segment_id) + """);
+      analytics.page();
+      }}();
+      function daSegmentEvent(){
+        if (daQuestionID != null){
+          analytics.track(daQuestionID.replace(/[^A-Za-z0-9]+/g, '_'));
+        }
+      }
+    </script>"""
     if len(interview_status.extra_css):
         start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
     return start_output
@@ -6737,6 +6753,10 @@ def index(action_argument=None):
             ga_id = google_config.get('analytics id')
         else:
             ga_id = None
+        if 'segment id' in daconfig:
+            segment_id = daconfig['segment id']
+        else:
+            segment_id = None
         the_js = """\
       var daMapInfo = null;
       var daWhichButton = null;
@@ -6764,6 +6784,7 @@ def index(action_argument=None):
       var daSpinnerTimeout = null;
       var daSubmitter = null;
       var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
+      var daUsingSegment = """ + ("true" if segment_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
       var daQuestionID = """ + json.dumps(question_id) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
@@ -9004,6 +9025,9 @@ def index(action_argument=None):
         daShowNotifications();
         if (daUsingGA){
           daPageview();
+        }
+        if (daUsingSegment){
+          daSegmentEvent();
         }
         $(document).trigger('daPageLoad');
       }

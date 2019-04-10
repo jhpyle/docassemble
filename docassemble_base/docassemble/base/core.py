@@ -3155,6 +3155,10 @@ class DALazyTableTemplate(DALazyTemplate):
         outfile.commit()
         outfile.retrieve()
         return outfile
+    def as_df(self):
+        """Returns the table as a pandas data frame"""
+        header_output, contents = self.header_and_contents()
+        return pandas.DataFrame.from_records(contents, columns=header_output)
     def header_and_contents(self):
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.32] - 2019-04-
+### Added
+- The `as_df()` method of a table.
+
 ## [0.4.31] - 2019-04-07
 ### Fixed
 - Errors with `read_qr()`.
