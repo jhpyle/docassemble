@@ -818,7 +818,8 @@ class Address(DAObject):
         #if hasattr(self, 'sublocality') and self.sublocality:
         #    output += text_type(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += text_type(self.sublocality_level_1) + ", "
+            if not (hasattr(self, 'street_number') and self.street_number == self.sublocality_level_1):
+                output += text_type(self.sublocality_level_1) + ", "
         output += text_type(self.city)
         if hasattr(self, 'state') and self.state:
             output += ", " + text_type(self.state)

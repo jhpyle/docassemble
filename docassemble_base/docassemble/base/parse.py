@@ -1418,6 +1418,34 @@ class Question:
             self.id = text_type(data['id']).strip()
             self.interview.ids_in_use.add(self.id)
             self.interview.questions_by_id[self.id] = self
+        if 'ga id' in data:
+            if not isinstance(data['ga id'], string_types):
+                raise DAError("A 'ga id' must refer to text." + self.idebug(data))
+            self.ga_id = TextObject(definitions + text_type(data['ga id']), names_used=self.mako_names)
+        if 'segment id' in data:
+            if not isinstance(data['segment id'], string_types):
+                raise DAError("A 'segment id' must refer to text." + self.idebug(data))
+            if not hasattr(self, 'segment'):
+                self.segment = dict(arguments=dict())
+            self.segment['id'] = TextObject(definitions + text_type(data['segment id']), names_used=self.mako_names)
+        if 'segment' in data:
+            if not isinstance(data['segment'], dict):
+                raise DAError("A 'segment' must refer to a dictionary." + self.idebug(data))
+            if 'id' in data['segment']:
+                if not isinstance(data['segment']['id'], string_types):
+                    raise DAError("An 'id' under 'segment' must refer to text." + self.idebug(data))
+                if not hasattr(self, 'segment'):
+                    self.segment = dict(arguments=dict())
+                self.segment['id'] = TextObject(definitions + text_type(data['segment']['id']), names_used=self.mako_names)
+            if 'arguments' in data['segment']:
+                if not isinstance(data['segment']['arguments'], dict):
+                    raise DAError("An 'arguments' under 'segment' must refer to a dictionary." + self.idebug(data))
+                if not hasattr(self, 'segment'):
+                    self.segment = dict(arguments=dict())
+                for key, val in data['segment']['arguments'].items():
+                    if not isinstance(val, (string_types, int, float, bool)):
+                        raise DAError("Each item under 'arguments' in a 'segment' must be plain text." + self.idebug(data))
+                    self.segment['arguments'][key] = TextObject(definitions + text_type(val), names_used=self.mako_names)
         if 'supersedes' in data:
             if not isinstance(data['supersedes'], list):
                 supersedes_list = [text_type(data['supersedes'])]
@@ -3402,6 +3430,14 @@ class Question:
                 extras['allow_emailing'] = eval(self.allow_emailing, user_dict)
         if hasattr(self, 'zip_filename'):
             extras['zip_filename'] = docassemble.base.functions.single_paragraph(self.zip_filename.text(user_dict))
+        if hasattr(self, 'ga_id'):
+            extras['ga_id'] = self.ga_id.text(user_dict)
+        if hasattr(self, 'segment') and 'id' in self.segment:
+            extras['segment'] = dict(arguments=dict())
+            extras['segment']['id'] = self.segment['id'].text(user_dict)
+            if 'arguments' in self.segment:
+                for key, val in self.segment['arguments']:
+                    extras['segment']['arguments'][key] = self.segment['arguments'][key].text(user_dict)
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
             # if hasattr(self, 'binaryresponse'):

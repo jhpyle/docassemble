@@ -1744,8 +1744,12 @@ def additional_scripts(interview_status, yaml_filename):
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       function daPageview(){
-        if (daQuestionID != null){
-          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + daQuestionID.replace(/[^A-Za-z0-9]+/g, '_')});
+        var idToUse = daQuestionID['id']
+        if (daQuestionID['ga'] != undefined && daQuestionID['ga'] != null){
+          idToUse = daQuestionID['ga'];
+        }
+        if (idToUse != null){
+          gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
         }
       }
     </script>
@@ -1759,14 +1763,33 @@ def additional_css(interview_status):
         segment_id = None
     start_output = ''
     if segment_id is not None:
-        start_output += """    <script>
+        start_output += """
+    <script>
       !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
       analytics.load(""" + json.dumps(segment_id) + """);
       analytics.page();
       }}();
       function daSegmentEvent(){
-        if (daQuestionID != null){
-          analytics.track(daQuestionID.replace(/[^A-Za-z0-9]+/g, '_'));
+        var idToUse = daQuestionID['id'];
+        useArguments = false;
+        if (daQuestionID['segment'] && daQuestionID['segment']['id']){
+          idToUse = daQuestionID['segment']['id'];
+          if (daQuestionID['segment']['arguments']){
+            for (var keyToUse in daQuestionID['segment']['arguments']){
+              if (daQuestionID['segment']['arguments'].hasOwnProperty(keyToUse)){
+                useArguments = true;
+                break;
+              }
+            }
+          }
+        }
+        if (idToUse != null){
+          if (useArguments){
+            analytics.track(idToUse.replace(/[^A-Za-z0-9]+/g, '_'), daQuestionID['segment']['arguments']);
+          }
+          else{
+            analytics.track(idToUse.replace(/[^A-Za-z0-9]+/g, '_'));
+          }
         }
       }
     </script>"""
@@ -6669,6 +6692,11 @@ def index(action_argument=None):
         question_id = interview_status.question.id
     else:
         question_id = None;
+    question_id_dict = dict(id=question_id)
+    if 'segment' in interview_status.extras:
+        question_id_dict['segment'] = interview_status.extras['segment']
+    if 'ga_id' in interview_status.extras:
+        question_id_dict['ga'] = interview_status.extras['ga_id']
     if not is_ajax:
         scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
         if 'javascript' in interview_status.question.interview.external_files:
@@ -6786,7 +6814,7 @@ def index(action_argument=None):
       var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
       var daUsingSegment = """ + ("true" if segment_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
-      var daQuestionID = """ + json.dumps(question_id) + """;
+      var daQuestionID = """ + json.dumps(question_id_dict) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
       var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
@@ -7802,7 +7830,7 @@ def index(action_argument=None):
             }
           }
           daAllowGoingBack = data.allow_going_back;
-          daQuestionID = data.id;
+          daQuestionID = data.id_dict;
           daMessageLog = data.message_log;
           daInitialize(doScroll);
           var tempDiv = document.createElement('div');
@@ -9524,7 +9552,7 @@ def index(action_argument=None):
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
-        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
+        data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         data.update(interview_status.as_data(user_dict))
         #if next_action_review:
         #    data['next_action'] = next_action_review
@@ -9539,8 +9567,8 @@ def index(action_argument=None):
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
-        #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id=question_id)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
+        #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         if return_fake_html:
             response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
