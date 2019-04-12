@@ -3436,7 +3436,7 @@ class Question:
             extras['segment'] = dict(arguments=dict())
             extras['segment']['id'] = self.segment['id'].text(user_dict)
             if 'arguments' in self.segment:
-                for key, val in self.segment['arguments']:
+                for key, val in self.segment['arguments'].items():
                     extras['segment']['arguments'][key] = self.segment['arguments'][key].text(user_dict)
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
