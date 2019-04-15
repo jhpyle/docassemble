@@ -1569,7 +1569,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:

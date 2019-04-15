@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.32](https://github.com/jhpyle/docassemble/releases/tag/v0.4.32) - 2019-04-15
+
+### Added
+- The `as_df()` method of a table.
+- The `segment`, `segment id`, and `ga id` specifiers.
+- The `log format` Configuration directive.
+
+### Fixed
+- Error when reading log files in multiple server configuration in
+  Python 3.
+
 ## [0.4.31](https://github.com/jhpyle/docassemble/releases/tag/v0.4.31) - 2019-04-07
 
 ### Fixed

@@ -649,9 +649,7 @@ buttons offering choices "Yes," "No," and "I don't know."
 `datatype: checkboxes` will show the [`choices`](#choices) list as
 checkboxes.  The variable will be a [`DADict`] (a type of [dictionary]
 specific to **docassemble**) with items set to `True` or `False`
-depending on whether the option was checked.  No validation is done to
-see if the user selected at least one, regardless of the value of
-`required`.
+depending on whether the option was checked.
 
 {% include side-by-side.html demo="fields-checkboxes" %}
 

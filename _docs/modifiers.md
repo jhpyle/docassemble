@@ -630,6 +630,51 @@ use the same [YAML] file, even when users who started later are using
 The `id` of a question needs to be set in order to use the
 [`forget_result_of()`] function.
 
+# <a name="ga id"></a>Google Analytics IDs
+
+If you are using the [Google Analytics integration] feature, by
+default, the [`id`] will be used as part of the pseudo-path sent to
+Google Analytics.  If you would rather use a different ID, you can
+explicitly set a `ga id`:
+
+{% highlight yaml %}
+id: lead certification
+ga id: landlordLeadCert
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
+# <a name="segment id"></a><a name="segment"></a>Segment IDs
+
+If you are using the [Segment integration] feature, by
+default, the [`id`] will be used as part of the pseudo-path sent to
+Google Analytics.  If you would rather use a different ID, you can
+explicitly set a `segment id`:
+
+{% highlight yaml %}
+id: lead certification
+segment id: landlordLeadCert
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
+You can also send [Segment] messages with arguments, using the
+`segment` specifier pointing to a dictionary with keys for `id` and
+`arguments`:
+
+{% highlight yaml %}
+id: lead certification
+segment:
+  id: landlord
+  arguments:
+    certification: lead
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
 # <a name="sets"></a>Manually indicating that a block sets a variable
 
 Usually, **docassemble** can figure out which variables a block is
@@ -967,3 +1012,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [Google Analytics integration]: {{ site.baseurl}}/docs/config.html#google analytics
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`only sets`]: #only sets
+[`id`]: #id
+[Segment integration]: {{ site.baseurl}}/docs/config.html#segment id
+[Segment]: https://segment.com/

@@ -1208,6 +1208,26 @@ showing a [list of available interviews] determined by the
 defined, users will be directed to the demonstration interview,
 `docassemble.base:data/questions/default-interview.yml`.
 
+## <a name="log format"></a>Log format
+
+Log messages written to the log files will by default contain the IP
+address, interview file, session ID, and user e-mail address, in
+addition to the log message itself.
+
+The format of the log message is determined by the `log format`, the
+default value of which is:
+
+{% highlight yaml %}
+log format: docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s
+{% endhighlight %}
+
+If you would like to shorten the log messages, you could change it to
+something like:
+
+{% highlight yaml %}
+log format: docassemble: i=%(yamlfile)s %(message)s
+{% endhighlight %}
+
 ## <a name="flask log"></a><a name="celery flask log"></a>Flask log file location
 
 **docassemble** uses the [Flask] web framework.  The `flask log` and
@@ -2030,7 +2050,7 @@ google:
 
 When this is configured, [JavaScript] for [Google Analytics] will be
 inserted into your interview pages, and [pageview] events will be sent
-to [Google Analytics] for any `question` that has an `id` defined.
+to [Google Analytics] for any `question` that has an [`id`] defined.
 These [pageview] events will record a view on an artificial path.  For
 example, suppose you have the following question:
 
@@ -2046,6 +2066,59 @@ package `docassemble.eviction`.  In that case, the `pageview` will
 record a view of the following pseudo-URL on your site:
 
 > /eviction/answer/lead_certification
+
+Since the [`id`] is also used as a unique identifier for a
+[`question`], you might to use a different identifier for purposes of
+Google Analytics.  If so, tag your question with [`ga id`] instead of
+an [`id`]:
+
+{% highlight yaml %}
+id: lead certification
+ga id: landlordLeadCert
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
+## <a name="segment id"></a>Segment ID
+
+[Segment] is similar to Google Analytics.  If you set a `segment id`
+in the Configuration, [JavaScript] will be included that initializes
+[Segment].  When the user arrives at a question with an [`id`], a
+[Segment] event will be fired with the [`id`] as a name.
+
+{% highlight yaml %}
+segment id: ZAfFSeR6BTWiEfGnT8YpujspehLtswJP
+{% endhighlight %}
+
+Since the [`id`] is also used as a unique identifier for a
+[`question`], you might to use a different identifier for purposes of
+Segment.  If so, tag your question with [`segment id`] modifier (not
+to be confused with the `segment id` Configuration directive) instead
+of an [`id`]:
+
+{% highlight yaml %}
+id: lead certification
+segment id: landlordLeadCert
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
+
+You can also send [Segment] messages with arguments, using the
+[`segment`] specifier pointing to a dictionary with keys for `id` and
+`arguments`:
+
+{% highlight yaml %}
+id: lead certification
+segment:
+  id: landlord
+  arguments:
+    certification: lead
+question: |
+  Does your landlord have a valid lead certification?
+yesno: lead_certification_exists
+{% endhighlight %}
 
 ## <a name="voicerss"></a>VoiceRSS API key
 
@@ -3292,3 +3365,9 @@ and Facebook API keys.
 [`allow non-idempotent questions`]: {{ site.baseurl }}/docs/initial.html#allow non-idempotent questions
 [ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [MIME]: https://en.wikipedia.org/wiki/Media_type
+[Segment]: https://segment.com/
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[`ga id`]: {{ site.baseurl }}/docs/modifiers.html#ga id
+[`segment id`]: {{ site.baseurl }}/docs/modifiers.html#segment id
+[`segment`]: {{ site.baseurl }}/docs/modifiers.html#segment
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
