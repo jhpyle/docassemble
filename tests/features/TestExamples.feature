@@ -34,7 +34,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "03/31/1977"
     And I click the button "Continue"
-    Then I should see the phrase "You are 41 years old"
+    Then I should see the phrase "You are 42 years old"
 
   Scenario: Test the interview "Scheduled task"
     Given I start the interview "docassemble.base:data/questions/examples/alarm-clock.yml"
@@ -4900,7 +4900,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/examples/objects-from-file.yml"
     Then I should see the phrase "How to contact us"
     And I should see the phrase "You can e-mail Fred Smith at fred@example.com."
-    And I should see the phrase "You can e-mail Larry Jones at larry@example.com."
+    And I should see the phrase "You can e-mail Larry Jönes at larry@example.com."
 
   Scenario: Test the interview "Share training sets"
     Given I start the interview "docassemble.demo:data/questions/examples/predict-activity-activity.yml"

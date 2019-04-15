@@ -16441,7 +16441,7 @@ def logs():
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
         if int(resp['status']) >= 200 and int(resp['status']) < 300:
-            files = [f for f in content.split("\n") if f != '' and f is not None]
+            files = [f for f in content.decode().split("\n") if f != '' and f is not None]
         else:
             abort(404)
         if len(files):
@@ -20550,7 +20550,7 @@ password_secret_key = daconfig.get('password secretkey', app.secret_key)
 sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)
 
-LOGFORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
+LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
 
 if LOGSERVER is None:
     docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
