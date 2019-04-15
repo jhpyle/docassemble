@@ -48,7 +48,6 @@ libtool \
 libtool-bin \
 syslog-ng \
 rsync \
-s3cmd \
 curl \
 mktemp \
 dnsutils \

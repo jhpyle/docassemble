@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.4.32] - 2019-04-14
+## [0.4.32] - 2019-04-15
 ### Added
 - The `as_df()` method of a table.
 - The `segment`, `segment id`, and `ga id` specifiers.

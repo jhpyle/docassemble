@@ -8,6 +8,11 @@ if [ "${DAPYTHONVERSION}" == "2" ]; then
 else
     export DA_DEFAULT_LOCAL="local3.5"
 fi
+
+if [ -x s3cmd ]; then
+    apt-get -q -y remove s3cmd &> /dev/null
+fi
+
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 
 echo "Activating with ${DA_ACTIVATE}"
@@ -25,6 +30,10 @@ echo "1" >&2
 export DEBIAN_FRONTEND=noninteractive
 apt-get clean &> /dev/null
 apt-get -q -y update &> /dev/null
+
+if [ ! -x s3cmd ]; then
+    su -c "source $DA_ACTIVATE && pip install s3cmd" www-data
+fi
 
 pandoc --help &> /dev/null || apt-get -q -y install pandoc
 
