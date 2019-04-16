@@ -1760,18 +1760,31 @@ email`, and `bind password` directives.
 
 ## <a name="xsendfile"></a>Support for xsendfile
 
-If your web server is not configured to support X-SENDFILE headers,
+If your web server is not configured to support X-Sendfile headers,
 set the `xsendfile` directive to `False`.
 
 {% highlight yaml %}
 xsendfile: False
 {% endhighlight %}
 
-Use of X-SENDFILE is recommended because it allows the web server,
+Use of X-Sendfile is recommended because it allows the web server,
 rather than the Python [WSGI] server, to serve files.  This is
 particularly useful when serving sound files, since the web browser
 typically asks for only a range of bytes from the sound file at a
 time, and the [WSGI] server does not support the HTTP Range header.
+
+This variable can be set using the [Docker] environment variable
+[`XSENDFILE`].
+
+However, there are some problems with the implementation of X-Sendfile
+that can sometimes cause problems.  If you get random JavaScript
+errors in your application, look at the network console, and if it
+reports 0-byte JavaScript files being served, try setting `xsendfile:
+False` in your Configuration.  This has been an issue when
+**docassemble** operates behind a load balancer on [ECS].  On [Docker], if you
+set [`BEHINDHTTPSLOADBALANCER`] to `true`, then `xsendfile` will be
+set to `False` by default when the initial Configuration is first
+created.
 
 ## <a name="log"></a>Directory for log files
 
@@ -3336,6 +3349,7 @@ and Facebook API keys.
 [`USEHTTPS`]: {{ site.baseurl }}/docs/docker.html#USEHTTPS
 [`USELETSENCRYPT`]: {{ site.baseurl }}/docs/docker.html#USELETSENCRYPT
 [`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL
+[`XSENDFILE`]: {{ site.baseurl }}/docs/docker.html#XSENDFILE
 [service account]: https://cloud.google.com/iam/docs/understanding-service-accounts
 [Google Developers Console]: https://console.developers.google.com/
 [`google`]: #google
@@ -3371,3 +3385,4 @@ and Facebook API keys.
 [`segment id`]: {{ site.baseurl }}/docs/modifiers.html#segment id
 [`segment`]: {{ site.baseurl }}/docs/modifiers.html#segment
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html

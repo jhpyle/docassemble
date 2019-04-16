@@ -240,7 +240,7 @@ up.  The [AMI]s will not be listed in any useful order, so you have to
 look carefully at the names, which contain the dates the [AMI]s were
 created.  There is also a [page on Amazon's web site] that lists the
 ECS-optimized AMIs by region.  As of this writing, the most recent
-ECS-optimzed [AMI] is "amzn-ami-2018.03.o-amazon-ecs-optimized."  If
+ECS-optimzed [AMI] is "amzn-ami-2018.03.p-amazon-ecs-optimized."  If
 you use a different AMI, make sure that you give the machine at least
 30GB of storage.
 
@@ -353,8 +353,9 @@ On the "Configure Security Settings" page, it will ask about SSL
 certificates and security policies.  If you have never been here
 before, accept all of the defaults.  This should result in [Amazon]
 creating an SSL certificate for you.  If you have created certificates
-in the past, either select the certificate you want to use, or click
-"Request a new certificate from ACM."
+in the past click "Choose a certificate from ACM" and select the
+existing certificate you want to use, or click the link to "Request a
+new certificate from ACM."
 
 On the "Configure Security Groups" page, select the `docassembleLbSg`
 [Security Group] you created earlier.  Select it as the only
@@ -387,7 +388,7 @@ Once those changes (if any) are saved, select the "HTTPS :
 Under "Default action(s)," it will incorrectly say that requests
 should be forwarded to the `http-redirect` target group.  This is the
 proper setting for HTTP (port 80), but not for HTTPS (port 443), so
-you need to change it.  Click the edit button (pencil icon) and hange
+you need to change it.  Click the edit button (pencil icon) and change
 it so that it forwards to the `web` target group.  Then press "Update"
 to save your changes.
 
@@ -587,7 +588,8 @@ Balancer."  The "IAM role for service" should be `ecsServiceRole`, an
 to `docassembleLb`, the name of the [Application Load Balancer] you
 created earlier.  Under "Container to load balance," select
 "app:80:80" and click "Add to ELB."  Set the "Target group name" to
-`web`, the "Target Group" you created earlier.  Then click "Save."
+`web`, the "Target Group" you created earlier.  Set the "Health check
+grace period" to 1200 seconds.  Then click "Save."
 
 Note that the `app` task definition is much briefer than the `backend`
 task definition.  This is because the `backend` service will save a

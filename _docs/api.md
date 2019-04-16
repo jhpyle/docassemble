@@ -154,10 +154,12 @@ Parameters:
  - `username`: the user's e-mail address.
  - `password` (optional): the user's password.  If a password is not
    supplied, a random password will be generated.
- - `privileges` (optional): a JSON array of user privileges (e.g.,
+ - `privileges` (optional): a [JSON] array of user privileges (e.g.,
    `['developer', 'trainer']`), or a string containing a single
    privilege (e.g., `'advocate'`).  If not specified, the new user
-   will have a single privilege, `user`.
+   will have a single privilege, `user`.  (If your request has the
+   `application/json` content type, you do not need to convert the
+   array to [JSON].)
  - `first_name` (optional): the user's first name.
  - `last_name` (optional): the user's last name.
  - `country` (optional): the user's country code (e.g., `US`).
@@ -864,7 +866,9 @@ Form data:
    `docassemble.demo:data/questions/questions.yml`.
  - `url_args` (optional): a [JSON] object containing additional URL
    arguments that should be included in the URL to which the user is
-   directed after they log in.
+   directed after they log in.  (If your request has the
+   `application/json` content type, you do not need to convert the
+   object to [JSON].)
  - `next` (optional): if the user should be directed after login to a
    page that is not an interview, you can omit `i` and instead set
    this parameter to a value like `playground` (for the [Playground])
@@ -1011,6 +1015,8 @@ Form data:
    if the interview uses server-side encryption.
  - `variables` (optional): a [JSON] object where the keys are variable
    names and the values are the values those variables should have.
+   (If your request has the `application/json` content type, you do
+   not need to convert the object to [JSON].)
  - `question_name` (optional): if set to the name of a question (which
    you can obtain from the `questionName` attribute of a question), it
    will mark the question as having been answered.  This is necessary
@@ -1024,8 +1030,10 @@ Form data:
    dictionary, but you do not want to trigger any side effects by
    causing the interview to be evaluated.
  - `delete_variables` (optional): a [JSON] array in which the items
-   are names of variables to be deleted with [`del`].  The deletion
-   of these variables happens after the `variables` are assigned.
+   are names of variables to be deleted with [`del`].  The deletion of
+   these variables happens after the `variables` are assigned.  (If
+   your request has the `application/json` content type, you do not
+   need to convert the array to [JSON].)
  - `file_variables` (optional): if you are uploading one or more
    files, and the name of the `DAFileList` variable cannot be passed
    as the name of the file upload, you can set `file_variables` to a
@@ -1036,13 +1044,18 @@ Form data:
    input name `my_file`, this will have the effect of setting the
    [Python] variable `user.relative['aunt']` equal to a [`DAFileList`]
    containing the file.
-  - `event_list` (optional): a [JSON] array of variable names that
-    triggered the question to which you are responding.  This is
-    necessary in cases where there is a diversion from the normal
-    interview logic.  The value of `event_list` can be obtained from
-    [`/api/session/question`].
+ - `event_list` (optional): a [JSON] array of variable names that
+   triggered the question to which you are responding.  This is
+   necessary in cases where there is a diversion from the normal
+   interview logic.  The value of `event_list` can be obtained from
+   [`/api/session/question`].  (If your request has the
+   `application/json` content type, you do not need to convert the
+   array to [JSON].)
 
-File uploads: you can include file uploads in the POST request.
+File uploads: you can include file uploads in the POST request.  Note
+that if you include a file upload, you cannot use the
+`application/json` content type, and any arrays or objects you send as
+parameters will need to be individually converted to [JSON].
 
 Responses on failure: 
  - [403] "Access Denied" if the API key did not authenticate.
@@ -1204,7 +1217,9 @@ Parameters:
    if the interview uses server-side encryption.
  - `action`: the name of the action you want to run.
  - `arguments` (optional): a [JSON] object in which the keys are
-   argument names and the values are argument values.
+   argument names and the values are argument values.  (If your
+   request has the `application/json` content type, you do not need to
+   convert the object to [JSON].)
 
 Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
@@ -1267,10 +1282,6 @@ Responses on failure:
    locating the interview dictionary.
  - [400] "Unable to decrypt interview dictionary" if there was a problem
    obtaining and decrypting the interview dictionary.
- - [400] "Variables data is not a dict" if the variables dictionary is
-   not a [JSON] object.
- - [400] "Problem setting variables" if there was an error while
-   setting variables in the dictionary.
  - [400] "Failure to assemble interview" if the interview generates an
    error.
 
@@ -1512,8 +1523,8 @@ define the variable `favorite_number`.
 To define this variable, you would next send a [POST] request to
 [`/api/session`], including as data values the `i`, `session`, and
 `secret` values, as well as a data value `variables`, which needs to
-be a [JSON] string containing an object where the keys are variable
-names and the values are the values you want those variables to have.
+be an object where the keys are variable names and the values are the
+values you want those variables to have.
 
 For example if you set `variables` to `{"favorite_number": 42}`, then
 the [Python] variable `favorite_number` will be set to the integer

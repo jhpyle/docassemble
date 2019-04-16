@@ -630,6 +630,9 @@ container for the new configuration to take effect.
   should use the `https` scheme even though requests appear to be
   coming in as HTTP requests.  See the [`behind https load balancer`]
   configuration directive.
+* <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
+  X-Sendfile header is not functional in your configuration for
+  whatever reason.  See the [`xsendfile`] configuration directive.
 * <a name="CROSSSITEDOMAIN"></a>`CROSSSITEDOMAIN`: If this is set, the
   [Apache] server will be configured to send a
   `Access-Control-Allow-Origin` header, which enables
@@ -1879,3 +1882,4 @@ line), as the containers depend on the images.
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
 [`python packages`]: {{ site.baseurl }}/docs/config.html#python packages
+[`xsendfile`]: {{ site.baseurl }}/docs/config.html#xsendfile
