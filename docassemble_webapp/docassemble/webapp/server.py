@@ -18522,7 +18522,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
 def api_verify(req, roles=None):
     api_key = request.args.get('key', None)
     if api_key is None and request.method == 'POST':
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         if 'key' in post_data:
             api_key = post_data['key']
     if api_key is None and 'X-API-Key' in request.cookies:
@@ -18684,7 +18686,9 @@ def api_user():
     if request.method == 'GET':
         return jsonify(user_info)
     elif request.method == 'POST':
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         info = dict()
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
@@ -18715,7 +18719,9 @@ def api_user_privileges():
 def api_create_user():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
-    post_data = request.form.copy()
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
     if 'email' in post_data and 'username' not in post_data: # temporary
         post_data['username'] = post_data['email']
         del post_data['email']
@@ -18725,10 +18731,13 @@ def api_create_user():
     for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
         if key in post_data:
             info[key] = post_data[key]
-    try:
-        role_list = json.loads(post_data.get('privileges', '[]'))
-    except:
-        role_list = [post_data['privileges']]
+    if 'privileges' in post_data and isinstance(post_data['privileges'], list):
+        role_list = post_data['privileges']
+    else:
+        try:
+            role_list = json.loads(post_data.get('privileges', '[]'))
+        except:
+            role_list = [post_data['privileges']]
     if not isinstance(role_list, list):
         if not isinstance(role_list, string_types):
             return jsonify_with_status("List of privileges must be a string or a list.", 400)
@@ -18787,7 +18796,9 @@ def api_user_by_id(user_id):
         make_user_inactive(user_id=user_id)
         return ('', 204)
     elif request.method == 'POST':
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         info = dict()
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
@@ -18821,7 +18832,9 @@ def api_privileges():
     if request.method == 'POST':
         if not (current_user.has_role('admin')):
             return jsonify_with_status("Access denied.", 403)
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         if 'privilege' not in post_data:
             return jsonify_with_status("A privilege name must be provided.", 400)
         try:
@@ -18897,7 +18910,9 @@ def api_user_by_id_privileges(user_id):
             except Exception as err:
                 return jsonify_with_status(str(err), 400)
         elif request.method == 'POST':
-            post_data = request.form.copy()
+            post_data = request.get_json(silent=True)
+            if post_data is None:
+                post_data = request.form.copy()
             role_name = post_data.get('privilege', None)
             if role_name is None:
                 return jsonify_with_status("A privilege name must be provided", 400)
@@ -19149,7 +19164,11 @@ def api_user_user_id_interviews(user_id):
 @csrf.exempt
 @crossdomain(origin='*', methods=['POST', 'HEAD'])
 def api_session_back():
-    post_data = request.form.copy()
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
     yaml_filename = post_data.get('i', None)
     session_id = post_data.get('session', None)
     secret = str(post_data.get('secret', None))
@@ -19188,7 +19207,9 @@ def api_session():
             return jsonify_with_status(str(the_err), 400)
         return jsonify(variables)
     elif request.method == 'POST':
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
         session['i'] = yaml_filename
@@ -19198,23 +19219,35 @@ def api_session():
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
-        try:
-            variables = json.loads(post_data.get('variables', '{}'))
-        except:
-            return jsonify_with_status("Malformed variables.", 400)
-        try:
-            file_variables = json.loads(post_data.get('file_variables', '{}'))
-        except:
-            return jsonify_with_status("Malformed list of file variables.", 400)
-        try:
-            del_variables = json.loads(post_data.get('delete_variables', '[]'))
-        except:
-            return jsonify_with_status("Malformed list of delete variables.", 400)
-        try:
-            event_list = json.loads(post_data.get('event_list', '[]'))
-            assert isinstance(event_list, list)
-        except:
-            return jsonify_with_status("Malformed event list.", 400)
+        if 'variables' in post_data and isinstance(post_data['variables'], dict):
+            variables = post_data['variables']
+        else:
+            try:
+                variables = json.loads(post_data.get('variables', '{}'))
+            except:
+                return jsonify_with_status("Malformed variables.", 400)
+        if 'file_variables' in post_data and isinstance(post_data['file_variables'], dict):
+            file_variables = post_data['file_variables']
+        else:
+            try:
+                file_variables = json.loads(post_data.get('file_variables', '{}'))
+            except:
+                return jsonify_with_status("Malformed list of file variables.", 400)
+        if 'del_variables' in post_data and isinstance(post_data['delete_variables'], list):
+            del_variables = post_data['delete_variables']
+        else:
+            try:
+                del_variables = json.loads(post_data.get('delete_variables', '[]'))
+            except:
+                return jsonify_with_status("Malformed list of delete variables.", 400)
+        if 'event_list' in post_data and isinstance(post_data['event_list'], list):
+            event_list = post_data['event_list']
+        else:
+            try:
+                event_list = json.loads(post_data.get('event_list', '[]'))
+                assert isinstance(event_list, list)
+            except:
+                return jsonify_with_status("Malformed event list.", 400)
         if type(variables) is not dict:
             return jsonify_with_status("Variables data is not a dict.", 400)
         if type(file_variables) is not dict:
@@ -19643,7 +19676,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
 def api_session_action():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
-    post_data = request.form.copy()
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
     yaml_filename = post_data.get('i', None)
     session_id = post_data.get('session', None)
     secret = post_data.get('secret', None)
@@ -19652,12 +19687,15 @@ def api_session_action():
         return jsonify_with_status("Parameters i, session, and action are required.", 400)
     secret = str(secret)
     if 'arguments' in post_data:
-        try:
-            arguments = json.loads(post_data.get('arguments', dict()))
-        except:
-            return jsonify_with_status("Malformed arguments.", 400)
-        if type(arguments) is not dict:
-            return jsonify_with_status("Arguments data is not a dict.", 400)
+        if isinstance(post_data['arguments'], dict):
+            arguments = post_data['arguments']
+        else:
+            try:
+                arguments = json.loads(post_data['arguments'])
+            except:
+                return jsonify_with_status("Malformed arguments.", 400)
+            if not isinstance(arguments, dict):
+                return jsonify_with_status("Arguments data is not a dict.", 400)
     else:
         arguments = dict()
     obtain_lock(session_id, yaml_filename)
@@ -19721,7 +19759,9 @@ def api_session_action():
 def api_login_url():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
-    post_data = request.form.copy()
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
     username = post_data.get('username', None)
     password = post_data.get('password', None)
     if username is None or password is None:
@@ -19731,11 +19771,14 @@ def api_login_url():
     except Exception as err:
         return jsonify_with_status(str(err), 403)
     if 'url_args' in post_data:
-        try:
-            url_args = json.loads(post_data['url_args'])
-            assert isinstance(url_args, dict)
-        except:
-            return jsonify_with_status("Malformed URL arguments", 400)
+        if isinstance(post_data['url_args'], dict):
+            url_args = post_data['url_args']
+        else:
+            try:
+                url_args = json.loads(post_data['url_args'])
+                assert isinstance(url_args, dict)
+            except:
+                return jsonify_with_status("Malformed URL arguments", 400)
     else:
         url_args = dict()
     user = UserModel.query.filter_by(active=True, email=username).first()
@@ -19843,7 +19886,9 @@ def api_playground():
         except:
             return jsonify_with_status("Invalid user_id.", 400)
     elif request.method == 'POST':
-        post_data = request.form.copy()
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
         folder = post_data.get('folder', 'static')
         try:
             if current_user.has_role('admin'):

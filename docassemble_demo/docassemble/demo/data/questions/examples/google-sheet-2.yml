@@ -6,7 +6,7 @@ metadata:
   example end: 7
 ---
 modules:
-  - docassemble.demo.google_sheets
+  - .google_sheets
 ---
 objects:
   - court: Person

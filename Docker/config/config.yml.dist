@@ -75,6 +75,7 @@ use https: {{USEHTTPS}}
 use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
 behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
+xsendfile: {{XSENDFILE}}
 url root: {{URLROOT}}
 external hostname: {{DAHOSTNAME}}
 root: {{POSTURLROOT}}

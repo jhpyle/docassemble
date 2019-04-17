@@ -269,6 +269,10 @@ DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 
 echo "15" >&2
 
+if [ "${BEHINDHTTPSLOADBALANCER:-null}" == "true" ] && [ "${XSENDFILE:-null}" == "null" ]; then
+    export XSENDFILE=false
+fi
+
 if [ ! -f $DA_CONFIG_FILE ]; then
     echo "There is no config file.  Creating one from source." >&2
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
@@ -303,6 +307,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
 	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
+	-e 's/{{XSENDFILE}}/'"${XSENDFILE:-true}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE
