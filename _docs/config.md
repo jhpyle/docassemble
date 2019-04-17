@@ -2095,10 +2095,14 @@ yesno: lead_certification_exists
 
 ## <a name="segment id"></a>Segment ID
 
-[Segment] is similar to Google Analytics.  If you set a `segment id`
-in the Configuration, [JavaScript] will be included that initializes
-[Segment].  When the user arrives at a question with an [`id`], a
-[Segment] event will be fired with the [`id`] as a name.
+[Segment] is an analytics aggregator that feeds data about user
+behavior to other tools, such as Amplitude, Customer.io, FullStory,
+and Google Analytics.
+
+If you set a `segment id` in the Configuration, [JavaScript] will be
+included that initializes [Segment].  When the user arrives at a
+question with an [`id`], a [Segment] event will be fired with the
+[`id`] as a name.
 
 {% highlight yaml %}
 segment id: ZAfFSeR6BTWiEfGnT8YpujspehLtswJP

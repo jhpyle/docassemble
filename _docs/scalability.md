@@ -252,15 +252,40 @@ In the "Configure details" section, set the "IAM role" of the
 you created earlier.  open the "Advanced Details" and add the
 following as "User data":
 
-{% highlight bash %}
+{% highlight text %}
+Content-Type: multipart/mixed; boundary="===============BOUNDARY=="
+MIME-Version: 1.0
+
+--===============BOUNDARY==
+MIME-Version: 1.0
+Content-Type: text/x-shellscript; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="standard_userdata.txt"
+
 #!/bin/bash
 sudo chkconfig sendmail off
 sudo service sendmail stop
+
+--===============BOUNDARY==
+MIME-Version: 1.0
+Content-Type: text/cloud-boothook; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="boothook.txt"
+
+#cloud-boothook
+cloud-init-per once docker_options echo 'OPTIONS="${OPTIONS} --storage-opt dm.basesize=20G"' >> /etc/sysconfig/docker
+
+--===============BOUNDARY==--
 {% endhighlight %}
 
-This is necessary in order to enable the [e-mail receiving] feature.
-If [sendmail] is running on the EC2 host, then a [Docker] container
-running on the host will not be able to bind to the [SMTP] port.
+The first part of this "user data" is enable the [e-mail receiving]
+feature to work.  If [sendmail] is running on the EC2 host, as it is
+by default, then a [Docker] container running on the host will not be
+able to bind to the [SMTP] port.  The shell script stops and disables
+the [sendmail] service on the host computer.  The second part expands
+the capacity of the [Docker] container's "hard drive" from 10GB to
+20GB.  The default size of 10GB can be too small for some
+**docassemble** servers.
 
 In the "Configure Security Group" section, set the security group to
 `docassembleSg`, the [Security Group] you created earlier.
