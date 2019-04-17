@@ -24,6 +24,7 @@ libffi-dev \
 libffi6 \
 gcc \
 supervisor \
+s3cmd \
 make \
 perl \
 libinline-perl \

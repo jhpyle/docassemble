@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.34] - 2019-04-16
+### Changed
+- Downgraded s3cmd.
+
 ## [0.4.33] - 2019-04-16
 ### Added
 - `XSENDFILE` Docker environment variable.
