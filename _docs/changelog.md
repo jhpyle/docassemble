@@ -4,12 +4,30 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.33](https://github.com/jhpyle/docassemble/releases/tag/v0.4.33) - 2019-04-16
+
+### Added
+- `XSENDFILE` Docker environment variable.
+
+### Changed
+- API will now process JSON as well as form-data.
+- By default, `xsendfile` will be set to `False` in the initial
+  Configuration if `BEHINDHTTPSLOADBALANCER` is true.
+
+### Fixed
+- New version of ProxyFix not called with arguments for processing
+  HTTP scheme.
+
 ## [0.4.32](https://github.com/jhpyle/docassemble/releases/tag/v0.4.32) - 2019-04-15
 
 ### Added
 - The `as_df()` method of a table.
 - The `segment`, `segment id`, and `ga id` specifiers.
 - The `log format` Configuration directive.
+- German translations.
+
+### Changed
+- Upgraded s3cmd.
 
 ### Fixed
 - Error when reading log files in multiple server configuration in

@@ -95,6 +95,16 @@ if r.status_code != 204:
     raise Exception("Unable to set user information")
 {% endhighlight %}
 
+You can also make [POST] requests where the body is a [JSON] object
+and the content type of the request is `application/json`.  In this
+case, when a [POST] parameter expects a [JSON] array or [JSON] object,
+you can simply provide an array or an object as part of [JSON] data
+structure that you are sending.  The exception to this is if you are
+making a [POST] request that includes file uploads.  In this
+situation, the format of the [POST] body cannot be [JSON], but must be
+traditional 'multipart/form-data' format in which text parameters are
+provided along with file contents, with boundary separators.
+
 Instead of passing the API key in the URL parameter or the POST body,
 you can pass it in a cookie called `X-API-Key`:
 
