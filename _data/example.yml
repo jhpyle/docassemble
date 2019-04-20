@@ -10586,6 +10586,20 @@
     which is located at:
 
     ${ court.address.block() }
+"google-sheet-3": "modules:\n  - docassemble.demo.google_sheets\n---\nobjects:\n \
+  \ - court: DAList.using(object_type=Person, auto_gather=False)\n---\ncode: |\n \
+  \ court.clear()\n  for row in read_sheet('court_list'):\n    item = court.appendObject()\n\
+  \    item.name.text = row['Name']\n    item.address.address = row['Address']\n \
+  \   item.address.city = row['City']\n    item.address.state = row['State']\n   \
+  \ item.address.zip = row['Zip']\n    item.address.county = row['County']\n    del\
+  \ item\n  court.gathered = True\n---\nattachment:\n  name: |\n    ${ court[i].address.county\
+  \ } court\n  filename: |\n    ${ space_to_underscore(court[i].address.county) }_court_info\n\
+  \  variable name: court[i].info_sheet\n  content: |\n    [BOLDCENTER] ${ court[i]\
+  \ }\n    \n    [NOINDENT] Your friendly court for\n    ${ court[i].address.county\
+  \ }\n    is located at:\n\n    ${ court[i].address_block() }\n---\nmandatory: True\n\
+  question: |\n  Court information\nsubquestion: |\n  Here are information sheets\n\
+  \  for each court in your state.\nattachment code: |\n  [item.info_sheet for item\
+  \ in court]"
 "harry-potter-or-heidegger": |-
   mandatory: True
   code: |

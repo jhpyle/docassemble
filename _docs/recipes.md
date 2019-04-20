@@ -389,12 +389,19 @@ to the attorney's e-mail address.
 
 {% include demo-side-by-side.html demo="sign" %}
 
-# <a name="upload validation">Validating uploaded files</a>
+# <a name="upload validation"></a>Validating uploaded files
 
 Here is an interview that makes the user upload a different file if
 the file the user uploads is too large.
 
 {% include demo-side-by-side.html demo="upload-file-size" %}
+
+# <a name="mail merge"></a>Mail merge
+
+Here is an example interview that assembles a document for every row
+in a Google Sheet.
+
+{% include demo-side-by-side.html demo="google-sheet-3" %}
 
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
