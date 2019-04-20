@@ -1926,6 +1926,15 @@ the user.  If you have set up a [Google API key](#google), it will use
 the [Google Cloud Translation API] to prepare "first draft"
 translations for any [ISO-639-1] language you designate.
 
+Users of **docassemble** have contributed translations of built-in
+system phrases.  These are available in the `docassemble.base`
+package, which is part of the core **docassemble** code.  To see a
+list of translation [YAML] files that are available, see the [list of
+files on GitHub].  For example, you can use the Italian translation
+file by including `docassemble.base:data/sources/it-words.yml` in your
+`words` directive.  Note that these user-contributed files have been
+added at various times and may not be 100% complete.
+
 For more information about how **docassemble** handles different
 languages, see the [language and locale settings] section and the
 [functions] section (specifically the functions [`set_language()`] and
@@ -3390,3 +3399,4 @@ and Facebook API keys.
 [`segment`]: {{ site.baseurl }}/docs/modifiers.html#segment
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[list of files on GitHub]: https://github.com/jhpyle/docassemble/tree/master/docassemble_base/docassemble/base/data/sources

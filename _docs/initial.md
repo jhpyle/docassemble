@@ -1060,8 +1060,58 @@ If your interview only uses one language, it is not necessary to (and
 probably not a good idea to) set a `default language`.
 
 See [language support] for more information about how to create
-multi-lingual interviews.  See [question modifiers] for information about the
-`language` setting of a question.
+[multi-lingual interviews].  See [question modifiers] for information
+about the `language` setting of a question.
+
+# <a name="translations"></a>Translation files
+
+One way that **docassemble** supports [multi-lingual interviews] is
+through the [`language` modifier] on a [`question`] and the [`default
+language`] block, which sets a default value for the [`language`
+modifier].  Your interview can contain [`question`]s in English that
+don't have a [`language` modifier], and [`question`]s in French that
+have the `language: fr` modifier set.  If the current language in an
+interview (as determined by the [`set_language()`] function) is French
+(`fr`), then when **docassemble** seeks a block to set a given
+variable, it will search the French blocks first.
+
+This method of creating [multi-lingual interviews] is good if the
+person who translates text from English to French is someone who
+understands how **docassemble** [YAML] files work.
+
+There is another method of creating [multi-lingual interviews] that
+may be preferable if the translator is someone who does not understand
+how **docassemble** [YAML] files work.  This second method extracts
+the phrases from an interview (specifically, everywhere in the YAML
+where [Mako] templating is allowed) and lists them all in an Excel
+spreadsheet.  The spreadsheet can then be given to a French
+translator, and the translator fills out a column in the spreadsheet
+with the translation of each phrase.  Then the completed spreadsheet
+can be stored in the [sources] folder of a package and referenced in
+an interview using the `translations` block:
+
+{% highlight yaml %}
+translations:
+  - custody.xlsx
+{% endhighlight %}
+
+Then, if the current language in an interview is French, the interview
+will use the French version of each phrase.
+
+This allows you to support multi-lingual interviews while having a
+code base that is all in one language.
+
+To obtain such a spreadsheet for a given interview, visit the
+[Utilities] page and go to the section called [Download an interview phrase translation file].
+
+The `translations` block is only capable of defining translations for
+blocks that come after the `translations` block.  Therefore, it is a
+good practice to make sure that the `translations` block is placed as
+one of the very first blocks in your interview [YAML] file.
+
+The [language support] for more information about how to create
+[multi-lingual interviews].  See [question modifiers] for information
+about the `language` setting of a question.
 
 # <a name="default screen parts"></a>Default screen parts
 
@@ -1803,6 +1853,7 @@ features:
 [`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
 [`metadata`]: #metadata
 [`set_parts()`]: {{ site.baseurl}}/docs/functions.html#set_parts
+[`set_language()`]: {{ site.baseurl}}/docs/functions.html#set_language
 [`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
 [chart.js]: https://www.chartjs.org/
 [Google Charts]: https://developers.google.com/chart/
@@ -1871,3 +1922,8 @@ features:
 [group]: {{ site.baseurl }}/docs/groups.html
 [`label` and `field`]: {{ site.baseurl }}/docs/fields.html#label
 [question]: {{ site.baseurl }}/docs/questions.html
+[multi-lingual interviews]: {{ site.baseurl }}/docs/language.html
+[`default language`]: #default language
+[sources]: {{ site.baseurl }}/docs/playground.html#sources
+[Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
+[Utilities]: {{ site.baseurl }}/docs/admin.html#utilities

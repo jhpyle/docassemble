@@ -17,7 +17,7 @@ By default, the active language and locale are determined by the
 [configuration].
 
 The value of [`language`] must be a two-character lowercase
-[ISO-639-1] code.  For example, English is 'en', Spanish is `es`,
+[ISO-639-1] code.  For example, English is `en`, Spanish is `es`,
 French is `fr`, and Arabic is `ar`.
 
 The value of [`locale`] must be a locale name without the language
@@ -35,8 +35,29 @@ locale, use the [`get_language()`] and [`get_locale()`] function from
 the [`docassemble.base.util`] module.  Also note that there is a
 function [`get_dialect()`] for retrieving the dialect.
 
-The [`language`] and [`locale`] settings have the following effects:
+The language and locale settings have the following effects:
 
+* If you have a [`translations`] block in your interview, then
+  whenever **docassemble** processes a phrase (text that you can mark
+  up with [Mako] templating), it will use the appropriate translation
+  of that phrase if a translation for the phrase is present in one of
+  the Excel files referenced in the [`translations`] block.  For more
+  information about creating these Excel files, see the documentation
+  for the [Download an interview phrase translation file] utility.
+* Built-in words and phrases from the "core" **docassemble** code will
+  be translated into the active language.  Whenever **docassemble**
+  prints such a word or phrase, it calls the [`word()`] function from
+  the [`docassemble.base.util`] module.  Calling `word('Login')` will
+  look up the word `Login` in a translation table.  If the [`word()`]
+  function finds the word `Login` in the translation table for the
+  active language, it will return the translated value.  If it does
+  not find a translation, it will return `Login`.  For more
+  information about how [`word()`] works, see [functions].  For
+  information on how to define translations for a server, see the
+  [`words`] directive in the [configuration].  For information on
+  downloading a complete list of these phrases so that you can
+  translate them into another language, see the documentation for the
+  [utility] called [Translate system phrases into another language].
 * When **docassemble** looks for a [`question`] or [`code`] block that
   defines a variable, it first tries [`question`]s and [`code`] blocks
   for which the [`language` modifier] is set to the active language
@@ -45,20 +66,10 @@ The [`language`] and [`locale`] settings have the following effects:
   [`question`]s or [`code`] blocks, it looks for ones that do not have
   [`language` modifier] set.  This means that if your interview only
   uses one language, you do not need to worry about setting the
-  [`language` modifier].  If you want the interview to be available in
-  two languages, then you simply need to make sure that each question
-  is in your interview two times, in the two different languages.
-* Built-in words like "Continue" for a continue button, or "Login" for
-  the login link, will be translated into the active language.
-  Whenever **docassemble** prints such a word or phrase, it calls the
-  [`word()`] function from the [`docassemble.base.util`] module.  Calling
-  `word('Login')` will look up the word `Login` in a translation
-  table.  If the [`word()`] function finds the word `Login` in the
-  translation table for the active language, it will return
-  the translated value.  If it does not find a translation, it will
-  return `Login`.  For more information about how [`word()`] works, see
-  [functions].  For information on how to define translations for a
-  server, see the [`words`] directive in the [configuration].
+  [`language` modifier].  If you are using the [`translations`] block
+  to translate all of the phrases in your interview, you probably will
+  not need to use the [`language` modifier] on [`question`] blocks,
+  but you will need to use it on your [`sections`] block if you have one.
 * Some functions have language-specific responses, such as [`today()`]
   in the [`docassemble.base.util`] module, which returns today's date in
   a readable format such as "October 31, 2015" (for language `en`) or
@@ -75,6 +86,10 @@ The [`language`] and [`locale`] settings have the following effects:
   Or, if the question does not have the [`language` modifier] set,
   **docassemble** will look for an [`interview help`] block that does
   not have the [`language` modifier] set.
+* If you have defined default text for various "screen parts" (such as
+  [`pre`], [`post`], and [`submit`]) using the [`metadata`] block and
+  you defined values for multiple languages, **docassemble** will use
+  the value for the current language.
 
 # Best practices for single-language interviews
 
@@ -86,11 +101,12 @@ simply make sure that the default [`language`] and [`locale`] in the
 
 # Best practices for multi-language interviews
 
-If you use the [`language` modifier] or the [`default language`]
-[initial block], you will need to have [`initial`] code that calls
-[`set_language()`].  **docassemble** does not remember the active
-language from one screen to the next, but the [`initial`] code will
-make sure that it is always set to the correct value.
+If you have an interview that needs to function in multiple languages,
+you will need to have [`initial`] code that calls [`set_language()`].
+**docassemble** does not remember the active language from one screen
+to the next (in a multi-user interview, the language could depend on
+who the user is), but the [`initial`] code will make sure that it is
+always set to the correct value.
 
 {% highlight yaml %}
 ---
@@ -106,13 +122,15 @@ question: |
   What language ${ x.do_question('speak') }?
 field: x.language
 choices:
-  - English: en
-  - Español: es
+  - "English": en
+  - "Español": es
 ---
 {% endhighlight %}
 
-If you are writing an interview that offers multiple language options,
-you may want to break out your interview into different files:
+If you are writing an interview that offers multiple language options
+and you are using the [`language` modifier] or the [`default
+language`] [initial block], you may want to break out your interview
+into different files:
 
 * `code.yml` - for language-independent [initial blocks],
   [interview logic], [questions], and [code blocks].
@@ -218,19 +236,78 @@ include:
 
 ([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
 
+# Working with third-party translators
+
+While it is generally a good thing that **docassemble** allows you to
+write complicated [`question`]s that make heavy use of [Mako]
+templating, [Markdown], and embedded Python code, a downside is that
+all of this "code" can make the translation process more complicated.
+Translators may be confused by all of the code.  They may ask you to
+convert your code to Microsoft Word, putting a great deal of
+conversion work on you, or they may translate variable names when they
+shouldn't.
+
+You may be tempted to change the way that you code interviews to
+optimize for the needs of the tech-phobic translators you hire.  For
+example, if you have a single [`question`] that has ten different
+variations, you may decide to split this into ten separate
+[`question`]s so that the translator has an easier time translating.
+Or you might decide to remove [Mako] templating and substitute generic
+language that is easier to translate.
+
+However, there is no reason that you should have to make your
+interview less functional or less maintainable just because the
+translators you tried to hire were confused by "code."  The solution
+is to find a different translator.  Although hiring a translator other
+than the "lowest bidder" could increase the out-of-pocket costs of
+your project, you should think about the net cost of your project,
+including your own time, and think about costs and benefits in the
+long term.
+
+While there are many translators who will be confused by having to
+"translate around code," there are also many translators for whom
+"translating around code" is not a problem at all.  Companies like
+[Morningside Translations] regularly handle technical translations and
+provide quality control to ensure that the translators do not disturb
+embedded Python.  Shop around before concluding that you have to "dumb
+down" your interview to make it translatable.
+
 # Creating documents in languages other than English
 
-The [documents] feature, which allows RTF and PDF documents to be
-created from [Markdown] text with [Mako] templating, supports
-languages other than English to the extent that RTF, [Pandoc], and
-[LaTeX] do.  [LaTeX] has support for internationalization, and the
-default [LaTeX] template will load either the [polyglossia] package or
-the [babel] package, depending on what is available.  The language
-used by [LaTeX] can be set using the `metadata` entries `lang` and
-`mainlang` in the `attachment` specification.  For some languages, you
-may need to write your own templates in order to enable fonts that
-support your language.
+If your interview uses the [`docx template file`] feature, you can
+prepare separate DOCX files for each language and then [use code] to
+select which file to use.  For example:
 
+{% highlight yaml %}
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  - name: Your letter
+    filename: letter
+    docx template file: 
+      code: |
+        'letter_' + get_language() + '.docx'
+{% endhighlight %}
+
+This will use the file `letter_en.docx` if the language is English,
+and `letter_es.docx` if the language is Spanish, etc.  This is
+primarily useful if you are using the [`translations`] block for
+translating phrases and you are not using the [`language` modifier] on
+your [`question`]s.
+
+The [documents] feature that allows documents to be created from
+[Markdown] text with [Mako] templating supports languages other than
+English to the extent that RTF, [Pandoc], and [LaTeX] do.  [LaTeX] has
+support for internationalization, and the default [LaTeX] template
+will load either the [polyglossia] package or the [babel] package,
+depending on what is available.  The language used by [LaTeX] can be
+set using the `metadata` entries `lang` and `mainlang` in the
+`attachment` specification.  For some languages, you may need to write
+your own templates in order to enable fonts that support your
+language.
+
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [interview logic]: {{ site.baseurl}}/docs/logic.html
@@ -273,3 +350,15 @@ support your language.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [selection]: {{ site.baseurl }}/docs/documents.html#metadata pdf
 [additional software packages]: https://packages.debian.org/stretch/texlive-lang-all
+[`translations`]: {{ site.baseurl }}/docs/initial.html#translations
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`pre`]: {{ site.baseurl }}/docs/initial.html#pre
+[`post`]: {{ site.baseurl }}/docs/initial.html#post
+[`submit`]: {{ site.baseurl }}/docs/initial.html#submit
+[Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
+[Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
+[`sections`]: {{ site.baseurl }}/docs/initial.html#sections
+[utility]: {{ site.baseurl }}/docs/admin.html#utilities
+[Translate system phrases into another language]: {{ site.baseurl }}/docs/admin.html#translate
+[use code]: {{ site.baseurl }}/docs/documents.html#template file code
+[Morningside Translations]: https://www.morningtrans.com/

@@ -263,9 +263,67 @@ will pass through all of the words defined in existing [`words`]
 files, and will only try to translate phrases that do not already
 exist in existing [`words`] files.
 
+### <a name="translation file"></a>Download an interview phrase translation file
+
+The third utility on the "Utilities" screen is helpful if you are
+developing [multi-lingual interviews].  It allows you to download an
+Excel spreadsheet for side-by-side translation of the phrases used in
+a given interview.  Once translated, the spreadsheet can be included
+in a [package] and mentioned in a [`translations`] block.  Then
+**docassemble** will use the translations in the file when it needs a
+translation of a given phrase.
+
+To download a translation file from the "Utilities" screen, you need
+to provide the name of an interview (e.g.,
+`docassemble.demo:data/questions/questions.yml`) and the target
+language in [ISO-639-1] format (e.g., `fr` for French).
+
+The resulting spreadsheet will contain a row for each unique phrase
+used in the interview file, including interview files incorporated by
+reference.
+
+The columns of the spreadsheet are:
+
+* interview: the name of the YAML file containing the question that
+  contained the phrase.
+* question_id: the [`id`] of the question the phrase, or the generic
+  name of the question (which could change if the interview changes).
+* index_num: an number that indexes the phrase within a given
+  question.
+* hash: an [MD5 hash] of the phrase (which can be used to test whether
+  the text in the "orig_text" column was edited, which it should not be) 
+* orig_lang: the original language of the phrase, as indicated by the
+  [`language`] specifier of the [`question`].
+* tr_lang: the language into which the phrase should be translated.
+* orig_text: the text of the phrase
+* tr_text: the translated phrase (which is blank if the phrase has not
+  yet been translated.
+
+You can then give the spreadsheet to a translator who will fill in the
+"tr_text" column with a translation of the text in the "orig_text"
+column.
+
+The spreadsheet with the completed translations can then be uploaded
+to the [sources] folder of a package and included in the interview
+using a [`translations`] block.  If the target language of the
+spreadsheet is French (`fr`), then the French translations of phrases
+will be used if the current language in the interview (as determined
+by the [`set_language()`] function is French.
+
+If the interview contains a [`translations`] block, the file or files
+referenced in the [`translations`] block will be scanned and the
+translations specified in those files will be included as default
+translations.
+
+If the files referenced in the [`translations`] block contain phrases
+that are not present in the interview, perhaps because they used to be
+present but are no longer present, these extra phrases will be listed
+at the end of the interview and their "index_num" values will be
+numbered starting with 1000.
+
 ### <a name="word addin manifest"></a>Word add-in manifest XML file
 
-The third utility is "Download Office add-in manifest file."  You will
+The fourth utility is "Download Office add-in manifest file."  You will
 need this if you want to enable a [Playground]-like task pane inside
 Microsoft Word.
 
@@ -539,3 +597,9 @@ For tips on troubleshooting your **docassemble** system, see the
 [logrotate]: https://manpages.debian.org/stretch/logrotate/logrotate.8.en.html
 [Word add-in section]: {{ site.baseurl }}/docs/playground.html#word addin
 [ASCII]: https://en.wikipedia.org/wiki/ASCII
+[`translations`]: {{ site.baseurl }}/docs/initial.html#translations
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[MD5 hash]: https://en.wikipedia.org/wiki/MD5#MD5_hashes
+[`language`]: {{ site.baseurl }}/docs/modifiers.html#language
+[sources]: {{ site.baseurl }}/docs/playground.html#sources
+[`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language
