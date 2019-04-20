@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.35] - 2019-04-20
+### Added
+- The `translations` block and the interview phrase translation file
+  download utility.
+
 ## [0.4.34] - 2019-04-16
 ### Changed
 - Downgraded s3cmd.

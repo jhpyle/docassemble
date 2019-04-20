@@ -16,6 +16,9 @@ comment: |
   A "metadata" block contains information about the interview, such as
   the title of the interview as displayed in the navigation bar.
 ---
+translations:
+  - questions.xlsx
+---
 interview help:
   heading: |
     % if interface() == 'sms':
@@ -257,7 +260,7 @@ subquestion: |
   relationship.
 
   % if user_understands_no_attorney_client_relationship == 'unsure':
-  We suggest that you call us at 215-981-3800 to talk to us about the
+  We suggest that you call us at 202-555-4344 to talk to us about the
   kinds of services we provide.
   % endif
 decoration: exit
@@ -667,9 +670,9 @@ event: client_done
 progress: 100
 question: |
   % if client_has_standing:
-    Congratulations!  You have a valid claim.
+  Congratulations!  You have a valid claim.
   % else:
-    Sorry, you do not have a valid claim.
+  Sorry, you do not have a valid claim.
   % endif
 decoration: finishline
 subquestion: |
@@ -782,7 +785,7 @@ attachments:
       aesthetic taxidermy Carles irony fixie. Hella organic swag pork
       belly Bushwick.
 
-      If you have any questions, you can call us at 215-391-9686.
+      If you have any questions, you can call us at 202-555-4344.
 
       Sincerely,
 

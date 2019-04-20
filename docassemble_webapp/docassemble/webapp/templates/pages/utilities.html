@@ -34,10 +34,23 @@
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.language, placeholder=language_placeholder) }}
+    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.language_submit) }}
+  </div>
+</form>
+
+<h3 class="page-header">{{ word('Download an interview phrase translation file') }}</h3>
+
+<form action="{{ url_for('translation_file') }}" method="POST" class="form" role="form">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ render_field(form.interview, placeholder=interview_placeholder) }}
+    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}
   </div>
 </form>
 

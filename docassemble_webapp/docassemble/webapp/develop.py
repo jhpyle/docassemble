@@ -57,6 +57,8 @@ class LogForm(FlaskForm):
 class Utilities(FlaskForm):
     pdfdocxfile = FileField(word('PDF/DOCX File'))
     scan = SubmitField(word('Scan'))
+    interview = StringField(word('Interview'))
+    interview_submit = SubmitField(word('Download'))
     language = StringField(word('Language'))
     language_submit = SubmitField(word('Translate'))
     officeaddin_version = StringField(word('Version'), default='0.0.0.1')

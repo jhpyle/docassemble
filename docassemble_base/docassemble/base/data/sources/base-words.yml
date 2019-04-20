@@ -118,6 +118,8 @@
 "Edit text files": Null
 "Edit User Profile": Null
 "e.g., 56.33.114.49": Null
+"E.g., docassemble.demo:data/questions/questions.yml": Null
+"E.g., es, fr, it": Null
 "e.g., *example.com": Null
 "E-mail address is required": Null
 "E-mail address": Null
@@ -129,7 +131,6 @@
 "E-mail this document": Null
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
-"Enter an ISO-639-1 language code (e.g., es, fr, it)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
 "Error accessing Google Drive": Null
@@ -205,11 +206,13 @@
 "interview answers cannot be decrypted": Null
 "Interview answers cannot be decrypted": Null
 "Interview files": Null
+"Interview": Null
 "Interviews": Null
 "in the": Null
 "Invalid e-mail address": Null
 "Invalid E-mail": Null
 "Invalid Email": Null
+"Invalid interview": Null
 "Invalid invitation token": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
@@ -622,6 +625,8 @@
 "You have signed out successfully.": Null
 "You must attach a file.": Null
 "You must provide a file.": Null
+"You must provide a language": Null
+"You must provide an interview filename": Null
 "You must select an option.": Null
 "You must sign your name to continue.": Null
 "You must type at least %s characters.": Null

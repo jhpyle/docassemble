@@ -760,6 +760,8 @@ import qrcode
 import qrcode.image.svg
 from io import BytesIO
 import links_from_header
+import xlsxwriter
+import hashlib
 from distutils.version import LooseVersion
 from subprocess import call, Popen, PIPE
 import subprocess
@@ -811,6 +813,7 @@ from jinja2.exceptions import TemplateError
 import uuid
 from bs4 import BeautifulSoup
 import collections
+import pandas
 
 import importlib
 modules_to_import = daconfig.get('preloaded modules', None)
@@ -10075,6 +10078,7 @@ def observer():
     userid = request.args.get('userid', None)
     observation_script = """
     <script>
+      var daMapInfo = null;
       var daWhichButton = null;
       var daSendChanges = false;
       var daNoConnectionCount = 0;
@@ -10082,11 +10086,148 @@ def observer():
       var daConfirmed = false;
       var daObserverChangesInterval = null;
       var daInitialized = false;
+      var daShowingSpinner = false;
+      var daSpinnerTimeout = null;
       var daShowingHelp = false;
       var daInformedChanged = false;
       var daDisable = null;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
-      var daTargetDiv = "#dabody";
+      var daShowIfInProcess = false;
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
+      var daVarLookup;
+      var daVarLookupRev;
+      var daValLookup;
+      var daTargetDiv;
+      //var daTargetDiv = "#dabody";
+      var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
+      var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
+      function daShowSpinner(){
+        if ($("#question").length > 0){
+          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
+        }
+        else{
+          var newSpan = document.createElement('span');
+          var newI = document.createElement('i');
+          $(newI).addClass("fas fa-spinner fa-spin");
+          $(newI).appendTo(newSpan);
+          $(newSpan).attr("id", "daSpinner");
+          $(newSpan).addClass("da-sig-spinner text-muted top-for-navbar");
+          $(newSpan).appendTo("#sigtoppart");
+        }
+        daShowingSpinner = true;
+      }
+      function daHideSpinner(){
+        $("#daSpinner").remove();
+        daShowingSpinner = false;
+        daSpinnerTimeout = null;
+      }
+      function getField(fieldName){
+        if (typeof daValLookup[fieldName] == "undefined"){
+          var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName)] != "undefined"){
+            fieldName = daVarLookup[btoa(fieldName)];
+            fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          }
+          var varList = $("[name='" + fieldNameEscaped + "']");
+          if (varList.length == 0){
+            varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
+          }
+          if (varList.length == 0){
+            varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
+          }
+          if (varList.length > 0){
+            elem = varList[0];
+          }
+          else{
+            return null;
+          }
+        }
+        else {
+          elem = daValLookup[fieldName];
+        }
+        return elem;
+      }
+      function setField(fieldName, val){
+        var elem = getField(fieldName);
+        if (elem == null){
+          console.log('setField: reference to non-existent field ' + fieldName);
+          return;
+        }
+        if ($(elem).attr('type') == "checkbox"){
+          if (val){
+            if ($(elem).prop('checked') != true){
+              $(elem).prop('checked', true);
+              $(elem).trigger('change');
+            }
+          }
+          else{
+            if ($(elem).prop('checked') != false){
+              $(elem).prop('checked', false);
+              $(elem).trigger('change');
+            }
+          }
+        }
+        else if ($(elem).attr('type') == "radio"){
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          var wasSet = false;
+          $("input[name='" + fieldNameEscaped + "']").each(function(){
+            if ($(this).val() == val){
+              if ($(this).prop('checked') != true){
+                $(this).prop('checked', true);
+                $(this).trigger('change');
+              }
+              wasSet = true;
+              return false;
+            }
+          });
+          if (!wasSet){
+            console.log('setField: could not set radio button ' + fieldName + ' to ' + val);
+          }
+        }
+        else{
+          if ($(elem).val() != val){
+            $(elem).val(val);
+            $(elem).trigger('change');
+          }
+        }
+      }
+      function val(fieldName){
+        var elem = getField(fieldName);
+        if (elem == null){
+          return null;
+        }
+        var showifParents = $(elem).parents(".jsshowif");
+        if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
+          theVal = null;
+        }
+        else if ($(elem).attr('type') == "checkbox"){
+          if ($(elem).prop('checked')){
+            theVal = true;
+          }
+          else{
+            theVal = false;
+          }
+        }
+        else if ($(elem).attr('type') == "radio"){
+          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          theVal = $("input[name='" + fieldNameEscaped + "']:checked").val();
+          if (typeof(theVal) == 'undefined'){
+            theVal = null;
+          }
+          else{
+            if (theVal == 'True'){
+              theVal = true;
+            }
+            else if (theVal == 'False'){
+              theVal = false;
+            }
+          }
+        }
+        else{
+          theVal = $(elem).val();
+        }
+        return theVal;
+      }
       window.daTurnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
@@ -10242,8 +10383,7 @@ def observer():
         }
       }
       function url_action(action, args){
-          //console.log("Got to a url_action");
-          //redo
+          //redo?
           if (args == null){
               args = {};
           }
@@ -10251,7 +10391,7 @@ def observer():
           return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
       }
       function url_action_call(action, args, callback){
-          //redo
+          //redo?
           if (args == null){
               args = {};
           }
@@ -10335,6 +10475,13 @@ def observer():
         });
       }
       function daInitialize(doScroll){
+        if (daSpinnerTimeout != null){
+          clearTimeout(daSpinnerTimeout);
+          daSpinnerTimeout = null;
+        }
+        if (daShowingSpinner){
+          daHideSpinner();
+        }
         $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction], #backbutton').click(daSubmitter);
         $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
@@ -16648,7 +16795,7 @@ def utilities():
         $(this).next('.custom-file-label').html(fileName);
       });
     </script>"""
-    return render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, language_placeholder=word("Enter an ISO-639-1 language code (e.g., es, fr, it)"))
+    return render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, interview_placeholder=word("E.g., docassemble.demo:data/questions/questions.yml"), language_placeholder=word("E.g., es, fr, it"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -18623,6 +18770,163 @@ def get_user_list(include_inactive=False):
             user_info['active'] = getattr(user, 'active')
         user_list.append(user_info)
     return user_list
+
+@app.route('/translation_file', methods=['POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def translation_file():
+    form = Utilities(request.form)
+    yaml_filename = form.interview.data
+    if yaml_filename is None or not re.search(r'\S', yaml_filename):
+        flash(word("You must provide an interview filename"), 'error')
+        return redirect(url_for('utilities'))
+    tr_lang = form.language.data
+    if tr_lang is None or not re.search(r'\S', tr_lang):
+        flash(word("You must provide a language"), 'error')
+        return redirect(url_for('utilities'))
+    temp_file = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
+    xlsx_filename = os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0] + ".xlsx"
+    workbook = xlsxwriter.Workbook(temp_file.name)
+    worksheet = workbook.add_worksheet()
+    bold = workbook.add_format({'bold': 1})
+    text = workbook.add_format()
+    text.set_align('top')
+    fixed = workbook.add_format()
+    fixed.set_align('top')
+    fixed.set_font_name('Courier New')
+    fixedunlocked = workbook.add_format()
+    fixedunlocked.set_align('top')
+    fixedunlocked.set_font_name('Courier New')
+    fixedunlocked.set_locked(False)
+    numb = workbook.add_format()
+    numb.set_align('top')
+    worksheet.write('A1', 'interview', bold)
+    worksheet.write('B1', 'question_id', bold)
+    worksheet.write('C1', 'index_num', bold)
+    worksheet.write('D1', 'hash', bold)
+    worksheet.write('E1', 'orig_lang', bold)
+    worksheet.write('F1', 'tr_lang', bold)
+    worksheet.write('G1', 'orig_text', bold)
+    worksheet.write('H1', 'tr_text', bold)
+    worksheet.set_column(0, 0, 25)
+    worksheet.set_column(1, 1, 15)
+    worksheet.set_column(2, 2, 12)
+    worksheet.set_column(6, 7, 90)
+    options = {
+        'objects':               False,
+        'scenarios':             False,
+        'format_cells':          False,
+        'format_columns':        False,
+        'format_rows':           False,
+        'insert_columns':        False,
+        'insert_rows':           True,
+        'insert_hyperlinks':     False,
+        'delete_columns':        False,
+        'delete_rows':           True,
+        'select_locked_cells':   True,
+        'sort':                  True,
+        'autofilter':            True,
+        'pivot_tables':          False,
+        'select_unlocked_cells': True,
+    }
+    worksheet.protect('', options)
+    try:
+        interview_source = docassemble.base.parse.interview_source_from_string(yaml_filename)
+    except DAError:
+        flash(word("Invalid interview"), 'error')
+        return redirect(url_for('utilities'))
+    interview_source.update()
+    interview_source.translating = True
+    interview = interview_source.get_interview()
+    tr_cache = dict()
+    if len(interview.translations):
+        for item in interview.translations:
+            the_xlsx_file = docassemble.base.functions.package_data_filename(item)
+            if not os.path.isfile(the_xlsx_file):
+                continue
+            df = pandas.read_excel(the_xlsx_file)
+            invalid = False
+            for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
+                if column_name not in df.columns:
+                    invalid = True
+                    break
+            if invalid:
+                continue
+            for indexno in df.index:
+                try:
+                    assert df['interview'][indexno]
+                    assert df['question_id'][indexno]
+                    assert df['index_num'][indexno] >= 0
+                    assert df['hash'][indexno]
+                    assert df['orig_lang'][indexno]
+                    assert df['tr_lang'][indexno]
+                    assert df['orig_text'][indexno] != ''
+                    assert df['tr_text'][indexno] != ''
+                except:
+                    continue
+                the_dict = {'interview': df['interview'][indexno], 'question_id': df['question_id'][indexno], 'index_num': df['index_num'][indexno], 'hash': df['hash'][indexno], 'orig_lang': df['orig_lang'][indexno], 'tr_lang': df['tr_lang'][indexno], 'orig_text': df['orig_text'][indexno], 'tr_text': df['tr_text'][indexno]}
+                if df['orig_text'][indexno] not in tr_cache:
+                    tr_cache[df['orig_text'][indexno]] = dict()
+                if df['orig_lang'][indexno] not in tr_cache[df['orig_text'][indexno]]:
+                    tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]] = dict()
+                tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = the_dict
+    row = 1
+    seen = list()
+    for question in interview.questions_list:
+        if not hasattr(question, 'translations'):
+            continue
+        language = question.language
+        if language == '*':
+            language = interview_source.language
+        if language == '*':
+            language = DEFAULT_LANGUAGE
+        if language == tr_lang:
+            continue
+        indexno = 0
+        if hasattr(question, 'id'):
+            question_id = question.id
+        else:
+            question_id = question.name
+        for item in question.translations:
+            if item in seen:
+                continue
+            if item in tr_cache and language in tr_cache[item] and tr_lang in tr_cache[item][language]:
+                tr_text = text_type(tr_cache[item][language][tr_lang]['tr_text'])
+            else:
+                tr_text = ''
+            worksheet.write_string(row, 0, question.from_source.get_name(), text)
+            worksheet.write_string(row, 1, question_id, text)
+            worksheet.write_number(row, 2, indexno, numb)
+            worksheet.write_string(row, 3, hashlib.md5(item.encode('utf-8')).hexdigest(), text)
+            worksheet.write_string(row, 4, language, text)
+            worksheet.write_string(row, 5, tr_lang, text)
+            worksheet.write_string(row, 6, item, fixed)
+            worksheet.write_string(row, 7, tr_text, fixedunlocked)
+            num_lines = item.count('\n')
+            if num_lines > 0:
+                worksheet.set_row(row, 15*(num_lines + 1))
+            indexno += 1
+            row += 1
+            seen.append(item)
+    for item in tr_cache:
+        if item in seen or language not in tr_cache[item] or tr_lang not in tr_cache[item][language]:
+            continue
+        worksheet.write_string(row, 0, tr_cache[item][language][tr_lang]['interview'], text)
+        worksheet.write_string(row, 1, tr_cache[item][language][tr_lang]['question_id'], text)
+        worksheet.write_number(row, 2, 1000 + tr_cache[item][language][tr_lang]['index_num'], numb)
+        worksheet.write_string(row, 3, tr_cache[item][language][tr_lang]['hash'], text)
+        worksheet.write_string(row, 4, tr_cache[item][language][tr_lang]['orig_lang'], text)
+        worksheet.write_string(row, 5, tr_cache[item][language][tr_lang]['tr_lang'], text)
+        worksheet.write_string(row, 6, tr_cache[item][language][tr_lang]['orig_text'], fixed)
+        worksheet.write_string(row, 7, tr_cache[item][language][tr_lang]['tr_text'], fixedunlocked)
+        num_lines = tr_cache[item][language][tr_lang]['orig_text'].count('\n')
+        if num_lines > 0:
+            worksheet.set_row(row, 15*(num_lines + 1))
+        row += 1
+    workbook.close()
+    response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, attachment_filename=xlsx_filename)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return(response)
 
 @app.route('/api/user_list', methods=['GET'])
 @crossdomain(origin='*', methods=['GET', 'HEAD'])
