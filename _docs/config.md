@@ -2422,7 +2422,7 @@ This variable is typically set using the [Docker] environment variable
 
 If you change this variable, you need to do a complete restart of the
 system for the change to take effect.  (That is, 
-`docker -t60 stop <container ID>` followed by `docker start <container ID>`.)
+`docker stop -t60 <container ID>` followed by `docker start <container ID>`.)
 
 ## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
 
@@ -2442,7 +2442,7 @@ These variables are typically set through the environment variables
 `docker run` command is run for the first time.  You can change the
 `use https`, `use lets encrypt`, and `lets encrypt email` variables on
 a running server, but they will only be effective if you restart the
-system using `docker -t60 stop <container ID>` followed by 
+system using `docker stop -t60 <container ID>` followed by 
 `docker start <container ID>`.
 
 ## <a name="cross site domain"></a>Cross-Origin Resource Sharing (CORS)
@@ -2463,7 +2463,7 @@ This variable is only used if **docassemble** is running on
 
 If you change this variable, you need to do a complete restart of the
 system for the change to take effect.  (That is, 
-`docker -t60 stop <container ID>` followed by `docker start <container ID>`).
+`docker stop -t60 <container ID>` followed by `docker start <container ID>`).
 
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 
