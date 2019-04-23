@@ -11203,8 +11203,9 @@ def monitor():
           }
           delete daSessions[key];
       }
-      function daPublishChatLog(uid, yaml_filename, userid, mode, messages){
+      function daPublishChatLog(uid, yaml_filename, userid, mode, messages, scroll){
           //console.log("daPublishChatLog with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
+          console.log("daPublishChatLog: scroll is " + scroll);
           var keys; 
           //if (mode == 'peer' || mode == 'peerhelp'){
           //    keys = daAllSessions(uid, yaml_filename);
@@ -11216,6 +11217,9 @@ def monitor():
               key = keys[i];
               var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
               var chatArea = $("#chatarea" + skey).find('ul').first();
+              if (messages.length > 0){
+                $(chatArea).removeClass('invisible');
+              }
               for (var i = 0; i < messages.length; ++i){
                   var message = messages[i];
                   var newLi = document.createElement('li');
@@ -11229,7 +11233,9 @@ def monitor():
                   $(newLi).html(message.message);
                   $(newLi).appendTo(chatArea);
               }
-              daScrollChatFast("#chatarea" + skey);
+              if (messages.length > 0 && scroll){
+                  daScrollChatFast("#chatarea" + skey);
+              }
           }
       }
       function daCheckIfEmpty(){
@@ -11330,6 +11336,12 @@ def monitor():
               $(theChatArea).appendTo($(theListElement));
               if (obj.chatstatus == 'on' && key in daChatPartners){
                   daActivateChatArea(key);
+                  console.log("activating chat area because on");
+              }
+              else{
+                  //PPP
+                  console.log("sending chat_log signal to get history for " + key);
+                  daSocket.emit('chat_log', {key: key, scroll: false});
               }
           }
           var theText = document.createElement('span');
@@ -11640,7 +11652,7 @@ def monitor():
                   daUpdateMonitor();
               });
               daSocket.on('terminate', function() {
-                  //console.log("monitor: terminating socket");
+                  console.log("monitor: terminating socket");
                   daSocket.disconnect();
               });
               daSocket.on('disconnect', function() {
@@ -11668,8 +11680,8 @@ def monitor():
                   daDeActivateChatArea(key);
               });
               daSocket.on('chat_log', function(arg) {
-                  //console.log('chat_log: ' + arg.userid);
-                  daPublishChatLog(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
+                  console.log('chat_log: ' + arg.userid);
+                  daPublishChatLog(arg.uid, arg.i, arg.userid, arg.mode, arg.data, arg.scroll);
               });            
               daSocket.on('block', function(arg) {
                   //console.log("back from blocking " + arg.key);
@@ -18960,7 +18972,8 @@ def translation_file():
                         parts.extend([fixedone, part[0]])
                     elif part[1] == 2:
                         parts.extend([fixedtwo, part[0]])
-                worksheet.write_rich_string(*parts, fixedcell)
+                parts.append(fixedcell)
+                worksheet.write_rich_string(*parts)
             mako = mako_parts(tr_text)
             if len(mako) == 1:
                 if mako[0][1] == 0:
@@ -18978,7 +18991,8 @@ def translation_file():
                         parts.extend([fixedunlockedone, part[0]])
                     elif part[1] == 2:
                         parts.extend([fixedunlockedtwo, part[0]])
-                worksheet.write_rich_string(*parts, fixedunlockedcell)
+                parts.append(fixedunlockedcell)
+                worksheet.write_rich_string(*parts)
             num_lines = item.count('\n')
             if num_lines > 25:
                 num_lines = 25

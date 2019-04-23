@@ -810,7 +810,9 @@ def monitor_chat_log(data):
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
-    #sys.stderr.write("Key is " + str(key) + "\n")
+    scroll = data.get('scroll', True)
+    sys.stderr.write("Key is " + str(key) + "\n")
+    sys.stderr.write("scroll is " + repr(scroll) + "\n")
     if key is None:
         sys.stderr.write("No key provided\n")
         return
@@ -854,7 +856,7 @@ def monitor_chat_log(data):
     if self_user_id is not None:
         self_user_id = int(self_user_id)
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
-    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages}, namespace='/monitor', room=request.sid)
+    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages, 'scroll': scroll}, namespace='/monitor', room=request.sid)
     #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")
 
 #observer
