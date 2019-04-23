@@ -1159,7 +1159,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         remove_question_package(kwargs)
         return(url_for('new_session', **kwargs))
     elif file_reference == 'help':
-        return('javascript:show_help_tab()');
+        return('javascript:daShowHelpTab()');
     elif file_reference == 'interview':
         remove_question_package(kwargs)
         return(url_for('index', **kwargs))
@@ -7130,10 +7130,10 @@ def index(action_argument=None):
         var newDiv = document.createElement('li');
         $(newDiv).addClass("list-group-item");
         if (data.is_self){
-          $(newDiv).addClass("list-group-item-warning dalistright");
+          $(newDiv).addClass("list-group-item-primary dalistright");
         }
         else{
-          $(newDiv).addClass("list-group-item-info");
+          $(newDiv).addClass("list-group-item-secondary dalistleft");
         }
         //var newSpan = document.createElement('span');
         //$(newSpan).html(data.message);
@@ -10097,8 +10097,7 @@ def observer():
       var daVarLookup;
       var daVarLookupRev;
       var daValLookup;
-      var daTargetDiv;
-      //var daTargetDiv = "#dabody";
+      var daTargetDiv = "#dabody";
       var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
       function daShowSpinner(){
@@ -11222,10 +11221,10 @@ def monitor():
                   var newLi = document.createElement('li');
                   $(newLi).addClass("list-group-item");
                   if (message.is_self){
-                      $(newLi).addClass("list-group-item-warning dalistright");
+                      $(newLi).addClass("list-group-item-primary dalistright");
                   }
                   else{
-                      $(newLi).addClass("list-group-item-info");
+                      $(newLi).addClass("list-group-item-secondary dalistleft");
                   }
                   $(newLi).html(message.message);
                   $(newLi).appendTo(chatArea);
@@ -11302,7 +11301,7 @@ def monitor():
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
               $(theChatArea).addClass('monitor-chat-area invisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled=""><span class="input-group-btn"><button role="button" class="btn btn-secondary" type="button" disabled=""><span>""" + word("Send") + """<\/span><\/button><\/span><\/div><\/div><\/div><\/form>');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><span class="input-group-btn"><button role="button" class="btn btn-secondary daChatButton" type="button" disabled=""><span>""" + word("Send") + """<\/span><\/button><\/span><\/div><\/div><\/div><\/form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
                   //console.log("I am the submitter and I am submitting " + key);
@@ -11697,10 +11696,10 @@ def monitor():
                     var newLi = document.createElement('li');
                     $(newLi).addClass("list-group-item");
                     if (data.data.is_self){
-                      $(newLi).addClass("list-group-item-warning dalistright");
+                      $(newLi).addClass("list-group-item-primary dalistright");
                     }
                     else{
-                      $(newLi).addClass("list-group-item-info");
+                      $(newLi).addClass("list-group-item-secondary dalistleft");
                     }
                     $(newLi).html(data.data.message);
                     $(newLi).appendTo(chatArea);
@@ -18785,19 +18784,62 @@ def translation_file():
         flash(word("You must provide a language"), 'error')
         return redirect(url_for('utilities'))
     temp_file = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-    xlsx_filename = os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0] + ".xlsx"
+    xlsx_filename = docassemble.base.functions.space_to_underscore(os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0]) + "_" + tr_lang + ".xlsx"
     workbook = xlsxwriter.Workbook(temp_file.name)
     worksheet = workbook.add_worksheet()
     bold = workbook.add_format({'bold': 1})
     text = workbook.add_format()
     text.set_align('top')
+    fixedcell = workbook.add_format()
+    fixedcell.set_align('top')
+    fixedcell.set_text_wrap()
+    fixedunlockedcell = workbook.add_format()
+    fixedunlockedcell.set_align('top')
+    fixedunlockedcell.set_text_wrap()
+    fixedunlockedcell.set_locked(False)
     fixed = workbook.add_format()
-    fixed.set_align('top')
-    fixed.set_font_name('Courier New')
+    fixedone = workbook.add_format()
+    fixedone.set_bold()
+    fixedone.set_font_color('green')
+    fixedtwo = workbook.add_format()
+    fixedtwo.set_bold()
+    fixedtwo.set_font_color('blue')
     fixedunlocked = workbook.add_format()
-    fixedunlocked.set_align('top')
-    fixedunlocked.set_font_name('Courier New')
-    fixedunlocked.set_locked(False)
+    fixedunlockedone = workbook.add_format()
+    fixedunlockedone.set_bold()
+    fixedunlockedone.set_font_color('green')
+    fixedunlockedtwo = workbook.add_format()
+    fixedunlockedtwo.set_bold()
+    fixedunlockedtwo.set_font_color('blue')
+    wholefixed = workbook.add_format()
+    wholefixed.set_align('top')
+    wholefixed.set_text_wrap()
+    wholefixedone = workbook.add_format()
+    wholefixedone.set_bold()
+    wholefixedone.set_font_color('green')
+    wholefixedone.set_align('top')
+    wholefixedone.set_text_wrap()
+    wholefixedtwo = workbook.add_format()
+    wholefixedtwo.set_bold()
+    wholefixedtwo.set_font_color('blue')
+    wholefixedtwo.set_align('top')
+    wholefixedtwo.set_text_wrap()
+    wholefixedunlocked = workbook.add_format()
+    wholefixedunlocked.set_align('top')
+    wholefixedunlocked.set_text_wrap()
+    wholefixedunlocked.set_locked(False)
+    wholefixedunlockedone = workbook.add_format()
+    wholefixedunlockedone.set_bold()
+    wholefixedunlockedone.set_font_color('green')
+    wholefixedunlockedone.set_align('top')
+    wholefixedunlockedone.set_text_wrap()
+    wholefixedunlockedone.set_locked(False)
+    wholefixedunlockedtwo = workbook.add_format()
+    wholefixedunlockedtwo.set_bold()
+    wholefixedunlockedtwo.set_font_color('blue')
+    wholefixedunlockedtwo.set_align('top')
+    wholefixedunlockedtwo.set_text_wrap()
+    wholefixedunlockedtwo.set_locked(False)
     numb = workbook.add_format()
     numb.set_align('top')
     worksheet.write('A1', 'interview', bold)
@@ -18808,10 +18850,6 @@ def translation_file():
     worksheet.write('F1', 'tr_lang', bold)
     worksheet.write('G1', 'orig_text', bold)
     worksheet.write('H1', 'tr_text', bold)
-    worksheet.set_column(0, 0, 25)
-    worksheet.set_column(1, 1, 15)
-    worksheet.set_column(2, 2, 12)
-    worksheet.set_column(6, 7, 90)
     options = {
         'objects':               False,
         'scenarios':             False,
@@ -18830,6 +18868,11 @@ def translation_file():
         'select_unlocked_cells': True,
     }
     worksheet.protect('', options)
+    worksheet.set_column(0, 0, 25)
+    worksheet.set_column(1, 1, 15)
+    worksheet.set_column(2, 2, 12)
+    worksheet.set_column(6, 6, 75)
+    worksheet.set_column(6, 7, 75)
     try:
         interview_source = docassemble.base.parse.interview_source_from_string(yaml_filename)
     except DAError:
@@ -18900,9 +18943,45 @@ def translation_file():
             worksheet.write_string(row, 3, hashlib.md5(item.encode('utf-8')).hexdigest(), text)
             worksheet.write_string(row, 4, language, text)
             worksheet.write_string(row, 5, tr_lang, text)
-            worksheet.write_string(row, 6, item, fixed)
-            worksheet.write_string(row, 7, tr_text, fixedunlocked)
+            mako = mako_parts(item)
+            if len(mako) == 1:
+                if mako[0][1] == 0:
+                    worksheet.write_string(row, 6, item, wholefixed)
+                elif mako[0][1] == 1:
+                    worksheet.write_string(row, 6, item, wholefixedone)
+                elif mako[0][1] == 2:
+                    worksheet.write_string(row, 6, item, wholefixedtwo)
+            else:
+                parts = [row, 6]
+                for part in mako:
+                    if part[1] == 0:
+                        parts.extend([fixed, part[0]])
+                    elif part[1] == 1:
+                        parts.extend([fixedone, part[0]])
+                    elif part[1] == 2:
+                        parts.extend([fixedtwo, part[0]])
+                worksheet.write_rich_string(*parts, fixedcell)
+            mako = mako_parts(tr_text)
+            if len(mako) == 1:
+                if mako[0][1] == 0:
+                    worksheet.write_string(row, 7, tr_text, wholefixedunlocked)
+                elif mako[0][1] == 1:
+                    worksheet.write_string(row, 7, tr_text, wholefixedunlockedone)
+                elif mako[0][1] == 2:
+                    worksheet.write_string(row, 7, tr_text, wholefixedunlockedtwo)
+            else:
+                parts = [row, 7]
+                for part in mako:
+                    if part[1] == 0:
+                        parts.extend([fixedunlocked, part[0]])
+                    elif part[1] == 1:
+                        parts.extend([fixedunlockedone, part[0]])
+                    elif part[1] == 2:
+                        parts.extend([fixedunlockedtwo, part[0]])
+                worksheet.write_rich_string(*parts, fixedunlockedcell)
             num_lines = item.count('\n')
+            if num_lines > 25:
+                num_lines = 25
             if num_lines > 0:
                 worksheet.set_row(row, 15*(num_lines + 1))
             indexno += 1
@@ -20708,6 +20787,139 @@ def illegal_variable_name(var):
     detector = docassemble.base.astparser.detectIllegal()
     detector.visit(t)
     return detector.illegal
+
+emoji_match = re.compile(r':([A-Za-z][A-Za-z0-9\_\-]+):')
+
+def mako_parts(expression):
+    in_percent = False
+    in_var = False
+    in_square = False
+    var_depth = 0
+    in_colon = 0
+    in_pre_bracket = False
+    in_post_bracket = False
+    n = len(expression)
+    output = list()
+    current = ''
+    i = 0
+    expression = emoji_match.sub(r'^^\1^^', expression)
+    while i < n:
+        if in_percent:
+            if expression[i] in ["\n", "\r"]:
+                in_percent = False
+                if current != '':
+                    output.append([current, 1])
+                current = expression[i]
+                i += 1
+                continue
+        elif in_var:
+            if expression[i] == '{' and expression[i-1] != "\\":
+                var_depth += 1
+            elif expression[i] == '}' and expression[i-1] != "\\":
+                var_depth -= 1
+                if var_depth == 0:
+                    current += expression[i]
+                    if current != '':
+                        output.append([current, 2])
+                    current = ''
+                    in_var = False
+                    i += 1
+                    continue
+        elif in_pre_bracket:
+            if i + 2 < n:
+                if expression[i:i+3] == '</%':
+                    in_pre_bracket = False
+                    in_post_bracket = True
+                    current += expression[i:i+3]
+                    i += 3
+                    continue
+            if i + 1 < n and expression[i:i+2] == '%>':
+                in_pre_bracket = False
+                current += expression[i:i+2]
+                if current != '':
+                    output.append([current, 1])
+                current = ''
+                i += 2
+                continue
+        elif in_post_bracket:
+            if expression[i] == '>' and expression[i-1] != "\\":
+                current += expression[i]
+                if current != '':
+                    output.append([current, 1])
+                current = ''
+                in_post_bracket = False
+                i += 1
+                continue
+        elif in_square:
+            if expression[i] == ']' and (i == 0 or expression[i-1] != "\\"):
+                mode = 0
+                current += expression[i]
+                for pattern in ['[FILE', '[TARGET ', '[EMOJI ', '[QR ', '[YOUTUBE', '[VIMEO]', '[PAGENUM]', '[BEGIN_TWOCOL]', '[BREAK]', '[END_TWOCOL', '[BEGIN_CAPTION]', '[VERTICAL_LINE]', '[END_CAPTION]', '[TIGHTSPACING]', '[SINGLESPACING]', '[DOUBLESPACING]', '[ONEANDAHALFSPACING]', '[TRIPLESPACING]', '[START_INDENTATION]', '[STOP_INDENTATION]', '[NBSP]', '[REDACTION', '[ENDASH]', '[EMDASH]', '[HYPHEN]', '[CHECKBOX]', '[BLANK]', '[BLANKFILL]', '[PAGEBREAK]', '[PAGENUM]', '[SECTIONNUM]', '[SKIPLINE]', '[NEWLINE]', '[NEWPAR]', '[BR]', '[TAB]', '[END]', '[BORDER]', '[NOINDENT]', '[FLUSHLEFT]', '[FLUSHRIGHT]', '[CENTER]', '[BOLDCENTER]', '[INDENTBY', '[${']:
+                    if current.startswith(pattern):
+                        mode = 2
+                        break
+                if current != '':
+                    output.append([current, mode])
+                current = ''
+                in_square = False
+                i += 1
+                continue
+        elif in_colon:
+            if i + 1 < n and expression[i:i+2] == '^^':
+                current += ':'
+                if current != '':
+                    output.append([current, 2])
+                current = ''
+                in_colon = False
+                i += 2
+                continue
+        elif i + 1 < n:
+            if expression[i:i+2] == '${':
+                in_var = True
+                var_depth += 1
+                if current != '':
+                    output.append([current, 0])
+                current = expression[i:i+2]
+                i += 2
+                continue
+            elif expression[i:i+2] == '^^':
+                in_colon = True
+                if current != '':
+                    output.append([current, 0])
+                current = ':'
+                i += 2
+                continue
+            elif expression[i:i+2] == '<%':
+                in_pre_bracket = True
+                if current != '':
+                    output.append([current, 0])
+                current = expression[i:i+2]
+                i += 2
+                continue
+            elif expression[i:i+2] == '% ' and (i == 0 or (expression[i-1] in ["\n", "\r"])):
+                in_percent = True
+                if current != '':
+                    output.append([current, 0])
+                current = expression[i:i+2]
+                i += 2
+                continue
+            elif expression[i] == '[' and (i == 0 or expression[i-1] != "\\"):
+                in_square = True
+                if current != '':
+                    output.append([current, 0])
+                current = expression[i]
+                i += 1
+                continue
+        current += expression[i]
+        i += 1
+    if current != '':
+        if in_pre_bracket or in_post_bracket or in_percent:
+            output.append([current, 1])
+        elif in_var:
+            output.append([current, 2])
+        else:
+            output.append([current, 0])
+    return output
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)

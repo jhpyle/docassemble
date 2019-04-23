@@ -661,13 +661,8 @@ a.example-share {
 
 .dachatbutton a {
     font-size: 14px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 0.75em;
     float: right;
-}
-
-.dalistright {
-    text-align: right;
 }
 
 a.example-share:focus {
@@ -2118,3 +2113,48 @@ tr:first-child .datableup, tr:last-child .databledown {
 	overflow: hidden;
     }
 }
+
+.dalistright {
+    border-top-left-radius: 1em !important;
+    border-top-right-radius: 1em !important;
+    border-bottom-right-radius: 0em !important;
+    border-bottom-left-radius: 1em !important;
+    margin-left: 25%;
+    margin-bottom: 0.5em !important;
+    border-width: 0px;
+}
+
+
+.dalistleft {
+    border-top-left-radius: 1em !important;
+    border-top-right-radius: 1em !important;
+    border-bottom-right-radius: 1em !important;
+    border-bottom-left-radius: 0em !important;
+    margin-right: 25%;
+    margin-bottom: 0.5em !important;
+    border-width: 0px;
+}
+
+.daChatMessage {
+    border-top-left-radius: 1em !important;
+    border-top-right-radius: 1em !important;
+    border-bottom-right-radius: 1em !important;
+    border-bottom-left-radius: 1em !important;
+    margin-left: 25%;
+    margin-right: 0.5em;
+}
+
+@media (max-width: 575px) {
+    .daChatMessage {
+	margin-left: 0;
+    }
+}
+
+.daChatMessage:disabled {
+    cursor: not-allowed !important;
+}
+
+.daChatButton:disabled {
+    cursor: not-allowed !important;
+}
+    
