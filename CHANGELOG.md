@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.37] - 2019-04-23
+### Fixed
+- Error affecting Python 2.7.
+
 ## [0.4.36] - 2019-04-23
 ### Changed
 - Syntax highlighting and word wrap for interview phrase translation files.
