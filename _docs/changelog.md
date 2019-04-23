@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.36](https://github.com/jhpyle/docassemble/releases/tag/v0.4.36) - 2019-04-23
+
+### Changed
+- Syntax highlighting and word wrap for interview phrase translation files.
+- New style for chat messages.
+
+### Fixed
+- PAM failure in cron on Amazon Linux.
+- Link to show help tab called wrong JavaScript function.
+
 ## [0.4.35](https://github.com/jhpyle/docassemble/releases/tag/v0.4.35) - 2019-04-20
 
 ### Added
