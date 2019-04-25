@@ -2383,6 +2383,82 @@ The default value of `enable` is True, so you can omit the
 `enable` line.  You can write `two factor authentication: True`
 to enable two-factor authentication with all of the default options.
 
+## <a name="playground examples"></a>List of examples in the Playground
+
+As a development aid, the [Playground] contains an [examples area]
+with a list of short sample interviews that demonstrate particular
+features.  The interviews shown here are controlled by the file
+[`docassemble.base:data/questions/example-list.yml`].  If you would
+rather use a list of your own, you can define `playground examples`:
+
+{% highlight yaml %}
+playground examples: docassemble.michigan:data/questions/examples.yml
+{% endhighlight %}
+
+This will replace all of the example interviews with the examples you specify.
+
+You can also set `playground examples` to a list of files:
+
+{% highlight yaml %}
+playground examples: 
+  - docassemble.base:data/questions/example-list.yml
+  - docassemble.michigan:data/questions/examples.yml
+{% endhighlight %}
+
+In this example, the standard list
+([`docassemble.base:data/questions/example-list.yml`]) will be used
+first, and then the example categories and interviews from the
+`docassemble.michigan` package will be included after.
+
+For example, suppose the file
+`docassemble.michigan:data/questions/examples.yml` contained:
+
+{% highlight yaml %}
+- Slack:
+    - slack-example
+    - slack-example-2
+{% endhighlight %}
+
+This would assume that there was an interview
+`docassemble.michigan:data/questions/slack-example.yml` and an
+interview `docassemble.michigan:data/questions/slack-example-2.yml`.
+
+It would also assume that there were PNG screenshots for this
+interviews available in the `data/static` folder of the
+`docassemble.michigan` package called `slack-example.png` and
+`slack-example-2.png`.
+
+There are some [`metadata`] headers specific to example interviews.
+For example, suppose the [`metadata`] of `slack-example.yml` was:
+
+{% highlight yaml %}
+metadata:
+  title: Test Slack Posting
+  short title: Test Slack
+  documentation: "https://michigan.example.com/docs/using_slack.html"
+  example start: 1
+  example end: 2
+---
+question: |
+  What do you want to post on Slack?
+fields:
+  - Message: the_message
+---
+code: |
+  post_to_slack(the_message)
+  message_posted
+{% endhighlight %}
+
+The `short` title, "Test Slack," will be used in the navigation bar of
+the [Playground] examples section.  The URL under `documentation` will
+be the URL behind the "View documentation" link in the [Playground]
+examples section.  The blocks of the interview that will be shown on
+the screen are based on the `example start` and `example end` items.
+In this example, block "1" is the [`question`] block, and block "2" is
+the [`code`] block.  (Block "0" is the [`metadata`] block.)  So the
+[`question`] block and the [`code`] block will be shown, but not the
+[`metadata`] block.
+
 ## <a name="vim"></a>Vim-like editor in Playground
 
 If the `vim` directive is set to `True`, then the in-browser text
@@ -3104,6 +3180,36 @@ editable extensions:
   - law
 {% endhighlight %}
 
+## <a name="new markdown to docx"></a>Inserting Markdown templates in Word files
+
+Originally, when inserting the results of a [`template`] in DOCX file
+that you assemble using [`docx template file`], you would include the
+template as follows:
+
+> {% raw %}{{r the_template }}{% endraw %}
+
+The template text would be inserted as a single "run," meaning that it
+cannot contain any proper paragraph breaks, only manual line breaks.
+
+There is a newer system of inserting Markdown [`template`]s into
+[`docx template file`]s, which can handle multiple paragraphs and a
+wider variety of Markdown.  However, this new system is not backwards
+compatible with the original system, because under the new system you
+need to include the [`template`] as follows:
+
+> {% raw %}{{p the_template }}{% endraw %}
+
+To upgrade to the new system today, set the following in your
+Configuration:
+
+{% highlight yaml %}
+new markdown to docx: True
+{% endhighlight %}
+
+The new system will become the default at some point in the future, so
+when you have time, you should adapt your DOCX files if you are using
+`{% raw %}{{r ... }}{% endraw %}` to insert [`template`]s.
+
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -3284,6 +3390,7 @@ and Facebook API keys.
 [Mailgun]: https://www.mailgun.com/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [phone login]: #phone login
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [`twilio`]: #twilio
 [Google Authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
 [Authy]: https://authy.com/
@@ -3400,3 +3507,6 @@ and Facebook API keys.
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
 [list of files on GitHub]: https://github.com/jhpyle/docassemble/tree/master/docassemble_base/docassemble/base/data/sources
+[examples area]: {{ site.baseurl }}/docs/playground.html#examples
+[`docassemble.base:data/questions/example-list.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/example-list.yml
+[`code`]: {{ site.baseurl }}/docs/code.html#code

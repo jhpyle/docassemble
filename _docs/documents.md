@@ -876,6 +876,40 @@ to pass variables to a DOCX template.  In order to pass variables in
 [`raw()`] function.  For more information, see the
 [documentation for the `raw()` function].
 
+## <a name="markdown to docx"></a>Inserting multi-line text into a single field in a DOCX file
+
+If you insert text into a [`docx template file`] using `{% raw %}{{
+the_variable }}{% endraw %}`, and the the text you are inserting
+contains newlines, the newlines will show up as spaces in the DOCX
+file.  Also, if the text contains [Markdown] formatting, it will be
+inserted into the DOCX file literally.
+
+If you want to insert formatted text into a DOCX file, you can put the
+text into a [`template`] and then insert the template variable into
+the DOCX file with:
+
+> {% raw %}{{r the_template }}{% endraw %}
+
+This will result in the template text being treated as [Markdown],
+which is then converted to DOCX format.
+
+Note, however, that there is a new version of this feature, which is
+not currently the default but that will in the future be the default,
+which will require that templates be inserted with:
+
+> {% raw %}{{p the_template }}{% endraw %}
+
+If you want to use the new version of the feature, set the [`new
+markdown to docx`] directive to `True` in the [Configuration].  Under
+the new version, the paragraphs that are inserted will have the
+default paragraph style.  Thus, if you want a particular type of
+paragraph spacing, you can change the default style.
+
+If you want single newlines in the text to break paragraphs, you can
+use the function [`single_to_double_newlines()`].  (Under the rules of
+[Markdown], single newlines act as spaces, while double spaces act as
+paragraph breaks.)
+
 ## <a name="update references"></a>Using tables of contents and other references in DOCX files
 
 If you are using `docx template file` and your template file uses a
@@ -1589,12 +1623,15 @@ interview, see the [`cache documents` feature].
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
 [spam]: https://en.wikipedia.org/wiki/Email_spam
-[Configuration]: {{ site.baseurl }}/docs/configuration.html
-[external SMTP server]: {{ site.baseurl }}/docs/configuration.html#smtp
-[Mailgun API]: {{ site.baseurl }}/docs/configuration.html#mailgun api
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[external SMTP server]: {{ site.baseurl }}/docs/config.html#smtp
+[Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
 [Mailgun]: https://www.mailgun.com/
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
 [`redact()`]: {{ site.baseurl }}/docs/functions.html#redact
 [docx-table-columns.docx]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/docx-table-columns.docx
 [using code to find a template file]: #template file code
 [`attachment code`]: #attachment code
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
+[`single_to_double_newlines()`]: {{ site.baseurl }}/docs/functions.html#single_to_double_newlines
+[`new markdown to docx`]: {{ site.baseurl }}/docs/config.html#new markdown to docx

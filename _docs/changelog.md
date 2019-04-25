@@ -4,6 +4,27 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.38](https://github.com/jhpyle/docassemble/releases/tag/v0.4.38) - 2019-04-25
+
+### Added
+- The `single_to_double_newlines()` function.
+- The `get_pdf_fields()` method of `DAFile` and other file objects.
+- The `playground examples` directive in the Configuration.
+- The `new markdown to docx` directive in the Configuration.
+
+### Changed
+- Style of chat messages updated; content of message from the monitor
+  is now contained in the notification received by the end user while
+  looking at a question.
+
+### Fixed
+- Python 3.5 error in utility function for Azure Blob Storage.
+
+## [0.4.37](https://github.com/jhpyle/docassemble/releases/tag/v0.4.37) - 2019-04-23
+
+### Fixed
+- Error affecting Python 2.7.
+
 ## [0.4.36](https://github.com/jhpyle/docassemble/releases/tag/v0.4.36) - 2019-04-23
 
 ### Changed

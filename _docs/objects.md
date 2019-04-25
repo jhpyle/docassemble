@@ -1351,6 +1351,23 @@ my_file.set_alt_text("A photograph of the Shanghai skyline")
 the_alt_text = my_file.get_alt_text()
 {% endhighlight %}
 
+<a name="DAFile.get_pdf_fields"></a>The `.get_pdf_fields()` method
+only works on PDF files.  It returns a list of fields that exist in
+the PDF file.
+
+The items in the list are tuples with five elements.  The five
+elements are:
+
+1. The name of the field.
+2. The default value of the field.  If no default value is provided in
+   the PDF file, this is the empty string for text fields and `'No'`
+   for checkbox fields.
+3. The page number on which the field appears.
+4. A list of four coordinates indicating the bounding box of the field
+   on the page.
+5. A code indicating the type of the field.  This can be `'/Tx'`,
+   `'/Btn'`, or `None`.
+
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
@@ -1416,6 +1433,11 @@ not have a `.alt_text` attribute.  If you run `set_alt_text()` on a
 the files in the collection.  If you run `get_alt_text()` on a
 `DAFileCollection`, it is like calling [`get_alt_text()`] on the first
 document type in the collection.
+
+<a name="DAFileCollection.get_pdf_fields"></a>The `.get_pdf_fields()`
+returns a list of fields that exist in the PDF version of the
+`DAFileCollection` object.  See [`get_pdf_fields()`] for more
+information.
 
 ## <a name="DAFileList"></a>DAFileList
 
@@ -1491,6 +1513,12 @@ a `.alt_text` attribute.  If you run `set_alt_text()` on a
 items in the list.  If you run `get_alt_text()` on a `DAFileList`, it
 is like calling [`get_alt_text()`] on the first item in the list.
 
+<a name="DAFileList.get_pdf_fields"></a>The `.get_pdf_fields()`
+returns a list of fields that exist in the first file in the list.  If
+you run `get_pdf_fields()` on a `DAFileList`, it is like calling
+[`get_pdf_fields()`] on the first item in the list.  See
+[`get_pdf_fields()`] for more information.
+
 ## <a name="DAStaticFile"></a>DAStaticFile
 
 A `DAStaticFile` represents a file in the "static folder" of a
@@ -1503,6 +1531,11 @@ to a static file, such as:
 * `coins.png` - a file in the static folder of the current package
 * `docassemble.base:data/static/cow.jpg` - a file in the static folder
   of another package.
+* `data/templates/application.pdf` - a file in the templates folder of
+  the current package.  (Though template files are not in the static
+  folder and are not normally used in the same way as static files, it
+  can be useful to use the `DAStaticFile` object to refer to files in
+  the templates folder.)
 
 The `DAStaticFile` also uses the `alt_text` attribute.  If you are
 using a `DAStaticFile` to insert an image into the browser, you can
@@ -1584,6 +1617,10 @@ Here is an example that shows how [`DAStaticFile`],
 used interchangeably.
 
 {% include side-by-side.html demo="file-types" %}
+
+<a name="DAStaticFile.get_pdf_fields"></a>The `.get_pdf_fields()` method
+only works on PDF files.  It returns a list of fields that exist in
+the PDF file.  See [`get_pdf_fields()`] for more information.
 
 ## <a name="DAEmail"></a>DAEmail
 
@@ -4131,6 +4168,7 @@ of the original [`DADateTime`] object.  See
 [write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown
 [`set_alt_text()`]: #DAFile.set_alt_text
 [`get_alt_text()`]: #DAFile.get_alt_text
+[`get_pdf_fields()`]: #DAFile.get_pdf_fields
 [alt text]: https://moz.com/learn/seo/alt-text
 [note above]: #set_info
 [using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute

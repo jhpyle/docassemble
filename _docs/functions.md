@@ -730,6 +730,16 @@ attachment:
 ---
 {% endhighlight %}
 
+## <a name="single_to_double_newlines"></a>single_to_double_newlines()
+
+Under the rules of [Markdown], you need to insert two newlines to
+break a paragraph.  Sometimes you have text where one newline
+represents a paragraph, but you want the single newlines to count as
+paragraph breaks.  The function `single_to_double_newlines()` will
+convert the text for you.
+
+{% include side-by-side.html demo="single_to_double_newlines" %}
+
 ## <a name="single_paragraph"></a>single_paragraph()
 
 `single_paragraph(user_supplied_text)` will replace any linebreaks in

@@ -589,6 +589,25 @@ In the example above, the sample interview is in the file
 the [Markdown] file is located at
 [`docassemble.base:data/templates/disclaimer.md`].
 
+A `template` can also be inserted into a [`docx template file`].  This
+can be useful when you want to insert multiple paragraphs of text into
+a DOCX file.  Ordinarily, when you insert text into a [`docx template
+file`], newlines are replaced with spaces.  The effect of inserting a
+[`template`] into a [`docx template file`] is controlled by the [`new
+markdown to docx`] directive in the [Configuration].  If you set `new
+markdown to docx: True` in the [Configuration], then you should insert
+a `template` using:
+
+> {% raw %}{{p the_template }}{% endraw %}
+
+However, if you don't set the [`new markdown to docx`] directive (the
+default of which is `False`), then you need to insert the [`template`]
+using:
+
+> {% raw %}{{r the_template }}{% endraw %}
+
+In the future, the default will change to [`True`]
+
 # <a name="table"></a>The `table` block
 
 The `table` works in much the same way as a `template`, except its
@@ -1927,3 +1946,4 @@ features:
 [sources]: {{ site.baseurl }}/docs/playground.html#sources
 [Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
+[`new markdown to docx`]: {{ site.baseurl}}/docs/config.html#new markdown to docx

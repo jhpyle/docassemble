@@ -9237,6 +9237,19 @@
         conceived and so dedicated,
         can long endure.
   mandatory: True
+"single_to_double_newlines": |-
+  mandatory: True
+  question: |
+    Here is your first book.
+  attachment:
+    name: Story of My Life
+    filename: life_story
+    content: |
+      [BOLDCENTER] My Life Story
+
+      ${ single_to_double_newlines(life_story) }
+
+      [CENTER] The End.
 "sms": |-
   question: |
     Hello, world!
