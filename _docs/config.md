@@ -2459,11 +2459,31 @@ the [`code`] block.  (Block "0" is the [`metadata`] block.)  So the
 [`question`] block and the [`code`] block will be shown, but not the
 [`metadata`] block.
 
-## <a name="vim"></a>Vim-like editor in Playground
+## <a name="vim"></a><a name="keymap">Changing the mode of the editor in the Playground
 
-If the `vim` directive is set to `True`, then the in-browser text
-editors in the [Playground] will emulate [Vim].  This uses the
-[Vim bindings option] of [CodeMirror].
+If the `keymap` directive is set to `vim`, `emacs`, or `sublime`, then
+the in-browser text editors in the [Playground] will emulate [Vim],
+[Emacs], or [Sublime Text], respectively.  This uses the [Vim bindings
+option], [Emacs bindings option], and [Sublime Text bindings option]
+of [CodeMirror].
+
+For [Vim]:
+
+{% highlight yaml %}
+keymap: vim
+{% endhighlight %}
+
+For [Emacs]:
+
+{% highlight yaml %}
+keymap: emacs
+{% endhighlight %}
+
+For [Sublime Text]:
+
+{% highlight yaml %}
+keymap: sublime
+{% endhighlight %}
 
 ## <a name="external hostname"></a>URL to the site
 
@@ -3366,7 +3386,11 @@ and Facebook API keys.
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [packages folder]: {{ site.baseurl }}/docs/playground.html#packages
 [Vim]: http://www.vim.org/
+[Emacs]: https://www.gnu.org/software/emacs/
+[Sublime Text]: https://www.sublimetext.com/
 [Vim bindings option]: https://codemirror.net/demo/vim.html
+[Emacs bindings option]: https://codemirror.net/demo/emacs.html
+[Sublime Text bindings option]: https://codemirror.net/demo/sublime.html
 [CodeMirror]: http://codemirror.net/
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`external hostname`]: #external hostname
