@@ -148,6 +148,11 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 the_package = question.from_source.package
             if the_package is None:
                 the_package = docassemble.base.functions.get_current_package()
+            if folder is None:
+                m = re.search(r'^data/(templates|sources|static)/(.*)', file_reference)
+                if m:
+                    folder = m.group(1)
+                    file_reference = m.group(2)
             if folder is not None and not re.search(r'/', file_reference):
                 file_reference = 'data/' + str(folder) + '/' + file_reference
             if the_package is not None:
@@ -156,6 +161,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
             else:
                 #logmessage("package was null")
                 file_reference = 'docassemble.base:' + file_reference
+            if the_package is not None:
+                result['package'] = the_package
+        elif len(parts) == 2:
+            result['package'] = parts[0]
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])

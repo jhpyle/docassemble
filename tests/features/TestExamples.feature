@@ -7944,3 +7944,30 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Signature diversion"
   #   Given I start the interview "docassemble.demo:data/questions/examples/signature-diversion.yml"
+
+  Scenario: Test the interview "Single to double newlines"
+    Given I start the interview "docassemble.base:data/questions/examples/single_to_double_newlines.yml"
+    Then I should see the phrase "Tell me your life story."
+    And I set the text area to "I was born.  I went to school.  I went to work."
+    And I click the button "Continue"
+    Then I should see the phrase "Here is your first book."
+    And I should see the phrase "The following document has been created for you."
+
+  Scenario: Test the interview "Advice"
+    Given I start the interview "docassemble.demo:data/questions/examples/advocate.yml"
+    Then I should see the phrase "What is your child’s name?"
+    And I set "First name" to "Sally"
+    And I click the button "Continue"
+    Then I should see the phrase "Please explain how the custody arrangement you propose would meet Sally’s need for stability and continuity in her education, family life and community life."
+    And I set the text area to "She would like it better."
+    And I click the button "Continue"
+    Then I should see the phrase "Please wait."
+
+  # Scenario: Test the interview "Get data from Google Sheet"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet-2.yml"
+
+  # Scenario: Test the interview "Google Sheets mail merge"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet-3.yml"
+
+  # Scenario: Test the interview "Upload file size"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/upload-file-size.yml"

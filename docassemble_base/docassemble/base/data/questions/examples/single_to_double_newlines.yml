@@ -1,0 +1,28 @@
+metadata:
+  title: Single to double newlines
+  short: Newlines
+  documentation: "https://docassemble.org/docs/functions.html#single_to_double_newlines"
+  example start: 2
+  example end: 2
+---
+question: |
+  Tell me your life story.
+subquestion: |
+  Make sure to press enter
+  and write several paragraphs.
+fields:
+  - no label: life_story
+    datatype: area
+---
+mandatory: True
+question: |
+  Here is your first book.
+attachment:
+  name: Story of My Life
+  filename: life_story
+  content: |
+    [BOLDCENTER] My Life Story
+
+    ${ single_to_double_newlines(life_story) }
+
+    [CENTER] The End.

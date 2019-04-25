@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
 import os
-from six import string_types, text_type
+from six import string_types, text_type, PY2
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
-from docassemble.base.functions import server, this_thread, package_template_filename
+from docassemble.base.functions import server, this_thread, package_template_filename, get_config
 import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from docassemble.base.logger import logmessage
@@ -239,17 +239,159 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
+class SoupParser(object):
+    def __init__(self, tpl):
+        self.paragraphs = [dict(params=dict(style='p', indentation=0), runs=[RichText('')])]
+        self.current_paragraph = self.paragraphs[-1]
+        self.run = self.current_paragraph['runs'][-1]
+        self.bold = False
+        self.italic = False
+        self.underline = False
+        self.strike = False
+        self.indentation = 0
+        self.style = 'p'
+        self.still_new = True
+        self.size = None
+        self.tpl = tpl
+    def new_paragraph(self):
+        if self.still_new:
+            logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
+            self.current_paragraph['params']['style'] = self.style
+            self.current_paragraph['params']['indentation'] = self.indentation
+            return
+        logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
+        self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation), runs=[RichText('')])
+        self.paragraphs.append(self.current_paragraph)
+        self.run = self.current_paragraph['runs'][-1]
+        self.still_new = True
+    def __str__(self):
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+    def __unicode__(self):
+        output = ''
+        list_number = 1
+        for para in self.paragraphs:
+            logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
+            output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
+            if para['params']['style'] in ('ul', 'ol', 'blockquote'):
+                output += '<w:ind w:left="' + text_type(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
+            output += '<w:rPr></w:rPr></w:pPr>'
+            if para['params']['style'] == 'ul':
+                output += text_type(RichText("•\t"))
+            if para['params']['style'] == 'ol':
+                output += text_type(RichText(text_type(list_number) + ".\t"))
+                list_number += 1
+            else:
+                list_number = 1
+            for run in para['runs']:
+                output += text_type(run)
+            output += '</w:p>'
+        return output
+    def start_link(self, url):
+        ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+        self.current_paragraph['runs'].append('<w:hyperlink r:id="%s">' % (ref, ))
+        self.new_run()
+        self.still_new = False
+    def end_link(self):
+        self.current_paragraph['runs'].append('</w:hyperlink>')
+        self.new_run()
+        self.still_new = False
+    def new_run(self):
+        self.current_paragraph['runs'].append(RichText(''))
+        self.run = self.current_paragraph['runs'][-1]
+    def traverse(self, elem):
+        for part in elem.contents:
+            if isinstance(part, NavigableString):
+                self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.still_new = False
+            elif isinstance(part, Tag):
+                logmessage("Part name is " + text_type(part.name))
+                if part.name == 'p':
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'li':
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'ul':
+                    logmessage("Entering a UL")
+                    oldstyle = self.style
+                    self.style = 'ul'
+                    self.indentation += 10
+                    self.traverse(part)
+                    self.indentation -= 10
+                    self.style = oldstyle
+                    logmessage("Leaving a UL")
+                elif part.name == 'ol':
+                    logmessage("Entering a OL")
+                    oldstyle = self.style
+                    self.style = 'ol'
+                    self.indentation += 10
+                    self.traverse(part)
+                    self.indentation -= 10
+                    self.style = oldstyle
+                    logmessage("Leaving a OL")
+                elif part.name == 'strong':
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                elif part.name == 'em':
+                    self.italic = True
+                    self.traverse(part)
+                    self.italic = False
+                elif part.name == 'strike':
+                    self.strike = True
+                    self.traverse(part)
+                    self.strike = False
+                elif part.name == 'u':
+                    self.underline = True
+                    self.traverse(part)
+                    self.underline = False
+                elif part.name == 'blockquote':
+                    oldstyle = self.style
+                    self.style = 'blockquote'
+                    self.indentation += 20
+                    self.traverse(part)
+                    self.indentation -= 20
+                    self.style = oldstyle
+                elif re.match(r'h[1-6]', part.name):
+                    oldsize = self.size
+                    self.size = 60 - ((int(part.name[1]) - 1) * 10)
+                    self.new_paragraph()
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                    self.size = oldsize
+                elif part.name == 'a':
+                    self.start_link(part['href'])
+                    self.underline = True
+                    self.traverse(part)
+                    self.underline = False
+                    self.end_link()
+            else:
+                logmessage("Encountered a " + part.__class__.__name__)
+
 def markdown_to_docx(text, tpl):
-    source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
-    source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
-    #source_code = re.sub("\n", ' ', source_code)
-    #source_code = re.sub(">\s+<", '><', source_code)
-    rt = RichText('')
-    soup = BeautifulSoup(source_code, 'lxml')
-    html_parsed = deque()
-    html_parsed = html_linear_parse(soup)
-    rt = add_to_rt(tpl, rt, html_parsed)
-    return rt
+    if get_config('new markdown to docx', False):
+        source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+        source_code = re.sub("\n", ' ', source_code)
+        source_code = re.sub(">\s+<", '><', source_code)
+        soup = BeautifulSoup('<html>' + source_code + '</html>', 'html.parser')
+        parser = SoupParser(tpl)
+        for elem in soup.find_all(recursive=False):
+            parser.traverse(elem)
+        output = text_type(parser)
+        logmessage(output)
+        return output
+    else:
+        source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+        source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
+        #source_code = re.sub("\n", ' ', source_code)
+        #source_code = re.sub(">\s+<", '><', source_code)
+        rt = RichText('')
+        soup = BeautifulSoup(source_code, 'lxml')
+        html_parsed = deque()
+        html_parsed = html_linear_parse(soup)
+        rt = add_to_rt(tpl, rt, html_parsed)
+        return rt
 
 def pdf_pages(file_info, width):
     output = ''

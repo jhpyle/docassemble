@@ -811,8 +811,8 @@ def monitor_chat_log(data):
         return
     key = data.get('key', None)
     scroll = data.get('scroll', True)
-    sys.stderr.write("Key is " + str(key) + "\n")
-    sys.stderr.write("scroll is " + repr(scroll) + "\n")
+    #sys.stderr.write("Key is " + str(key) + "\n")
+    #sys.stderr.write("scroll is " + repr(scroll) + "\n")
     if key is None:
         sys.stderr.write("No key provided\n")
         return

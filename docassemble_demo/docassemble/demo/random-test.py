@@ -23,7 +23,7 @@ while iterations:
         sys.exit(r.text)
     info = json.loads(r.text)
 
-    print r.text
+    print(r.text)
 
     steps = 0
     while steps < 1000 and info['questionType'] not in ('deadend', 'restart', 'exit', 'leave'):
@@ -84,9 +84,9 @@ while iterations:
                 sys.exit("Fields not recognized:\n" + repr(info['fields']))
             else:
                 sys.exit("Question not recognized:\n" + repr(info))
-        print "Session is " + session
+        print("Session is " + session)
         if len(variables):
-            print "Setting variables:\n" + repr(variables)
+            print("Setting variables:\n" + repr(variables))
             data = {'key': key, 'i': i, 'secret': secret, 'session': session, 'variables': json.dumps(variables)}
         if len(file_variables):
             data = {'key': key, 'i': i, 'secret': secret, 'session': session}
@@ -95,14 +95,14 @@ while iterations:
         if 'event_list' in info:
             data['event_list'] = json.dumps(info['event_list'])
         if len(file_uploads):
-            print "Setting file variables:\n" + repr(file_variables)
+            print("Setting file variables:\n" + repr(file_variables))
             data['file_variables'] = json.dumps(file_variables)
             r = requests.post(root + '/api/session', data=data, files=file_uploads)
         else:
             r = requests.post(root + '/api/session', data=data)
         if r.status_code != 200:
             sys.exit(r.text)
-        print "Got question:\n" + r.text
+        print("Got question:\n" + r.text)
         try:
             info = json.loads(r.text)
             assert isinstance(info, dict)

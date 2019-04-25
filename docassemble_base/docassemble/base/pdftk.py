@@ -4,7 +4,6 @@ import os.path
 from six import string_types, text_type, PY2
 import subprocess
 import mimetypes
-import docassemble.base.filter
 import tempfile
 import shutil
 import fdfgen

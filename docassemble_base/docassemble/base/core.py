@@ -2471,6 +2471,17 @@ class DAFile(DAObject):
         self.retrieve()
         shutil.copyfile(filepath, self.file_info['path'])
         self.retrieve()
+    def get_pdf_fields(self):
+        """Returns a list of fields that exist in the PDF document"""
+        results = list()
+        import docassemble.base.pdftk
+        for item in docassemble.base.pdftk.read_fields(self.path()):
+            the_type = re.sub(r'[^/A-Za-z]', '', text_type(item[4]))
+            if the_type == 'None':
+                the_type = None
+            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
+            results.append(result)
+        return results
     def from_url(self, url):
         """Makes the contents of the file the contents of the given URL."""
         self.retrieve()
@@ -2677,6 +2688,9 @@ class DAFileCollection(DAObject):
         if the_file is None:
             return None
         return the_file.path()
+    def get_pdf_fields(self):
+        """Returns a list of fields that exist in the PDF document"""
+        return the_file.pdf.get_pdf_fields()
     def url_for(self, **kwargs):
         """Returns a URL to one of the attachments in the collection."""
         for ext in self._extension_list():
@@ -2762,6 +2776,11 @@ class DAFileList(DAList):
         if len(self.elements) == 0:
             return None
         return self.elements[0].path()
+    def get_pdf_fields(self):
+        """Returns a list of fields that exist in the PDF document"""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].get_pdf_fields()
     def url_for(self, **kwargs):
         """Returns a URL to the first file in the list."""
         if len(self.elements) == 0:
@@ -2842,6 +2861,17 @@ class DAStaticFile(DAObject):
         """
         file_info = server.file_finder(self.filename)
         return file_info.get('fullpath', None)
+    def get_pdf_fields(self):
+        """Returns a list of fields that exist in the PDF document"""
+        results = list()
+        import docassemble.base.pdftk
+        for item in docassemble.base.pdftk.read_fields(self.path()):
+            the_type = re.sub(r'[^/A-Za-z]', '', text_type(item[4]))
+            if the_type == 'None':
+                the_type = None
+            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
+            results.append(result)
+        return results
     def url_for(self, **kwargs):
         """Returns a URL to the static file."""
         the_args = dict()

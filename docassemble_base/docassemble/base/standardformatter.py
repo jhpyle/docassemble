@@ -1612,9 +1612,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 <div class="row">
                   <div class="col-md-12">
                     <div class="input-group">
-                        <label for="daMessage" class="sr-only">""" + word("Chat message you want to send") + """</label>
-                        <input type="text" class="form-control daChatMessage" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
-                        <span class="input-group-btn"><button class="btn btn-secondary daChatButton" id="daSend" type="button"><span>""" + word("Send") + """</span></button></span>
+                      <label for="daMessage" class="sr-only">""" + word("Chat message you want to send") + """</label>
+                      <input type="text" class="form-control daChatMessage" id="daMessage" placeholder=""" + json.dumps(word("Type your message here.")) + """>
+                      <button class="btn btn-secondary daChatButton" id="daSend" type="button">""" + word("Send") + """</button>
                     </div>
                   </div>
                 </div>

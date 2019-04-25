@@ -1533,21 +1533,26 @@ def copy_playground_modules():
         with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
             the_file.write(init_py_file)
 
-def proc_example_list(example_list, examples):
+def proc_example_list(example_list, package, directory, examples):
     for example in example_list:
         if type(example) is dict:
             for key, value in example.items():
                 sublist = list()
-                proc_example_list(value, sublist)
+                proc_example_list(value, package, directory, sublist)
                 examples.append({'title': str(key), 'list': sublist})
                 break
             continue
         result = dict()
         result['id'] = example
-        result['interview'] = url_for('index', reset=1, i="docassemble.base:data/questions/examples/" + example + ".yml")
-        example_file = 'docassemble.base:data/questions/examples/' + example + '.yml'
-        result['image'] = url_for('static', filename='examples/' + example + ".png")
+        result['interview'] = url_for('index', reset=1, i=package + ":data/questions/" + directory + example + ".yml")
+        example_file = package + ":data/questions/" + directory + example + '.yml'
+        if package == 'docassemble.base':
+            result['image'] = url_for('static', filename=directory + example + ".png")
+        else:
+            result['image'] = url_for('package_static', package=package, filename=example + ".png")
+        logmessage("Giving it " + example_file)
         file_info = get_info_from_file_reference(example_file)
+        logmessage("Got back " + file_info['fullpath'])
         start_block = 1
         end_block = 2
         if 'fullpath' not in file_info or file_info['fullpath'] is None:
@@ -1601,13 +1606,30 @@ def proc_example_list(example_list, examples):
     
 def get_examples():
     examples = list()
-    example_list_file = get_info_from_file_reference('docassemble.base:data/questions/example-list.yml')
-    if 'fullpath' in example_list_file and example_list_file['fullpath'] is not None:
-        example_list = list()
-        with open(example_list_file['fullpath'], 'rU', encoding='utf-8') as fp:
-            content = fp.read()
-            content = fix_tabs.sub('  ', content)
-            proc_example_list(ruamel.yaml.safe_load(content), examples)
+    file_list = daconfig.get('playground examples', ['docassemble.base:data/questions/example-list.yml'])
+    if not isinstance(file_list, list):
+        file_list = [file_list]
+    for the_file in file_list:
+        if not isinstance(the_file, string_types):
+            continue
+        example_list_file = get_info_from_file_reference(the_file)
+        if 'fullpath' in example_list_file and example_list_file['fullpath'] is not None:
+            if 'package' in example_list_file:
+                the_package = example_list_file['package']
+            else:
+                continue
+            if the_package == 'docassemble.base':
+                the_directory = 'examples/'
+            else:
+                the_directory = ''
+            if os.path.exists(example_list_file['fullpath']):
+                try:
+                    with open(example_list_file['fullpath'], 'rU', encoding='utf-8') as fp:
+                        content = fp.read()
+                        content = fix_tabs.sub('  ', content)
+                        proc_example_list(ruamel.yaml.safe_load(content), the_package, the_directory, examples)
+                except Exception as the_err:
+                    logmessage("There was an error loading the Playground examples:" + text_type(the_err))
     #logmessage("Examples: " + str(examples))
     return(examples)
 
@@ -2290,7 +2312,6 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     extra_help_message = word("Help is available for this question")
     phone_sr = word("Phone help")
     phone_message = word("Phone help is available")
-    chat_message = word("Live chat is available")
     chat_sr = word("Live chat")
     source_message = word("How this question came to be asked")
     if debug_mode:
@@ -2303,7 +2324,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
             navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a role="button" href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" title=' + json.dumps(chat_message) + ' class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
+    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a role="button" href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
     navbar += """
         <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
@@ -7079,7 +7100,7 @@ def index(action_argument=None):
           }
         });
       }
-      function daInformAbout(subject){
+      function daInformAbout(subject, chatMessage){
         if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
           return;
         }
@@ -7100,7 +7121,8 @@ def index(action_argument=None):
         }
         else if (subject == 'chatmessage'){
           target = "#daChatAvailable a";
-          message = """ + json.dumps(word("A chat message has arrived.")) + """;
+          //message = """ + json.dumps(word("A chat message has arrived.")) + """;
+          message = chatMessage;
         }
         else if (subject == 'phone'){
           target = "#daPhoneAvailable a";
@@ -7113,7 +7135,12 @@ def index(action_argument=None):
           daInformed[subject] = 1;
           daInformedChanged = true;
         }
-        $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body"});
+        if (subject == 'chatmessage'){
+          $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body", "title": """ + json.dumps(word("New chat message")) + """});
+        }
+        else {
+          $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body", "title": """ + json.dumps(word("Live chat is available")) + """});
+        }
         $(target).popover('show');
         setTimeout(function(){
           $(target).popover('dispose');
@@ -7324,7 +7351,7 @@ def index(action_argument=None):
                 daChatHistory.push(arg.data);
                 daPublishMessage(arg.data);
                 daScrollChat();
-                daInformAbout('chatmessage');
+                daInformAbout('chatmessage', arg.data.message);
             });
             daSocket.on('newpage', function(incoming) {
                 //console.log("newpage received");
@@ -11205,7 +11232,7 @@ def monitor():
       }
       function daPublishChatLog(uid, yaml_filename, userid, mode, messages, scroll){
           //console.log("daPublishChatLog with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
-          console.log("daPublishChatLog: scroll is " + scroll);
+          //console.log("daPublishChatLog: scroll is " + scroll);
           var keys; 
           //if (mode == 'peer' || mode == 'peerhelp'){
           //    keys = daAllSessions(uid, yaml_filename);
@@ -11307,7 +11334,7 @@ def monitor():
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
               $(theChatArea).addClass('monitor-chat-area invisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><span class="input-group-btn"><button role="button" class="btn btn-secondary daChatButton" type="button" disabled=""><span>""" + word("Send") + """<\/span><\/button><\/span><\/div><\/div><\/div><\/form>');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn btn-secondary daChatButton" type="button" disabled="">""" + word("Send") + """<\/button><\/div><\/div><\/div><\/form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
                   //console.log("I am the submitter and I am submitting " + key);
@@ -11336,12 +11363,6 @@ def monitor():
               $(theChatArea).appendTo($(theListElement));
               if (obj.chatstatus == 'on' && key in daChatPartners){
                   daActivateChatArea(key);
-                  console.log("activating chat area because on");
-              }
-              else{
-                  //PPP
-                  console.log("sending chat_log signal to get history for " + key);
-                  daSocket.emit('chat_log', {key: key, scroll: false});
               }
           }
           var theText = document.createElement('span');
@@ -11680,7 +11701,7 @@ def monitor():
                   daDeActivateChatArea(key);
               });
               daSocket.on('chat_log', function(arg) {
-                  console.log('chat_log: ' + arg.userid);
+                  //console.log('chat_log: ' + arg.userid);
                   daPublishChatLog(arg.uid, arg.i, arg.userid, arg.mode, arg.data, arg.scroll);
               });            
               daSocket.on('block', function(arg) {
