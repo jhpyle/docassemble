@@ -36,7 +36,7 @@ import random
 #import tablib
 import pandas
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree']
 
 unique_names = set()
 
@@ -169,7 +169,7 @@ class DAEmpty(object):
         return hex(0)
     def __index__(self):
         return int(0)
-        
+
 class DAObjectPlusParameters(object):
     pass
 
@@ -249,6 +249,168 @@ class DAObject(object):
         self.instanceName = get_unique_name()
         self.has_nonrandom_instance_name = False
         return self
+    def is_peer_relation(self, target, relationship_type, tree):
+        for item in tree.query_peer(tree._and(involves=[self, target], relationship_type=relationship_type)):
+            return True
+        return False
+    def is_relation(self, target, relationship_type, tree, self_is='either', filter_by=None):
+        extra_queries = list()
+        if filter_by is not None:
+            if not isinstance(filter_by, dict):
+                raise DAError("is_relation: filter_by must be a dictionary.")
+            extra_queries = list()
+            for key, val in filter_by.items():
+                if self_is == 'either':
+                    extra_queries.append(tree._or(lambda y: hasattr(self.child, key) and getattr(self.child, key) == val, lambda y: hasattr(y.parent, key) and getattr(y.parent, key) == val))
+                elif self_is == 'parent':
+                    extra_queries.append(lambda y: hasattr(y.child, key) and getattr(y.child, key) == val)
+                elif self_is == 'child':
+                    extra_queries.append(lambda y: hasattr(y.parent, key) and getattr(y.parent, key) == val)
+                else:
+                    raise DAError("is_relation: self_is must be parent, child, or other")
+        if self_is == 'either':
+            for item in tree.query_peer(tree._and(*extra_queries, involves=[self, target], relationship_type=relationship_type)):
+                return True
+        elif self_is == 'parent':
+            for item in tree.query_peer(tree._and(*extra_queries, parent=self, child=target, relationship_type=relationship_type)):
+                return True
+        elif self_is == 'child':
+            for item in tree.query_peer(tree._and(*extra_queries, child=self, parent=target, relationship_type=relationship_type)):
+                return True
+        else:
+            raise DAError("is_relation: self_is must be parent, child, or other")
+        return False
+    def get_relation(self, relationship_type, tree, self_is='either', create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None):
+        results = DAList(auto_gather=False, gathered=True)
+        results.set_random_instance_name()
+        if rel_filter_by is None:
+            query_params = dict()
+        elif isinstance(rel_filter_by, dict):
+            query_params = copy.copy(rel_filter_by)
+        else:
+            raise DAError("get_peer_relation: rel_filter_by must be a dictionary.")
+        if self_is == 'either':
+            if create:
+                raise DAError("get_relation: create can only be used if self_is is parent or child.")
+            query_params.update(involves=self, relationship_type=relationship_type)
+            for item in tree.query_dir(tree._and(**query_params)):
+                if item.parent is not self:
+                    results.append(item.parent)
+                elif item.child is not self:
+                    results.append(item.child)
+        elif self_is == 'parent':
+            query_params.update(parent=self, relationship_type=relationship_type)
+            for item in tree.query_dir(tree._and(**query_params)):
+                results.append(item.child)
+        elif self_is == 'child':
+            query_params.update(child=self, relationship_type=relationship_type)
+            for item in tree.query_dir(tree._and(**query_params)):
+                results.append(item.parent)
+        else:
+            raise DAError("get_relation: self_is must be parent, child, or either.")
+        if filter_by is not None:
+            results = results.filter(**filter_by)
+        if len(results) == 1:
+            return results[0]
+        if len(results) > 1:
+            return results
+        if create:
+            if filter_by is None:
+                filter_by = dict()
+            if create == 'independent':
+                if object_type is None:
+                    new_item = tree.leaf.appendObject(self.__class__, **filter_by)
+                else:
+                    new_item = tree.leaf.appendObject(object_type, **filter_by)
+                self.set_relationship(new_item, relationship_type, self_is, tree)
+            else:
+                if not hasattr(self, 'new_relation'):
+                    self.initializeAttribute('new_relation', DADict)
+                if relationship_type not in self.new_relation.elements:
+                    if object_type is None:
+                        object_type = self.__class__
+                    self.new_relation.initializeObject(relationship_type, object_type, **filter_by)
+                if complete_attribute:
+                    getattr(self.new_relation[relationship_type], complete_attribute)
+                else:
+                    text_type(self.new_relation[relationship_type])
+                new_item = self.new_relation[relationship_type]
+                if new_item not in tree.leaf.elements:
+                    tree.leaf.append(new_item, set_instance_name=True)
+                self.set_peer_relationship(new_item, relationship_type, tree)
+                del self.new_relation
+            return new_item
+        return None
+    def get_peer_relation(self, relationship_type, tree, create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None):
+        results = DAList(auto_gather=False, gathered=True)
+        results.set_random_instance_name()
+        if rel_filter_by is None:
+            query_params = dict()
+        elif isinstance(rel_filter_by, dict):
+            query_params = copy.copy(rel_filter_by)
+        else:
+            raise DAError("get_peer_relation: rel_filter_by must be a dictionary.")
+        query_params.update(dict(involves=self, relationship_type=relationship_type))
+        for item in tree.query_peer(tree._and(*query_params)):
+            for subitem in item.peers:
+                if subitem is not self:
+                    results.append(subitem)
+        if filter_by is not None:
+            results = results.filter(**filter_by)
+        if len(results) == 1:
+            return results[0]
+        if len(results) > 1:
+            return results
+        if create:
+            if create == 'independent':
+                if object_type is None:
+                    new_item = tree.leaf.appendObject(self.__class__)
+                else:
+                    new_item = tree.leaf.appendObject(object_type)
+                self.set_peer_relationship(new_item, relationship_type, tree)
+            else:
+                if not hasattr(self, 'new_peer_relation'):
+                    self.initializeAttribute('new_peer_relation', DADict)
+                if relationship_type not in self.new_peer_relation.elements:
+                    if object_type is None:
+                        object_type = self.__class__
+                    self.new_peer_relation.initializeObject(relationship_type, object_type)
+                if complete_attribute:
+                    getattr(self.new_peer_relation[relationship_type], complete_attribute)
+                else:
+                    text_type(self.new_peer_relation[relationship_type])
+                new_item = self.new_peer_relation[relationship_type]
+                if new_item not in tree.leaf.elements:
+                    tree.leaf.append(new_item, set_instance_name=True)
+                self.set_peer_relationship(new_item, relationship_type, tree)
+                del self.new_peer_relation
+            return new_item
+        return None
+    def set_peer_relationship(self, target, relationship_type, tree, replace=False):
+        if replace:
+            to_delete = list()
+            for item in tree.query_peer(tree._and(involves=self, relationship_type=relationship_type)):
+                to_delete.append(item)
+            if len(to_delete):
+                tree.delete_peer(*to_delete)
+        return tree.add_relationship_peer(self, target, relationship_type=relationship_type)
+    def set_relationship(self, target, relationship_type, self_is, tree, replace=False):
+        if self_is != 'parent' and self_is != 'child':
+            raise DAError("set_relationship: self_is must be parent or child")
+        if replace:
+            to_delete = list()
+            if self_is == 'parent':
+                for item in tree.query_dir(tree._and(parent=self, relationship_type=relationship_type)):
+                    to_delete.append(item)
+            elif self_is == 'child':
+                for item in tree.query_dir(tree._and(child=self, relationship_type=relationship_type)):
+                    to_delete.append(item)
+            if len(to_delete):
+                tree.delete_dir(*to_delete)
+        if self_is == 'parent':
+            return tree.add_relationship_dir(parent=self, child=target, relationship_type=relationship_type)
+        else:
+            return tree.add_relationship_dir(child=self, parent=target, relationship_type=relationship_type)
     def fix_instance_name(self, old_instance_name, new_instance_name):
         """Substitutes a different instance name for the object and its subobjects."""
         self.instanceName = re.sub(r'^' + re.escape(old_instance_name), new_instance_name, self.instanceName)
@@ -436,6 +598,156 @@ class DAObject(object):
         return self is not other
     def __hash__(self):
         return hash((self.instanceName,))
+
+class RelationshipDir(DAObject):
+    """A data structure representing a relationships among people."""
+    def init(self, *pargs, **kwargs):
+        return super(RelationshipDir, self).init(*pargs, **kwargs)
+    def involves(self, target):
+        #sys.stderr.write("RelationshipDir: involves " + repr(target) + "\n")
+        if self.parent is target or self.child is target:
+            return True
+        return False
+
+class RelationshipPeer(DAObject):
+    """A data structure representing a relationships among people."""
+    def init(self, *pargs, **kwargs):
+        return super(RelationshipPeer, self).init(*pargs, **kwargs)
+    def involves(self, target):
+        #sys.stderr.write("RelationshipPeer: involves " + repr(target) + "\n")
+        if target in self.peers:
+            return True
+        return False
+
+def generator_involves(the_item):
+    return lambda y: y.involves(the_item)
+
+def generator_is(the_key, the_val):
+    return lambda y: getattr(y, the_key) is the_val
+
+def generator_equals(the_key, the_val):
+    return lambda y: getattr(y, the_key) == the_val
+
+class RelationshipTree(DAObject):
+    """A data structure that maps the relationships among people."""
+    def init(self, *pargs, **kwargs):
+        super(RelationshipTree, self).init(*pargs, **kwargs)
+        self.initializeAttribute('leaf', DAList)
+        self.leaf.auto_gather = False
+        self.leaf.gathered = True
+        self.leaf.object_type = DAObject
+        self.leaf.initializeAttribute('existing', DAList)
+        self.initializeAttribute('relationships_dir', DAList)
+        self.relationships_dir.auto_gather = False
+        self.relationships_dir.gathered = True
+        self.relationships_dir.object_type = RelationshipDir
+        self.initializeAttribute('relationships_peer', DAList)
+        self.relationships_peer.auto_gather = False
+        self.relationships_peer.gathered = True
+        self.relationships_peer.object_type = RelationshipPeer
+    def new(self, *pargs, **kwargs):
+        return self.leaf.appendObject(*pargs, **kwargs)
+    def _func_list(self, *pargs, **kwargs):
+        filters = list()
+        for item in pargs:
+            if isinstance(item, types.FunctionType):
+                filters.append(item)
+        for key, val in kwargs.items():
+            if key == 'involves':
+                #sys.stderr.write("_func_list: key is involves\n")
+                if isinstance(val, (list, set, DAList, DASet)):
+                    #sys.stderr.write("_func_list: involves in a list\n")
+                    subfilters = list()
+                    for item in val:
+                        #sys.stderr.write("_func_list: adding a subfilter\n")
+                        subfilters.append(generator_involves(item))
+                    filters.append(self._and(*subfilters))
+                else:
+                    #sys.stderr.write("_func_list: involves without a list\n")
+                    filters.append(generator_involves(val))
+            elif isinstance(val, DAObject):
+                #sys.stderr.write("_func_list: a DAObject\n")
+                filters.append(generator_is(key, val))
+            else:
+                #sys.stderr.write("_func_list: key is " + repr(key) + " and val is " + repr(val) + "\n")
+                filters.append(generator_equals(key, val))
+        return filters
+    def _and(self, *pargs, **kwargs):
+        #sys.stderr.write("_and\n")
+        filters = self._func_list(*pargs, **kwargs)
+        def func(y):
+            #sys.stderr.write("in _and func\n")
+            for subfunc in filters:
+                #sys.stderr.write("evaluating _and func\n")
+                result = subfunc(y)
+                #sys.stderr.write("result is " + repr(result) + "\n")
+                if not result:
+                    return False
+            return True
+        return func
+    def _or(self, *pargs, **kwargs):
+        #sys.stderr.write("_or\n")
+        filters = self._func_list(*pargs, **kwargs)
+        def func(y):
+            #sys.stderr.write("in _or func\n")
+            for subfunc in filters:
+                #sys.stderr.write("evaluating _or func\n")
+                if subfunc(y):
+                    return True
+            return False
+        return func
+    def query_peer(self, *pargs, **kwargs):
+        #sys.stderr.write("query_peer\n")
+        if len(pargs) == 0 and len(kwargs) == 1:
+            func = self._func_list(*pargs, **kwargs)[0]
+        elif len(pargs) == 1:
+            func = pargs[0]
+        else:
+            func = None
+        if not isinstance(func, types.FunctionType):
+            raise DAError("Invalid RelationshipTree query")
+        return (y for y in self.relationships_peer if func(y))
+    def query_dir(self, *pargs, **kwargs):
+        #sys.stderr.write("query_dir\n")
+        if len(pargs) == 0 and len(kwargs) == 1:
+            func = self._func_list(*pargs, **kwargs)[0]
+        elif len(pargs) == 1:
+            func = pargs[0]
+        else:
+            func = None
+        if not isinstance(func, types.FunctionType):
+            raise DAError("Invalid RelationshipTree query")
+        return (y for y in self.relationships_dir if func(y))
+    def add_relationship_dir(self, parent=None, child=None, relationship_type=None):
+        """Creates a relationship between the person and another object."""
+        for item in self.relationships_dir:
+            if item.relationship_type == relationship_type and (hasattr(item, 'parent') and item.parent is parent) and (hasattr(item, 'child') and item.child is child):
+                return item
+        args = dict()
+        if parent is not None:
+            args['parent'] = parent
+        if child is not None:
+            args['child'] = child
+        if relationship_type is not None:
+            args['relationship_type'] = relationship_type
+        return self.relationships_dir.appendObject(**args)
+    def delete_dir(self, *pargs):
+        """Deletes the given relationship(s)"""
+        self.relationships_dir.remove(*pargs)
+    def add_relationship_peer(self, *pargs, relationship_type=None):
+        """Creates a relationship between the person and another object."""
+        the_set = set(pargs)
+        for item in self.relationships_peer:
+            if item.relationship_type == relationship_type and item.peers == the_set:
+                return item
+        #sys.stderr.write("Setting relationship involving " + repr(the_set) + " and reltype " + relationship_type + "\n")
+        return self.relationships_peer.appendObject(peers=the_set, relationship_type=relationship_type)
+    def delete_peer(self, *pargs):
+        """Deletes the given peer relationship(s)"""
+        self.relationships_peer.remove(*pargs)
+    def delete_dir(self, *pargs):
+        """Deletes the given relationship(s)"""
+        self.relationships_dir.remove(*pargs)
 
 class DAList(DAObject):
     """The base class for lists of things."""

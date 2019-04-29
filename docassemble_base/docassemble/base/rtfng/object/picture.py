@@ -82,7 +82,6 @@ def _get_jpg_dimensions( fin ):
 _PNG_HEADER = b'\x89\x50\x4e'
     
 def _get_png_dimensions( data ) :
-    import sys
     if data[0:3] != _PNG_HEADER :
         raise Exception( 'Invalid PNG image' )
     if PY2:

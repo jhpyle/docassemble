@@ -1,10 +1,21 @@
 # Change Log
 
+## [0.4.39] - 2019-04-29
+### Fixed
+- ProxyFix settings for Docker containers behind reverse proxies.
+- Variables could not be converted to JSON where `None` used as
+  dictionary key.
+- Compile errors due to unused non-Python-3-compliant code in copy of
+  rtfng.
+- Playground package description formatted as text area, which
+  resulted in newlines that caused problems when uploading to GitHub.
+
 ## [0.4.38] - 2019-04-25
 ### Added
 - The `single_to_double_newlines()` function.
 - The `get_pdf_fields()` method of `DAFile` and other file objects.
 - The `playground examples` directive in the Configuration.
+- The `new markdown to docx` directive in the Configuration.
 ### Changed
 - Style of chat messages updated; content of message from the monitor
   is now contained in the notification received by the end user while

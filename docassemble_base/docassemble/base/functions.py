@@ -3271,9 +3271,9 @@ def serializable_dict(user_dict, include_internal=False):
         result_dict[key] = safe_json(data)
     return result_dict
 
-def safe_json(the_object, level=0):
+def safe_json(the_object, level=0, is_key=False):
     if level > 20:
-        return None
+        return 'None' if is_key else None
     if isinstance(the_object, (string_types, bool, int, float)):
         return the_object
     if isinstance(the_object, list):
@@ -3281,7 +3281,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, dict):
         new_dict = dict()
         for key, value in the_object.items():
-            new_dict[safe_json(key, level=level+1)] = safe_json(value, level=level+1)
+            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(value, level=level+1)
         return new_dict
     if isinstance(the_object, set):
         new_list = list()
@@ -3289,7 +3289,7 @@ def safe_json(the_object, level=0):
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
     if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
-        return None
+        return 'None' if is_key else None
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
         return serial
@@ -3311,12 +3311,12 @@ def safe_json(the_object, level=0):
         for key, data in the_object.__dict__.items():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
-            new_dict[safe_json(key, level=level+1)] = safe_json(data, level=level+1)
+            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(data, level=level+1)
         return new_dict
     try:
         json.dumps(the_object)
     except:
-        return None
+        return 'None' if is_key else None
     return the_object
 
 def referring_url(default=None):
