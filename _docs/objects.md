@@ -178,13 +178,6 @@ objects:
   - foo: DAObject
 {% endhighlight %}
 
-or you do:
-
-{% highlight yaml %}
-code: |
-  foo = DAObject()
-{% endhighlight %}
-
 then `foo.instanceName` will be `'foo'`.  The object knows its own
 name.  This is not a standard feature of [Python] objects, but a
 feature added by **docassemble**.
@@ -194,7 +187,7 @@ for the same object, but the `instanceName` attribute will not change.
 
 {% highlight python %}
 >>> from docassemble.base.util import DAObject
->>> foo = DAObject()
+>>> foo = DAObject('foo')
 >>> foo.instanceName
 'foo'
 >>> foo.seeds = 4
@@ -246,7 +239,7 @@ containing:
 from docassemble.base.util import DAList, Thing
 
 def build_list():
-    the_list = DAList(object_type=Thing)
+    the_list = DAList('the_list', object_type=Thing)
     for indexno in range(4):
         the_list.appendObject()
     return the_list
@@ -264,12 +257,12 @@ The problem here is that the `list_of_fruits` and `list_of_vegetables`
 objects, as well as their subobjects, will not have the right
 intrinsic names.
 
-Another potential problem is that **docassemble**'s method for
-determining the name of a variable when you write statements like `foo
-= DAObject()` is fragile, and under certain circumstances it can fail,
-and it will fall back to giving the object a random instrinsic name.
-To avoid this problem, you can always set the intrinsic name of an
-object at the time you create it by passing the intrinsic name you
+In some situations, you can wrote `foo = DAObject()` instead of `foo =
+DAObject('foo'), and it will automatically figure out the instance
+name, but this is fragile, and under certain circumstances it can
+fail, and it will fall back to giving the object a random instrinsic
+name.  To avoid this problem, you can always set the intrinsic name of
+an object at the time you create it by passing the intrinsic name you
 want to use as the first parameter.
 
 Thus, you can do:

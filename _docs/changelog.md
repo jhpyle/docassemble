@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.39](https://github.com/jhpyle/docassemble/releases/tag/v0.4.39) - 2019-04-29
+
+### Fixed
+- ProxyFix settings for Docker containers behind reverse proxies.
+- Variables could not be converted to JSON where `None` used as
+  dictionary key.
+- Compile errors due to unused non-Python-3-compliant code in copy of
+  rtfng.
+- Playground package description formatted as text area, which
+  resulted in newlines that caused problems when uploading to GitHub.
+
 ## [0.4.38](https://github.com/jhpyle/docassemble/releases/tag/v0.4.38) - 2019-04-25
 
 ### Added
