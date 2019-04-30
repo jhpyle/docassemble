@@ -280,7 +280,7 @@ class DAObject(object):
         else:
             raise DAError("is_relation: self_is must be parent, child, or other")
         return False
-    def get_relation(self, relationship_type, tree, self_is='either', create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None):
+    def get_relation(self, relationship_type, tree, self_is='either', create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None, count=1):
         results = DAList(auto_gather=False, gathered=True)
         results.set_random_instance_name()
         if rel_filter_by is None:
@@ -310,10 +310,11 @@ class DAObject(object):
             raise DAError("get_relation: self_is must be parent, child, or either.")
         if filter_by is not None:
             results = results.filter(**filter_by)
-        if len(results) == 1:
-            return results[0]
-        if len(results) > 1:
-            return results
+        if create is False or len(results) >= count:
+            if len(results) == 1:
+                return results[0]
+            if len(results) > 1:
+                return results
         if create:
             if filter_by is None:
                 filter_by = dict()
@@ -341,7 +342,7 @@ class DAObject(object):
                 del self.new_relation
             return new_item
         return None
-    def get_peer_relation(self, relationship_type, tree, create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None):
+    def get_peer_relation(self, relationship_type, tree, create=False, object_type=None, complete_attribute=None, rel_filter_by=None, filter_by=None, count=1):
         results = DAList(auto_gather=False, gathered=True)
         results.set_random_instance_name()
         if rel_filter_by is None:
@@ -357,10 +358,11 @@ class DAObject(object):
                     results.append(subitem)
         if filter_by is not None:
             results = results.filter(**filter_by)
-        if len(results) == 1:
-            return results[0]
-        if len(results) > 1:
-            return results
+        if count is False or len(results) >= count:
+            if len(results) == 1:
+                return results[0]
+            if len(results) > 1:
+                return results
         if create:
             if create == 'independent':
                 if object_type is None:
@@ -734,8 +736,9 @@ class RelationshipTree(DAObject):
     def delete_dir(self, *pargs):
         """Deletes the given relationship(s)"""
         self.relationships_dir.remove(*pargs)
-    def add_relationship_peer(self, *pargs, relationship_type=None):
+    def add_relationship_peer(self, *pargs, **kwargs):
         """Creates a relationship between the person and another object."""
+        relationship_type = kwargs.get('relationship_type', None)
         the_set = set(pargs)
         for item in self.relationships_peer:
             if item.relationship_type == relationship_type and item.peers == the_set:

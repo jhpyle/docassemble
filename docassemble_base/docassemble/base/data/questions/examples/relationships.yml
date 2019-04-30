@@ -53,6 +53,6 @@ subquestion: |
 
   Your friend is ${ user.get_peer_relation('friend', tree, create=True) }.
 
-  Your mother is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'female'}, create='independent') }.
+  Your mother is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'female'}, create='independent', count=2) }.
 
-  Your father is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'male'}, create='independent') }.
+  Your father is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'male'}, create='independent', count=2) }.

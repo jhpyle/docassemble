@@ -1368,6 +1368,8 @@ class Individual(Person):
         return self.set_peer_relationship(self, target, "spouse", tree, replace=True)
     def is_spouse_of(self, target, tree):
         return self.is_peer_relation(target, 'spouse', tree)
+    def gather_family(self, tree, up=1, down=1):
+        pass
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
         if hasattr(self.name, 'first'):
