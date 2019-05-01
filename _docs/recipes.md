@@ -403,6 +403,17 @@ in a Google Sheet.
 
 {% include demo-side-by-side.html demo="google-sheet-3" %}
 
+# <a name="two stage"></a>Inserting Jinja2 with Jinja2
+
+If you use Jinja2 to insert Jinja2 template tags into a document
+assembled through [`docx template file`], you will find that the tags
+in the included text will not be evaluated.  However, you can conduct
+your document assembly in two stages, so that first you assemble a
+template and then you use the DOCX output as the input for another assembly.
+
+{% include demo-side-by-side.html demo="twostage" %}
+
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/

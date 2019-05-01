@@ -8107,6 +8107,9 @@
     ${ current_datetime().format_time() }.
   buttons:
     - Tell me again: refresh
+"relationships": |-
+  objects:
+    - tree: RelationshipTree
 "reload": |-
   reload: True
   question: |
@@ -10700,6 +10703,10 @@
   \ user.legume_picks['String beans'] \\\n     and user.legume_picks['Peanut'] \\\n\
   \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
   \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
+"life_story": |-
+  template: life_story
+  content: |
+    ${ single_to_double_newlines(life_story_text) }
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
   \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
   \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
@@ -11393,6 +11400,30 @@
   fields:
     - Date: worm_idolizing_stop_date
       datatype: date
+"twostage": |-
+  code: |
+    inserted_paragraph = "My favorite fruit is {{ favorite_fruit }} and I want the world to know."
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Favorite fruit: favorite_fruit
+  ---
+  attachment:
+    variable name: the_template
+    docx template file: twostage.docx
+    valid formats:
+      - docx
+  ---
+  mandatory: True
+  question: |
+    All done
+  attachment:
+    name: A Document
+    filename: a_document
+    docx template file:
+      code: |
+        the_template.docx
 "update-references": |-
   mandatory: True
   question: Here is your document
