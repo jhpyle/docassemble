@@ -13,7 +13,7 @@ fields:
 mandatory: True
 code: |
   ml = SimpleTextMachineLearner(group_id='demo')
-  predictions = ml.predict(phrase)
+  predictions = ml.predict(phrase, probabilities=True)
 ---
 mandatory: True
 question: |
