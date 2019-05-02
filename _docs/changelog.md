@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.41](https://github.com/jhpyle/docassemble/releases/tag/v0.4.41) - 2019-05-02
+
+### Added
+- The `get_docx_variables()` method of `DAFile` and other file
+  objects.
+
+### Fixed
+- ProxyFix settings for Docker containers behind reverse proxies.
+
 ## [0.4.40](https://github.com/jhpyle/docassemble/releases/tag/v0.4.40) - 2019-04-29
 
 ### Fixed
@@ -12,7 +21,6 @@ short_title: Change Log
 ## [0.4.39](https://github.com/jhpyle/docassemble/releases/tag/v0.4.39) - 2019-04-29
 
 ### Fixed
-- ProxyFix settings for Docker containers behind reverse proxies.
 - Variables could not be converted to JSON where `None` used as
   dictionary key.
 - Compile errors due to unused non-Python-3-compliant code in copy of

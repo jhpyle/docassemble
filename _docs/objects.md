@@ -1361,6 +1361,10 @@ elements are:
 5. A code indicating the type of the field.  This can be `'/Tx'`,
    `'/Btn'`, or `None`.
 
+<a name="DAFile.get_docx_variables"></a>The `.get_docx_variables()`
+method only works on DOCX files.  It returns a list of variables that
+are used in Jinja2 templating in the DOCX file.
+
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
@@ -1431,6 +1435,11 @@ document type in the collection.
 returns a list of fields that exist in the PDF version of the
 `DAFileCollection` object.  See [`get_pdf_fields()`] for more
 information.
+
+<a name="DAFileCollection.get_docx_variables"></a>The
+`.get_docx_variables()` returns a list of variables that exist in the
+Jinja2 templating of the DOCX version of the `DAFileCollection`
+object.  See [`get_docx_variables()`] for more information.
 
 ## <a name="DAFileList"></a>DAFileList
 
@@ -1506,11 +1515,18 @@ a `.alt_text` attribute.  If you run `set_alt_text()` on a
 items in the list.  If you run `get_alt_text()` on a `DAFileList`, it
 is like calling [`get_alt_text()`] on the first item in the list.
 
-<a name="DAFileList.get_pdf_fields"></a>The `.get_pdf_fields()`
+<a name="DAFileList.get_pdf_fields"></a>The `.get_pdf_fields()` method
 returns a list of fields that exist in the first file in the list.  If
 you run `get_pdf_fields()` on a `DAFileList`, it is like calling
 [`get_pdf_fields()`] on the first item in the list.  See
 [`get_pdf_fields()`] for more information.
+
+<a name="DAFileList.get_docx_variables"></a>The
+`.get_docx_variables()` method returns a list of variables that exist
+in the Jinja2 templating of the first file in the list.  If you run
+`get_docx_variables()` on a `DAFileList`, it is like calling
+[`get_docx_variables()`] on the first item in the list.  See
+[`get_docx_variables()`] for more information.
 
 ## <a name="DAStaticFile"></a>DAStaticFile
 
@@ -1614,6 +1630,11 @@ used interchangeably.
 <a name="DAStaticFile.get_pdf_fields"></a>The `.get_pdf_fields()` method
 only works on PDF files.  It returns a list of fields that exist in
 the PDF file.  See [`get_pdf_fields()`] for more information.
+
+<a name="DAStaticFile.get_docx_variables"></a>The
+`.get_docx_variables()` method only works on DOCX files.  It returns a
+list of variables that exist in the Jinja2 templating of the file.
+See [`get_docx_variables()`] for more information.
 
 ## <a name="DAEmail"></a>DAEmail
 
@@ -4162,6 +4183,7 @@ of the original [`DADateTime`] object.  See
 [`set_alt_text()`]: #DAFile.set_alt_text
 [`get_alt_text()`]: #DAFile.get_alt_text
 [`get_pdf_fields()`]: #DAFile.get_pdf_fields
+[`get_docx_variables()`]: #DAFile.get_docx_variables
 [alt text]: https://moz.com/learn/seo/alt-text
 [note above]: #set_info
 [using `complete_attribute`]: {{ site.baseurl }}/docs/groups.html#complete_attribute
