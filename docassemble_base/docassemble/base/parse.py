@@ -6557,3 +6557,26 @@ def custom_jinja_env():
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.misc.get('docx_template', None))
+
+def get_docx_variables(the_path):
+    import docassemble.base.legal
+    names = set()
+    if not os.path.isfile(the_path):
+        raise DAError("Missing docx template file " + os.path.basename(the_path))
+    try:
+        docx_template = docassemble.base.file_docx.DocxTemplate(the_path)
+        the_env = custom_jinja_env()
+        the_xml = docx_template.get_xml()
+        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
+        the_xml = docx_template.patch_xml(the_xml)
+        parsed_content = the_env.parse(the_xml)
+    except Exception as the_err:
+        raise DAError("There was an error parsing the docx file: " + the_err.__class__.__name__ + " " + text_type(the_err))
+    for key in jinja2meta.find_undeclared_variables(parsed_content):
+        if not key.startswith('_'):
+            names.add(key)
+    for name in docassemble.base.legal.__all__:
+        if name in names:
+            names.remove(name)
+    return sorted(list(names))

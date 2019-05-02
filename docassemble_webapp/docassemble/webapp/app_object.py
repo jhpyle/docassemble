@@ -28,7 +28,7 @@ def create_app():
     babel.init_app(app)
     if daconfig.get('behind https load balancer', False):
         if proxyfix_version >= 15:
-            app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
+            app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
         else:
             app.wsgi_app = ProxyFix(app.wsgi_app)
     return app, csrf, babel

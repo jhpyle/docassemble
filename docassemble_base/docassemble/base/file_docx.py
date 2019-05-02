@@ -427,3 +427,4 @@ def pdf_pages(file_info, width):
             output += "[Error including page image]"
         output += ' '
     return(output)
+

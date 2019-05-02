@@ -1,0 +1,20 @@
+metadata:
+  title: Get DOCX variables
+  short: DOCX
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.get_docx_variables"
+  example start: 1
+  example end: 2
+---
+objects:
+  - docx_file: DAStaticFile.using(filename="data/templates/letter_template.docx")
+---
+mandatory: True
+question: |
+  The variables in the DOCX file
+subquestion: |
+  The following variables were found in the
+  [letter_template.docx] file:
+
+  `${ repr(docx_file.get_docx_variables()) }`
+
+  [letter_template.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/letter_template.docx

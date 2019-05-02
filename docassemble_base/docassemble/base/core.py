@@ -2786,6 +2786,10 @@ class DAFile(DAObject):
         self.retrieve()
         shutil.copyfile(filepath, self.file_info['path'])
         self.retrieve()
+    def get_docx_variables(self):
+        """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
+        import docassemble.base.parse
+        return docassemble.base.parse.get_docx_variables(self.path())
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
         results = list()
@@ -3003,6 +3007,9 @@ class DAFileCollection(DAObject):
         if the_file is None:
             return None
         return the_file.path()
+    def get_docx_variables(self):
+        """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
+        return the_file.docx.get_docx_fields()
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
         return the_file.pdf.get_pdf_fields()
@@ -3091,6 +3098,11 @@ class DAFileList(DAList):
         if len(self.elements) == 0:
             return None
         return self.elements[0].path()
+    def get_docx_variables(self):
+        """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].get_docx_variables()
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
         if len(self.elements) == 0:
@@ -3176,6 +3188,10 @@ class DAStaticFile(DAObject):
         """
         file_info = server.file_finder(self.filename)
         return file_info.get('fullpath', None)
+    def get_docx_variables(self):
+        """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
+        import docassemble.base.parse
+        return docassemble.base.parse.get_docx_variables(self.path())
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
         results = list()
