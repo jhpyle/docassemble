@@ -18021,7 +18021,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             new_temp_user = TempUser()
             db.session.add(new_temp_user)
             db.session.commit()
-            sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=form["From"], encrypted=True, tempuser=new_temp_user.id, user_id=None)
+            sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=form["From"], encrypted=True, tempuser=new_temp_user.id, user_id=None, session_uid=random_string(10))
             r.set(key, pickle.dumps(sess_info))
             accepting_input = False
         else:
@@ -18031,6 +18031,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 logmessage("do_sms: unable to decode session information")
                 return resp
             accepting_input = True
+        if 'session_uid' not in sess_info:
+            sess_info['session_uid'] = random_string(10)
         if inp.lower() in (word('exit'), word('quit')):
             logmessage("do_sms: exiting")
             if save:
@@ -18080,9 +18082,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid']), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid']), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
         if action is not None:
             logmessage("do_sms: setting action to " + str(action))
             ci.update(action)
@@ -18185,6 +18187,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         user_entered_skip = False
     if accepting_input:
         saveas = None
+        uses_util = False
+        uncheck_others = False
         if len(interview_status.question.fields):
             question = interview_status.question
             if question.question_type == "fields":
@@ -18326,6 +18330,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             elif question.question_type == "yesno" or (hasattr(field, 'datatype') and (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0))):
                 if inp_lower in true_list:
                     data = 'True'
+                    if question.question_type == "fields" and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                        uncheck_others = field
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
@@ -18333,6 +18339,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             elif question.question_type == "yesnomaybe" or (hasattr(field, 'datatype') and (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0))):
                 if inp_lower in true_list:
                     data = 'True'
+                    if question.question_type == "fields" and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                        uncheck_others = field
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
@@ -18342,6 +18350,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
+                    if question.question_type == "fields" and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                        uncheck_others = field
                 else:
                     data = None
             elif question.question_type in ('noyesmaybe', 'noyesmaybe', 'noyeswidemaybe') or (hasattr(field, 'datatype') and field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign < 0)):
@@ -18349,10 +18359,12 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
+                    if question.question_type == "fields" and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                        uncheck_others = field
                 else:
                     data = 'None'
             elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'checkboxes', 'object_checkboxes')) or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
-                cdata, choice_list = get_choices_with_abb(interview_status, field)
+                cdata, choice_list = get_choices_with_abb(interview_status, field, user_dict)
                 data = None
                 if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes') and saveas is not None:
                     if 'command_cache' not in user_dict['_internal']:
@@ -18378,7 +18390,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 user_dict['_internal']['command_cache'][field.number].append(choice[1] + ' = False')
                         elif (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')) or hasattr(field, 'choicetype'):
                             if user_entered_skip:
-                                data = repr(None)
+                                skip_it = True
+                                data = repr('')
                             else:
                                 logmessage("do_sms: setting skip_it to True")
                                 skip_it = True
@@ -18466,7 +18479,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 else:
                     try:
                         dateutil.parser.parse(inp)
-                        data = docassemble.base.util.as_datetime(inp)
+                        data = "docassemble.base.util.as_datetime(" + repr(inp) + ")"
+                        uses_util = True
                     except Exception as the_err:
                         logmessage("do_sms: date validation error was " + str(the_err))
                         if field.datatype == 'date':
@@ -18481,7 +18495,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 else:
                     try:
                         dateutil.parser.parse(inp)
-                        data = docassemble.base.util.as_datetime(inp).time()
+                        data = "docassemble.base.util.as_datetime(" + repr(inp) + ").time()"
+                        uses_util = True
                     except Exception as the_err:
                         logmessage("do_sms: time validation error was " + str(the_err))
                         special_messages.append('"' + inp + '" ' + word("is not a valid time."))
@@ -18528,6 +18543,16 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             logmessage("do_sms: could not process input: " + inp)
             special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '."')
         else:
+            if uses_util:
+                exec("import docassemble.base.util", user_dict)
+            if uncheck_others:
+                for other_field in interview_status.get_field_list():
+                    if hasattr(other_field, 'datatype') and other_field.datatype == 'boolean' and other_field is not uncheck_others and 'command_cache' in user_dict['_internal'] and other_field.number in user_dict['_internal']['command_cache']:
+                        for command_index in range(len(user_dict['_internal']['command_cache'][other_field.number])):
+                            if other_field.sign > 0:
+                                user_dict['_internal']['command_cache'][other_field.number][command_index] = re.sub(r'= True$', '= False', user_dict['_internal']['command_cache'][other_field.number][command_index])
+                            else:
+                                user_dict['_internal']['command_cache'][other_field.number][command_index] = re.sub(r'= False$', '= True', user_dict['_internal']['command_cache'][other_field.number][command_index])
             the_string = saveas + ' = ' + data
             try:
                 if not skip_it:
@@ -18665,14 +18690,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
-                decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+                decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
-                encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+                encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if len(interview_status.attachments) > 0:
             with resp.message(qoutput) as m:
                 media_count = 0

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.42] - 2019-05-
+### Fixed
+- Errors with SMS interface.
+
 ## [0.4.41] - 2019-05-02
 ### Added
 - The `get_docx_variables()` method of `DAFile` and other file
