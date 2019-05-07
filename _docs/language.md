@@ -17,8 +17,8 @@ By default, the active language and locale are determined by the
 [configuration].
 
 The value of [`language`] must be a two-character lowercase
-[ISO-639-1] code.  For example, English is `en`, Spanish is `es`,
-French is `fr`, and Arabic is `ar`.
+[ISO-639-1] or [ISO-639-3] code.  For example, English is `en`,
+Spanish is `es`, French is `fr`, and Arabic is `ar`.
 
 The value of [`locale`] must be a locale name without the language
 prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
@@ -324,6 +324,7 @@ language.
 [polyglossia]: https://www.ctan.org/pkg/polyglossia
 [babel]: https://www.ctan.org/pkg/babel
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [`language` modifier]: {{ site.baseurl }}/docs/modifiers.html#language
 [`language`]: {{ site.baseurl }}/docs/config.html#language

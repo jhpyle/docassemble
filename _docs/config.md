@@ -1258,9 +1258,9 @@ locale: en_US.utf8
 dialect: us
 {% endhighlight %}
 
-The `language` needs to be a lowercase [ISO-639-1] code.  The `locale`
-needs to be a locale name that will be accepted by the [locale]
-library.
+The `language` needs to be a lowercase [ISO-639-1] or [ISO-639-3]
+code.  The `locale` needs to be a locale name that will be accepted by
+the [locale] library.
 
 The dialect is only relevant for the text-to-speech feature, which is
 controlled by the [special variable `speak_text`].  See the
@@ -1902,8 +1902,9 @@ words:
 {% endhighlight %}
 
 Each [YAML] file listed under `words` must be in the form of a
-dictionary in which the keys are languages ([ISO-639-1] codes) and the
-values are dictionaries with the translations of words or phrases.
+dictionary in which the keys are languages ([ISO-639-1] or [ISO-639-3]
+codes) and the values are dictionaries with the translations of words
+or phrases.
 
 Assuming the following is the content of the
 `data/sources/words.yml` file in [`docassemble.base`]:
@@ -2172,17 +2173,17 @@ default dialects to be used with that language.
 
 ## <a name="ocr languages"></a>OCR language settings
 
-The [`ocr_file()`] function uses the [Tesseract]<span></span>
-[optical character recognition] (OCR) application to extract text from
-image files and PDF files.  One of the options for the OCR process is
-the language being recognized.  The codes for language that
-[Tesseract] uses are different from those that **docassemble** uses.
-In most cases, the code that [Tesseract] uses is the [ISO-639-3] code
-that corresponds to the [ISO-639-1] code that **docassemble** uses,
-and **docassemble** can make this conversion automatically.  However,
-in some cases this does not work, so there is an override, which is
-controlled by the `ocr languages` directive.  The default value maps
-Chinese to Traditional Chinese:
+The [`ocr_file()`] function uses the [Tesseract]<span></span> [optical
+character recognition] (OCR) application to extract text from image
+files and PDF files.  One of the options for the OCR process is the
+language being recognized.  The codes for language that [Tesseract]
+may be different from those that **docassemble** uses.  If you are
+using [ISO-639-1] for your language codes, the code that [Tesseract]
+uses is the [ISO-639-3] code that corresponds to the [ISO-639-1] code
+that **docassemble** uses, and **docassemble** can make this
+conversion automatically.  However, in some cases this does not work,
+so there is an override, which is controlled by the `ocr languages`
+directive.  The default value maps Chinese to Traditional Chinese:
 
 {% highlight yaml %}
 ocr languages:

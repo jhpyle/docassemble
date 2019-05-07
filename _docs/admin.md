@@ -276,7 +276,7 @@ translation of a given phrase.
 To download a translation file from the "Utilities" screen, you need
 to provide the name of an interview (e.g.,
 `docassemble.demo:data/questions/questions.yml`) and the target
-language in [ISO-639-1] format (e.g., `fr` for French).
+language in [ISO-639-1] or [ISO-639-3] format (e.g., `fr` for French).
 
 The resulting spreadsheet will contain a row for each unique phrase
 used in the interview file, including interview files incorporated by
@@ -365,8 +365,8 @@ The profile fields that you can edit include:
 * County
 * Municipality
 * Organization
-* Language: a lowercase [ISO-639-1] language code representing the
-  user's language.
+* Language: a lowercase [ISO-639-1] or [ISO-639-3] language code
+  representing the user's language.
 
 The words "State," "County," and "Municipality" are actually
 translated phrases defined in
@@ -506,8 +506,8 @@ the following fields:
 * County
 * Municipality
 * Organization
-* Language: a lowercase [ISO-639-1] language code representing the
-  user's language.
+* Language: a lowercase [ISO-639-1] or [ISO-639-3] language code
+  representing the user's language.
 * PyPI Username
 * PyPI Password
 
@@ -569,6 +569,7 @@ For tips on troubleshooting your **docassemble** system, see the
 [Google Cloud Translation API]: https://cloud.google.com/translate/
 [Google Developers Console]: https://console.developers.google.com/
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [ISO 3166]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`set_user_info()`]: {{ site.baseurl }}/docs/functions.html#set_user_info

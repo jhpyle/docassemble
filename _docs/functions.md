@@ -1925,7 +1925,8 @@ attributes describing the current user:
 * `organization` (e.g., company or non-profit organization)
 * `session` the session ID of the current interview session
 * `filename` the filename of the current interview session
-* `language` the user's language, if set (an [ISO-639-1] code)
+* `language` the user's language, if set (an [ISO-639-1] or
+  [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
 
 All of these attributes, with the exception of `session` and
@@ -2131,9 +2132,9 @@ choices:
 ---
 {% endhighlight %}
 
-The value given to `set_language()` must be a two-character lowercase
-[ISO-639-1] code.  For example, Spanish is `es`, French is `fr`, and
-Arabic is `ar`.
+The value given to `set_language()` must be a lowercase [ISO-639-1] or
+[ISO-639-3] code.  For example in [ISO-639-1], Spanish is `es`, French
+is `fr`, and Arabic is `ar`.
 
 Using the optional `dialect` keyword argument, you can also set the
 dialect of the language.  The dialect is relevant only for the
@@ -3405,7 +3406,8 @@ user.  The `info` dictionary can contain any of the following keys:
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
- - `language` the user's language (an [ISO-639-1] code).
+ - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
+   code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
  
 To set this information after the user account is created, use
@@ -3437,7 +3439,8 @@ each dictionary has the following keys:
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
- - `language` the user's language (an [ISO-639-1] code).
+ - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
+   code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
 For an [API] version of this function, see [`/api/user_list`].
@@ -3478,7 +3481,8 @@ are optional:
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
- - `language` the user's language (an [ISO-639-1] code).
+ - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
+   code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
  - `password`: user's password.
 
@@ -4279,8 +4283,8 @@ performed.
 
 * `language` indicates the language of the document.  If not
   specified, the language returned by `get_language()` is used.  The
-  language must be either a two-character lowercase [ISO-639-1] code
-  or a language code that [Tesseract] uses.
+  language must be a lowercase [ISO-639-1]/[ISO-639-3] code or a
+  language code that [Tesseract] uses.
 * `psm` indicates the [Tesseract] page segmentation mode.  The default
 is 6 ("assume a uniform block of text").  The choices are:
     * 0: Orientation and script detection (OSD) only.
@@ -4499,7 +4503,7 @@ which case **docassemble** will convert it to the corresponding
 [Tesseract] code.  If [Tesseract] does not support the language,
 English will be used.  If the `language` parameter is not supplied,
 **docassemble** will use the default language (the result of
-`get_language()`), which is always a two-character [ISO-639-1] code.
+`get_language()`).
 
 For some languages, there is more than one variant.  For example, if
 you specify Chinese, `zh`, **docassemble** will use `chi-tra`
@@ -6368,6 +6372,7 @@ $(document).on('daPageLoad', function(){
 [`get_user_list()`]: #get_user_list
 [`get_user_secret()`]: #get_user_secret
 [`get_session_variables()`]: #get_session_variables
+[`get_question_data()`]: #get_question_data
 [`set_session_variables()`]: #set_session_variables
 [API]: {{ site.baseurl }}/docs/api.html
 [`get_user_info()`]: #get_user_info

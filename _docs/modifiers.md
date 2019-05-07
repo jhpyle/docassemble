@@ -399,7 +399,8 @@ write questions in different languages that set the same variables.
 language.
 
 The value of `language` must be a two-character lowercase [ISO-639-1]
-code.  For example, Spanish is `es`, French is `fr`, and Arabic is `ar`.
+or [ISO-639-3] code.  For example, Spanish is `es`, French is `fr`,
+and Arabic is `ar`.
 
 For more information about how to set the active language, see
 [language support].
@@ -952,6 +953,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [language support]: {{ site.baseurl }}/docs/language.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Mako]: http://www.makotemplates.org/
 [HTML5 audio tag]: http://www.w3schools.com/html/html5_audio.asp
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
