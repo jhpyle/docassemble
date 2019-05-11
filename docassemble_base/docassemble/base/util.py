@@ -184,16 +184,6 @@ def run_python_module(module, arguments=None):
         return_code = err.returncode
     return output, return_code
 
-# def default_user_id_function():
-#     return dict()
-
-# user_id_dict = default_user_id_function
-
-# def set_user_id_function(func):
-#     global user_id_dict
-#     user_id_dict = func
-#     return
-
 def today(timezone=None, format=None):
     """Returns today's date at midnight as a DADateTime object."""
     ensure_definition(timezone, format)
@@ -204,18 +194,6 @@ def today(timezone=None, format=None):
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
     else:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
-
-# def today_default(format='long', timezone=None):
-#     if timezone is None:
-#         timezone = get_default_timezone()
-#     return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
-
-# language_functions['today'] = {'*': today_default}
-
-# today = language_function_constructor('today')
-
-# if today.__doc__ is None:
-#     today.__doc__ = """Returns today's date in long form according to the current locale."""    
 
 def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.  
@@ -579,7 +557,7 @@ def last_access_hours(*pargs, **kwargs):
 def last_access_minutes(*pargs, **kwargs):
     """Returns the number of minutes since the last time the interview 
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
 def last_access_time(include_privileges=None, exclude_privileges=None, include_cron=False, timezone=None):
@@ -601,16 +579,32 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
                 exclude_privileges = [exclude_privileges]
     else:
         exclude_privileges = list()
-    lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].items():
-        if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
-            for role in lookup_dict[user_id].roles:
-                if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
-                    continue
-                if include_privileges is None or role.name in include_privileges:
-                    if max_time is None or max_time < access_time:
-                        max_time = access_time
-                        break
+        if user_id == -1:
+            if 'anonymous' in exclude_privileges:
+                continue
+            if include_privileges is None or 'anonymous' in include_privileges:
+                if max_time is None or max_time < access_time:
+                    max_time = access_time
+                    break
+        else:
+            user_object = server.get_user_object(user_id)
+            if user_object is not None and hasattr(user_object, 'roles'):
+                if len(user_object.roles) == 0:
+                    if 'user' in exclude_privileges:
+                        continue
+                    if include_privileges is None or 'user' in include_privileges:
+                        if max_time is None or max_time < access_time:
+                            max_time = access_time
+                            break
+                else:
+                    for role in user_object.roles:
+                        if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
+                            continue
+                        if include_privileges is None or role.name in include_privileges:
+                            if max_time is None or max_time < access_time:
+                                max_time = access_time
+                                break
     if max_time is None:
         return None
     if timezone is not None:
@@ -2422,7 +2416,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-revisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""

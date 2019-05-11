@@ -1550,9 +1550,9 @@ def proc_example_list(example_list, package, directory, examples):
             result['image'] = url_for('static', filename=directory + example + ".png")
         else:
             result['image'] = url_for('package_static', package=package, filename=example + ".png")
-        logmessage("Giving it " + example_file)
+        #logmessage("Giving it " + example_file)
         file_info = get_info_from_file_reference(example_file)
-        logmessage("Got back " + file_info['fullpath'])
+        #logmessage("Got back " + file_info['fullpath'])
         start_block = 1
         end_block = 2
         if 'fullpath' not in file_info or file_info['fullpath'] is None:
@@ -2103,15 +2103,15 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + text_type(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
                     output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + text_type(the_title) + '</a>'
                 else:
-                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + active_class + '">' + text_type(the_title) + '</a>'
+                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + active_class + '">' + text_type(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(the_title) + '</a>'
+                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + text_type(the_title) + '</a>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
                     output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + text_type(the_title) + '</a>'
@@ -2165,10 +2165,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 #logmessage("First sub is %s, indexno is %d, sub_currently_active is %s, sub_key is %s, sub_title is %s, section_reached is %s, current_is_within is %s, sub_active_class is %s, new_sub_key is %s, seen_more is %s, section_reached is %s, show_links is %s" % (str(first_sub), indexno, str(sub_currently_active), sub_key, sub_title, section_reached, current_is_within, sub_active_class, new_sub_key, str(seen_more), str(section_reached), str(show_links)))
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     #url = docassemble.base.functions.interview_url_action(sub_key)
-                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="clickable ' + a_class + sub_active_class + '">' + text_type(sub_title) + '</a>'
+                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + sub_active_class + '">' + text_type(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' notavailableyet">' + text_type(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + text_type(sub_title) + '</a>'
                     else:
                         suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + text_type(sub_title) + '</a>'
                 #suboutput += "</li>"
@@ -2176,7 +2176,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 if currently_active or current_is_within:
                     suboutput = '<div class="' + inner_div_class + '">' + suboutput
                 else:
-                    suboutput = '<div style="display: none;" class="notshowing ' + inner_div_class + '">' + suboutput
+                    suboutput = '<div style="display: none;" class="danotshowing ' + inner_div_class + '">' + suboutput
                 suboutput += "</div>"
                 output += suboutput
             else:
@@ -2288,14 +2288,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <form style="display: inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted backbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
 """
         else:
             navbar += """\
-        <form style="display: inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     navbar += """\
-        <a id="pagetitle" class="navbar-brand navbar-title pointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
+        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
 """
     help_message = word("Help is available")
     help_label = None
@@ -2315,21 +2315,21 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     chat_sr = word("Live chat")
     source_message = word("How this question came to be asked")
     if debug_mode:
-        source_button = '<li class="nav-item d-none d-md-block"><a class="no-outline nav-link" title=' + json.dumps(source_message) + ' id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
+        source_button = '<li class="nav-item d-none d-md-block"><a class="da-no-outline nav-link" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
     else:
         source_button = ''
-    navbar += '        <ul class="nav navbar-nav mynavbar-right">' + source_button + '<li class="nav-item invisible"><a class="nav-link" id="questionlabel" href="#question" data-target="#question">' + word('Question') + '</a></li>'
+    navbar += '        <ul class="nav navbar-nav damynavbar-right">' + source_button + '<li class="nav-item dainvisible"><a class="nav-link" id="daquestionlabel" href="#daquestion" data-target="#daquestion">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
+            navbar += '<li class="nav-item"><a class="dapointer da-no-outline nav-link dahelptrigger" href="#dahelp" data-target="#dahelp" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
-            navbar += '<li class="nav-item"><a class="pointer no-outline nav-link helptrigger" href="#help" data-target="#help" id="helptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item invisible" id="daPhoneAvailable"><a role="button" href="#help" data-target="#help" title=' + json.dumps(phone_message) + ' class="nav-link pointer helptrigger"><i class="fas fa-phone chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item invisible" id="daChatAvailable"><a href="#help" data-target="#help" class="nav-link pointer helptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
+            navbar += '<li class="nav-item"><a class="dapointer da-no-outline nav-link dahelptrigger" href="#dahelp" data-target="#dahelp" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
+    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><a role="button" href="#dahelp" data-target="#dahelp" title=' + json.dumps(phone_message) + ' class="nav-link dapointer dahelptrigger"><i class="fas fa-phone da-chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item dainvisible" id="daChatAvailable"><a href="#dahelp" data-target="#dahelp" class="nav-link dapointer dahelptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
     navbar += """
-        <button id="mobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#navbar-collapse">
+        <button id="damobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#danavbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
         </button>
-        <div class="collapse navbar-collapse" id="navbar-collapse">
+        <div class="collapse navbar-collapse" id="danavbar-collapse">
           <ul class="navbar-nav ml-auto">
 """
     if 'menu_items' in status.extras:
@@ -2357,14 +2357,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="menuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="menuLabel">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
+                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
                 navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
-                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" id="menuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="menuLabel">'
+                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">'
                 if custom_menu:
                     navbar += custom_menu
                 if not status.question.interview.options.get('hide standard menu', False):
@@ -2633,16 +2633,16 @@ def flash_as_html(message, message_type="info", is_ajax=True):
     return output
 
 def make_example_html(examples, first_id, example_html, data_dict):
-    example_html.append('          <ul class="nav flex-column nav-pills example-list example-hidden">\n')
+    example_html.append('          <ul class="nav flex-column nav-pills da-example-list da-example-hidden">\n')
     for example in examples:
         if 'list' in example:
-            example_html.append('          <li class="nav-item"><a tabindex="0" class="nav-link example-heading">' + example['title'] + '</a>')
+            example_html.append('          <li class="nav-item"><a tabindex="0" class="nav-link da-example-heading">' + example['title'] + '</a>')
             make_example_html(example['list'], first_id, example_html, data_dict)
             example_html.append('          </li>')
             continue
         if len(first_id) == 0:
             first_id.append(example['id'])
-        example_html.append('            <li class="nav-item"><a tabindex="0" class="nav-link example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
+        example_html.append('            <li class="nav-item"><a tabindex="0" class="nav-link da-example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
         data_dict[example['id']] = example
     example_html.append('          </ul>')
 
@@ -4029,7 +4029,7 @@ def mfa_setup():
         viewbox = ' ' + m.group(1)
     else:
         viewbox = ''
-    the_qrcode = '<svg class="mfasvg"' + viewbox + '><g transform="scale(1.0)">' + the_qrcode + '</g></svg>'
+    the_qrcode = '<svg class="damfasvg"' + viewbox + '><g transform="scale(1.0)">' + the_qrcode + '</g></svg>'
     session['otp_secret'] = otp_secret
     return render_template('flask_user/mfa_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("Scan the barcode with your phone's authenticator app and enter the verification code."), the_qrcode=Markup(the_qrcode))
 
@@ -4308,7 +4308,7 @@ def github_menu():
         description = "Your GitHub integration is currently turned on.  You can disconnect GitHub integration if you no longer wish to use it."
     else:
         description = "If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground."
-    return render_template('pages/github.html', form=form, version_warning=None, title=word("GitHub Integration"), tab_title=word("GitHub"), page_title=word("GitHub"), description=description, uses_github=uses_github, bodyclass='adminbody')
+    return render_template('pages/github.html', form=form, version_warning=None, title=word("GitHub Integration"), tab_title=word("GitHub"), page_title=word("GitHub"), description=description, uses_github=uses_github, bodyclass='daadminbody')
 
 @app.route('/github_configure', methods=['POST', 'GET'])
 @login_required
@@ -4587,7 +4587,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
     output = []
     if yaml_filename is None or session_id is None:
         return output
-    user_cache = user_id_dict()
+    user_cache = dict()
     for record in ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id)).order_by(ChatLog.id).all():
         if record.encrypted:
             try:
@@ -4617,8 +4617,14 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
             user_last_name = user_cache[record.user_id].last_name
             user_email = user_cache[record.user_id].email
         else:
-            sys.stderr.write("get_current_chat_log: Invalid user ID in chat log\n")
-            continue
+            new_user = get_user_object(record.user_id)
+            if new_user is None:
+                sys.stderr.write("get_current_chat_log: Invalid user ID in chat log\n")
+                continue
+            user_cache[record.user_id] = new_user
+            user_first_name = user_cache[record.user_id].first_name
+            user_last_name = user_cache[record.user_id].last_name
+            user_email = user_cache[record.user_id].email
         if utc:
             the_datetime = record.modtime.replace(tzinfo=tz.tzutc())
         else:
@@ -4717,7 +4723,7 @@ def checkin():
                     other_value = other_value.decode()
                     remaining_seconds = r.ttl(call_key)
                     if remaining_seconds > 30:
-                        call_forwarding_message = '<span class="phone-message"><i class="fas fa-phone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
+                        call_forwarding_message = '<span class="daphone-message"><i class="fas fa-phone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="daphone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="daphone-code">' + str(call_forwarding_code) + '</span>.</span>'
                         break
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
@@ -6698,7 +6704,7 @@ def index(action_argument=None):
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages and len(messages):
-        flash_content += '<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">'
+        flash_content += '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">'
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
@@ -6773,12 +6779,12 @@ def index(action_argument=None):
             being_controlled = 'false'
         if debug_mode:
             debug_readability_help = """
-            $("#readability-help").show();
-            $("#readability-question").hide();
+            $("#dareadability-help").show();
+            $("#dareadability-question").hide();
 """
             debug_readability_question = """
-            $("#readability-help").hide();
-            $("#readability-question").show();
+            $("#dareadability-help").hide();
+            $("#dareadability-question").show();
 """
         #     debug_init = """
         # $("#showvariables").on('click', function(e){
@@ -6929,7 +6935,7 @@ def index(action_argument=None):
         if (elem == null){
           return null;
         }
-        var showifParents = $(elem).parents(".jsshowif");
+        var showifParents = $(elem).parents(".dajsshowif");
         if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
           theVal = null;
         }
@@ -6987,19 +6993,19 @@ def index(action_argument=None):
       }
       daPreloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
       function daShowHelpTab(){
-          $('#helptoggle').tab('show');
+          $('#dahelptoggle').tab('show');
       }
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
         }
-        if (!$("#flash").length){
-          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+        if (!$("#daflash").length){
+          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
-            $("#flash .alert-success").hide(300, function(){
+            $("#daflash .alert-success").hide(300, function(){
               $(this).remove();
             });
           }, 3000);
@@ -7218,9 +7224,9 @@ def index(action_argument=None):
         $('input[type="submit"], button[type="submit"]').prop("disabled", true);
         $("body").addClass("dacontrolled");
         var newDiv = document.createElement('div');
-        $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
+        $(newDiv).addClass("datop-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 dacol-centered");
         $(newDiv).html(""" + json.dumps(word("Your screen is being controlled by an operator.")) + """)
-        $(newDiv).attr('id', "controlAlert");
+        $(newDiv).attr('id', "dacontrolAlert");
         $(newDiv).css("display", "none");
         $(newDiv).appendTo($(daTargetDiv));
         if (mode == 'animated'){
@@ -7237,10 +7243,10 @@ def index(action_argument=None):
         }
         $('input[type="submit"], button[type="submit"]').prop("disabled", false);
         $("body").removeClass("dacontrolled");
-        $("#controlAlert").html(""" + json.dumps(word("The operator is no longer controlling your screen.")) + """);
+        $("#dacontrolAlert").html(""" + json.dumps(word("The operator is no longer controlling your screen.")) + """);
         setTimeout(function(){
-          $("#controlAlert").slideUp(300, function(){
-            $("#controlAlert").remove();
+          $("#dacontrolAlert").slideUp(300, function(){
+            $("#dacontrolAlert").remove();
           });
         }, 2000);
       }
@@ -7422,10 +7428,10 @@ def index(action_argument=None):
                 if (data.clicked){
                     //console.log("Need to click " + data.clicked);
                     $(data.clicked).prop("disabled", false);
-                    $(data.clicked).addClass("click-selected");
+                    $(data.clicked).addClass("da-click-selected");
                     if ($(data.clicked).prop("tagName") == 'A' && typeof $(data.clicked).attr('href') != 'undefined' && ($(data.clicked).attr('href').startsWith('javascript') || $(data.clicked).attr('href').startsWith('#'))){
                       setTimeout(function(){
-                        $(data.clicked).removeClass("click-selected");
+                        $(data.clicked).removeClass("da-click-selected");
                       }, 2200);
                     }
                     setTimeout(function(){
@@ -7698,17 +7704,17 @@ def index(action_argument=None):
           }
         }
         if (do_iframe_upload){
-          $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
+          $("#dauploadiframe").remove();
+          var iframe = $('<iframe name="dauploadiframe" id="dauploadiframe" style="display: none"><\/iframe>');
           $(daTargetDiv).append(iframe);
-          $(form).attr("target", "uploadiframe");
+          $(form).attr("target", "dauploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
               try {
-                daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#uploadiframe").contents().text())), form, 1);
+                daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#dauploadiframe").contents().text())), form, 1);
               }
               catch (e){
-                daShowErrorScreen(document.getElementById('uploadiframe').contentWindow.document.body.innerHTML);
+                daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML);
               }
             }, 0);
           });
@@ -7743,13 +7749,13 @@ def index(action_argument=None):
           document.getElementById(inline_file_list[i]).disabled = true;
         }
         if (newFileList.length > 0){
-          $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"><\/iframe>');
+          $("#dauploadiframe").remove();
+          var iframe = $('<iframe name="dauploadiframe" id="dauploadiframe" style="display: none"><\/iframe>');
           $(daTargetDiv).append(iframe);
-          $(form).attr("target", "uploadiframe");
+          $(form).attr("target", "dauploadiframe");
           iframe.bind('load', function(){
             setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form, 1);
+              daProcessAjax($.parseJSON($("#dauploadiframe").contents().text()), form, 1);
             }, 0);
           });
           form.submit();
@@ -7800,7 +7806,7 @@ def index(action_argument=None):
         if (e.which == 13){
           if (daShowingHelp == 0){
             var tag = $( document.activeElement ).prop("tagName");
-            if ($("#daform button.questionbackbutton").length > 0 && (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON")){
+            if ($("#daform button.daquestionbackbutton").length > 0 && (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON")){
               e.preventDefault();
               e.stopPropagation();
               return false;
@@ -7951,8 +7957,8 @@ def index(action_argument=None):
       }
       function daTurnOnChat(){
         //console.log("Publishing from daTurnOnChat");
-        $("#daChatOnButton").addClass("invisible");
-        $("#daChatBox").removeClass("invisible");
+        $("#daChatOnButton").addClass("dainvisible");
+        $("#daChatBox").removeClass("dainvisible");
         $("#daCorrespondence").html('');
         for(var i = 0; i < daChatHistory.length; i++){
           daPublishMessage(daChatHistory[i]);
@@ -7972,8 +7978,8 @@ def index(action_argument=None):
         }
       }
       // function daTurnOffChat(){
-      //   $("#daChatOnButton").removeClass("invisible");
-      //   $("#daChatBox").addClass("invisible");
+      //   $("#daChatOnButton").removeClass("dainvisible");
+      //   $("#daChatBox").addClass("dainvisible");
       //   //daCloseSocket();
       //   $("#daMessage").prop('disabled', true);
       //   $("#daSend").unbind();
@@ -7981,54 +7987,54 @@ def index(action_argument=None):
       // }
       function daDisplayChat(){
         if (daChatStatus == 'off' || daChatStatus == 'observeonly'){
-          $("#daChatBox").addClass("invisible");
-          $("#daChatAvailable").addClass("invisible");
-          $("#daChatOnButton").addClass("invisible");
+          $("#daChatBox").addClass("dainvisible");
+          $("#daChatAvailable").addClass("dainvisible");
+          $("#daChatOnButton").addClass("dainvisible");
         }
         else{
           if (daChatStatus == 'waiting'){
             if (daChatPartnersAvailable > 0){
-              $("#daChatBox").removeClass("invisible");
+              $("#daChatBox").removeClass("dainvisible");
             }
           }
           else {
-            $("#daChatBox").removeClass("invisible");
+            $("#daChatBox").removeClass("dainvisible");
           }
         }
         if (daChatStatus == 'waiting'){
           //console.log("I see waiting")
           if (daChatHistory.length > 0){
-            $("#daChatAvailable a i").removeClass("chat-active");
-            $("#daChatAvailable a i").addClass("chat-inactive");
-            $("#daChatAvailable").removeClass("invisible");
+            $("#daChatAvailable a i").removeClass("da-chat-active");
+            $("#daChatAvailable a i").addClass("da-chat-inactive");
+            $("#daChatAvailable").removeClass("dainvisible");
           }
           else{
-            $("#daChatAvailable a i").removeClass("chat-active");
-            $("#daChatAvailable a i").removeClass("chat-inactive");
-            $("#daChatAvailable").addClass("invisible");
+            $("#daChatAvailable a i").removeClass("da-chat-active");
+            $("#daChatAvailable a i").removeClass("da-chat-inactive");
+            $("#daChatAvailable").addClass("dainvisible");
           }
-          $("#daChatOnButton").addClass("invisible");
-          $("#daChatOffButton").addClass("invisible");
+          $("#daChatOnButton").addClass("dainvisible");
+          $("#daChatOffButton").addClass("dainvisible");
           $("#daMessage").prop('disabled', true);
           $("#daSend").prop('disabled', true);
         }
         if (daChatStatus == 'standby' || daChatStatus == 'ready'){
           //console.log("I see standby")
-          $("#daChatAvailable").removeClass("invisible");
-          $("#daChatAvailable a i").removeClass("chat-inactive");
-          $("#daChatAvailable a i").addClass("chat-active");
-          $("#daChatOnButton").removeClass("invisible");
-          $("#daChatOffButton").addClass("invisible");
+          $("#daChatAvailable").removeClass("dainvisible");
+          $("#daChatAvailable a i").removeClass("da-chat-inactive");
+          $("#daChatAvailable a i").addClass("da-chat-active");
+          $("#daChatOnButton").removeClass("dainvisible");
+          $("#daChatOffButton").addClass("dainvisible");
           $("#daMessage").prop('disabled', true);
           $("#daSend").prop('disabled', true);
           daInformAbout('chat');
         }
         if (daChatStatus == 'on'){
-          $("#daChatAvailable").removeClass("invisible");
-          $("#daChatAvailable a i").removeClass("chat-inactive");
-          $("#daChatAvailable a i").addClass("chat-active");
-          $("#daChatOnButton").addClass("invisible");
-          $("#daChatOffButton").removeClass("invisible");
+          $("#daChatAvailable").removeClass("dainvisible");
+          $("#daChatAvailable a i").removeClass("da-chat-inactive");
+          $("#daChatAvailable a i").addClass("da-chat-active");
+          $("#daChatOnButton").addClass("dainvisible");
+          $("#daChatOffButton").removeClass("dainvisible");
           $("#daMessage").prop('disabled', false);
           if (daShowingHelp){
             $("#daMessage").focus();
@@ -8083,10 +8089,10 @@ def index(action_argument=None):
             for (var i = 0; i < data.commands.length; ++i){
               var command = data.commands[i];
               if (command.extra == 'flash'){
-                if (!$("#flash").length){
-                  $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+                if (!$("#daflash").length){
+                  $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
                 }
-                $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + command.value + '<\/div>');
+                $("#daflash").append('<div class="alert alert-info daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + command.value + '<\/div>');
                 //console.log("command is " + command.value);
               }
               else if (command.extra == 'refresh'){
@@ -8125,7 +8131,7 @@ def index(action_argument=None):
               }
             }
             // setTimeout(function(){
-            //   $("#flash .alert-interlocutory").hide(300, function(){
+            //   $("#daflash .daalert-interlocutory").hide(300, function(){
             //     $(self).remove();
             //   });
             // }, 5000);
@@ -8133,15 +8139,15 @@ def index(action_argument=None):
           oldDaChatStatus = daChatStatus;
           //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
           if (data.phone == null){
-            $("#daPhoneMessage").addClass("invisible");
+            $("#daPhoneMessage").addClass("dainvisible");
             $("#daPhoneMessage p").html('');
-            $("#daPhoneAvailable").addClass("invisible");
+            $("#daPhoneAvailable").addClass("dainvisible");
             daPhoneAvailable = false;
           }
           else{
-            $("#daPhoneMessage").removeClass("invisible");
+            $("#daPhoneMessage").removeClass("dainvisible");
             $("#daPhoneMessage p").html(data.phone);
-            $("#daPhoneAvailable").removeClass("invisible");
+            $("#daPhoneAvailable").removeClass("dainvisible");
             daPhoneAvailable = true;
             daInformAbout('phone');
           }
@@ -8164,27 +8170,27 @@ def index(action_argument=None):
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
             }
             else{
-              $("#peerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
             }
-            $("#peerMessage").removeClass("invisible");
+            $("#dapeerMessage").removeClass("dainvisible");
           }
           else{
-            $("#peerMessage").addClass("invisible");
+            $("#dapeerMessage").addClass("dainvisible");
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             if (data.help_available == 1){
-              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
+              $("#dapeerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
             }
             else{
-              $("#peerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
+              $("#dapeerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
             }
-            $("#peerHelpMessage").removeClass("invisible");
+            $("#dapeerHelpMessage").removeClass("dainvisible");
           }
           else{
-            $("#peerHelpMessage").addClass("invisible");
+            $("#dapeerHelpMessage").addClass("dainvisible");
           }
           if (daBeingControlled){
             if (!data.observerControl){
@@ -8261,8 +8267,8 @@ def index(action_argument=None):
         }
       }
       function daShowSpinner(){
-        if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
+        if ($("#daquestion").length > 0){
+          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
         }
         else{
           var newSpan = document.createElement('span');
@@ -8270,8 +8276,8 @@ def index(action_argument=None):
           $(newI).addClass("fas fa-spinner fa-spin");
           $(newI).appendTo(newSpan);
           $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner text-muted top-for-navbar");
-          $(newSpan).appendTo("#sigtoppart");
+          $(newSpan).addClass("da-sig-spinner text-muted da-top-for-navbar");
+          $(newSpan).appendTo("#dasigtoppart");
         }
         daShowingSpinner = true;
       }
@@ -8285,7 +8291,7 @@ def index(action_argument=None):
         var leftBracket = new RegExp('<', 'g');
         var rightBracket = new RegExp('>', 'g');
         contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
+        $('<span class="dainput-embedded" id="dawidth">').html( contents ).appendTo('#daquestion');
         $("#dawidth").css('min-width', $(this).css('min-width'));
         $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
         $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
@@ -8345,7 +8351,7 @@ def index(action_argument=None):
         var finalNum = $(".dacollectextraheader").last().data('collectnum');
         var num = $(".dacollectextraheader:visible").last().data('collectnum');
         if (parseInt(num) < parseInt(finalNum)){
-          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('invisible')){
+          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('dainvisible')){
             $('div.dacollectextraheader[data-collectnum="' + (num + 1) + '"]').show('fast');
           }
         }
@@ -8353,7 +8359,7 @@ def index(action_argument=None):
         var firstNum = parseInt($(".dacollectextraheader").first().data('collectnum'));
         while (n-- > firstNum){
           if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('invisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('invisible')){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('dainvisible')){
               $('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').hide();
             }
           }
@@ -8362,13 +8368,13 @@ def index(action_argument=None):
         var seenAddAnother = false;
         while (n-- > firstNum){
           if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('invisible')){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible')){
               seenAddAnother = true;
             }
             var current = $('div.dacollectextraheader[data-collectnum="' + n + '"]');
-            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('invisible')){
-              $(current).find(".dacollectadd").addClass('invisible');
-              $(current).find(".dacollectunremove").removeClass('invisible');
+            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('dainvisible')){
+              $(current).find(".dacollectadd").addClass('dainvisible');
+              $(current).find(".dacollectunremove").removeClass('dainvisible');
             }
           }
         }
@@ -8383,7 +8389,7 @@ def index(action_argument=None):
           daHideSpinner();
         }
         daNotYetScrolled = true;
-        $(".helptrigger").click(function(e) {
+        $(".dahelptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
@@ -8423,9 +8429,9 @@ def index(action_argument=None):
             var num = $(this).parent().parent().data('collectnum');
             $('div[data-collectnum="' + num + '"]').show('fast');
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
-            $(this).parent().find("button.dacollectremove").removeClass("invisible");
-            $(this).parent().find("span.dacollectnum").removeClass("invisible");
-            $(this).addClass("invisible");
+            $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
+            $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
+            $(this).addClass("dainvisible");
             rationalizeListCollect();
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
           }
@@ -8436,9 +8442,9 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $(this).parent().find("button.dacollectadd").removeClass("invisible");
-          $(this).parent().find("span.dacollectnum").addClass("invisible");
-          $(this).addClass("invisible");
+          $(this).parent().find("button.dacollectadd").removeClass("dainvisible");
+          $(this).parent().find("span.dacollectnum").addClass("dainvisible");
+          $(this).addClass("dainvisible");
           rationalizeListCollect();
           return false;
         });
@@ -8447,9 +8453,9 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $(this).parent().find("button.dacollectunremove").removeClass("invisible");
-          $(this).parent().find("span.dacollectremoved").removeClass("invisible");
-          $(this).addClass("invisible");
+          $(this).parent().find("button.dacollectunremove").removeClass("dainvisible");
+          $(this).parent().find("span.dacollectremoved").removeClass("dainvisible");
+          $(this).addClass("dainvisible");
           rationalizeListCollect();
           return false;
         });
@@ -8458,20 +8464,20 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]').show('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
-          $(this).parent().find("button.dacollectremoveexisting").removeClass("invisible");
-          $(this).parent().find("button.dacollectremove").removeClass("invisible");
-          $(this).parent().find("span.dacollectremoved").addClass("invisible");
-          $(this).addClass("invisible");
+          $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
+          $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
+          $(this).parent().find("span.dacollectremoved").addClass("dainvisible");
+          $(this).addClass("dainvisible");
           rationalizeListCollect();
           return false;
         });
-        $('#questionlabel').click(function(e) {
+        $('#daquestionlabel').click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
-        $('#pagetitle').click(function(e) {
+        $('#dapagetitle').click(function(e) {
           e.preventDefault();
-          $('#questionlabel').tab('show');
+          $('#daquestionlabel').tab('show');
         });
         $('.dacurrency').each(function(){
           var theVal = $(this).val();
@@ -8495,40 +8501,40 @@ def index(action_argument=None):
             selects[i].appendChild(document.createElement("optgroup"));
           }
         }
-        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
-        $(".to-labelauty-icon").labelauty({ label: false });
+        $(".da-to-labelauty").labelauty({ class: "labelauty dafullwidth" });
+        $(".da-to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
           daWhichButton = this;
           return true;
         });
-        $('#source').on('hide.bs.collapse', function (e) {
-          $("#readability").slideUp();
+        $('#dasource').on('hide.bs.collapse', function (e) {
+          $("#dareadability").slideUp();
         });
-        $('#source').on('show.bs.collapse', function (e) {
+        $('#dasource').on('show.bs.collapse', function (e) {
           if (daShowingHelp){
-            $("#readability-question").hide();
-            $("#readability-help").show();
+            $("#dareadability-question").hide();
+            $("#dareadability-help").show();
           }
           else{
-            $("#readability-help").hide();
-            $("#readability-question").show();
+            $("#dareadability-help").hide();
+            $("#dareadability-question").show();
           }
-          $("#readability").slideDown();
+          $("#dareadability").slideDown();
         });
-        $('a[data-target="#help"], a[data-target="#question"]').on('shown.bs.tab', function (e) {
-          if ($(this).data("target") == '#help'){
+        $('a[data-target="#dahelp"], a[data-target="#daquestion"]').on('shown.bs.tab', function (e) {
+          if ($(this).data("target") == '#dahelp'){
             daShowingHelp = 1;
             if (daNotYetScrolled){
               daScrollChatFast();
               daNotYetScrolled = false;
             }""" + debug_readability_help + """
           }
-          else if ($(this).data("target") == '#question'){
+          else if ($(this).data("target") == '#daquestion'){
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
-        $("input.nota-checkbox").click(function(){
-          $(this).parent().find('input.non-nota-checkbox').each(function(){
+        $("input.danota-checkbox").click(function(){
+          $(this).parent().find('input.danon-nota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -8536,8 +8542,8 @@ def index(action_argument=None):
             }
           });
         });
-        $("input.non-nota-checkbox").click(function(){
-          $(this).parent().find('input.nota-checkbox').each(function(){
+        $("input.danon-nota-checkbox").click(function(){
+          $(this).parent().find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -8547,12 +8553,12 @@ def index(action_argument=None):
         });
         $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang});
         $('.combobox').combobox();
-        $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error'});
+        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
-        $("a.review-action").click(daReviewAction);
-        $("input.input-embedded").on('keyup', daAdjustInputWidth);
-        $("input.input-embedded").each(daAdjustInputWidth);
+        $("a.da-review-action").click(daReviewAction);
+        $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
+        $("input.dainput-embedded").each(daAdjustInputWidth);
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
@@ -8562,25 +8568,25 @@ def index(action_argument=None):
           $(this).popover("show");
         });
         if (daPhoneAvailable){
-          $("#daPhoneAvailable").removeClass("invisible");
+          $("#daPhoneAvailable").removeClass("dainvisible");
         }
-        $("#questionhelpbutton").on('click', function(event){
+        $("#daquestionhelpbutton").on('click', function(event){
           event.preventDefault();
-          $('#helptoggle').tab('show');
+          $('#dahelptoggle').tab('show');
           return false;
         });
-        $(".questionbackbutton").on('click', function(event){
+        $(".daquestionbackbutton").on('click', function(event){
           event.preventDefault();
-          $("#backbutton").submit();
+          $("#dabackbutton").submit();
           return false;
         });
-        $("#backbutton").on('submit', function(event){
+        $("#dabackbutton").on('submit', function(event){
           if (daShowingHelp){
             event.preventDefault();
-            $('#questionlabel').tab('show');
+            $('#daquestionlabel').tab('show');
             return false;
           }
-          $("#backbutton").addClass("dabackiconpressed");
+          $("#dabackbutton").addClass("dabackiconpressed");
           var informed = '';
           if (daInformedChanged){
             informed = '&informed=' + Object.keys(daInformed).join(',');
@@ -8590,12 +8596,12 @@ def index(action_argument=None):
             url = daPostURL;
           }
           else{
-            url = $("#backbutton").attr('action');
+            url = $("#dabackbutton").attr('action');
           }
           $.ajax({
             type: "POST",
             url: url,
-            data: $("#backbutton").serialize() + '&ajax=1' + informed, 
+            data: $("#dabackbutton").serialize() + '&ajax=1' + informed, 
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, document.getElementById('backbutton'), 1);
@@ -8624,15 +8630,15 @@ def index(action_argument=None):
           daSubmitter = this;
           return true;
         });
-        $('#emailform button[type="submit"]').click(function(){
+        $('#daemailform button[type="submit"]').click(function(){
           daSubmitter = this;
           return true;
         });
-        $('#downloadform button[type="submit"]').click(function(){
+        $('#dadownloadform button[type="submit"]').click(function(){
           daSubmitter = this;
           return true;
         });
-        $(".danavlinks a.clickable").click(function(e){
+        $(".danavlinks a.daclickable").click(function(e){
           var the_key = $(this).data('key');
           url_action_perform("_da_priority_action", {action: the_key});
           e.preventDefault();
@@ -8696,7 +8702,7 @@ def index(action_argument=None):
           }
         }
         else {
-          var firstButton = $("#navbar-collapse .nav-link").filter(':visible').first();
+          var firstButton = $("#danavbar-collapse .nav-link").filter(':visible').first();
           if (firstButton.length > 0){
             setTimeout(function(){
               $(firstButton).focus();
@@ -8704,7 +8710,7 @@ def index(action_argument=None):
             }, 0);
           }
         }
-        $(".uncheckspecificothers").on('change', function(){
+        $(".dauncheckspecificothers").on('change', function(){
           if ($(this).is(":checked")){
             var theIds = $.parseJSON(atob($(this).data('unchecklist')));
             var n = theIds.length;
@@ -8715,41 +8721,41 @@ def index(action_argument=None):
             }
           }
         });
-        $(".uncheckothers").on('change', function(){
+        $(".dauncheckothers").on('change', function(){
           if ($(this).is(":checked")){
-            $(".uncheckable").prop("checked", false);
-            $(".uncheckable").trigger('change');
+            $(".dauncheckable").prop("checked", false);
+            $(".dauncheckable").trigger('change');
           }
         });
-        $(".uncheckable").on('change', function(){
+        $(".dauncheckable").on('change', function(){
           if ($(this).is(":checked")){
-            $(".uncheckothers").prop("checked", false);
-            $(".uncheckothers").trigger('change');
+            $(".dauncheckothers").prop("checked", false);
+            $(".dauncheckothers").trigger('change');
           }
         });
-        var navMain = $("#navbar-collapse");
+        var navMain = $("#danavbar-collapse");
         navMain.on("click", "a", null, function () {
           if (!($(this).hasClass("dropdown-toggle"))){
             navMain.collapse('hide');
           }
         });
-        $("a[data-target='#help']").on("shown.bs.tab", function(){
+        $("a[data-target='#dahelp']").on("shown.bs.tab", function(){
           if (daJsEmbed){
             $(daTargetDiv)[0].scrollTo(0, 1);
           }
           else{
             window.scrollTo(0, 1);
           }
-          $("#helptoggle span").removeClass('daactivetext')
-          $("#helptoggle").blur();
+          $("#dahelptoggle span").removeClass('daactivetext')
+          $("#dahelptoggle").blur();
         });
-        $("#sourcetoggle").on("click", function(){
+        $("#dasourcetoggle").on("click", function(){
           $(this).parent().toggleClass("active");
           $(this).blur();
         });
-        $('#backToQuestion').click(function(event){
+        $('#dabackToQuestion').click(function(event){
           event.preventDefault();
-          $('#questionlabel').tab('show');
+          $('#daquestionlabel').tab('show');
         });
         daVarLookup = Object();
         daVarLookupRev = Object();
@@ -8793,7 +8799,7 @@ def index(action_argument=None):
         }
         daShowIfInProcess = true;
         daValLookup = Object();
-        $(".jsshowif").each(function(){
+        $(".dajsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
           var showIfSign = jsInfo['sign'];
@@ -8870,7 +8876,7 @@ def index(action_argument=None):
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
           }
         });
-        $(".showif").each(function(){
+        $(".dashowif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -8888,7 +8894,7 @@ def index(action_argument=None):
           var showHideDiv = function(speed){
             //console.log("showHideDiv for saveAs " + atob(saveAs) + " with showIfVar " + showIfVar);
             var theVal;
-            var showifParents = $(this).parents(".showif");
+            var showifParents = $(this).parents(".dashowif");
             if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
               theVal = '';
               //console.log("Setting theVal to blank.");
@@ -8928,14 +8934,14 @@ def index(action_argument=None):
               //console.log("They are the same");
               if (showIfSign){
                 //console.log("Showing1!");
-                //$(showIfDiv).removeClass("invisible");
+                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
                 //console.log("Hiding1!");
-                //$(showIfDiv).addClass("invisible");
+                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
@@ -8947,14 +8953,14 @@ def index(action_argument=None):
                 //console.log("Hiding2!");
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
-                //$(showIfDiv).addClass("invisible");
+                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
                 //console.log("Showing2!");
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
-                //$(showIfDiv).removeClass("invisible");
+                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
@@ -8985,7 +8991,7 @@ def index(action_argument=None):
         });
         $("a.danavlink").last().addClass('thelast');
         $("a.danavlink").each(function(){
-          if ($(this).hasClass('btn') && !$(this).hasClass('notavailableyet')){
+          if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
             var the_a = $(this);
             var the_delay = 1000 + 250 * parseInt($(this).data('index'));
             setTimeout(function(){
@@ -9056,7 +9062,7 @@ def index(action_argument=None):
         daShowingHelp = 0;
         daSubmitter = null;
         setTimeout(function(){
-          $("#flash .alert-success").hide(300, function(){
+          $("#daflash .alert-success").hide(300, function(){
             $(self).remove();
           });
         }, 3000);
@@ -9101,7 +9107,7 @@ def index(action_argument=None):
         }
         window.onpopstate = function(event) {
           if (event.state != null && event.state.steps < daSteps && daAllowGoingBack){
-            $("#backbutton").submit();
+            $("#dabackbutton").submit();
           }
         };
         $( window ).bind('unload', function() {
@@ -9132,20 +9138,20 @@ def index(action_argument=None):
       $(window).ready(daUpdateHeight);
       $(window).resize(daUpdateHeight);
       function daUpdateHeight(){
-        $(".googleMap").each(function(){
+        $(".dagoogleMap").each(function(){
           var size = $( this ).width();
           $( this ).css('height', size);
         });
       }
       $.validator.setDefaults({
         highlight: function(element) {
-            $(element).closest('.form-group').addClass('has-error');
+            $(element).closest('.form-group').addClass('da-has-error');
         },
         unhighlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-error');
+            $(element).closest('.form-group').removeClass('da-has-error');
         },
         errorElement: 'span',
-        errorClass: 'help-block',
+        errorClass: 'da-help-block',
         errorPlacement: function(error, element) {
             var elementName = $(element).attr("name");
             var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
@@ -9158,19 +9164,19 @@ def index(action_argument=None):
                 return null;
               }
             })[0];
-            if (element.hasClass('input-embedded')){
+            if (element.hasClass('dainput-embedded')){
               error.insertAfter(element);
             }
-            else if (element.hasClass('file-embedded')){
+            else if (element.hasClass('dafile-embedded')){
               error.insertAfter(element);
             }
-            else if (element.hasClass('radio-embedded')){
+            else if (element.hasClass('daradio-embedded')){
               element.parent().append(error);
             }
-            else if (element.hasClass('checkbox-embedded')){
+            else if (element.hasClass('dacheckbox-embedded')){
               element.parent().append(error);
             }
-            else if (element.hasClass('uncheckable') && lastInGroup){
+            else if (element.hasClass('dauncheckable') && lastInGroup){
               $("input[name='" + lastInGroup + "']").parent().append(error);
             }
             else if (element.parent().hasClass('combobox-container')){
@@ -9189,7 +9195,7 @@ def index(action_argument=None):
               error.insertAfter(element.parent());
             }
             else if (element.hasClass('labelauty')){
-              var choice_with_help = $(element).parents(".choicewithhelp").first();
+              var choice_with_help = $(element).parents(".dachoicewithhelp").first();
               if (choice_with_help.length > 0){
                 $(choice_with_help).parent().append(error);
               }
@@ -9197,7 +9203,7 @@ def index(action_argument=None):
                 element.parent().append(error);
               }
             }
-            else if (element.hasClass('non-nota-checkbox')){
+            else if (element.hasClass('danon-nota-checkbox')){
               element.parent().append(error);
             }
             else {
@@ -9324,7 +9330,7 @@ def index(action_argument=None):
         if interview_status.question.interview.options.get('hide navbar', False):
             bodyclass="dabody"
         else:
-            bodyclass="dabody pad-for-navbar"
+            bodyclass="dabody da-pad-for-navbar"
     if hasattr(interview_status.question, 'id'):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
         # if not is_ajax:
@@ -9425,7 +9431,7 @@ def index(action_argument=None):
         readability_report = '          <h3>Readability</h3>\n'
         for question_type in ('question', 'help'):
             if question_type in readability:
-                readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
+                readability_report += '          <table style="display: none;" class="table" id="dareadability-' + question_type +'">' + "\n"
                 readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
                 for read_type, value in readability[question_type]:
                     readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
@@ -9472,7 +9478,7 @@ def index(action_argument=None):
         start_output += global_css + additional_css(interview_status)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     if interview_status.question.interview.options.get('hide navbar', False):
-        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, extra_class='invisible')
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, extra_class='dainvisible')
     else:
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode)
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
@@ -9494,24 +9500,24 @@ def index(action_argument=None):
     if interview_status.question.question_type != "signature" and interview_status.post:
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += interview_status.post
         output += '        </div>\n'
         output += '      </div>' + "\n"
     if len(interview_status.attributions):
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="attributions">\n'
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="attributions">\n'
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
             output += '          <div><p><cite><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True, trim=True) + '</small></cite></p></div>\n'
@@ -9521,15 +9527,15 @@ def index(action_argument=None):
         output += '      <h2 class="sr-only">Information for developers</h2>\n'
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="readability">' + readability_report + '        </div>\n'
+            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12" style="display: none" id="readability">' + readability_report + '        </div>'
+                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>'
             else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12" style="display: none" id="readability">' + readability_report + '        </div>\n'
+                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>\n'
         output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
-        output += '        <div id="source" class="col-md-12 collapse">' + "\n"
+        output += '        <div id="dasource" class="col-md-12 collapse">' + "\n"
         #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
         #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
         if interview_status.using_screen_reader:
@@ -9829,7 +9835,7 @@ def interview_menu(absolute_urls=False, start_new=False):
             package = None
             subtitle = None
             status_class = 'dainterviewhaserror'
-            subtitle_class = 'invisible'
+            subtitle_class = 'dainvisible'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
         if absolute_urls:
             if start_new:
@@ -10128,8 +10134,8 @@ def observer():
       var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
       function daShowSpinner(){
-        if ($("#question").length > 0){
-          $('<div id="daSpinner" class="spinner-container top-for-navbar"><div class="container"><div class="row"><div class="col-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
+        if ($("#daquestion").length > 0){
+          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
         }
         else{
           var newSpan = document.createElement('span');
@@ -10137,8 +10143,8 @@ def observer():
           $(newI).addClass("fas fa-spinner fa-spin");
           $(newI).appendTo(newSpan);
           $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner text-muted top-for-navbar");
-          $(newSpan).appendTo("#sigtoppart");
+          $(newSpan).addClass("da-sig-spinner text-muted da-top-for-navbar");
+          $(newSpan).appendTo("#dasigtoppart");
         }
         daShowingSpinner = true;
       }
@@ -10222,7 +10228,7 @@ def observer():
         if (elem == null){
           return null;
         }
-        var showifParents = $(elem).parents(".jsshowif");
+        var showifParents = $(elem).parents(".dajsshowif");
         if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
           theVal = null;
         }
@@ -10327,15 +10333,15 @@ def observer():
           return false;
         }
         var theAction = null;
-        if ($(this).hasClass('review-action')){
+        if ($(this).hasClass('da-review-action')){
           theAction = $(this).data('action');
         }
         var embeddedJs = $(this).data('js');
         var embeddedAction = $(this).data('embaction');
         var linkNum = $(this).data('linknum');
         var theId = $(this).attr('id');
-        if (theId == 'pagetitle'){
-          theId = 'questionlabel';
+        if (theId == 'dapagetitle'){
+          theId = 'daquestionlabel';
         }
         var theName = $(this).attr('name');
         var theValue = $(this).val();
@@ -10362,7 +10368,7 @@ def observer():
           skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
         }
         //console.log("Need to click on " + skey);
-        if (daObserverChangesInterval != null && embeddedJs == null && theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
+        if (daObserverChangesInterval != null && embeddedJs == null && theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
           clearInterval(daObserverChangesInterval);
         }
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
@@ -10370,7 +10376,7 @@ def observer():
           //console.log("Running the embedded js");
           eval(decodeURIComponent(embeddedJs));
         }
-        if (theId != "backToQuestion" && theId != "helptoggle" && theId != "questionlabel"){
+        if (theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
           event.preventDefault();
           return false;
         }
@@ -10380,7 +10386,7 @@ def observer():
         var leftBracket = new RegExp('<', 'g');
         var rightBracket = new RegExp('>', 'g');
         contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('#question');
+        $('<span class="dainput-embedded" id="dawidth">').html( contents ).appendTo('#daquestion');
         $("#dawidth").css('min-width', $(this).css('min-width'));
         $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
         $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
@@ -10390,19 +10396,19 @@ def observer():
         }, 0);
       }
       function daShowHelpTab(){
-          $('#helptoggle').tab('show');
+          $('#dahelptoggle').tab('show');
       }
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
         }
-        if (!$("#flash").length){
-          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+        if (!$("#daflash").length){
+          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
-            $("#flash .alert-success").hide(300, function(){
+            $("#daflash .alert-success").hide(300, function(){
               $(self).remove();
             });
           }, 3000);
@@ -10508,10 +10514,10 @@ def observer():
         if (daShowingSpinner){
           daHideSpinner();
         }
-        $('button[type="submit"], input[type="submit"], a.review-action, #backToQuestion, #questionlabel, #pagetitle, #helptoggle, a[data-linknum], a[data-embaction], #backbutton').click(daSubmitter);
-        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
-        $(".to-labelauty-icon").labelauty({ label: false });
-        var navMain = $("#navbar-collapse");
+        $('button[type="submit"], input[type="submit"], a.da-review-action, #dabackToQuestion, #daquestionlabel, #dapagetitle, #dahelptoggle, a[data-linknum], a[data-embaction], #dabackbutton').click(daSubmitter);
+        $(".da-to-labelauty").labelauty({ class: "labelauty dafullwidth" });
+        //$(".da-to-labelauty-icon").labelauty({ label: false });
+        var navMain = $("#danavbar-collapse");
         navMain.on("click", "a", null, function () {
           if (!($(this).hasClass("dropdown-toggle"))){
             navMain.collapse('hide');
@@ -10520,50 +10526,50 @@ def observer():
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
         });
-        $("input.nota-checkbox").click(function(){
-          $(this).parent().find('input.non-nota-checkbox').each(function(){
+        $("input.danota-checkbox").click(function(){
+          $(this).parent().find('input.danon-nota-checkbox').each(function(){
             if ($(this).prop('checked') != false){
               $(this).prop('checked', false);
               $(this).trigger('change');
             }
           });
         });
-        $("input.non-nota-checkbox").click(function(){
-          $(this).parent().find('input.nota-checkbox').each(function(){
+        $("input.danon-nota-checkbox").click(function(){
+          $(this).parent().find('input.danota-checkbox').each(function(){
             if ($(this).prop('checked') != false){
               $(this).prop('checked', false);
               $(this).trigger('change');
             }
           });
         });
-        $("input.input-embedded").on('keyup', daAdjustInputWidth);
-        $("input.input-embedded").each(daAdjustInputWidth);
-        $(".helptrigger").click(function(e) {
+        $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
+        $("input.dainput-embedded").each(daAdjustInputWidth);
+        $(".dahelptrigger").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
-        $("#questionlabel").click(function(e) {
+        $("#daquestionlabel").click(function(e) {
           e.preventDefault();
           $(this).tab('show');
         });
-        $("#pagetitle").click(function(e) {
+        $("#dapagetitle").click(function(e) {
           e.preventDefault();
-          $('#questionlabel').tab('show');
+          $('#daquestionlabel').tab('show');
         });        
-        $("#help").on("shown.bs.tab", function(){
+        $("#dahelp").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
-          $("#helptoggle span").removeClass('daactivetext')
-          $("#helptoggle").blur();
+          $("#dahelptoggle span").removeClass('daactivetext')
+          $("#dahelptoggle").blur();
         });
-        $("#sourcetoggle").on("click", function(){
+        $("#dasourcetoggle").on("click", function(){
           $(this).parent().toggleClass("active");
           $(this).blur();
         });
-        $('#backToQuestion').click(function(event){
+        $('#dabackToQuestion').click(function(event){
           event.preventDefault();
-          $('#questionlabel').tab('show');
+          $('#daquestionlabel').tab('show');
         });
-        $(".showif").each(function(){
+        $(".dashowif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -10572,7 +10578,7 @@ def observer():
           //var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(speed){
-            if($(this).parents(".showif").length !== 0){
+            if($(this).parents(".dashowif").length !== 0){
               return;
             }
             var theVal;
@@ -10587,12 +10593,12 @@ def observer():
               //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).show(speed);
-                //$(showIfDiv).removeClass("invisible");
+                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
                 $(showIfDiv).hide(speed);
-                //$(showIfDiv).addClass("invisible");
+                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
@@ -10600,12 +10606,12 @@ def observer():
               //console.log("They are not the same");
               if (showIfSign){
                 $(showIfDiv).hide(speed);
-                //$(showIfDiv).addClass("invisible");
+                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
                 $(showIfDiv).show(speed);
-                //$(showIfDiv).removeClass("invisible");
+                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
@@ -10643,7 +10649,7 @@ def observer():
         daInitialized = true;
         daShowingHelp = 0;
         setTimeout(function(){
-          $("#flash .alert-success").hide(300, function(){
+          $("#daflash .alert-success").hide(300, function(){
             $(self).remove();
           });
         }, 3000);
@@ -10802,7 +10808,7 @@ def observer():
         obj = dict()
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
     output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
-    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody pad-for-navbar') + '">\n  <div id="dabody">\n  '
+    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
     output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
     response = make_response(output.encode('utf-8'), '200 OK')
@@ -10876,7 +10882,7 @@ def monitor():
           // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           // $("#listelement" + skey).find("a").each(function(){
           //     if ($(this).data('name') == "stopcontrolling"){
-          //         $(this).removeClass('invisible');
+          //         $(this).removeClass('dainvisible');
           //         console.log("Found it");
           //     }
           // });
@@ -10897,7 +10903,7 @@ def monitor():
       }
       function daTopMessage(message){
           var newDiv = document.createElement('div');
-          $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
+          $(newDiv).addClass("datop-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 dacol-centered");
           $(newDiv).html(message)
           $(newDiv).css("display", "none");
           $(newDiv).appendTo($(daTargetDiv));
@@ -11073,25 +11079,25 @@ def monitor():
               $("#daPhoneNumber").val('+' + the_number);
           }
           if (daPhoneNumberOk()){
-              $("#daPhoneNumber").parent().removeClass("has-error");
-              $("#daPhoneError").addClass("invisible");
+              $("#daPhoneNumber").parent().removeClass("da-has-error");
+              $("#daPhoneError").addClass("dainvisible");
               daPhoneNumber = $("#daPhoneNumber").val();
               if (daPhoneNumber == ''){
                   daPhoneNumber = null;
               }
               else{
-                  $(".phone").removeClass("invisible");
+                  $(".phone").removeClass("dainvisible");
               }
-              $("#daPhoneSaved").removeClass("invisible");
+              $("#daPhoneSaved").removeClass("dainvisible");
               setTimeout(function(){
-                  $("#daPhoneSaved").addClass("invisible");
+                  $("#daPhoneSaved").addClass("dainvisible");
               }, 2000);
           }
           else{
-              $("#daPhoneNumber").parent().addClass("has-error");
-              $("#daPhoneError").removeClass("invisible");
+              $("#daPhoneNumber").parent().addClass("da-has-error");
+              $("#daPhoneError").removeClass("dainvisible");
               daPhoneNumber = null;
-              $(".phone").addClass("invisible");
+              $(".phone").addClass("dainvisible");
           }
       }
       function daAllSessions(uid, yaml_filename){
@@ -11175,14 +11181,14 @@ def monitor():
           //console.log("daActivateChatArea with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-            $("#listelement" + skey).addClass("new-message");
+            $("#listelement" + skey).addClass("da-new-message");
             if (daBrowserTitle == document.title){
               document.title = '* ' + daBrowserTitle;
               daFaviconAlert();
             }
           }
           daMarkAsUpdated(key);
-          $("#chatarea" + skey).removeClass('invisible');
+          $("#chatarea" + skey).removeClass('dainvisible');
           $("#chatarea" + skey).find('input, button').prop("disabled", false);
           $("#chatarea" + skey).find('ul').html('');
           daSocket.emit('chat_log', {key: key});
@@ -11191,7 +11197,7 @@ def monitor():
           //console.log("daActivateChatArea with " + key);
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           $("#chatarea" + skey).find('input, button').prop("disabled", true);
-          $("#listelement" + skey).removeClass("new-message");
+          $("#listelement" + skey).removeClass("da-new-message");
           if (document.title != daBrowserTitle){
               document.title = daBrowserTitle;
               daFaviconRegular();
@@ -11202,7 +11208,7 @@ def monitor():
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           var xButton = document.createElement('a');
           var xButtonIcon = document.createElement('i');
-          $(xButton).addClass("corner-remove");
+          $(xButton).addClass("dacorner-remove");
           $(xButtonIcon).addClass("fas fa-times-circle");
           $(xButtonIcon).appendTo($(xButton));
           $("#listelement" + skey).addClass("list-group-item-danger");
@@ -11245,7 +11251,7 @@ def monitor():
               var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
               var chatArea = $("#chatarea" + skey).find('ul').first();
               if (messages.length > 0){
-                $(chatArea).removeClass('invisible');
+                $(chatArea).removeClass('dainvisible');
               }
               for (var i = 0; i < messages.length; ++i){
                   var message = messages[i];
@@ -11267,10 +11273,10 @@ def monitor():
       }
       function daCheckIfEmpty(){
           if ($("#monitorsessions").find("li").length > 0){
-              $("#emptylist").addClass("invisible");
+              $("#emptylist").addClass("dainvisible");
           }
           else{
-              $("#emptylist").removeClass("invisible");
+              $("#emptylist").removeClass("dainvisible");
           }
       }
       function daDrawSession(key, obj){
@@ -11316,24 +11322,24 @@ def monitor():
               $(theListElement).attr('id', "listelement" + key);
               var sessionDiv = document.createElement('div');
               $(sessionDiv).attr('id', "session" + key);
-              $(sessionDiv).addClass('chat-session');
+              $(sessionDiv).addClass('da-chat-session');
               $(sessionDiv).addClass('p-1');
               $(sessionDiv).appendTo($(theListElement));
               $(theListElement).appendTo("#monitorsessions");
               // controlDiv = document.createElement('div');
               // $(controlDiv).attr('id', "control" + key);
-              // $(controlDiv).addClass("chatcontrol invisible chat-session");
+              // $(controlDiv).addClass("dachatcontrol dainvisible da-chat-session");
               // $(controlDiv).appendTo($(theListElement));
               theIframeContainer = document.createElement('div');
-              $(theIframeContainer).addClass("observer-container invisible");
+              $(theIframeContainer).addClass("daobserver-container dainvisible");
               $(theIframeContainer).attr('id', 'iframe' + key);
               var theIframe = document.createElement('iframe');
-              $(theIframe).addClass("observer");
+              $(theIframe).addClass("daobserver");
               $(theIframe).attr('name', 'iframe' + key);
               $(theIframe).appendTo($(theIframeContainer));
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
-              $(theChatArea).addClass('monitor-chat-area invisible');
+              $(theChatArea).addClass('monitor-chat-area dainvisible');
               $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn btn-secondary daChatButton" type="button" disabled="">""" + word("Send") + """<\/button><\/div><\/div><\/div><\/form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
@@ -11354,7 +11360,7 @@ def monitor():
                   if(theCode == 13) { submitter(); e.preventDefault(); }
               });
               $(theChatArea).find("input").focus(function(){
-                  $(theListElement).removeClass("new-message");
+                  $(theListElement).removeClass("da-new-message");
                   if (document.title != daBrowserTitle){
                       document.title = daBrowserTitle;
                       daFaviconRegular();
@@ -11366,10 +11372,10 @@ def monitor():
               }
           }
           var theText = document.createElement('span');
-          $(theText).addClass('chat-title-label');
+          $(theText).addClass('da-chat-title-label');
           theText.innerHTML = the_html;
           var statusLabel = document.createElement('span');
-          $(statusLabel).addClass("badge badge-info chat-status-label");
+          $(statusLabel).addClass("badge badge-info da-chat-status-label");
           $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
           $(statusLabel).appendTo($(sessionDiv));
           if (daUsePhone){
@@ -11388,11 +11394,11 @@ def monitor():
               $(phoneButton).attr('title', daPhoneOffMessage);
             }
             $(phoneButton).attr('tabindex', 0);
-            $(phoneButton).addClass('observebutton')
+            $(phoneButton).addClass('daobservebutton')
             $(phoneButton).appendTo($(sessionDiv));
             $(phoneButton).attr('href', '#');
             if (daPhoneNumber == null){
-              $(phoneButton).addClass("invisible");
+              $(phoneButton).addClass("dainvisible");
             }
             $(phoneButton).click(function(e){
               e.preventDefault();
@@ -11427,40 +11433,40 @@ def monitor():
             });
           }
           var unblockButton = document.createElement('a');
-          $(unblockButton).addClass("btn btn-info observebutton");
+          $(unblockButton).addClass("btn btn-info daobservebutton");
           $(unblockButton).data('name', 'unblock');
           if (!obj.blocked){
-              $(unblockButton).addClass("invisible");
+              $(unblockButton).addClass("dainvisible");
           }
           $(unblockButton).html(""" + json.dumps(word("Unblock")) + """);
           $(unblockButton).attr('href', '#');
           $(unblockButton).appendTo($(sessionDiv));
           var blockButton = document.createElement('a');
-          $(blockButton).addClass("btn btn-danger observebutton");
+          $(blockButton).addClass("btn btn-danger daobservebutton");
           if (obj.blocked){
-              $(blockButton).addClass("invisible");
+              $(blockButton).addClass("dainvisible");
           }
           $(blockButton).html(""" + json.dumps(word("Block")) + """);
           $(blockButton).attr('href', '#');
           $(blockButton).data('name', 'block');
           $(blockButton).appendTo($(sessionDiv));
           $(blockButton).click(function(e){
-              $(unblockButton).removeClass("invisible");
-              $(this).addClass("invisible");
+              $(unblockButton).removeClass("dainvisible");
+              $(this).addClass("dainvisible");
               daDeActivateChatArea(key);
               daSocket.emit('block', {key: key});
               e.preventDefault();
               return false;
           });
           $(unblockButton).click(function(e){
-              $(blockButton).removeClass("invisible");
-              $(this).addClass("invisible");
+              $(blockButton).removeClass("dainvisible");
+              $(this).addClass("dainvisible");
               daSocket.emit('unblock', {key: key});
               e.preventDefault();
               return false;
           });
           var joinButton = document.createElement('a');
-          $(joinButton).addClass("btn btn-warning observebutton");
+          $(joinButton).addClass("btn btn-warning daobservebutton");
           $(joinButton).html(""" + json.dumps(word("Join")) + """);
           $(joinButton).attr('href', """ + json.dumps(url_for('visit_interview') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
           $(joinButton).data('name', 'join');
@@ -11468,7 +11474,7 @@ def monitor():
           $(joinButton).appendTo($(sessionDiv));
           if (wants_to_chat){
               var openButton = document.createElement('a');
-              $(openButton).addClass("btn btn-primary observebutton");
+              $(openButton).addClass("btn btn-primary daobservebutton");
               $(openButton).attr('href', """ + json.dumps(url_for('observer') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
               //$(openButton).attr('href', 'about:blank');
               $(openButton).attr('id', 'observe' + key);
@@ -11477,19 +11483,19 @@ def monitor():
               $(openButton).data('name', 'open');
               $(openButton).appendTo($(sessionDiv));
               var stopObservingButton = document.createElement('a');
-              $(stopObservingButton).addClass("btn btn-secondary observebutton invisible");
+              $(stopObservingButton).addClass("btn btn-secondary daobservebutton dainvisible");
               $(stopObservingButton).html(""" + json.dumps(word("Stop Observing")) + """);
               $(stopObservingButton).attr('href', '#');
               $(stopObservingButton).data('name', 'stopObserving');
               $(stopObservingButton).appendTo($(sessionDiv));
               var controlButton = document.createElement('a');
-              $(controlButton).addClass("btn btn-info observebutton");
+              $(controlButton).addClass("btn btn-info daobservebutton");
               $(controlButton).html(""" + json.dumps(word("Control")) + """);
               $(controlButton).attr('href', '#');
               $(controlButton).data('name', 'control');
               $(controlButton).appendTo($(sessionDiv));
               var stopControllingButton = document.createElement('a');
-              $(stopControllingButton).addClass("btn btn-secondary observebutton invisible");
+              $(stopControllingButton).addClass("btn btn-secondary daobservebutton dainvisible");
               $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
               $(stopControllingButton).attr('href', '#');
               $(stopControllingButton).data('name', 'stopcontrolling');
@@ -11497,9 +11503,9 @@ def monitor():
               $(controlButton).click(function(event){
                   event.preventDefault();
                   //console.log("Controlling...");
-                  $(this).addClass("invisible");
-                  $(stopControllingButton).removeClass("invisible");
-                  $(stopObservingButton).addClass("invisible");
+                  $(this).addClass("dainvisible");
+                  $(stopControllingButton).removeClass("dainvisible");
+                  $(stopObservingButton).addClass("dainvisible");
                   var theIframe = $("#iframe" + skey).find('iframe')[0];
                   if (theIframe != null && theIframe.contentWindow){
                       theIframe.contentWindow.daTurnOnControl();
@@ -11522,9 +11528,9 @@ def monitor():
                       return false;
                   }
                   //console.log("Stop controlling...");
-                  $(this).addClass("invisible");
-                  $(controlButton).removeClass("invisible");
-                  $(stopObservingButton).removeClass("invisible");
+                  $(this).addClass("dainvisible");
+                  $(controlButton).removeClass("dainvisible");
+                  $(stopObservingButton).removeClass("dainvisible");
                   if (daControlling.hasOwnProperty(key)){
                       delete daControlling[key];
                   }
@@ -11532,19 +11538,19 @@ def monitor():
               });
               $(openButton).click(function(event){
                   //console.log("Observing..");
-                  $(this).addClass("invisible");
-                  $(stopObservingButton).removeClass("invisible");
-                  $("#iframe" + skey).removeClass("invisible");
-                  $(controlButton).removeClass("invisible");
+                  $(this).addClass("dainvisible");
+                  $(stopObservingButton).removeClass("dainvisible");
+                  $("#iframe" + skey).removeClass("dainvisible");
+                  $(controlButton).removeClass("dainvisible");
                   return true;
               });
               $(stopObservingButton).click(function(e){
                   //console.log("Unobserving...");
-                  $(this).addClass("invisible");
-                  $(openButton).removeClass("invisible");
-                  $(controlButton).addClass("invisible");
-                  $(stopObservingButton).addClass("invisible");
-                  $(stopControllingButton).addClass("invisible");
+                  $(this).addClass("dainvisible");
+                  $(openButton).removeClass("dainvisible");
+                  $(controlButton).addClass("dainvisible");
+                  $(stopObservingButton).addClass("dainvisible");
+                  $(stopControllingButton).addClass("dainvisible");
                   var theIframe = $("#iframe" + skey).find('iframe')[0];
                   if (daControlling.hasOwnProperty(key)){
                       delete daControlling[key];
@@ -11560,36 +11566,36 @@ def monitor():
                       theIframe.contentWindow.document.close();
                   }
                   $("#iframe" + skey).slideUp(400, function(){
-                      $(this).css("display", "").addClass("invisible");
+                      $(this).css("display", "").addClass("dainvisible");
                   });
                   e.preventDefault();
                   return false;
               });
-              if ($(theIframeContainer).hasClass("invisible")){
-                  $(openButton).removeClass("invisible");
-                  $(stopObservingButton).addClass("invisible");
-                  $(controlButton).addClass("invisible");
-                  $(stopControllingButton).addClass("invisible");
+              if ($(theIframeContainer).hasClass("dainvisible")){
+                  $(openButton).removeClass("dainvisible");
+                  $(stopObservingButton).addClass("dainvisible");
+                  $(controlButton).addClass("dainvisible");
+                  $(stopControllingButton).addClass("dainvisible");
                   if (daControlling.hasOwnProperty(key)){
                       delete daControlling[key];
                   }
               }
               else{
-                  $(openButton).addClass("invisible");
+                  $(openButton).addClass("dainvisible");
                   if (daControlling.hasOwnProperty(key)){
-                      $(stopObservingButton).addClass("invisible");
-                      $(controlButton).addClass("invisible");
-                      $(stopControllingButton).removeClass("invisible");
+                      $(stopObservingButton).addClass("dainvisible");
+                      $(controlButton).addClass("dainvisible");
+                      $(stopControllingButton).removeClass("dainvisible");
                   }
                   else{
-                      $(stopObservingButton).removeClass("invisible");
-                      $(controlButton).removeClass("invisible");
-                      $(stopControllingButton).addClass("invisible");
+                      $(stopObservingButton).removeClass("dainvisible");
+                      $(controlButton).removeClass("dainvisible");
+                      $(stopControllingButton).addClass("dainvisible");
                   }
               }
           }
           $(theText).appendTo($(sessionDiv));
-          if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
+          if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('dainvisible')){
               daActivateChatArea(key);
           }
           if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
@@ -11738,7 +11744,7 @@ def monitor():
                     $(newLi).appendTo(chatArea);
                     daScrollChat("#chatarea" + skey);
                     if (data.data.is_self){
-                      $("#listelement" + skey).removeClass("new-message");
+                      $("#listelement" + skey).removeClass("da-new-message");
                       if (document.title != daBrowserTitle){
                         document.title = daBrowserTitle;
                         daFaviconRegular();
@@ -11746,7 +11752,7 @@ def monitor():
                     }
                     else{
                       if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-                        $("#listelement" + skey).addClass("new-message");
+                        $("#listelement" + skey).addClass("da-new-message");
                         if (daBrowserTitle == document.title){
                           document.title = '* ' + daBrowserTitle;
                           daFaviconAlert();
@@ -11862,23 +11868,23 @@ def monitor():
                       daUndrawSession(key);
                   }
                   if ($("#monitorsessions").find("li").length > 0){
-                      $("#emptylist").addClass("invisible");
+                      $("#emptylist").addClass("dainvisible");
                   }
                   else{
-                      $("#emptylist").removeClass("invisible");
+                      $("#emptylist").removeClass("dainvisible");
                   }
               });
           }
           if (daAvailableForChat){
-              $("#daNotAvailable").addClass("invisible");
+              $("#daNotAvailable").addClass("dainvisible");
               daCheckNotifications();
           }
           else{
-              $("#daAvailable").addClass("invisible");
+              $("#daAvailable").addClass("dainvisible");
           }
           $("#daAvailable").click(function(event){
-              $("#daAvailable").addClass("invisible");
-              $("#daNotAvailable").removeClass("invisible");
+              $("#daAvailable").addClass("dainvisible");
+              $("#daNotAvailable").removeClass("dainvisible");
               daAvailableForChat = false;
               //console.log("daAvailableForChat: " + daAvailableForChat);
               daUpdateMonitor();
@@ -11886,8 +11892,8 @@ def monitor():
           });
           $("#daNotAvailable").click(function(event){
               daCheckNotifications();
-              $("#daNotAvailable").addClass("invisible");
-              $("#daAvailable").removeClass("invisible");
+              $("#daNotAvailable").addClass("dainvisible");
+              $("#daAvailable").removeClass("dainvisible");
               daAvailableForChat = true;
               //console.log("daAvailableForChat: " + daAvailableForChat);
               daUpdateMonitor();
@@ -11899,7 +11905,7 @@ def monitor():
             }
           });
           if (daUsePhone){
-            $("#daPhoneInfo").removeClass("invisible");
+            $("#daPhoneInfo").removeClass("dainvisible");
             $("#daPhoneNumber").val(daPhoneNumber);
             $("#daPhoneNumber").change(daCheckPhone);
             $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
@@ -11909,7 +11915,7 @@ def monitor():
           }
           $(window).on('scroll', daOnScrollResize);
           $(window).on('resize', daOnScrollResize);
-          $(".chat-notifier").click(function(e){
+          $(".da-chat-notifier").click(function(e){
               //var key = $(this).data('key');
               var direction = 0;
               if ($(this).attr('id') == "chat-message-above"){
@@ -11947,7 +11953,7 @@ def monitor():
           });
       });
     </script>"""
-    return render_template('pages/monitor.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
+    return render_template('pages/monitor.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
 
 @app.route('/updatingpackages', methods=['GET', 'POST'])
 @login_required
@@ -12060,7 +12066,7 @@ def update_package_wait():
         daCheckinInterval = setInterval(daUpdate, 6000);
       });
     </script>"""
-    return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
+    return render_template('pages/update_package_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url)
 
 @app.route('/update_package_ajax', methods=['POST'])
 @login_required
@@ -12292,7 +12298,7 @@ def update_package():
     dw_status = pypi_status('docassemble.webapp')
     if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != text_type(python_version):
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
-    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -12649,7 +12655,7 @@ def create_playground_package():
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
-    return render_template('pages/create_playground_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
+    return render_template('pages/create_playground_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -12930,7 +12936,7 @@ class Fruit(DAObject):
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             flash(word("Package created"), 'success')
             return response
-    return render_template('pages/create_package.html', version_warning=version_warning, bodyclass='adminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
+    return render_template('pages/create_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
 
 @app.route('/restart', methods=['GET', 'POST'])
 @login_required
@@ -12958,7 +12964,7 @@ def restart_page():
     </script>"""
     next_url = request.args.get('next', url_for('interview_list', post_restart=1))
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
-    return render_template('pages/restart.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
+    return render_template('pages/restart.html', version_warning=None, bodyclass='daadminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
 @app.route('/playground_poll', methods=['GET'])
 @login_required
@@ -12985,7 +12991,7 @@ def playground_poll():
         setInterval(daPoll, 4000);
       });
     </script>"""
-    return render_template('pages/playground_poll.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Waiting'), page_title=word('Waiting'))
+    return render_template('pages/playground_poll.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Waiting'), page_title=word('Waiting'))
 
 def get_gd_flow():
     app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', dict())
@@ -13263,7 +13269,7 @@ def gd_sync_wait():
         daCheckinInterval = setInterval(daSync, 2000);
       });
     </script>"""
-    return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
+    return render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
 
 @app.route('/onedrive_callback', methods=['GET', 'POST'])
 @login_required
@@ -13486,7 +13492,7 @@ def od_sync_wait():
         daCheckinInterval = setInterval(daSync, 2000);
       });
     </script>"""
-    return render_template('pages/od_sync_wait.html', version_warning=None, bodyclass='adminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
+    return render_template('pages/od_sync_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url)
 
 # @app.route('/old_sync_with_google_drive', methods=['GET', 'POST'])
 # @login_required
@@ -13494,7 +13500,7 @@ def od_sync_wait():
 # def old_sync_with_google_drive():
 #     next = request.args.get('next', url_for('playground_page'))
 #     extra_meta = """\n    <meta http-equiv="refresh" content="1; url='""" + url_for('do_sync_with_google_drive', next=next) + """'">"""
-#     return render_template('pages/google_sync.html', version_warning=None, bodyclass='adminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
+#     return render_template('pages/google_sync.html', version_warning=None, bodyclass='daadminbody', extra_meta=Markup(extra_meta), tab_title=word('Synchronizing'), page_title=word('Synchronizing'))
 
 def add_br(text):
     return re.sub(r'[\n\r]+', "<br>", text)
@@ -13823,7 +13829,7 @@ def google_drive_page():
     description = 'Select the folder from your Google Drive that you want to be synchronized with the Playground.'
     if app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None:
         description += '  ' + word('Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.')
-    return render_template('pages/googledrive.html', version_warning=version_warning, description=description, bodyclass='adminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
+    return render_template('pages/googledrive.html', version_warning=version_warning, description=description, bodyclass='daadminbody', header=word('Google Drive'), tab_title=word('Google Drive'), items=items, the_folder=the_folder, page_title=word('Google Drive'), form=form)
 
 def gd_fix_subdirs(service, the_folder):
     subdirs = list()
@@ -13949,7 +13955,7 @@ def onedrive_page():
     description = word('Select the folder from your OneDrive that you want to be synchronized with the Playground.')
     if app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None:
         description += '  ' + word('Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.')
-    return render_template('pages/onedrive.html', version_warning=version_warning, bodyclass='adminbody', header=word('OneDrive'), tab_title=word('OneDrive'), items=items, the_folder=the_folder, page_title=word('OneDrive'), form=form, description=Markup(description))
+    return render_template('pages/onedrive.html', version_warning=version_warning, bodyclass='daadminbody', header=word('OneDrive'), tab_title=word('OneDrive'), items=items, the_folder=the_folder, page_title=word('OneDrive'), form=form, description=Markup(description))
 
 def od_fix_subdirs(http, the_folder):
     subdirs = set()
@@ -14025,7 +14031,7 @@ def config_page():
         version = word("Version ") + text_type(python_version)
     else:
         version = word("Version ") + text_type(python_version) + ' (Python); ' + text_type(system_version) + ' (' + word('system') + ')'
-    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='adminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
+    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
 
 @app.route('/view_source', methods=['GET'])
 @login_required
@@ -14047,7 +14053,7 @@ def view_source():
         logmessage("view_source: no source: " + str(errmess))
         abort(404)
     header = source_path
-    return render_template('pages/view_source.html', version_warning=None, bodyclass='adminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight fullheight")))), 200
+    return render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight dafullheight")))), 200
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
@@ -14498,11 +14504,11 @@ def playground_files():
 """ + indent_by(search_js(form='formtwo'), 6) + """
       function saveCallback(data){
         fetchVars(true);
-        if ($("#flash").length){
-          $("#flash").html(data.flash_message);
+        if ($("#daflash").length){
+          $("#daflash").html(data.flash_message);
         }
         else{
-          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '<\/div>');
+          $("#damain").prepend('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">' + data.flash_message + '<\/div>');
         }
       }
       function scrollBottom(){
@@ -14524,7 +14530,7 @@ def playground_files():
           }
           return;
         });
-        $("#uploadbutton").click(function(event){
+        $("#dauploadbutton").click(function(event){
           if ($("#uploadfile").val() == ""){
             event.preventDefault();
             return false;
@@ -14557,7 +14563,7 @@ def playground_files():
               success: function(data){
                 saveCallback(data);
                 setTimeout(function(){
-                  $("#flash .alert-success").hide(300, function(){
+                  $("#daflash .alert-success").hide(300, function(){
                     $(self).remove();
                   });
                 }, 3000);
@@ -14593,8 +14599,8 @@ def playground_files():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted backbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     cm_mode = ''
     if mode == 'null':
         modes = []
@@ -14604,7 +14610,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -14666,7 +14672,7 @@ def pull_playground_package():
       });
     </script>
 """
-    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='adminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200
+    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='daadminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200
 
 @app.route('/get_git_branches', methods=['GET'])
 @login_required
@@ -15351,7 +15357,7 @@ def playground_packages():
           var daWhichButton = this;
           if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
             if ($("#commit_message_div").is(":visible")){
-              $("#commit_message").parent().addClass("has-error");
+              $("#commit_message").parent().addClass("da-has-error");
             }
             else{
               $("#commit_message_div").show();
@@ -15379,8 +15385,8 @@ def playground_packages():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted backbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -15467,7 +15473,7 @@ def playground_packages():
         form.author_name.data = current_user.first_name + " " + current_user.last_name
     if form.author_email.data in ('', None) and current_user.email:
         form.author_email.data = current_user.email
-    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='adminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def github_as_http(url):
     if url.startswith('http'):
@@ -15562,7 +15568,7 @@ function searchReady(){
     if (query.length == 0){
       clear_matches();
       daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
       return;
     }
     origPosition = daCodeMirror.getCursor('from');
@@ -15572,7 +15578,7 @@ function searchReady(){
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
       scroll_to_selection();
-      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
     }
     else{
       var lastLine = daCodeMirror.lastLine()
@@ -15584,10 +15590,10 @@ function searchReady(){
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
         scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+        $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
       }
       else{
-        $("#""" + form + """ input[name='search_term']").addClass("search-error");
+        $("#""" + form + """ input[name='search_term']").addClass("da-search-error");
       }
     }
     event.preventDefault();
@@ -15598,7 +15604,7 @@ function searchReady(){
     if (query.length == 0){
       clear_matches();
       daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
       return;
     }
     origPosition = daCodeMirror.getCursor('to');
@@ -15608,7 +15614,7 @@ function searchReady(){
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
       scroll_to_selection();
-      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
     }
     else{
       origPosition = { line: 0, ch: 0, xRel: 1 }
@@ -15618,10 +15624,10 @@ function searchReady(){
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
         scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+        $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
       }
       else{
-        $("#""" + form + """ input[name='search_term']").addClass("search-error");
+        $("#""" + form + """ input[name='search_term']").addClass("da-search-error");
       }
     }
     event.preventDefault();
@@ -15633,7 +15639,7 @@ function show_matches(query){
   clear_matches();
   if (query.length == 0){
     daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+    $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
     return;
   }
   searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
@@ -15668,7 +15674,7 @@ function update_search(event){
   if (query.length == 0){
     clear_matches();
     daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $(this).removeClass("search-error");
+    $(this).removeClass("da-search-error");
     return;
   }
   var theCode = event.which || event.keyCode;
@@ -15683,7 +15689,7 @@ function update_search(event){
   if (found){
     daCodeMirror.setSelection(sc.from(), sc.to());
     scroll_to_selection();
-    $(this).removeClass("search-error");
+    $(this).removeClass("da-search-error");
   }
   else{
     origPosition = { line: 0, ch: 0, xRel: 1 }
@@ -15693,10 +15699,10 @@ function update_search(event){
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
       scroll_to_selection();
-      $(this).removeClass("search-error");
+      $(this).removeClass("da-search-error");
     }
     else{
-      $(this).addClass("search-error");
+      $(this).addClass("da-search-error");
     }
   }
 }
@@ -15776,7 +15782,7 @@ function activateVariables(){
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
       scroll_to_selection();
-      $("#form input[name='search_term']").removeClass('search-error');
+      $("#form input[name='search_term']").removeClass('da-search-error');
     }
     else{
       origPosition = { line: 0, ch: 0, xRel: 1 }
@@ -15786,10 +15792,10 @@ function activateVariables(){
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
         scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass('search-error');
+        $("#""" + form + """ input[name='search_term']").removeClass('da-search-error');
       }
       else{
-        $("#""" + form + """ input[name='search_term']").addClass('search-error');
+        $("#""" + form + """ input[name='search_term']").addClass('da-search-error');
       }
     }
     event.preventDefault();
@@ -16194,55 +16200,55 @@ var attrs_showing = Object();
 
 function activateExample(id, scroll){
   var info = exampleData[id];
-  $("#example-source").html(info['html']);
-  $("#example-source-before").html(info['before_html']);
-  $("#example-source-after").html(info['after_html']);
-  $("#example-image-link").attr("href", info['interview']);
-  $("#example-image").attr("src", info['image']);
+  $("#da-example-source").html(info['html']);
+  $("#da-example-source-before").html(info['before_html']);
+  $("#da-example-source-after").html(info['after_html']);
+  $("#da-example-image-link").attr("href", info['interview']);
+  $("#da-example-image").attr("src", info['image']);
   if (info['documentation'] != null){
-    $("#example-documentation-link").attr("href", info['documentation']);
-    $("#example-documentation-link").removeClass("example-hidden");
-    //$("#example-documentation-link").slideUp();
+    $("#da-example-documentation-link").attr("href", info['documentation']);
+    $("#da-example-documentation-link").removeClass("da-example-hidden");
+    //$("#da-example-documentation-link").slideUp();
   }
   else{
-    $("#example-documentation-link").addClass("example-hidden");
-    //$("#example-documentation-link").slideDown();
+    $("#da-example-documentation-link").addClass("da-example-hidden");
+    //$("#da-example-documentation-link").slideDown();
   }
-  $(".example-list").addClass("example-hidden");
-  $(".example-link").removeClass("example-active");
-  $(".example-link").removeClass("active");
-  $(".example-link").each(function(){
+  $(".da-example-list").addClass("da-example-hidden");
+  $(".da-example-link").removeClass("da-example-active");
+  $(".da-example-link").removeClass("active");
+  $(".da-example-link").each(function(){
     if ($(this).data("example") == id){
-      $(this).addClass("example-active");
+      $(this).addClass("da-example-active");
       $(this).addClass("active");
-      $(this).parents(".example-list").removeClass("example-hidden");
+      $(this).parents(".da-example-list").removeClass("da-example-hidden");
       if (scroll){
         setTimeout(function(){
           //console.log($(this).parents("li").last()[0].offsetTop);
           //console.log($(this).parents("li").last().parent()[0].offsetTop);
-          $(".example-active").parents("ul").last().scrollTop($(".example-active").parents("li").last()[0].offsetTop);
+          $(".da-example-active").parents("ul").last().scrollTop($(".da-example-active").parents("li").last()[0].offsetTop);
         }, 0);
       }
-      //$(this).parents(".example-list").slideDown();
+      //$(this).parents(".da-example-list").slideDown();
     }
   });
-  $("#hide-full-example").addClass("invisible");
+  $("#da-hide-full-example").addClass("dainvisible");
   if (info['has_context']){
-    $("#show-full-example").removeClass("invisible");
+    $("#da-show-full-example").removeClass("dainvisible");
   }
   else{
-    $("#show-full-example").addClass("invisible");
+    $("#da-show-full-example").addClass("dainvisible");
   }
-  $("#example-source-before").addClass("invisible");
-  $("#example-source-after").addClass("invisible");
+  $("#da-example-source-before").addClass("dainvisible");
+  $("#da-example-source-after").addClass("dainvisible");
 }
 
 function saveCallback(data){
-  if ($("#flash").length){
-    $("#flash").html(data.flash_message);
+  if ($("#daflash").length){
+    $("#daflash").html(data.flash_message);
   }
   else{
-    $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
+    $("#damain").prepend('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">' + data.flash_message + '</div>');
   }
   if (data.vocab_list != null){
     vocab = data.vocab_list;
@@ -16310,7 +16316,7 @@ $( document ).ready(function() {
       success: function(data){
         saveCallback(data);
         setTimeout(function(){
-          $("#flash .alert-success").hide(300, function(){
+          $("#daflash .alert-success").hide(300, function(){
             $(self).remove();
           });
         }, 3000);
@@ -16321,16 +16327,16 @@ $( document ).ready(function() {
     return false;
   });
 
-  $(".example-link").on("click", function(){
+  $(".da-example-link").on("click", function(){
     var id = $(this).data("example");
     activateExample(id, false);
   });
 
-  $(".example-copy").on("click", function(event){
+  $(".da-example-copy").on("click", function(event){
     if (daCodeMirror.somethingSelected()){
       daCodeMirror.replaceSelection("");
     }
-    var id = $(".example-active").data("example");
+    var id = $(".da-example-active").data("example");
     var curPos = daCodeMirror.getCursor();
     var notFound = 1;
     var insertLine = daCodeMirror.lastLine();
@@ -16356,15 +16362,15 @@ $( document ).ready(function() {
     return false;
   });
 
-  $(".example-heading").on("click", function(){
+  $(".da-example-heading").on("click", function(){
     var list = $(this).parent().children("ul").first();
     if (list != null){
-      if (!list.hasClass("example-hidden")){
+      if (!list.hasClass("da-example-hidden")){
         return;
       }
-      $(".example-list").addClass("example-hidden");
-      //$(".example-list").slideUp();
-      var new_link = $(this).parent().find("a.example-link").first();
+      $(".da-example-list").addClass("da-example-hidden");
+      //$(".da-example-list").slideUp();
+      var new_link = $(this).parent().find("a.da-example-link").first();
       if (new_link.length){
         var id = new_link.data("example");
         activateExample(id, true);
@@ -16374,22 +16380,22 @@ $( document ).ready(function() {
 
   activatePopovers();
 
-  $("#show-full-example").on("click", function(){
-    var id = $(".example-active").data("example");
+  $("#da-show-full-example").on("click", function(){
+    var id = $(".da-example-active").data("example");
     var info = exampleData[id];
-    $(this).addClass("invisible");
-    $("#hide-full-example").removeClass("invisible");
-    $("#example-source-before").removeClass("invisible");
-    $("#example-source-after").removeClass("invisible");
+    $(this).addClass("dainvisible");
+    $("#da-hide-full-example").removeClass("dainvisible");
+    $("#da-example-source-before").removeClass("dainvisible");
+    $("#da-example-source-after").removeClass("dainvisible");
   });
 
-  $("#hide-full-example").on("click", function(){
-    var id = $(".example-active").data("example");
+  $("#da-hide-full-example").on("click", function(){
+    var id = $(".da-example-active").data("example");
     var info = exampleData[id];
-    $(this).addClass("invisible");
-    $("#show-full-example").removeClass("invisible");
-    $("#example-source-before").addClass("invisible");
-    $("#example-source-after").addClass("invisible");
+    $(this).addClass("dainvisible");
+    $("#da-show-full-example").removeClass("dainvisible");
+    $("#da-example-source-before").addClass("dainvisible");
+    $("#da-example-source-after").addClass("dainvisible");
   });
   if ($("#playground_name").val().length > 0){
     daCodeMirror.focus();
@@ -16434,7 +16440,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='adminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 @app.errorhandler(404)
 def page_not_found_error(the_error):
@@ -16525,13 +16531,13 @@ def server_error(the_error):
         if (priority == null){
           priority = 'info'
         }
-        if (!$("#flash").length){
-          $(daTargetDiv).append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"><\/div>');
+        if (!$("#daflash").length){
+          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
         }
-        $("#flash").append('<div class="alert alert-' + priority + ' alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
         if (priority == 'success'){
           setTimeout(function(){
-            $("#flash .alert-success").hide(300, function(){
+            $("#daflash .alert-success").hide(300, function(){
               $(self).remove();
             });
           }, 3000);
@@ -16661,7 +16667,7 @@ def logs():
         content = "\n".join(map(lambda x: x, lines))
     else:
         content = "No log files available"
-    return render_template('pages/logs.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
+    return render_template('pages/logs.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
 
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required
@@ -16690,7 +16696,7 @@ def request_developer():
             except:
                 flash(word('We were unable to submit your request.'), 'error')
         return redirect(url_for('user.profile'))
-    return render_template('users/request_developer.html', version_warning=None, bodyclass='adminbody', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
+    return render_template('users/request_developer.html', version_warning=None, bodyclass='daadminbody', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
 def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
@@ -16827,7 +16833,7 @@ def utilities():
         $(this).next('.custom-file-label').html(fileName);
       });
     </script>"""
-    return render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, interview_placeholder=word("E.g., docassemble.demo:data/questions/questions.yml"), language_placeholder=word("E.g., es, fr, it"))
+    return render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, interview_placeholder=word("E.g., docassemble.demo:data/questions/questions.yml"), language_placeholder=word("E.g., es, fr, it"))
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -17075,7 +17081,7 @@ def train():
         if playground_package and playground_package not in package_list:
             package_list[playground_package] = 0
         package_list = [(x, package_list[x]) for x in sorted(package_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package)
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_package_list=True, playground_package=playground_package)
     if playground_package and the_package == playground_package:
         the_package_display = word("My Playground")
     else:
@@ -17111,7 +17117,7 @@ def train():
                     if short_file_name not in file_list:
                         file_list[short_file_name] = 0
         file_list = [(x, file_list[x]) for x in sorted(file_list)]
-        return render_template('pages/train.html', version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True)
+        return render_template('pages/train.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_file_list=True)
     if the_group_id is None:
         the_prefix = ml_prefix(the_package, the_file)
         the_package_file = docassemble.base.functions.package_data_filename(the_prefix)
@@ -17245,14 +17251,14 @@ def train():
         });
       });
     </script>"""        
-        return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform)
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=fix_pickle_obj(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
-                new_entry['independent_display'] = '<div class="mldatacontainer">' + '<br>'.join(['<span class="mldatakey">' + text_type(key) + '</span>: <span class="mldatavalue">' + text_type(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
+                new_entry['independent_display'] = '<div class="damldatacontainer">' + '<br>'.join(['<span class="damldatakey">' + text_type(key) + '</span>: <span class="damldatavalue">' + text_type(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
                 new_entry['type'] = 'data'
             else:
                 new_entry['type'] = 'text'
@@ -17334,7 +17340,7 @@ def train():
             $("#dependent" + the_number).val($(this).val());
           }
         });
-        $("div.delete-observation input").change(function(){
+        $("div.dadelete-observation input").change(function(){
           var the_number = $(this).data("id-number");
           if ($(this).is(':checked')){
             $("#dependent" + the_number).prop('disabled', true);
@@ -17347,7 +17353,7 @@ def train():
         });
       });
     </script>"""
-        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='adminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
+        return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
@@ -20401,7 +20407,7 @@ def manage_api():
     argu['extra_js'] = Markup("""
 <script>
   function remove_constraint(elem){
-    $(elem).parents('.constraintlist div').remove();
+    $(elem).parents('.daconstraintlist div').remove();
     fix_constraints();
   }
   function fix_constraints(){
@@ -20409,13 +20415,13 @@ def manage_api():
     var filled_exist = 0;
     var empty_exist = 0;
     if ($("#method").val() == 'none'){
-      $(".constraintlist").hide();
+      $(".daconstraintlist").hide();
       return;
     }
     else{
-      $(".constraintlist").show();
+      $(".daconstraintlist").show();
     }
-    $(".constraintlist input").each(function(){
+    $(".daconstraintlist input").each(function(){
       if ($(this).val() == ''){
         empty_exist = 1;
       }
@@ -20452,7 +20458,7 @@ def manage_api():
       }
       $(new_input).on('change', fix_constraints);
       $(new_input).on('keyup', fix_constraints);
-      $(".constraintlist").append(new_div);
+      $(".daconstraintlist").append(new_div);
       var new_button = $('<button>');
       var new_i = $('<i>');
       $(new_button).addClass('btn btn-outline-secondary');
@@ -20464,14 +20470,14 @@ def manage_api():
     }
   }
   $( document ).ready(function(){
-    $(".constraintlist input").on('change', fix_constraints);
+    $(".daconstraintlist input").on('change', fix_constraints);
     $("#method").on('change', function(){
-      $(".constraintlist div.input-group").remove();
+      $(".daconstraintlist div.input-group").remove();
       fix_constraints();
     });
     $("#submit").on('click', function(){
       var the_constraints = [];
-      $(".constraintlist input").each(function(){
+      $(".daconstraintlist input").each(function(){
         if ($(this).val() != ''){
           the_constraints.push($(this).val());
         }
@@ -20483,6 +20489,10 @@ def manage_api():
 </script>
 """)
     form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
+    try:
+        ip_address = request.remote_addr
+    except:
+        ip_address = None
     if request.method == 'POST' and form.validate():
         action = form.action.data
         try:
@@ -20556,6 +20566,8 @@ def manage_api():
                 form.key.data = api_key
                 form.name.data = info.get('name')
                 argu['constraints'] = info.get('constraints')
+        if ip_address:
+            argu['description'] = Markup(word("Your IP address is") + " <code>" + text_type(ip_address) + "</code>.")
     if action == 'list':
         argu['title'] = word("API Keys")
         argu['tab_title'] = argu['title']
@@ -20634,7 +20646,7 @@ def retrieve_emails(**pargs):
     else:
         user_id = current_user.id
         temp_user_id = None
-    user_cache = user_id_dict()
+    user_cache = dict()
     results = list()
     if key is None:
         the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id).order_by(Shortener.modtime)
@@ -20650,7 +20662,11 @@ def retrieve_emails(**pargs):
         result_for_short.index = record.index
         result_for_short.emails = list()
         if record.user_id is not None:
-            user = user_cache[record.user_id]
+            if record.user_id in user_cache:
+                user = user_cache[record.user_id]
+            else:
+                user = get_user_object(record.user_id)
+                user_cache[record.user_id] = user
             result_for_short.owner = user.email
         else:
             user = None
@@ -21117,6 +21133,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          server_redis=r,
                                          server_redis_user=r_user,
                                          user_id_dict=user_id_dict,
+                                         get_user_object=get_user_object,
                                          retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code,
                                          make_png_for_pdf=make_png_for_pdf,
@@ -21223,8 +21240,8 @@ def define_examples():
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="badge badge-success example-copy">' + word("Insert") + '</a></h5><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a tabindex="0" class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="badge badge-primary example-documentation example-hidden" id="example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 da-example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="badge badge-success da-example-copy">' + word("Insert") + '</a></h5><div id="da-example-source-before" class="dainvisible"></div><div id="da-example-source"></div><div id="da-example-source-after" class="dainvisible"></div><div><a tabindex="0" class="da-example-hider" id="da-show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="da-example-hider dainvisible" id="da-hide-full-example">' + word("Hide context of example") + '</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="badge badge-primary da-example-documentation da-example-hidden" id="da-example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="da-example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="da-example-screenshot" id="da-example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

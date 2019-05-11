@@ -3636,7 +3636,7 @@ class Question:
                     extras['list_collect_allow_delete'] = True
                 extras['list_iterator'] = m.group(2)
                 the_list = eval(the_list_varname, user_dict)
-                if 'DAList' not in text_type(type(the_list)) or not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
+                if not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
                     raise DAError("Cannot use list collect on a variable that is not a DAList.")
                 extras['list_collect'] = the_list
                 if hasattr(self, 'list_collect_label'):

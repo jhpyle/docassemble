@@ -23,28 +23,28 @@ function daInitializeSignature(){
   $(window).on('resize', function(){daResizeCanvas()});
   $(window).on('orientationchange', function(){daResizeCanvas()});
   
-  $(".sigpalette").click(function(){
-    $(".sigpalette").css("border-color", "#777");
-    $(".sigpalette").css("border-style", "solid");
-    $(this).css("border-color", "#fff");
-    $(this).css("border-style", "dashed");
-    daColor = $(this).css("background-color");
-    daCtx.beginPath();
-    daCtx.lineJoin="round";
-    daCtx.strokeStyle = daColor;
-    daCtx.fillStyle = daColor;
-  });
-  $(".sigclear").click(function() {
+  // $(".dasigpalette").click(function(){
+  //   $(".dasigpalette").css("border-color", "#777");
+  //   $(".dasigpalette").css("border-style", "solid");
+  //   $(this).css("border-color", "#fff");
+  //   $(this).css("border-style", "dashed");
+  //   daColor = $(this).css("background-color");
+  //   daCtx.beginPath();
+  //   daCtx.lineJoin="round";
+  //   daCtx.strokeStyle = daColor;
+  //   daCtx.fillStyle = daColor;
+  // });
+  $(".dasigclear").click(function() {
     daNewCanvas();
   });
-  $(".sigsave").click(function() {
+  $(".dasigsave").click(function() {
     if (daIsEmpty){
-      $("#errormess").removeClass("signotshowing");
-      setTimeout(function(){ $("#errormess").addClass("signotshowing"); }, 3000);
+      $("#errormess").removeClass("dasignotshowing");
+      setTimeout(function(){ $("#daerrormess").addClass("dasignotshowing"); }, 3000);
     }
     else{
-      $(".sigclear").attr('disabled', true);
-      $(".sigsave").attr('disabled', true);
+      $(".dasigclear").attr('disabled', true);
+      $(".dasigsave").attr('disabled', true);
       daSaveCanvas();
     }
   });
@@ -83,32 +83,32 @@ function daResizeCanvas(){
 }
 
 function daSaveCanvas(){
-  var dataURL = document.getElementById("sigcanvas").toDataURL();
+  var dataURL = document.getElementById("dasigcanvas").toDataURL();
   //console.log(dataURL)
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-  daPost({'_success': 1, '_the_image': dataURL});
+  daPost({'da_success': 1, 'da_the_image': dataURL});
 }
 
 function daNewCanvas(){
-  console.log("running daNewCanvas");
+  //console.log("running daNewCanvas");
   var cwidth = $(window).width() - daTheBorders;
-  var contentwidth = $("#sigpage").outerWidth(true);
+  var contentwidth = $("#dasigpage").outerWidth(true);
   if (cwidth > contentwidth ){
     cwidth = contentwidth;
   }
   var cheight = cwidth*daAspectRatio;
-  var otherHeights = $("#sigheader").outerHeight(true) + $("#sigtoppart").outerHeight(true) + $("#sigmidpart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
-  console.log("height is " + $(window).height());
-  console.log("otherHeights are " + otherHeights);
+  var otherHeights = $("#dasigheader").outerHeight(true) + $("#dasigtoppart").outerHeight(true) + $("#dasigmidpart").outerHeight(true) + $("#dasigbottompart").outerHeight(true);
+  //console.log("height is " + $(window).height());
+  //console.log("otherHeights are " + otherHeights);
   if (cheight > $(window).height()-otherHeights){
     cheight = $(window).height()-otherHeights;
   }
   if (cheight > 275){
     cheight = 275;
   }
-  $("#sigcontent").height(cheight);
-  var canvas = '<canvas id="sigcanvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
-  $("#sigcontent").html(canvas);
+  $("#dasigcontent").height(cheight);
+  var canvas = '<canvas id="dasigcanvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
+  $("#dasigcontent").html(canvas);
   //theTop = $("#sigcanvas").offset().top;
   //theLeft = $("#sigcanvas").offset().left;
   daTheWidth = cwidth/100.0;
@@ -118,16 +118,16 @@ function daNewCanvas(){
   
   // setup canvas
   // daCtx=document.getElementById("sigcanvas").getContext("2d");
-  $("#sigcanvas").each(function(){
+  $("#dasigcanvas").each(function(){
     daCtx = $(this)[0].getContext("2d");
     daCtx.strokeStyle = daColor;
     daCtx.lineWidth = daTheWidth;
   });
   
   // setup to trigger drawing on mouse or touch
-  $("#sigcanvas").drawTouch();
-  $("#sigcanvas").drawPointer();
-  $("#sigcanvas").drawMouse();
+  $("#dasigcanvas").drawTouch();
+  $("#dasigcanvas").drawPointer();
+  $("#dasigcanvas").drawMouse();
   //$(document).on("touchend", function(event){event.preventDefault();});
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
@@ -142,8 +142,8 @@ function daNewCanvas(){
 $.fn.drawTouch = function() {
   var start = function(e) {
     e = e.originalEvent;
-    x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
-    y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
+    x = e.changedTouches[0].pageX-$("#dasigcanvas").offset().left;
+    y = e.changedTouches[0].pageY-$("#dasigcanvas").offset().top;
     daCtx.beginPath();
     daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
     daCtx.fill();
@@ -151,7 +151,7 @@ $.fn.drawTouch = function() {
     daCtx.lineJoin="round";
     daCtx.moveTo(x,y);
     if (daIsEmpty){
-      $(".sigsave").prop("disabled", false);
+      $(".dasigsave").prop("disabled", false);
       daIsEmpty = 0;
     }
   };
@@ -159,8 +159,8 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     if (daWaiter % daWaitLimit == 0){
       e = e.originalEvent;
-      x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
-      y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
+      x = e.changedTouches[0].pageX-$("#dasigcanvas").offset().left;
+      y = e.changedTouches[0].pageY-$("#dasigcanvas").offset().top;
       daCtx.lineTo(x,y);
       daCtx.stroke();
       if (daIsEmpty){
@@ -181,8 +181,8 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     e = e.originalEvent;
     daCtx.lineJoin="round";
-    x = e.pageX-$("#sigcanvas").offset().left;
-    y = e.pageY-$("#sigcanvas").offset().top;
+    x = e.pageX-$("#dasigcanvas").offset().left;
+    y = e.pageY-$("#dasigcanvas").offset().top;
     daCtx.beginPath();
     daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
     daCtx.fill();
@@ -206,8 +206,8 @@ $.fn.drawPointer = function() {
     e = e.originalEvent;
     daCtx.beginPath();
     daCtx.lineJoin="round";
-    x = e.pageX-$("#sigcanvas").offset().left;
-    y = e.pageY-$("#sigcanvas").offset().top;
+    x = e.pageX-$("#dasigcanvas").offset().left;
+    y = e.pageY-$("#dasigcanvas").offset().top;
     daCtx.moveTo(x,y);
     if (daIsEmpty){
       daIsEmpty = 0;
@@ -219,8 +219,8 @@ $.fn.drawPointer = function() {
     e.preventDefault();
     if (daWaiter % daWaitLimit == 0){
       e = e.originalEvent;
-      x = e.pageX-$("#sigcanvas").offset().left;
-      y = e.pageY-$("#sigcanvas").offset().top;
+      x = e.pageX-$("#dasigcanvas").offset().left;
+      y = e.pageY-$("#dasigcanvas").offset().top;
       daCtx.lineTo(x,y);
       daCtx.stroke();
       daCtx.beginPath();
@@ -248,8 +248,8 @@ $.fn.drawMouse = function() {
   var clicked = 0;
   var start = function(e) {
     clicked = 1;
-    x = e.pageX-$("#sigcanvas").offset().left;
-    y = e.pageY-$("#sigcanvas").offset().top;
+    x = e.pageX-$("#dasigcanvas").offset().left;
+    y = e.pageY-$("#dasigcanvas").offset().top;
     daCtx.beginPath();
     daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
     daCtx.fill();
@@ -262,8 +262,8 @@ $.fn.drawMouse = function() {
   };
   var move = function(e) {
     if(clicked && daWaiter % daWaitLimit == 0){
-      x = e.pageX-$("#sigcanvas").offset().left;
-      y = e.pageY-$("#sigcanvas").offset().top;
+      x = e.pageX-$("#dasigcanvas").offset().left;
+      y = e.pageY-$("#dasigcanvas").offset().top;
       daCtx.lineTo(x,y);
       daCtx.stroke();
       daCtx.beginPath();

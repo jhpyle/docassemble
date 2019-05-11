@@ -9,7 +9,7 @@
     <label class="custom-file-label" for="{{ field.id }}">{{ word("Choose file") }}</label>
   </div>
   {% for e in field.errors %}
-  <p class="help-block">{{ e }}</p>
+  <p class="da-help-block">{{ e }}</p>
   {% endfor %}
 </div>
 {%- endmacro %}
@@ -33,7 +33,7 @@
   {%- endif %}
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <p class="help-block">{{ e }}</p>
+  <p class="da-help-block">{{ e }}</p>
   {%- endfor %}
   {%- endif %}
   {%- if right_message %}
@@ -60,7 +60,7 @@
 </div>
 {%- if field.errors %}
 {%- for e in field.errors %}
-<p class="help-block">{{ e }}</p>
+<p class="da-help-block">{{ e }}</p>
 {%- endfor %}
 {%- endif %}
 {%- if right_message %}
@@ -99,7 +99,7 @@
   </select>
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <p class="help-block">{{ e }}</p>
+  <p class="da-help-block">{{ e }}</p>
   {%- endfor %}
   {%- endif %}
 </div>
@@ -115,7 +115,7 @@
   </select>
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <p class="help-block">{{ e }}</p>
+  <p class="da-help-block">{{ e }}</p>
   {%- endfor %}
   {%- endif %}
   {%- if undernote %}
@@ -141,7 +141,7 @@
       {{ field(class_='form-control', **kwargs) }}
       {%- if field.errors %}
         {% for e in field.errors %}
-      <p class="help-block">{{ e }}</p>
+      <p class="da-help-block">{{ e }}</p>
         {% endfor %}
       {%- endif %}
       </div>    

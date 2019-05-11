@@ -27,7 +27,7 @@ def change_wait_seconds(step, secs):
 @step('I click inside the signature area')
 def click_inside(step):
     elem = WebDriverWait(world.browser, 10).until(
-        EC.presence_of_element_located((By.ID, "sigcanvas"))
+        EC.presence_of_element_located((By.ID, "dasigcanvas"))
     )
     action = webdriver.common.action_chains.ActionChains(world.browser)
     action.move_to_element_with_offset(elem, 20, 20)
@@ -105,12 +105,12 @@ def click_back_button(step):
 @step('I click the question back button')
 def click_question_back_button(step):
     do_wait()
-    world.browser.find_element_by_css_selector('.questionbackbutton').click()
+    world.browser.find_element_by_css_selector('.daquestionbackbutton').click()
     world.browser.wait_for_it()
 
 @step('I click the button "([^"]+)"')
 def click_button(step, button_name):
-    world.browser.find_element_by_id('pagetitle').click()
+    world.browser.find_element_by_id('dapagetitle').click()
     do_wait()
     success = False
     try:
@@ -173,7 +173,7 @@ def click_link(step, link_name):
 def menu_select(step, link_name):
     do_wait()
     try:
-        world.browser.find_element_by_css_selector('#mobile-toggler').click()
+        world.browser.find_element_by_css_selector('#damobile-toggler').click()
     except:
         world.browser.find_element_by_css_selector('a.dropdown-toggle').click()
     time.sleep(0.5)
@@ -183,13 +183,13 @@ def menu_select(step, link_name):
 @step('I go to the help screen')
 def click_help_tab(step):
     do_wait()
-    world.browser.find_element_by_id('helptoggle').click()
+    world.browser.find_element_by_id('dahelptoggle').click()
     world.browser.wait_for_it()
 
 @step('I go back to the question screen')
 def click_back_to_question_button(step):
     do_wait()
-    world.browser.find_element_by_id('backToQuestion').click()
+    world.browser.find_element_by_id('dabackToQuestion').click()
     world.browser.wait_for_it()
 
 @step('I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) link "([^"]+)"')
@@ -394,7 +394,7 @@ def change_window_size(step, xdimen, ydimen):
 
 @step('I unfocus')
 def unfocus(step):
-    world.browser.find_element_by_id('pagetitle').click()
+    world.browser.find_element_by_id('dapagetitle').click()
 
 @step('I click the final link "([^"]+)"')
 def finally_click_link(step, link_name):

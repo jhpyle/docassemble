@@ -1,12 +1,12 @@
 {% extends 'base_templates/flask_wide_base.html' %}
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
-<ul class="nav nav-pills navpillssmaller">
+<ul class="nav nav-pills danavpillssmaller">
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
       <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}
     </a>
-    <div class="dropdown-menu heightlim">
+    <div class="dropdown-menu daheightlim">
       {% for file in files %}{% if file == current_file %}
       <a class="dropdown-item active" href="#"><span class="fas fa-file fa-fw" aria-hidden="true"></span> {{ file }}
       </a>
@@ -43,7 +43,7 @@
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>
 <div>
-  <pre class="wrappre vspace">{{ content }}</pre>
+  <pre class="dawrappre davspace">{{ content }}</pre>
 </div>
 <div>
   <p>{{ word("Only the last 30 lines are shown.  Download the file to see the previous lines.") }}</p>

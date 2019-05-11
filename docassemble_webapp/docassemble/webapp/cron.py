@@ -131,7 +131,7 @@ def run_cron(cron_type):
                                         if interview_status.questionText != 'Empty Response':
                                             sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                         except Exception as err:
-                            sys.stderr.write(str(err.__class__.__name__) + ": " + str(err) + "\n")
+                            sys.stderr.write("Cron error: " + text_type(item['key']) + " " + text_type(item['filename']) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")
                             release_lock(item['key'], item['filename'])
                             if hasattr(err, 'traceback'):
                                 error_trace = text_type(err.traceback)

@@ -13,7 +13,7 @@
 {{ myrender_hidden_field(form.security, value="") }}
 {{ render_field(form.name) }}
 {{ render_select_field(form.method) }}
-<div class="form-group constraintlist">
+<div class="form-group daconstraintlist">
   <label class="control-label">{{ word("Allowed sites") }}</label>
 </div>
 <div class="form-actions">
@@ -32,7 +32,7 @@
   <p><code>{{ api_key }}</code></p>
 </div>
 {{ render_select_field(form.method) }}
-<div class="form-group constraintlist">
+<div class="form-group daconstraintlist">
   <label class="control-label">{{ word("Allowed sites") }}</label>
   {%- for constraint in constraints %}
   <div class="input-group"><input type="text" class="form-control" value="{{ constraint }}" placeholder="{% if method == 'ip' %}{{ word('e.g., 56.33.114.49') }}{% else %}{{ word('e.g., *example.com') }}{% endif %}"></div>

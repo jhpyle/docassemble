@@ -659,7 +659,7 @@ def map_string(encoded_text, status):
         return ''
     map_number = len(status.maps)
     status.maps.append(codecs.decode(bytearray(encoded_text, 'utf-8'), 'base64').decode())
-    return '<div id="map' + text_type(map_number) + '" class="googleMap"></div>'
+    return '<div id="map' + text_type(map_number) + '" class="dagoogleMap"></div>'
 
 def target_html(match):
     target = match.group(1)
@@ -1155,7 +1155,7 @@ def emoji_html(text, status=None, question=None, images=None):
             the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fas')
         return('<i class="' + the_prefix + ' fa-' + text_type(text) + '"></i>')
     elif icons_setting == 'material icons':
-        return('<i class="material-icons">' + text_type(text) + '</i>')
+        return('<i class="da-material-icons">' + text_type(text) + '</i>')
     return(":" + text_type(text) + ":")
 
 def emoji_insert(text, status=None, images=None):
@@ -1289,7 +1289,7 @@ def audio_control(files, preload="metadata", title_text=None):
         title_text = ''
     else:
         title_text = " title=" + json.dumps(title_text)
-    output = '<audio' + title_text + ' class="audio-control" controls="controls" preload="' + preload + '">' + "\n"
+    output = '<audio' + title_text + ' class="daaudio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'
@@ -1304,7 +1304,7 @@ def video_control(files):
     for d in files:
         if isinstance(d, (string_types, NoneType)):
             return text_type(d)
-    output = '<video controls="controls">' + "\n"
+    output = '<video class="dawidevideo" controls="controls">' + "\n"
     for d in files:
         if type(d) is list:
             if d[0] is None:
@@ -1465,7 +1465,7 @@ def to_text(html_doc, terms, links, status):
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
-    [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
+    [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
             words = s.attrs['alt']

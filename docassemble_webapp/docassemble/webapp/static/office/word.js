@@ -19,14 +19,14 @@ function flash(message, priority){
     if (priority == null){
         priority = 'info'
     }
-    if (!$("#flash").length){
-        $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+    if (!$("#daflash").length){
+        $("body").append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"></div>');
     }
     else{
-	$("#flash").empty();
+	$("#daflash").empty();
     }
-    var newMessage = $('<div class="alert alert-' + priority + ' alert-interlocutory">' + message + '</div>');
-    $("#flash").append(newMessage);
+    var newMessage = $('<div class="alert alert-' + priority + ' daalert-interlocutory">' + message + '</div>');
+    $("#daflash").append(newMessage);
     setTimeout(function(){
 	if ($(newMessage).length > 0){
             $(newMessage).hide(300, function(){

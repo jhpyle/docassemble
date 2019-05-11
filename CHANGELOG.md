@@ -1,8 +1,12 @@
 # Change Log
 
-## [0.4.42] - 2019-05-
+## [0.4.42] - 2019-05-11
+### Changed
+- Many CSS classes and IDs renamed and given the `da` prefix.
 ### Fixed
 - Errors with SMS interface.
+- Subclasses of `DAList` were not allowed in list collect.
+- Inefficiency with `last_access_time()`.
 
 ## [0.4.41] - 2019-05-02
 ### Added

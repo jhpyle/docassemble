@@ -1064,6 +1064,7 @@ server.send_mail = null_func
 server.file_finder = null_func
 server.url_finder = null_func
 server.user_id_dict = null_func
+server.get_user_object = null_func
 server.sms_body = null_func
 server.get_sms_session = null_func
 server.initiate_sms_session = null_func
