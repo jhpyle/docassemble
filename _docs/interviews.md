@@ -226,7 +226,7 @@ interviews.  Within the body of an interview question, you can insert
 a link to another interview using the [`interview_url()`] function
 with an `i` parameter indicating the interview.
 
-## <a name="iframe"></a>Embedding the interview into a web page
+## <a name="iframe"></a>Embedding the interview into a web page with an iframe
 
 You can embed an interview into a web page by inserting an [iframe]
 into the [HTML] of the page.
@@ -242,6 +242,142 @@ and on mobile.  Since embedded interviews are often less than ideal for
 mobile users, you can use the [`go full screen`] feature to cause the
 interview to "go full screen" on the user's device once the user
 starts interacting with it.
+
+## <a name="div"></a>Embedding the interview into a web page directly
+
+A **docassemble** interview can be embedded into a `<div>` element in
+a page of another web site, provided that the web page loads the
+resources that **docassemble** needs.  This takes more care and setup
+than [using an iframe] because you need to merge the [CSS] and
+[JavaScript] that **docassemble** needs with the [CSS] and
+[JavaScript] already contained within the host web site.  The merging
+of these resources could cause problems.  For example, **docassemble**
+depends on the [CSS] classes of [Bootstrap 4] being defined, but the
+site into which you are embedding might not use [Bootstrap], or may
+use a different version.  If your site does not use [Bootstrap],
+inserting the standard [Bootstrap] styles into the site may change the
+style of the whole page in ways you do not want.
+
+To get started with embedding **docassemble** into a web page, log in
+to your server as an administrator or developer, then navigate to
+`/test_embed`.  You will see your default interview there, inside of a
+box.  Do "View Source" in your browser to see how it works.  Here is
+an example of what the source will look like on a server with the URL
+`https://interview.example.com`:
+
+{% highlight html %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://interview.example.com/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://interview.example.com/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="https://interview.example.com/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://interview.example.com/favicon-16x16.png" sizes="16x16">
+    <link rel="manifest" href="https://interview.example.com/manifest.json">
+    <link rel="mask-icon" href="https://interview.example.com/safari-pinned-tab.svg" color="#698aa7">
+    <meta name="theme-color" content="#83b3dd">
+    <script defer src="https://interview.example.com/static/fontawesome/js/all.js"></script>
+    <link href="https://interview.example.com/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-fileinput/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
+    <link href="https://interview.example.com/static/labelauty/source/jquery-labelauty.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-combobox/css/bootstrap-combobox.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-slider/dist/css/bootstrap-slider.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/app/app.css" rel="stylesheet">
+    <title>Embed test</title>
+  </head>
+  <body>
+    <div>
+      <p>Here is some content before the interview.</p>
+    </div>
+    <div style="width: 100%; padding: 40px">
+      <div id="dablock" class="dabody dajs-embedded dahide-navbar" style="width: 100%; height: 80vh; border-style: solid; border-width: 1px; border-color: #777">
+      </div>
+    </div>
+    <div>
+      <p>Here is some content after the interview.
+    </div>
+
+    <script src="https://interview.example.com/static/app/jquery.min.js"></script>
+    <script src="https://interview.example.com/static/app/jquery.validate.min.js"></script>
+    <script src="https://interview.example.com/static/app/additional-methods.min.js"></script>
+    <script src="https://interview.example.com/static/popper/umd/popper.min.js"></script>
+    <script src="https://interview.example.com/static/popper/umd/tooltip.min.js"></script>
+    <script src="https://interview.example.com/static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-slider/dist/bootstrap-slider.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-fileinput/js/fileinput.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-fileinput/themes/fas/theme.min.js"></script>
+    <script src="https://interview.example.com/static/app/app.js"></script>
+    <script src="https://interview.example.com/static/app/socket.io.min.js"></script>
+    <script src="https://interview.example.com/static/labelauty/source/jquery-labelauty.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=egsdSdgER344tuTYUgsdDErEdx34res2e44sdrg&libraries=places"></script>
+    <script src="https://interview.example.com/interview?i=docassemble.base%3Adata%2Fquestions%2Fdefault-interview.yml&js_target=dablock"></script>
+  </body>
+</html>
+{% endhighlight %}
+
+The idea behind `/test_embed` is that you can selectively copy and
+paste its source code into another web site in order to embed a
+**docassemble** interview into that web site.
+
+Notice that the last `<script>` is a call to `/interview`, which is
+the standard endpoint for a **docassemble** interview.  (You can pass
+a URL parameter `i` to `/test_embed` to indicate a different interview
+to be used here.)  The `/interview` URL contains `&js_target=dablock`.
+This indicates that instead of returning HTML, the endpoint should
+return [JavaScript].  The value of the parameter is `dablock`, which
+is the `id` attribute of a `<div>` on the page.  The [JavaScript],
+when run, will load the **docassemble** interview into the `<div>`
+designated with `id="dablock"`.
+
+A **docassemble** interview will only be styled correctly if the
+appropriate [CSS] resources are present, and the [JavaScript] code
+loaded through the call to `/interview` will only work if other
+[JavaScript] resources, such as [jQuery] and the [jQuery Validation
+Plugin], are loaded.
+
+Thus, you will need to edit your web site to make sure that all of the
+necessary [CSS] and [JavaScript] resources are loaded.
+
+The lines beginning with `<link rel=` and `<meta` are probably not
+necessary for you to include; most of them relate to [favicon] setup,
+and your site may have its own [favicon] that you want to use.
+However, these lines may be important if your site does not already
+have similar lines in its header:
+
+{% highlight html %}
+    <meta charset="utf-8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endhighlight %}
+
+These lines can have an effect on how your interview looks on a mobile
+device.
+
+You can use a different `id` than `dablock` as long as you are
+consistent between the `id` of the `<div>` and your `js_target=`
+URL parameter in the `<script>` that uses the `/interview` endpoint.
+You can position the `<div>` wherever you want, but you will want to
+make sure you give it an appropriate height and width.  You will also
+want to make sure that you use appropriate [CSS] so that the interview
+works well on devices of all sizes.
+
+In order to match styling between the host web site and the
+**docassemble** interview, you will likely need to create your own
+custom [Bootstrap] <span></span>[CSS] file.  You could start by making
+a Bootstrap theme [CSS] file and then editing the [CSS] file to remove
+global styling.
+
+The [Bootstrap] <span></span>[CSS] file is probably the only [CSS]
+file that you will need to modify.  The **docassemble** [CSS] file
+`app.css` is designed not to interfere with other [CSS] on a page.
 
 ## <a name="reset"></a>Starting an interview from the beginning
 
@@ -664,3 +800,12 @@ For more information about [YAML], see the [YAML specification].
 [special buttons]: {{ site.baseurl }}/docs/questions.html#special buttons
 [Legal Applications]: {{ site.baseurl }}/docs/legal.html
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[jQuery]: http://jquery.com/
+[jQuery Validation Plugin]: http://jqueryvalidation.org/maxlength-method
+[using an iframe]: #iframe
+[Bootstrap 4]: http://getbootstrap.com/
+[Bootstrap]: http://getbootstrap.com/
+[Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
+[favicon]: https://en.wikipedia.org/wiki/Favicon
