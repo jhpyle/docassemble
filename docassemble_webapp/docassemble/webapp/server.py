@@ -817,13 +817,13 @@ import pandas
 
 import importlib
 modules_to_import = daconfig.get('preloaded modules', None)
-if type(modules_to_import) is list:
+if isinstance(modules_to_import, list):
     for module_name in daconfig['preloaded modules'] + ['docassemble.base.legal']:
         try:
             importlib.import_module(module_name)
         except:
             pass
-        
+
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
 
@@ -2392,7 +2392,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
                         else:
                             navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
                     navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
-            navbar += '</div></li>'
+            #navbar += '</div></li>'
     else:
         if custom_menu:
             navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
@@ -21288,6 +21288,13 @@ with app.app_context():
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts
+    interviews_to_load = daconfig.get('preloaded interviews', None)
+    if isinstance(interviews_to_load, list):
+        for yaml_filename in daconfig['preloaded interviews']:
+            try:
+                docassemble.base.interview_cache.get_interview(yaml_filename)
+            except:
+                pass
     obtain_lock('init', 'init')
     copy_playground_modules()
     write_pypirc()

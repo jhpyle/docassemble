@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.43] - 2019-05-
+### Fixed
+- HTML error when `hide standard menu` in use.
+
 ## [0.4.42] - 2019-05-11
 ### Changed
 - Many CSS classes and IDs renamed and given the `da` prefix.

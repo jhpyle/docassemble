@@ -38,7 +38,7 @@ import pandas
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree']
 
-unique_names = set()
+#unique_names = set()
 
 match_inside_and_outside_brackets = re.compile('(.*)\[([^\]]+)\]$')
 is_number = re.compile(r'[0-9]+')
@@ -58,12 +58,13 @@ def object_name_convert(text):
     return word(underscore_to_space(text))
 
 def get_unique_name():
-    while True:
-        newname = random_string(12)
-        if newname in unique_names:
-            continue
-        unique_names.add(newname)
-        return newname
+    return random_string(12)
+    # while True:
+    #     newname = random_string(12)
+    #     if newname in unique_names:
+    #         continue
+    #     unique_names.add(newname)
+    #     return newname
 
 class DAEmpty(object):
     """An object that does nothing except avoid triggering errors about missing information."""
