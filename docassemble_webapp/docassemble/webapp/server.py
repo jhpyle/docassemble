@@ -9806,7 +9806,7 @@ def speak_file():
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
 
-def interview_menu(absolute_urls=False, start_new=False):
+def interview_menu(absolute_urls=False, start_new=False, tag=None):
     interview_info = list()
     for key, yaml_filename in sorted(daconfig['dispatch'].items()):
         try:
@@ -9837,6 +9837,8 @@ def interview_menu(absolute_urls=False, start_new=False):
             status_class = 'dainterviewhaserror'
             subtitle_class = 'dainvisible'
             logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
+        if tag is not None and tag not in tags:
+            continue
         if absolute_urls:
             if start_new:
                 url = url_for('index', i=yaml_filename, _external=True, reset='1')
@@ -9859,17 +9861,24 @@ def interview_start():
         is_json = True
     else:
         is_json = False
+    tag = request.args.get('tag', None)
     if daconfig.get('dispatch interview', None) is not None:
         if is_json:
-            return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', json='1'))
+            if tag:
+                return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', json='1', tag=tag))
+            else:
+                return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', json='1'))
         else:
-            return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1'))
+            if tag:
+                return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1', tag=tag))
+            else:
+                return redirect(url_for('index', i=daconfig.get('dispatch interview'), from_list='1'))
     if 'embedded' in request.args and int(request.args['embedded']):
         the_page = 'pages/start-embedded.html'
         embed = True
     else:
         embed = False
-    interview_info = interview_menu(absolute_urls=embed)
+    interview_info = interview_menu(absolute_urls=embed, tag=tag)
     if is_json:
         return jsonify(action='menu', interviews=interview_info)
     argu = dict(version_warning=None, interview_info=interview_info) #extra_css=Markup(global_css), extra_js=Markup(global_js), tab_title=daconfig.get('start page title', word('Interviews')), title=daconfig.get('start page heading', word('Available interviews'))
@@ -20259,7 +20268,7 @@ def api_login_url():
 def api_list():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
-    return jsonify(interview_menu(absolute_urls=true_or_false(request.args.get('absolute_urls', True))))
+    return jsonify(interview_menu(absolute_urls=true_or_false(request.args.get('absolute_urls', True)), tag=request.args.get('tag', None)))
 
 @app.route('/api/user/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt

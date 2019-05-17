@@ -1,0 +1,42 @@
+metadata:
+  title: DAContext
+  documentation: "https://docassemble.org/docs/initial.html#use objects"
+  example start: 1
+  example end: 2
+---
+variable name: fruits
+use objects: True
+data:
+  - question: Apple
+    document: red fruit
+  - question: Orange
+    document: fruit that rhymes with nothing
+  - question: Peach
+    document: juicy fruit
+    docx: peachy peach
+    pandoc: very juicy fruit
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    datatype: object
+    choices: fruits
+---
+mandatory: True
+question: |
+  Result
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+attachments:
+  - name: |
+      Pandoc
+    filename: pandoc_fruit
+    content: |
+      Your favorite fruit is
+      ${ favorite_fruit }.
+  - name: |
+      DOCX
+    filename: docx_fruit
+    docx template file: context.docx

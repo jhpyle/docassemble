@@ -64,6 +64,7 @@ DAObject.initializeAttribute: "https://docassemble.org/docs/objects.html#DAObjec
 DAObject.reInitializeAttribute: "https://docassemble.org/docs/objects.html#DAObject.reInitializeAttribute"
 DAObject.init: "https://docassemble.org/docs/objects.html#DAObject.init"
 DAObject.using: "https://docassemble.org/docs/objects.html#DAObject.using"
+DAContext: "https://docassemble.org/docs/objects.html#DAContext"
 DADict: "https://docassemble.org/docs/objects.html#DADict"
 DADict.add_action: "https://docassemble.org/docs/objects.html#DADict.add_action"
 DADict.item_actions: "https://docassemble.org/docs/objects.html#DADict.item_actions"

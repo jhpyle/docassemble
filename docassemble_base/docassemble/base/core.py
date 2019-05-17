@@ -36,7 +36,7 @@ import random
 #import tablib
 import pandas
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree', 'DAContext']
 
 #unique_names = set()
 
@@ -2103,9 +2103,9 @@ class DADict(DAObject):
         return self.elements.__delitem__(key)
     def __missing__(self, key):
         return self.elements.__missing__(key)
-    def __hash__(self, the_object):
-        self._trigger_gather()
-        return self.elements.__hash__(the_object)
+    #def __hash__(self):
+    #    self._trigger_gather()
+    #    return self.elements.__hash__()
     def __str__(self):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
@@ -2555,9 +2555,9 @@ class DASet(DAObject):
     def __ror__(self, operand):
         self._trigger_gather()
         return self.elements.__ror__(operand)
-    def __hash__(self, the_object):
+    def __hash__(self):
         self._trigger_gather()
-        return self.elements.__hash__(the_object)
+        return self.elements.__hash__()
     def __add__(self, other):
         if isinstance(other, DASet):
             return self.elements + other.elements
@@ -3726,3 +3726,60 @@ class DALink(DAObject):
             return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.misc.get('docx_template', None))
         else:
             return '[%s](%s)' % (self.anchor_text, self.url)
+
+class DAContext(DADict):
+    def init(self, *pargs, **kwargs):
+        super(DAContext, self).init()
+        self.pargs = pargs
+        self.kwargs = kwargs
+        if len(pargs) == 1:
+            self.elements['question'] = pargs[0]
+            self.elements['document'] = pargs[0]
+        if len(pargs) >= 2:
+            self.elements['question'] = pargs[0]
+            self.elements['document'] = pargs[1]
+        for key, val in kwargs.items():
+            self.elements[key] = val
+    def __str__(self):
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+    def __unicode__(self):
+        if docassemble.base.functions.this_thread.evaluation_context in ('docx', 'pdf', 'pandoc'):
+            if docassemble.base.functions.this_thread.evaluation_context in self.elements:
+                return text_type(self.elements[docassemble.base.functions.this_thread.evaluation_context])
+            return text_type(self.elements['document'])
+        else:
+            return text_type(self.elements['question'])
+    def __repr__(self):
+        output = text_type('DAContext(' + repr(self.instanceName) + ', ')
+        if len(self.elements):
+            output += ', '.join(key + '=' + repr(val) for key, val in self.elements.items())
+        output += text_type(')')
+
+def objects_from_structure(target, root=None):
+    if isinstance(target, dict):
+        if len(target.keys()) > 0 and len(set(target.keys()).difference(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) == 0:
+            new_context = DAContext('abc_context', **target)
+            if root:
+                new_context._set_instance_name_recursively(root)
+            new_context.gathered = True
+            return new_context
+        else:
+            new_dict = DADict('abc_dict')
+            for key, val in target.items():
+                new_dict[key] = objects_from_structure(val)
+            new_dict.gathered = True
+            if root:
+                new_dict._set_instance_name_recursively(root)
+            return new_dict
+    if isinstance(target, list):
+        new_list = DAList('abc_list')
+        for val in target.__iter__():
+            new_list.append(objects_from_structure(val))
+        new_list.gathered = True
+        if root:
+            new_list._set_instance_name_recursively(root)
+        return new_list
+    if isinstance(target, (bool, float, int, NoneType, string_types)):
+        return target
+    else:
+        raise DAError("objects_from_structure: expected a standard type, but found a " + str(type(target)))

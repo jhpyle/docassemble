@@ -1467,14 +1467,20 @@ class Question:
                 raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'].strip())
-            self.question_type = 'data'
+            if 'use objects' in data and data['use objects']:
+                self.question_type = 'data_da'
+            else:
+                self.question_type = 'data'
             self.fields.append(Field({'saveas': data['variable name'].strip(), 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
         if 'data from code' in data and 'variable name' in data:
             if not isinstance(data['variable name'], string_types):
                 raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'])
-            self.question_type = 'data_from_code'
+            if 'use objects' in data and data['use objects']:
+                self.question_type = 'data_from_code_da'
+            else:
+                self.question_type = 'data_from_code'
             self.fields.append(Field({'saveas': data['variable name'], 'type': 'data_from_code', 'data': self.recursive_data_from_code(data['data from code'])}))
         if 'objects' in data:
             if not isinstance(data['objects'], list):
@@ -3017,7 +3023,7 @@ class Question:
         if isinstance(target, (bool, float, int, NoneType)):
             return target
         return TextObject(text_type(target), question=self)
-        
+
     def find_fields_in(self, code):
         myvisitor = myvisitnode()
         t = ast.parse(text_type(code))
@@ -4611,11 +4617,13 @@ class Question:
                             the_markdown += u'---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + u"...\n"
                         else:
                             the_markdown += u'---\n' + codecs.decode(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), 'utf-8') + u"...\n"
+                    docassemble.base.functions.set_context('pandoc')
                     the_markdown += attachment['content'].text(the_user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                         the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                     result['markdown'][doc_format] = the_markdown
+                    docassemble.base.functions.reset_context()
             elif doc_format in ['html']:
                 result['markdown'][doc_format] = attachment['content'].text(the_user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
@@ -5135,8 +5143,18 @@ class Interview:
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
+                            if question.question_type == "data_da":
+                                exec(import_core, user_dict)
+                                string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
                             if question.question_type == "data_from_code":
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
+                            if question.question_type == "data_from_code_da":
+                                exec(import_core, user_dict)
+                                string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
@@ -5576,9 +5594,23 @@ class Interview:
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    if question.question_type == "data_da":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        exec(import_core, user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    if question.question_type == "data_from_code_da":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        exec(import_core, user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
