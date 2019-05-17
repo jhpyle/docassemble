@@ -4996,6 +4996,32 @@
     The default time zone is
     ${ get_default_timezone() }.
   mandatory: True
+"get-docx-variables": |-
+  objects:
+    - docx_file: DAStaticFile.using(filename="data/templates/letter_template.docx")
+  ---
+  mandatory: True
+  question: |
+    The variables in the DOCX file
+  subquestion: |
+    The following variables were found in the
+    [letter_template.docx] file:
+
+    `${ repr(docx_file.get_docx_variables()) }`
+
+    [letter_template.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/letter_template.docx
+"get-pdf-fields": |-
+  objects:
+    - pdf_file: DAStaticFile.using(filename="data/templates/fruit_template.pdf")
+  ---
+  mandatory: True
+  question: The field names in the PDF file
+  subquestion: |
+    The field names in the PDF file [fruit_template.pdf] are:
+
+    `${ repr(pdf_file.get_pdf_fields()) }`
+
+    [fruit_template.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/fruit_template.pdf
 "getField": |-
   question: |
     What do you want for
@@ -10490,6 +10516,69 @@
 "complete-attribute-method": |-
   modules:
     - .fishlist
+"context": |-
+  variable name: fruits
+  use objects: True
+  data:
+    - question: Apple
+      document: red fruit
+    - question: Orange
+      document: fruit that rhymes with nothing
+    - question: Peach
+      document: juicy fruit
+      docx: peachy peach
+      pandoc: very juicy fruit
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      datatype: object
+      choices: fruits
+"context-code": |-
+  variable name: fruits
+  use objects: True
+  data from code:
+    - question: |
+        "Apple"
+      document: |
+        "red fruit"
+    - question: |
+        "Orange"
+      document: |
+        "fruit that rhymes " + "with nothing"
+    - question: |
+        "Peach"
+      document: |
+        "juicy fruit"
+      docx: |
+        "peachy peach"
+      pandoc: |
+        "very juicy " + "fruit"
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      datatype: object
+      choices: fruits
+"context-manual": |-
+  objects:
+    - fruits: DAList.using(auto_gather=False)
+  ---
+  code: |
+    fruits.clear()
+    fruits.appendObject(DAContext, 'Apple', 'red fruit')
+    fruits.appendObject(DAContext, 'Orange', 'fruit that rhymes with nothing')
+    fruits.appendObject(DAContext, question='Peach', document='juicy fruit', docx='peachy peach', pandoc='very juicy fruit')
+    fruits.gathered = True
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      datatype: object
+      choices: fruits
 "custody": |-
   objects:
     - has_standing: DADict.using(auto_gather=False)

@@ -232,6 +232,14 @@ If you want to take advantage of the `/start/` shortcuts but you do
 not want the interview listed in the interview list, set `unlisted:
 True` in the [`metadata`] of the interview.
 
+The `/list` URL accepts a URL parameter `tag`.  If `tag=estates`, then
+`/list` will only list interviews where `estates` is one of the
+[`tags`] in the interview [`metadata`].
+
+You can also control whether an interview appears in the `/list` by
+adding the [`required privileges`] specifier to the interview
+[`metadata`].
+
 If you would like to embed the list of interviews into another web
 site, you can send a [GET request] to `/list?embedded=1` to obtain a
 snippet of [HTML].  For example, the [HTML] snippet might look like
@@ -3324,6 +3332,8 @@ and Facebook API keys.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
+[`tags`]: {{ site.baseurl }}/docs/initial.html#tags
 [`error help`]: {{ site.baseurl }}/docs/initial.html#error help
 [`error help` directive]: #error help
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled

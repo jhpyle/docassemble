@@ -798,8 +798,12 @@ Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
+ - `tag` (optional): if set to `estates`, then the list of interviews
+   is limited to those that have `estates` as one of the [`tags`] in
+   the [interview `metadata`].
  - `absolute_urls` (optional): if `0`, the `link` URL returned will be
-   relative (i.e., will not include the hostname).
+   relative (i.e., will not include the hostname).  By default, the
+   `link` URLs are absolute.
 
 Required privileges: none.
 
@@ -1580,6 +1584,7 @@ function.
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
 [`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
 [interview `metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`tags`]: {{ site.baseurl }}/docs/initial.html#tags
 [`/api/interviews`]: #interviews
 [`/api/secret`]: #secret
 [`/api/session`]: #session_post

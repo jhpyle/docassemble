@@ -3357,8 +3357,8 @@ The keys in each dictionary are:
 * `subtitle_class`: this is set to `invisible` if there is a problem
   with the interview.
 
-The `interview_menu()` function takes two optional keyword arguments,
-`absolute_urls` and `start_new`.
+The `interview_menu()` function takes three optional keyword arguments,
+`absolute_urls`, `start_new`, and `tag`.
 
 If `absolute_urls` is set to `True`, then the URLs will be absolute
 rather than relative, so that the HTML can be used from a web site on
@@ -3367,6 +3367,10 @@ another server.
 If `start_new` is set to `True`, then the URLs will have `&reset=1` at
 the end.  Thus, even if the user has already started an interview,
 clicking the link will start the interview at the beginning again.
+
+If `tag` is set to `estates` (for example), then `interview_menu()`
+will only return interviews that have `estates` defined as a `tag` in
+the interview [`metadata`].
 
 This function can be useful in interviews that replace the standard
 list of available interviews.  See the [`dispatch interview`]

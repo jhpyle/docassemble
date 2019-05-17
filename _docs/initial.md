@@ -70,6 +70,23 @@ the interview will be exempted from display in the list of interviews
 available at `/list`.  For more information about this, see the
 documentation for the [`dispatch`] configuration directive.
 
+<a name="tags"></a>You can set `tags` to a list of one or more "tags"
+as a way of categorizing the interview.
+
+{% highlight yaml %}
+metadata:
+  title: Write your will
+  tags:
+    - estates
+    - wills
+{% endhighlight %}
+
+The list of available interviews at `/list` and the list of interview
+sessions at `/interviews` make use of the metadata `tags` for
+filtering purposes.  Note that the `metadata` of an interview are
+static, while the tags of a particular session of an interview are
+dynamic, and can be changed with [`session_tags()`].
+
 <a name="required privileges"></a>If you set `required privileges` to
 a list of one or more privileges, then the interview will only be
 shown in the list of interviews available at `/list` if the user has
@@ -426,8 +443,32 @@ structures.  You can also use [Mako] in the data structure.
 
 {% include side-by-side.html demo="data" %}
 
+`data` blocks do not work the same way as [`template`] blocks.  The
+[Mako] templating in a `data` block is evaluated at the time the
+variable indicted by `variable name` is defined.  The text stored in
+the data structure is the result of processing the [Mako] templating.
+The [Mako] templating is not re-evaluated automatically each time a
+[`question`] is shown.
+
 You can also import data from [YAML] files using the
 [`objects_from_file()` function].
+
+## <a name="use objects"></a>Structured data in object form
+
+If you set `use objects: True` in a [`data`] block, then lists in your
+[YAML] will become [`DAList`]s in the resulting data structure, and
+dictionaries in your [YAML] will become [`DADict`]s.  The `.gathered`
+attribute of these objects will be set to `True`.
+
+In addition, when `use objects: True` is enabled, any dictionaries in
+the data structure will be transformed into a [`DAContext`] object if
+the keys of the dictionary are a non-empty subset of `question`,
+`document`, `docx`, `pdf`, and `pandoc`.
+
+This is a useful shorthand for creating [`DAContext`] objects.  For
+example:
+
+{% include demo-side-by-side.html demo="context" %}
 
 # <a name="data from code"></a>Storing structured `data` in a variable using code
 
@@ -435,6 +476,12 @@ The `data from code` block works just like the [`data`] block, except
 that [Python] code is used instead of text or [Mako] markup.
 
 {% include side-by-side.html demo="data-code" %}
+
+## <a name="use objects from code"></a>Structured data from code in object form
+
+The [`use objects`] modifier can also be used with `data from code`.
+
+{% include side-by-side.html demo="context-code" %}
 
 # <a name="reset"></a>Keeping variables fresh: `reset`
 
@@ -606,7 +653,7 @@ using:
 
 > {% raw %}{{r the_template }}{% endraw %}
 
-In the future, the default will change to [`True`]
+In the future, the default will change to `True`.
 
 # <a name="table"></a>The `table` block
 
@@ -1947,3 +1994,6 @@ features:
 [Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [`new markdown to docx`]: {{ site.baseurl}}/docs/config.html#new markdown to docx
+[`DAContext`]: {{ site.baseurl }}/docs/objects.html#DAContext
+[`use objects`]: #use objects
+[`session_tags()`]: {{ site.baseurl}}/docs/functions.html#session_tags

@@ -464,6 +464,21 @@ By default, the "Available Interviews" menu item is not shown.  It can
 be enabled by setting [`show dispatch link`] to `True` in the
 [Configuration].
 
+If an interview is listed under [`dispatch`], but the [`metadata`] of
+the interview contains the specifier [`unlisted`] set to `True`, then
+the interview will not be listed in the `/list`, although it will
+still be usable with a `/start` shortcut.
+
+The URL parameter `tag` can be used to filter the list of available
+interviews.  For example, if you set `tag=estates`, then the only
+interviews that will be listed are those that have `estates` as one of
+the [`tags`] in the interview [`metadata`].
+
+You can use the [`required privileges`] specifier in the [`metadata`]
+of each interview listed under [`dispatch`] to control whether the
+interview should appear in the list, depending on the [privileges] of
+the user.
+
 For information about how to customize the "Available Interviews"
 page, see the [Configuration] directives that begin with [`start
 page`], or configure the [`start page template`], or replace the page
@@ -604,3 +619,7 @@ For tips on troubleshooting your **docassemble** system, see the
 [`language`]: {{ site.baseurl }}/docs/modifiers.html#language
 [sources]: {{ site.baseurl }}/docs/playground.html#sources
 [`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`tags`]: {{ site.baseurl }}/docs/initial.html#tags
+[`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
+[`unlisted`]: {{ site.baseurl }}/docs/initial.html#unlisted

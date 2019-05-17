@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.43](https://github.com/jhpyle/docassemble/releases/tag/v0.4.43) - 2019-05-
+
+### Added
+- The `tag` parameter for `/list`, `/api/list`, and
+  `interview_menu()`.
+
+### Fixed
+- HTML error when `hide standard menu` in use.
+
 ## [0.4.42](https://github.com/jhpyle/docassemble/releases/tag/v0.4.42) - 2019-05-11
 
 ### Changed

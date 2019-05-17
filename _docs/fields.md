@@ -256,7 +256,8 @@ dictionary) (as opposed to text) as the value of a label in a
 While embedding [`question`] blocks can be useful sometimes, it is
 generally not a good idea to structure interviews with a lot of
 embedded questions.  You will have more flexibility if your questions
-stand on their own.
+stand on their own.  Embedded blocks cannot use the [`generic object`](#generic)
+modifier or [index variables](#index variables).
 
 It is also possible for multiple-choice questions to embed [`code`]
 blocks that execute [Python] code.  (If you do not know what [`code`]

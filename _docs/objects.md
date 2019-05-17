@@ -1636,6 +1636,48 @@ the PDF file.  See [`get_pdf_fields()`] for more information.
 list of variables that exist in the Jinja2 templating of the file.
 See [`get_docx_variables()`] for more information.
 
+## <a name="DAContext"></a>DAContext
+
+The `DAContext` class is for context-dependent text.  When an instance
+of the `DAContext` class is reduced to text, different text will be
+used depending on whether the text will appear on the screen or in a
+document.
+
+The `DAContext` class is a subclass of [`DADict`].  Possible keys of the
+dictionary include:
+
+* `'question'`
+* `'document'`
+* `'pdf'`
+* `'docx'`
+* `'pandoc'`
+
+If `favorite_fruit` is a `DAContext`, reducing it to text will return
+`favorite_fruit['question']` in the context of the web application,
+and `favorite_fruit['document']` in the context of document assembly.
+
+Instead of using `'document'`, you can indicate particular values for
+particular types of document assembly.  If you define
+`favorite_fruit['pdf']`, its value will be used in a [`pdf template
+file`] assembly instead of `favorite_fruit['document']`.
+
+When a `DAContext` object is initialized, the positional and keyword
+parameters are used to populate items in the dictionary.  If you
+provide two positional parameters, the first parameter will become the
+`question` and the second will become the `document`.  If you pass one
+positional parameter, the parameter will become the `question`.
+Keyword parameters populate items in the dictionary directly
+(overriding positional parameters).
+
+{% include demo-side-by-side.html demo="context-manual" %}
+
+If you use a [`data`] block with [`use objects`] enabled, `DAContext`
+objects will be created instead of [`DADict`] objects when the [YAML]
+includes a dictionary where the keys are a non-empty subset of
+`question`, `document`, `'pdf'`, `'docx'`, and `'pandoc'`.
+
+{% include demo-side-by-side.html demo="context" %}
+
 ## <a name="DAEmail"></a>DAEmail
 
 The [e-mail receiving] feature converts actual e-mails into objects of
@@ -4191,3 +4233,6 @@ of the original [`DADateTime`] object.  See
 [`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util
 [ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes
+[`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
+[`data`]: {{ site.baseurl }}/docs/initial.html#data
+[`use objects`]: {{ site.baseurl }}/docs/initial.html#use objects
