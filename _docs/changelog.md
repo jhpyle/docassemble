@@ -4,14 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.4.43](https://github.com/jhpyle/docassemble/releases/tag/v0.4.43) - 2019-05-
+## [0.4.43](https://github.com/jhpyle/docassemble/releases/tag/v0.4.43) - 2019-05-16
 
 ### Added
 - The `tag` parameter for `/list`, `/api/list`, and
   `interview_menu()`.
+- The `DAContext` object and the `use objects` option for the `data`
+  and `data from code` blocks.
 
 ### Fixed
-- HTML error when `hide standard menu` in use.
+- HTML error when `hide standard menu` is in use.
 
 ## [0.4.42](https://github.com/jhpyle/docassemble/releases/tag/v0.4.42) - 2019-05-11
 
