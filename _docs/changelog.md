@@ -4,6 +4,29 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
+
+### Added
+- Version-specific caching of CSS and JavaScript files.
+- The `sort()` and `sort_elements()` methods for `DAList`.
+
+### Changed
+- `terms` and `auto terms` are now compatible with the `translations`
+  block.
+- Files in the Playground will be served from server rather than block
+  storage.
+
+### Fixed
+- `static_image()` did not work with unqualified file names.
+- Some initial blocks were not included in side-by-side translation
+  files.
+- Orphaned translations did not receive syntax highlighting in
+  translation files.
+- Indented Mako was not receiving syntax highlighting in translation
+  files.
+- Translations containing emojis were being truncated in translation
+  files.
+
 ## [0.4.43](https://github.com/jhpyle/docassemble/releases/tag/v0.4.43) - 2019-05-16
 
 ### Added

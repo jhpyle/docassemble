@@ -609,6 +609,15 @@ Other methods available on a `DAList` are:
   (the default), then the object's instance name will not be changed.
 * <a name="DAList.clear"></a><a name="DADict.clear"></a><a
   name="DASet.clear"></a>`clear()` - makes the list empty.
+* <a name="DAList.sort"></a>`sort()` - reorders the elements of the
+  list, saves the reordered items, and returns the object.  If you
+  pass keyword parameters to `sort()`, those parameters will be passed
+  directly to Python's [`sorted()`] function.
+
+{% include side-by-side.html demo="sort" %}
+  
+* <a name="DAList.sort_elements"></a>`sort_elements()` - acts like
+  `sort()` but does not cause the list to be gathered.
 * <a name="DAList.complete_elements"></a><a
   name="DADict.complete_elements"></a>`complete_elements()` - returns
   the subset of elements in the list that are "complete."  This is

@@ -388,6 +388,12 @@ This will uninstall the Python 3 version of [mod_wsgi] and install the
 Python 2.7 version.  Keep in mind, however, that Python 2.7 [will not
 be maintained] after January 1, 2020.
 
+Note that [mod_wsgi] and [mod_php] can conflict with one another.  If
+[mod_php] is enabled, [mod_wsgi] may terminate with a segmentation
+fault.  Thus it may not be possible for [mod_wsgi] to share a server
+with PHP applications.  This does not always happen, however; the
+cause may not be PHP itself but rather a library loaded by PHP.
+
 The `pip.conf` file is necessary because it enables the use of
 [GitHub] package references in the `setup.py` files of **docassemble**
 extension packages.  The [ndg-httpsclient] module, which is a
@@ -1615,3 +1621,4 @@ All of these system administration headaches can be avoided by
 [Google settings]: https://support.google.com/accounts/answer/6010255
 [will not be maintained]: https://www.python.org/dev/peps/pep-0373/
 [mod_wsgi]: https://modwsgi.readthedocs.io/en/develop/
+[mod_php]: https://wiki.apache.org/httpd/php

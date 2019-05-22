@@ -569,7 +569,9 @@ whether in curly brackets or not, use `auto terms`.
 
 You can also use `terms` and `auto terms` as [question modifiers], in which
 case the terms will apply only to the question, not to the interview
-as a whole.
+as a whole.  When you use `terms` and `auto terms` as initial blocks,
+you cannot use [Mako] templating in the definitions, but when you use
+them as [question modifiers], you can use [Mako] templating.
 
 # <a name="template"></a>The `template` block
 
