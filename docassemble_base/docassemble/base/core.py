@@ -946,6 +946,20 @@ class DAList(DAObject):
             if isinstance(item, DAObject) and item.instanceName.startswith(self.instanceName + '['):
                 item._set_instance_name_recursively(self.instanceName + '[' + str(indexno) + ']')
             indexno += 1
+    def sort(self, *pargs, **kwargs):
+        """Reorders the elements of the list and returns the object."""
+        self._trigger_gather()
+        self.elements = sorted(self.elements, **kwargs)
+        self._reset_instance_names()
+        return self
+    def sort_elements(self, *pargs, **kwargs):
+        """Reorders the elements of the list and returns the object, without
+        triggering the gathering process.
+
+        """
+        self.elements = sorted(self.elements, **kwargs)
+        self._reset_instance_names()
+        return self
     def appendObject(self, *pargs, **kwargs):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object

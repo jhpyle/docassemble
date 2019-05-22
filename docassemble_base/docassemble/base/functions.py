@@ -1907,7 +1907,7 @@ def capitalize_default(a, **kwargs):
     if a and isinstance(a, string_types) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
-        return(text_type(a))
+        return(capitalize_default(text_type(a)))
 
 def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
@@ -2381,7 +2381,8 @@ def static_filename(filereference):
     #filereference = re.sub(r'^None:', '', filereference)
     parts = filereference.split(':')
     if len(parts) < 2:
-        parts = ['docassemble.base', filereference]
+        parts = [this_thread.current_package, filereference]
+        #parts = ['docassemble.base', filereference]
     if re.search(r'\.\./', parts[1]):
         return(None)
     if not re.match(r'(data|static)/.*', parts[1]):
@@ -2465,7 +2466,8 @@ def package_data_filename(the_file):
     #the_file = re.sub(r'^None:', '', the_file)
     parts = the_file.split(":")
     result = None
-    #if len(parts) == 1:
+    if len(parts) == 1:
+        parts = [this_thread.current_package, the_file]
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])

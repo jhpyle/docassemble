@@ -1248,7 +1248,7 @@ class Question:
                     if column_name not in df.columns:
                         raise DAError("Invalid translations file " + os.path.basename(the_xlsx_file) + ": column " + column_name + " is missing")
                 for indexno in df.index:
-                    if df['tr_text'][indexno] == '':
+                    if not isinstance(df['tr_text'][indexno], string_types) or df['tr_text'][indexno] == '':
                         continue
                     if df['orig_text'][indexno] not in self.interview.translation_dict:
                         self.interview.translation_dict[df['orig_text'][indexno]] = dict()
@@ -1739,7 +1739,14 @@ class Question:
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
                 for term in termitem:
                     lower_term = term.lower()
-                    self.terms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    alt_terms = dict()
+                    re_dict = dict()
+                    re_dict[self.language] = re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        re_dict[lang] = re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)
+                        alt_terms[lang] = tr_tuple[0]
+                    self.terms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
             if not isinstance(data['auto terms'], (dict, list)):
                 raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
@@ -1750,7 +1757,14 @@ class Question:
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
                 for term in termitem:
                     lower_term = term.lower()
-                    self.autoterms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    alt_terms = dict()
+                    re_dict = dict()
+                    re_dict[self.language] = re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)
+                        alt_terms[lang] = tr_tuple[0]
+                    self.autoterms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
             should_append = False
             if self.language not in self.interview.terms:
@@ -1760,13 +1774,29 @@ class Question:
                     if isinstance(termitem, dict):
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.terms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                            term_textobject = TextObject(text_type(lower_term), question=self)
+                            definition_textobject = TextObject(text_type(termitem[term]), question=self)
+                            self.interview.terms[self.language][lower_term] = {'definition': text_type(termitem[term]), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                            for lang, tr_tuple in term_textobject.other_lang.items():
+                                if lang not in self.interview.terms:
+                                    self.interview.terms[lang] = dict()
+                                if tr_tuple[0] not in self.interview.terms[lang]:
+                                    if lang in definition_textobject.other_lang:
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
                 for term in data['terms']:
                     lower_term = term.lower()
-                    self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    definition_textobject = TextObject(text_type(data['terms'][term]), question=self)
+                    self.interview.terms[self.language][lower_term] = {'definition': text_type(data['terms'][term]), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        if lang not in self.interview.terms:
+                            self.interview.terms[lang] = dict()
+                        if tr_tuple[0] not in self.interview.terms[lang]:
+                            if lang in definition_textobject.other_lang:
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -1778,13 +1808,29 @@ class Question:
                     if isinstance(termitem, dict):
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.autoterms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                            term_textobject = TextObject(text_type(lower_term), question=self)
+                            definition_textobject = TextObject(text_type(termitem[term]), question=self)
+                            self.interview.autoterms[self.language][lower_term] = {'definition': text_type(termitem[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                            for lang, tr_tuple in term_textobject.other_lang.items():
+                                if lang not in self.interview.autoterms:
+                                    self.interview.autoterms[lang] = dict()
+                                if tr_tuple[0] not in self.interview.autoterms[lang]:
+                                    if lang in definition_textobject.other_lang:
+                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)}
                     else:
                         raise DAError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['auto terms'], dict):
                 for term in data['auto terms']:
                     lower_term = term.lower()
-                    self.interview.autoterms[self.language][lower_term] = {'definition': data['auto terms'][term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    definition_textobject = TextObject(text_type(data['auto terms'][term]), question=self)
+                    self.interview.autoterms[self.language][lower_term] = {'definition': text_type(data['auto terms'][term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        if lang not in self.interview.autoterms:
+                            self.interview.autoterms[lang] = dict()
+                        if tr_tuple[0] not in self.interview.autoterms[lang]:
+                            if lang in definition_textobject.other_lang:
+                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)}
             else:
                 raise DAError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -2897,6 +2943,11 @@ class Question:
                 #     raise DAError("Question ID " + text_type(self.id) + " results in duplicate question name")
             else:
                 self.name = "Question_" + str(self.number)
+        else:
+            self.number = self.interview.next_block_number()
+            if self.name is None:
+                self.name = "Block_" + str(self.number)
+        self.interview.all_questions.append(self)
         # if hasattr(self, 'id'):
         #     try:
         #         self.interview.questions_by_id[self.id].append(self)
@@ -3395,13 +3446,21 @@ class Question:
             if key in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (key + ' text') not in extras:
                 extras[key + ' text'] = val
         if len(self.terms):
+            lang = docassemble.base.functions.get_language()
             extras['terms'] = dict()
             for termitem, definition in self.terms.items():
-                extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+                if lang in definition['alt_terms']:
+                    extras['terms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                else:
+                    extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if len(self.autoterms):
+            lang = docassemble.base.functions.get_language()
             extras['autoterms'] = dict()
             for termitem, definition in self.autoterms.items():
-                extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+                if lang in definition['alt_terms']:
+                    extras['autoterms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                else:
+                    extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if self.css is not None:
             extras['css'] = self.css.text(user_dict)
         if self.script is not None:
@@ -4693,6 +4752,7 @@ class Interview:
         self.questions_by_id = dict()
         self.questions_by_name = dict()
         self.questions_list = list()
+        self.all_questions = list()
         self.progress_points = set()
         self.ids_in_use = set()
         self.id_orderings = list()
@@ -4709,6 +4769,7 @@ class Interview:
         self.reconsider = set()
         self.reconsider_generic = dict()
         self.question_index = 0
+        self.block_index = 0
         self.translating = False
         self.default_role = None
         self.default_validation_messages = dict()
@@ -4847,6 +4908,9 @@ class Interview:
     def next_number(self):
         self.question_index += 1
         return(self.question_index - 1)
+    def next_block_number(self):
+        self.block_index += 1
+        return(self.block_index - 1)
     def read_from(self, source):
         if self.source is None:
             self.source = source

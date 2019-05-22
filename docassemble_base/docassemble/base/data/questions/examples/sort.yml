@@ -1,0 +1,36 @@
+metadata:
+  title: Sort list
+  short: Sort
+  documentation: "https://docassemble.org/docs/objects.html#DAList.sort"
+  example start: 1
+  example end: 1
+---
+objects:
+  building: DAList.using(object_type=Thing, minimum_number=2)
+---
+question: |
+  Tell me about the ${ ordinal(i) }
+  building.
+fields:
+  - Name: building[i].name.text
+  - Stories: building[i].stories
+    datatype: integer
+---
+question: |
+  Are there any more buildings
+  you would like to list?
+yesno: building.there_is_another
+---
+mandatory: True
+question: |
+  Your buildings
+subquestion: |
+  % for b in building.sort(key=lambda y: y.stories):
+  ${ capitalize(b) }
+  is
+  ${ quantity_noun(b.stories, 'story') }
+  tall.
+  Its intrinsic name is now
+  `${ b.instanceName }`.
+  
+  % endfor

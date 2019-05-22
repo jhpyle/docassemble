@@ -1,6 +1,8 @@
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
+da_version = '0.4.43'
+app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
 app.config['SHOW_PROFILE'] = True if daconfig.get('show profile link', True) else False

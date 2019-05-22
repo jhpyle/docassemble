@@ -1132,13 +1132,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <input type="hidden" name="_ml_info" value=' + myb64doublequote(json.dumps(ml_info)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
-            #init_string = '<script>'
-            #for saveasname in files:
-            #    init_string += '$("#' + escape_for_jquery(saveasname) + '").fileinput();' + "\n"
-            #init_string += '</script>'
-            #status.extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
-            #status.extra_scripts.append(init_string)
-            #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += status.submit
         output += '                <fieldset class="da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'fields_saveas'):

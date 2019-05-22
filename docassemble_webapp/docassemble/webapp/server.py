@@ -698,6 +698,7 @@ def password_validator(form, field):
         raise wtforms.ValidationError(word(error_message))
 
 import docassemble.webapp.setup
+from docassemble.webapp.setup import da_version
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm
@@ -1547,7 +1548,7 @@ def proc_example_list(example_list, package, directory, examples):
         result['interview'] = url_for('index', reset=1, i=package + ":data/questions/" + directory + example + ".yml")
         example_file = package + ":data/questions/" + directory + example + '.yml'
         if package == 'docassemble.base':
-            result['image'] = url_for('static', filename=directory + example + ".png")
+            result['image'] = url_for('static', filename=directory + example + ".png", v=da_version)
         else:
             result['image'] = url_for('package_static', package=package, filename=example + ".png")
         #logmessage("Giving it " + example_file)
@@ -1740,10 +1741,10 @@ def do_refresh(is_ajax, yaml_filename):
 
 def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
     if interview_language in ('ar', 'cs', 'et', 'he', 'ka', 'nl', 'ro', 'th', 'zh', 'az', 'da', 'fa', 'hu', 'kr', 'no', 'ru', 'tr', 'bg', 'de', 'fi', 'id', 'kz', 'pl', 'sk', 'uk', 'ca', 'el', 'fr', 'it', 'sl', 'uz', 'cr', 'es', 'gl', 'ja', 'lt', 'pt', 'sv', 'vi'):
-        fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js', _external=external) + '"></script>'
+        fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js', v=da_version, _external=external) + '"></script>'
     else:
         fileinput_locale = ''
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', _external=external) + '"></script>' + fileinput_locale + '\n    <script src="' + url_for('static', filename='app/app.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js', _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js', _external=external) + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version, _external=external) + '"></script>' + fileinput_locale + '\n    <script src="' + url_for('static', filename='app/app.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js', v=da_version, _external=external) + '"></script>'
 
 def additional_scripts(interview_status, yaml_filename):
     scripts = ''
@@ -1824,12 +1825,12 @@ def additional_css(interview_status):
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False):
     if bootstrap_theme is None:
-        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', _external=external) + '" rel="stylesheet">'
+        bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', _external=external) + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css', _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css', _external=external) + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', v=da_version, _external=external) + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
-        output += '\n    <link href="' + url_for('static', filename='app/pygments.css', _external=external) + '" rel="stylesheet">'
+        output += '\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version, _external=external) + '" rel="stylesheet">'
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
@@ -6991,7 +6992,7 @@ def index(action_argument=None):
         var img = new Image();
         img.src = url;
       }
-      daPreloadImage('""" + str(url_for('static', filename='app/chat.ico')) + """');
+      daPreloadImage('""" + str(url_for('static', filename='app/chat.ico', v=da_version)) + """');
       function daShowHelpTab(){
           $('#dahelptoggle').tab('show');
       }
@@ -10861,7 +10862,7 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
       var daAudioContext = null;
       var daSocket;
       var daSoundBuffer = Object();
@@ -10907,7 +10908,7 @@ def monitor():
         var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
         link.type = 'image/x-icon';
         link.rel = 'shortcut icon';
-        link.href = '""" + url_for('static', filename='app/chat.ico') + """?nocache=1';
+        link.href = '""" + url_for('static', filename='app/chat.ico', v=da_version) + """?nocache=1';
         document.getElementsByTagName('head')[0].appendChild(link);
       }
       function daTopMessage(message){
@@ -11672,9 +11673,9 @@ def monitor():
           catch(e) {
               console.log('Web Audio API is not supported in this browser');
           }
-          daLoadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
-          daLoadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
-          daLoadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
+          daLoadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg', v=da_version) + """');
+          daLoadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg', v=da_version) + """');
+          daLoadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-snap.ogg', v=da_version) + """');
           if (location.protocol === 'http:' || document.location.protocol === 'http:'){
               daSocket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
           }
@@ -14030,7 +14031,7 @@ def config_page():
         abort(404)
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
+        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
     else:
         kbOpt = ''
         kbLoad = ''
@@ -14040,7 +14041,7 @@ def config_page():
         version = word("Version ") + text_type(python_version)
     else:
         version = word("Version ") + text_type(python_version) + ' (Python); ' + text_type(system_version) + ' (' + word('system') + ')'
-    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
+    return render_template('pages/config.html', version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200
 
 @app.route('/view_source', methods=['GET'])
 @login_required
@@ -14495,7 +14496,7 @@ def playground_files():
         extra_command = ""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
+        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
     else:
         kbOpt = ''
         kbLoad = ''
@@ -14618,8 +14619,8 @@ def playground_files():
     else:
         modes = [mode]
     for the_mode in modes:
-        cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js") + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+        cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js", v=da_version) + '"></script>'
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js', v=da_version) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -15386,7 +15387,7 @@ def playground_packages():
         });"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
+        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
     else:
         kbOpt = ''
         kbLoad = ''
@@ -15401,7 +15402,7 @@ def playground_packages():
             pypi_message = Markup(pypi_message)
     else:
         pypi_message = None
-    extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    '
+    extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js", v=da_version) + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
       var isNew = """ + json.dumps(is_new) + """;
@@ -15482,7 +15483,7 @@ def playground_packages():
         form.author_name.data = current_user.first_name + " " + current_user.last_name
     if form.author_email.data in ('', None) and current_user.email:
         form.author_email.data = current_user.email
-    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def github_as_http(url):
     if url.startswith('http'):
@@ -16445,11 +16446,11 @@ $( document ).ready(function() {
     </script>"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
+        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js', v=da_version) + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version) + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 @app.errorhandler(404)
 def page_not_found_error(the_error):
@@ -16581,7 +16582,7 @@ def server_error(the_error):
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
     if package == 'fonts':
-        return redirect(url_for('static', filename='bootstrap/fonts/' + filename))
+        return redirect(url_for('static', filename='bootstrap/fonts/' + filename, v=da_version))
     try:
         filename = re.sub(r'^\.+', '', filename)
         filename = re.sub(r'\/\.+', '\/', filename)
@@ -18988,7 +18989,7 @@ def translation_file():
                 tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = the_dict
     row = 1
     seen = list()
-    for question in interview.questions_list:
+    for question in interview.all_questions:
         if not hasattr(question, 'translations'):
             continue
         language = question.language
@@ -19055,8 +19056,8 @@ def translation_file():
                 parts.append(fixedunlockedcell)
                 worksheet.write_rich_string(*parts)
             num_lines = item.count('\n')
-            if num_lines > 25:
-                num_lines = 25
+            #if num_lines > 25:
+            #    num_lines = 25
             if num_lines > 0:
                 worksheet.set_row(row, 15*(num_lines + 1))
             indexno += 1
@@ -19071,8 +19072,44 @@ def translation_file():
         worksheet.write_string(row, 3, tr_cache[item][language][tr_lang]['hash'], text)
         worksheet.write_string(row, 4, tr_cache[item][language][tr_lang]['orig_lang'], text)
         worksheet.write_string(row, 5, tr_cache[item][language][tr_lang]['tr_lang'], text)
-        worksheet.write_string(row, 6, tr_cache[item][language][tr_lang]['orig_text'], fixed)
-        worksheet.write_string(row, 7, tr_cache[item][language][tr_lang]['tr_text'], fixedunlocked)
+        mako = mako_parts(tr_cache[item][language][tr_lang]['orig_text'])
+        if len(mako) == 1:
+            if mako[0][1] == 0:
+                worksheet.write_string(row, 6, tr_cache[item][language][tr_lang]['orig_text'], wholefixed)
+            elif mako[0][1] == 1:
+                worksheet.write_string(row, 6, tr_cache[item][language][tr_lang]['orig_text'], wholefixedone)
+            elif mako[0][1] == 2:
+                worksheet.write_string(row, 6, tr_cache[item][language][tr_lang]['orig_text'], wholefixedtwo)
+        else:
+            parts = [row, 6]
+            for part in mako:
+                if part[1] == 0:
+                    parts.extend([fixed, part[0]])
+                elif part[1] == 1:
+                    parts.extend([fixedone, part[0]])
+                elif part[1] == 2:
+                    parts.extend([fixedtwo, part[0]])
+            parts.append(fixedcell)
+            worksheet.write_rich_string(*parts)
+        mako = mako_parts(tr_cache[item][language][tr_lang]['tr_text'])
+        if len(mako) == 1:
+            if mako[0][1] == 0:
+                worksheet.write_string(row, 7, tr_cache[item][language][tr_lang]['tr_text'], wholefixedunlocked)
+            elif mako[0][1] == 1:
+                worksheet.write_string(row, 7, tr_cache[item][language][tr_lang]['tr_text'], wholefixedunlockedone)
+            elif mako[0][1] == 2:
+                worksheet.write_string(row, 7, tr_cache[item][language][tr_lang]['tr_text'], wholefixedunlockedtwo)
+        else:
+            parts = [row, 7]
+            for part in mako:
+                if part[1] == 0:
+                    parts.extend([fixedunlocked, part[0]])
+                elif part[1] == 1:
+                    parts.extend([fixedunlockedone, part[0]])
+                elif part[1] == 2:
+                    parts.extend([fixedunlockedtwo, part[0]])
+            parts.append(fixedunlockedcell)
+            worksheet.write_rich_string(*parts)
         num_lines = tr_cache[item][language][tr_lang]['orig_text'].count('\n')
         if num_lines > 0:
             worksheet.set_row(row, 15*(num_lines + 1))
@@ -20883,11 +20920,11 @@ def mako_parts(expression):
     in_colon = 0
     in_pre_bracket = False
     in_post_bracket = False
-    n = len(expression)
     output = list()
     current = ''
     i = 0
     expression = emoji_match.sub(r'^^\1^^', expression)
+    n = len(expression)
     while i < n:
         if in_percent:
             if expression[i] in ["\n", "\r"]:
@@ -20981,7 +21018,7 @@ def mako_parts(expression):
                 current = expression[i:i+2]
                 i += 2
                 continue
-            elif expression[i:i+2] == '% ' and (i == 0 or (expression[i-1] in ["\n", "\r"])):
+            elif expression[i:i+2] == '% ' and start_of_line(expression, i):
                 in_percent = True
                 if current != '':
                     output.append([current, 0])
@@ -21005,6 +21042,19 @@ def mako_parts(expression):
         else:
             output.append([current, 0])
     return output
+
+def start_of_line(expression, i):
+    if i == 0:
+        return True
+    i -= 1
+    while i >= 0:
+        if expression[i] in ("\n", "\r"):
+            return True
+        if expression[i] in (" ", "\t"):
+            i -= 1
+            continue
+        return False
+    return True
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)

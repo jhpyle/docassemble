@@ -474,7 +474,7 @@ div.playgroundbox table td.playground-warning-box {
 }
 
 #daform pre,
-.da-example-source-col pre {
+.daadminbody pre {
     margin: 0;
     padding: 9.5px;
     word-break: break-all;

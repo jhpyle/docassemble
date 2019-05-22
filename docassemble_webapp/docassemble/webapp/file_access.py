@@ -33,18 +33,18 @@ def url_if_exists(file_reference, **kwargs):
                 if re.search(r'^data/sources/', parts[1]):
                     section = 'playgroundsources'
                     filename = re.sub(r'^data/sources/', '', parts[1])
-                else:
-                    section = 'playgroundstatic'
-                    filename = re.sub(r'^data/static/', '', parts[1])
-                filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
-                key = str(section) + '/' + str(user_id) + '/' + filename
-                cloud_key = cloud.get_key(key)
-                if cloud_key.does_exist:
-                    if not kwargs.get('inline', False):
-                        return cloud_key.generate_url(3600, display_filename=filename)
-                    else:
-                        return cloud_key.generate_url(3600)
-                return None
+                    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+                    key = str(section) + '/' + str(user_id) + '/' + filename
+                    cloud_key = cloud.get_key(key)
+                    if cloud_key.does_exist:
+                        if not kwargs.get('inline', False):
+                            return cloud_key.generate_url(3600, display_filename=filename)
+                        else:
+                            return cloud_key.generate_url(3600)
+                    return None
+                section = 'playgroundstatic'
+                filename = re.sub(r'^data/static/', '', parts[1])
+                return docassemble.base.config.daconfig.get('root', '/') + 'packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1])
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None

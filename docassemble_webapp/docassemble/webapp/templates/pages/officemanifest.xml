@@ -11,8 +11,8 @@
     <DefaultLocale>en-US</DefaultLocale>
     <DisplayName DefaultValue="{{ word('Docassemble') }}" />
     <Description DefaultValue="{{ word('Connects Word to the docassemble Playground.') }}"/>
-    <IconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
-    <HighResolutionIconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}"/>
+    <IconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', v=config['DA_VERSION'], _external=True) }}" />
+    <HighResolutionIconUrl DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', v=config['DA_VERSION'], _external=True) }}"/>
     <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
     <!--<SupportUrl DefaultValue="[Insert the URL of a page that provides support information for the app]">-->
     <AppDomains>
@@ -68,9 +68,9 @@
         </Hosts>
         <Resources>
             <bt:Images>
-                <bt:Image id="DA.tpicon_16x16" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-16.png', _external=True) }}" />
-                <bt:Image id="DA.tpicon_32x32" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', _external=True) }}" />
-                <bt:Image id="DA.tpicon_80x80" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', _external=True) }}" />
+                <bt:Image id="DA.tpicon_16x16" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-16.png', v=config['DA_VERSION'], _external=True) }}" />
+                <bt:Image id="DA.tpicon_32x32" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-32.png', v=config['DA_VERSION'], _external=True) }}" />
+                <bt:Image id="DA.tpicon_80x80" DefaultValue="{{ url_for('static', filename='office/cat-in-circle-80.png', v=config['DA_VERSION'], _external=True) }}" />
             </bt:Images>
             <bt:Urls>
                 <bt:Url id="DA.Taskpane.Url" DefaultValue="{{ url_for('playground_office_taskpane', _external=True) }}" />
