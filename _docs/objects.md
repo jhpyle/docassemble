@@ -1988,6 +1988,88 @@ manual s3 configuration:
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
 {% endhighlight %}
 
+## <a name="DAOAuth"></a>DAOAuth
+
+The `DAOAuth` objects facilitates using [OAuth2] authentication in the
+context of an interview.
+
+{% include demo-side-by-side.html demo="oauth-test" %}
+
+The user needs to be logged in because [OAuth2] credentials are stored
+globally using [Redis] and they are tied to the user's e-mail address.
+
+To use a `DAOAuth` object to connect to Google, you need to use the
+[Google Developers Console] and enable the "Google Sheets API."  Under
+Credentials, create an "OAuth client ID" for a "web application."
+Assuming your server is at https://interview.example.com, add
+`https://interview.example.com` to the "Authorized JavaScript
+origins."  Then, under "Authorized redirect URIs," add
+`https://interview.example.com/interview`.  Make a note of the "Client
+ID" and the "Client secret" because you will need to plug those values
+into the [Configuration]
+
+The module `oauthsheets.py` contains the following:
+
+{% highlight python %}
+from docassemble.base.util import DAOAuth
+from googleapiclient.discovery import build
+
+__all__ = ['GoogleAuth']
+
+class GoogleAuth(DAOAuth):
+    def init(self, *pargs, **kwargs):
+        super(GoogleAuth, self).init(*pargs, **kwargs)
+        self.appname = 'mygoogle'
+        self.token_uri = "https://www.googleapis.com/oauth2/v4/token"
+        self.auth_uri = "https://accounts.google.com/o/oauth2/v2/auth"
+        self.scope = "https://www.googleapis.com/auth/spreadsheets"
+    def test(self):
+        service = build('sheets', 'v4', http=self.get_http())
+        SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+        SAMPLE_RANGE_NAME = 'Class Data!A2:E'
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                                    range=SAMPLE_RANGE_NAME).execute()
+        values = result.get('values', [])
+        return values
+{% endhighlight %}
+
+The `GoogleAuth` class is a subclass of `DAOAuth`.  The following four
+attributes must be defined:
+
+* `appname` - This is a name that you choose.  Credentials will be
+  stored based on this application name as well as the user's e-mail
+  address.  In this example, the application name is `mygoogle`.
+* `token_uri` - This is the URL for obtaining the [OAuth2] token.  It
+  should be provided in the documentation for the [OAuth2] API.
+* `auth_uri` - This is the URL for [OAuth2] authorization.  It
+  should be provided in the documentation for the [OAuth2] API.
+* `scope` - This is the scope of access you are requesting.  The
+  format should be documented in the documentation for the [OAuth2]
+  API.
+
+Since the application name is `mygoogle`, you need to edit your
+[Configuration] to add the "Client ID" and "Client secret" under the
+`oauth` directive as follows:
+
+{% highlight yaml %}
+oauth:
+  mygoogle:
+    id: 18761224589-4t28ji14udf7pa39hd5ssqdttebt959y.apps.googleusercontent.com
+    secret: UnDdE_EBOft7wYU8rmCFXTdy
+{% endhighlight %}
+
+Note that in the interview, the object was defined with
+`.using(url_args=url_args)`, and that the "redirect URI" was
+`/interview`.  This is all necessary because after the [OAuth2]
+process, the [OAuth2] provider will redirect back to your interview
+with the URL parameters `state` and `code`.  The `DAOAuth` object
+needs to have a reference to the `url_args` so that it can read these
+URL parameters.
+
+If you need to modify the way this works, you can copy and paste the
+code for `DAOAuth` out of [`oauth.py`] into your own module.
+
 ## <a name="DAGoogleAPI"></a>DAGoogleAPI
 
 The `DAGoogleAPI` object provides convenient access to Google's APIs
@@ -4245,3 +4327,6 @@ of the original [`DADateTime`] object.  See
 [`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [`data`]: {{ site.baseurl }}/docs/initial.html#data
 [`use objects`]: {{ site.baseurl }}/docs/initial.html#use objects
+[OAuth2]: https://oauth.net/2/
+[Google Developers Console]: https://console.developers.google.com/
+[`oauth.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/oauth.py

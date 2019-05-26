@@ -9328,6 +9328,9 @@
     - Suffix: trustee.name.suffix
       required: False
       code: name_suffix()
+"sort": |-
+  objects:
+    building: DAList.using(object_type=Thing, minimum_number=2)
 "space-underscore": |-
   question: |
     Removing spaces
@@ -10967,6 +10970,23 @@
       show if:
         variable: customers[i].existing_or_new
         is: New
+"oauth-test": |-
+  modules:
+    .oauthsheets
+  ---
+  objects:
+    - google: GoogleAuth.using(url_args=url_args)
+  ---
+  initial: True
+  code: |
+    if not user_logged_in():
+      message("Test Google Sheets Integration", "Sorry, you must be logged in to test this interview.")
+  ---
+  mandatory: True
+  question: |
+    Here is some data.
+  subquestion: |
+    `${ google.test() }`
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"
