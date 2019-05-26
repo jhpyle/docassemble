@@ -14,7 +14,7 @@ objects:
 initial: True
 code: |
   if not user_logged_in():
-    command('leave', url=url_of('login'))
+    message("Test Google Sheets Integration", "Sorry, you must be logged in to test this interview.")
 ---
 mandatory: True
 question: |
