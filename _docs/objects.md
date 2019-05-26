@@ -2070,6 +2070,14 @@ URL parameters.
 If you need to modify the way this works, you can copy and paste the
 code for `DAOAuth` out of [`oauth.py`] into your own module.
 
+The methods of `DAOAuth` that are useful are:
+
+* `.get_credentials()` - this returns credentials in the format used
+  by `oauth2client.client`.
+* `.get_http()` - this returns a `httplib2.Http()` object that has
+  been modified so that it contains the necessary [OAuth2]
+  credentials.
+
 ## <a name="DAGoogleAPI"></a>DAGoogleAPI
 
 The `DAGoogleAPI` object provides convenient access to Google's APIs
