@@ -6996,6 +6996,11 @@ def index(action_argument=None):
       function daShowHelpTab(){
           $('#dahelptoggle').tab('show');
       }
+      function addCsrfHeader(xhr, settings){
+        if (daJsEmbed && !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)){
+          xhr.setRequestHeader("X-CSRFToken", daCsrf);
+        }
+      }
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
@@ -7038,6 +7043,10 @@ def index(action_argument=None):
             type: "GET",
             url: url,
             success: callback,
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             error: function(xhr, status, error){
               setTimeout(function(){
                 daProcessAjaxError(xhr, status, error);
@@ -7054,6 +7063,10 @@ def index(action_argument=None):
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
@@ -7078,6 +7091,10 @@ def index(action_argument=None):
           $.ajax({
             type: "POST",
             url: """ + '"' + url_for('index') + '"' + """,
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
             success: function(data){
               setTimeout(function(){
@@ -7100,6 +7117,10 @@ def index(action_argument=None):
           type: "GET",
           url: """ + '"' + url_for('get_variables') + '"' + """,
           success: callback,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
           error: function(xhr, status, error){
             setTimeout(function(){
               daProcessAjaxError(xhr, status, error);
@@ -7599,7 +7620,7 @@ def index(action_argument=None):
                 }
               }
             }
-            if (hasImages){
+            if (hasImages || daJsEmbed){
               for (var j = 0; j < file_input.files.length; j++){
                 var the_file = file_input.files[j];
                 filesToRead++;
@@ -7622,19 +7643,24 @@ def index(action_argument=None):
               fileArray.values[inline_file_list[i]] = Array()
               var fileInfoList = fileArray.values[inline_file_list[i]];
               var file_input = $('#' + inline_file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
-              var max_size = parseInt($(file_input).data('maximagesize'));
-              var image_type = $(file_input).data('imagetype');
-              var image_mime_type = null;
-              if (image_type){
-                if (image_type == 'png'){
-                  image_mime_type = 'image/png';
-                }
-                else if (image_type == 'bmp'){
-                  image_mime_type = 'image/bmp';
-                }
-                else {
-                  image_mime_type = 'image/jpeg';
-                  image_type = 'jpg';
+              var max_size;
+              var image_type;
+              var image_mime_type;
+              if (hasImages){
+                max_size = parseInt($(file_input).data('maximagesize'));
+                image_type = $(file_input).data('imagetype');
+                image_mime_type = null;
+                if (image_type){
+                  if (image_type == 'png'){
+                    image_mime_type = 'image/png';
+                  }
+                  else if (image_type == 'bmp'){
+                    image_mime_type = 'image/bmp';
+                  }
+                  else {
+                    image_mime_type = 'image/jpeg';
+                    image_type = 'jpg';
+                  }
                 }
               }
               for (var j = 0; j < file_input.files.length; j++){
@@ -7644,7 +7670,7 @@ def index(action_argument=None):
                   var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
                   fileInfoList.push(thisFileInfo);
                   reader.onload = function(readerEvent){
-                    if (the_file.type.match(/image.*/) && !the_file.type.startsWith('image/svg')){
+                    if (hasImages && the_file.type.match(/image.*/) && !the_file.type.startsWith('image/svg')){
                       var convertedName = the_file.name;
                       var convertedType = the_file.type;
                       if (image_type){
@@ -7726,6 +7752,10 @@ def index(action_argument=None):
             type: "POST",
             url: $(form).attr('action'),
             data: $(form).serialize(), 
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, form, 1);
@@ -7766,6 +7796,10 @@ def index(action_argument=None):
             type: "POST",
             url: $(form).attr('action'),
             data: $(form).serialize(), 
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, form, 1);
@@ -7929,6 +7963,10 @@ def index(action_argument=None):
           type: "POST",
           url: """ + '"' + url_for('index') + '"' + """,
           data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -8063,6 +8101,10 @@ def index(action_argument=None):
           type: "POST",
           url: $('#daform').attr('action'),
           data: 'csrf_token=' + daCsrf + '&ajax=1',
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 0);
@@ -8245,6 +8287,10 @@ def index(action_argument=None):
         $.ajax({
           type: 'POST',
           url: """ + "'" + url_for('checkin') + "'" + """,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
           data: datastring,
           success: daCheckinCallback,
           dataType: 'json'
@@ -8255,6 +8301,10 @@ def index(action_argument=None):
         $.ajax({
           type: 'POST',
           url: """ + "'" + url_for('checkout') + "'" + """,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
           data: 'csrf_token=' + daCsrf + '&action=checkout',
           success: daCheckoutCallback,
           dataType: 'json'
@@ -8602,6 +8652,10 @@ def index(action_argument=None):
           $.ajax({
             type: "POST",
             url: url,
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             data: $("#dabackbutton").serialize() + '&ajax=1' + informed, 
             success: function(data){
               setTimeout(function(){
@@ -9030,6 +9084,10 @@ def index(action_argument=None):
             $.ajax({
               type: 'POST',
               url: """ + "'" + url_for('checkin') + "'" + """,
+              beforeSend: addCsrfHeader,
+              xhrFields: {
+                withCredentials: true
+              },
               data: $.param({action: 'chat_log', csrf_token: daCsrf}),
               success: daChatLogCallback,
               dataType: 'json'
@@ -9071,6 +9129,7 @@ def index(action_argument=None):
           setTimeout(function () {
             if (daJsEmbed){
               $(daTargetDiv)[0].scrollTo(0, 1);
+              $(daTargetDiv)[0].scrollIntoView();
             }
             else{
               window.scrollTo(0, 1);
@@ -9122,6 +9181,10 @@ def index(action_argument=None):
           $.ajax({
             type: "POST",
             url: daPostURL,
+            beforeSend: addCsrfHeader,
+            xhrFields: {
+              withCredentials: true
+            },
             data: 'csrf_token=' + daCsrf + '&ajax=1',
             success: function(data){
               setTimeout(function(){
@@ -12308,7 +12371,7 @@ def update_package():
     dw_status = pypi_status('docassemble.webapp')
     if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != text_type(python_version):
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
-    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=package_list, tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
+    return render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():

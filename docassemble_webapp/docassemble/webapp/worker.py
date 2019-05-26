@@ -569,7 +569,7 @@ def sync_with_onedrive(user_id):
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating OD modtime on file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                         headers = { 'Content-Type': 'application/json' }
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": od_createtimes[section][f], "lastModifiedDateTime": the_modtime })))
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime })))
                         if int(r['status']) != 200:
                             return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
@@ -619,7 +619,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
             num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
             custom_headers = { 'Content-Length': text_type(num_bytes), 'Content-Range': 'bytes ' + text_type(start_byte) + '-' + text_type(start_byte + num_bytes - 1) + '/' + text_type(total_bytes), 'Content-Type': 'application/octet-stream' }
             #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
-            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=fh.read(num_bytes))
+            r, content = try_request(http, upload_url.encode('utf-8'), 'PUT', headers=custom_headers, body=fh.read(num_bytes))
             sys.stderr.write("Sent request\n")
             start_byte += num_bytes
             if start_byte == total_bytes:

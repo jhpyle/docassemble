@@ -1,0 +1,23 @@
+metadata:
+  title: OAuth with Google
+  short: OAuth
+  documentation: "https://docassemble.org/docs/objects.html#DAOAuth"
+  example start: 1
+  example end: 4
+---
+modules:
+  .oauthsheets
+---
+objects:
+  - google: GoogleAuth.using(url_args=url_args)
+---
+initial: True
+code: |
+  if not user_logged_in():
+    command('leave', url=url_of('login'))
+---
+mandatory: True
+question: |
+  Here is some data.
+subquestion: |
+  `${ google.test() }`

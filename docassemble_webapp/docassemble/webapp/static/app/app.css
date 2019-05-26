@@ -2148,3 +2148,60 @@ tr:first-child .datableup, tr:last-child .databledown {
     cursor: not-allowed !important;
 }
    
+.dawide .col-xl-1,
+.dawide .col-xl-2,
+.dawide .col-xl-3,
+.dawide .col-xl-4,
+.dawide .col-xl-5,
+.dawide .col-xl-6,
+.dawide .col-xl-7,
+.dawide .col-xl-8,
+.dawide .col-xl-9,
+.dawide .col-xl-10,
+.dawide .col-xl-11,
+.dawide .col-lg-1,
+.dawide .col-lg-2,
+.dawide .col-lg-3,
+.dawide .col-lg-4,
+.dawide .col-lg-5,
+.dawide .col-lg-6,
+.dawide .col-lg-7,
+.dawide .col-lg-8,
+.dawide .col-lg-9,
+.dawide .col-lg-10,
+.dawide .col-lg-11,
+.dawide .col-md-1,
+.dawide .col-md-2,
+.dawide .col-md-3,
+.dawide .col-md-4,
+.dawide .col-md-5,
+.dawide .col-md-6,
+.dawide .col-md-7,
+.dawide .col-md-8,
+.dawide .col-md-9,
+.dawide .col-md-10,
+.dawide .col-md-11 {
+    -webkit-box-flex: 0 !important;
+    -ms-flex: 0 0 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.dawide .offset-md-2,
+.dawide .offset-md-3,
+.dawide .offset-md-4,
+.dawide .offset-xl-1,
+.dawide .offset-xl-3,
+.dawide .offset-lg-3 {
+    margin-left: 0 !important;
+}
+
+.dawide .datext-right {
+    text-align: left !important;
+}
+
+.dawide .form-group.darequired .col-form-label:after {
+    bottom: 0.7rem !important;
+    top: auto !important;
+    right: auto !important;
+}

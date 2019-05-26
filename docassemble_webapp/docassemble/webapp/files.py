@@ -279,7 +279,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        use_external = kwargs.get('_external', False)
+        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
         if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)

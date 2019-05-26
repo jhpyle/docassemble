@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.45] - 2019-05-
+### Added
+- The `DAOAuth` class.
+### Changed
+- Made modifications to facilitate embedding interviews in a `<div>`
+  in another site.
+### Fixed
+- Errors from OneDrive integration.
+
 ## [0.4.44] - 2019-05-21
 ### Added
 - Version-specific caching of CSS and JavaScript files.
