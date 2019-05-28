@@ -1,3 +1,6 @@
+if (typeof($) == 'undefined'){
+    var $ = jQuery.noConflict();
+}
 var daCtx, daColor = "#000";	
 
 var daTheWidth;
@@ -15,7 +18,7 @@ function daInitializeSignature(){
   daIsEmpty = 1;
   setTimeout(function(){
     if (!isCanvasSupported()){
-      daPost({'success': 0});
+      daPost({'da_success': 0, 'da_ajax': 1});
     }
     daNewCanvas();
     $(document).on("touchmove", function(event){event.preventDefault();});
@@ -86,7 +89,7 @@ function daSaveCanvas(){
   var dataURL = document.getElementById("dasigcanvas").toDataURL();
   //console.log(dataURL)
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-  daPost({'da_success': 1, 'da_the_image': dataURL});
+  daPost({'da_success': 1, 'da_the_image': dataURL, 'da_ajax': 1});
 }
 
 function daNewCanvas(){
@@ -133,8 +136,16 @@ function daNewCanvas(){
   //$(document).on("touchstart", function(event){event.preventDefault();});
   //$("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, user-scalable=0");
   daIsEmpty = 1;
-  setTimeout(function () {
-    window.scrollTo(0, 1);
+  setTimeout(function() {
+    if (daJsEmbed){
+      $(daTargetDiv)[0].scrollTo(0, 1);
+      if (daSteps > 1){
+        $(daTargetDiv)[0].scrollIntoView();
+      }
+    }
+    else{
+      window.scrollTo(0, 1);
+    }
   }, 10);
 }
 

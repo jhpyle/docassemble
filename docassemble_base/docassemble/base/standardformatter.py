@@ -635,7 +635,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 <a href="#" role="button" class="btn btn-warning """ + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>
               </div>
 """
-        output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
+        output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
         output += '            <div class="d-block d-md-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
@@ -792,6 +792,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['messages'][the_saveas] = dict()
         seen_extra_header = False
         for field in field_list:
+            field_number = int(re.sub(r'.*_', '', text_type(field.number)))
             if hasattr(field, 'collect_type'):
                 data_def = 'data-collectnum="' + str(field.collect_number) + '" data-collecttype="' + field.collect_type + '" '
                 class_def = ' dacollect' + field.collect_type
@@ -819,6 +820,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 status.extras['disableothers'][field.number] = list()
                 for orig_var in field.disableothers:
                     for the_field in field_list:
+                        the_field_number = int(re.sub(r'.*_', '', text_type(the_field.number)))
                         if the_field is not field and hasattr(the_field, 'saveas') and from_safeid(the_field.saveas) == orig_var:
                             status.extras['disableothers'][field.number].append(status.saveas_by_number[the_field.number])
                             break

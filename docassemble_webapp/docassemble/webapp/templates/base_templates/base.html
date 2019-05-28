@@ -95,10 +95,7 @@
     {%- block main %}{% endblock %}
     {%- block bottom %}{% endblock %}
     </div>
-    <script src="{{ url_for('static', filename='app/jquery.min.js', v=config['DA_VERSION']) }}"></script>
-    <script src="{{ url_for('static', filename='popper/umd/popper.min.js', v=config['DA_VERSION']) }}"></script>
-    <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js', v=config['DA_VERSION']) }}"></script>
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js', v=config['DA_VERSION']) }}"></script>
+    <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
       var daWhichButton = null;
       $( document ).ready(function(){

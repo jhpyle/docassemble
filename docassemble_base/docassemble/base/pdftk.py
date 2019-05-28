@@ -22,7 +22,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.functions import word
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
-from pdfminer.pdftypes import resolve1
+from pdfminer.pdftypes import resolve1, PDFObjRef
 from pdfminer.pdfpage import PDFPage
 import logging
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
@@ -67,6 +67,8 @@ def fieldsorter(x):
     return (x[2], y_coord, x_coord)
 
 def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
+    if isinstance(fields, PDFObjRef):
+        fields = resolve1(fields)
     for i in fields:
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')

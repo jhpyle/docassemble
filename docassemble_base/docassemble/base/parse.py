@@ -3678,10 +3678,13 @@ class Question:
                     if common_var is None:
                         common_var = the_saveas
                         continue
+                    mismatch = False
                     for char_index in range(len(common_var)):
                         if the_saveas[char_index] != common_var[char_index]:
+                            mismatch = True
                             break
-                    common_var = common_var[0:char_index]
+                    if mismatch:
+                        common_var = common_var[0:char_index]
                 common_var = re.sub(r'[^\]]*$', '', common_var)
                 m = re.search(r'^(.*)\[([ijklmn])\]$', common_var)
                 if not m:

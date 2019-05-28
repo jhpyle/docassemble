@@ -237,13 +237,13 @@
 			// Now, add "min-width" to label
 			// Let's say the truth, a fixed width is more beautiful than a variable width
 			if( settings.minimum_width !== false )
-				$object.next( "label[for=" + input_id + "]" ).css({ "min-width": settings.minimum_width });
+				$object.next( "label[for='" + input_id + "']" ).css({ "min-width": settings.minimum_width });
 
 			// Now, add "min-width" to label
 			// Let's say the truth, a fixed width is more beautiful than a variable width
 			if( settings.same_width != false && settings.label == true )
 			{
-				var label_object = $object.next( "label[for=" + input_id + "]" );
+				var label_object = $object.next( "label[for='" + input_id + "']" );
 				var unchecked_width = getRealWidth(label_object.find( "span.labelauty-unchecked" ));
 				var checked_width = getRealWidth(label_object.find( "span.labelauty-checked" ));
 

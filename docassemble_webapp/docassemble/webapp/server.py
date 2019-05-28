@@ -1243,7 +1243,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         #     url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
         # else:
         #     url = None
-        if kwargs.get('_external', False) and url is not None and url.startswith('/'):
+        if ('jsembed' in docassemble.base.functions.this_thread.misc or kwargs.get('_external', False)) and url is not None and url.startswith('/'):
             url = docassemble.base.functions.get_url_root() + url
     return(url)
 
@@ -1744,9 +1744,9 @@ def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
         fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js', v=da_version, _external=external) + '"></script>'
     else:
         fileinput_locale = ''
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/additional-methods.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/popper.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='popper/umd/tooltip.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version, _external=external) + '"></script>' + fileinput_locale + '\n    <script src="' + url_for('static', filename='app/app.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='labelauty/source/jquery-labelauty.js', v=da_version, _external=external) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-combobox/js/bootstrap-combobox.js', v=da_version, _external=external) + '"></script>'
+    return '\n    <script src="' + url_for('static', filename='app/bundle.js', v=da_version, _external=external) + '"></script>' + fileinput_locale
 
-def additional_scripts(interview_status, yaml_filename):
+def additional_scripts(interview_status, yaml_filename, as_javascript=False):
     scripts = ''
     interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
     interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
@@ -1760,12 +1760,17 @@ def additional_scripts(interview_status, yaml_filename):
         ga_id = google_config.get('analytics id')
     else:
         ga_id = None
+    output_js = ''
     if api_key is not None:
         scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+        if as_javascript:
+            output_js += """\
+      var daScript = document.createElement('script');
+      daScript.src = "https://maps.googleapis.com/maps/api/js?key=""" + api_key + """&libraries=places";
+      document.head.appendChild(daScript);
+"""
     if ga_id is not None:
-        scripts += """
-    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
-    <script>
+        the_js = """\
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -1778,19 +1783,34 @@ def additional_scripts(interview_status, yaml_filename):
           gtag('config', """ + json.dumps(ga_id) + """, {'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
         }
       }
+"""
+        scripts += """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
+    <script>
+""" + the_js + """
     </script>
 """
+        if as_javascript:
+# Not good to enable this, since most web sites would have Google Analytics already.
+#             output_js += """
+#       var daScript = document.createElement('script');
+#       daScript.src = "https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """";
+#       document.head.appendChild(daScript);
+# """
+            output_js += the_js
+    if as_javascript:
+        return output_js
     return scripts
 
-def additional_css(interview_status):
+def additional_css(interview_status, js_only=False):
     if 'segment id' in daconfig:
         segment_id = daconfig['segment id']
     else:
         segment_id = None
     start_output = ''
+    the_js = ''
     if segment_id is not None:
-        start_output += """
-    <script>
+        segment_js = """\
       !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
       analytics.load(""" + json.dumps(segment_id) + """);
       analytics.page();
@@ -1818,9 +1838,16 @@ def additional_css(interview_status):
           }
         }
       }
+"""
+        start_output += """
+    <script>
+""" + segment_js + """\
     </script>"""
+        the_js += segment_js
     if len(interview_status.extra_css):
         start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+    if js_only:
+        return the_js
     return start_output
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False):
@@ -1828,7 +1855,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', v=da_version, _external=external) + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='labelauty/source/jquery-labelauty.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-combobox/css/bootstrap-combobox.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.css', v=da_version, _external=external) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version, _external=external) + '" rel="stylesheet">'
     return output
@@ -6728,13 +6755,19 @@ def index(action_argument=None):
         question_id_dict['segment'] = interview_status.extras['segment']
     if 'ga_id' in interview_status.extras:
         question_id_dict['ga'] = interview_status.extras['ga_id']
+    append_script_urls = list()
+    append_javascript = ''
     if not is_ajax:
         scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
+        if is_js:
+            append_javascript += additional_scripts(interview_status, yaml_filename, as_javascript=True)
         if 'javascript' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
                 if the_url is not None:
                     scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _package=packageref) + '"></script>'
+                    if is_js:
+                        append_script_urls.append(get_url_from_file_reference(fileref, _package=packageref))
                 else:
                     logmessage("index: could not find javascript file " + str(fileref))
         if interview_status.question.checkin is not None:
@@ -6817,6 +6850,9 @@ def index(action_argument=None):
         else:
             segment_id = None
         the_js = """\
+      if (typeof($) == 'undefined'){
+        var $ = jQuery.noConflict();
+      }
       var daMapInfo = null;
       var daWhichButton = null;
       var daSocket = null;
@@ -7770,6 +7806,31 @@ def index(action_argument=None):
         }
         return(false);
       }
+      function daSignatureSubmit(event){
+        $(this).find("input[name='ajax']").val(1);
+        $.ajax({
+          type: "POST",
+          url: $(this).attr('action'),
+          data: $(this).serialize(),
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $(this), 1);
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          }
+        });
+        event.preventDefault();
+        event.stopPropagation();
+        return(false);
+      }
       function daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
         $('<input>').attr({
           type: 'hidden',
@@ -7795,7 +7856,7 @@ def index(action_argument=None):
           $.ajax({
             type: "POST",
             url: $(form).attr('action'),
-            data: $(form).serialize(), 
+            data: $(form).serialize(),
             beforeSend: addCsrfHeader,
             xhrFields: {
               withCredentials: true
@@ -7881,8 +7942,9 @@ def index(action_argument=None):
             document.activeElement.blur();
           }
           $(daTargetDiv).html(data.body);
-          $("body").removeClass();
-          $("body").addClass(data.bodyclass);
+          $(daTargetDiv).parent().removeClass("dabody");
+          $(daTargetDiv).parent().removeClass("dasignature");
+          $(daTargetDiv).parent().addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
           //daNextAction = data.next_action;
@@ -8488,6 +8550,7 @@ def index(action_argument=None):
           }
           return false;
         });
+        $("#dasigform").on('submit', daSignatureSubmit);
         $(".dacollectremove").on('click', function(e){
           e.preventDefault();
           var num = $(this).parent().parent().data('collectnum');
@@ -9129,7 +9192,9 @@ def index(action_argument=None):
           setTimeout(function () {
             if (daJsEmbed){
               $(daTargetDiv)[0].scrollTo(0, 1);
-              $(daTargetDiv)[0].scrollIntoView();
+              if (daSteps > 1){
+                $(daTargetDiv)[0].scrollIntoView();
+              }
             }
             else{
               window.scrollTo(0, 1);
@@ -9530,16 +9595,21 @@ def index(action_argument=None):
                 new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                 db.session.add(new_entry)
             db.session.commit()
+    append_css_urls = list()
     if not is_ajax:
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
             for packageref, fileref in interview_status.question.interview.external_files['css']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
+                if is_js:
+                    append_css_urls.append(the_url)
                 if the_url is not None:
                     start_output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
                 else:
                     logmessage("index: could not find css file " + str(fileref))
         start_output += global_css + additional_css(interview_status)
+        if is_js:
+            append_javascript += additional_css(interview_status, js_only=True)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     if interview_status.question.interview.options.get('hide navbar', False):
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, extra_class='dainvisible')
@@ -9673,7 +9743,32 @@ def index(action_argument=None):
             response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
             response.headers['Content-type'] = 'text/html; charset=utf-8'
     elif is_js:
-        output = the_js
+        output = the_js + "\n" + append_javascript
+        if 'global css' in daconfig:
+            for fileref in daconfig['global css']:
+                append_css_urls.append(get_url_from_file_reference(fileref));
+        if 'global javascript' in daconfig:
+            for fileref in daconfig['global javascript']:
+                append_script_urls.append(get_url_from_file_reference(fileref));
+        if len(append_css_urls):
+            output += """
+      var daLink;"""
+        for path in append_css_urls:
+            output += """
+      daLink = document.createElement('link');
+      daLink.href = """ + json.dumps(path) + """;
+      daLink.rel = "stylesheet";
+      document.head.appendChild(daLink);
+"""
+        if len(append_script_urls):
+            output += """
+      var daScript;"""
+        for path in append_script_urls:
+            output += """
+      daScript = document.createElement('script');
+      daScript.src = """ + json.dumps(path) + """;
+      document.head.appendChild(daScript);
+"""
         response = make_response(output.encode('utf-8'), '200 OK')
         response.headers['Content-type'] = 'application/javascript; charset=utf-8'
     else:
@@ -10782,8 +10877,8 @@ def observer():
                 //console.log("Got newpage")
                 var data = incoming.obj;
                 $(daTargetDiv).html(data.body);
-                $("body").removeClass();
-                $("body").addClass(data.bodyclass);
+                $(daTargetDiv).parent().removeClass();
+                $(daTargetDiv).parent().addClass(data.bodyclass);
                 daInitialize(1);
                 var tempDiv = document.createElement('div');
                 tempDiv.innerHTML = data.extra_scripts;
@@ -14683,7 +14778,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js", v=da_version) + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js', v=da_version) + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>' + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -15465,7 +15560,7 @@ def playground_packages():
             pypi_message = Markup(pypi_message)
     else:
         pypi_message = None
-    extra_js = '\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js", v=da_version) + '"></script>\n    '
+    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
       var isNew = """ + json.dumps(is_new) + """;
@@ -15546,7 +15641,7 @@ def playground_packages():
         form.author_name.data = current_user.first_name + " " + current_user.last_name
     if form.author_email.data in ('', None) and current_user.email:
         form.author_email.data = current_user.email
-    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 def github_as_http(url):
     if url.startswith('http'):
@@ -16513,7 +16608,7 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js', v=da_version) + '"></script>' + '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/themes/fas/theme.min.js', v=da_version) + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 @app.errorhandler(404)
 def page_not_found_error(the_error):
@@ -16641,6 +16736,78 @@ def server_error(the_error):
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
         return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)})
     return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
+
+@app.route('/bundle.css', methods=['GET'])
+def css_bundle():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['bootstrap-fileinput', 'css', 'fileinput.min.css'], ['labelauty', 'source', 'jquery-labelauty.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.css'], ['app', 'app.css']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='text/css')
+
+@app.route('/playgroundbundle.css', methods=['GET'])
+def playground_css_bundle():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['codemirror', 'lib', 'codemirror.css'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.css'], ['codemirror', 'addon', 'display', 'fullscreen.css'], ['codemirror', 'addon', 'scroll', 'simplescrollbars.css'], ['codemirror', 'addon', 'hint', 'show-hint.css'], ['app', 'pygments.css'], ['bootstrap-fileinput', 'css', 'fileinput.min.css']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='text/css')
+
+@app.route('/bundle.js', methods=['GET'])
+def js_bundle():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='application/javascript')
+
+@app.route('/playgroundbundle.js', methods=['GET'])
+def playground_js_bundle():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['codemirror', 'lib', 'codemirror.js'], ['codemirror', 'addon', 'search', 'searchcursor.js'], ['codemirror', 'addon', 'scroll', 'annotatescrollbar.js'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.js'], ['codemirror', 'addon', 'display', 'fullscreen.js'], ['codemirror', 'addon', 'edit', 'matchbrackets.js'], ['codemirror', 'addon', 'hint', 'show-hint.js'], ['codemirror', 'mode', 'yaml', 'yaml.js'], ['codemirror', 'mode', 'markdown', 'markdown.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='application/javascript')
+
+@app.route('/adminbundle.js', methods=['GET'])
+def js_admin_bundle():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['app', 'jquery.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='application/javascript')
+
+@app.route('/bundlewrapjquery.js', methods=['GET'])
+def js_bundle_wrap():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = '(function($) {'
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    output += '})(jQuery);'
+    return Response(output, mimetype='application/javascript')
+
+@app.route('/bundlenojquery.js', methods=['GET'])
+def js_bundle_no_query():
+    base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    output = ''
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    output += ''
+    return Response(output, mimetype='application/javascript')
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):

@@ -765,7 +765,10 @@ def image_as_rtf(match, question=None):
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
-        return rtf_image(file_info, width, False)
+        try:
+            return rtf_image(file_info, width, False)
+        except:
+            return '[graphic could not be inserted]'
     elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
         output = ''
         if not width_supplied:
