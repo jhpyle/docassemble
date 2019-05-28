@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.45](https://github.com/jhpyle/docassemble/releases/tag/v0.4.45) - 2019-05-27
+
+### Added
+- The `DAOAuth` class.
+
+### Changed
+- Made modifications to facilitate embedding interviews in a `<div>`
+  in another site.
+- CSS and JavaScript files are now bundled.
+
+### Fixed
+- Errors from OneDrive integration.
+- Error reading fields from PDF.
+- Inserting certain types of images into RTF files resulted in a fatal
+  error rather than a non-fatal error.
+
 ## [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
 
 ### Added
