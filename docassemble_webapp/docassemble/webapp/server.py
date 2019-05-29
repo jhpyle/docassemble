@@ -19055,7 +19055,7 @@ def true_or_false(text):
         return False
     return True
 
-def get_user_list(include_inactive=False):
+def get_user_list(include_inactive=False, include_privileges=True):
     if not (current_user.is_authenticated and current_user.has_role('admin', 'advocate')):
         raise Exception("You cannot call get_user_list() unless you are an administrator or advocate")
     if include_inactive:
@@ -19064,9 +19064,11 @@ def get_user_list(include_inactive=False):
         the_users = UserModel.query.filter_by(active=True).order_by(UserModel.id).all()
     user_list = list()
     for user in the_users:
-        user_info = dict(privileges=[])
-        for role in user.roles:
-            user_info['privileges'].append(role.name)
+        user_info = dict()
+        if include_privileges:
+            user_info['privileges'] = list()
+            for role in user.roles:
+                user_info['privileges'].append(role.name)
         for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             user_info[attrib] = getattr(user, attrib)
         if include_inactive:

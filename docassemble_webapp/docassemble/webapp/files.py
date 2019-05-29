@@ -368,7 +368,7 @@ class SavedFile(object):
                     key.delete()
                 except:
                     pass
-        sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        #sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
         
 def get_ext_and_mimetype(filename):

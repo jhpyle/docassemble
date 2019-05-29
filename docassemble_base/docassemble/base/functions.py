@@ -3529,10 +3529,10 @@ def interview_menu():
     """Returns the list of interviews that is offered at /list."""
     return server.interview_menu()
 
-def get_user_list(include_inactive=False):
+def get_user_list(include_inactive=False, include_privileges=True):
     """Returns a list of users on the system."""
     if this_thread.current_info['user']['is_authenticated']:
-        return server.get_user_list(include_inactive=include_inactive)
+        return server.get_user_list(include_inactive=include_inactive, include_privileges=include_privileges)
     return None
 
 def manage_privileges(*pargs):
