@@ -31,7 +31,7 @@ from sqlalchemy import or_, and_
 set_request_active(False)
 
 def get_cron_user():
-    for user in UserModel.query.all():
+    for user in UserModel.query.options(db.joinedload('roles')).all():
         for role in user.roles:
             if role.name == 'cron':
                 return(user)

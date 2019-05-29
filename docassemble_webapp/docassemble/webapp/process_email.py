@@ -123,7 +123,7 @@ def main():
     fp.close()
     user = None
     if record.user_id is not None:
-        user = db.session.query(UserModel).filter_by(id=record.user_id).first()
+        user = db.session.query(UserModel).options(db.joinedload('roles')).filter_by(id=record.user_id).first()
     if user is None:
         user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=list())
     else:

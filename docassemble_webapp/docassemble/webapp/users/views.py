@@ -52,7 +52,7 @@ def privilege_list():
 @roles_required('admin')
 def user_list():
     users = list()
-    for user in db.session.query(UserModel).order_by(UserModel.id):
+    for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
         role_names = [y.name for y in user.roles]
@@ -94,7 +94,7 @@ def delete_privilege(id):
     if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
         flash(word('The role could not be deleted.'), 'error')
     else:
-        for user in db.session.query(UserModel):
+        for user in db.session.query(UserModel).options(db.joinedload('roles')):
             roles_to_remove = list()
             for the_role in user.roles:
                 if the_role.name == role.name:
@@ -115,7 +115,7 @@ def delete_privilege(id):
 @login_required
 @roles_required('admin')
 def edit_user_profile_page(id):
-    user = UserModel.query.filter_by(id=id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None:
         abort(404)

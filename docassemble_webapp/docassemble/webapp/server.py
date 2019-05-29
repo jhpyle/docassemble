@@ -1249,7 +1249,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
 
 def user_id_dict():
     output = dict()
-    for user in UserModel.query.all():
+    for user in UserModel.query.options(db.joinedload('roles')).all():
         output[user.id] = user
     anon = FakeUser()
     anon_role = FakeRole()
@@ -1511,7 +1511,7 @@ def syslog_message_with_timestamp(message):
     
 def copy_playground_modules():
     devs = list()
-    for user in UserModel.query.filter_by(active=True).all():
+    for user in UserModel.query.options(db.joinedload('roles')).filter_by(active=True).all():
         for role in user.roles:
             if role.name == 'admin' or role.name == 'developer':
                 devs.append(user.id)
@@ -3771,12 +3771,12 @@ def get_locale():
     return request.accept_languages.best_match(translations)
 
 def get_user_object(user_id):
-    the_user = UserModel.query.filter_by(id=user_id).first()
+    the_user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     return the_user
 
 @lm.user_loader
 def load_user(id):
-    return UserModel.query.get(int(id))
+    return UserModel.query.options(db.joinedload('roles')).get(int(id))
     # key = 'da:usercache:' + str(id)
     # stored_user = r.get(key)
     # if stored_user is None:
@@ -3816,7 +3816,7 @@ def auto_login():
         info = decrypt_dictionary(info_text, decryption_key)
     except:
         abort(403)
-    user = UserModel.query.filter_by(id=info['user_id']).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=info['user_id']).first()
     if not user:
         abort(403)
     login_user(user, remember=False)
@@ -3859,9 +3859,9 @@ def oauth_callback(provider):
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list', from_login='1'))
-    user = UserModel.query.filter_by(social_id=social_id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=social_id).first()
     if not user:
-        user = UserModel.query.filter_by(email=email).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
     if user and user.social_id is not None and user.social_id.startswith('local'):
         flash(word('There is already a username and password on this system with the e-mail address') + " " + str(email) + ".  " + word("Please log in."), 'error')
         return redirect(url_for('user.login'))
@@ -3970,7 +3970,7 @@ def phone_login_verify():
     if submitted or (request.method == 'POST' and form.submit.data):
         if form.validate():
             social_id = 'phone$' + str(phone_number)
-            user = UserModel.query.filter_by(social_id=social_id).first()
+            user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=social_id).first()
             if user and user.active is False:
                 flash(word("Your account has been disabled."), 'error')
                 return redirect(url_for('user.login'))
@@ -16916,7 +16916,7 @@ def request_developer():
     form = RequestDeveloperForm(request.form)
     recipients = list()
     if request.method == 'POST':
-        for user in UserModel.query.filter_by(active=True).all():
+        for user in UserModel.query.options(db.joinedload('roles')).filter_by(active=True).all():
             for role in user.roles:
                 if role.name == 'admin':
                     recipients.append(user.email)
@@ -19026,7 +19026,7 @@ def api_verify(req, roles=None):
             if not matched:
                 logmessage("api_verify: authorization failure referer " + str(the_referer) + " could not be matched")
                 return False
-    user = UserModel.query.filter_by(id=user_id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     if user is None:
         logmessage("api_verify: user does not exist")
         return False
@@ -19059,9 +19059,15 @@ def get_user_list(include_inactive=False, include_privileges=True):
     if not (current_user.is_authenticated and current_user.has_role('admin', 'advocate')):
         raise Exception("You cannot call get_user_list() unless you are an administrator or advocate")
     if include_inactive:
-        the_users = UserModel.query.order_by(UserModel.id).all()
+        if include_privileges:
+            the_users = UserModel.query.options(db.joinedload('roles')).order_by(UserModel.id).all()
+        else:
+            the_users = UserModel.query.order_by(UserModel.id).all()
     else:
-        the_users = UserModel.query.filter_by(active=True).order_by(UserModel.id).all()
+        if include_privileges:
+            the_users = UserModel.query.options(db.joinedload('roles')).filter_by(active=True).order_by(UserModel.id).all()
+        else:
+            the_users = UserModel.query.filter_by(active=True).order_by(UserModel.id).all()
     user_list = list()
     for user in the_users:
         user_info = dict()
@@ -19370,9 +19376,9 @@ def get_user_info(user_id=None, email=None):
             raise Exception("You cannot call get_user_info() unless you are an administrator or advocate")
     user_info = dict(privileges=[])
     if user_id is not None:
-        user = UserModel.query.filter_by(id=user_id).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
-        user = UserModel.query.filter_by(email=email).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
     if user is None:
         return None
     for role in user.roles:
@@ -19655,7 +19661,7 @@ def add_user_privilege(user_id, privilege):
         raise Exception('You must have admin privileges to call add_user_privilege().')
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
-    user = UserModel.query.filter_by(id=user_id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     if user is None:
         raise Exception("The specified user did not exist")
     for role in user.roles:
@@ -19678,7 +19684,7 @@ def remove_user_privilege(user_id, privilege):
         raise Exception('You cannot take away the admin privilege from the current user.')
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
-    user = UserModel.query.filter_by(id=user_id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     if user is None:
         raise Exception("The specified user did not exist")
     role_to_remove = None
@@ -19720,7 +19726,7 @@ def create_user(email, password, privileges=None, info=None):
     user_auth = UserAuthModel(password=app.user_manager.hash_password(password))
     while True:
         new_social = 'local$' + random_alphanumeric(32)
-        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        existing_user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=new_social).first()
         if existing_user:
             continue
         break
@@ -19765,9 +19771,9 @@ def set_user_info(**kwargs):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
             raise Exception("You cannot call set_user_info() unless you are an administrator")
     if user_id is not None:
-        user = UserModel.query.filter_by(id=user_id).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
-        user = UserModel.query.filter_by(email=email).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
     if user is None:
         raise Exception("User not found")
     for key, val in kwargs.items():
@@ -19818,7 +19824,7 @@ def api_get_secret():
     return jsonify(secret)
     
 def get_secret(username, password):
-    user = UserModel.query.filter_by(active=True, email=username).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(active=True, email=username).first()
     if user is None:
         raise Exception("Username not known")
     if app.config['USE_MFA'] and user.otp_secret is not None:
@@ -20508,7 +20514,7 @@ def api_login_url():
                 return jsonify_with_status("Malformed URL arguments", 400)
     else:
         url_args = dict()
-    user = UserModel.query.filter_by(active=True, email=username).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(active=True, email=username).first()
     info = dict(user_id=user.id, secret=secret)
     if 'next' in post_data:
         try:
@@ -20886,7 +20892,7 @@ def retrieve_email(email_id):
         raise DAError("E-mail did not exist")
     short_record = Shortener.query.filter_by(short=email.short).first()
     if short_record.user_id is not None:
-        user = UserModel.query.filter_by(id=short_record.user_id, active=True).first()
+        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=short_record.user_id, active=True).first()
     else:
         user = None
     if short_record is None:

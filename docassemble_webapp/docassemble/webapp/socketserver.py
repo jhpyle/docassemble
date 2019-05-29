@@ -80,7 +80,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             person = None
             user_is_temp = True
         else:
-            person = UserModel.query.filter_by(id=user_id).first()
+            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
             user_is_temp = False
         if person is not None and person.timezone is not None:
             the_timezone = pytz.timezone(person.timezone)
@@ -234,7 +234,7 @@ def chat_message(data):
     db.session.add(record)
     db.session.commit()
     if user_id is not None:
-        person = UserModel.query.filter_by(id=user_id).first()
+        person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
         person = None
     modtime = nice_utc_date(nowtime)
@@ -413,7 +413,7 @@ def monitor_thread(sid=None, user_id=None):
     with app.app_context():
         sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
         if user_id is not None:
-            person = UserModel.query.filter_by(id=user_id).first()
+            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
         else:
             person = None
         if person is not None and person.timezone is not None:
@@ -465,7 +465,7 @@ def monitor_thread(sid=None, user_id=None):
                         if str(data['userid']).startswith('t'):
                             name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
                         else:
-                            person = UserModel.query.filter_by(id=data['userid']).first()
+                            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=data['userid']).first()
                             if person.first_name:
                                 name = str(person.first_name) + ' ' + str(person.last_name)
                             else:
@@ -784,7 +784,7 @@ def monitor_chat_message(data):
     user_id = session.get('user_id', None)
     if user_id is not None:
         user_id = int(user_id)
-    person = UserModel.query.filter_by(id=user_id).first()
+    person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:
