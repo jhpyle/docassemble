@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.46] - 2019-05-30
+### Fixed
+- Recursion error with `capitalize()` function.
+- A CSS class was called `vspace` instead of `davspace`.
+- Multiple choice options not included in translation spreadsheets.
+
 ## [0.4.45] - 2019-05-27
 ### Added
 - The `DAOAuth` class.

@@ -1904,10 +1904,12 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
 
 def capitalize_default(a, **kwargs):
     ensure_definition(a)
-    if a and isinstance(a, string_types) and len(a) > 1:
+    if not isinstance(a, string_types):
+        a = text_type(a)
+    if a and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
-        return(capitalize_default(text_type(a)))
+        return a
 
 def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
@@ -3529,10 +3531,10 @@ def interview_menu():
     """Returns the list of interviews that is offered at /list."""
     return server.interview_menu()
 
-def get_user_list(include_inactive=False, include_privileges=True):
+def get_user_list(include_inactive=False):
     """Returns a list of users on the system."""
     if this_thread.current_info['user']['is_authenticated']:
-        return server.get_user_list(include_inactive=include_inactive, include_privileges=include_privileges)
+        return server.get_user_list(include_inactive=include_inactive)
     return None
 
 def manage_privileges(*pargs):
