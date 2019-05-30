@@ -5933,8 +5933,8 @@ variable name must be written exactly as it appears in the underlying
 
 The `url_action()` function, like its [Python namesake](#url_action),
 returns a URL that will run a particular action in the interview.  The
-first parameter is the [action] to run, and the second
-parameter is an object containing the arguments to provide to the
+first parameter is the [action] to run. You can include a series of
+keyword arguments containing the arguments to provide to the
 action (to be read with [`action_argument()`]).
 
 {% include side-by-side.html demo="js_url_action" %}
