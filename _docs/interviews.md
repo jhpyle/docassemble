@@ -248,15 +248,28 @@ starts interacting with it.
 A **docassemble** interview can be embedded into a `<div>` element in
 a page of another web site, provided that the web page loads the
 resources that **docassemble** needs.  This takes more care and setup
-than [using an iframe] because you need to merge the [CSS] and
+than [using an iframe] because you need to reconcile the [CSS] and
 [JavaScript] that **docassemble** needs with the [CSS] and
-[JavaScript] already contained within the host web site.  The merging
-of these resources could cause problems.  For example, **docassemble**
-depends on the [CSS] classes of [Bootstrap 4] being defined, but the
-site into which you are embedding might not use [Bootstrap], or may
-use a different version.  If your site does not use [Bootstrap],
-inserting the standard [Bootstrap] styles into the site may change the
-style of the whole page in ways you do not want.
+[JavaScript] already contained within the host web site.
+
+For example, **docassemble** depends on the [CSS] classes of
+[Bootstrap 4] being defined, but the site into which you are embedding
+might not use [Bootstrap], or may use a different version.  You will
+need to make sure that the [CSS] of your site is loaded after the
+[CSS] needed by **docassemble**.  The [CSS] of your site will affect
+the styling of the **docassemble** interview, which is generally a
+good thing because you will probably want the interview to have the
+same look-and-feel as your site.  However, some of the changes that
+your site's [CSS] will make to the look-and-feel of your interview
+will not be desirable.  For example, you might see excessive padding
+between form fields.  You will likely need to make edits to your
+site's CSS to adjust these parameters.
+
+Another complication is that **docassemble** requires [jQuery].  There
+might be problems due to incompatible versions of [jQuery].
+**docassemble** also requires a number of other [JavaScript]
+libraries.  These libraries will probably not have an effect on your
+site, but it is possible that they will.
 
 To get started with embedding **docassemble** into a web page, log in
 to your server as an administrator or developer, then navigate to
@@ -283,11 +296,7 @@ an example of what the source will look like on a server with the URL
     <meta name="theme-color" content="#83b3dd">
     <script defer src="https://interview.example.com/static/fontawesome/js/all.js"></script>
     <link href="https://interview.example.com/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://interview.example.com/static/bootstrap-fileinput/css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
-    <link href="https://interview.example.com/static/labelauty/source/jquery-labelauty.css" rel="stylesheet">
-    <link href="https://interview.example.com/static/bootstrap-combobox/css/bootstrap-combobox.css" rel="stylesheet">
-    <link href="https://interview.example.com/static/bootstrap-slider/dist/css/bootstrap-slider.css" rel="stylesheet">
-    <link href="https://interview.example.com/static/app/app.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/app/bundle.css" rel="stylesheet">
     <title>Embed test</title>
   </head>
   <body>
@@ -301,22 +310,10 @@ an example of what the source will look like on a server with the URL
     <div>
       <p>Here is some content after the interview.
     </div>
-
-    <script src="https://interview.example.com/static/app/jquery.min.js"></script>
-    <script src="https://interview.example.com/static/app/jquery.validate.min.js"></script>
-    <script src="https://interview.example.com/static/app/additional-methods.min.js"></script>
-    <script src="https://interview.example.com/static/popper/umd/popper.min.js"></script>
-    <script src="https://interview.example.com/static/popper/umd/tooltip.min.js"></script>
-    <script src="https://interview.example.com/static/bootstrap/js/bootstrap.min.js"></script>
-    <script src="https://interview.example.com/static/bootstrap-slider/dist/bootstrap-slider.js"></script>
-    <script src="https://interview.example.com/static/bootstrap-fileinput/js/fileinput.js"></script>
-    <script src="https://interview.example.com/static/bootstrap-fileinput/themes/fas/theme.min.js"></script>
-    <script src="https://interview.example.com/static/app/app.js"></script>
-    <script src="https://interview.example.com/static/app/socket.io.min.js"></script>
-    <script src="https://interview.example.com/static/labelauty/source/jquery-labelauty.js"></script>
-    <script src="https://interview.example.com/static/bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    
+    <script src="https://interview.example.com/static/app/bundle.js?v=0.4.44"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=egsdSdgER344tuTYUgsdDErEdx34res2e44sdrg&libraries=places"></script>
-    <script src="https://interview.example.com/interview?i=docassemble.base%3Adata%2Fquestions%2Fdefault-interview.yml&js_target=dablock"></script>
+    <script src="https://interview.example.com/interview?js_target=dablock&i=docassemble.base%3Adata%2Fquestions%2Fdefault-interview.yml"></script>
   </body>
 </html>
 {% endhighlight %}
@@ -369,15 +366,47 @@ make sure you give it an appropriate height and width.  You will also
 want to make sure that you use appropriate [CSS] so that the interview
 works well on devices of all sizes.
 
-In order to match styling between the host web site and the
-**docassemble** interview, you will likely need to create your own
-custom [Bootstrap] <span></span>[CSS] file.  You could start by making
-a Bootstrap theme [CSS] file and then editing the [CSS] file to remove
-global styling.
+Note that with the exception of [Font Awesome], [Bootstrap], the
+Google Maps API, and the [JavaScript] that launches the interview
+using a request to `/interview`, all of the [CSS] and [JavaScript]
+dependencies of **docassemble** are combined into the files
+`bundle.css` and `bundle.js`.  If you want, you can un-bundle these.
 
-The [Bootstrap] <span></span>[CSS] file is probably the only [CSS]
-file that you will need to modify.  The **docassemble** [CSS] file
-`app.css` is designed not to interfere with other [CSS] on a page.
+The [CSS] files, unbundled, would be:
+
+{% highlight html %}
+    <link href="https://interview.example.com/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-fileinput/css/fileinput.min.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/labelauty/source/jquery-labelauty.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-combobox/css/bootstrap-combobox.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/bootstrap-slider/dist/css/bootstrap-slider.css" rel="stylesheet">
+    <link href="https://interview.example.com/static/app/app.css" rel="stylesheet">
+{% endhighlight %}
+
+The [JavaScript] files, unbundled, would be:
+
+{% highlight html %}
+    <script src="https://interview.example.com/static/app/jquery.min.js"></script>
+    <script src="https://interview.example.com/static/app/jquery.validate.min.js"></script>
+    <script src="https://interview.example.com/static/app/additional-methods.min.js"></script>
+    <script src="https://interview.example.com/static/popper/umd/popper.min.js"></script>
+    <script src="https://interview.example.com/static/popper/umd/tooltip.min.js"></script>
+    <script src="https://interview.example.com/static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-slider/dist/bootstrap-slider.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-fileinput/js/fileinput.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-fileinput/themes/fas/theme.min.js"></script>
+    <script src="https://interview.example.com/static/app/app.js"></script>
+    <script src="https://interview.example.com/static/app/socket.io.min.js"></script>
+    <script src="https://interview.example.com/static/labelauty/source/jquery-labelauty.js"></script>
+    <script src="https://interview.example.com/static/bootstrap-combobox/js/bootstrap-combobox.js"></script>
+{% endhighlight %}
+
+If you want to load all of the [JavaScript] dependencies except for
+[jQuery], use the following:
+
+{% highlight html %}
+    <script src="https://interview.example.com/static/app/bundlenojquery.js"></script>
+{% endhighlight %}
 
 ## <a name="reset"></a>Starting an interview from the beginning
 
@@ -809,3 +838,5 @@ For more information about [YAML], see the [YAML specification].
 [Bootstrap]: http://getbootstrap.com/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [favicon]: https://en.wikipedia.org/wiki/Favicon
+[Font Awesome]: https://fontawesome.com
+[jQuery]: https://jquery.com/
