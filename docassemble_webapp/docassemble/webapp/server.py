@@ -19212,7 +19212,7 @@ def translation_file():
                     assert df['tr_text'][indexno] != ''
                 except:
                     continue
-                the_dict = {'interview': df['interview'][indexno], 'question_id': df['question_id'][indexno], 'index_num': df['index_num'][indexno], 'hash': df['hash'][indexno], 'orig_lang': df['orig_lang'][indexno], 'tr_lang': df['tr_lang'][indexno], 'orig_text': df['orig_text'][indexno], 'tr_text': df['tr_text'][indexno]}
+                the_dict = {'interview': text_type(df['interview'][indexno]), 'question_id': text_type(df['question_id'][indexno]), 'index_num': df['index_num'][indexno], 'hash': text_type(df['hash'][indexno]), 'orig_lang': text_type(df['orig_lang'][indexno]), 'tr_lang': text_type(df['tr_lang'][indexno]), 'orig_text': text_type(df['orig_text'][indexno]), 'tr_text': text_type(df['tr_text'][indexno])}
                 if df['orig_text'][indexno] not in tr_cache:
                     tr_cache[df['orig_text'][indexno]] = dict()
                 if df['orig_lang'][indexno] not in tr_cache[df['orig_text'][indexno]]:
