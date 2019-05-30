@@ -1184,8 +1184,8 @@ It accepts the following optional keyword arguments:
   any icon, set `icon` to `None`.
 * `color` - this is the Bootstrap color of the button.  The options
   are `primary`, `secondary`, `success`, `danger`, `warning`, `info`,
-  `light`, and `dark`.  The default is `'dark'`.  The actual colors
-  depend on the Bootstrap theme.
+  `light`, `link`, and `dark`.  The default is `'dark'`.  The actual
+  colors depend on the Bootstrap theme.
 * `size` - this is the Bootstrap size of the button.  The options are
   `'sm'`, `'md'`, and `'lg'`.  The default is `'sm'`.
 * `block` - if set to `True`, the button will fill the width of the
@@ -5873,7 +5873,7 @@ and bring them into your interview using the [`javascript`] and
 The following [JavaScript] functions are available for your use in
 your [JavaScript] code.
 
-## <a name="flash"></a>flash()
+## <a name="flash"></a>flash() JavaScript function
 
 The `flash()` function displays a notification at the top of the
 screen, using the standard [Bootstrap] notification style.
@@ -5900,7 +5900,7 @@ The available priorities are:
 
 If no priority is supplied, `'info'` is used.
 
-## <a name="js_val"></a>val()
+## <a name="js_val"></a>val() JavaScript function
 
 If you need the value of one of the variables on the screen, you can
 call `val()`, passing as the sole parameter the variable name of the
@@ -5911,7 +5911,7 @@ appears in the underlying [`question`].
 
 This function is essential for using the [`js show if`] feature.
 
-## <a name="js_getField"></a>getField()
+## <a name="js_getField"></a>getField() JavaScript function
 
 The `getField()` function is similar to `val()`, except that instead
 of returning the value of the input element, it returns the element
@@ -5919,7 +5919,7 @@ itself.
 
 {% include side-by-side.html demo="getField" %}
 
-## <a name="js_setField"></a>setField()
+## <a name="js_setField"></a>setField() JavaScript function
 
 The `setField()` function sets the value of a field.  The first
 parameter is the the variable name of the field, as a string.  The
@@ -5929,7 +5929,7 @@ variable name must be written exactly as it appears in the underlying
 
 {% include side-by-side.html demo="setField" %}
 
-## <a name="js_url_action"></a>url_action()
+## <a name="js_url_action"></a>url_action() JavaScript function
 
 The `url_action()` function, like its [Python namesake](#url_action),
 returns a URL that will run a particular action in the interview.  The
@@ -5939,7 +5939,7 @@ action (to be read with [`action_argument()`]).
 
 {% include side-by-side.html demo="js_url_action" %}
 
-## <a name="js_url_action_perform"></a>url_action_perform()
+## <a name="js_url_action_perform"></a>url_action_perform() JavaScript function
 
 The `url_action_perform()` function is like
 [`url_action()`](#js_url_action), except that instead of returning a
@@ -5954,7 +5954,7 @@ The [JavaScript] function takes two arguments:
    interview, you can use the [`action_argument()`] function to read
    these values.
 
-## <a name="js_url_action_call"></a>url_action_call()
+## <a name="js_url_action_call"></a>url_action_call() JavaScript function
 
 The `url_action_call()` function is like
 [`url_action()`](#js_url_action), except it makes an [Ajax] call to
@@ -5983,7 +5983,7 @@ classes.
 Note that [Ajax] interactions with the interview are possible without
 writing any [JavaScript] code; see the [`check in` feature].
 
-## <a name="js_get_interview_variables"></a>get_interview_variables()
+## <a name="js_get_interview_variables"></a>get_interview_variables() JavaScript function
 
 If you would like to work with all of the variables in the interview
 in your [JavaScript] code, you can do so with the
