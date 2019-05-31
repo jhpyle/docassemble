@@ -565,7 +565,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in UserModel.options(db.joinedload('roles')).query.filter_by(id=user_id):
+    for record in UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id):
         cache[record.id] = record
         return record
     return None

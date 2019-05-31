@@ -2383,7 +2383,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, string_types):
         label = 'Edit'
-    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
         color = 'dark'
     if size not in ('sm', 'md', 'lg'):
         size = 'sm'

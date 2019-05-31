@@ -8547,6 +8547,7 @@ def index(action_argument=None):
             $(this).addClass("dainvisible");
             rationalizeListCollect();
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
+            //$('div[data-collectnum="' + num + '"]')[0].scrollIntoView();
           }
           return false;
         });

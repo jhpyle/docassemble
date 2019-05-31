@@ -405,6 +405,13 @@ class InterviewStatus(object):
                     the_field.number = str(list_indexno) + '_' + str(the_field.number)
                     if hasattr(the_field, 'saveas'):
                         the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                    if hasattr(the_field, 'extras'):
+                        if 'show_if_var' in the_field.extras:
+                            the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
+                        if 'show_if_js' in the_field.extras:
+                            the_field.extras['show_if_js']['expression'] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'])
+                            for ii in range(len(the_field.extras['show_if_js']['vars'])):
+                                the_field.extras['show_if_js']['vars'][ii] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
                     if list_indexno >= list_len:
                         the_field.collect_type = 'extra'
                     else:
@@ -3731,6 +3738,8 @@ class Question:
                                 selectcompute[str(list_indexno) + '_' + str(field_num)] = val
                                 if list_indexno == length_to_use - 1:
                                     selectcompute[str(list_indexno + 1) + '_' + str(field_num)] = val
+                                    for ii in range(1, extra_amount + 1):
+                                        selectcompute[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'defaults':
                                 defaults[str(list_indexno) + '_' + str(field_num)] = val
                             elif key == 'hints':
