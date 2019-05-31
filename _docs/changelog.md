@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.47](https://github.com/jhpyle/docassemble/releases/tag/v0.4.47) - 2019-05-31
+
+### Added
+- Option for `'link'` style buttons with `action_button_html()`.
+
+### Fixed
+- Some types of `fields` gave errors with `list collect`.
+- Error re `UserModel`.
+
 ## [0.4.46](https://github.com/jhpyle/docassemble/releases/tag/v0.4.46) - 2019-05-30
 
 ### Fixed
@@ -68,7 +77,7 @@ short_title: Change Log
 
 ### Fixed
 - Errors with SMS interface.
-- Subclasses of `DAList` were not allowed in list collect.
+- Subclasses of `DAList` were not allowed in `list collect`.
 - Inefficiency with `last_access_time()`.
 
 ## [0.4.41](https://github.com/jhpyle/docassemble/releases/tag/v0.4.41) - 2019-05-02
