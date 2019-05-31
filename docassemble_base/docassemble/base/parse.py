@@ -4316,16 +4316,23 @@ class Question:
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         try:
                             the_template = result['template']
-                            while True:
+                            while True: # Rerender if there's a subdoc using include_docx_template
                                 old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
                                 the_template.render(result['field_data'], jinja_env=custom_jinja_env())
                                 if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                                    # There's another template included
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                                    the_template.save(new_template_file.name)
+                                    the_template.save(new_template_file.name) # Save and refresh the template
                                     the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
                                     docassemble.base.functions.this_thread.misc['docx_template'] = the_template
                                 else:
                                     break
+                            # Copy over images, etc from subdoc to master template
+                            subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
+                            the_template_docx = the_template.docx
+                            for subdoc in subdocs:
+                                docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+                            
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
                                 the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
