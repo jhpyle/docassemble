@@ -128,7 +128,6 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
-    sd.subdocx._part = sd.docx._part
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
 	# Given we're half way through processing the template, we can't fix the master template here
