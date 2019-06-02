@@ -2069,7 +2069,6 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
 
 def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     """Reads QR codes from a file or files and returns a list of codes found."""
-    import qrtools
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     if isinstance(image_file, DAFile):
@@ -2114,13 +2113,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     codes = list()
     for page in file_list:
         if PY2:
-            try:
-                from qrtools import QR
-            except ImportError:
-                from qrtools.qrtools import QR
-            qr = QR()
-            qr.decode(page)
-            codes.append(qr.data)
+            raise Exception("QR reading is not supported in the Python 2.7 version of docassemble.")
         else:
             from pyzbar.pyzbar import decode
             for result in decode(Image.open(page)):

@@ -782,7 +782,6 @@ import werkzeug
 from rauth import OAuth1Service, OAuth2Service
 import apiclient
 import oauth2client.client
-import strict_rfc3339
 import io
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
@@ -13732,172 +13731,6 @@ def checkin_sync_with_onedrive():
     else:
         return jsonify(success=True, status='waiting', restart=False)
 
-# @app.route('/do_sync_with_google_drive', methods=['GET', 'POST'])
-# @login_required
-# @roles_required(['admin', 'developer'])
-# def do_sync_with_google_drive():
-#     if app.config['USE_GOOGLE_DRIVE'] is False:
-#         flash(word("Google Drive is not configured"), "error")
-#         return redirect(url_for('interview_list'))
-#     storage = RedisCredStorage(app='googledrive')
-#     credentials = storage.get()
-#     if not credentials or credentials.invalid:
-#         flow = get_gd_flow()
-#         uri = flow.step1_get_authorize_url()
-#         return redirect(uri)
-#     http = credentials.authorize(httplib2.Http())
-#     service = apiclient.discovery.build('drive', 'v3', http=http)
-#     the_folder = get_gd_folder()
-#     response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
-#     the_mime_type = response.get('mimeType', None)
-#     trashed = response.get('trashed', False)
-#     if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
-#         flash(word("Error accessing Google Drive"), 'error')
-#         return redirect(url_for('google_drive'))
-#     local_files = dict()
-#     local_modtimes = dict()
-#     gd_files = dict()
-#     gd_ids = dict()
-#     gd_modtimes = dict()
-#     gd_deleted = dict()
-#     sections_modified = set()
-#     commentary = ''
-#     for section in ('static', 'templates', 'questions', 'modules', 'sources'):
-#         local_files[section] = set()
-#         local_modtimes[section] = dict()
-#         if section == 'questions':
-#             the_section = 'playground'
-#         elif section == 'templates':
-#             the_section = 'playgroundtemplate'
-#         else:
-#             the_section = 'playground' + section
-#         area = SavedFile(current_user.id, fix=True, section=the_section)
-#         for f in os.listdir(area.directory):
-#             local_files[section].add(f)
-#             local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
-#         subdirs = list()
-#         page_token = None
-#         while True:
-#             response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents").execute()
-#             for the_file in response.get('files', []):
-#                 if 'id' in the_file:
-#                     subdirs.append(the_file['id'])
-#             page_token = response.get('nextPageToken', None)
-#             if page_token is None:
-#                 break
-#         if len(subdirs) == 0:
-#             flash(word("Error accessing " + section + " in Google Drive"), 'error')
-#             return redirect(url_for('google_drive'))
-#         subdir = subdirs[0]
-#         gd_files[section] = set()
-#         gd_ids[section] = dict()
-#         gd_modtimes[section] = dict()
-#         gd_deleted[section] = set()
-#         page_token = None
-#         while True:
-#             response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents").execute()
-#             for the_file in response.get('files', []):
-#                 if re.search(r'(\.tmp|\.gdoc)$', the_file['name']):
-#                     continue
-#                 if re.search(r'^\~', the_file['name']):
-#                     continue
-#                 gd_ids[section][the_file['name']] = the_file['id']
-#                 gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
-#                 logmessage("Google says modtime on " + text_type(the_file) + " is " + the_file['modifiedTime'])
-#                 if the_file['trashed']:
-#                     gd_deleted[section].add(the_file['name'])
-#                     continue
-#                 gd_files[section].add(the_file['name'])
-#             page_token = response.get('nextPageToken', None)
-#             if page_token is None:
-#                 break
-#         gd_deleted[section] = gd_deleted[section] - gd_files[section]
-#         for f in gd_files[section]:
-#             logmessage("Considering " + f + " on GD")
-#             if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-#                 logmessage("Considering " + f + " to copy to local")
-#                 sections_modified.add(section)
-#                 commentary += "Copied " + f + " from Google Drive.  "
-#                 the_path = os.path.join(area.directory, f)
-#                 with open(the_path, 'wb') as fh:
-#                     response = service.files().get_media(fileId=gd_ids[section][f])
-#                     downloader = apiclient.http.MediaIoBaseDownload(fh, response)
-#                     done = False
-#                     while done is False:
-#                         status, done = downloader.next_chunk()
-#                         #logmessage("Download %d%%." % int(status.progress() * 100))
-#                 os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
-#         for f in local_files[section]:
-#             logmessage("Considering " + f + ", which is a local file")
-#             if f not in gd_deleted[section]:
-#                 logmessage("Considering " + f + " is not in Google Drive deleted")
-#                 if f not in gd_files[section]:
-#                     logmessage("Considering " + f + " is not in Google Drive")
-#                     the_path = os.path.join(area.directory, f)
-#                     if os.path.getsize(the_path) == 0:
-#                         logmessage("Found zero byte file: " + the_path)
-#                         continue
-#                     logmessage("Copying " + f + " to Google Drive.")
-#                     commentary += "Copied " + f + " to Google Drive.  "
-#                     extension, mimetype = get_ext_and_mimetype(the_path)
-#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on new file " + text_type(f) + " to " + text_type(the_modtime))
-#                     file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
-#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-#                     the_new_file = service.files().create(body=file_metadata,
-#                                                           media_body=media,
-#                                                           fields='id').execute()
-#                     new_id = the_new_file.get('id')
-#                 elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-#                     logmessage("Considering " + f + " is in Google Drive but local is more recent")
-#                     the_path = os.path.join(area.directory, f)
-#                     if os.path.getsize(the_path) == 0:
-#                         logmessage("Found zero byte file during update: " + the_path)
-#                         continue
-#                     commentary += "Updated " + f + " on Google Drive.  "
-#                     extension, mimetype = get_ext_and_mimetype(the_path)
-#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on modified " + text_type(f) + " to " + text_type(the_modtime))
-#                     file_metadata = { 'modifiedTime': the_modtime }
-#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-#                     service.files().update(fileId=gd_ids[section][f],
-#                                            body=file_metadata,
-#                                            media_body=media).execute()
-#         for f in gd_deleted[section]:
-#             logmessage("Considering " + f + " is deleted on Google Drive")
-#             if f in local_files[section]:
-#                 logmessage("Considering " + f + " is deleted on Google Drive but exists locally")
-#                 if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-#                     logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
-#                     commentary += "Undeleted and updated " + f + " on Google Drive.  "
-#                     the_path = os.path.join(area.directory, f)
-#                     extension, mimetype = get_ext_and_mimetype(the_path)
-#                     the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
-#                     logmessage("Setting GD modtime on undeleted file " + text_type(f) + " to " + text_type(the_modtime))
-#                     file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
-#                     media = apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
-#                     service.files().update(fileId=gd_ids[section][f],
-#                                            body=file_metadata,
-#                                            media_body=media).execute()
-#                 else:
-#                     logmessage("Considering " + f + " is deleted on Google Drive but exists locally and needs to deleted locally")
-#                     sections_modified.add(section)
-#                     commentary += "Deleted " + f + " from Playground.  "
-#                     the_path = os.path.join(area.directory, f)
-#                     if os.path.isfile(the_path):
-#                         area.delete_file(f)
-#         area.finalize()
-#     for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-#         r.incr(key)
-#     if commentary != '':
-#         flash(commentary, 'info')
-#         logmessage(commentary)
-#     next = request.args.get('next', url_for('playground_page'))
-#     if 'modules' in sections_modified:
-#         return redirect(url_for('restart_page', next=next))
-#     return redirect(next)
-#     #return render_template('pages/testgoogledrive.html', tab_title=word('Google Drive Test'), page_title=word('Google Drive Test'), commentary=commentary)
-
 @app.route('/google_drive', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -21452,7 +21285,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          fg_make_pdf_for_word_path=fg_make_pdf_for_word_path,
                                          get_question_data=get_question_data,
                                          fix_pickle_obj=fix_pickle_obj,
-                                         main_page_parts=main_page_parts)
+                                         main_page_parts=main_page_parts,
+                                         SavedFile=SavedFile)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

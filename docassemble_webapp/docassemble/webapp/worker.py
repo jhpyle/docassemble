@@ -14,7 +14,6 @@ import importlib
 import os
 import re
 import httplib2
-import strict_rfc3339
 import oauth2client.client
 import time
 import json
@@ -199,7 +198,7 @@ def sync_with_google_drive(user_id):
                         if re.search(r'^(\~|\.)', the_file['name']):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
-                        gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+                        gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
                         sys.stderr.write("Google says modtime on " + text_type(the_file['name']) + " is " + text_type(the_file['modifiedTime']) + ", which is " + text_type(gd_modtimes[section][the_file['name']]) + "\n")
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
@@ -241,7 +240,7 @@ def sync_with_google_drive(user_id):
                             sys.stderr.write("Copying " + text_type(f) + " to Google Drive.\n")
                             commentary += "Copied " + text_type(f) + " to Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on new file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -257,7 +256,7 @@ def sync_with_google_drive(user_id):
                                 continue
                             commentary += "Updated " + text_type(f) + " on Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Updating on Google Drive and setting GD modtime on modified " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'modifiedTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -265,7 +264,7 @@ def sync_with_google_drive(user_id):
                                                                   body=file_metadata,
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
-                            gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                            gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
                             sys.stderr.write("After update, timestamp on Google Drive is " + text_type(gd_modtimes[section][f]) + "\n")
                             sys.stderr.write("After update, timestamp on local system is " + text_type(os.path.getmtime(the_path)) + "\n")
                 for f in gd_deleted[section]:
@@ -278,7 +277,7 @@ def sync_with_google_drive(user_id):
                             commentary += "Undeleted and updated " + text_type(f) + " on Google Drive.\n"
                             the_path = os.path.join(area.directory, f)
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on undeleted file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -286,7 +285,7 @@ def sync_with_google_drive(user_id):
                                                                   body=file_metadata,
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
-                            gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                            gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
                         else:
                             sys.stderr.write("Considering " + text_type(f) + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
                             sections_modified.add(section)
@@ -306,13 +305,13 @@ def sync_with_google_drive(user_id):
                     local_modtimes[section][f] = os.path.getmtime(the_path)
                     sys.stderr.write("After finalizing, " + text_type(f) + " has a modtime of " + text_type(local_modtimes[section][f]) + "\n")
                     if abs(local_modtimes[section][f] - gd_modtimes[section][f]) > 3:
-                        the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                        the_modtime = iso_from_epoch(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating GD modtime on file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                         file_metadata = { 'modifiedTime': the_modtime }
                         updated_file = service.files().update(fileId=gd_ids[section][f],
                                                               body=file_metadata,
                                                               fields='modifiedTime').execute()
-                        gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                        gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
@@ -619,7 +618,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
             num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
             custom_headers = { 'Content-Length': text_type(num_bytes), 'Content-Range': 'bytes ' + text_type(start_byte) + '-' + text_type(start_byte + num_bytes - 1) + '/' + text_type(total_bytes), 'Content-Type': 'application/octet-stream' }
             #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
-            r, content = try_request(http, upload_url.encode('utf-8'), 'PUT', headers=custom_headers, body=fh.read(num_bytes))
+            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=bytes(fh.read(num_bytes)))
             sys.stderr.write("Sent request\n")
             start_byte += num_bytes
             if start_byte == total_bytes:

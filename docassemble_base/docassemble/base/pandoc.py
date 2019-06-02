@@ -46,11 +46,11 @@ PANDOC_OLD = False
 PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
 
 def initialize_pandoc():
-    if PANDOC_INITIALIZED:
-        return
     global PANDOC_OLD
     global PANDOC_ENGINE
     global PANDOC_INITIALIZED
+    if PANDOC_INITIALIZED:
+        return
     PANDOC_VERSION = get_pandoc_version()
     if PANDOC_VERSION.startswith('1'):
         PANDOC_OLD = True
@@ -397,9 +397,9 @@ def update_references(filename):
     return True
 
 def initialize_libreoffice():
+    global LIBREOFFICE_INITIALIZED
     if LIBREOFFICE_INITIALIZED:
         return
-    global LIBREOFFICE_INITIALIZED
     LIBREOFFICE_INITIALIZED = True
     if not os.path.isfile(LIBREOFFICE_MACRO_PATH):
         logmessage("No LibreOffice macro path exists")

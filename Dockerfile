@@ -284,7 +284,8 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp"
+   /tmp/docassemble/docassemble_webapp \
+&& pip uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
@@ -311,7 +312,8 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp"
+   /tmp/docassemble/docassemble_webapp \
+&& pip3 uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER root
 RUN rm -rf /tmp/docassemble \

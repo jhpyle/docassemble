@@ -590,6 +590,10 @@ echo "37" >&2
 
 su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
 
+echo "37.5" >&2
+
+su -c "source $DA_ACTIVATE && pip uninstall --yes mysqlclient MySQL-python &> /dev/null" www-data
+
 echo "38" >&2
 
 if rabbitmqctl status &> /dev/null; then

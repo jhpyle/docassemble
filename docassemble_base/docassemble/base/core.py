@@ -25,7 +25,6 @@ from docassemble.base.functions import possessify, possessify_long, a_prepositio
 import docassemble.base.functions
 import docassemble.base.filter
 import docassemble.base.file_docx
-from docassemble.webapp.files import SavedFile
 from docassemble.base.error import LazyNameError, DAError, DAAttributeError, DAIndexError
 from docxtpl import InlineImage, Subdoc
 import tempfile
@@ -2738,7 +2737,7 @@ class DAFile(DAObject):
         self.retrieve()
         the_path = self.path()
         if not (os.path.isfile(the_path) or os.path.islink(the_path)):
-            sf = SavedFile(self.number, extension=self.extension, fix=True)
+            sf = server.SavedFile(self.number, extension=self.extension, fix=True)
             sf.save()
     def retrieve(self):
         """Ensures that the file is ready to be used."""
@@ -2831,6 +2830,11 @@ class DAFile(DAObject):
         c.perform()
         c.close()
         self.retrieve()
+    def is_encrypted(self):
+        """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        return self.file_info.get('encrypted', False)
     def _make_pdf_thumbnail(self, page):
         """Creates a page image for the first page of a PDF file."""
         if not hasattr(self, 'file_info'):
@@ -2905,7 +2909,7 @@ class DAFile(DAObject):
         """Returns the path with which the file can be accessed using S3 or Azure Blob Storage, or None if cloud storage is not enabled."""
         if not hasattr(self, 'number'):
             raise Exception("Cannot get the cloud path of file without a file number.")
-        return SavedFile(self.number, fix=False).cloud_path(filename)
+        return server.SavedFile(self.number, fix=False).cloud_path(filename)
     def path(self):
         """Returns a path and filename at which the file can be accessed."""
         #logmessage("path")
@@ -2924,7 +2928,7 @@ class DAFile(DAObject):
         #logmessage("commit")
         if hasattr(self, 'number'):
             #logmessage("Committed " + str(self.number))
-            sf = SavedFile(self.number, fix=True)
+            sf = server.SavedFile(self.number, fix=True)
             sf.finalize()
     def show(self, width=None, wait=True, alt_text=None):
         """Inserts markup that displays the file as an image.  Takes
@@ -3003,11 +3007,16 @@ class DAFileCollection(DAObject):
             if hasattr(self, ext):
                 return getattr(self, ext).get_alt_text()
         return None
+    def is_encrypted(self):
+        """Returns True if there is a PDF file and it is encrypted, otherwise returns False."""
+        if hasattr(self, 'pdf'):
+            return self.pdf.is_encrypted()
+        return False
     def num_pages(self):
         """If there is a PDF file, returns the number of pages in the file, otherwise returns 1."""
         if hasattr(self, 'pdf'):
             return self.pdf.num_pages()
-        return result        
+        return 1
     def _first_file(self):
         for ext in self._extension_list():
             if hasattr(self, ext):
@@ -3081,12 +3090,16 @@ class DAFileList(DAList):
             if element.ok:
                 result += element.num_pages()
         return result        
+    def is_encrypted(self):
+        """Returns True if the first file is a PDF file and it is encrypted, otherwise returns False."""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].is_encrypted()
     def size_in_bytes(self):
         """Returns the number of bytes in the first file."""
-        the_file = self._first_file()
-        if the_file is None:
+        if len(self.elements) == 0:
             return None
-        return the_file.size_in_bytes()
+        return self.elements[0].size_in_bytes()
     def slurp(self, auto_decode=True):
         """Returns the contents of the first file."""
         if len(self.elements) == 0:
@@ -3182,8 +3195,12 @@ class DAStaticFile(DAObject):
         file_info['path'] = os.path.splitext(pdf_file.name)[0]
         shutil.copyfile(self.path(), pdf_file.name)
         return docassemble.base.file_docx.pdf_pages(file_info, width)
+    def is_encrypted(self):
+        """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
+        file_info = server.file_finder(self.filename)
+        return the_file.get('encrypted', False)
     def size_in_bytes(self):
-        """Returns the number of bytes in the first file."""
+        """Returns the number of bytes in the file."""
         the_path = self.path()
         return os.path.getsize(the_path)
     def slurp(self, auto_decode=True):

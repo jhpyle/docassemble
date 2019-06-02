@@ -197,12 +197,14 @@ def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
         try:
             reader = PyPDF2.PdfFileReader(open(filename, 'rb'))
+            result['encrypted'] = reader.isEncrypted
             result['pages'] = reader.getNumPages()
         except:
             result['pages'] = 1
     elif os.path.isfile(basename + '.pdf'):
         try:
             reader = PyPDF2.PdfFileReader(open(basename + '.pdf', 'rb'))
+            result['encrypted'] = reader.isEncrypted
             result['pages'] = reader.getNumPages()
         except:
             result['pages'] = 1
