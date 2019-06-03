@@ -1353,6 +1353,10 @@ my_file.set_alt_text("A photograph of the Shanghai skyline")
 the_alt_text = my_file.get_alt_text()
 {% endhighlight %}
 
+<a name="DAFile.is_encrypted"></a>The `.is_encrypted()` method returns
+`True` if the file is a PDF file and the PDF file is encrypted.
+Otherwise it returns `False`.
+
 <a name="DAFile.get_pdf_fields"></a>The `.get_pdf_fields()` method
 only works on PDF files.  It returns a list of fields that exist in
 the PDF file.
@@ -1440,6 +1444,11 @@ the files in the collection.  If you run `get_alt_text()` on a
 `DAFileCollection`, it is like calling [`get_alt_text()`] on the first
 document type in the collection.
 
+<a name="DAFileCollection.is_encrypted"></a>The `.is_encrypted()`
+method returns `True` if there is a PDF version of the
+`DAFileCollection` object and that PDF file is encrypted.  Otherwise
+it returns `False`.
+
 <a name="DAFileCollection.get_pdf_fields"></a>The `.get_pdf_fields()`
 returns a list of fields that exist in the PDF version of the
 `DAFileCollection` object.  See [`get_pdf_fields()`] for more
@@ -1523,6 +1532,10 @@ a `.alt_text` attribute.  If you run `set_alt_text()` on a
 [`DAFileList`], it is like calling `set_alt_text()` on each of the
 items in the list.  If you run `get_alt_text()` on a `DAFileList`, it
 is like calling [`get_alt_text()`] on the first item in the list.
+
+<a name="DAFileList.is_encrypted"></a>The `.is_encrypted()` method
+returns `True` if the first file in the list is a PDF file that file
+is encrypted.  Otherwise it returns `False`.
 
 <a name="DAFileList.get_pdf_fields"></a>The `.get_pdf_fields()` method
 returns a list of fields that exist in the first file in the list.  If
@@ -1635,6 +1648,10 @@ Here is an example that shows how [`DAStaticFile`],
 used interchangeably.
 
 {% include side-by-side.html demo="file-types" %}
+
+<a name="DAStaticFile.is_encrypted"></a>The `.is_encrypted()` method
+returns `True` if the file is a PDF file and it is encrypted.
+Otherwise it returns `False`.
 
 <a name="DAStaticFile.get_pdf_fields"></a>The `.get_pdf_fields()` method
 only works on PDF files.  It returns a list of fields that exist in

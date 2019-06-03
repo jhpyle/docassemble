@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.48](https://github.com/jhpyle/docassemble/releases/tag/v0.4.48) - 2019-06-01
+
+### Added
+- The `.is_encrypted()` method of `DAFile` and other file objects.
+
 ## [0.4.47](https://github.com/jhpyle/docassemble/releases/tag/v0.4.47) - 2019-05-31
 
 ### Added

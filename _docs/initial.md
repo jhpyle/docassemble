@@ -481,7 +481,7 @@ that [Python] code is used instead of text or [Mako] markup.
 
 The [`use objects`] modifier can also be used with `data from code`.
 
-{% include side-by-side.html demo="context-code" %}
+{% include demo-side-by-side.html demo="context-code" %}
 
 # <a name="reset"></a>Keeping variables fresh: `reset`
 
