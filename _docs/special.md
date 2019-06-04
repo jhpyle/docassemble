@@ -100,21 +100,25 @@ subquestion: |
 You can test this out by trying the following link:
 [{{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
-The following parameter names are not available for use as URL
-parameters because they are used for other purposes by
-**docassemble**:
+<a name="reserved url parameters"></a>The following URL parameters
+have special meaning in **docassemble**.  All others are available for
+you to use and to retrieve with [`url_args`].
 
-* `action`
-* `cache`
-* `filename`
-* `format`
-* `from_list`
-* `i`
-* `index`
-* `new_session`
-* `question`
-* `reset`
-* `session`
+* `i`: indicates the interview file to use
+* `session`: indicates the key of the stored dictionary to use
+* `action`: used by the [`url_action()`] function
+* `filename`: used for retrieving documents
+* `question`: used for retrieving documents
+* `format`: used for retrieving documents
+* `cache`: used to clear the interview evaluation cache
+* `reset`: used to restart an interview session
+* `new_session`: used to start a new interview session
+* `index`: used for retrieving documents
+* `from_list`: indicates that interview was launched from the
+  Interview List page
+* `js_target`: indicates that [JavaScript] should be returned that
+  places the interview into the element on the screen with an `id`
+  matching the given value.
 
 ## <a name="role_needed"></a>role_needed
 
@@ -330,49 +334,74 @@ experience errors or unexpected results.
 * <span></span>[`url_args`]: a dictionary available to interview code that contains
   values encoded in the URL with which the interview was initially
   loaded.
-* <span></span>[`user_dict`]: if you use this as a name in an
+* <span></span>`user_dict`: if you use this as a name in an
   interview, your interview will not behave properly.
 * <span></span>[`allow_cron`]: a special variable that is used as
   part of the [scheduled tasks] system.
 * <span></span>[`x`]: used as a reference to the underlying object when
   [generic objects] are defined.
 
-The following names are imported automatically, unless you 
+The following names are imported automatically:
 
 * [`Address`]
 * [`Asset`]
 * [`ChildList`]
+* [`City`]
+* [`DACloudStorage`]
+* [`DAContext`]
 * [`DADict`]
+* [`DAEmail`]
+* [`DAEmailRecipient`]
+* [`DAEmailRecipientList`]
+* [`DAEmpty`]
 * [`DAFile`]
 * [`DAFileCollection`]
 * [`DAFileList`]
+* [`DAGoogleAPI`]
+* [`DALink`]
 * [`DAList`]
+* [`DAOAuth`]
 * [`DAObject`]
+* [`DAOrderedDict`]
 * [`DARedis`]
+* [`DASet`]
+* [`DAStaticFile`]
 * [`DATemplate`]
-* [`DALazyTemplate`]
+* [`DAValidationError`]
+* [`Event`]
 * [`Expense`]
 * [`FinancialList`]
 * [`Income`]
 * [`Individual`]
 * [`IndividualName`]
 * [`LatitudeLongitude`]
+* [`MachineLearningEntry`]
 * [`Name`]
 * [`OfficeList`]
 * [`Organization`]
+* [`PY2`]
 * [`PeriodicFinancialList`]
 * [`PeriodicValue`]
 * [`Person`]
+* [`RandomForestMachineLearner`]
+* [`RelationshipTree`]
 * [`RoleChangeTracker`]
+* [`SVMMachineLearner`]
 * [`SimpleTextMachineLearner`]
+* [`Thing`]
 * [`Value`]
 * [`action_argument`]
 * [`action_arguments`]
+* [`action_button_html`]
 * [`action_menu_item`]
+* [`all_variables`]
+* [`alpha`]
 * [`as_datetime`]
 * [`background_action`]
+* [`background_error_action`]
 * [`background_response`]
 * [`background_response_action`]
+* [`bold`]
 * [`capitalize`]
 * [`chat_partners_available`]
 * [`comma_and_list`]
@@ -380,31 +409,62 @@ The following names are imported automatically, unless you
 * [`command`]
 * [`countries_list`]
 * [`country_name`]
+* [`create_user`]
 * [`currency`]
 * [`currency_symbol`]
 * [`current_datetime`]
 * [`date_difference`]
 * [`date_interval`]
 * [`day_of`]
+* [`decode_name`]
+* [`define`]
 * [`defined`]
+* [`delete_record`]
+* [`device`]
+* [`dispatch`]
+* [`dow_of`]
+* [`encode_name`]
+* [`fix_punctuation`]
 * [`force_ask`]
 * [`force_gather`]
+* [`forget_result_of`]
 * [`format_date`]
+* [`format_datetime`]
 * [`format_time`]
 * [`from_b64_json`]
+* [`get_chat_log`]
 * [`get_config`]
 * [`get_country`]
 * [`get_default_timezone`]
 * [`get_dialect`]
+* [`get_emails`]
 * [`get_info`]
 * [`get_language`]
 * [`get_locale`]
+* [`get_progress`]
+* [`get_question_data`]
+* [`get_session_variables`]
+* [`get_sms_session`]
+* [`get_user_info`]
+* [`get_user_list`]
+* [`get_user_secret`]
+* [`go_back_in_session`]
+* [`include_docx_template`]
 * [`indefinite_article`]
+* [`indent`]
+* [`initiate_sms_session`]
 * [`interface`]
+* [`interview_email`]
+* [`interview_list`]
+* [`interview_menu`]
 * [`interview_url`]
 * [`interview_url_action`]
 * [`interview_url_action_as_qr`]
 * [`interview_url_as_qr`]
+* [`italic`]
+* [`item_label`]
+* [`json_response`]
+* [`language_from_browser`]
 * [`last_access_days`]
 * [`last_access_delta`]
 * [`last_access_hours`]
@@ -412,6 +472,8 @@ The following names are imported automatically, unless you
 * [`last_access_time`]
 * [`location_known`]
 * [`location_returned`]
+* [`log`]
+* [`manage_privileges`]
 * [`map_of`]
 * [`mark_task_as_performed`]
 * [`message`]
@@ -421,37 +483,77 @@ The following names are imported automatically, unless you
 * [`nice_number`]
 * [`noun_plural`]
 * [`noun_singular`]
+* [`noyes`]
 * [`objects_from_file`]
+* [`ocr_file`]
+* [`ocr_file_in_background`]
 * [`ordinal`]
 * [`ordinal_number`]
+* [`overlay_pdf`]
+* [`path_and_mimetype`]
+* [`pdf_concatenate`]
 * [`period_list`]
 * [`phone_number_in_e164`]
 * [`phone_number_is_valid`]
+* [`phone_number_part`]
+* [`plain`]
 * [`prevent_going_back`]
 * [`process_action`]
 * [`qr_code`]
 * [`quantity_noun`]
+* [`quote_paragraphs`]
+* [`raw`]
+* [`re_run_logic`]
+* [`read_qr`]
+* [`read_records`]
+* [`reconsider`]
+* [`redact`]
+* [`referring_url`]
 * [`response`]
+* [`returning_user`]
+* [`roman`]
+* [`run_python_module`]
 * [`selections`]
 * [`send_email`]
+* [`send_fax`]
 * [`send_sms`]
+* [`server_capabilities`]
+* [`session_tags`]
 * [`set_country`]
 * [`set_info`]
 * [`set_language`]
 * [`set_live_help_status`]
 * [`set_locale`]
+* [`set_parts`]
+* [`set_progress`]
+* [`set_save_status`]
+* [`set_session_variables`]
 * [`set_task_counter`]
+* [`set_title`]
+* [`set_user_info`]
+* [`showif`]
+* [`showifdef`]
 * [`single_paragraph`]
+* [`single_to_double_newlines`]
 * [`space_to_underscore`]
+* [`split`]
+* [`start_time`]
+* [`state_name`]
+* [`states_list`]
 * [`static_image`]
+* [`string_types`]
+* [`subdivision_type`]
 * [`task_not_yet_performed`]
 * [`task_performed`]
+* [`terminate_sms_session`]
+* [`text_type`]
 * [`times_task_performed`]
 * [`timezone_list`]
 * [`title_case`]
 * [`today`]
+* [`undefine`]
 * [`url_action`]
-* [`url_args`]
+* [`url_ask`]
 * [`url_of`]
 * [`us`]
 * [`user_has_privilege`]
@@ -459,11 +561,16 @@ The following names are imported automatically, unless you
 * [`user_lat_lon`]
 * [`user_logged_in`]
 * [`user_privileges`]
+* [`validation_error`]
 * [`value`]
+* [`variables_as_json`]
 * [`verb_past`]
 * [`verb_present`]
 * [`word`]
+* [`write_record`]
 * [`year_of`]
+* [`yesno`]
+* [`zip_file`]
 
 If you include a [`modules`] block including
 [`docassemble.base.legal`], the above names will be used, as well as
@@ -701,23 +808,6 @@ internal names include:
 * `_tracker`
 * `_varnames`
 
-<a name="reserved url parameters"></a>The following URL parameters
-have special meaning in **docassemble**.  All others are available for
-you to use and to retrieve with [`url_args`].
-
-* `i`: indicates the interview file to use
-* `session`: indicates the key of the stored dictionary to use
-* `action`: used by the [`url_action()`] function
-* `filename`: used for retrieving documents
-* `question`: used for retrieving documents
-* `format`: used for retrieving documents
-* `index`: used for retrieving documents
-* `from_list`: indicates that interview was launched from the
-  Interview List page
-* `js_target`: indicates that [JavaScript] should be returned that
-  places the interview into the element on the screen with an `id`
-  matching the given value.
-
 [API]: {{ site.baseurl }}/docs/api.html
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Mako]: http://www.makotemplates.org/
@@ -731,18 +821,32 @@ you to use and to retrieve with [`url_args`].
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`Asset`]: {{ site.baseurl }}/docs/objects.html#Asset
 [`Case`]: {{ site.baseurl }}/docs/legal.html#Case
+[`City`]: {{ site.baseurl }}/docs/objects.html#City
 [`ChildList`]: {{ site.baseurl }}/docs/objects.html#ChildList
 [`Court`]: {{ site.baseurl }}/docs/legal.html#Court
+[`DACloudStorage`]: {{ site.baseurl }}/docs/objects.html#DACloudStorage
+[`DAContext`]: {{ site.baseurl }}/docs/objects.html#DAContext
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`DAEmailRecipientList`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipientList
+[`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
+[`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
+[`DAEmpty`]: {{ site.baseurl }}/docs/objects.html#DAEmpty
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAGoogleAPI`]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI
+[`DALink`]: {{ site.baseurl }}/docs/objects.html#DALink
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DAOAuth`]: {{ site.baseurl }}/docs/objects.html#DAOAuth
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`DAOrderedDict`]: {{ site.baseurl }}/docs/objects.html#DAOrderedDict
 [`DARedis`]: {{ site.baseurl }}/docs/functions.html#redis
 [`DASet`]: {{ site.baseurl }}/docs/objects.html#DASet
+[`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`DAValidationError`]: {{ site.baseurl }}/docs/objects.html#DAValidationError
 [`Document`]: {{ site.baseurl }}/docs/legal.html#Document
+[`Event`]: {{ site.baseurl }}/docs/objects.html#Event
 [`Expense`]: {{ site.baseurl }}/docs/objects.html#Expense
 [`FinancialList`]: {{ site.baseurl }}/docs/objects.html#FinancialList
 [`Income`]: {{ site.baseurl }}/docs/objects.html#Income
@@ -751,28 +855,40 @@ you to use and to retrieve with [`url_args`].
 [`Jurisdiction`]: {{ site.baseurl }}/docs/legal.html#Jurisdiction
 [`LatitudeLongitude`]: {{ site.baseurl }}/docs/objects.html#LatitudeLongitude
 [`LegalFiling`]: {{ site.baseurl }}/docs/legal.html#LegalFiling
+[`MachineLearningEntry`]: {{ site.baseurl }}/docs/ml.html#MachineLearningEntry
 [`Name`]: {{ site.baseurl }}/docs/objects.html#Name
 [`OfficeList`]: {{ site.baseurl }}/docs/objects.html#OfficeList
 [`Organization`]: {{ site.baseurl }}/docs/objects.html#Organization
+[`PY2`]: https://pythonhosted.org/six/#six.PY2
 [`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
 [`PeriodicFinancialList`]: {{ site.baseurl }}/docs/objects.html#PeriodicFinancialList
 [`PeriodicValue`]: {{ site.baseurl }}/docs/objects.html#PeriodicValue
 [`Person`]: {{ site.baseurl }}/docs/objects.html#Person
+[`RandomForestMachineLearner`]: {{ site.baseurl }}/docs/ml.html#RandomForestMachineLearner
+[`RelationshipTree`]: {{ site.baseurl }}/docs/objects.html#RelationshipTree
 [`RoleChangeTracker`]: {{ site.baseurl }}/docs/objects.html#RoleChangeTracker
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
+[`SVMMachineLearner`]: {{ site.baseurl }}/docs/ml.html#SVMMachineLearner
 [`SimpleTextMachineLearner`]: {{ site.baseurl }}/docs/ml.html
+[`Thing`]: {{ site.baseurl }}/docs/objects.html#Thing
 [`Value`]: {{ site.baseurl }}/docs/objects.html#Value
 [`_internal`]: #_internal
 [`action_argument`]: {{ site.baseurl }}/docs/functions.html#action_argument
 [`action_arguments`]: {{ site.baseurl }}/docs/functions.html#action_arguments
+[`action_button_html`]: {{ site.baseurl }}/docs/functions.html#action_button_html
 [`action_menu_item()` function]: {{ site.baseurl }}/docs/functions.html#action_menu_item
 [`action_menu_item`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
+[`all_variables`]: {{ site.baseurl }}/docs/functions.html#all_variables
 [`allow_cron`]: #allow_cron
+[`alpha`]: {{ site.baseurl }}/docs/functions.html#alpha
 [`as_datetime`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`background_action`]: {{ site.baseurl }}/docs/background.html#background_action
+[`background_error_action`]: {{ site.baseurl }}/docs/functions.html#background_error_action
 [`background_response_action`]: {{ site.baseurl }}/docs/background.html#background_response_action
 [`background_response`]: {{ site.baseurl }}/docs/background.html#background_response
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`bold`]: {{ site.baseurl }}/docs/functions.html#bold
+[`caller`]: https://docs.makotemplates.org/en/latest/defs.html#calling-a-def-with-embedded-content-and-or-other-defs
 [`capitalize`]: {{ site.baseurl }}/docs/functions.html#capitalize
 [`chat_partners_available`]: {{ site.baseurl }}/docs/functions.html#chat_partners_available
 [`code`]: {{ site.baseurl }}/docs/code.html
@@ -781,6 +897,7 @@ you to use and to retrieve with [`url_args`].
 [`command`]: {{ site.baseurl }}/docs/functions.html#command
 [`countries_list`]: {{ site.baseurl }}/docs/functions.html#countries_list
 [`country_name`]: {{ site.baseurl }}/docs/functions.html#country_name
+[`create_user`]: {{ site.baseurl }}/docs/functions.html#create_user
 [`cron_daily`]: #cron_daily
 [`cron_hourly`]: #cron_hourly
 [`cron_monthly`]: #cron_monthly
@@ -791,34 +908,63 @@ you to use and to retrieve with [`url_args`].
 [`date_difference`]: {{ site.baseurl }}/docs/functions.html#date_difference
 [`date_interval`]: {{ site.baseurl }}/docs/functions.html#date_interval
 [`day_of`]: {{ site.baseurl }}/docs/functions.html#day_of
+[`decode_name`]: {{ site.baseurl }}/docs/functions.html#decode_name
 [`default role` initial block]: {{ site.baseurl }}/docs/initial.html#default_role
+[`define`]: {{ site.baseurl }}/docs/functions.html#define
 [`defined`]: {{ site.baseurl }}/docs/functions.html#defined
+[`delete_record`]: {{ site.baseurl }}/docs/functions.html#delete_record
+[`device`]: {{ site.baseurl }}/docs/functions.html#device
+[`dispatch`]: {{ site.baseurl }}/docs/functions.html#dispatch
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[`dow_of`]: {{ site.baseurl }}/docs/functions.html#dow_of
+[`encode_name`]: {{ site.baseurl }}/docs/functions.html#encode_name
+[`fix_punctuation`]: {{ site.baseurl }}/docs/functions.html#fix_punctuation
 [`force_ask`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`force_gather`]: {{ site.baseurl }}/docs/functions.html#force_gather
+[`forget_result_of`]: {{ site.baseurl }}/docs/functions.html#forget_result_of
 [`format_date`]: {{ site.baseurl }}/docs/functions.html#format_date
+[`format_datetime`]: {{ site.baseurl }}/docs/functions.html#format_datetime
 [`format_time`]: {{ site.baseurl }}/docs/functions.html#format_time
 [`from_b64_json`]: {{ site.baseurl }}/docs/functions.html#from_b64_json
+[`get_chat_log`]: {{ site.baseurl }}/docs/functions.html#get_chat_log
 [`get_config`]: {{ site.baseurl }}/docs/functions.html#get_config
 [`get_country`]: {{ site.baseurl }}/docs/functions.html#get_country
 [`get_default_timezone`]: {{ site.baseurl }}/docs/functions.html#get_default_timezone
 [`get_dialect`]: {{ site.baseurl }}/docs/functions.html#get_dialect
+[`get_emails`]: {{ site.baseurl }}/docs/functions.html#get_emails
 [`get_info`]: {{ site.baseurl }}/docs/functions.html#get_info
 [`get_language`]: {{ site.baseurl }}/docs/functions.html#get_language
 [`get_locale`]: {{ site.baseurl }}/docs/functions.html#get_locale
+[`get_progress`]: {{ site.baseurl }}/docs/functions.html#get_progress
+[`get_question_data`]: {{ site.baseurl }}/docs/functions.html#get_question_data
+[`get_session_variables`]: {{ site.baseurl }}/docs/functions.html#get_session_variables
+[`get_sms_session`]: {{ site.baseurl }}/docs/functions.html#get_sms_session
+[`get_user_info`]: {{ site.baseurl }}/docs/functions.html#get_user_info
+[`get_user_list`]: {{ site.baseurl }}/docs/functions.html#get_user_list
+[`get_user_secret`]: {{ site.baseurl }}/docs/functions.html#get_user_secret
+[`go_back_in_session`]: {{ site.baseurl }}/docs/functions.html#go_back_in_session
 [`i`]: {{ site.baseurl }}/docs/groups.html#i
-[`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
+[`include_docx_template`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
 [`incoming_email`]: {{ site.baseurl }}/docs/background.html#email
 [`indefinite_article`]: {{ site.baseurl }}/docs/functions.html#indefinite_article
+[`indent`]: {{ site.baseurl }}/docs/functions.html#indent
+[`initiate_sms_session`]: {{ site.baseurl }}/docs/functions.html#initiate_sms_session
 [`interface`]: {{ site.baseurl }}/docs/functions.html#interface
+[`interview_email`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`interview_list`]: {{ site.baseurl }}/docs/functions.html#interview_list
+[`interview_menu`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [`interview_url_action_as_qr`]: {{ site.baseurl }}/docs/functions.html#interview_url_action_as_qr
 [`interview_url_action`]: {{ site.baseurl }}/docs/functions.html#interview_url_action
 [`interview_url_as_qr`]: {{ site.baseurl }}/docs/functions.html#interview_url_as_qr
 [`interview_url`]: {{ site.baseurl }}/docs/functions.html#interview_url
+[`italic`]: {{ site.baseurl }}/docs/functions.html#italic
+[`item_label`]: {{ site.baseurl }}/docs/functions.html#item_label
 [`j`]: {{ site.baseurl }}/docs/groups.html#i
+[`json_response`]: {{ site.baseurl }}/docs/functions.html#json_response
 [`k`]: {{ site.baseurl }}/docs/groups.html#i
 [`l`]: {{ site.baseurl }}/docs/groups.html#i
+[`language_from_browser`]: {{ site.baseurl }}/docs/functions.html#language_from_browser
 [`last_access_days`]: {{ site.baseurl }}/docs/functions.html#last_access_days
 [`last_access_delta`]: {{ site.baseurl }}/docs/functions.html#last_access_delta
 [`last_access_hours`]: {{ site.baseurl }}/docs/functions.html#last_access_hours
@@ -828,8 +974,10 @@ you to use and to retrieve with [`url_args`].
 [`location_known`]: {{ site.baseurl }}/docs/functions.html#location_known
 [`location_returned()`]: {{ site.baseurl }}/docs/functions.html#location_returned
 [`location_returned`]: {{ site.baseurl }}/docs/functions.html#location_returned
+[`log`]: {{ site.baseurl }}/docs/functions.html#log
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`m`]: {{ site.baseurl }}/docs/groups.html#i
+[`manage_privileges`]: {{ site.baseurl }}/docs/functions.html#manage_privileges
 [`map_of`]: {{ site.baseurl }}/docs/functions.html#map_of
 [`mark_task_as_performed`]: {{ site.baseurl }}/docs/functions.html#mark_task_as_performed
 [`menu_items`]: #menu_items
@@ -845,51 +993,90 @@ you to use and to retrieve with [`url_args`].
 [`nice_number`]: {{ site.baseurl }}/docs/functions.html#nice_number
 [`noun_plural`]: {{ site.baseurl }}/docs/functions.html#noun_plural
 [`noun_singular`]: {{ site.baseurl }}/docs/functions.html#noun_singular
+[`noyes`]: {{ site.baseurl }}/docs/functions.html#noyes
 [`objects_from_file`]: {{ site.baseurl }}/docs/functions.html#objects_from_file
+[`ocr_file_in_background`]: {{ site.baseurl }}/docs/functions.html#ocr_file_in_background
+[`ocr_file`]: {{ site.baseurl }}/docs/functions.html#ocr_file
 [`ordinal_number`]: {{ site.baseurl }}/docs/functions.html#ordinal_number
 [`ordinal`]: {{ site.baseurl }}/docs/functions.html#ordinal
+[`overlay_pdf`]: {{ site.baseurl }}/docs/functions.html#overlay_pdf
+[`path_and_mimetype`]: {{ site.baseurl }}/docs/functions.html#path_and_mimetype
+[`pdf_concatenate`]: {{ site.baseurl }}/docs/functions.html#pdf_concatenate
 [`period_list`]: {{ site.baseurl }}/docs/functions.html#period_list
 [`phone_number_in_e164`]: {{ site.baseurl }}/docs/functions.html#phone_number_in_e164
 [`phone_number_is_valid`]: {{ site.baseurl }}/docs/functions.html#phone_number_is_valid
+[`phone_number_part`]: {{ site.baseurl }}/docs/functions.html#phone_number_part
+[`plain`]: {{ site.baseurl }}/docs/functions.html#plain
 [`prevent_going_back`]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`process_action`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`qr_code`]: {{ site.baseurl }}/docs/functions.html#qr_code
 [`quantity_noun`]: {{ site.baseurl }}/docs/functions.html#quantity_noun
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`quote_paragraphs`]: {{ site.baseurl }}/docs/functions.html#quote_paragraphs
+[`raw`]: {{ site.baseurl }}/docs/functions.html#raw
+[`re_run_logic`]: {{ site.baseurl }}/docs/functions.html#re_run_logic
+[`read_qr`]: {{ site.baseurl }}/docs/functions.html#read_qr
+[`read_records`]: {{ site.baseurl }}/docs/functions.html#read_records
+[`reconsider`]: {{ site.baseurl }}/docs/functions.html#reconsider
+[`redact`]: {{ site.baseurl }}/docs/functions.html#redact
+[`referring_url`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [`response`]: {{ site.baseurl }}/docs/functions.html#response
-[`role_event`]: {{ site.baseurl }}/docs/roles.html
+[`returning_user`]: {{ site.baseurl }}/docs/functions.html#returning_user
 [`role_event`]: {{ site.baseurl }}/docs/roles.html
 [`role_needed`]: #role_needed
 [`role`]: #role
+[`roman`]: {{ site.baseurl }}/docs/functions.html#roman
 [`row_index`]: {{ site.baseurl }}/docs/initial.html#table
 [`row_item`]: {{ site.baseurl }}/docs/initial.html#table
+[`run_python_module`]: {{ site.baseurl }}/docs/functions.html#run_python_module
 [`selections`]: {{ site.baseurl }}/docs/functions.html#selections
 [`self`]: https://docs.python.org/2.7/tutorial/classes.html
 [`send_email`]: {{ site.baseurl }}/docs/functions.html#send_email
+[`send_fax`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [`send_sms`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[`server_capabilities`]: {{ site.baseurl }}/docs/functions.html#server_capabilities
+[`session_tags`]: {{ site.baseurl }}/docs/functions.html#session_tags
 [`set_country`]: {{ site.baseurl }}/docs/functions.html#set_country
 [`set_info`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`set_language`]: {{ site.baseurl }}/docs/functions.html#set_language
 [`set_live_help_status`]: {{ site.baseurl }}/docs/functions.html#set_live_help_status
 [`set_locale`]: {{ site.baseurl }}/docs/functions.html#set_locale
+[`set_parts`]: {{ site.baseurl }}/docs/functions.html#set_parts
+[`set_progress`]: {{ site.baseurl }}/docs/functions.html#set_progress
+[`set_save_status`]: {{ site.baseurl }}/docs/functions.html#set_save_status
+[`set_session_variables`]: {{ site.baseurl }}/docs/functions.html#set_session_variables
 [`set_task_counter`]: {{ site.baseurl }}/docs/functions.html#set_task_counter
+[`set_title`]: {{ site.baseurl }}/docs/functions.html#set_title
+[`set_user_info`]: {{ site.baseurl }}/docs/functions.html#set_user_info
+[`showif`]: {{ site.baseurl }}/docs/functions.html#showif
+[`showifdef`]: {{ site.baseurl }}/docs/functions.html#showifdef
 [`single_paragraph`]: {{ site.baseurl }}/docs/functions.html#single_paragraph
+[`single_to_double_newlines`]: {{ site.baseurl }}/docs/functions.html#single_to_double_newlines
 [`space_to_underscore`]: {{ site.baseurl }}/docs/functions.html#space_to_underscore
 [`speak_text`]: #speak_text
+[`split`]: {{ site.baseurl }}/docs/functions.html#split
+[`start_time`]: {{ site.baseurl }}/docs/functions.html#start_time
+[`state_name`]: {{ site.baseurl }}/docs/functions.html#state_name
+[`states_list`]: {{ site.baseurl }}/docs/functions.html#states_list
 [`static_image`]: {{ site.baseurl }}/docs/functions.html#static_image
+[`string_types`]: {{ site.baseurl }}/docs/functions.html#string_types
+[`subdivision_type`]: {{ site.baseurl }}/docs/functions.html#subdivision_type
 [`task_not_yet_performed`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
 [`task_performed`]: {{ site.baseurl }}/docs/functions.html#task_performed
+[`terminate_sms_session`]: {{ site.baseurl }}/docs/functions.html#terminate_sms_session
+[`text_type`]: {{ site.baseurl }}/docs/functions.html#text_type
 [`times_task_performed`]: {{ site.baseurl }}/docs/functions.html#times_task_performed
 [`timezone_list`]: {{ site.baseurl }}/docs/functions.html#timezone_list
 [`title_case`]: {{ site.baseurl }}/docs/functions.html#title_case
 [`today`]: {{ site.baseurl }}/docs/functions.html#today
 [`track_location`]: #track_location
 [`track_location`]: #track_location
-[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[`undefine`]: {{ site.baseurl }}/docs/functions.html#undefine
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`url_action`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`url_args`]: #url_args
+[`url_ask`]: {{ site.baseurl }}/docs/functions.html#url_ask
 [`url_of`]: {{ site.baseurl }}/docs/functions.html#url_of
 [`us`]: https://pypi.python.org/pypi/us
 [`user_has_privilege`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
@@ -898,14 +1085,20 @@ you to use and to retrieve with [`url_args`].
 [`user_lat_lon`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon
 [`user_logged_in`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
 [`user_privileges`]: {{ site.baseurl }}/docs/functions.html#user_privileges
+[`validation_error`]: {{ site.baseurl }}/docs/functions.html#validation_error
+[`value`]: {{ site.baseurl }}/docs/functions.html#value
+[`variables_as_json`]: {{ site.baseurl }}/docs/functions.html#variables_as_json
 [`verb_past`]: {{ site.baseurl }}/docs/functions.html#verb_past
 [`verb_present`]: {{ site.baseurl }}/docs/functions.html#verb_present
 [`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
 [`word`]: {{ site.baseurl }}/docs/functions.html#word
 [`words`]: {{ site.baseurl }}/docs/functions.html#words
+[`write_record`]: {{ site.baseurl }}/docs/functions.html#write_record
 [`x`]: {{ site.baseurl }}/docs/modifiers.html#x
 [`year_of`]: {{ site.baseurl }}/docs/functions.html#year_of
+[`yesno`]: {{ site.baseurl }}/docs/functions.html#yesno
 [`your`]: {{ site.baseurl }}/docs/functions.html#your
+[`zip_file`]: {{ site.baseurl }}/docs/functions.html#zip_file
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [configuration]: {{ site.baseurl }}/docs/config.html
