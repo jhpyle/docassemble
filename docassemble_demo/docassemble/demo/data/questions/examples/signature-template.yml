@@ -1,0 +1,33 @@
+objects:
+  - signer: DAList.using(object_type=Individual, there_are_any=True)
+---
+question: |
+  Is there another signer?
+yesno: signer.there_is_another
+---
+question: |
+  Tell me about the ${ ordinal(i) } signer.
+fields:
+  - First Name: signer[i].name.first
+  - Last Name: signer[i].name.last
+  - Likes Fruit: signer[i].likes_fruit
+    datatype: yesno
+---
+template: signer[i].signature_block
+content: |
+  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+  
+  ${ signer[i] }, fruit
+  % if signer[i].likes_fruit:
+  lover
+  % else:
+  hater
+  % endif
+  
+  Dated: ${ today() }
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  docx template file: signature_template.docx

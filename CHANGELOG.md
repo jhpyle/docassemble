@@ -1,12 +1,15 @@
 # Change Log
 
-## [0.4.48] - 2019-06-01
+## [0.4.48] - 2019-06-06
 ### Added
 - The `.is_encrypted()` method of `DAFile` and other file objects.
 ### Fixed
 - Dependency problems when `docassemble.base` was used without
   `docassemble.webapp`.
-- Errors in the `DAFileCollection` version of `num_pages()` and `size_in_bytes()`.
+- Errors in the `DAFileCollection` version of `num_pages()` and
+  `size_in_bytes()`.
+- JavaScript used `.includes()` and `.startsWith()` methods, which are
+  not universally supported.
 
 ## [0.4.47] - 2019-05-31
 ### Added

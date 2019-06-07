@@ -1,5 +1,5 @@
 {% macro render_file_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False) -%}
-<div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+<div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if label_visible %}
   {% if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}">{{ label|safe }}</label>
@@ -14,7 +14,7 @@
 </div>
 {%- endmacro %}
 {% macro render_field(field, type=None, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, prelabel=None) %}
-<div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+<div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if field.type != 'HiddenField' and label_visible %}
   {%- if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}">{{ label|safe }}</label>
@@ -44,7 +44,7 @@
 
 {% macro render_addon_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, extra=None, extra_class=None) %}
 {%- if not extra_class %}{% set extra_class='' %}{% endif %}
-<div class="input-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}{{ extra_class }}">
+<div class="input-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}{{ extra_class }}">
   {%- if field.type != 'HiddenField' and label_visible %}
   {%- if not label %}{% set label=field.label.text|word %}{% endif %}
   <div class="input-group-prepend">
@@ -90,7 +90,7 @@
 {%- endmacro %}
 
 {% macro render_select_field(field) %}
-<div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+<div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   <label for="{{ field.id }}">{{ field.label.text }}</label>
   <select class="form-control" name="{{ field.id }}" id="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
@@ -106,7 +106,7 @@
 {%- endmacro %}
 
 {% macro render_multiselect_field(field, undernote=None) %}
-<div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+<div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   <label for="{{ field.id }}">{{ field.label.text }}</label>
   <select multiple class="form-control" name="{{ field.id }}" id="{{ field.id }}" name="{{ field.id }}">
   {%- for value, name, checked in field.iter_choices() %}
@@ -130,7 +130,7 @@
 {%- endmacro %}
 
 {% macro myrender_field(field, label=None, label_visible=True, right_url=None, right_label=None) %}
-    <div class="control-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+    <div class="control-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
       {%- if field.type != 'HiddenField' and label_visible %}
         {%- if not label %}
           {%- set label=field.label.text|word %}

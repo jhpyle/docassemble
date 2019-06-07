@@ -7010,7 +7010,7 @@ def index(action_argument=None):
         for (var i = 0; i < n; ++i){
           var key = formData[i]['name'];
           var val = formData[i]['value'];
-          if ($.inArray(key, daFieldsToSkip) != -1 || key.startsWith('_ignore')){
+          if ($.inArray(key, daFieldsToSkip) != -1 || key.indexOf('_ignore') == 0){
             continue;
           }
           if (typeof daVarLookupRev[key] != "undefined"){
@@ -7486,7 +7486,7 @@ def index(action_argument=None):
                     //console.log("Need to click " + data.clicked);
                     $(data.clicked).prop("disabled", false);
                     $(data.clicked).addClass("da-click-selected");
-                    if ($(data.clicked).prop("tagName") == 'A' && typeof $(data.clicked).attr('href') != 'undefined' && ($(data.clicked).attr('href').startsWith('javascript') || $(data.clicked).attr('href').startsWith('#'))){
+                    if ($(data.clicked).prop("tagName") == 'A' && typeof $(data.clicked).attr('href') != 'undefined' && ($(data.clicked).attr('href').indexOf('javascript') == 0 || $(data.clicked).attr('href').indexOf('#') == 0)){
                       setTimeout(function(){
                         $(data.clicked).removeClass("da-click-selected");
                       }, 2200);
@@ -7705,7 +7705,7 @@ def index(action_argument=None):
                   var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
                   fileInfoList.push(thisFileInfo);
                   reader.onload = function(readerEvent){
-                    if (hasImages && the_file.type.match(/image.*/) && !the_file.type.startsWith('image/svg')){
+                    if (hasImages && the_file.type.match(/image.*/) && !(the_file.type.indexOf('image/svg') == 0)){
                       var convertedName = the_file.name;
                       var convertedType = the_file.type;
                       if (image_type){
@@ -7941,8 +7941,13 @@ def index(action_argument=None):
             document.activeElement.blur();
           }
           $(daTargetDiv).html(data.body);
-          $(daTargetDiv).parent().removeClass("dabody");
-          $(daTargetDiv).parent().removeClass("dasignature");
+          var bodyClasses = $(daTargetDiv).parent()[0].className.split(/\s+/);
+          var n = bodyClasses.length;
+          while (n--){
+            if (bodyClasses[n] == 'dabody' || bodyClasses[n] == 'dasignature' || bodyClasses[n].indexOf('question-') == 0){
+              $(daTargetDiv).parent().removeClass(bodyClasses[n]);
+            }
+          }
           $(daTargetDiv).parent().addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
@@ -8595,7 +8600,7 @@ def index(action_argument=None):
         });
         $('.dacurrency').each(function(){
           var theVal = $(this).val();
-          if (theVal.includes('.') || theVal.includes(',')){
+          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
             $(this).val(cleanNum);
@@ -8603,7 +8608,7 @@ def index(action_argument=None):
         });
         $('.dacurrency').on('blur', function(){
           var theVal = $(this).val();
-          if (theVal.includes('.') || theVal.includes(',')){
+          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
             $(this).val(cleanNum);
@@ -9274,10 +9279,10 @@ def index(action_argument=None):
       }
       $.validator.setDefaults({
         highlight: function(element) {
-            $(element).closest('.form-group').addClass('da-has-error');
+            $(element).closest('.form-group').find('input, select').addClass('is-invalid');
         },
         unhighlight: function(element) {
-            $(element).closest('.form-group').removeClass('da-has-error');
+            $(element).closest('.form-group').find('input, select').removeClass('is-invalid');
         },
         errorElement: 'span',
         errorClass: 'da-help-block',
@@ -11247,7 +11252,7 @@ def monitor():
               $("#daPhoneNumber").val('+' + the_number);
           }
           if (daPhoneNumberOk()){
-              $("#daPhoneNumber").parent().removeClass("da-has-error");
+              $("#daPhoneNumber").removeClass("is-invalid");
               $("#daPhoneError").addClass("dainvisible");
               daPhoneNumber = $("#daPhoneNumber").val();
               if (daPhoneNumber == ''){
@@ -11262,7 +11267,7 @@ def monitor():
               }, 2000);
           }
           else{
-              $("#daPhoneNumber").parent().addClass("da-has-error");
+              $("#daPhoneNumber").addClass("is-invalid");
               $("#daPhoneError").removeClass("dainvisible");
               daPhoneNumber = null;
               $(".phone").addClass("dainvisible");
@@ -15359,7 +15364,7 @@ def playground_packages():
           var daWhichButton = this;
           if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
             if ($("#commit_message_div").is(":visible")){
-              $("#commit_message").parent().addClass("da-has-error");
+              $("#commit_message").addClass("is-invalid");
             }
             else{
               $("#commit_message_div").show();
