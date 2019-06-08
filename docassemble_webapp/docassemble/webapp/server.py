@@ -3180,7 +3180,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 else:
                     content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title=' + json.dumps(word("Train")) + '><i class="fas fa-graduation-cap"></i></a>'
             content += '</td></tr>'
-        if len(all_sources):
+        if len(all_sources) and show_messages:
             content += search_key
             content += '\n                <tr><td>'
             content += '\n                  <ul>'
@@ -14145,8 +14145,7 @@ def playground_office_taskpane():
     defaultDaServer = daconfig.get('url root', None)
     if defaultDaServer is None:
         defaultDaServer = request.url_root
-    else:
-        defaultDaServer += daconfig.get('root', '/')
+    defaultDaServer += daconfig.get('root', '/')
     return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
 
 @app.route('/officeaddin', methods=['GET', 'POST'])
