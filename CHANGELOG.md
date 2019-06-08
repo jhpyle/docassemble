@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.4.49] - 2019-06-
+## [0.4.49] - 2019-06-08
 ### Changed
 - Revised the CSS classes for error messages.
 ### Fixed
