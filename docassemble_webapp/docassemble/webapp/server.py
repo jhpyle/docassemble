@@ -8599,7 +8599,7 @@ def index(action_argument=None):
           $('#daquestionlabel').tab('show');
         });
         $('.dacurrency').each(function(){
-          var theVal = $(this).val();
+          var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
@@ -8607,7 +8607,7 @@ def index(action_argument=None):
           }
         });
         $('.dacurrency').on('blur', function(){
-          var theVal = $(this).val();
+          var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + text_type(daconfig.get('currency decimal places', 2)) + """);
@@ -9279,14 +9279,17 @@ def index(action_argument=None):
       }
       $.validator.setDefaults({
         highlight: function(element) {
-            $(element).closest('.form-group').find('input, select').addClass('is-invalid');
+            $(element).closest('.form-group').addClass('da-group-has-error');
+            $(element).addClass('is-invalid');
         },
         unhighlight: function(element) {
-            $(element).closest('.form-group').find('input, select').removeClass('is-invalid');
+            $(element).closest('.form-group').removeClass('da-group-has-error');
+            $(element).removeClass('is-invalid');
         },
         errorElement: 'span',
-        errorClass: 'da-help-block',
+        errorClass: 'da-has-error',
         errorPlacement: function(error, element) {
+            $(error).addClass('text-danger');
             var elementName = $(element).attr("name");
             var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
               var fieldsArr;

@@ -1109,8 +1109,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div>\n' + sub_question_text 
-            #for saveas_string in status.embedded:
-            #    output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label> '
             output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
@@ -1556,9 +1554,6 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
               </div>
             </div>
 """
-#            status.extra_scripts.append("""<script>
-#      $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'da-has-error'});
-#    </script>""")
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
     if status.question.question_type == "signature":
@@ -2239,7 +2234,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="da-inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="dafile-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/></span>'
             else:
-                output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + json.dumps(word("You can upload a file here")) + ' type="file" tabindex="-1" class="dafile" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + json.dumps(word("You can upload a file here")) + ' type="file" tabindex="-1" class="dafile" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + '/><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error text-danger" id="' + escape_id(saveas_string) + '-error"></label>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
@@ -2311,10 +2306,9 @@ def input_for(status, field, wide=False, embedded=False):
                 input_type = 'text'
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
-                # output += '<span class="da-inline-error-wrapper"><label for="' + escape_id(saveas_string) + '" class="da-has-error da-inline-error-position da-inline-error" style="display: none" id="' + escape_id(saveas_string) + '-error"></label>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
-                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + '/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + '/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error text-danger" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
                 output += '/>'
             if embedded:

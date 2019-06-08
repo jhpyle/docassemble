@@ -1844,14 +1844,6 @@ blockquote.dalimheight {
     float: right;
 }
 
-.da-has-error {
-    color: #a94442;
-}
-
-.da-help-block {
-    color: #a94442;
-}
-
 div.danavnested {
     padding-left: 20px;
 }

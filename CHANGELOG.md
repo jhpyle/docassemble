@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.49] - 2019-06-
+### Changed
+- Revised the CSS classes for error messages.
+
 ## [0.4.48] - 2019-06-06
 ### Added
 - The `.is_encrypted()` method of `DAFile` and other file objects.

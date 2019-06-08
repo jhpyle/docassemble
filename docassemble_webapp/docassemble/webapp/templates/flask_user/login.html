@@ -37,7 +37,7 @@
               {{ field(class_='form-control', type='email') }}
               {%- if field.errors %}
                 {%- for e in field.errors %}
-              <p class="da-help-block">{{ e }}</p>
+              <p class="da-has-error text-danger">{{ e }}</p>
                 {%- endfor %}
               {%- endif %}
             </div>
@@ -60,7 +60,7 @@
               {{ field(class_='form-control') }}
               {%- if field.errors %}
                 {%- for e in field.errors %}
-              <p class="da-help-block">{{ e }}</p>
+              <p class="da-has-error text-danger">{{ e }}</p>
                 {%- endfor %}
               {%- endif %}
             </div>
