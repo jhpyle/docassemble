@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.49](https://github.com/jhpyle/docassemble/releases/tag/v0.4.49) - 2019-06-08
+
+### Changed
+- Revised the CSS classes for error messages.
+
+### Fixed
+- Word add-in did not work for servers with a `root` other than `/`.
+
 ## [0.4.48](https://github.com/jhpyle/docassemble/releases/tag/v0.4.48) - 2019-06-06
 
 ### Added
