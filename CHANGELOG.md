@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.50] - 2019-06-
+### Added
+- The `update on start` Configuration directive.
+### Changed
+- The `include_docx_template()` function now includes images, shapes,
+  styles, footnotes, etc. from the sub-document.
+- Problem with websockets on servers with a `root` other than `/`.
+
 ## [0.4.49] - 2019-06-08
 ### Changed
 - Revised the CSS classes for error messages.
