@@ -791,7 +791,6 @@ import docassemble.base.astparser
 import ast
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
-#import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb, is_empty_mc
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text

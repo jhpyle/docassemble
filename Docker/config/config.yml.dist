@@ -76,6 +76,7 @@ use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
 behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
 xsendfile: {{XSENDFILE}}
+update on start: {{DAUPDATEONSTART}}
 url root: {{URLROOT}}
 external hostname: {{DAHOSTNAME}}
 root: {{POSTURLROOT}}

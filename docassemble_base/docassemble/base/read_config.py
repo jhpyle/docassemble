@@ -85,6 +85,8 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
+    if 'update on start' in daconfig and daconfig['update on start'] is False:
+        print('export DAUPDATEONSTART=false')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:

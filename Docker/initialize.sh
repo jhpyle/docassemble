@@ -304,6 +304,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
 	-e 's/{{XSENDFILE}}/'"${XSENDFILE:-true}"'/' \
+	-e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE
@@ -588,7 +589,9 @@ fi
 
 echo "37" >&2
 
-su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
+if [ "${DAUPDATEONSTART:-true}" = "true" ]; then
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE initialize" www-data || exit 1
+fi
 
 echo "38" >&2
 
