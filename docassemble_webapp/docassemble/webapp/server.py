@@ -19753,6 +19753,28 @@ def api_session_back():
         return data['response']
     return jsonify(**data)
 
+def transform_json_variables(obj):
+    if isinstance(obj, string_types):
+        if re.search(r'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T', obj):
+            try:
+                return docassemble.base.util.as_datetime(dateutil.parser.parse(obj))
+            except:
+                pass
+        else:
+            return obj
+    if isinstance(obj, (bool, int, float)):
+        return obj
+    if isinstance(obj, dict):
+        new_dict = dict()
+        for key, val in obj.items():
+            new_dict[transform_json_variables(key)] = transform_json_variables(val)
+        return new_dict
+    if isinstance(obj, list):
+        return [transform_json_variables(val) for val in obj]
+    if isinstance(obj, set):
+        return set([transform_json_variables(val) for val in obj])
+    return obj
+
 @app.route('/api/session', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
 @crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
@@ -19784,6 +19806,7 @@ def api_session():
         session['uid'] = session_id
         secret = str(post_data.get('secret', None))
         question_name = post_data.get('question_name', None)
+        treat_as_raw = true_or_false(post_data.get('raw', False))
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
@@ -19794,6 +19817,8 @@ def api_session():
                 variables = json.loads(post_data.get('variables', '{}'))
             except:
                 return jsonify_with_status("Malformed variables.", 400)
+        if not treat_as_raw:
+            variables = transform_json_variables(variables)
         if 'file_variables' in post_data and isinstance(post_data['file_variables'], dict):
             file_variables = post_data['file_variables']
         else:
@@ -19971,7 +19996,12 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         for key, val in variables.items():
             if illegal_variable_name(key) or contains_volatile.search(key):
                 raise Exception("Illegal value as variable name.")
-            exec(text_type(key) + ' = ' + repr(val), user_dict)
+            if isinstance(val, (docassemble.base.util.DADateTime, docassemble.base.util.DAObject)):
+                user_dict['_internal']['_tempvar'] = val
+                exec(text_type(key) + ' = _internal["_tempvar"]', user_dict)
+                del user_dict['_internal']['_tempvar']
+            else:
+                exec(text_type(key) + ' = ' + repr(val), user_dict)
             vars_set.add(key)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)

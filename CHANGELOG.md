@@ -1,12 +1,16 @@
 # Change Log
 
-## [0.4.50] - 2019-06-
+## [0.4.50] - 2019-06-11
 ### Added
 - The `update on start` Configuration directive.
 ### Changed
 - The `include_docx_template()` function now includes images, shapes,
   styles, footnotes, etc. from the sub-document.
 - Problem with websockets on servers with a `root` other than `/`.
+- The `/api/session` POST API endpoint will now convert dates to
+  `DADateTime` objects, unless the `raw` parameter is `1`.
+### Fixed
+- Triple spacing in RTF documents.
 
 ## [0.4.49] - 2019-06-08
 ### Changed

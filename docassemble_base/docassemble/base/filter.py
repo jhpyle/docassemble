@@ -125,7 +125,7 @@ def get_max_width_points():
 
 rtf_spacing = {'tight': '\\sl0 ', 'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
 
-rtf_after_space = {'tight': 0, 'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0}
+rtf_after_space = {'tight': 0, 'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0, 'triple': 0}
 
 def rtf_prefilter(text, metadata=dict()):
     text = re.sub(r'^# ', '[HEADING1] ', text, flags=re.MULTILINE)

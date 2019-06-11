@@ -386,7 +386,7 @@ def current_datetime(timezone=None):
     return dd(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)))
 
 def as_datetime(the_date, timezone=None):
-    """Converts the_date to a datetime.datetime object with a timezone.  Uses the
+    """Converts the_date to a DADateTime object with a timezone.  Uses the
     default timezone unless another timezone is explicitly provided."""
     ensure_definition(the_date, timezone)
     if timezone is None:

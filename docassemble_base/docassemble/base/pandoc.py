@@ -289,7 +289,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             use_libreoffice = False
         else:
             if method == 'default':
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file]
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
             else:
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:
@@ -323,7 +323,8 @@ def rtf_to_docx(in_file, out_file):
     from_file = os.path.join(tempdir, "file.rtf")
     to_file = os.path.join(tempdir, "file.docx")
     shutil.copyfile(in_file, from_file)
-    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file]
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file, '--outdir', tempdir]
+    #logmessage("rtf_to_docx: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
     result = p.wait()
     if not os.path.isfile(to_file):
@@ -344,7 +345,7 @@ def word_to_markdown(in_file, in_format):
         from_file = os.path.join(tempdir, "file." + in_format)
         to_file = os.path.join(tempdir, "file.docx")
         shutil.copyfile(in_file, from_file)
-        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file]
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file, '--outdir', tempdir]
         p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
         result = p.wait()
         if result != 0:
