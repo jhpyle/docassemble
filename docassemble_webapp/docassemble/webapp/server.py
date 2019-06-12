@@ -19342,7 +19342,7 @@ def api_user_info():
     if request.method == 'GET':
         return jsonify(user_info)
 
-@app.route('/api/user/<user_id>', methods=['GET', 'DELETE', 'POST'])
+@app.route('/api/user/<int:user_id>', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
 @crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
 def api_user_by_id(user_id):
@@ -19452,7 +19452,7 @@ def remove_privilege(privilege):
     db.session.commit()
     #clear_user_cache()
 
-@app.route('/api/user/<user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
+@app.route('/api/user/<int:user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
 @crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
 def api_user_by_id_privileges(user_id):
@@ -19699,7 +19699,7 @@ def api_users_interviews():
             user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
         return ('', 204)
 
-@app.route('/api/user/<user_id>/interviews', methods=['GET', 'DELETE'])
+@app.route('/api/user/<int:user_id>/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
 @crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
 def api_user_user_id_interviews(user_id):
@@ -19895,7 +19895,7 @@ def api_session():
         user_interviews(action='delete', filename=yaml_filename, session=session_id)
         return ('', 204)
 
-@app.route('/api/file/<file_number>', methods=['GET'])
+@app.route('/api/file/<int:file_number>', methods=['GET'])
 @crossdomain(origin='*', methods=['GET', 'HEAD'])
 def api_file(file_number):
     if not api_verify(request):

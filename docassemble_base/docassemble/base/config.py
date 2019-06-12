@@ -281,6 +281,12 @@ def load(**kwargs):
             del daconfig['checkin interval']
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
+    if 'websockets port' in daconfig and daconfig['websockets port']:
+        try:
+            daconfig['websockets port'] = int(daconfig['websockets port'])
+        except:
+            sys.stderr.write("websockets port must be an integer\n")
+            del daconfig['websockets port']
     if 'mail' not in daconfig:
         daconfig['mail'] = dict()
     if 'dispatch' not in daconfig or type(daconfig['dispatch']) is not dict:

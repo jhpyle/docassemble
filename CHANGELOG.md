@@ -1,8 +1,10 @@
 # Change Log
 
-## [0.4.50] - 2019-06-11
+## [0.4.50] - 2019-06-12
 ### Added
 - The `update on start` Configuration directive.
+- The `expose websockets`, `websockets ip`, and `websockets port`
+  Configuration directives.
 ### Changed
 - The `include_docx_template()` function now includes images, shapes,
   styles, footnotes, etc. from the sub-document.
@@ -11,6 +13,7 @@
   `DADateTime` objects, unless the `raw` parameter is `1`.
 ### Fixed
 - Triple spacing in RTF documents.
+- Flask route ambiguity with `/api/user/new`.
 
 ## [0.4.49] - 2019-06-08
 ### Changed

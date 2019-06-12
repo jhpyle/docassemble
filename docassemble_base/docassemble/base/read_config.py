@@ -87,6 +87,16 @@ if __name__ == "__main__":
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
     if 'update on start' in daconfig and daconfig['update on start'] is False:
         print('export DAUPDATEONSTART=false')
+    if 'expose websockets' in daconfig and daconfig['expose websockets']:
+        print('export DAEXPOSEWEBSOCKETS=true')
+    if 'websockets ip' in daconfig and daconfig['websockets ip']:
+        print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
+    else:
+        print('export DAWEBSOCKETSIP="127.0.0.1"')
+    if 'websockets port' in daconfig and daconfig['websockets port']:
+        print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
+    else:
+        print('export DAWEBSOCKETSPORT=5000')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:

@@ -1029,13 +1029,26 @@ if __name__ == '__main__':
     sys.stderr.write("5\n")
     if daconfig.get('expose websockets', False):
         try:
-            import netifaces as ni
-            ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
-            host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
-            socketio.run(app, host=host, port=5000)
+            if 'websockets ip' in daconfig and daconfig['websockets ip']:
+                host = daconfig['websockets ip']
+            else:
+                import netifaces as ni
+                ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
+                host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
+            socketio.run(app, host=host, port=daconfig.get('websockets port', 5000))
         except:
             sys.stderr.write("Could not find the external IP address\n")
-            socketio.run(app)
+            if 'websockets ip' in daconfig and daconfig['websockets ip']:
+                socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', 5000))
+            elif 'websockets port' in daconfig and daconfig['websockets port']:
+                socketio.run(app, port=daconfig['websockets port'])
+            else:
+                socketio.run(app)
     else:
         sys.stderr.write("6\n")
-        socketio.run(app)
+        if 'websockets ip' in daconfig and daconfig['websockets ip']:
+            socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', daconfig.get('websockets port', 5000)))
+        elif 'websockets port' in daconfig and daconfig['websockets port']:
+            socketio.run(app, port=daconfig['websockets port'])
+        else:
+            socketio.run(app)

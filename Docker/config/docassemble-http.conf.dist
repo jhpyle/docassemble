@@ -7,11 +7,11 @@ ServerName ${DAHOSTNAME}
     <IfModule mod_ssl.c>
         RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
     </IfModule>
-    RewriteCond %{REQUEST_URI}     ^${DAPOSTURLROOT}ws/socket.io         [NC]
-    RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-    RewriteRule ${DAPOSTURLROOT}ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
-    ProxyPass ${DAPOSTURLROOT}ws/ http://127.0.0.1:5000/
-    ProxyPassReverse ${DAPOSTURLROOT}ws/ http://127.0.0.1:5000/
+    RewriteCond %{REQUEST_URI}           ^${DAPOSTURLROOT}ws/socket.io                 [NC]
+    RewriteCond %{QUERY_STRING}          transport=websocket                           [NC]
+    RewriteRule ${DAPOSTURLROOT}ws/(.*)  ws://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/$1 [P,L]
+    ProxyPass        ${DAPOSTURLROOT}ws/ http://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/
+    ProxyPassReverse ${DAPOSTURLROOT}ws/ http://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/
     <IfDefine DACROSSSITEDOMAIN>
         Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAINVALUE}"
         Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
