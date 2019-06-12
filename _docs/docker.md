@@ -780,6 +780,9 @@ container for the new configuration to take effect.
 * <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
   X-Sendfile header is not functional in your configuration for
   whatever reason.  See the [`xsendfile`] configuration directive.
+* <a name="DAUPDATEONSTART"></a>`DAUPDATEONSTART`: Set this to `false`
+  if you do not want the container to update its software using `pip`
+  when it starts up.
 * <a name="CROSSSITEDOMAIN"></a>`CROSSSITEDOMAIN`: If this is set, the
   [Apache] server will be configured to send a
   `Access-Control-Allow-Origin` header, which enables
@@ -1471,8 +1474,8 @@ using encryption.  The web server will be accessible at
 `https://justice.example.com` and will serve resources other than
 **docassemble**.  The **docassemble** resources will be accessible at
 `https://justice.example.com/da`.  [Docker] will run on the machine
-and will listen on port 8080.  The web server will accept HTTPS
-requests at `/da` and forward them HTTP requests to port 8080.  The
+and will listen on port 8000.  The web server will accept HTTPS
+requests at `/da` and forward them HTTP requests to port 8000.  The
 SSL certificate will be installed on the Ubuntu server, and the
 [Docker] container will run an HTTP server.  [Docker] will be
 controlled by the user account `ubuntu`, which is assumed to have
@@ -1517,7 +1520,9 @@ Now, let's enable some necessary components of [Apache]:
 
 {% highlight bash %}
 sudo a2ensite default-ssl
+sudo a2enmod proxy
 sudo a2enmod proxy_http
+sudo a2enmod proxy_wstunnel
 sudo a2enmod headers
 sudo service apache2 reload
 {% endhighlight %}
@@ -1563,6 +1568,7 @@ Set the contents of `env.list` to:
 BEHINDHTTPSLOADBALANCER=true
 DAHOSTNAME=justice.example.com
 POSTURLROOT=/da/
+DAEXPOSEWEBSOCKETS=true
 DAPYTHONVERSION=3
 {% endhighlight %}
 
@@ -1573,14 +1579,22 @@ paths, but `/da/` will be reserved for the exclusive use of
 **docassemble**.  The beginning slash and the trailing slash are both
 necessary.
 
+Setting `DAEXPOSEWEBSOCKETS` to `true` means that the websockets
+server running inside the container will expose port 5000 to the
+external IP address rather than port 5000 of 127.0.0.1, so that the
+web server on the host can act as a proxy server for it.
+
 Now, let's download, install, and run **docassemble**.
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 8080:80 jhpyle/docassemble
+docker run --env-file=env.list -d -p 8000:80 -p 5000:5000 jhpyle/docassemble
 {% endhighlight %}
 
-The option `-p 8080:80` means that port 8080 on the Ubuntu
-machine will be mapped to port 80 within the [Docker] container.
+The option `-p 8000:80` means that port 8000 on the Ubuntu machine
+will be mapped to port 80 within the [Docker] container.  The option
+`-p 5000:5000` means that the web sockets port of the container should
+be accessible from the host, so that the web server on the host can
+tunnel traffic to it directly.
 
 Now that **docassemble** is running, let's configure [Apache] on the
 Ubuntu machine to forward requests to **docassemble**.  Edit the HTTPS
@@ -1593,8 +1607,14 @@ sudo vi /etc/apache2/sites-available/default-ssl.conf
 Add the following lines within the `<VirtualHost>` area:
 
 {% highlight text %}
-ProxyPass "/da"  "http://localhost:8080/da"
-ProxyPassReverse "/da"  "http://localhost:8080/da"
+RewriteEngine On
+RewriteCond %{REQUEST_URI}     ^/da/ws/socket.io      [NC]
+RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
+RewriteRule /da/ws/(.*)        ws://localhost:5000/$1 [P,L]
+ProxyPass /da/ws/ http://localhost:5000/
+ProxyPassReverse /da/ws/ http://localhost:5000/
+ProxyPass "/da"  "http://localhost:8000/da"
+ProxyPassReverse "/da"  "http://localhost:8000/da"
 RequestHeader set X-Forwarded-Proto "https"
 {% endhighlight %}
 

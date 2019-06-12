@@ -994,8 +994,10 @@ Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
- - [400] "Unable to obtain interview dictionary" if there was a problem
-   locating the interview dictionary.
+ - [400] "Unable to obtain interview dictionary" if there was a
+   problem locating the interview dictionary.  The `i` and/or
+   `session` might be incorrect, or the interview session for the
+   given `i` and `session` might have been deleted.
  - [400] "Unable to decrypt interview dictionary" if there was a problem
    obtaining and decrypting the interview dictionary.
 
@@ -1031,6 +1033,9 @@ Form data:
    names and the values are the values those variables should have.
    (If your request has the `application/json` content type, you do
    not need to convert the object to [JSON].)
+ - `raw` (optional): if set to `0`, then no attempt will be made to
+   identify and convert dates that appear in the `variables` (see note
+   below).
  - `question_name` (optional): if set to the name of a question (which
    you can obtain from the `questionName` attribute of a question), it
    will mark the question as having been answered.  This is necessary
@@ -1118,18 +1123,18 @@ For example, if `variables` is this [JSON] string:
 {"defense['latches']": false, "client.phone_number": "202-555-3434"}
 {% endhighlight %}
 
-Then in [Python] the data structure becomes this:
-
-{% highlight python %}
-{u"defense['latches']": False, u'client.phone_number': u'202-555-3434'}
-{% endhighlight %}
-
-And the following statements will be executed in the interview dictionary:
+Then the following statements will be executed in the interview
+dictionary:
 
 {% highlight python %}
 defense['latches'] = False
-client.phone_number = u'202-555-3434'
+client.phone_number = '202-555-3434'
 {% endhighlight %}
+
+If a variable value in the [JSON] is in [ISO 8601] format (e.g.,
+`2019-06-13T21:40:32.000Z`), then the variable will be converted from
+text into a [`DADateTime`] object.  If you do not want dates to be
+converted, set the `raw` parameter to `1`.
 
 You can also upload files along with a [POST] request to this API.  In
 HTTP, a [POST] request can contain one or more file uploads.  Each
@@ -1614,3 +1619,5 @@ function.
 [Redis]: http://redis.io/
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
+[ISO 8601]: https://en.wikipedia.org/wiki/ISO_8601
