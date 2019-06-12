@@ -7325,10 +7325,10 @@ def index(action_argument=None):
             return;
         }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect("http://" + document.domain + """ + '"' + ROOT + 'wsinterview' + '"' + """, {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('http://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect("https://" + document.domain + """ + '"' + ROOT + 'wsinterview' + '"' + """ + location.port, {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('https://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io'});
         }
         //console.log("daInitializeSocket: socket is " + daSocket);
         if (daSocket != null){
@@ -10838,10 +10838,10 @@ def observer():
           }
         });
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect("http://" + document.domain + '""" + ROOT + """observer' + location.port, {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('http://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect("https://" + document.domain + '""" + ROOT + """observer' + location.port, {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('https://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io'});
         }
         if (typeof daSocket !== 'undefined') {
             daSocket.on('connect', function() {
@@ -11842,10 +11842,10 @@ def monitor():
           daLoadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg', v=da_version) + """');
           daLoadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-snap.ogg', v=da_version) + """');
           if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-              daSocket = io.connect("http://" + document.domain + '""" + ROOT + """monitor' + location.port, {path: '""" + ROOT + """ws/socket.io'});
+              daSocket = io.connect('http://' + document.domain + '/monitor', {path: '""" + ROOT + """ws/socket.io'});
           }
           if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-              daSocket = io.connect("https://" + document.domain + '""" + ROOT + """monitor' + location.port, {path: '""" + ROOT + """ws/socket.io'});
+              daSocket = io.connect('https://' + document.domain + '/monitor', {path: '""" + ROOT + """ws/socket.io'});
           }
           //console.log("socket is " + daSocket)
           if (typeof daSocket !== 'undefined') {

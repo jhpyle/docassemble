@@ -4,10 +4,13 @@ import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 import docassemble.base.functions
-
+sys.stderr.write("1\n")
 import eventlet
+sys.stderr.write("2\n")
 eventlet.sleep()
+sys.stderr.write("3\n")
 eventlet.monkey_patch()
+sys.stderr.write("4\n")
 
 from flask_socketio import join_room, disconnect
 from docassemble.webapp.app_socket import app, db, socketio
@@ -1023,6 +1026,7 @@ def terminate_observer_connection():
     #disconnect()
 
 if __name__ == '__main__':
+    sys.stderr.write("5\n")
     if daconfig.get('expose websockets', False):
         try:
             import netifaces as ni
@@ -1033,4 +1037,5 @@ if __name__ == '__main__':
             sys.stderr.write("Could not find the external IP address\n")
             socketio.run(app)
     else:
+        sys.stderr.write("6\n")
         socketio.run(app)
