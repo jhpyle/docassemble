@@ -33,18 +33,18 @@ def url_if_exists(file_reference, **kwargs):
                 if re.search(r'^data/sources/', parts[1]):
                     section = 'playgroundsources'
                     filename = re.sub(r'^data/sources/', '', parts[1])
-                else:
-                    section = 'playgroundstatic'
-                    filename = re.sub(r'^data/static/', '', parts[1])
-                filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
-                key = str(section) + '/' + str(user_id) + '/' + filename
-                cloud_key = cloud.get_key(key)
-                if cloud_key.does_exist:
-                    if not kwargs.get('inline', False):
-                        return cloud_key.generate_url(3600, display_filename=filename)
-                    else:
-                        return cloud_key.generate_url(3600)
-                return None
+                    filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+                    key = str(section) + '/' + str(user_id) + '/' + filename
+                    cloud_key = cloud.get_key(key)
+                    if cloud_key.does_exist:
+                        if not kwargs.get('inline', False):
+                            return cloud_key.generate_url(3600, display_filename=filename)
+                        else:
+                            return cloud_key.generate_url(3600)
+                    return None
+                section = 'playgroundstatic'
+                filename = re.sub(r'^data/static/', '', parts[1])
+                return docassemble.base.config.daconfig.get('root', '/') + 'packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1])
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None
@@ -148,6 +148,11 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 the_package = question.from_source.package
             if the_package is None:
                 the_package = docassemble.base.functions.get_current_package()
+            if folder is None:
+                m = re.search(r'^data/(templates|sources|static)/(.*)', file_reference)
+                if m:
+                    folder = m.group(1)
+                    file_reference = m.group(2)
             if folder is not None and not re.search(r'/', file_reference):
                 file_reference = 'data/' + str(folder) + '/' + file_reference
             if the_package is not None:
@@ -156,6 +161,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
             else:
                 #logmessage("package was null")
                 file_reference = 'docassemble.base:' + file_reference
+            if the_package is not None:
+                result['package'] = the_package
+        elif len(parts) == 2:
+            result['package'] = parts[0]
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])
@@ -179,15 +188,23 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 return dict()
         #logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']) and not has_info:
-            add_info_about_file(result['fullpath'], result)
+            add_info_about_file(result['fullpath'], result['path'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
 
-def add_info_about_file(filename, result):
+def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
         try:
             reader = PyPDF2.PdfFileReader(open(filename, 'rb'))
+            result['encrypted'] = reader.isEncrypted
+            result['pages'] = reader.getNumPages()
+        except:
+            result['pages'] = 1
+    elif os.path.isfile(basename + '.pdf'):
+        try:
+            reader = PyPDF2.PdfFileReader(open(basename + '.pdf', 'rb'))
+            result['encrypted'] = reader.isEncrypted
             result['pages'] = reader.getNumPages()
         except:
             result['pages'] = 1
@@ -240,7 +257,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
         return result
     final_filename = result['path'] + '.' + result['extension']
     if os.path.isfile(final_filename):
-        add_info_about_file(final_filename, result)
+        add_info_about_file(final_filename, result['path'], result)
     # else:
     #     logmessage("Filename " + final_filename + "did not exist.")
     return(result)

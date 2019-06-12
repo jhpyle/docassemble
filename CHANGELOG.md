@@ -1,5 +1,310 @@
 # Change Log
 
+## [0.4.50] - 2019-06-12
+### Added
+- The `update on start` Configuration directive.
+- The `expose websockets`, `websockets ip`, and `websockets port`
+  Configuration directives.
+### Changed
+- The `include_docx_template()` function now includes images, shapes,
+  styles, footnotes, etc. from the sub-document.
+- Problem with websockets on servers with a `root` other than `/`.
+- The `/api/session` POST API endpoint will now convert dates to
+  `DADateTime` objects, unless the `raw` parameter is `1`.
+### Fixed
+- Triple spacing in RTF documents.
+- Flask route ambiguity with `/api/user/new`.
+
+## [0.4.49] - 2019-06-08
+### Changed
+- Revised the CSS classes for error messages.
+### Fixed
+- Word add-in did not work for servers with a `root` other than `/`.
+
+## [0.4.48] - 2019-06-06
+### Added
+- The `.is_encrypted()` method of `DAFile` and other file objects.
+### Fixed
+- Dependency problems when `docassemble.base` was used without
+  `docassemble.webapp`.
+- Errors in the `DAFileCollection` version of `num_pages()` and
+  `size_in_bytes()`.
+- JavaScript used `.includes()` and `.startsWith()` methods, which are
+  not universally supported.
+
+## [0.4.47] - 2019-05-31
+### Added
+- Option for `'link'` style buttons with `action_button_html()`.
+### Fixed
+- Some types of `fields` gave errors with `list collect`.
+- Error re `UserModel`.
+
+## [0.4.46] - 2019-05-30
+### Fixed
+- Recursion error with `capitalize()` function.
+- A CSS class was called `vspace` instead of `davspace`.
+- Multiple choice options not included in translation spreadsheets.
+
+## [0.4.45] - 2019-05-27
+### Added
+- The `DAOAuth` class.
+### Changed
+- Made modifications to facilitate embedding interviews in a `<div>`
+  in another site.
+- CSS and JavaScript files are now bundled.
+### Fixed
+- Errors from OneDrive integration.
+- Error reading fields from PDF.
+- Inserting certain types of images into RTF files resulted in a fatal
+  error rather than a non-fatal error.
+
+## [0.4.44] - 2019-05-21
+### Added
+- Version-specific caching of CSS and JavaScript files.
+- The `sort()` and `sort_elements()` methods for `DAList`.
+### Changed
+- `terms` and `auto terms` are now compatible with the `translations`
+  block.
+- Files in the Playground will be served from server rather than block
+  storage.
+### Fixed
+- `static_image()` did not work with unqualified file names.
+- Some initial blocks were not included in side-by-side translation
+  files.
+- Orphaned translations did not receive syntax highlighting in
+  translation files.
+- Indented Mako was not receiving syntax highlighting in translation
+  files.
+- Translations containing emojis were being truncated in translation
+  files.
+
+## [0.4.43] - 2019-05-16
+### Added
+- The `tag` parameter for `/list`, `/api/list`, and
+  `interview_menu()`.
+- The `DAContext` object and the `use objects` option for the `data`
+  and `data from code` blocks.
+### Fixed
+- HTML error when `hide standard menu` is in use.
+
+## [0.4.42] - 2019-05-11
+### Changed
+- Many CSS classes and IDs renamed and given the `da` prefix.
+### Fixed
+- Errors with SMS interface.
+- Subclasses of `DAList` were not allowed in `list collect`.
+- Inefficiency with `last_access_time()`.
+
+## [0.4.41] - 2019-05-02
+### Added
+- The `get_docx_variables()` method of `DAFile` and other file
+  objects.
+### Fixed
+- ProxyFix settings for Docker containers behind reverse proxies.
+
+## [0.4.40] - 2019-04-29
+### Fixed
+- Python 2.7 error.
+
+## [0.4.39] - 2019-04-29
+### Fixed
+- Variables could not be converted to JSON where `None` used as
+  dictionary key.
+- Compile errors due to unused non-Python-3-compliant code in copy of
+  rtfng.
+- Playground package description formatted as text area, which
+  resulted in newlines that caused problems when uploading to GitHub.
+
+## [0.4.38] - 2019-04-25
+### Added
+- The `single_to_double_newlines()` function.
+- The `get_pdf_fields()` method of `DAFile` and other file objects.
+- The `playground examples` directive in the Configuration.
+- The `new markdown to docx` directive in the Configuration.
+### Changed
+- Style of chat messages updated; content of message from the monitor
+  is now contained in the notification received by the end user while
+  looking at a question.
+### Fixed
+- Python 3.5 error in utility function for Azure Blob Storage.
+
+## [0.4.37] - 2019-04-23
+### Fixed
+- Error affecting Python 2.7.
+
+## [0.4.36] - 2019-04-23
+### Changed
+- Syntax highlighting and word wrap for interview phrase translation files.
+- New style for chat messages.
+### Fixed
+- PAM failure in cron on Amazon Linux.
+- Link to show help tab called wrong JavaScript function.
+
+## [0.4.35] - 2019-04-20
+### Added
+- The `translations` block and the interview phrase translation file
+  download utility.
+
+## [0.4.34] - 2019-04-16
+### Changed
+- Downgraded s3cmd.
+
+## [0.4.33] - 2019-04-16
+### Added
+- `XSENDFILE` Docker environment variable.
+### Changed
+- API will now process JSON as well as form-data.
+- By default, `xsendfile` will be set to `False` in the initial
+  Configuration if `BEHINDHTTPSLOADBALANCER` is true.
+### Fixed
+- New version of ProxyFix not called with arguments for processing
+  HTTP scheme.
+
+## [0.4.32] - 2019-04-15
+### Added
+- The `as_df()` method of a table.
+- The `segment`, `segment id`, and `ga id` specifiers.
+- The `log format` Configuration directive.
+- German translations.
+### Changed
+- Upgraded s3cmd.
+### Fixed
+- Error when reading log files in multiple server configuration in
+  Python 3.
+
+## [0.4.31] - 2019-04-07
+### Fixed
+- Errors with `read_qr()`.
+
+## [0.4.30] - 2019-04-07
+### Added
+- The `editable mimetypes` and `editable extensions` configuration
+  directives.
+### Changed
+- The `worker.log` no longer exempt from backup.
+- The Redis database now backed up to rolling backup.
+- Relaxed some restrictions on multiple developers working on same
+  package in their Playgrounds.
+### Fixed
+- Problem with `write()` method of `DAFile`.
+- Problem with creating packages when author not defined.
+- Problem with `source_code` when `debug` mode not in effect.
+
+## [0.4.29] - 2019-03-28
+### Added
+- The `.size_in_bytes()` method for `DAFile`.
+### Fixed
+- Python3 could not write to S3.
+
+## [0.4.28] - 2019-03-28
+### Added
+- Portuguese translations.
+### Fixed
+- Swagger-generated setup.py files in ZIP files could not be parsed.
+- Error with gender set to "other"
+
+## [0.4.27] - 2019-03-27
+### Added
+- The `list collect` feature for allowing users to add multiple items
+  of `DAList` on one screen.
+### Fixed
+- GitHub error with packages that have dependency packages with null
+  attributes.
+
+## [0.4.26] - 2019-03-25
+### Fixed
+- Enter key caused browsers to press the `question back button`.
+- Newest version of `textstat` not compatible with Python 2.7.
+
+## [0.4.25] - 2019-03-22
+### Changed
+- When using Google Drive Sync, deleting file from Playground now
+  permanently deletes file from Google Drive, rather than send it to
+  the Trash.
+### Fixed
+- KeyError during initial GitHub repository creation.
+- Exception could be raised if docstring in a dependency module was
+  bytes.
+- Methods not appearing in Playground sidebar in Python 3.
+- File uploads failing in Internet Explorer.
+
+## [0.4.24] - 2019-03-21
+### Added
+- The `maximum content length` configuration directive.
+- The `image upload type` configuration directive, feature, and field
+  specifier.
+### Fixed
+- Error in `log` service.
+- A long interview title could cause wrapping in the navigation bar on
+  mobile.
+
+## [0.4.23] - 2019-03-19
+### Added
+- The `progress bar multiplier` and `progress bar method` features.
+### Changed
+- Embedded blocks can use generic objects and iterators.
+- Help buttons are now "info" color instead of "secondary" color.
+### Fixed
+- Error when uploading files through the API.
+- Error resulting from `add_action()` under some circumstances.
+
+## [0.4.22] - 2019-03-17
+### Fixed
+- Section setting error.
+
+## [0.4.21] - 2019-03-16
+### Added
+- The `nav.hide()`, `nav.unhide()`, and `nav.visible()` methods.
+### Fixed
+- Excessive memory usage while looking for cron tasks.
+- Could not upload more than one module file to Playground at the same time.
+- Playground Wizard errors.
+
+## [0.4.20] - 2019-03-13
+### Added
+- The `set_save_status()` function.
+- The `id_tag` option to `action_button_html()`.
+- Field number in error messages.
+### Changed
+- Removed redirects after non-standard URL parameters.
+- The `add_action()` button behaves more consistently with `.gather()`.
+- The `new_window` option to `action_button_html()` can be used to set
+  the `target` of the hyperlink.
+### Fixed
+- Field trim JavaScript was affecting file variables and triggering an
+  error.
+
+## [0.4.19] - 2019-03-10
+### Added
+- The `only sets` modifier.
+### Changed
+- The `allow non-idempotent questions` specifier in `metadata` was
+  removed and replaced with a Configuration directive.
+- The `allow non-idempotent questions` Configuration directive is set
+  to `False` by default in the default Configuration.  This will
+  affect new servers but not existing servers.
+- The API validation `Referer` constraint checks against the `Origin` if
+  there is no `Referer`.
+
+## [0.4.18] - 2019-03-09
+### Added
+- Fullscreen option for code editing.
+### Fixed
+- Python 3 errors during GitHub integration process.
+
+## [0.4.17] - 2019-03-08
+### Added
+- The `python packages` Configuration directive and the
+  `PYTHONPACKAGES` Docker environment variable.
+### Fixed
+- Error when updating references in .docx file.
+- `object_type_repr` error raised from Jinja2.
+- `filter()` returning zero elements from non-empty list caused
+  re-gathering.
+- Dueling `uncheck others` fields had wrong CSS after unchecking.
+- Thumbnails for .docx files.
+- Blanking of dates in Firefox on blur.
+
 ## [0.4.16] - 2019-03-04
 ### Fixed
 - Playground packages copied to wrong location on Python 3.

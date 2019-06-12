@@ -102,9 +102,9 @@ comment: |
 ---
 auto terms:
   rhododendron: |
-     A genus of shrubs or small trees, often having handsome
-     evergreen leaves, and remarkable for the beauty of their
-     flowers.
+    A genus of shrubs or small trees, often having handsome
+    evergreen leaves, and remarkable for the beauty of their
+    flowers.
   custody order: |
     An order signed by a family court judge that says who gets to have
     what kind of custody over a child.
@@ -257,7 +257,7 @@ subquestion: |
   relationship.
 
   % if user_understands_no_attorney_client_relationship == 'unsure':
-  We suggest that you call us at 215-981-3800 to talk to us about the
+  We suggest that you call us at 202-555-4344 to talk to us about the
   kinds of services we provide.
   % endif
 decoration: exit
@@ -667,9 +667,9 @@ event: client_done
 progress: 100
 question: |
   % if client_has_standing:
-    Congratulations!  You have a valid claim.
+  Congratulations!  You have a valid claim.
   % else:
-    Sorry, you do not have a valid claim.
+  Sorry, you do not have a valid claim.
   % endif
 decoration: finishline
 subquestion: |
@@ -782,7 +782,7 @@ attachments:
       aesthetic taxidermy Carles irony fixie. Hella organic swag pork
       belly Bushwick.
 
-      If you have any questions, you can call us at 215-391-9686.
+      If you have any questions, you can call us at 202-555-4344.
 
       Sincerely,
 

@@ -16,7 +16,7 @@ items:
       module: docassemble.base.util
       item:
         first: Larry
-        last: Jones
+        last: Jönes
     email: larry@example.com
     skills:
       - stapling

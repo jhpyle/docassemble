@@ -1,0 +1,49 @@
+metadata:
+  title: Google Sheets mail merge
+  short title: Mail merge
+  documentation: "https://docassemble.org/docs/recipes.html#mail merge"
+  example start: 1
+  example end: 5
+---
+modules:
+  - docassemble.demo.google_sheets
+---
+objects:
+  - court: DAList.using(object_type=Person, auto_gather=False)
+---
+code: |
+  court.clear()
+  for row in read_sheet('court_list'):
+    item = court.appendObject()
+    item.name.text = row['Name']
+    item.address.address = row['Address']
+    item.address.city = row['City']
+    item.address.state = row['State']
+    item.address.zip = row['Zip']
+    item.address.county = row['County']
+    del item
+  court.gathered = True
+---
+attachment:
+  name: |
+    ${ court[i].address.county } court
+  filename: |
+    ${ space_to_underscore(court[i].address.county) }_court_info
+  variable name: court[i].info_sheet
+  content: |
+    [BOLDCENTER] ${ court[i] }
+    
+    [NOINDENT] Your friendly court for
+    ${ court[i].address.county }
+    is located at:
+
+    ${ court[i].address_block() }
+---
+mandatory: True
+question: |
+  Court information
+subquestion: |
+  Here are information sheets
+  for each court in your state.
+attachment code: |
+  [item.info_sheet for item in court]

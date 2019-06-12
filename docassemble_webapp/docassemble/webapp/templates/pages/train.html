@@ -10,7 +10,7 @@
   <a href="{{ url_for('train', show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Packages') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3>{{ word('Packages') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <div class="list-group">
   {%- for package, count in package_list %}
   {%- if package == '_global' %}
@@ -31,7 +31,7 @@
   <a href="{{ url_for('train', package=the_package, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Interviews') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3>{{ word('Interviews') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -56,7 +56,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Models') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3>{{ word('Models') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -78,7 +78,7 @@
     </li>
   </ol>
 </nav>
-<a class="btn btn-secondary mldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
+<a class="btn btn-secondary damldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
 
 <p>
   <a class="btn btn-success" href="#" id="showimport">Show import controls</a>
@@ -149,7 +149,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Items') }}<a class="onright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3>{{ word('Items') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 {%- if the_package == '_global' %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -231,14 +231,14 @@
   <div class="card mb-2">
     <div class="card-body">
       <div class="form-group">
-        <div class="checkbox delete-observation">
+        <div class="checkbox dadelete-observation">
           <label>
             <input type="checkbox" name="delete{{ entry.id }}" data-id-number="{{ entry.id }}"> {{ word("Delete") }}
           </label>
         </div>
         <label>{{ word("Input") }}</label>
         {%- if entry.type == 'text' %}
-        <blockquote class="blockquote limheight">{{ entry.independent }}</blockquote>
+        <blockquote class="blockquote dalimheight">{{ entry.independent }}</blockquote>
         {%- else %}
         {{ entry.independent_display|safe }}
         {%- endif %}
@@ -249,7 +249,7 @@
         <label>{{ word("Files") }}</label>
         {%- endif %}
         {%- for linked_file in entry.image_files %}
-        <div class="imagepreview"><a target="_blank" href="{{ linked_file['doc_url'] }}"><img src="{{ linked_file['image_url'] }}"></a></div>
+        <div class="daimagepreview"><a target="_blank" href="{{ linked_file['doc_url'] }}"><img src="{{ linked_file['image_url'] }}"></a></div>
         {%- endfor %}
         {%- endif %}
         {%- if entry.predictions %}

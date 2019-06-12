@@ -1,6 +1,8 @@
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
+da_version = '0.4.49'
+app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
 app.config['SHOW_PROFILE'] = True if daconfig.get('show profile link', True) else False
@@ -71,9 +73,9 @@ app.config['FAVICON_THEME_COLOR'] = daconfig.get('favicon theme color', '#83b3dd
 
 if not daconfig.get('allow registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = daconfig.get('maximum content length', 16 * 1024 * 1024)
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
-#if daconfig.get('behind https load balancer', False) or daconfig.get('use https', False):
+#if daconfig.get('behind https load balancer', False):
 #    app.config['PREFERRED_URL_SCHEME'] = 'https'
 #app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 connect_string = docassemble.webapp.database.connection_string()

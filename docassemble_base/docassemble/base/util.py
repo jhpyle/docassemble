@@ -26,8 +26,8 @@ import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title
-from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines
+from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
@@ -50,10 +50,11 @@ import shutil
 import subprocess
 from io import open
 from bs4 import BeautifulSoup
+import types
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth']
 
 #knn_machine_learner = DummyObject
 
@@ -183,16 +184,6 @@ def run_python_module(module, arguments=None):
         return_code = err.returncode
     return output, return_code
 
-# def default_user_id_function():
-#     return dict()
-
-# user_id_dict = default_user_id_function
-
-# def set_user_id_function(func):
-#     global user_id_dict
-#     user_id_dict = func
-#     return
-
 def today(timezone=None, format=None):
     """Returns today's date at midnight as a DADateTime object."""
     ensure_definition(timezone, format)
@@ -203,18 +194,6 @@ def today(timezone=None, format=None):
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
     else:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
-
-# def today_default(format='long', timezone=None):
-#     if timezone is None:
-#         timezone = get_default_timezone()
-#     return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
-
-# language_functions['today'] = {'*': today_default}
-
-# today = language_function_constructor('today')
-
-# if today.__doc__ is None:
-#     today.__doc__ = """Returns today's date in long form according to the current locale."""    
 
 def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.  
@@ -407,7 +386,7 @@ def current_datetime(timezone=None):
     return dd(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)))
 
 def as_datetime(the_date, timezone=None):
-    """Converts the_date to a datetime.datetime object with a timezone.  Uses the
+    """Converts the_date to a DADateTime object with a timezone.  Uses the
     default timezone unless another timezone is explicitly provided."""
     ensure_definition(the_date, timezone)
     if timezone is None:
@@ -578,7 +557,7 @@ def last_access_hours(*pargs, **kwargs):
 def last_access_minutes(*pargs, **kwargs):
     """Returns the number of minutes since the last time the interview 
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
 def last_access_time(include_privileges=None, exclude_privileges=None, include_cron=False, timezone=None):
@@ -600,16 +579,32 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
                 exclude_privileges = [exclude_privileges]
     else:
         exclude_privileges = list()
-    lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].items():
-        if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
-            for role in lookup_dict[user_id].roles:
-                if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
-                    continue
-                if include_privileges is None or role.name in include_privileges:
-                    if max_time is None or max_time < access_time:
-                        max_time = access_time
-                        break
+        if user_id == -1:
+            if 'anonymous' in exclude_privileges:
+                continue
+            if include_privileges is None or 'anonymous' in include_privileges:
+                if max_time is None or max_time < access_time:
+                    max_time = access_time
+                    break
+        else:
+            user_object = server.get_user_object(user_id)
+            if user_object is not None and hasattr(user_object, 'roles'):
+                if len(user_object.roles) == 0:
+                    if 'user' in exclude_privileges:
+                        continue
+                    if include_privileges is None or 'user' in include_privileges:
+                        if max_time is None or max_time < access_time:
+                            max_time = access_time
+                            break
+                else:
+                    for role in user_object.roles:
+                        if (include_cron is False and role.name == 'cron') or role.name in exclude_privileges:
+                            continue
+                        if include_privileges is None or role.name in include_privileges:
+                            if max_time is None or max_time < access_time:
+                                max_time = access_time
+                                break
     if max_time is None:
         return None
     if timezone is not None:
@@ -818,7 +813,8 @@ class Address(DAObject):
         #if hasattr(self, 'sublocality') and self.sublocality:
         #    output += text_type(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += text_type(self.sublocality_level_1) + ", "
+            if not (hasattr(self, 'street_number') and self.street_number == self.sublocality_level_1):
+                output += text_type(self.sublocality_level_1) + ", "
         output += text_type(self.city)
         if hasattr(self, 'state') and self.state:
             output += ", " + text_type(self.state)
@@ -1358,6 +1354,16 @@ class Individual(Person):
             self.name.uses_parts = False
             self.name.text = kwargs['name']
         return super(Individual, self).init(*pargs, **kwargs)
+    def get_parents(self, tree, create=False):
+        return self.get_relation('child', tree, create=create)
+    def get_spouse(self, tree, create=False):
+        return self.get_peer_relation('spouse', tree, create=create)
+    def set_spouse(self, target, tree):
+        return self.set_peer_relationship(self, target, "spouse", tree, replace=True)
+    def is_spouse_of(self, target, tree):
+        return self.is_peer_relation(target, 'spouse', tree)
+    def gather_family(self, tree, up=1, down=1):
+        pass
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
         if hasattr(self.name, 'first'):
@@ -1403,6 +1409,8 @@ class Individual(Person):
             output = your(target, **kwargs)
         elif self.gender == 'female':
             output = her(target, **kwargs)
+        elif self.gender == 'other':
+            output = their(target, **kwargs)
         else:
             output = his(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1415,6 +1423,8 @@ class Individual(Person):
             output = word('you', **kwargs)
         if self.gender == 'female':
             output = word('her', **kwargs)
+        elif self.gender == 'other':
+            output = word('them', **kwargs)
         else:
             output = word('him', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1430,6 +1440,8 @@ class Individual(Person):
             output = word('you', **kwargs)
         elif self.gender == 'female':
             output = word('she', **kwargs)
+        elif self.gender == 'other':
+            output = word('they', **kwargs)
         else:
             output = word('he', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2057,12 +2069,18 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
 
 def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     """Reads QR codes from a file or files and returns a list of codes found."""
-    import qrtools
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     if isinstance(image_file, DAFile):
         image_file = [image_file]
+    pdf_to_ppm = get_config("pdftoppm")
+    if pdf_to_ppm is None:
+        pdf_to_ppm = 'pdftoppm'
+    ocr_resolution = get_config("ocr dpi")
+    if ocr_resolution is None:
+        ocr_resolution = '300'
     file_list = list()
+    temp_directory_list = list()
     for doc in image_file:
         if hasattr(doc, 'extension'):
             if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
@@ -2094,9 +2112,12 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
             file_list.append(path)
     codes = list()
     for page in file_list:
-        qr = qrtools.QR()
-        qr.decode(page)
-        codes.append(qr.data)
+        if PY2:
+            raise Exception("QR reading is not supported in the Python 2.7 version of docassemble.")
+        else:
+            from pyzbar.pyzbar import decode
+            for result in decode(Image.open(page)):
+                codes.append(result.data.decode())
     return codes
 
 def path_and_mimetype(file_ref):
@@ -2351,11 +2372,11 @@ def url_ask(data):
             raise DAError("url_ask cannot be used with a generic object or a variable iterator")
     return url_action('_da_force_ask', variables=variables)
 
-def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True):
+def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True, id_tag=None):
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, string_types):
         label = 'Edit'
-    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
         color = 'dark'
     if size not in ('sm', 'md', 'lg'):
         size = 'sm'
@@ -2378,11 +2399,17 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         icon = '<i class="' + icon + '"></i> '
     else:
         icon = ''
-    if new_window:
+    if new_window is True:
         target = ''
-    else:
+    elif new_window is False:
         target = 'target="_self" '
-    return '<a ' + target + 'href="' + url + '" class="btn' + size + block + ' btn-' + color + ' btn-revisit' + classname + '">' + icon + word(label) + '</a> '
+    else:
+        target = 'target="' + text_type(new_window) + '" '
+    if id_tag is None:
+        id_tag = ''
+    else:
+        id_tag = ' id=' + json.dumps(id_tag)
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
@@ -2409,3 +2436,5 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     outfile.commit()
     outfile.retrieve()
     return outfile
+
+from docassemble.base.oauth import DAOAuth

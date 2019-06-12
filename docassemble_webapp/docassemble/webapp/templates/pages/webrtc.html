@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Twilio Client Quickstart</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app/webrtc.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app/webrtc.css', v=config['DA_VERSION']) }}">
 </head>
 <body>
   <div id="controls">
@@ -21,6 +21,6 @@
 
   <script type="text/javascript" src="//media.twiliocdn.com/sdk/js/client/v1.2/twilio.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script src="{{ url_for('static', filename='app/webrtc.js') }}"></script>
+  <script src="{{ url_for('static', filename='app/webrtc.js', v=config['DA_VERSION']) }}"></script>
 </body>
 </html>

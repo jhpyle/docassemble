@@ -3,6 +3,7 @@
 console.log("Starting script");
 var pythonVariableChar = /[A-Za-z0-9\_]/g;
 var daServer = null;
+var daFullServer = null;
 var daYAML = null;
 var daVocab = [];
 var daVocabDict = Object();
@@ -19,24 +20,30 @@ function flash(message, priority){
     if (priority == null){
         priority = 'info'
     }
-    if (!$("#flash").length){
-        $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+    if (!$("#daflash").length){
+        $("body").append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"></div>');
     }
     else{
-	$("#flash").empty();
+        $("#daflash").empty();
     }
-    var newMessage = $('<div class="alert alert-' + priority + ' alert-interlocutory">' + message + '</div>');
-    $("#flash").append(newMessage);
+    var newMessage = $('<div class="alert alert-' + priority + ' daalert-interlocutory">' + message + '</div>');
+    $("#daflash").append(newMessage);
     setTimeout(function(){
-	if ($(newMessage).length > 0){
+        if ($(newMessage).length > 0){
             $(newMessage).hide(300, function(){
-		$(this).remove();
+                $(this).remove();
             });
-	}
+        }
     }, 3000);
 }
 
 function fixServer(serverName) {
+    var l = document.createElement("a");
+    l.href = serverName;
+    return l.origin;
+}
+
+function fixFullServer(serverName) {
     return serverName.replace(/\/$/, "");;
 }
 
@@ -163,11 +170,11 @@ function receiveMessage(event) {
             fetchVarsEtc();
         }
     } else if (event.data.action == 'varsetc') {
-	//console.log("Got to varsetc.");
+        //console.log("Got to varsetc.");
         if (event.data.uploaded && daUploadStatus != 'uploading'){
-	    console.log("Got varsetc message with uploaded when not uploading.  Ignoring.");
-	    return;
-	}
+            console.log("Got varsetc message with uploaded when not uploading.  Ignoring.");
+            return;
+        }
         if (daYAML == null) {
             daYAML = '';
             Cookies.set('daYAML', daYAML, { expires: 999999 });
@@ -197,41 +204,41 @@ function receiveMessage(event) {
         });
         $("#uploadbutton").on('click', function(event){
             event.preventDefault();
-	    if (daUploadStatus != 'waiting'){
-		$(this).blur();
-		return false;
-	    }
+            if (daUploadStatus != 'waiting'){
+                $(this).blur();
+                return false;
+            }
             if (fileErrorTimeout != null){
                 clearTimeout(fileErrorTimeout);
             }
             fileErrorTimeout = setTimeout(function () {
                 $("#uploadbutton").show();
-		$("#uploadbutton").blur();
-		$("#uploadspinner").hide();
+                $("#uploadbutton").blur();
+                $("#uploadspinner").hide();
                 flash(fileErrorMessage, 'danger');
             }, 10000);
-	    daUploadStatus = 'retrieving';
+            daUploadStatus = 'retrieving';
             uploadTemplateFile();
             $(this).hide();
-	    $("#uploadspinner").show();
+            $("#uploadspinner").show();
             return false;            
         });
         if (event.data.uploaded){
-	    daUploadStatus = 'waiting';
+            daUploadStatus = 'waiting';
             if (fileErrorTimeout != null){
                 clearTimeout(fileErrorTimeout);
-		fileErrorTimeout = null;
+                fileErrorTimeout = null;
             }
             $("#uploadbutton").show();
             $("#uploadbutton").blur();
-	    $("#uploadspinner").hide();
+            $("#uploadspinner").hide();
             flash(fileSuccessMessage, "success");
         }
     }
 }
 
 function showIframe() {
-    $("#server").attr('src', daServer + "/officeaddin?nm=1");
+    $("#server").attr('src', daFullServer + "/officeaddin?nm=1");
     $("#iframeDiv").show();
 }
 
@@ -272,29 +279,31 @@ Office.initialize = function (reason) {
         }
         window.addEventListener("message", receiveMessage, false);
         $("#serverConnect").on('click', function (event) {
+            daFullServer = fixFullServer($("#daServer").val());
             daServer = fixServer($("#daServer").val());
-            Cookies.set('daServer', daServer, { expires: 999999 });
+            Cookies.set('daServer', daFullServer, { expires: 999999 });
             $("#daServerDiv").hide();
             $("#changeServerDiv").show();
             showIframe();
-	    event.preventDefault();
-	    return false;
+            event.preventDefault();
+            return false;
         });
         $("#serverChange").on('click', function (event) {
             Cookies.remove('daServer');
-	    if (daServer){
-		$("#daServer").val(daServer);
-	    }
+            if (daServer){
+                $("#daServer").val(daFullServer);
+            }
             $("#daServerDiv").show();
-	    $("#iframeDiv").hide();
+            $("#iframeDiv").hide();
             $("#changeServerDiv").hide();
-	    $("#variablesDiv").hide();
-	    event.preventDefault();
-	    return false;
+            $("#variablesDiv").hide();
+            event.preventDefault();
+            return false;
         });
-        daServer = Cookies.get('daServer');
-        if (!daServer) {
+        daFullServer = Cookies.get('daServer');
+        if (!daFullServer) {
             if (defaultServer != null && defaultServer != "") {
+                daFullServer = fixFullServer(defaultServer);
                 daServer = fixServer(defaultServer);
                 $("#changeServerDiv").show();
                 showIframe();
@@ -303,6 +312,7 @@ Office.initialize = function (reason) {
                 $("#changeServerDiv").hide();
             }
         } else {
+            daServer = fixServer(daFullServer);
             $("#changeServerDiv").show();
             showIframe();
         }
@@ -527,7 +537,7 @@ function getSliceAsync(file, nextSlice, sliceCount, gotAllSlices, docdataSlices,
 
 function uploadTemplateFile() {
     return Word.run(function (context) {
-	Office.context.document.getFilePropertiesAsync(function (asyncResult) {
+        Office.context.document.getFilePropertiesAsync(function (asyncResult) {
             var fileName = asyncResult.value.url;
             //console.log("the raw fileName is " + fileName);
             fileName = fileName.replace(/.*[\/\\]/, '');
@@ -548,12 +558,12 @@ function uploadTemplateFile() {
                     fileContent += String.fromCharCode(docdata[j]);
                 }
                 action.content = 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,' + btoa(fileContent);
-		if (daUploadStatus == 'retrieving'){
+                if (daUploadStatus == 'retrieving'){
                     document.getElementById('server').contentWindow.postMessage(action, daServer);
-		    daUploadStatus = 'uploading';
-		}
+                    daUploadStatus = 'uploading';
+                }
             });
-	});
+        });
         return context.sync();
     }).catch(function (error) {
         console.log('Error: ' + JSON.stringify(error));

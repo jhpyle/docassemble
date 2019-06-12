@@ -91,5 +91,5 @@ def setup_browser():
 @after.all
 def tear_down(total):
     time.sleep(2)
-    print "Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed )
+    print("Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed ))
     world.browser.quit()

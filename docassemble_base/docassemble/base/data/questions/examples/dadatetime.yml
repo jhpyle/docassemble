@@ -1,0 +1,23 @@
+metadata:
+  title: DADateTime API
+  short: DADateTime
+  documentation: "https://docassemble.org/docs/api.html#session_post"
+  example start: 2
+  example end: 2
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  Enter a date.
+subquestion: |
+  The session ID of this interview is
+  `${ user_info().session }`.
+fields:
+  - Date: date_variable
+    datatype: date
+---
+mandatory: True
+question: |
+  The date you entered was ${ date_variable }.

@@ -256,4 +256,3 @@ class CommandError(Exception):
         self.url = kwargs.get('url', '');
     def __str__(self):
         return str(self.return_type)
-

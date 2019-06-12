@@ -1,0 +1,58 @@
+metadata:
+  title: Relationships
+---
+objects:
+  - tree: RelationshipTree
+---
+objects:
+  - user: Individual
+  - father: Individual.using(gender='male')
+---
+mandatory: True
+code: |
+  user.set_relationship(father, 'parent', 'child', tree)
+---
+question: |
+  What is the name of your friend?
+fields:
+  - Somebody already mentioned: user.new_peer_relation['friend']
+    datatype: object
+    choices: tree.leaf.complete_elements()
+    disable others: True
+  - First name: user.new_peer_relation['friend'].name.first
+  - Last name: user.new_peer_relation['friend'].name.last
+---
+if: |
+  tree.leaf[i].is_relation(user, 'parent', tree, 'child', filter_by={'gender': 'female'})
+question: |
+  What is the name of your mother?
+fields:
+  - First name: tree.leaf[i].name.first
+  - Last name: tree.leaf[i].name.last
+---
+if: |
+  tree.leaf[i].is_relation(user, 'parent', tree, self_is='child', filter_by={'gender': 'male'})
+question: |
+  What is the name of your father?
+fields:
+  - First name: tree.leaf[i].name.first
+  - Last name: tree.leaf[i].name.last
+---
+if: tree.leaf[i].is_spouse_of(user, tree)
+question: |
+  What is the name of your spouse?
+fields:
+  - First name: tree.leaf[i].name.first
+  - Last name: tree.leaf[i].name.last
+---
+mandatory: True
+question: |
+  Your relationships
+subquestion: |
+  You are married to ${ user.get_spouse(tree, create='independent') }.
+
+  Your friend is ${ user.get_peer_relation('friend', tree, create=True) }.
+
+  Your mother is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'female'}, create='independent', count=2) }.
+
+  Your father is ${ user.get_relation('parent', tree, self_is='child', filter_by={'gender': 'male'}, create='independent', count=2) }.

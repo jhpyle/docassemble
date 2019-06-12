@@ -10,7 +10,7 @@ question: |
 fields:
   - Picture: user_picture
     datatype: file
-    maximum image size: None
+    maximum image size: 100
 ---
 question: |
   You're so small!

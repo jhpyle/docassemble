@@ -11,7 +11,7 @@ def to_text(html_doc):
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
-    [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
+    [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
     previous = text_type()
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):

@@ -30,7 +30,7 @@ def recursive_list(cloud, prefix):
         if key.name != prefix and key.name.endswith('/'):
             recursive_list(cloud, key.name)
         else:
-            print key.name
+            print(key.name)
 
 if __name__ == "__main__":
     main()

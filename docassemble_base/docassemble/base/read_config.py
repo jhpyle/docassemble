@@ -48,6 +48,22 @@ if __name__ == "__main__":
             for package in map(lambda x: x.strip(), separator.split(packages_variable)):
                 print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
                 indexno += 1
+    if 'python packages' in daconfig and type(daconfig['python packages']) is list:
+        print('declare -a PYTHONPACKAGES')
+        print('export PYTHONPACKAGES')
+        indexno = 0
+        for package in daconfig['python packages']:
+            print('PYTHONPACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+            indexno += 1
+    else:
+        packages_variable = os.getenv('PYTHONPACKAGES', None)
+        if packages_variable is not None and packages_variable != 'null':
+            print('declare -a PYTHONPACKAGES')
+            print('export PYTHONPACKAGES')
+            indexno = 0
+            for package in map(lambda x: x.strip(), separator.split(packages_variable)):
+                print('PYTHONPACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+                indexno += 1
     if 'db' in daconfig:
         if 'prefix' in daconfig['db'] and daconfig['db']['prefix'] is not None:
             if daconfig['db']['prefix'].startswith('postgresql'):
@@ -69,6 +85,18 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
+    if 'update on start' in daconfig and daconfig['update on start'] is False:
+        print('export DAUPDATEONSTART=false')
+    if 'expose websockets' in daconfig and daconfig['expose websockets']:
+        print('export DAEXPOSEWEBSOCKETS=true')
+    if 'websockets ip' in daconfig and daconfig['websockets ip']:
+        print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
+    else:
+        print('export DAWEBSOCKETSIP="127.0.0.1"')
+    if 'websockets port' in daconfig and daconfig['websockets port']:
+        print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
+    else:
+        print('export DAWEBSOCKETSPORT=5000')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:

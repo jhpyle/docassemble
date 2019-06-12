@@ -74,3 +74,4 @@ external hostname: Null
 root: /
 words:
   - docassemble.base:data/sources/us-words.yml
+allow non-idempotent questions: False

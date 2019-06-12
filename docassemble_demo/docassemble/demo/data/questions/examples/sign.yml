@@ -1,0 +1,128 @@
+metadata:
+  title: Sign
+  documentation: "https://docassemble.org/docs/recipes.html#document signing"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+code: |
+  multi_user = True
+  signature = '(Your signature will go here)'
+---
+mandatory: True
+code: |
+  intro_seen
+  email_address
+  template_file
+  notified_of_url
+  agrees_to_sign
+  signature_reset
+  signature
+  document_emailed
+  final_screen
+---
+code: |
+  notified_of_url = True
+  prevent_going_back()
+  force_ask('screen_with_link')
+---
+question: |
+  What is your e-mail address?
+subquestion: |
+  The signed document will be e-mailed to this address.
+fields:
+  - E-mail: email_address
+---
+event: screen_with_link
+question: |
+  Share this link with the signer.
+subquestion: |
+  Suggested content for e-mailing to the signer:
+    
+  > I need you to sign a document.  You can
+  > sign it using a touchscreen or with a
+  > mouse.  To see the document and start
+  > the signing process, [click here].
+
+  [click here]: ${ interview_url() }
+---
+signature: signature
+question: Sign your name
+---
+question: |
+  Do you agree to sign this document?
+subquestion: |
+  Click the document image below to read the document
+  before signing it.
+  
+  ${ draft_document.pdf }
+field: agrees_to_sign
+continue button label: I agree to sign
+---
+attachment:
+  name: Document
+  filename: signed_document
+  variable name: draft_document
+  docx template file:
+    code: template_file
+---
+question: |
+  Collect an electronic signature
+subquestion: |
+  If you provide your e-mail address and upload a document,
+  you can get a link that you can give to someone, where
+  they can click the link, sign their name, and then the
+  signed document will be e-mailed to you.
+
+  The document you upload needs to be in .docx format.
+
+  In the place where you want the signature to be, you need to
+  include the word "signature" surrounded by double curly brackets.
+  For example:
+
+  > I swear that the above is true and correct.
+  >
+  > {{ signature }}
+  >
+  > Angela Washington
+
+  If you do not include "{{ signature }}" in exactly this way,
+  a signature will not be inserted.
+field: intro_seen
+---
+question: |
+  Please upload the document you want to be signed.
+subquestion: |
+fields:
+  - Document: template_file
+    datatype: file
+    accept: |
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+---
+code: |
+  del signature
+  signature_reset = True
+---
+attachment:
+  name: Document
+  filename: signed_document
+  variable name: signed_document
+  valid formats:
+    - pdf
+  docx template file:
+    code: template_file  
+---
+event: final_screen
+prevent going back: True
+question: |
+  Here is your signed document.
+attachment code: signed_document
+---
+template: email_template
+subject: Signed document
+content: |
+  The attached document has been signed.
+---
+code: |
+  send_email(to=email_address, template=email_template, attachments=signed_document.pdf)
+  document_emailed = True

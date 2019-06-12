@@ -17,6 +17,61 @@ wget \
 unzip \
 git \
 locales \
+apache2 \
+postgresql \
+libapache2-mod-xsendfile \
+libffi-dev \
+libffi6 \
+gcc \
+supervisor \
+s3cmd \
+make \
+perl \
+libinline-perl \
+libparallel-forkmanager-perl \
+autoconf \
+automake \
+libjpeg-dev \
+zlib1g-dev \
+libpq-dev \
+logrotate \
+nodejs \
+cron \
+libxml2 \
+libxslt1.1 \
+libxml2-dev \
+libxslt1-dev \
+libcurl4-openssl-dev \
+libssl-dev \
+redis-server \
+rabbitmq-server \
+libtool \
+libtool-bin \
+syslog-ng \
+rsync \
+curl \
+mktemp \
+dnsutils \
+build-essential \
+libsvm3 \
+libsvm-dev \
+liblinear3 \
+liblinear-dev \
+libzbar-dev \
+libzbar0 \
+libgs-dev \
+default-libmysqlclient-dev \
+libgmp-dev \
+python-passlib \
+libsasl2-dev \
+libldap2-dev \
+python3 \
+exim4-daemon-heavy \
+python3-venv \
+python3-dev \
+imagemagick \
+pdftk \
+pacpl \
 pandoc \
 texlive \
 texlive-luatex \
@@ -31,55 +86,18 @@ texlive-lang-german \
 texlive-lang-european \
 texlive-lang-spanish \
 texlive-extra-utils \
-apache2 \
-postgresql \
-libapache2-mod-xsendfile \
 poppler-utils \
-libffi-dev \
-libffi6 \
-imagemagick \
-gcc \
-supervisor \
 libaudio-flac-header-perl \
 libaudio-musepack-perl \
 libmp3-tag-perl \
 libogg-vorbis-header-pureperl-perl \
-make \
-perl \
 libvorbis-dev \
 libcddb-perl \
-libinline-perl \
 libcddb-get-perl \
 libmp3-tag-perl \
 libaudio-scan-perl \
 libaudio-flac-header-perl \
-libparallel-forkmanager-perl \
 libav-tools \
-autoconf \
-automake \
-libjpeg-dev \
-zlib1g-dev \
-libpq-dev \
-logrotate \
-cron \
-pdftk \
-libxml2 \
-libxslt1.1 \
-libxml2-dev \
-libxslt1-dev \
-libcurl4-openssl-dev \
-libssl-dev \
-redis-server \
-rabbitmq-server \
-libtool \
-libtool-bin \
-pacpl \
-syslog-ng \
-rsync \
-s3cmd \
-curl \
-mktemp \
-dnsutils \
 tesseract-ocr \
 tesseract-ocr-dev \
 tesseract-ocr-afr \
@@ -149,39 +167,18 @@ tesseract-ocr-tha \
 tesseract-ocr-tur \
 tesseract-ocr-ukr \
 tesseract-ocr-vie \
-build-essential \
-nodejs \
-exim4-daemon-heavy \
-libsvm3 \
-libsvm-dev \
-liblinear3 \
-liblinear-dev \
-libzbar-dev \
-libzbar0 \
-cm-super \
-libgs-dev \
-ghostscript \
-default-libmysqlclient-dev \
-libgmp-dev \
-python-passlib \
-libsasl2-dev \
-libldap2-dev \
 ttf-mscorefonts-installer \
 fonts-ebgaramond-extra \
+ghostscript \
 ttf-liberation \
 fonts-liberation \
-qpdf \
-python3 \
-python3-venv \
-python3-dev; \
+cm-super \
+qpdf; \
 do sleep 5; \
 done; \
-apt-get -q -y install -t stretch-backports libreoffice"
+apt-get -q -y install -t stretch-backports libreoffice &> /dev/null"
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 cd /tmp \
-&& wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb \
-&& dpkg -i pandoc-2.5-1-amd64.deb \
-&& rm pandoc-2.5-1-amd64.deb \
 && mkdir -p /etc/ssl/docassemble \
    /usr/share/docassemble/local \
    /usr/share/docassemble/local3.5 \
@@ -287,7 +284,8 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp"
+   /tmp/docassemble/docassemble_webapp \
+&& pip uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
@@ -314,13 +312,15 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp"
+   /tmp/docassemble/docassemble_webapp \
+&& pip3 uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER root
 RUN rm -rf /tmp/docassemble \
 && rm -f /etc/cron.daily/apt-compat \
 && sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf \
 && sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars \
+&& sed -i '/session    required     pam_loginuid.so/c\#session    required   pam_loginuid.so' /etc/pam.d/cron \
 && LANG=en_US.UTF-8 \
 && a2dismod ssl; \
 a2enmod rewrite; \

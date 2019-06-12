@@ -1,0 +1,23 @@
+metadata:
+  title: OAuth with Google
+  short: OAuth
+  documentation: "https://docassemble.org/docs/objects.html#DAOAuth"
+  example start: 1
+  example end: 4
+---
+modules:
+  .oauthsheets
+---
+objects:
+  - google: GoogleAuth.using(url_args=url_args)
+---
+initial: True
+code: |
+  if not user_logged_in():
+    message("Test Google Sheets Integration", "Sorry, you must be logged in to test this interview.")
+---
+mandatory: True
+question: |
+  Here is some data.
+subquestion: |
+  `${ google.test() }`

@@ -7,6 +7,7 @@ question: |
 fields:
   - Value: target_variable
     datatype: currency
+    min: 0
 ---
 question: Result of question
 subquestion: |

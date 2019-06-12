@@ -27,12 +27,11 @@ else:
     import pickle
 import codecs
 from sqlalchemy import or_, and_
-#import docassemble.webapp.worker
 
 set_request_active(False)
 
 def get_cron_user():
-    for user in UserModel.query.all():
+    for user in UserModel.query.options(db.joinedload('roles')).all():
         for role in user.roles:
             if role.name == 'cron':
                 return(user)
@@ -46,8 +45,8 @@ def clear_old_interviews():
     stale = list()
     nowtime = datetime.datetime.utcnow()
     #sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
-    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
-    results = db.session.query(UserDict.key, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).subquery()
+    results = db.session.query(UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
     for record in results:
         delta = nowtime - record.modtime
         #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
@@ -65,16 +64,20 @@ def run_cron(cron_type):
     cron_user = get_cron_user()
     user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     to_do = list()
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
+    results = db.session.query(UserDict.key, UserDict.filename, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
     for record in results:
+        dict_result = db.session.query(UserDict.dictionary).filter(UserDict.indexno == record.indexno).first()
         try:
-            the_dict = unpack_dictionary(record.dictionary)
+            the_dict = unpack_dictionary(dict_result.dictionary)
         except:
             continue
         if 'allow_cron' in the_dict:
             if the_dict['allow_cron']:
-                to_do.append(dict(key=record.key, user_id=record.user_id, filename=record.filename))
+                to_do.append(dict(key=record.key, filename=record.filename))
+        del the_dict
+        del dict_result
+    del results
     with app.app_context():
         with app.test_request_context():
             login_user(cron_user, remember=False)
@@ -95,6 +98,7 @@ def run_cron(cron_type):
                             steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
                             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron'), session=item['key'], secret=None, yaml_filename=item['filename'], url=None, url_root=None, encrypted=is_encrypted, action=cron_type_to_use, interface='cron', arguments=dict()))
                             interview.assemble(user_dict, interview_status)
+                            save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                                 reset_user_dict(item['key'], item['filename'], force=True)
                             if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
@@ -106,12 +110,15 @@ def run_cron(cron_type):
                                     interview.assemble(user_dict, interview_status)
                                 except:
                                     pass
-                                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
+                                save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+                                if save_status != 'ignore':
+                                    save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                 release_lock(item['key'], item['filename'])
                             elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
                                 release_lock(item['key'], item['filename'])
                             else:
-                                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
+                                if save_status != 'ignore':
+                                    save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                 release_lock(item['key'], item['filename'])
                                 if interview_status.question.question_type == "response":
                                     if hasattr(interview_status.question, 'all_variables'):
@@ -124,7 +131,7 @@ def run_cron(cron_type):
                                         if interview_status.questionText != 'Empty Response':
                                             sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                         except Exception as err:
-                            sys.stderr.write(str(err.__class__.__name__) + ": " + str(err) + "\n")
+                            sys.stderr.write("Cron error: " + text_type(item['key']) + " " + text_type(item['filename']) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")
                             release_lock(item['key'], item['filename'])
                             if hasattr(err, 'traceback'):
                                 error_trace = text_type(err.traceback)

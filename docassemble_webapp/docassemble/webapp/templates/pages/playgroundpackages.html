@@ -20,7 +20,7 @@
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
                   <i class="fas fa-briefcase" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
-                <div class="dropdown-menu heightlim">
+                <div class="dropdown-menu daheightlim">
                   {%- if any_files %}
                   {%- for file in editable_files %}
                   {%- if file['name'] == current_file %}

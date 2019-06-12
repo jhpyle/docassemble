@@ -279,7 +279,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        use_external = kwargs.get('_external', False)
+        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
         if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
@@ -363,7 +363,7 @@ class SavedFile(object):
                     self.modtimes[filename] = key.get_epoch_modtime()
         for filename, key in self.keydict.items():
             if filename not in existing_files:
-                #sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 try:
                     key.delete()
                 except:
@@ -532,13 +532,13 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 
 """
     setuppy += u"setup(name='docassemble." + str(pkgname) + "',\n" + """\
-      version=""" + repr(info['version']) + """,
-      description=(""" + repr(info['description']) + """),
+      version=""" + repr(info.get('version', '')) + """,
+      description=(""" + repr(info.get('description', '')) + """),
       long_description=""" + repr(readme) + """,
       long_description_content_type='text/markdown',
-      author=""" + repr(info['author_name']) + """,
-      author_email=""" + repr(info['author_email']) + """,
-      license=""" + repr(info['license']) + """,
+      author=""" + repr(info.get('author_name', '')) + """,
+      author_email=""" + repr(info.get('author_email', '')) + """,
+      license=""" + repr(info.get('license', '')) + """,
       url=""" + repr(info['url'] if info['url'] else 'https://docassemble.org') + """,
       packages=find_packages(),
       namespace_packages=['docassemble'],

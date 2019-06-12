@@ -57,6 +57,8 @@ class LogForm(FlaskForm):
 class Utilities(FlaskForm):
     pdfdocxfile = FileField(word('PDF/DOCX File'))
     scan = SubmitField(word('Scan'))
+    interview = StringField(word('Interview'))
+    interview_submit = SubmitField(word('Download'))
     language = StringField(word('Language'))
     language_submit = SubmitField(word('Translate'))
     officeaddin_version = StringField(word('Version'), default='0.0.0.1')
@@ -91,7 +93,7 @@ class PlaygroundPackagesForm(FlaskForm):
     license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255)])
     author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255)])
     author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255)])
-    description = TextAreaField(word('Description'), validators=[validators.Length(min=0, max=255)], default="A docassemble extension.")
+    description = StringField(word('Description'), validators=[validators.Length(min=0, max=255)], default="A docassemble extension.")
     version = StringField(word('Version'), validators=[validators.Length(min=0, max=255)], default="0.0.1")
     url = StringField(word('URL'), validators=[validators.Length(min=0, max=255)], default="")
     dependencies = SelectMultipleField(word('Dependencies'))

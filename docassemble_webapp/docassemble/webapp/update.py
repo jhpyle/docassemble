@@ -207,7 +207,7 @@ def check_for_updates(doing_startup=False):
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
-            #print "Found a package " + package.name
+            #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:

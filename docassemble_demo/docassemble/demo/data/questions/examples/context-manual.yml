@@ -1,0 +1,41 @@
+metadata:
+  title: DAContext initialization
+  short: DAContext
+  documentation: "https://docassemble.org/docs/objects.html#DAContext"
+  example start: 1
+  example end: 3
+---
+objects:
+  - fruits: DAList.using(auto_gather=False)
+---
+code: |
+  fruits.clear()
+  fruits.appendObject(DAContext, 'Apple', 'red fruit')
+  fruits.appendObject(DAContext, 'Orange', 'fruit that rhymes with nothing')
+  fruits.appendObject(DAContext, question='Peach', document='juicy fruit', docx='peachy peach', pandoc='very juicy fruit')
+  fruits.gathered = True
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    datatype: object
+    choices: fruits
+---
+mandatory: True
+question: |
+  Result
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+attachments:
+  - name: |
+      Pandoc
+    filename: pandoc_fruit
+    content: |
+      Your favorite fruit is
+      ${ favorite_fruit }.
+  - name: |
+      DOCX
+    filename: docx_fruit
+    docx template file: context.docx

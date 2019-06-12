@@ -125,7 +125,7 @@ def get_max_width_points():
 
 rtf_spacing = {'tight': '\\sl0 ', 'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
 
-rtf_after_space = {'tight': 0, 'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0}
+rtf_after_space = {'tight': 0, 'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0, 'triple': 0}
 
 def rtf_prefilter(text, metadata=dict()):
     text = re.sub(r'^# ', '[HEADING1] ', text, flags=re.MULTILINE)
@@ -659,7 +659,7 @@ def map_string(encoded_text, status):
         return ''
     map_number = len(status.maps)
     status.maps.append(codecs.decode(bytearray(encoded_text, 'utf-8'), 'base64').decode())
-    return '<div id="map' + text_type(map_number) + '" class="googleMap"></div>'
+    return '<div id="map' + text_type(map_number) + '" class="dagoogleMap"></div>'
 
 def target_html(match):
     target = match.group(1)
@@ -765,7 +765,10 @@ def image_as_rtf(match, question=None):
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
-        return rtf_image(file_info, width, False)
+        try:
+            return rtf_image(file_info, width, False)
+        except:
+            return '[graphic could not be inserted]'
     elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
         output = ''
         if not width_supplied:
@@ -1155,7 +1158,7 @@ def emoji_html(text, status=None, question=None, images=None):
             the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fas')
         return('<i class="' + the_prefix + ' fa-' + text_type(text) + '"></i>')
     elif icons_setting == 'material icons':
-        return('<i class="material-icons">' + text_type(text) + '</i>')
+        return('<i class="da-material-icons">' + text_type(text) + '</i>')
     return(":" + text_type(text) + ":")
 
 def emoji_insert(text, status=None, images=None):
@@ -1196,21 +1199,43 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         if do_terms:
             if status is not None:
                 if len(question.terms):
+                    lang = docassemble.base.functions.get_language()
                     for term in question.terms:
-                        a = question.terms[term]['re'].sub(r'[[\1]]', a)
+                        if lang in question.terms[term]['re']:
+                            a = question.terms[term]['re'][lang].sub(r'[[\1]]', a)
+                        else:
+                            a = question.terms[term]['re'][question.language].sub(r'[[\1]]', a)
                 if len(question.autoterms):
+                    lang = docassemble.base.functions.get_language()
                     for term in question.autoterms:
-                        a = question.autoterms[term]['re'].sub(r'[[\1]]', a)
-            if question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
-                for term in question.interview.terms[question.language]:
-                    #logmessage("Searching for term " + term + " in " + a + "\n")
-                    a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
-                    #logmessage("string is now " + text_type(a) + "\n")
-            if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
-                for term in question.interview.autoterms[question.language]:
-                    #logmessage("Searching for term " + term + " in " + a + "\n")
-                    a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
-                    #logmessage("string is now " + text_type(a) + "\n")
+                        if lang in question.autoterms[term]['re']:
+                            a = question.autoterms[term]['re'][lang].sub(r'[[\1]]', a)
+                        else:
+                            a = question.autoterms[term]['re'][question.language].sub(r'[[\1]]', a)
+            if len(question.interview.terms):
+                lang = docassemble.base.functions.get_language()
+                if lang in question.interview.terms and len(question.interview.terms[lang]) > 0:
+                    for term in question.interview.terms[lang]:
+                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        a = question.interview.terms[lang][term]['re'].sub(r'[[\1]]', a)
+                        #logmessage("string is now " + text_type(a) + "\n")
+                elif question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
+                    for term in question.interview.terms[question.language]:
+                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        #logmessage("string is now " + text_type(a) + "\n")
+            if len(question.interview.autoterms):
+                lang = docassemble.base.functions.get_language()
+                if lang in question.interview.autoterms and len(question.interview.autoterms[lang]) > 0:
+                    for term in question.interview.autoterms[lang]:
+                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        a = question.interview.autoterms[lang][term]['re'].sub(r'[[\1]]', a)
+                        #logmessage("string is now " + text_type(a) + "\n")
+                elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
+                    for term in question.interview.autoterms[question.language]:
+                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        #logmessage("string is now " + text_type(a) + "\n")
     if status is not None and question.interview.scan_for_emojis:
         a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), a)
     a = html_filter(text_type(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
@@ -1232,14 +1257,19 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub(r'<a href="(.*?)"', lambda x: link_rewriter(x, status), result)
     if do_terms and question is not None and term_start.search(result):
+        lang = docassemble.base.functions.get_language()
         if status is not None:
             if len(question.terms):
                 result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status, question=question)), result)
             if len(question.autoterms):
                 result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status, question=question)), result)
-        if question.language in question.interview.terms and len(question.interview.terms[question.language]):
+        if lang in question.interview.terms and len(question.interview.terms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[lang], status=status, question=question)), result)
+        elif question.language in question.interview.terms and len(question.interview.terms[question.language]):
             result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status, question=question)), result)
-        if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
+        if lang in question.interview.autoterms and len(question.interview.autoterms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[lang], status=status, question=question)), result)
+        elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
             result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
@@ -1273,6 +1303,14 @@ def noquote(string):
     #return json.dumps(string.replace('\n', ' ').rstrip())
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
+def add_terms_mako(termname, terms, status=None, question=None):
+    lower_termname = termname.lower()
+    if lower_termname in terms:
+        return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
+    else:
+        #logmessage(lower_termname + " is not in terms dictionary\n")
+        return '[[' + termname + ']]'
+
 def add_terms(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
@@ -1289,7 +1327,7 @@ def audio_control(files, preload="metadata", title_text=None):
         title_text = ''
     else:
         title_text = " title=" + json.dumps(title_text)
-    output = '<audio' + title_text + ' class="audio-control" controls="controls" preload="' + preload + '">' + "\n"
+    output = '<audio' + title_text + ' class="daaudio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'
@@ -1304,7 +1342,7 @@ def video_control(files):
     for d in files:
         if isinstance(d, (string_types, NoneType)):
             return text_type(d)
-    output = '<video controls="controls">' + "\n"
+    output = '<video class="dawidevideo" controls="controls">' + "\n"
     for d in files:
         if type(d) is list:
             if d[0] is None:
@@ -1465,7 +1503,7 @@ def to_text(html_doc, terms, links, status):
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
-    [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
+    [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
             words = s.attrs['alt']

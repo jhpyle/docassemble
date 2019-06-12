@@ -1,0 +1,39 @@
+metadata:
+  title: Only sets
+  short title: Only sets
+  documentation: "https://docassemble.org/docs/modifiers.html#only sets"
+  example start: 1
+  example end: 5
+---
+question: |
+  What is the best color?
+fields:
+  - Color: best_color
+---
+question: |
+  What is the time of day?
+field: time_of_day
+choices:
+  - Night
+  - Day
+---
+only sets: best_thing
+code: |
+  if time_of_day == 'Night':
+    best_thing = 'astronomy'
+    best_color = 'black'
+  else:
+    best_thing = 'the beach'
+    best_color = 'blue'
+---
+mandatory: True
+field: initial_screen
+question: |
+  According to you, the best color
+  is ${ best_color }.
+---
+mandatory: True
+question: |
+  Since the best thing is
+  ${ best_thing }, the best color is
+  ${ best_color }.

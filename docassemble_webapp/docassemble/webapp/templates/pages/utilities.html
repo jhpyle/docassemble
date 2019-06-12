@@ -2,14 +2,14 @@
 {%- block content %}
 {%- from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
 {%- if fields %}
-<h3 class="page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
+<h3 class="da-page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
 <p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
 <pre>
 {{ fields }}
 </pre>
 {%- endif %}
 {%- if word_box %}
-<h3 class="page-header">{{ word('Draft translation of system phrases') }}</h3>
+<h3 class="da-page-header">{{ word('Draft translation of system phrases') }}</h3>
 <p>{{ word("Here is the start of a YAML file you can import with a 'words' directive in your Configuration.") }} </p>
 <p>{{ word("Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground or the sources folder of a package.") }}</p>
 {% if uses_null %}
@@ -19,7 +19,7 @@
 {{ word_box }}
 </textarea>
 {%- endif %}
-<h3 class="page-header">{{ word('Get list of fields from PDF/DOCX template') }}</h3>
+<h3 class="da-page-header">{{ word('Get list of fields from PDF/DOCX template') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
@@ -29,19 +29,32 @@
   </div>
 </form>
 
-<h3 class="page-header">{{ word('Translate system phrases into another language') }}</h3>
+<h3 class="da-page-header">{{ word('Translate system phrases into another language') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.language, placeholder=language_placeholder) }}
+    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.language_submit) }}
   </div>
 </form>
 
-<h3 class="page-header">{{ word('Download Office add-in manifest file') }}</h3>
+<h3 class="da-page-header">{{ word('Download an interview phrase translation file') }}</h3>
+
+<form action="{{ url_for('translation_file') }}" method="POST" class="form" role="form">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ render_field(form.interview, placeholder=interview_placeholder) }}
+    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}
+  </div>
+</form>
+
+<h3 class="da-page-header">{{ word('Download Office add-in manifest file') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" role="form">
   {{ form.hidden_tag() }}

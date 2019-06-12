@@ -1,0 +1,18 @@
+metadata:
+  title: Get PDF fields
+  short: PDF
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.get_pdf_fields"
+  example start: 1
+  example end: 2
+---
+objects:
+  - pdf_file: DAStaticFile.using(filename="data/templates/fruit_template.pdf")
+---
+mandatory: True
+question: The field names in the PDF file
+subquestion: |
+  The field names in the PDF file [fruit_template.pdf] are:
+
+  `${ repr(pdf_file.get_pdf_fields()) }`
+
+  [fruit_template.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/fruit_template.pdf

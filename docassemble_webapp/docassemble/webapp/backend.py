@@ -424,7 +424,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
     if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current)
+        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else True))
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()
@@ -492,8 +492,20 @@ def fetch_previous_user_dict(user_code, filename, secret):
         db.session.commit()
     return fetch_user_dict(user_code, filename, secret=secret)
 
-def advance_progress(user_dict):
-    user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
+def advance_progress(user_dict, interview):
+    if hasattr(interview, 'progress_bar_multiplier'):
+        multiplier = interview.progress_bar_multiplier
+    else:
+        multiplier = 0.05
+    if hasattr(interview, 'progress_bar_method') and interview.progress_bar_method == 'stepped':
+        next_part = 100.0
+        for value in sorted(interview.progress_points):
+            if value > user_dict['_internal']['progress']:
+                next_part = value
+                break
+        user_dict['_internal']['progress'] += multiplier*(next_part-user_dict['_internal']['progress'])
+    else:
+        user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
     return
 
 #@elapsed('reset_user_dict')
@@ -553,7 +565,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in UserModel.query.filter_by(id=user_id):
+    for record in UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id):
         cache[record.id] = record
         return record
     return None

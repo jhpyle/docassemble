@@ -45,14 +45,14 @@ def privilege_list():
       </tbody>
     </table>
 """
-    return render_template('users/rolelist.html', version_warning=None, bodyclass='adminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
+    return render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
 
 @app.route('/userlist', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin')
 def user_list():
     users = list()
-    for user in db.session.query(UserModel).order_by(UserModel.id):
+    for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
         if user.nickname == 'cron':
             continue
         role_names = [y.name for y in user.roles]
@@ -83,7 +83,7 @@ def user_list():
         else:
             is_active = False
         users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
-    return render_template('users/userlist.html', version_warning=None, bodyclass='adminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
+    return render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
 @login_required
@@ -94,7 +94,7 @@ def delete_privilege(id):
     if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
         flash(word('The role could not be deleted.'), 'error')
     else:
-        for user in db.session.query(UserModel):
+        for user in db.session.query(UserModel).options(db.joinedload('roles')):
             roles_to_remove = list()
             for the_role in user.roles:
                 if the_role.name == role.name:
@@ -115,7 +115,7 @@ def delete_privilege(id):
 @login_required
 @roles_required('admin')
 def edit_user_profile_page(id):
-    user = UserModel.query.filter_by(id=id).first()
+    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None:
         abort(404)
@@ -190,7 +190,7 @@ def add_privilege():
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
-    return render_template('users/new_role_page.html', version_warning=None, bodyclass='adminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
+    return render_template('users/new_role_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -275,7 +275,7 @@ def invite():
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('flask_user/invite.html', version_warning=None, bodyclass='adminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)
+    return render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)
 
 @app.route('/user/add', methods=['GET', 'POST'])
 @login_required
@@ -322,4 +322,4 @@ def user_add():
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
-    return render_template('users/add_user_page.html', version_warning=None, bodyclass='adminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form)
+    return render_template('users/add_user_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form)

@@ -46,7 +46,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_save_status', 'single_to_double_newlines']
 
 # debug = False
 # default_dialect = 'us'
@@ -768,12 +768,18 @@ def get_progress():
     """Returns the position of the progress meter."""
     return this_thread.internal['progress']
 
+def set_save_status(status):
+    """Indicates whether the current processing of the interview logic should result in a new step in the interview."""
+    if status in ('new', 'overwrite', 'ignore'):
+        this_thread.misc['save_status'] = status
+
 class DANav(object):
     def __init__(self):
         self.past = set()
         self.sections = None
         self.current = None
         self.progressive = True
+        self.hidden = False
 
     def __unicode__(self):
         return self.show_sections()
@@ -880,6 +886,20 @@ class DANav(object):
                     break
         return current_title
 
+    def hide(self):
+        """Hides the navigation bar, except if it is displayed inline."""
+        self.hidden = True
+
+    def unhide(self):
+        """Unhides the navigation bar if it was hidden."""
+        self.hidden = False
+
+    def visible(self, language=None):
+        """Returns False if the navigation bar is hidden, and True otherwise."""
+        if self.sections is None or len(self.get_sections(language=language)) == 0:
+            return False
+        return not (hasattr(self, 'hidden') and self.hidden)
+
     def set_sections(self, sections, language=None):
         """Sets the sections of the navigation to the given list."""
         if language is None:
@@ -887,7 +907,6 @@ class DANav(object):
         if sections is None:
             sections = []
         self.sections[language] = sections
-        #self.past = set()
 
     def get_sections(self, language=None):
         """Returns the sections of the navigation as a list."""
@@ -904,6 +923,8 @@ class DANav(object):
             interior_class = 'dainlineinside'
             a_class = "btn btn-secondary danavlink "
         else:
+            if not self.visible():
+                return ''
             the_class = 'danavlinks'
             interior_class = None
             a_class = None
@@ -1043,6 +1064,7 @@ server.send_mail = null_func
 server.file_finder = null_func
 server.url_finder = null_func
 server.user_id_dict = null_func
+server.get_user_object = null_func
 server.sms_body = null_func
 server.get_sms_session = null_func
 server.initiate_sms_session = null_func
@@ -1634,6 +1656,7 @@ def reset_local_variables():
     this_thread.current_package = None
     this_thread.current_question = None
     this_thread.internal = dict()
+    this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
     this_thread.prevent_going_back = False
 
 def prevent_going_back():
@@ -1881,10 +1904,12 @@ def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language
 
 def capitalize_default(a, **kwargs):
     ensure_definition(a)
-    if a and isinstance(a, string_types) and len(a) > 1:
+    if not isinstance(a, string_types):
+        a = text_type(a)
+    if a and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
-        return(text_type(a))
+        return a
 
 def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
@@ -2341,12 +2366,16 @@ def force_gather(*pargs):
 
 def static_filename_path(filereference):
     ensure_definition(filereference)
-    result = package_data_filename(static_filename(filereference))
+    if re.search(r'data/templates/', filereference):
+        result = package_template_filename(filereference)
+    else:
+        result = package_data_filename(static_filename(filereference))
     #if result is None or not os.path.isfile(result):
     #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
+    #logmessage("static_filename: got " + filereference)
     ensure_definition(filereference)
     if re.search(r',', filereference):
         return(None)
@@ -2354,11 +2383,13 @@ def static_filename(filereference):
     #filereference = re.sub(r'^None:', '', filereference)
     parts = filereference.split(':')
     if len(parts) < 2:
-        parts = ['docassemble.base', filereference]
+        parts = [this_thread.current_package, filereference]
+        #parts = ['docassemble.base', filereference]
     if re.search(r'\.\./', parts[1]):
         return(None)
     if not re.match(r'(data|static)/.*', parts[1]):
         parts[1] = 'data/static/' + parts[1]
+    #logmessage("static_filename: returning " + parts[0] + ':' + parts[1])
     return(parts[0] + ':' + parts[1])
 
 def static_image(filereference, width=None):
@@ -2437,7 +2468,8 @@ def package_data_filename(the_file):
     #the_file = re.sub(r'^None:', '', the_file)
     parts = the_file.split(":")
     result = None
-    #if len(parts) == 1:
+    if len(parts) == 1:
+        parts = [this_thread.current_package, the_file]
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
@@ -2670,10 +2702,28 @@ def process_action():
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        the_list.appendObject()
-        the_list.reset_gathered()
-        the_list.there_are_any = True
-        the_list.there_is_another = False
+        #if the_list.ask_object_type:
+        #    the_list.append(None)
+        #else:
+        #    the_list.appendObject()
+        if hasattr(the_list, 'gathered') and the_list.gathered:
+            the_list.was_gathered = True
+            the_list.reset_gathered()
+        else:
+            the_list.was_gathered = False
+        if the_list.auto_gather:
+            if the_list.ask_number:
+                if hasattr(the_list, 'target_number'):
+                    the_list.target_number += 1
+            else:
+                if the_list.was_gathered:
+                    the_list.there_is_another = False
+                    if len(the_list.elements) > 0:
+                        the_list.there_is_one_other = True
+                else:
+                    the_list.there_is_another = True
+        if the_list.auto_gather and not the_list.ask_number:
+            the_list.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
             this_thread.internal['event_stack'] = dict()
@@ -2689,9 +2739,18 @@ def process_action():
     elif the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
-        the_dict.reset_gathered()
-        the_dict.there_are_any = True
-        the_dict.there_is_another = True
+        if hasattr(the_dict, 'gathered') and the_dict.gathered:
+            the_dict.reset_gathered()
+            if the_dict.auto_gather:
+                if the_dict.ask_number:
+                    if hasattr(the_dict, 'target_number'):
+                        the_dict.target_number += 1
+                else:
+                    the_dict.there_is_another = False
+                    if len(the_dict.elements) > 0:
+                        the_dict.there_is_one_other = True
+        if the_dict.auto_gather and not the_dict.ask_number:
+            the_dict.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' not in this_thread.internal:
             this_thread.internal['event_stack'] = dict()
@@ -3217,9 +3276,9 @@ def serializable_dict(user_dict, include_internal=False):
         result_dict[key] = safe_json(data)
     return result_dict
 
-def safe_json(the_object, level=0):
+def safe_json(the_object, level=0, is_key=False):
     if level > 20:
-        return None
+        return 'None' if is_key else None
     if isinstance(the_object, (string_types, bool, int, float)):
         return the_object
     if isinstance(the_object, list):
@@ -3227,7 +3286,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, dict):
         new_dict = dict()
         for key, value in the_object.items():
-            new_dict[safe_json(key, level=level+1)] = safe_json(value, level=level+1)
+            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(value, level=level+1)
         return new_dict
     if isinstance(the_object, set):
         new_list = list()
@@ -3235,7 +3294,7 @@ def safe_json(the_object, level=0):
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
     if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
-        return None
+        return 'None' if is_key else None
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
         return serial
@@ -3245,7 +3304,7 @@ def safe_json(the_object, level=0):
     if isinstance(the_object, decimal.Decimal):
         return float(the_object)
     if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current)
+        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else True))
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()
@@ -3257,12 +3316,12 @@ def safe_json(the_object, level=0):
         for key, data in the_object.__dict__.items():
             if key in ['has_nonrandom_instance_name', 'attrList']:
                 continue
-            new_dict[safe_json(key, level=level+1)] = safe_json(data, level=level+1)
+            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(data, level=level+1)
         return new_dict
     try:
         json.dumps(the_object)
     except:
-        return None
+        return 'None' if is_key else None
     return the_object
 
 def referring_url(default=None):
@@ -3636,8 +3695,9 @@ def forget_result_of(*pargs):
     """Resets the user's answer to an embedded code question or mandatory code block."""
     for id_name in pargs:
         key = 'ID ' + id_name
-        if key in this_thread.internal['answers']:
-            del this_thread.internal['answers'][key]
+        for key_item in list(this_thread.internal['answers'].keys()):
+            if key_item == key or key_item.startswith(key + '|WITH|'):
+                del this_thread.internal['answers'][key_item]
         if key in this_thread.internal['answered']:
             this_thread.internal['answered'].remove(key)
 
@@ -3655,3 +3715,7 @@ def reconsider(*pargs):
         undefine(var)
         this_thread.misc['reconsidered'].add(var)
         value(var)
+
+def single_to_double_newlines(text):
+    """Converts single newlines to double newlines."""
+    return re.sub(r'[\n\r]+', r'\n\n', text)

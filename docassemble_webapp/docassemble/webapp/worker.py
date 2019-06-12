@@ -14,7 +14,6 @@ import importlib
 import os
 import re
 import httplib2
-import strict_rfc3339
 import oauth2client.client
 import time
 import json
@@ -199,7 +198,7 @@ def sync_with_google_drive(user_id):
                         if re.search(r'^(\~|\.)', the_file['name']):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
-                        gd_modtimes[section][the_file['name']] = strict_rfc3339.rfc3339_to_timestamp(the_file['modifiedTime'])
+                        gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
                         sys.stderr.write("Google says modtime on " + text_type(the_file['name']) + " is " + text_type(the_file['modifiedTime']) + ", which is " + text_type(gd_modtimes[section][the_file['name']]) + "\n")
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
@@ -241,7 +240,7 @@ def sync_with_google_drive(user_id):
                             sys.stderr.write("Copying " + text_type(f) + " to Google Drive.\n")
                             commentary += "Copied " + text_type(f) + " to Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on new file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -257,7 +256,7 @@ def sync_with_google_drive(user_id):
                                 continue
                             commentary += "Updated " + text_type(f) + " on Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Updating on Google Drive and setting GD modtime on modified " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'modifiedTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -265,7 +264,7 @@ def sync_with_google_drive(user_id):
                                                                   body=file_metadata,
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
-                            gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                            gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
                             sys.stderr.write("After update, timestamp on Google Drive is " + text_type(gd_modtimes[section][f]) + "\n")
                             sys.stderr.write("After update, timestamp on local system is " + text_type(os.path.getmtime(the_path)) + "\n")
                 for f in gd_deleted[section]:
@@ -278,7 +277,7 @@ def sync_with_google_drive(user_id):
                             commentary += "Undeleted and updated " + text_type(f) + " on Google Drive.\n"
                             the_path = os.path.join(area.directory, f)
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
-                            the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                            the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on undeleted file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                             file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
@@ -286,7 +285,7 @@ def sync_with_google_drive(user_id):
                                                                   body=file_metadata,
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
-                            gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                            gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
                         else:
                             sys.stderr.write("Considering " + text_type(f) + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
                             sections_modified.add(section)
@@ -306,13 +305,13 @@ def sync_with_google_drive(user_id):
                     local_modtimes[section][f] = os.path.getmtime(the_path)
                     sys.stderr.write("After finalizing, " + text_type(f) + " has a modtime of " + text_type(local_modtimes[section][f]) + "\n")
                     if abs(local_modtimes[section][f] - gd_modtimes[section][f]) > 3:
-                        the_modtime = strict_rfc3339.timestamp_to_rfc3339_utcoffset(local_modtimes[section][f])
+                        the_modtime = iso_from_epoch(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating GD modtime on file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                         file_metadata = { 'modifiedTime': the_modtime }
                         updated_file = service.files().update(fileId=gd_ids[section][f],
                                                               body=file_metadata,
                                                               fields='modifiedTime').execute()
-                        gd_modtimes[section][f] = strict_rfc3339.rfc3339_to_timestamp(updated_file['modifiedTime'])
+                        gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
@@ -379,7 +378,7 @@ def sync_with_onedrive(user_id):
                 else:
                     trashed = False
             if trashed is True:
-                logmessage('trash_gd_file: folder did not exist')
+                sys.stderr.write('trash_gd_file: folder did not exist' + "\n")
                 return False
             if trashed is True or 'folder' not in info:
                 return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
@@ -569,7 +568,7 @@ def sync_with_onedrive(user_id):
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating OD modtime on file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                         headers = { 'Content-Type': 'application/json' }
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": od_createtimes[section][f], "lastModifiedDateTime": the_modtime })))
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime })))
                         if int(r['status']) != 200:
                             return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
@@ -583,7 +582,10 @@ def sync_with_onedrive(user_id):
             do_restart = False
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except Exception as e:
-        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
+        if PY2:
+            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e), restart=False)
+        else:
+            return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
 
 def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=None):
     headers = { 'Content-Type': 'application/json' }
@@ -597,13 +599,15 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         #    return worker_controller.functions.ReturnValue(ok=False, error="error creating shell file for OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + text_type(content) + " and url was " + the_url + " and body was " + json.dumps(data), restart=False)
         #new_item_id = json.loads(content)['id']
         #sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     else:
         is_new = False    
-        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
-    r, content = try_request(http, the_url, 'POST')
+        #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
+    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
+    body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace", "description": data['description'], "fileSystemInfo": { "@odata.type": "microsoft.graph.fileSystemInfo" }, "name": data['name']}}
+    r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data))
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url, restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + repr(data) + " and is_new is " + repr(is_new), restart=False)
     sys.stderr.write("Upload session created.\n")
     upload_url = json.loads(content.decode())["uploadUrl"]
     sys.stderr.write("Upload url obtained.\n")
@@ -614,7 +618,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
             num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
             custom_headers = { 'Content-Length': text_type(num_bytes), 'Content-Range': 'bytes ' + text_type(start_byte) + '-' + text_type(start_byte + num_bytes - 1) + '/' + text_type(total_bytes), 'Content-Type': 'application/octet-stream' }
             #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
-            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=fh.read(num_bytes))
+            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=bytes(fh.read(num_bytes)))
             sys.stderr.write("Sent request\n")
             start_byte += num_bytes
             if start_byte == total_bytes:
@@ -853,7 +857,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 return(worker_controller.functions.ReturnValue(extra=extra))
             start_time = time.time()
             interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, action=action['action'], interface='worker', arguments=action['arguments']))
-            old_language = docassemble.base.functions.get_language()
+            old_language = worker_controller.functions.get_language()
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
@@ -889,9 +893,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
                 else:
                     sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time))
-                    docassemble.base.functions.set_language(old_language)
+                    worker_controller.functions.set_language(old_language)
                     return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
-            docassemble.base.functions.set_language(old_language)
+            worker_controller.functions.set_language(old_language)
             sys.stderr.write("Time in background action was " + str(time.time() - start_time))
             if not hasattr(interview_status, 'question'):
                 #sys.stderr.write("background_action: status had no question\n")
@@ -904,10 +908,10 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 else:
                     worker_controller.reset_user_dict(session_code, yaml_filename, user_id=user_info.get('theid', None))
                 worker_controller.release_lock(session_code, yaml_filename)
-            if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
-                #There is no lock to release.  Why is this here?
-                #worker_controller.release_lock(session_code, yaml_filename)
-                pass
+            # if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
+            #     #There is no lock to release.  Why is this here?
+            #     #worker_controller.release_lock(session_code, yaml_filename)
+            #     pass
             if interview_status.question.question_type == "response":
                 #sys.stderr.write("background_action: status was response\n")
                 if hasattr(interview_status.question, 'all_variables'):
@@ -925,7 +929,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 worker_controller.obtain_lock(session_code, yaml_filename)
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
                 interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
-                old_language = docassemble.base.functions.get_language()
+                old_language = worker_controller.functions.get_language()
                 try:
                     interview.assemble(user_dict, interview_status)
                     has_error = False
@@ -946,8 +950,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     worker_controller.error_notification(e, message=error_message, trace=error_trace)
                     has_error = True
                 # is this right?  Save even though there was an error on assembly?
-                docassemble.base.functions.set_language(old_language)
-                if not has_error:
+                worker_controller.functions.set_language(old_language)
+                save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
+                if (not has_error) and save_status != 'ignore':
                     if str(user_info.get('the_user_id', None)).startswith('t'):
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
                     else:
@@ -997,7 +1002,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     worker_controller.obtain_lock(session_code, yaml_filename)
     steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
     interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
-    old_language = docassemble.base.functions.get_language()
+    old_language = worker_controller.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
     except Exception as e:
@@ -1014,12 +1019,14 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         else:
             error_trace = None
         worker_controller.error_notification(e, message=error_message, trace=error_trace)
-    docassemble.base.functions.set_language(old_language)
+    worker_controller.functions.set_language(old_language)
     # is this right?
-    if str(user_info.get('the_user_id', None)).startswith('t'):
-        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-    else:
-        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+    save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
+    if save_status != 'ignore':
+        if str(user_info.get('the_user_id', None)).startswith('t'):
+            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+        else:
+            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
     worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":

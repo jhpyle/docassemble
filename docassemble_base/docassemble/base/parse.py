@@ -10,7 +10,7 @@ from jinja2.environment import Environment
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
 from jinja2.lexer import Token
-from jinja2.utils import internalcode, missing
+from jinja2.utils import internalcode, missing, object_type_repr
 from jinja2.ext import Extension
 import ast
 import ruamel.yaml as yaml
@@ -51,6 +51,7 @@ else:
     import collections.abc as abc
 from collections import OrderedDict
 from types import CodeType
+import pandas
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -60,7 +61,7 @@ import_util = compile('from docassemble.base.util import *', '<code block>', 'ex
 import_process_action = compile('from docassemble.base.util import process_action', '<code block>', 'exec')
 run_process_action = compile('process_action()', '<code block>', 'exec')
 match_process_action = re.compile(r'process_action\(')
-match_mako = re.compile(r'<%|\${|% if|% for|% while')
+match_mako = re.compile(r'<%|\${|% if|% for|% while|\#\#')
 emoji_match = re.compile(r':([^ ]+):')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined)')
@@ -75,15 +76,19 @@ match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
 list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
 extension_of_doc_format = {'pdf':'pdf', 'docx': 'docx', 'rtf': 'rtf', 'rtf to docx': 'docx', 'tex': 'tex', 'html': 'html'}
+do_not_translate = """<%doc>
+  do not translate
+</%doc>
+"""
 
-def process_audio_video_list(the_list, user_dict):
+def process_audio_video_list(the_list, the_user_dict):
     output = list()
     for the_item in the_list:
-        output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package'], 'type': the_item['type']})
+        output.append({'text': the_item['text'].text(the_user_dict), 'package': the_item['package'], 'type': the_item['type']})
     return output
 
-def textify(data, user_dict):
-    return list(map((lambda x: x.text(user_dict)), data))
+def textify(data, the_user_dict):
+    return list(map((lambda x: x.text(the_user_dict)), data))
 
 # def set_absolute_filename(func):
 #     #logmessage("Running set_absolute_filename in parse")
@@ -142,6 +147,7 @@ class InterviewSource(object):
         self.language = kwargs.get('language', '*')
         self.dialect = kwargs.get('dialect', None)
         self.testing = kwargs.get('testing', False)
+        self.translating = kwargs.get('translating', False)
     def __le__(self, other):
         return text_type(self) <= (text_type(other) if isinstance(other, InterviewSource) else other)
     def __ge__(self, other):
@@ -168,6 +174,10 @@ class InterviewSource(object):
     def set_path(self, path):
         self.path = path
         return
+    def get_name(self):
+        if ':' in self.path:
+            return self.path
+        return self.get_package() + ':data/questions/' + self.path
     def get_index(self):
         the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
         if the_index is None:
@@ -366,11 +376,64 @@ class InterviewStatus(object):
                     field_list.extend(self.extras['sub_fields'][field.number])
                 else:
                     field_list.append(field)
+        else:
+            field_list = self.question.fields
+        if 'list_collect' in self.extras:
+            full_field_list = list()
+            allow_append = self.extras['list_collect_allow_append']
+            iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
+            list_len = len(self.extras['list_collect'].elements)
+            if self.extras['list_collect'].ask_object_type or not allow_append:
+                extra_amount = 0
+            else:
+                extra_amount = get_config('list collect extra count', 15)
+            for list_indexno in range(list_len + extra_amount):
+                header_field = Field({'type': 'html', 'extras': {'html': TextObject('')}})
+                if list_indexno >= list_len:
+                    header_field.collect_type = 'extraheader'
+                elif list_indexno == 0:
+                    header_field.collect_type = 'firstheader'
+                else:
+                    header_field.collect_type = 'header'
+                header_field.collect_number = list_indexno
+                header_field.number = str(list_indexno)
+                full_field_list.append(header_field)
+                self.extras['ok'][str(list_indexno)] = True
+                self.extras['required'][str(list_indexno)] = False
+                for field in field_list:
+                    the_field = copy.deepcopy(field)
+                    the_field.number = str(list_indexno) + '_' + str(the_field.number)
+                    if hasattr(the_field, 'saveas'):
+                        the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                    if hasattr(the_field, 'extras'):
+                        if 'show_if_var' in the_field.extras:
+                            the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
+                        if 'show_if_js' in the_field.extras:
+                            the_field.extras['show_if_js']['expression'] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'])
+                            for ii in range(len(the_field.extras['show_if_js']['vars'])):
+                                the_field.extras['show_if_js']['vars'][ii] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
+                    if list_indexno >= list_len:
+                        the_field.collect_type = 'extra'
+                    else:
+                        the_field.collect_type = 'mid'
+                    the_field.collect_number = list_indexno
+                    full_field_list.append(the_field)
+                post_header_field = Field({'type': 'html', 'extras': {'html': TextObject('')}})
+                if extra_amount > 0 and list_indexno == list_len + extra_amount - 1:
+                    post_header_field.collect_type = 'extrafinalpostheader'
+                elif list_indexno >= list_len:
+                    post_header_field.collect_type = 'extrapostheader'
+                else:
+                    post_header_field.collect_type = 'postheader'
+                post_header_field.collect_number = list_indexno
+                post_header_field.number = str(list_indexno)
+                full_field_list.append(post_header_field)
+            return full_field_list
+        else:
             return field_list
-        return self.question.fields
-    def mark_tentative_as_answered(self, user_dict):
+    def mark_tentative_as_answered(self, the_user_dict):
         for question in self.tentatively_answered:
-            question.mark_as_answered(user_dict)
+            question.mark_as_answered(the_user_dict)
         self.tentatively_answered.clear()
     def initialize_screen_reader(self):
         self.using_screen_reader = True
@@ -396,7 +459,7 @@ class InterviewStatus(object):
         self.orig_sought = question_result['orig_sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
-    def as_data(self, encode=True):
+    def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
         if self.question.language in self.question.interview.default_validation_messages:
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
@@ -511,7 +574,7 @@ class InterviewStatus(object):
             else:
                 the_default = None
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
-                the_field['choices'] = self.get_choices_data(field, the_default, encode=encode)
+                the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = self.extras['nota'][field.number]
             the_field['active'] = self.extras['ok'][field.number]
@@ -521,6 +584,8 @@ class InterviewStatus(object):
                 the_field['validation_messages'].update(self.extras['validation messages'][field.number])
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
+            if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'image_type' in self.extras and self.extras['image_type']:
+                the_field['image_type'] = self.extras['image_type']
             if hasattr(field, 'extras'):
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     the_field['ml_info'] = dict()
@@ -554,7 +619,7 @@ class InterviewStatus(object):
         if 'track_location' in self.extras and self.extras['track_location']:
             result['track_location'] = True
         return result
-    def get_choices(self, field):
+    def get_choices(self, field, the_user_dict):
         question = self.question
         choice_list = list()
         if hasattr(field, 'saveas') and field.saveas is not None:
@@ -590,7 +655,7 @@ class InterviewStatus(object):
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                choice_list.append([choice['label'], '_internal["answers"][' + repr(question.name) + ']', indexno])
+                choice_list.append([choice['label'], '_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', indexno])
                 indexno += 1
         return choice_list
     def icon_url(self, name):
@@ -601,7 +666,7 @@ class InterviewStatus(object):
             self.attributions.add(the_image.attribution)
         url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
         return url
-    def get_choices_data(self, field, defaultvalue, encode=True):
+    def get_choices_data(self, field, defaultvalue, the_user_dict, encode=True):
         question = self.question
         choice_list = list()
         if hasattr(field, 'saveas') and field.saveas is not None:
@@ -671,9 +736,9 @@ class InterviewStatus(object):
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.name) + ']', value=indexno)
+                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', value=indexno)
                 if encode:
-                    item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.name) + ']')
+                    item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']')
                 if 'image' in choice:
                     the_image = self.icon_url(choice['image'])
                     if the_image:
@@ -697,9 +762,19 @@ class InterviewStatus(object):
 # increment_question_counter = new_counter()
 
 class TextObject(object):
-    def __init__(self, x, names_used=set()):
+    def __init__(self, x, question=None):
         self.original_text = x
+        self.other_lang = dict()
+        if question is not None and question.interview.source.translating and isinstance(x, string_types) and re.search(r'[^\s0-9]', self.original_text) and not re.search(r'\<%doc\>\s*do not translate', self.original_text, re.IGNORECASE) and self.original_text != 'no label':
+            if not hasattr(question, 'translations'):
+                question.translations = list()
+            if self.original_text not in question.translations:
+                question.translations.append(self.original_text)
         if isinstance(x, string_types) and match_mako.search(x):
+            if question is None:
+                names_used = set()
+            else:
+                names_used = question.names_used            
             self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
             for x in self.template.names_used:
                 if x not in self.template.names_set:
@@ -707,9 +782,29 @@ class TextObject(object):
             self.uses_mako = True
         else:
             self.uses_mako = False
-    def text(self, user_dict):
+        if question is not None and len(question.interview.translations) and isinstance(x, string_types):
+            if self.original_text in question.interview.translation_dict:
+                if question.language == '*':
+                    self.language = docassemble.base.functions.server.default_language
+                else:
+                    self.language = question.language
+                for orig_lang in question.interview.translation_dict[self.original_text]:
+                    if orig_lang == question.language or (question.language == '*' and orig_lang == docassemble.base.functions.server.default_language):
+                        for target_lang in question.interview.translation_dict[self.original_text][orig_lang]:
+                            if self.uses_mako:
+                                self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang], MakoTemplate(question.interview.translation_dict[self.original_text][orig_lang][target_lang], strict_undefined=True, input_encoding='utf-8'))
+                            else:
+                                self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang],)
+    def text(self, the_user_dict):
+        if len(self.other_lang):
+            target_lang = docassemble.base.functions.get_language()
+            if self.language != target_lang and target_lang in self.other_lang:
+                if self.uses_mako:
+                    return(self.other_lang[target_lang][1].render(**the_user_dict))
+                else:
+                    return(self.other_lang[target_lang][0])
         if self.uses_mako:
-            return(self.template.render(**user_dict))
+            return(self.template.render(**the_user_dict))
         else:
             return(self.original_text)
 
@@ -759,6 +854,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
+        if 'image_type' in data:
+            self.image_type = data['image_type']
         if 'accept' in data:
             self.accept = data['accept']
         if 'rows' in data:
@@ -818,88 +915,88 @@ class Field:
                 pass
         return message
 
-def recursive_eval_dataobject(target, user_dict):
+def recursive_eval_dataobject(target, the_user_dict):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
         for key, val in target.items():
-            new_dict[key] = recursive_eval_dataobject(val, user_dict)
+            new_dict[key] = recursive_eval_dataobject(val, the_user_dict)
         return new_dict
     if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
         new_list = list()
         for val in target.__iter__():
-            new_list.append(recursive_eval_dataobject(val, user_dict))
+            new_list.append(recursive_eval_dataobject(val, the_user_dict))
         return new_list
     if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
         new_set = set()
         for val in target.__iter__():
-            new_set.add(recursive_eval_dataobject(val, user_dict))
+            new_set.add(recursive_eval_dataobject(val, the_user_dict))
         return new_set
     if isinstance(target, (bool, float, int, NoneType)):
         return target
     if isinstance(target, TextObject):
-        return target.text(user_dict)
+        return target.text(the_user_dict)
     else:
         raise DAError("recursive_eval_dataobject: expected a TextObject, but found a " + str(type(target)))
 
-def recursive_eval_data_from_code(target, user_dict):
+def recursive_eval_data_from_code(target, the_user_dict):
     if isinstance(target, dict):
         new_dict = dict()
         for key, val in target.items():
-            new_dict[key] = recursive_eval_data_from_code(val, user_dict)
+            new_dict[key] = recursive_eval_data_from_code(val, the_user_dict)
         return new_dict
     if isinstance(target, list):
         new_list = list()
         for val in target:
-            new_list.append(recursive_eval_data_from_code(val, user_dict))
+            new_list.append(recursive_eval_data_from_code(val, the_user_dict))
         return new_list
     if isinstance(target, set):
         new_set = set()
         for val in target:
-            new_set.add(recursive_eval_data_from_code(val, user_dict))
+            new_set.add(recursive_eval_data_from_code(val, the_user_dict))
         return new_set
     if isinstance(target, CodeType):
-        return eval(target, user_dict)
+        return eval(target, the_user_dict)
     else:
         return target
     
-def recursive_textobject(target, names_used):
+def recursive_textobject(target, question):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
         for key, val in target.items():
-            new_dict[key] = recursive_textobject(val, names_used)
+            new_dict[key] = recursive_textobject(val, question)
         return new_dict
     if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
         new_list = list()
         for val in target.__iter__():
-            new_list.append(recursive_textobject(val, names_used))
+            new_list.append(recursive_textobject(val, question))
         return new_list
     if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
         new_set = set()
         for val in target.__iter__():
-            new_set.add(recursive_textobject(val, names_used))
+            new_set.add(recursive_textobject(val, question))
         return new_set
-    return TextObject(text_type(target), names_used=names_used)
+    return TextObject(text_type(target), question=question)
 
-def recursive_eval_textobject(target, user_dict, question, tpl):
+def recursive_eval_textobject(target, the_user_dict, question, tpl):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
         for key, val in target.items():
-            new_dict[key] = recursive_eval_textobject(val, user_dict, question, tpl)
+            new_dict[key] = recursive_eval_textobject(val, the_user_dict, question, tpl)
         return new_dict
     if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
         new_list = list()
         for val in target.__iter__():
-            new_list.append(recursive_eval_textobject(val, user_dict, question, tpl))
+            new_list.append(recursive_eval_textobject(val, the_user_dict, question, tpl))
         return new_list
     if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
         new_set = set()
         for val in target.__iter__():
-            new_set.add(recursive_eval_textobject(val, user_dict, question, tpl))
+            new_set.add(recursive_eval_textobject(val, the_user_dict, question, tpl))
         return new_set
     if isinstance(target, (bool, NoneType)):
         return target
     if isinstance(target, TextObject):
-        text = target.text(user_dict)
+        text = target.text(the_user_dict)
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
@@ -936,12 +1033,12 @@ class FileInPackage:
             self.is_code = False
         self.area = area
         self.package = package
-    def path(self, user_dict=dict()):
+    def path(self, the_user_dict=dict()):
         if self.area == 'template':
             if self.is_code:
-                if len(user_dict) == 0:
+                if len(the_user_dict) == 0:
                     raise Exception("FileInPackage.path: called with empty dict")
-                the_file_ref = eval(self.code, user_dict)
+                the_file_ref = eval(self.code, the_user_dict)
                 if the_file_ref.__class__.__name__ == 'DAFile':
                     the_file_ref = the_file_ref.path()
                 elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
@@ -1005,6 +1102,7 @@ class Question:
         self.autoterms = dict()
         self.need = None
         self.scan_for_variables = True
+        self.embeds = False
         self.helptext = None
         self.subcontent = None
         self.reload_after = None
@@ -1047,6 +1145,12 @@ class Question:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
             if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
                 self.interview.show_progress_bar_percentage = True
+            if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], text_type):
+                self.interview.progress_bar_method = data['features']['progress bar method']
+            if 'progress bar multiplier' in data['features'] and isinstance(data['features']['progress bar multiplier'], (int, float)):
+                if data['features']['progress bar multiplier'] <= 0.0 or data['features']['progress bar multiplier'] >= 1.0:
+                    raise DAError("progress bar multiplier in features must be between 0 and 1." + self.idebug(data))
+                self.interview.progress_bar_method = data['features']['progress bar multiplier']
             if 'question back button' in data['features']:
                 self.interview.question_back_button = True if data['features']['question back button'] else False
             if 'question help button' in data['features']:
@@ -1061,6 +1165,8 @@ class Question:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
+            if 'image upload type' in data['features']:
+                self.interview.image_type = str(data['features']['image upload type'])
             if 'debug' in data['features'] and isinstance(data['features']['debug'], bool):
                 self.interview.debug = data['features']['debug']
             if 'cache documents' in data['features']:
@@ -1104,11 +1210,58 @@ class Question:
                 self.scan_for_variables = True
             else:
                 self.scan_for_variables = False
+        if 'only sets' in data:
+            if isinstance(data['only sets'], string_types):
+                self.fields_used.add(data['only sets'])
+            elif isinstance(data['only sets'], list):
+                for key in data['only sets']:
+                    self.fields_used.add(key)
+            else:
+                raise DAError("An only sets phrase must be text or a list." + self.idebug(data))
+            self.scan_for_variables = False
         if 'question' in data and 'code' in data:
             raise DAError("A block can be a question block or a code block but cannot be both at the same time." + self.idebug(data))
         if 'event' in data:
             if 'field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data:
                 raise DAError("The 'event' designator is for special screens that do not gather information and can only be used with 'buttons' or with no other controls." + self.idebug(data))
+        if 'translations' in data:
+            should_append = False
+            if not isinstance(data['translations'], list):
+                raise DAError("A 'translations' block must be a list" + self.idebug(data))
+            tr_todo = list()
+            for item in data['translations']:
+                if not isinstance(item, string_types):
+                    raise DAError("A 'translations' block must be a list of text items" + self.idebug(data))
+                if not item.endswith('.xlsx'):
+                    raise DAError("Invalid translations entry '" + item + "'.  A translations entry must refer to a file ending in .xlsx." + self.idebug(data))
+                parts = item.split(":")
+                if len(parts) == 1:
+                    item = re.sub(r'^data/sources/', '', item)
+                    the_package = self.from_source.get_package()
+                    if the_package is not None:
+                        item = self.from_source.get_package() + ':data/sources/' + item
+                    tr_todo.append(item)
+                elif len(parts) == 2 and parts[0].startswith('docassemble.') and parts[1].startswith('data/sources/'):
+                    tr_todo.append(item)
+                else:
+                    raise DAError("Invalid translations entry: " + item + ".  A translations entry must refer to a data sources file" + self.idebug(data))
+            for item in tr_todo:
+                self.interview.translations.append(item)
+                the_xlsx_file = docassemble.base.functions.package_data_filename(item)
+                if not os.path.isfile(the_xlsx_file):
+                    raise DAError("The translations file " + the_xlsx_file + " could not be found")
+                df = pandas.read_excel(the_xlsx_file)
+                for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
+                    if column_name not in df.columns:
+                        raise DAError("Invalid translations file " + os.path.basename(the_xlsx_file) + ": column " + column_name + " is missing")
+                for indexno in df.index:
+                    if not isinstance(df['tr_text'][indexno], string_types) or df['tr_text'][indexno] == '':
+                        continue
+                    if df['orig_text'][indexno] not in self.interview.translation_dict:
+                        self.interview.translation_dict[df['orig_text'][indexno]] = dict()
+                    if df['orig_lang'][indexno] not in self.interview.translation_dict[df['orig_text'][indexno]]:
+                        self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]] = dict()
+                    self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = df['tr_text'][indexno]
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
@@ -1178,18 +1331,38 @@ class Question:
         if 'continue button label' in data:
             if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
                 raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
-            self.continuelabel = TextObject(definitions + text_type(data['continue button label']), names_used=self.mako_names)
+            self.continuelabel = TextObject(definitions + text_type(data['continue button label']), question=self)
         if 'resume button label' in data:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
-            self.continuelabel = TextObject(definitions + text_type(data['resume button label']), names_used=self.mako_names)
+            self.continuelabel = TextObject(definitions + text_type(data['resume button label']), question=self)
         if 'back button label' in data:
-            self.backbuttonlabel = TextObject(definitions + text_type(data['back button label']), names_used=self.mako_names)
+            self.backbuttonlabel = TextObject(definitions + text_type(data['back button label']), question=self)
         if 'skip undefined' in data:
             if 'review' not in data:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
             if not data['skip undefined']:
                 self.skip_undefined = False
+        if 'list collect' in data:
+            if 'fields' not in data:
+                raise DAError("You cannot set list collect without a fields specifier." + self.idebug(data))
+            if isinstance(data['list collect'], (string_types, bool)):
+                self.list_collect = compile(text_type(data['list collect']), '<list collect code>', 'eval')
+            elif isinstance(data['list collect'], dict):
+                if 'enable' in data['list collect']:
+                    self.list_collect = compile(text_type(data['list collect']['enable']), '<list collect code>', 'eval')
+                else:
+                    self.list_collect = compile('True', '<list collect code>', 'eval')
+                if 'label' in data['list collect']:
+                    self.list_collect_label = TextObject(definitions + text_type(data['list collect']['label']), question=self)
+                if 'is final' in data['list collect']:
+                    self.list_collect_is_final = compile(text_type(data['list collect']['is final']), '<list collect final code>', 'eval')
+                if 'allow append' in data['list collect']:
+                    self.list_collect_allow_append = compile(text_type(data['list collect']['allow append']), '<list collect allow append code>', 'eval')
+                if 'allow delete' in data['list collect']:
+                    self.list_collect_allow_delete = compile(text_type(data['list collect']['allow delete']), '<list collect allow delete code>', 'eval')
+            else:
+                raise DAError("Invalid data under list collect." + self.idebug(data))
         if 'mandatory' in data:
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
@@ -1255,11 +1428,11 @@ class Question:
         if 'script' in data:
             if not isinstance(data['script'], string_types):
                 raise DAError("A script section must be plain text." + self.idebug(data))
-            self.script = TextObject(definitions + text_type(data['script']), names_used=self.mako_names)
+            self.script = TextObject(definitions + do_not_translate + text_type(data['script']), question=self)
         if 'css' in data:
             if not isinstance(data['css'], string_types):
                 raise DAError("A css section must be plain text." + self.idebug(data))
-            self.css = TextObject(definitions + text_type(data['css']), names_used=self.mako_names)
+            self.css = TextObject(definitions + do_not_translate + text_type(data['css']), question=self)
         if 'initial' in data and 'code' not in data:
             raise DAError("Only a code block can be marked as initial." + self.idebug(data))
         if 'initial' in data or 'default role' in data:
@@ -1281,7 +1454,7 @@ class Question:
             self.initial_code = None
         if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session'):
             self.question_type = data['command']
-            self.content = TextObject(data.get('url', ''), names_used=self.mako_names)
+            self.content = TextObject(data.get('url', ''), question=self)
             return
         if 'objects from file' in data:
             if not isinstance(data['objects from file'], list):
@@ -1301,14 +1474,20 @@ class Question:
                 raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'].strip())
-            self.question_type = 'data'
+            if 'use objects' in data and data['use objects']:
+                self.question_type = 'data_da'
+            else:
+                self.question_type = 'data'
             self.fields.append(Field({'saveas': data['variable name'].strip(), 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
         if 'data from code' in data and 'variable name' in data:
             if not isinstance(data['variable name'], string_types):
                 raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'])
-            self.question_type = 'data_from_code'
+            if 'use objects' in data and data['use objects']:
+                self.question_type = 'data_from_code_da'
+            else:
+                self.question_type = 'data_from_code'
             self.fields.append(Field({'saveas': data['variable name'], 'type': 'data_from_code', 'data': self.recursive_data_from_code(data['data from code'])}))
         if 'objects' in data:
             if not isinstance(data['objects'], list):
@@ -1330,6 +1509,34 @@ class Question:
             self.id = text_type(data['id']).strip()
             self.interview.ids_in_use.add(self.id)
             self.interview.questions_by_id[self.id] = self
+        if 'ga id' in data:
+            if not isinstance(data['ga id'], string_types):
+                raise DAError("A 'ga id' must refer to text." + self.idebug(data))
+            self.ga_id = TextObject(definitions + text_type(data['ga id']), question=self)
+        if 'segment id' in data:
+            if not isinstance(data['segment id'], string_types):
+                raise DAError("A 'segment id' must refer to text." + self.idebug(data))
+            if not hasattr(self, 'segment'):
+                self.segment = dict(arguments=dict())
+            self.segment['id'] = TextObject(definitions + text_type(data['segment id']), question=self)
+        if 'segment' in data:
+            if not isinstance(data['segment'], dict):
+                raise DAError("A 'segment' must refer to a dictionary." + self.idebug(data))
+            if 'id' in data['segment']:
+                if not isinstance(data['segment']['id'], string_types):
+                    raise DAError("An 'id' under 'segment' must refer to text." + self.idebug(data))
+                if not hasattr(self, 'segment'):
+                    self.segment = dict(arguments=dict())
+                self.segment['id'] = TextObject(definitions + text_type(data['segment']['id']), question=self)
+            if 'arguments' in data['segment']:
+                if not isinstance(data['segment']['arguments'], dict):
+                    raise DAError("An 'arguments' under 'segment' must refer to a dictionary." + self.idebug(data))
+                if not hasattr(self, 'segment'):
+                    self.segment = dict(arguments=dict())
+                for key, val in data['segment']['arguments'].items():
+                    if not isinstance(val, (string_types, int, float, bool)):
+                        raise DAError("Each item under 'arguments' in a 'segment' must be plain text." + self.idebug(data))
+                    self.segment['arguments'][key] = TextObject(definitions + text_type(val), question=self)
         if 'supersedes' in data:
             if not isinstance(data['supersedes'], list):
                 supersedes_list = [text_type(data['supersedes'])]
@@ -1417,7 +1624,7 @@ class Question:
                 for the_item in the_list:
                     if isinstance(the_item, (list, dict)):
                         raise DAError("An interview help audio section must be in the form of a text item or a list of text items." + self.idebug(data))
-                    audiovideo.append({'text': TextObject(definitions + text_type(data['interview help']['audio']), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                    audiovideo.append({'text': TextObject(definitions + text_type(data['interview help']['audio']), question=self), 'package': self.package, 'type': 'audio'})
             if 'video' in data['interview help']:
                 if not isinstance(data['interview help']['video'], list):
                     the_list = [data['interview help']['video']]
@@ -1426,26 +1633,26 @@ class Question:
                 for the_item in the_list:
                     if isinstance(the_item, (list, dict)):
                         raise DAError("An interview help video section must be in the form of a text item or a list of text items." + self.idebug(data))
-                    audiovideo.append({'text': TextObject(definitions + text_type(data['interview help']['video']), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                    audiovideo.append({'text': TextObject(definitions + text_type(data['interview help']['video']), question=self), 'package': self.package, 'type': 'video'})
             if 'video' not in data['interview help'] and 'audio' not in data['interview help']:
                 audiovideo = None
             if 'heading' in data['interview help']:
                 if not isinstance(data['interview help']['heading'], (dict, list)):
-                    help_heading = TextObject(definitions + text_type(data['interview help']['heading']), names_used=self.mako_names)
+                    help_heading = TextObject(definitions + text_type(data['interview help']['heading']), question=self)
                 else:
                     raise DAError("A heading within an interview help section must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 help_heading = None
             if 'content' in data['interview help']:
                 if not isinstance(data['interview help']['content'], (dict, list)):
-                    help_content = TextObject(definitions + text_type(data['interview help']['content']), names_used=self.mako_names)
+                    help_content = TextObject(definitions + text_type(data['interview help']['content']), question=self)
                 else:
                     raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 raise DAError("No content section was found in an interview help section." + self.idebug(data))
             if 'label' in data['interview help']:
                 if not isinstance(data['interview help']['label'], (dict, list)):
-                    help_label = TextObject(definitions + text_type(data['interview help']['label']), names_used=self.mako_names)
+                    help_label = TextObject(definitions + text_type(data['interview help']['label']), question=self)
                 else:
                     raise DAError("Help label must be text, not a list or a dictionary." + self.idebug(data))
             else:
@@ -1466,7 +1673,7 @@ class Question:
                 else:
                     if not (isinstance(key, string_types) and isinstance(content, string_types)):
                         raise DAError("A default screen parts block must be a dictionary of text keys and text values." + self.idebug(data))
-                self.interview.default_screen_parts[self.language][key] = TextObject(definitions + text_type(content.strip()), names_used=self.mako_names)
+                self.interview.default_screen_parts[self.language][key] = TextObject(definitions + text_type(content.strip()), question=self)
         if 'default validation messages' in data:
             should_append = False
             if not isinstance(data['default validation messages'], dict):
@@ -1539,7 +1746,14 @@ class Question:
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
                 for term in termitem:
                     lower_term = term.lower()
-                    self.terms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), names_used=self.mako_names), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    alt_terms = dict()
+                    re_dict = dict()
+                    re_dict[self.language] = re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        re_dict[lang] = re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)
+                        alt_terms[lang] = tr_tuple[0]
+                    self.terms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
             if not isinstance(data['auto terms'], (dict, list)):
                 raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
@@ -1550,7 +1764,14 @@ class Question:
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
                 for term in termitem:
                     lower_term = term.lower()
-                    self.autoterms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), names_used=self.mako_names), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    alt_terms = dict()
+                    re_dict = dict()
+                    re_dict[self.language] = re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)
+                        alt_terms[lang] = tr_tuple[0]
+                    self.autoterms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
             should_append = False
             if self.language not in self.interview.terms:
@@ -1560,13 +1781,29 @@ class Question:
                     if isinstance(termitem, dict):
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.terms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                            term_textobject = TextObject(text_type(lower_term), question=self)
+                            definition_textobject = TextObject(text_type(termitem[term]), question=self)
+                            self.interview.terms[self.language][lower_term] = {'definition': text_type(termitem[term]), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                            for lang, tr_tuple in term_textobject.other_lang.items():
+                                if lang not in self.interview.terms:
+                                    self.interview.terms[lang] = dict()
+                                if tr_tuple[0] not in self.interview.terms[lang]:
+                                    if lang in definition_textobject.other_lang:
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
                 for term in data['terms']:
                     lower_term = term.lower()
-                    self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    definition_textobject = TextObject(text_type(data['terms'][term]), question=self)
+                    self.interview.terms[self.language][lower_term] = {'definition': text_type(data['terms'][term]), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        if lang not in self.interview.terms:
+                            self.interview.terms[lang] = dict()
+                        if tr_tuple[0] not in self.interview.terms[lang]:
+                            if lang in definition_textobject.other_lang:
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -1578,13 +1815,29 @@ class Question:
                     if isinstance(termitem, dict):
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.autoterms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                            term_textobject = TextObject(text_type(lower_term), question=self)
+                            definition_textobject = TextObject(text_type(termitem[term]), question=self)
+                            self.interview.autoterms[self.language][lower_term] = {'definition': text_type(termitem[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                            for lang, tr_tuple in term_textobject.other_lang.items():
+                                if lang not in self.interview.autoterms:
+                                    self.interview.autoterms[lang] = dict()
+                                if tr_tuple[0] not in self.interview.autoterms[lang]:
+                                    if lang in definition_textobject.other_lang:
+                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)}
                     else:
                         raise DAError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['auto terms'], dict):
                 for term in data['auto terms']:
                     lower_term = term.lower()
-                    self.interview.autoterms[self.language][lower_term] = {'definition': data['auto terms'][term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    term_textobject = TextObject(text_type(lower_term), question=self)
+                    definition_textobject = TextObject(text_type(data['auto terms'][term]), question=self)
+                    self.interview.autoterms[self.language][lower_term] = {'definition': text_type(data['auto terms'][term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+                    for lang, tr_tuple in term_textobject.other_lang.items():
+                        if lang not in self.interview.autoterms:
+                            self.interview.autoterms[lang] = dict()
+                        if tr_tuple[0] not in self.interview.autoterms[lang]:
+                            if lang in definition_textobject.other_lang:
+                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (tr_tuple[0],), re.IGNORECASE)}
             else:
                 raise DAError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -1673,9 +1926,13 @@ class Question:
         #     else:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
-            self.progress = data['progress']
+            try:
+                self.progress = int(data['progress'])
+                self.interview.progress_points.add(self.progress)
+            except:
+                logmessage("Invalid progress number " + repr(data['progress']))
         if 'zip filename' in data:
-            self.zip_filename = TextObject(definitions + text_type(data['zip filename']), names_used=self.mako_names)
+            self.zip_filename = TextObject(definitions + text_type(data['zip filename']), question=self)
         if 'action' in data:
             self.question_type = 'backgroundresponseaction'
             self.content = TextObject('action')
@@ -1685,7 +1942,7 @@ class Question:
             self.content = TextObject('backgroundresponse')
             self.backgroundresponse = data['backgroundresponse']
         if 'response' in data:
-            self.content = TextObject(definitions + text_type(data['response']), names_used=self.mako_names)
+            self.content = TextObject(definitions + text_type(data['response']), question=self)
             self.question_type = 'response'
         elif 'binaryresponse' in data:
             self.question_type = 'response'
@@ -1717,7 +1974,7 @@ class Question:
                     self.content_type = TextObject('text/plain; charset=utf-8')
             self.content = TextObject('')
             if 'content type' in data:
-                self.content_type = TextObject(definitions + text_type(data['content type']), names_used=self.mako_names)
+                self.content_type = TextObject(definitions + text_type(data['content type']), question=self)
             elif not (hasattr(self, 'content_type') and self.content_type):
                 if self.response_file is not None:
                     self.content_type = TextObject(get_mimetype(self.response_file.path()))
@@ -1725,7 +1982,7 @@ class Question:
                     self.content_type = TextObject('text/plain; charset=utf-8')
         elif 'redirect url' in data:
             self.question_type = 'redirect'
-            self.content = TextObject(definitions + text_type(data['redirect url']), names_used=self.mako_names)
+            self.content = TextObject(definitions + text_type(data['redirect url']), question=self)
         elif 'null response' in data:
             self.content = TextObject('null')
             self.question_type = 'response'
@@ -1733,20 +1990,20 @@ class Question:
             if 'include_internal' in data:
                 self.include_internal = data['include_internal']
             if 'content type' in data:
-                self.content_type = TextObject(definitions + text_type(data['content type']), names_used=self.mako_names)
+                self.content_type = TextObject(definitions + text_type(data['content type']), question=self)
             else:
                 self.content_type = TextObject('text/plain; charset=utf-8')
         if 'question' in data:
-            self.content = TextObject(definitions + text_type(data['question']), names_used=self.mako_names)
+            self.content = TextObject(definitions + text_type(data['question']), question=self)
         if 'subquestion' in data:
-            self.subcontent = TextObject(definitions + text_type(data['subquestion']), names_used=self.mako_names)
+            self.subcontent = TextObject(definitions + text_type(data['subquestion']), question=self)
         if 'reload' in data and data['reload']:
-            self.reload_after = TextObject(definitions + text_type(data['reload']), names_used=self.mako_names)
+            self.reload_after = TextObject(definitions + text_type(data['reload']), question=self)
         if 'help' in data:
             if isinstance(data['help'], dict):
                 for key, value in data['help'].items():
                     if key == 'label':
-                        self.helplabel = TextObject(definitions + text_type(value), names_used=self.mako_names)
+                        self.helplabel = TextObject(definitions + text_type(value), question=self)
                     if key == 'audio':
                         if not isinstance(value, list):
                             the_list = [value]
@@ -1759,7 +2016,7 @@ class Question:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + text_type(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'audio'})
                     if key == 'video':
                         if not isinstance(value, list):
                             the_list = [value]
@@ -1772,13 +2029,13 @@ class Question:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + text_type(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'video'})
                     if key == 'content':
                         if isinstance(value, (dict, list, set)):
                             raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
-                        self.helptext = TextObject(definitions + text_type(value), names_used=self.mako_names)
+                        self.helptext = TextObject(definitions + text_type(value), question=self)
             else:
-                self.helptext = TextObject(definitions + text_type(data['help']), names_used=self.mako_names)
+                self.helptext = TextObject(definitions + text_type(data['help']), question=self)
         if 'audio' in data:
             if not isinstance(data['audio'], list):
                 the_list = [data['audio']]
@@ -1791,7 +2048,7 @@ class Question:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'audio'})
         if 'video' in data:
             if not isinstance(data['video'], list):
                 the_list = [data['video']]
@@ -1804,7 +2061,7 @@ class Question:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'video'})
         if 'decoration' in data:
             if isinstance(data['decoration'], dict):
                 decoration_list = [data['decoration']]
@@ -1820,7 +2077,7 @@ class Question:
                     the_item = {'image': str(item.rstrip())}
                 item_to_add = dict()
                 for key, value in the_item.items():
-                    item_to_add[key] = TextObject(value, names_used=self.mako_names)
+                    item_to_add[key] = TextObject(do_not_translate + value, question=self)
                 processed_decoration_list.append(item_to_add)
             self.decorations = processed_decoration_list
         if 'signature' in data:
@@ -1829,9 +2086,9 @@ class Question:
             if self.scan_for_variables:
                 self.fields_used.add(data['signature'])
         if 'under' in data:
-            self.undertext = TextObject(definitions + text_type(data['under']), names_used=self.mako_names)
+            self.undertext = TextObject(definitions + text_type(data['under']), question=self)
         if 'right' in data:
-            self.righttext = TextObject(definitions + text_type(data['right']), names_used=self.mako_names)
+            self.righttext = TextObject(definitions + text_type(data['right']), question=self)
         if 'check in' in data:
             self.interview.uses_action = True
             if isinstance(data['check in'], (dict, list, set)):
@@ -1899,7 +2156,7 @@ class Question:
                 if has_code:
                     field_data['has_code'] = True
                 if 'default' in data:
-                    field_data['default'] = TextObject(definitions + text_type(data['default']), names_used=self.mako_names)
+                    field_data['default'] = TextObject(definitions + text_type(data['default']), question=self)
             elif 'buttons' in data:
                 has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)
                 field_data = {'choices': choices, 'shuffle': shuffle}
@@ -1913,7 +2170,7 @@ class Question:
                 for validation_key, validation_message in data['validation messages'].items():
                     if not (isinstance(validation_key, string_types) and isinstance(validation_message, string_types)):
                         raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
-                    field_data['validation messages'][validation_key] = TextObject(definitions + text_type(validation_message).strip(), names_used=self.mako_names)
+                    field_data['validation messages'][validation_key] = TextObject(definitions + text_type(validation_message).strip(), question=self)
             if uses_field:
                 data['field'] = data['field'].strip()
                 if invalid_variable_name(data['field']):
@@ -1992,7 +2249,7 @@ class Question:
                 if header_text == '':
                     header.append(TextObject('&nbsp;'))
                 else:
-                    header.append(TextObject(definitions + text_type(header_text), names_used=self.mako_names))
+                    header.append(TextObject(definitions + text_type(header_text), question=self))
                 self.find_fields_in(cell_text)
                 column.append(compile(cell_text, '<column code>', 'eval'))
             if 'allow reordering' in data and data['allow reordering'] is not False:
@@ -2020,7 +2277,7 @@ class Question:
                     if data['edit header'] == '':
                         header.append(TextObject('&nbsp;'))
                     else:
-                        header.append(TextObject(definitions + text_type(data['edit header']), names_used=self.mako_names))
+                        header.append(TextObject(definitions + text_type(data['edit header']), question=self))
                 else:
                     header.append(TextObject(word("Actions")))
             elif ('delete buttons' in data and data['delete buttons']) or reorder:
@@ -2040,14 +2297,14 @@ class Question:
                     if data['edit header'] == '':
                         header.append(TextObject('&nbsp;'))
                     else:
-                        header.append(TextObject(definitions + text_type(data['edit header']), names_used=self.mako_names))
+                        header.append(TextObject(definitions + text_type(data['edit header']), question=self))
                 else:
                     header.append(TextObject(word("Actions")))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
-                empty_message = TextObject(definitions + text_type(empty_message), names_used=self.mako_names)
+                empty_message = TextObject(definitions + text_type(empty_message), question=self)
             field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, is_reorderable=is_reorderable)}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
@@ -2077,10 +2334,10 @@ class Question:
                 self.fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
-            self.content = TextObject(definitions + text_type(data['content']), names_used=self.mako_names)
+            self.content = TextObject(definitions + text_type(data['content']), question=self)
             #logmessage("keys are: " + str(self.mako_names))
             if 'subject' in data:
-                self.subcontent = TextObject(definitions + text_type(data['subject']), names_used=self.mako_names)
+                self.subcontent = TextObject(definitions + text_type(data['subject']), question=self)
             else:
                 self.subcontent = TextObject("")
             self.question_type = 'template'
@@ -2154,6 +2411,7 @@ class Question:
             else:
                 field_number = 0
                 for field in data['fields']:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field_number
                     if isinstance(field, dict):
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
@@ -2181,7 +2439,7 @@ class Question:
                                 if key == 'using':
                                     if 'extras' not in field_info:
                                         field_info['extras'] = dict()
-                                    field_info['extras']['ml_group'] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                                    field_info['extras']['ml_group'] = TextObject(definitions + text_type(field[key]), question=self)
                                 if key == 'keep for training':
                                     if 'extras' not in field_info:
                                         field_info['extras'] = dict()
@@ -2197,17 +2455,22 @@ class Question:
                                 for validation_key, validation_message in field[key].items():
                                     if not (isinstance(validation_key, string_types) and isinstance(validation_message, string_types)):
                                         raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
-                                    field_info['validation messages'][validation_key] = TextObject(definitions + text_type(validation_message).strip(), names_used=self.mako_names)
+                                    field_info['validation messages'][validation_key] = TextObject(definitions + text_type(validation_message).strip(), question=self)
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
                             elif 'datatype' in field and field['datatype'] == 'area' and key == 'rows':
                                 field_info['rows'] = {'compute': compile(text_type(field[key]), '<rows code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'maximum image size':
+                            elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                                 field_info['max_image_size'] = {'compute': compile(text_type(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment') and key == 'accept':
+                            elif key == 'image upload type' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if field[key].lower().strip() in ('jpeg', 'jpg', 'bmp', 'png'):
+                                    field_info['image_type'] = {'compute': compile(repr(field[key]), '<image upload type code>', 'eval'), 'sourcecode': repr(field[key])}
+                                else:
+                                    field_info['image_type'] = {'compute': compile(text_type(field[key]), '<image upload type code>', 'eval'), 'sourcecode': text_type(field[key])}
+                            elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                                 field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
                             elif key == 'object labeler':
@@ -2240,7 +2503,7 @@ class Question:
                                 if isinstance(field[key], dict):
                                     if 'variable' in field[key] and 'is' in field[key]:
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
-                                        field_info['extras']['show_if_val'] = TextObject(definitions + text_type(field[key]['is']).strip(), names_used=self.mako_names)
+                                        field_info['extras']['show_if_val'] = TextObject(definitions + text_type(field[key]['is']).strip(), question=self)
                                     elif 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
                                         self.find_fields_in(field[key]['code'])
@@ -2259,7 +2522,7 @@ class Question:
                                     field_info['extras']['show_if_sign'] = 0
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if not isinstance(field[key], dict) and not isinstance(field[key], list):
-                                    field_info[key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                                    field_info[key] = TextObject(definitions + text_type(field[key]), question=self)
                                 if key == 'default':
                                     if isinstance(field[key], dict) and 'code' in field[key]:
                                         if 'extras' not in field_info:
@@ -2327,7 +2590,7 @@ class Question:
                                     field_info['selections'] = dict()
                                 else:
                                     field_info['choicetype'] = 'manual'
-                                    field_info['selections'] = dict(values=process_selections_manual(field[key]))
+                                    field_info['selections'] = dict(values=self.process_selections_manual(field[key]))
                                     if 'datatype' not in field:
                                         auto_determine_type(field_info)
                                     for item in field_info['selections']['values']:
@@ -2347,24 +2610,24 @@ class Question:
                             elif key in ('note', 'html'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
-                                field_info['extras'][key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                                field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
                             elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
-                                field_info['extras'][key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                                field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
                             # elif key in ('css', 'script'):
                             #     if 'extras' not in field_info:
                             #         field_info['extras'] = dict()
                             #     if field_info['type'] == 'text':
                             #         field_info['type'] = key
-                            #     field_info['extras'][key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                            #     field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
                             elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
                                 if isinstance(field[key], bool):
                                     field_info['nota'] = field[key]
                                 else:
-                                    field_info['nota'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
+                                    field_info['nota'] = TextObject(definitions + interpret_label(field[key]), question=self)
                             elif key == 'field':
                                 if 'label' not in field:
                                     raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
@@ -2377,11 +2640,11 @@ class Question:
                             elif key == 'label':
                                 if 'field' not in field:
                                     raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
-                                field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
+                                field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
                             else:
                                 if 'label' in field_info:
                                     raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
-                                field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
+                                field_info['label'] = TextObject(definitions + interpret_label(key), question=self)
                                 if not isinstance(field[key], string_types):
                                     raise DAError("Fields in a 'field' section must be plain text." + self.idebug(data))
                                 field[key] = field[key].strip()
@@ -2473,6 +2736,8 @@ class Question:
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
         else:
             if 'continue button field' in data:
                 raise DAError("A continue button field can only be used with a fields directive." + self.idebug(data))
@@ -2492,19 +2757,19 @@ class Question:
                         continue
                     elif key == 'help':
                         if not isinstance(field[key], dict) and not isinstance(field[key], list):
-                            field_info[key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                            field_info[key] = TextObject(definitions + text_type(field[key]), question=self)
                         if 'button' in field: #or 'css' in field or 'script' in field:
                             raise DAError("In a review block, you cannot mix help text with a button item." + self.idebug(data)) #, css, or script
                     elif key == 'button':
                         if not isinstance(field[key], dict) and not isinstance(field[key], list):
-                            field_info['help'] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                            field_info['help'] = TextObject(definitions + text_type(field[key]), question=self)
                             field_info['type'] = 'button'
                     elif key in ('note', 'html'):
                         if 'type' not in field_info:
                             field_info['type'] = key
                         if 'extras' not in field_info:
                             field_info['extras'] = dict()
-                        field_info['extras'][key] = TextObject(definitions + text_type(field[key]), names_used=self.mako_names)
+                        field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
                     elif key == 'show if':
                         if not isinstance(field[key], list):
                             field_list = [field[key]]
@@ -2597,9 +2862,9 @@ class Question:
                     elif key == 'label':
                         if 'field' not in field and 'fields' not in field:
                             raise DAError("If you use 'label' to label a field in a 'review' section, you must also include a 'field' or 'fields.'" + self.idebug(data))                                    
-                        field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
+                        field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
                     else:
-                        field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
+                        field_info['label'] = TextObject(definitions + interpret_label(key), question=self)
                         if not isinstance(field[key], list):
                             field_list = [field[key]]
                         else:
@@ -2685,6 +2950,11 @@ class Question:
                 #     raise DAError("Question ID " + text_type(self.id) + " results in duplicate question name")
             else:
                 self.name = "Question_" + str(self.number)
+        else:
+            self.number = self.interview.next_block_number()
+            if self.name is None:
+                self.name = "Block_" + str(self.number)
+        self.interview.all_questions.append(self)
         # if hasattr(self, 'id'):
         #     try:
         #         self.interview.questions_by_id[self.id].append(self)
@@ -2758,20 +3028,20 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
-    def exec_setup(self, is_generic, the_x, iterators, user_dict):
+    def exec_setup(self, is_generic, the_x, iterators, the_user_dict):
         if is_generic:
             if the_x != 'None':
-                exec("x = " + the_x, user_dict)
+                exec("x = " + the_x, the_user_dict)
         if len(iterators):
             for indexno in range(len(iterators)):
-                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                exec(list_of_indices[indexno] + " = " + iterators[indexno], the_user_dict)
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
             docassemble.base.functions.reconsider(*self.reconsider)
         if self.need is not None:
             for need_code in self.need:
-                exec(need_code, user_dict)
+                exec(need_code, the_user_dict)
     def recursive_data_from_code(self, target):
         if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
             new_dict = dict()
@@ -2810,8 +3080,8 @@ class Question:
             return new_set
         if isinstance(target, (bool, float, int, NoneType)):
             return target
-        return TextObject(text_type(target), names_used=self.mako_names)
-        
+        return TextObject(text_type(target), question=self)
+
     def find_fields_in(self, code):
         myvisitor = myvisitnode()
         t = ast.parse(text_type(code))
@@ -2937,10 +3207,10 @@ class Question:
                         for sub_data in data:
                             if sub_data is not str:
                                 raise DAError('Unknown data type ' + str(type(sub_data)) + ' in list in attachment metadata' + self.idebug(target))
-                        newdata = list(map((lambda x: TextObject(x, names_used=self.mako_names)), data))
+                        newdata = list(map((lambda x: TextObject(x, question=self)), data))
                         metadata[key] = newdata
                     elif isinstance(data, string_types):
-                        metadata[key] = TextObject(data, names_used=self.mako_names)
+                        metadata[key] = TextObject(data, question=self)
                     elif isinstance(data, bool):
                         metadata[key] = data
                     else:
@@ -3010,8 +3280,11 @@ class Question:
                 target['content'] = ''
                 options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if template_type == 'docx' and isinstance(target[template_type + ' template file'], string_types):
+                    the_docx_path = options['docx_template_file'].path()
+                    if not os.path.isfile(the_docx_path):
+                        raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
                     try:
-                        docx_template = docassemble.base.file_docx.DocxTemplate(options['docx_template_file'].path())
+                        docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
                         the_env = custom_jinja_env()
                         the_xml = docx_template.get_xml()
                         the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
@@ -3032,7 +3305,7 @@ class Question:
                         if not key.startswith('_'):
                             self.mako_names.add(key)
                 if field_mode == 'manual':
-                    options['fields'] = recursive_textobject(target['fields'], self.mako_names)
+                    options['fields'] = recursive_textobject(target['fields'], self)
                     if 'code' in target:
                         if isinstance(target['code'], string_types):
                             options['code'] = compile(target['code'], '<expression>', 'eval')
@@ -3100,13 +3373,30 @@ class Question:
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
-            return({'name': TextObject(target['name'], names_used=self.mako_names), 'filename': TextObject(target['filename'], names_used=self.mako_names), 'description': TextObject(target['description'], names_used=self.mako_names), 'content': TextObject("\n".join(defs) + "\n" + target['content'], names_used=self.mako_names), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif isinstance(orig_target, string_types):
-            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, question=self), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
             raise DAError("Unknown data type in attachment")
-
-    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought):
+    def get_question_for_field_with_sub_fields(self, field, user_dict):
+        field_list = eval(field.extras['fields_code'], user_dict)
+        if not isinstance(field_list, list):
+            raise DAError("A code directive that defines items in fields must return a list")
+        new_interview_source = InterviewSourceString(content='')
+        new_interview = new_interview_source.get_interview()
+        reproduce_basics(self.interview, new_interview)
+        return Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
+    def get_fields_and_sub_fields(self, user_dict):
+        all_fields = list()
+        for field in self.fields:
+            if hasattr(field, 'extras') and 'fields_code' in field.extras:
+                the_question = self.get_question_for_field_with_sub_fields(field, user_dict)
+                for sub_field in the_question.fields:
+                    all_fields.append(sub_field)
+            else:
+                all_fields.append(field)
+        return all_fields
+    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought, process_list_collect=True):
         #logmessage("ask: orig_sought is " + text_type(orig_sought) + " and q is " + self.name)
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
@@ -3163,13 +3453,21 @@ class Question:
             if key in ('pre', 'post', 'submit', 'exit link', 'exit label', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (key + ' text') not in extras:
                 extras[key + ' text'] = val
         if len(self.terms):
+            lang = docassemble.base.functions.get_language()
             extras['terms'] = dict()
             for termitem, definition in self.terms.items():
-                extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+                if lang in definition['alt_terms']:
+                    extras['terms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                else:
+                    extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if len(self.autoterms):
+            lang = docassemble.base.functions.get_language()
             extras['autoterms'] = dict()
             for termitem, definition in self.autoterms.items():
-                extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+                if lang in definition['alt_terms']:
+                    extras['autoterms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                else:
+                    extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if self.css is not None:
             extras['css'] = self.css.text(user_dict)
         if self.script is not None:
@@ -3282,6 +3580,14 @@ class Question:
                 extras['allow_emailing'] = eval(self.allow_emailing, user_dict)
         if hasattr(self, 'zip_filename'):
             extras['zip_filename'] = docassemble.base.functions.single_paragraph(self.zip_filename.text(user_dict))
+        if hasattr(self, 'ga_id'):
+            extras['ga_id'] = self.ga_id.text(user_dict)
+        if hasattr(self, 'segment') and 'id' in self.segment:
+            extras['segment'] = dict(arguments=dict())
+            extras['segment']['id'] = self.segment['id'].text(user_dict)
+            if 'arguments' in self.segment:
+                for key, val in self.segment['arguments'].items():
+                    extras['segment']['arguments'][key] = self.segment['arguments'][key].text(user_dict)
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
             # if hasattr(self, 'binaryresponse'):
@@ -3299,6 +3605,7 @@ class Question:
                 skip_undefined = True
             extras['ok'] = dict()
             for field in self.fields:
+                docassemble.base.functions.this_thread.misc['current_field'] = field.number
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
                     failed = False
@@ -3364,311 +3671,409 @@ class Question:
                     else:
                         labels[field.number] = field.label.text(user_dict)
                 extras['ok'][field.number] = True
+            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['current_field']
         else:
-            only_empty_fields_exist = True
-            commands_to_run = list()
-            for field in self.fields:
-                if hasattr(field, 'has_code') and field.has_code:
-                    # standalone multiple-choice questions
-                    selectcompute[field.number] = list()
-                    for choice in field.choices:
-                        if 'compute' in choice and isinstance(choice['compute'], CodeType):
-                            selectcompute[field.number].extend(process_selections(eval(choice['compute'], user_dict)))
-                        else:
-                            new_item = dict()
-                            if 'image' in choice:
-                                new_item['image'] = choice['image']
-                            if 'help' in choice:
-                                new_item['help'] = choice['help'].text(user_dict)
-                            if 'default' in choice:
-                                new_item['default'] = choice['default']
-                            new_item['key'] = choice['key'].text(user_dict)
-                            new_item['label'] = choice['label'].text(user_dict)
-                            selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
-                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
-                            commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
-                        else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                    # multiple choice field in choices
-                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
-                        exec("import docassemble.base.core", user_dict)
-                    if hasattr(field, 'object_labeler'):
-                        labeler_func = eval(field.object_labeler['compute'], user_dict)
-                        if not isinstance(labeler_func, types.FunctionType):
-                            raise DAError("The object labeler was not a function")
-                        user_dict['_DAOBJECTLABELER'] = labeler_func
-                    else:
-                        labeler_func = None
-                    to_compute = field.selections['compute']
-                    if field.datatype == 'object_checkboxes':
-                        default_exists = False
-                        #logmessage("Testing for " + from_safeid(field.saveas))
-                        try:
-                            eval(from_safeid(field.saveas), user_dict)
-                            default_to_use = from_safeid(field.saveas)
-                        except:
-                            default_to_use = 'None'
-                        #logmessage("Running " + '_DAOBJECTDEFAULTDA = ' + default_to_use)
-                        exec('_DAOBJECTDEFAULTDA = ' + default_to_use, user_dict)
-                    if 'exclude' in field.selections:
-                        exclude_list = list()
-                        for x in field.selections['exclude']:
-                            exclude_list.append(eval(x, user_dict))
-                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict), exclude=exclude_list)
-                    else:
-                        #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
-                        selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
-                    if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
-                        del user_dict['_DAOBJECTDEFAULTDA']
-                    if labeler_func is not None:
-                        del user_dict['_DAOBJECTLABELER']
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
-                            ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
-                            commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
-                        else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
-                    if 'exclude' in field.selections:
-                        to_exclude = list()
-                        for x in field.selections['exclude']:
-                            to_exclude.append(eval(x, user_dict))
-                        to_exclude = unpack_list(to_exclude)
+            if hasattr(self, 'list_collect') and process_list_collect and eval(self.list_collect, user_dict):
+                fields_to_scan = self.get_fields_and_sub_fields(user_dict)
+                indexno = 0
+                common_var = None
+                for field in fields_to_scan:
+                    if not hasattr(field, 'saveas'):
+                        continue
+                    the_saveas = from_safeid(field.saveas)
+                    if common_var is None:
+                        common_var = the_saveas
+                        continue
+                    mismatch = False
+                    for char_index in range(len(common_var)):
+                        if the_saveas[char_index] != common_var[char_index]:
+                            mismatch = True
+                            break
+                    if mismatch:
+                        common_var = common_var[0:char_index]
+                common_var = re.sub(r'[^\]]*$', '', common_var)
+                m = re.search(r'^(.*)\[([ijklmn])\]$', common_var)
+                if not m:
+                    raise DAError("Cannot use list collect on these fields.  " + common_var)
+                the_list_varname = m.group(1)
+                if hasattr(self, 'list_collect_is_final'):
+                    extras['list_collect_is_final'] = eval(self.list_collect_is_final, user_dict)
+                else:
+                    extras['list_collect_is_final'] = True
+                if hasattr(self, 'list_collect_allow_append'):
+                    extras['list_collect_allow_append'] = eval(self.list_collect_allow_append, user_dict)
+                else:
+                    extras['list_collect_allow_append'] = True
+                if hasattr(self, 'list_collect_allow_delete'):
+                    extras['list_collect_allow_delete'] = eval(self.list_collect_allow_delete, user_dict)
+                else:
+                    extras['list_collect_allow_delete'] = True
+                extras['list_iterator'] = m.group(2)
+                the_list = eval(the_list_varname, user_dict)
+                if not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
+                    raise DAError("Cannot use list collect on a variable that is not a DAList.")
+                extras['list_collect'] = the_list
+                if hasattr(self, 'list_collect_label'):
+                    extras['list_message'] = self.list_collect_label.text(user_dict)
+                else:
+                    extras['list_message'] = ''
+                if hasattr(the_list, 'minimum_number') and the_list.minimum_number:
+                    extras['list_minimum'] = the_list.minimum_number
+                iterator_index = list_of_indices.index(extras['list_iterator'])
+                length_to_use = len(the_list.elements)
+                if length_to_use == 0:
+                    length_to_use = 1
+                if the_list.ask_object_type or not extras['list_collect_allow_append']:
+                    extra_amount = 0
+                else:
+                    extra_amount = get_config('list collect extra count', 15)
+                for list_indexno in range(length_to_use):
+                    new_iterators = copy.copy(iterators)
+                    new_iterators[iterator_index] = str(list_indexno)
+                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False)
+                    for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
+                        for field_num, val in ask_result[key].items():
+                            if key == 'selectcompute':
+                                selectcompute[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    selectcompute[str(list_indexno + 1) + '_' + str(field_num)] = val
+                                    for ii in range(1, extra_amount + 1):
+                                        selectcompute[str(list_indexno + ii) + '_' + str(field_num)] = val
+                            elif key == 'defaults':
+                                defaults[str(list_indexno) + '_' + str(field_num)] = val
+                            elif key == 'hints':
+                                hints[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        hints[str(list_indexno + ii) + '_' + str(field_num)] = val
+                            elif key == 'helptexts':
+                                helptexts[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        helptexts[str(list_indexno + ii) + '_' + str(field_num)] = val
+                            elif key == 'labels':
+                                labels[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        labels[str(list_indexno + ii) + '_' + str(field_num)] = val
+                    for key, possible_dict in ask_result['extras'].items():
+                        if isinstance(possible_dict, dict):
+                            if key not in extras:
+                                extras[key] = dict()
+                            for field_num, val in possible_dict.items():
+                                extras[key][str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        extras[key][str(list_indexno + ii) + '_' + str(field_num)] = val
+            else:
+                only_empty_fields_exist = True
+                commands_to_run = list()
+                for field in self.fields:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    if hasattr(field, 'has_code') and field.has_code:
+                        # standalone multiple-choice questions
                         selectcompute[field.number] = list()
-                        for candidate in field.selections['values']:
-                            new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
-                            if 'image' in candidate:
-                                new_item['image'] = candidate['image']
-                            if 'help' in candidate:
-                                new_item['help'] = candidate['help'].text(user_dict)
-                            if 'default' in candidate:
-                                new_item['default'] = candidate['default']
-                            if new_item['key'] not in to_exclude:
+                        for choice in field.choices:
+                            if 'compute' in choice and isinstance(choice['compute'], CodeType):
+                                selectcompute[field.number].extend(process_selections(eval(choice['compute'], user_dict)))
+                            else:
+                                new_item = dict()
+                                if 'image' in choice:
+                                    new_item['image'] = choice['image']
+                                if 'help' in choice:
+                                    new_item['help'] = choice['help'].text(user_dict)
+                                if 'default' in choice:
+                                    new_item['default'] = choice['default']
+                                new_item['key'] = choice['key'].text(user_dict)
+                                new_item['label'] = choice['label'].text(user_dict)
                                 selectcompute[field.number].append(new_item)
-                    else:
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                                ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
+                                commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
+                            else:
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
+                        # multiple choice field in choices
+                        if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
+                            exec("import docassemble.base.core", user_dict)
+                        if hasattr(field, 'object_labeler'):
+                            labeler_func = eval(field.object_labeler['compute'], user_dict)
+                            if not isinstance(labeler_func, types.FunctionType):
+                                raise DAError("The object labeler was not a function")
+                            user_dict['_DAOBJECTLABELER'] = labeler_func
+                        else:
+                            labeler_func = None
+                        to_compute = field.selections['compute']
+                        if field.datatype == 'object_checkboxes':
+                            default_exists = False
+                            #logmessage("Testing for " + from_safeid(field.saveas))
+                            try:
+                                eval(from_safeid(field.saveas), user_dict)
+                                default_to_use = from_safeid(field.saveas)
+                            except:
+                                default_to_use = 'None'
+                            #logmessage("Running " + '_DAOBJECTDEFAULTDA = ' + default_to_use)
+                            exec('_DAOBJECTDEFAULTDA = ' + default_to_use, user_dict)
+                        if 'exclude' in field.selections:
+                            exclude_list = list()
+                            for x in field.selections['exclude']:
+                                exclude_list.append(eval(x, user_dict))
+                            selectcompute[field.number] = process_selections(eval(to_compute, user_dict), exclude=exclude_list)
+                        else:
+                            #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
+                            selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
+                        if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
+                            del user_dict['_DAOBJECTDEFAULTDA']
+                        if labeler_func is not None:
+                            del user_dict['_DAOBJECTLABELER']
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                                ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
+                                commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
+                            else:
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
+                        if 'exclude' in field.selections:
+                            to_exclude = list()
+                            for x in field.selections['exclude']:
+                                to_exclude.append(eval(x, user_dict))
+                            to_exclude = unpack_list(to_exclude)
+                            selectcompute[field.number] = list()
+                            for candidate in field.selections['values']:
+                                new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
+                                if 'image' in candidate:
+                                    new_item['image'] = candidate['image']
+                                if 'help' in candidate:
+                                    new_item['help'] = candidate['help'].text(user_dict)
+                                if 'default' in candidate:
+                                    new_item['default'] = candidate['default']
+                                if new_item['key'] not in to_exclude:
+                                    selectcompute[field.number].append(new_item)
+                        else:
+                            selectcompute[field.number] = list()
+                            for item in field.selections['values']:
+                                new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                                if 'image' in item:
+                                    new_item['image'] = item['image']
+                                if 'help' in item:
+                                    new_item['help'] = item['help'].text(user_dict)
+                                if 'default' in item:
+                                    new_item['default'] = item['default']
+                                selectcompute[field.number].append(new_item)
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
+                        else:
+                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
                         selectcompute[field.number] = list()
-                        for item in field.selections['values']:
-                            new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                        for item in field.choices:
+                            new_item = dict()
                             if 'image' in item:
                                 new_item['image'] = item['image']
                             if 'help' in item:
                                 new_item['help'] = item['help'].text(user_dict)
                             if 'default' in item:
                                 new_item['default'] = item['default']
+                            new_item['key'] = item['key'].text(user_dict)
+                            new_item['label'] = item['label'].text(user_dict)
                             selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
-                    selectcompute[field.number] = list()
-                    for item in field.choices:
-                        new_item = dict()
-                        if 'image' in item:
-                            new_item['image'] = item['image']
-                        if 'help' in item:
-                            new_item['help'] = item['help'].text(user_dict)
-                        if 'default' in item:
-                            new_item['default'] = item['default']
-                        new_item['key'] = item['key'].text(user_dict)
-                        new_item['label'] = item['label'].text(user_dict)
-                        selectcompute[field.number].append(new_item)
-                    if len(selectcompute[field.number]) > 0:
-                        only_empty_fields_exist = False
-                    else:
-                        commands_to_run.append(from_safeid(field.saveas) + ' = None')
-                elif self.question_type == "multiple_choice":
-                    selectcompute[field.number] = list()
-                    for item in field.choices:
-                        new_item = dict()
-                        if 'image' in item:
-                            new_item['image'] = item['image']
-                        if 'help' in item:
-                            new_item['help'] = item['help'].text(user_dict)
-                        if 'default' in item:
-                            new_item['default'] = item['default']
-                        new_item['label'] = item['label'].text(user_dict)
-                        new_item['key'] = item['key']
-                        selectcompute[field.number].append(new_item)
-                    only_empty_fields_exist = False
-                else:
-                    only_empty_fields_exist = False
-            if len(self.fields) > 0 and only_empty_fields_exist:
-                assumed_objects = set()
-                for field in self.fields:
-                    if hasattr(field, 'saveas'):
-                        parse_result = parse_var_name(from_safeid(field.saveas))
-                        if not parse_result['valid']:
-                            raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
-                        if len(parse_result['objects']):
-                            assumed_objects.add(parse_result['objects'][-1])
-                        if len(parse_result['bracket_objects']):
-                            assumed_objects.add(parse_result['bracket_objects'][-1])
-                for var in assumed_objects:
-                    if complications.search(var) or var not in user_dict:
-                        eval(var, user_dict)
-                raise CodeExecute(commands_to_run, self)
-            extras['ok'] = dict()
-            for field in self.fields:
-                if hasattr(field, 'showif_code'):
-                    result = eval(field.showif_code, user_dict)
-                    if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
-                        if result:
-                            extras['ok'][field.number] = False
-                            continue
-                    else:
-                        if not result:
-                            extras['ok'][field.number] = False
-                            continue
-                extras['ok'][field.number] = True
-                if hasattr(field, 'nota'):
-                    if 'nota' not in extras:
-                        extras['nota'] = dict()
-                    if isinstance(field.nota, bool):
-                        extras['nota'][field.number] = field.nota
-                    else:
-                        extras['nota'][field.number] = field.nota.text(user_dict)
-                if isinstance(field.required, bool):
-                    extras['required'][field.number] = field.required
-                else:
-                    extras['required'][field.number] = eval(field.required['compute'], user_dict)
-                if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
-                if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
-                    if 'accept' not in extras:
-                        extras['accept'] = dict()
-                    extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
-                if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
-                    if 'rows' not in extras:
-                        extras['rows'] = dict()
-                    extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
-                if hasattr(field, 'validation_messages'):
-                    if 'validation messages' not in extras:
-                        extras['validation messages'] = dict()
-                    extras['validation messages'][field.number] = dict()
-                    for validation_key, validation_message_template in field.validation_messages.items():
-                        extras['validation messages'][field.number][validation_key] = validation_message_template.text(user_dict)
-                if hasattr(field, 'validate'):
-                    the_func = eval(field.validate['compute'], user_dict)
-                    try:
-                        if hasattr(field, 'datatype'):
-                            if field.datatype in ('number', 'integer', 'currency', 'range'):
-                                the_func(0)
-                            elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
-                                the_func('')
-                            elif field.datatype == 'date':
-                                the_func('01/01/1970')
-                            elif field.datatype == 'time':
-                                the_func('12:00 AM')
-                            elif field.datatype == 'datetime':
-                                the_func('01/01/1970 12:00 AM')
-                            elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
-                                the_func(True)
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
                         else:
-                            the_func('')
-                    except DAValidationError as err:
-                        pass
-                if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
-                    if field.number not in selectcompute:
-                        raise DAError("datatype was set to object but no code or selections was provided")
-                    string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
-                    # logmessage("Doing " + string)
-                    try:
-                        exec(string, user_dict)
-                        for selection in selectcompute[field.number]:
-                            key = selection['key']
-                            #logmessage("key is " + str(key))
-                            real_key = codecs.decode(bytearray(key, encoding='utf-8'), 'base64').decode('utf8')
-                            string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
-                            #logmessage("Doing " + string)
+                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                    elif self.question_type == "multiple_choice":
+                        selectcompute[field.number] = list()
+                        for item in field.choices:
+                            new_item = dict()
+                            if 'image' in item:
+                                new_item['image'] = item['image']
+                            if 'help' in item:
+                                new_item['help'] = item['help'].text(user_dict)
+                            if 'default' in item:
+                                new_item['default'] = item['default']
+                            new_item['label'] = item['label'].text(user_dict)
+                            new_item['key'] = item['key']
+                            selectcompute[field.number].append(new_item)
+                        only_empty_fields_exist = False
+                    else:
+                        only_empty_fields_exist = False
+                if len(self.fields) > 0 and only_empty_fields_exist:
+                    assumed_objects = set()
+                    for field in self.fields:
+                        if hasattr(field, 'saveas'):
+                            parse_result = parse_var_name(from_safeid(field.saveas))
+                            if not parse_result['valid']:
+                                raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                            if len(parse_result['objects']):
+                                assumed_objects.add(parse_result['objects'][-1])
+                            if len(parse_result['bracket_objects']):
+                                assumed_objects.add(parse_result['bracket_objects'][-1])
+                    for var in assumed_objects:
+                        if complications.search(var) or var not in user_dict:
+                            eval(var, user_dict)
+                    raise CodeExecute(commands_to_run, self)
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
+                extras['ok'] = dict()
+                for field in self.fields:
+                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    if hasattr(field, 'showif_code'):
+                        result = eval(field.showif_code, user_dict)
+                        if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                            if result:
+                                extras['ok'][field.number] = False
+                                continue
+                        else:
+                            if not result:
+                                extras['ok'][field.number] = False
+                                continue
+                    extras['ok'][field.number] = True
+                    if hasattr(field, 'nota'):
+                        if 'nota' not in extras:
+                            extras['nota'] = dict()
+                        if isinstance(field.nota, bool):
+                            extras['nota'][field.number] = field.nota
+                        else:
+                            extras['nota'][field.number] = field.nota.text(user_dict)
+                    if isinstance(field.required, bool):
+                        extras['required'][field.number] = field.required
+                    else:
+                        extras['required'][field.number] = eval(field.required['compute'], user_dict)
+                    if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
+                    if hasattr(field, 'image_type') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        extras['image_type'] = eval(field.image_type['compute'], user_dict)
+                    if hasattr(field, 'accept') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
+                        if 'accept' not in extras:
+                            extras['accept'] = dict()
+                        extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
+                    if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
+                        if 'rows' not in extras:
+                            extras['rows'] = dict()
+                        extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
+                    if hasattr(field, 'validation_messages'):
+                        if 'validation messages' not in extras:
+                            extras['validation messages'] = dict()
+                        extras['validation messages'][field.number] = dict()
+                        for validation_key, validation_message_template in field.validation_messages.items():
+                            extras['validation messages'][field.number][validation_key] = validation_message_template.text(user_dict)
+                    if hasattr(field, 'validate'):
+                        the_func = eval(field.validate['compute'], user_dict)
+                        try:
+                            if hasattr(field, 'datatype'):
+                                if field.datatype in ('number', 'integer', 'currency', 'range'):
+                                    the_func(0)
+                                elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
+                                    the_func('')
+                                elif field.datatype == 'date':
+                                    the_func('01/01/1970')
+                                elif field.datatype == 'time':
+                                    the_func('12:00 AM')
+                                elif field.datatype == 'datetime':
+                                    the_func('01/01/1970 12:00 AM')
+                                elif field.datatype.startswith('yesno') or field.datatype.startswith('noyes'):
+                                    the_func(True)
+                            else:
+                                the_func('')
+                        except DAValidationError as err:
+                            pass
+                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
+                        if field.number not in selectcompute:
+                            raise DAError("datatype was set to object but no code or selections was provided")
+                        string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
+                        # logmessage("Doing " + string)
+                        try:
                             exec(string, user_dict)
-                    except Exception as err:
-                        raise DAError("Failure while processing field with datatype of object: " + str(err))
-                if hasattr(field, 'label'):
-                    labels[field.number] = field.label.text(user_dict)
-                if hasattr(field, 'extras'):
-                    if 'fields_code' in field.extras:
-                        field_list = eval(field.extras['fields_code'], user_dict)
-                        if not isinstance(field_list, list):
-                            raise DAError("A code directive that defines items in fields must return a list")
-                        new_interview_source = InterviewSourceString(content='')
-                        new_interview = new_interview_source.get_interview()
-                        reproduce_basics(self.interview, new_interview)
-                        the_question = Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
-                        ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought, orig_sought)
-                        for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
-                            for field_num, val in ask_result[key].items():
-                                if key == 'selectcompute':
-                                    selectcompute[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'defaults':
-                                    defaults[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'hints':
-                                    hints[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'helptexts':
-                                    helptexts[str(field.number) + '_' + str(field_num)] = val
-                                elif key == 'labels':
-                                    labels[str(field.number) + '_' + str(field_num)] = val
-                        for key, possible_dict in ask_result['extras'].items():
-                            #logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
-                            if isinstance(possible_dict, dict):
-                                #logmessage("key points to a dict")
+                            for selection in selectcompute[field.number]:
+                                key = selection['key']
+                                #logmessage("key is " + str(key))
+                                real_key = codecs.decode(bytearray(key, encoding='utf-8'), 'base64').decode('utf8')
+                                string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
+                                #logmessage("Doing " + string)
+                                exec(string, user_dict)
+                        except Exception as err:
+                            raise DAError("Failure while processing field with datatype of object: " + str(err))
+                    if hasattr(field, 'label'):
+                        labels[field.number] = field.label.text(user_dict)
+                    if hasattr(field, 'extras'):
+                        if 'fields_code' in field.extras:
+                            the_question = self.get_question_for_field_with_sub_fields(field, user_dict)
+                            ask_result = the_question.ask(user_dict, old_user_dict, the_x, iterators, sought, orig_sought)
+                            for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
+                                for field_num, val in ask_result[key].items():
+                                    if key == 'selectcompute':
+                                        selectcompute[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'defaults':
+                                        defaults[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'hints':
+                                        hints[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'helptexts':
+                                        helptexts[str(field.number) + '_' + str(field_num)] = val
+                                    elif key == 'labels':
+                                        labels[str(field.number) + '_' + str(field_num)] = val
+                            for key, possible_dict in ask_result['extras'].items():
+                                #logmessage(repr("key is " + str(key) + " and possible dict is " + repr(possible_dict)))
+                                if isinstance(possible_dict, dict):
+                                    #logmessage("key points to a dict")
+                                    if key not in extras:
+                                        extras[key] = dict()
+                                    for field_num, val in possible_dict.items():
+                                        #logmessage("Setting " + str(field.number) + '_' + str(field_num))
+                                        extras[key][str(field.number) + '_' + str(field_num)] = val
+                            for sub_field in the_question.fields:
+                                sub_field.number = str(field.number) + '_' + str(sub_field.number)
+                            if 'sub_fields' not in extras:
+                                extras['sub_fields'] = dict()
+                            extras['sub_fields'][field.number] = the_question.fields
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
+                            if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
-                                for field_num, val in possible_dict.items():
-                                    #logmessage("Setting " + str(field.number) + '_' + str(field_num))
-                                    extras[key][str(field.number) + '_' + str(field_num)] = val
-                        for sub_field in the_question.fields:
-                            sub_field.number = str(field.number) + '_' + str(sub_field.number)
-                        if 'sub_fields' not in extras:
-                            extras['sub_fields'] = dict()
-                        extras['sub_fields'][field.number] = the_question.fields
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
-                        if key in field.extras:
-                            if key not in extras:
-                                extras[key] = dict()
-                            extras[key][field.number] = field.extras[key].text(user_dict)
-                    for key in ('ml_train',):
-                        if key in field.extras:
-                            if key not in extras:
-                                extras[key] = dict()
-                            if isinstance(field.extras[key], bool):
-                                extras[key][field.number] = field.extras[key]
+                                extras[key][field.number] = field.extras[key].text(user_dict)
+                        for key in ('ml_train',):
+                            if key in field.extras:
+                                if key not in extras:
+                                    extras[key] = dict()
+                                if isinstance(field.extras[key], bool):
+                                    extras[key][field.number] = field.extras[key]
+                                else:
+                                    extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
+                    if hasattr(field, 'saveas'):
+                        try:
+                            if old_user_dict is not None:
+                                try:
+                                    defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
+                                except:
+                                    defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                             else:
-                                extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
-                if hasattr(field, 'saveas'):
-                    try:
-                        if old_user_dict is not None:
-                            try:
-                                defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
-                            except:
                                 defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
-                        else:
-                            defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
-                    except:
-                        if hasattr(field, 'default'):
-                            if isinstance(field.default, TextObject):
-                                defaults[field.number] = field.default.text(user_dict).strip()
-                            else:
-                                defaults[field.number] = field.default
-                        elif hasattr(field, 'extras') and 'default' in field.extras:
-                            defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
-                    if hasattr(field, 'helptext'):
-                        helptexts[field.number] = field.helptext.text(user_dict)
-                    if hasattr(field, 'hint'):
-                        hints[field.number] = field.hint.text(user_dict)
+                        except:
+                            if hasattr(field, 'default'):
+                                if isinstance(field.default, TextObject):
+                                    defaults[field.number] = field.default.text(user_dict).strip()
+                                else:
+                                    defaults[field.number] = field.default
+                            elif hasattr(field, 'extras') and 'default' in field.extras:
+                                defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
+                        if hasattr(field, 'helptext'):
+                            helptexts[field.number] = field.helptext.text(user_dict)
+                        if hasattr(field, 'hint'):
+                            hints[field.number] = field.hint.text(user_dict)
+                if 'current_field' in docassemble.base.functions.this_thread.misc:
+                    del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
         assumed_objects = set()
         for field in self.fields:
+            docassemble.base.functions.this_thread.misc['current_field'] = field.number
             if hasattr(field, 'saveas'):
                 # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
                 # if m and m.group(1) != 'x':
@@ -3680,6 +4085,8 @@ class Question:
                     assumed_objects.add(parse_result['objects'][-1])
                 if len(parse_result['bracket_objects']):
                     assumed_objects.add(parse_result['bracket_objects'][-1])
+        if 'current_field' in docassemble.base.functions.this_thread.misc:
+            del docassemble.base.functions.this_thread.misc['current_field']
         for var in assumed_objects:
             if complications.search(var) or var not in user_dict:
                 eval(var, user_dict)
@@ -3714,26 +4121,26 @@ class Question:
             if not already_there:
                 user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict()))
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined, 
-    def processed_attachments(self, user_dict, **kwargs):
+    def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)
         if self.compute_attachment is not None:
             use_cache = False
         seeking_var = kwargs.get('seeking_var', '__novar')
-        steps = user_dict['_internal'].get('steps', -1)
+        steps = the_user_dict['_internal'].get('steps', -1)
         #logmessage("processed_attachments: steps is " + str(steps))
-        if use_cache and self.interview.cache_documents and hasattr(self, 'name') and self.name + '__SEEKING__' + seeking_var in user_dict['_internal']['doc_cache']:
-            if steps in user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var]:
+        if use_cache and self.interview.cache_documents and hasattr(self, 'name') and self.name + '__SEEKING__' + seeking_var in the_user_dict['_internal']['doc_cache']:
+            if steps in the_user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var]:
                 #logmessage("processed_attachments: result was in document cache")
-                return user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps]
-            user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var].clear()
+                return the_user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps]
+            the_user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var].clear()
         result_list = list()
         items = list()
         for x in self.attachments:
-            items.append([x, self.prepare_attachment(x, user_dict, **kwargs), None])
+            items.append([x, self.prepare_attachment(x, the_user_dict, **kwargs), None])
         for item in items:
-            result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
+            result_list.append(self.finalize_attachment(item[0], item[1], the_user_dict))
         if self.compute_attachment is not None:
-            computed_attachment_list = eval(self.compute_attachment, user_dict)
+            computed_attachment_list = eval(self.compute_attachment, the_user_dict)
             if not isinstance(computed_attachment_list, list):
                 computed_attachment_list = [computed_attachment_list]
             for the_att in computed_attachment_list:
@@ -3752,14 +4159,14 @@ class Question:
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
-                #     attachment = self.interview.questions_by_name[the_att.info['attachment']['name']].attachments[the_att.info['attachment']['number']] #PPP
-                #     items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
+                #     attachment = self.interview.questions_by_name[the_att.info['attachment']['name']].attachments[the_att.info['attachment']['number']]
+                #     items.append([attachment, self.prepare_attachment(attachment, the_user_dict, **kwargs)])
         if self.interview.cache_documents and hasattr(self, 'name'):
-            if self.name + '__SEEKING__' + seeking_var not in user_dict['_internal']['doc_cache']:
-                user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var] = dict()
-            user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps] = result_list
+            if self.name + '__SEEKING__' + seeking_var not in the_user_dict['_internal']['doc_cache']:
+                the_user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var] = dict()
+            the_user_dict['_internal']['doc_cache'][self.name + '__SEEKING__' + seeking_var][steps] = result_list
         return result_list
-        #return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
+        #return(list(map((lambda x: self.make_attachment(x, the_user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = list()
         has_code = False
@@ -3784,7 +4191,7 @@ class Question:
                         result_dict['image'] = value
                         continue
                     if key == 'help':
-                        result_dict['help'] = TextObject(value)
+                        result_dict['help'] = TextObject(value, question=self)
                         continue
                     if key == 'default':
                         result_dict['default'] = value
@@ -3795,48 +4202,95 @@ class Question:
                         result_dict['compute'] = compile(value, '<expression>', 'eval')
                         self.find_fields_in(value)
                     else:
-                        result_dict['label'] = TextObject(key)
-                        result_dict['key'] = TextObject(value)
+                        result_dict['label'] = TextObject(key, question=self)
+                        result_dict['key'] = TextObject(value, question=self)
                 elif isinstance(value, dict):
-                    result_dict['label'] = TextObject(key)
+                    result_dict['label'] = TextObject(key, question=self)
+                    self.embeds = True
                     if PY3:
                         result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(bytearray(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), encoding='utf-8'), 'utf-8'))
                     else:
                         result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(yaml.safe_dump(value, default_flow_style=False, default_style = '|', allow_unicode=True), 'utf-8'))
                 elif isinstance(value, string_types):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
-                        result_dict['label'] = TextObject(key)
+                        self.embeds = True
+                        result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ('continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'logout', 'exit_logout', 'leave', 'new_session'):
-                        result_dict['label'] = TextObject(key)
+                        self.embeds = True
+                        result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass
                     else:
-                        result_dict['label'] = TextObject(key)
+                        result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = value
                 elif isinstance(value, bool):
-                    result_dict['label'] = TextObject(key)
+                    result_dict['label'] = TextObject(key, question=self)
                     result_dict['key'] = value
                 else:
                     raise DAError("Unknown data type in parse_fields:" + str(type(value)) + ".  " + self.idebug(the_list))
             result_list.append(result_dict)
         return(has_code, result_list)
-    def mark_as_answered(self, user_dict):
+    def mark_as_answered(self, the_user_dict):
         if self.is_mandatory or self.mandatory_code is not None:
-            user_dict['_internal']['answered'].add(self.name)
-    def follow_multiple_choice(self, user_dict, interview_status):
-        if self.name and self.name in user_dict['_internal']['answers']:
+            the_user_dict['_internal']['answered'].add(self.name)
+    def sub_fields_used(self):
+        all_fields_used = set()
+        for var_name in self.fields_used:
+            all_fields_used.add(var_name)
+        if len(self.fields) > 0 and hasattr(self.fields[0], 'choices'):
+            for choice in self.fields[0].choices:
+                if isinstance(choice['key'], Question):
+                    all_fields_used.update(choice['key'].sub_fields_used())
+        return all_fields_used
+    def extended_question_name(self, the_user_dict):
+        if not self.name:
+            return self.name
+        the_name = self.name
+        uses = set()
+        for var_name in self.sub_fields_used():
+            if re.search(r'^x\b', var_name):
+                uses.add('x')
+            for iterator in re.findall(r'\[([ijklmn])\]', var_name):
+                uses.add(iterator)
+        if len(uses) > 0:
+            ok_to_use_extra = True
+            for var_name in uses:
+                if var_name not in the_user_dict:
+                    ok_to_use_extra = False
+            if ok_to_use_extra and 'x' in uses and not hasattr(the_user_dict['x'], 'instanceName'):
+                ok_to_use_extra = False
+            if ok_to_use_extra:
+                extras = []
+                if 'x' in uses:
+                    extras.append(the_user_dict['x'].instanceName)
+                for var_name in ['i', 'j', 'k', 'l', 'm', 'n']:
+                    if var_name in uses:
+                        extras.append(text_type(the_user_dict[var_name]))
+                the_name += "|WITH|" + '|'.join(extras)
+        return the_name
+    def follow_multiple_choice(self, the_user_dict, interview_status, is_generic, the_x, iterators):
+        if not self.embeds:
+            return(self)
+        if is_generic:
+            if the_x != 'None':
+                exec("x = " + the_x, the_user_dict)
+        if len(iterators):
+            for indexno in range(len(iterators)):
+                exec(list_of_indices[indexno] + " = " + iterators[indexno], the_user_dict)
+        the_name = self.extended_question_name(the_user_dict)
+        if the_name and the_name in the_user_dict['_internal']['answers']:
             interview_status.followed_mc = True
             interview_status.tentatively_answered.add(self)
-            qtarget = self.fields[0].choices[user_dict['_internal']['answers'][self.name]].get('key', False)
+            qtarget = self.fields[0].choices[the_user_dict['_internal']['answers'][the_name]].get('key', False)
             if isinstance(qtarget, Question):
-                return(qtarget.follow_multiple_choice(user_dict, interview_status))
+                return(qtarget.follow_multiple_choice(the_user_dict, interview_status, is_generic, the_x, iterators))
         return(self)
-    def finalize_attachment(self, attachment, result, user_dict):
+    def finalize_attachment(self, attachment, result, the_user_dict):
         if self.interview.cache_documents and attachment['variable_name']:
             try:
-                existing_object = eval(attachment['variable_name'], user_dict)
+                existing_object = eval(attachment['variable_name'], the_user_dict)
                 for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html'):
                     if hasattr(existing_object, doc_format):
                         the_file = getattr(existing_object, doc_format)
@@ -3860,7 +4314,7 @@ class Question:
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(user_dict=user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references'):
                             if key in result:
@@ -3871,19 +4325,26 @@ class Question:
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         try:
                             the_template = result['template']
-                            while True:
+                            while True: # Rerender if there's a subdoc using include_docx_template
                                 old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
                                 the_template.render(result['field_data'], jinja_env=custom_jinja_env())
                                 if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                                    # There's another template included
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                                    the_template.save(new_template_file.name)
+                                    the_template.save(new_template_file.name) # Save and refresh the template
                                     the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
                                     docassemble.base.functions.this_thread.misc['docx_template'] = the_template
                                 else:
                                     break
+                            # Copy over images, etc from subdoc to master template
+                            subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
+                            the_template_docx = the_template.docx
+                            for subdoc in subdocs:
+                                docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+                            
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
-                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(user_dict=user_dict))
+                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
                             #logmessage("TemplateError:\n" + traceback.format_exc())
                             raise the_error
                         docassemble.base.functions.reset_context()
@@ -3895,7 +4356,7 @@ class Question:
                             result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
                         if 'pdf' in result['formats_to_use']:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_references=result['update_references'], tagged=result['convert_to_tagged_pdf'])
+                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
                         for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references']:
                             if key in result:
@@ -3905,28 +4366,28 @@ class Question:
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
-                        converter.initial_yaml = [x.path(user_dict=user_dict) for x in attachment['options']['initial_yaml']]
+                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['initial_yaml']]
                     elif 'initial_yaml' in self.interview.attachment_options:
-                        converter.initial_yaml = [x.path(user_dict=user_dict) for x in self.interview.attachment_options['initial_yaml']]
+                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['initial_yaml']]
                     if 'additional_yaml' in attachment['options']:
-                        converter.additional_yaml = [x.path(user_dict=user_dict) for x in attachment['options']['additional_yaml']]
+                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['additional_yaml']]
                     elif 'additional_yaml' in self.interview.attachment_options:
-                        converter.additional_yaml = [x.path(user_dict=user_dict) for x in self.interview.attachment_options['additional_yaml']]
+                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['additional_yaml']]
                     if doc_format in ('rtf', 'rtf to docx'):
                         if 'rtf_template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['rtf_template_file'].path(user_dict=user_dict)
+                            converter.template_file = attachment['options']['rtf_template_file'].path(the_user_dict=the_user_dict)
                         elif 'rtf_template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path(user_dict=user_dict)
+                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path(the_user_dict=the_user_dict)
                     elif doc_format == 'docx':
                         if 'docx_reference_file' in attachment['options']:
-                            converter.reference_file = attachment['options']['docx_reference_file'].path(user_dict=user_dict)
+                            converter.reference_file = attachment['options']['docx_reference_file'].path(the_user_dict=the_user_dict)
                         elif 'docx_reference_file' in self.interview.attachment_options:
-                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(user_dict=user_dict)
+                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(the_user_dict=the_user_dict)
                     else:
                         if 'template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['template_file'].path(user_dict=user_dict)
+                            converter.template_file = attachment['options']['template_file'].path(the_user_dict=the_user_dict)
                         elif 'template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['template_file'].path(user_dict=user_dict)
+                            converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
                     converter.metadata = result['metadata']
                     converter.convert(self)
                     result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
@@ -3935,25 +4396,25 @@ class Question:
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
         if attachment['variable_name']:
             string = "import docassemble.base.core"
-            exec(string, user_dict)
+            exec(string, the_user_dict)
             variable_name = attachment['variable_name']
             m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
             if m:
                 base_var = m.group(1)
                 attrib = m.group(2)
-                the_var = eval(base_var, user_dict)
+                the_var = eval(base_var, the_user_dict)
                 if hasattr(the_var, 'instanceName'):
                     variable_name = the_var.instanceName + '.' + attrib
             string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
             # logmessage("Executing " + string + "\n")
-            exec(string, user_dict)
-            the_name = attachment['name'].text(user_dict).strip()
-            the_filename = attachment['filename'].text(user_dict).strip()
+            exec(string, the_user_dict)
+            the_name = attachment['name'].text(the_user_dict).strip()
+            the_filename = attachment['filename'].text(the_user_dict).strip()
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False))
-            exec(variable_name + '.info = _attachment_info', user_dict)
-            del user_dict['_attachment_info']
+            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False))
+            exec(variable_name + '.info = _attachment_info', the_user_dict)
+            del the_user_dict['_attachment_info']
             for doc_format in result['file']:
                 variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                 # filename = result['filename'] + '.' + doc_format
@@ -3970,35 +4431,35 @@ class Question:
                     markdown_string = ''
                 string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + extension_of_doc_format[doc_format]) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
                 #logmessage("Executing " + string + "\n")
-                exec(string, user_dict)
+                exec(string, the_user_dict)
             for doc_format in result['content']:
                 # logmessage("Considering " + doc_format)
                 if doc_format not in result['file']:
                     variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                     # logmessage("Setting " + variable_string)
                     string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
-                    exec(string, user_dict)
+                    exec(string, the_user_dict)
         return(result)
-    def prepare_attachment(self, attachment, user_dict, **kwargs):
+    def prepare_attachment(self, attachment, the_user_dict, **kwargs):
         if 'language' in attachment['options']:
             old_language = docassemble.base.functions.get_language()
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
-        the_name = attachment['name'].text(user_dict).strip()
-        the_filename = attachment['filename'].text(user_dict).strip()
+        the_name = attachment['name'].text(the_user_dict).strip()
+        the_filename = attachment['filename'].text(the_user_dict).strip()
         if the_filename == '':
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
-        result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
         if 'redact' in attachment['options']:
             if isinstance(attachment['options']['redact'], CodeType):
-                result['redact'] = eval(attachment['options']['redact'], user_dict)
+                result['redact'] = eval(attachment['options']['redact'], the_user_dict)
             else:
                 result['redact'] = attachment['options']['redact']
         else:
             result['redact'] = True
         if 'editable' in attachment['options']:
-            result['editable'] = eval(attachment['options']['editable'], user_dict)
+            result['editable'] = eval(attachment['options']['editable'], the_user_dict)
         else:
             result['editable'] = True
         docassemble.base.functions.this_thread.misc['redact'] = result['redact']
@@ -4018,43 +4479,43 @@ class Question:
                 if isinstance(data, bool):
                     result['metadata'][key] = data
                 elif isinstance(data, list):
-                    result['metadata'][key] = textify(data, user_dict)
+                    result['metadata'][key] = textify(data, the_user_dict)
                 else:
-                    result['metadata'][key] = data.text(user_dict)
+                    result['metadata'][key] = data.text(the_user_dict)
         if 'pdf_a' in attachment['options']:
             if isinstance(attachment['options']['pdf_a'], bool):
                 result['convert_to_pdf_a'] = attachment['options']['pdf_a']
             else:
-                result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], user_dict)
+                result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
         if 'tagged_pdf' in attachment['options']:
             if isinstance(attachment['options']['tagged_pdf'], bool):
                 result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
             else:
-                result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], user_dict)
+                result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
         else:
             result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
         if 'update_references' in attachment['options']:
             if isinstance(attachment['options']['update_references'], bool):
                 result['update_references'] = attachment['options']['update_references']
             else:
-                result['update_references'] = eval(attachment['options']['update_references'], user_dict)
+                result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
         else:
             result['update_references'] = False
         if 'password' in attachment['options']:
-            result['password'] = attachment['options']['password'].text(user_dict)
+            result['password'] = attachment['options']['password'].text(the_user_dict)
         else:
             result['password'] = None
         if 'template_password' in attachment['options']:
-            result['template_password'] = attachment['options']['template_password'].text(user_dict)
+            result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
         else:
             result['template_password'] = None
         for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
                 if 'decimal_places' in attachment['options']:
                     try:
-                        float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(user_dict).strip())) + 'f'
+                        float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
                     except:
                         logmessage("prepare_attachment: error in float_formatter")
                         float_formatter = None
@@ -4062,12 +4523,12 @@ class Question:
                     float_formatter = None
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(user_dict=user_dict))
+                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         if isinstance(attachment['options']['fields'], string_types):
-                            result['field_data'] = user_dict
+                            result['field_data'] = the_user_dict
                         else:
-                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], user_dict, self, result['template'])
+                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'])
                             new_field_data = dict()
                             if isinstance(the_field_data, list):
                                 for item in the_field_data:
@@ -4078,7 +4539,7 @@ class Question:
                         result['field_data']['_codecs'] = codecs
                         result['field_data']['_array'] = array
                         if 'code' in attachment['options']:
-                            additional_dict = eval(attachment['options']['code'], user_dict)
+                            additional_dict = eval(attachment['options']['code'], the_user_dict)
                             if isinstance(additional_dict, dict):
                                 for key, val in additional_dict.items():
                                     if isinstance(val, float) and float_formatter is not None:
@@ -4091,14 +4552,14 @@ class Question:
                                 raise DAError("code in an attachment returned something other than a dictionary")
                         if 'raw code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['raw code dict'].items():
-                                val = eval(var_code, user_dict)
+                                val = eval(var_code, the_user_dict)
                                 if isinstance(val, float) and float_formatter is not None:
                                     result['field_data'][varname] = float_formatter % val
                                 else:
                                     result['field_data'][varname] = val
                         if 'code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['code dict'].items():
-                                val = eval(var_code, user_dict)
+                                val = eval(var_code, the_user_dict)
                                 if isinstance(val, float) and float_formatter is not None:
                                     result['field_data'][varname] = float_formatter % val
                                 elif isinstance(val, RawValue):
@@ -4115,13 +4576,13 @@ class Question:
                     else:
                         the_fields = attachment['options']['fields']
                     if 'checkbox_export_value' in attachment['options']:
-                        yes_value = attachment['options']['checkbox_export_value'].text(user_dict).strip()
+                        yes_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
                     else:
                         yes_value = 'Yes'
                     docassemble.base.functions.this_thread.misc['checkbox_export_value'] = yes_value
                     for item in the_fields:
                         for key, val in item.items():
-                            answer = val.text(user_dict).rstrip()
+                            answer = val.text(the_user_dict).rstrip()
                             if answer == 'True':
                                 answer = yes_value
                             elif answer == 'False':
@@ -4139,7 +4600,7 @@ class Question:
                             else:
                                 result['data_strings'].append((key, answer))
                     if 'code' in attachment['options']:
-                        additional_fields = eval(attachment['options']['code'], user_dict)
+                        additional_fields = eval(attachment['options']['code'], the_user_dict)
                         if not isinstance(additional_fields, list):
                             additional_fields = [additional_fields]
                         for item in additional_fields:
@@ -4173,7 +4634,7 @@ class Question:
                             if not isinstance(item, dict):
                                 raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.items():
-                                val = eval(var_code, user_dict)
+                                val = eval(var_code, the_user_dict)
                                 if val is True:
                                     val = yes_value
                                 elif val is False:
@@ -4201,7 +4662,7 @@ class Question:
                             if not isinstance(item, dict):
                                 raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.items():
-                                val = eval(var_code, user_dict)
+                                val = eval(var_code, the_user_dict)
                                 if val is True:
                                     val = yes_value
                                 elif val is False:
@@ -4234,18 +4695,69 @@ class Question:
                             the_markdown += u'---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + u"...\n"
                         else:
                             the_markdown += u'---\n' + codecs.decode(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), 'utf-8') + u"...\n"
-                    the_markdown += attachment['content'].text(user_dict)
+                    docassemble.base.functions.set_context('pandoc')
+                    the_markdown += attachment['content'].text(the_user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                         the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                     result['markdown'][doc_format] = the_markdown
+                    docassemble.base.functions.reset_context()
             elif doc_format in ['html']:
-                result['markdown'][doc_format] = attachment['content'].text(user_dict)
+                result['markdown'][doc_format] = attachment['content'].text(the_user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                     result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
                 #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if old_language is not None:
             docassemble.base.functions.set_language(old_language)
+        return(result)
+    def process_selections_manual(self, data):
+        result = []
+        if isinstance(data, list):
+            for entry in data:
+                if isinstance(entry, dict):
+                    the_item = dict()
+                    for key in entry:
+                        if len(entry) > 1:
+                            if key in ['default', 'help', 'image']:
+                                continue
+                            if 'key' in entry and 'label' in entry and key != 'key':
+                                continue
+                            if 'default' in entry:
+                                the_item['default'] = entry['default']
+                            if 'help' in entry:
+                                the_item['help'] = TextObject(entry['help'], question=self)
+                            if 'image' in entry:
+                                if entry['image'].__class__.__name__ == 'DAFile':
+                                    entry['image'].retrieve()
+                                    if entry['image'].mimetype is not None and entry['image'].mimetype.startswith('image'):
+                                        the_item['image'] = dict(type='url', value=entry['image'].url_for())
+                                elif entry['image'].__class__.__name__ == 'DAFileList':
+                                    entry['image'][0].retrieve()
+                                    if entry['image'][0].mimetype is not None and entry['image'][0].mimetype.startswith('image'):
+                                        the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
+                                elif entry['image'].__class__.__name__ == 'DAStaticFile':
+                                    the_item['image'] = dict(type='url', value=entry['image'].url_for())
+                                else:
+                                    the_item['image'] = dict(type='decoration', value=entry['image'])
+                            if 'key' in entry and 'label' in entry:
+                                the_item['key'] = TextObject(entry['key'], question=self)
+                                the_item['label'] = TextObject(entry['label'], question=self)
+                                result.append(the_item)
+                                continue
+                        the_item['key'] = TextObject(entry[key], question=self)
+                        the_item['label'] = TextObject(key, question=self)
+                        result.append(the_item)
+                if isinstance(entry, list):
+                    result.append(dict(key=TextObject(entry[0], question=self), label=TextObject(entry[1], question=self)))
+                elif isinstance(entry, string_types):
+                    result.append(dict(key=TextObject(entry, question=self), label=TextObject(entry, question=self)))
+                elif isinstance(entry, (int, float, bool, NoneType)):
+                    result.append(dict(key=TextObject(text_type(entry), question=self), label=TextObject(text_type(entry), question=self)))
+        elif isinstance(data, dict):
+            for key, value in sorted(data.items(), key=operator.itemgetter(1)):
+                result.append(dict(key=TextObject(value, question=self), label=TextObject(key, question=self)))
+        else:
+            raise DAError("Unknown data type in manual choices selection: " + re.sub(r'[<>]', '', repr(data)))
         return(result)
 
 def emoji_matcher_insert(obj):
@@ -4308,6 +4820,8 @@ class Interview:
         self.questions_by_id = dict()
         self.questions_by_name = dict()
         self.questions_list = list()
+        self.all_questions = list()
+        self.progress_points = set()
         self.ids_in_use = set()
         self.id_orderings = list()
         self.orderings = list()
@@ -4323,6 +4837,8 @@ class Interview:
         self.reconsider = set()
         self.reconsider_generic = dict()
         self.question_index = 0
+        self.block_index = 0
+        self.translating = False
         self.default_role = None
         self.default_validation_messages = dict()
         self.default_screen_parts = dict()
@@ -4341,6 +4857,7 @@ class Interview:
         self.use_navigation = False
         self.flush_left = False
         self.max_image_size = get_config('maximum image size', None)
+        self.image_type = get_config('image upload type', None)
         self.bootstrap_theme = get_config('bootstrap theme', None)
         self.sections = dict()
         self.names_used = set()
@@ -4353,6 +4870,8 @@ class Interview:
         self.imports_util = False
         self.table_width = 65
         self.success = True
+        self.translation_dict = dict()
+        self.translations = list()
         self.scan_for_emojis = False
         self.consolidated_metadata = dict()
         if 'source' in kwargs:
@@ -4386,9 +4905,9 @@ class Interview:
             return None
         result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
         return result
-    def get_tags(self, user_dict):
-        if 'tags' in user_dict['_internal']:
-            return user_dict['_internal']['tags']
+    def get_tags(self, the_user_dict):
+        if 'tags' in the_user_dict['_internal']:
+            return the_user_dict['_internal']['tags']
         else:
             tags = set()
             for metadata in self.metadata:
@@ -4396,22 +4915,22 @@ class Interview:
                     for tag in metadata['tags']:
                         tags.add(tag)
             return tags
-    def get_title(self, user_dict, status=None, converter=None):
+    def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
         mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'))
         title = dict()
         for title_name, title_abb in mapping:
-            if '_internal' in user_dict and title_name in user_dict['_internal'] and user_dict['_internal'][title_name] is not None:
-                title[title_abb] = text_type(user_dict['_internal'][title_name]).strip()
+            if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
+                title[title_abb] = text_type(the_user_dict['_internal'][title_name]).strip()
             elif status is not None and (title_name + ' text') in status.extras and status.extras[title_name + ' text'] is not None:
                 if title_name == 'exit link':
                     title[title_abb] = status.extras[title_name + ' text']
                 else:
                     title[title_abb] = converter(status.extras[title_name + ' text'], title_name)
-                user_dict['_internal'][title_name + ' default'] = title[title_abb]
-            elif status is None and (title_name + ' default') in user_dict['_internal'] and user_dict['_internal'][title_name + ' default'] is not None:
-                title[title_abb] = user_dict['_internal'][title_name + ' default']
+                the_user_dict['_internal'][title_name + ' default'] = title[title_abb]
+            elif status is None and (title_name + ' default') in the_user_dict['_internal'] and the_user_dict['_internal'][title_name + ' default'] is not None:
+                title[title_abb] = the_user_dict['_internal'][title_name + ' default']
         if status is not None:
             base_lang = status.question.language
         else:
@@ -4457,6 +4976,9 @@ class Interview:
     def next_number(self):
         self.question_index += 1
         return(self.question_index - 1)
+    def next_block_number(self):
+        self.block_index += 1
+        return(self.block_index - 1)
     def read_from(self, source):
         if self.source is None:
             self.source = source
@@ -4575,7 +5097,6 @@ class Interview:
                     continue
                 if parts.get('main page ' + title_name, '') != '':
                     self.default_title[lang][title_abb] = parts['main page ' + title_name]
-
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K(object):
@@ -4621,7 +5142,7 @@ class Interview:
         result = sorted(the_list, key=self.sorter)
         # logmessage(repr([y for y in reversed([x.number for x in result])]))
         return reversed(result)
-    def processed_helptext(self, user_dict, language):
+    def processed_helptext(self, the_user_dict, language):
         result = list()
         if language in self.helptext:
             for source in self.helptext[language]:
@@ -4630,16 +5151,16 @@ class Interview:
                 if source['label'] is None:
                     help_item['label'] = None
                 else:
-                    help_item['label'] = source['label'].text(user_dict)
+                    help_item['label'] = source['label'].text(the_user_dict)
                 if source['heading'] is None:
                     help_item['heading'] = None
                 else:
-                    help_item['heading'] = source['heading'].text(user_dict)
+                    help_item['heading'] = source['heading'].text(the_user_dict)
                 if source['audiovideo'] is None:
                     help_item['audiovideo'] = None
                 else:
-                    help_item['audiovideo'] = process_audio_video_list(source['audiovideo'], user_dict)
-                help_item['content'] = source['content'].text(user_dict)
+                    help_item['audiovideo'] = process_audio_video_list(source['audiovideo'], the_user_dict)
+                help_item['content'] = source['content'].text(the_user_dict)
                 result.append(help_item)
         return result
     def assemble(self, user_dict, interview_status=None, old_user_dict=None):
@@ -4661,8 +5182,6 @@ class Interview:
         docassemble.base.functions.this_thread.interview = self
         docassemble.base.functions.this_thread.interview_status = interview_status
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        #if 'nav' not in user_dict: # waste of CPU cycles; eventually take out!
-        #    user_dict['nav'] = docassemble.base.functions.DANav()
         if user_dict['nav'].sections is None:
             user_dict['nav'].sections = self.sections
             if hasattr(self, 'sections_progressive'):
@@ -4751,13 +5270,23 @@ class Interview:
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)
-                        if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
+                        if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
+                            if question.question_type == "data_da":
+                                exec(import_core, user_dict)
+                                string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
                             if question.question_type == "data_from_code":
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                                exec(string, user_dict)
+                                question.mark_as_answered(user_dict)
+                            if question.question_type == "data_from_code_da":
+                                exec(import_core, user_dict)
+                                string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
@@ -4800,10 +5329,7 @@ class Interview:
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory question', 'time': time.time()})
                                 if question.name and question.name in user_dict['_internal']['answers']:
-                                    #logmessage("in answers")
-                                    #question.mark_as_answered(user_dict)
-                                    #interview_status.populate(question.follow_multiple_choice(user_dict, interview_status).ask(user_dict, old_user_dict, 'None', [], None, None))
-                                    the_question = question.follow_multiple_choice(user_dict, interview_status)
+                                    the_question = question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
                                         exec_with_trap(the_question, user_dict)
@@ -5156,12 +5682,9 @@ class Interview:
                         # logmessage("Skipping question " + the_question.name)
                         continue
                     current_question = the_question
-                    if follow_mc:
-                        question = the_question.follow_multiple_choice(user_dict, interview_status)
-                    else:
-                        question = the_question
                     if self.debug:
-                        seeking.append({'question': question, 'reason': 'considering', 'time': time.time()})
+                        seeking.append({'question': the_question, 'reason': 'considering', 'time': time.time()})
+                    question = current_question
                     if len(question.condition) > 0:
                         if is_generic:
                             if the_x != 'None':
@@ -5176,6 +5699,25 @@ class Interview:
                                 break
                         if not condition_success:
                             continue
+                    if follow_mc:
+                        question = the_question.follow_multiple_choice(user_dict, interview_status, is_generic, the_x, iterators)
+                    else:
+                        question = the_question
+                    if question is not current_question:
+                        if len(question.condition) > 0:
+                            if is_generic:
+                                if the_x != 'None':
+                                    exec("x = " + the_x, user_dict)
+                            if len(iterators):
+                                for indexno in range(len(iterators)):
+                                    exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
+                            condition_success = True
+                            for condition in question.condition:
+                                if not eval(condition, user_dict):
+                                    condition_success = False
+                                    break
+                            if not condition_success:
+                                continue
                     if self.debug:
                         seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":
@@ -5184,9 +5726,23 @@ class Interview:
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    if question.question_type == "data_da":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        exec(import_core, user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                        exec(string, user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    if question.question_type == "data_from_code_da":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        exec(import_core, user_dict)
+                        string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -5287,8 +5843,8 @@ class Interview:
                         the_object.source_content = question.content
                         the_object.source_subject = question.subcontent
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
-                        the_object.user_dict = user_dict
-                        the_object.temp_vars = temp_vars
+                        the_object.userdict = user_dict
+                        the_object.tempvars = temp_vars
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
@@ -5328,8 +5884,8 @@ class Interview:
                             if the_object.__class__.__name__ != 'DALazyTableTemplate':
                                 raise DAError("askfor: failure to define template object")
                         the_object.table_info = table_info
-                        the_object.user_dict = user_dict
-                        the_object.temp_vars = temp_vars
+                        the_object.userdict = user_dict
+                        the_object.tempvars = temp_vars
                         #logmessage("Pop variable for table")
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -5739,56 +6295,6 @@ def process_selections(data, manual=False, exclude=None):
         raise DAError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return(result)
 
-def process_selections_manual(data):
-    result = []
-    if isinstance(data, list):
-        for entry in data:
-            if isinstance(entry, dict):
-                the_item = dict()
-                for key in entry:
-                    if len(entry) > 1:
-                        if key in ['default', 'help', 'image']:
-                            continue
-                        if 'key' in entry and 'label' in entry and key != 'key':
-                            continue
-                        if 'default' in entry:
-                            the_item['default'] = entry['default']
-                        if 'help' in entry:
-                            the_item['help'] = TextObject(entry['help'])
-                        if 'image' in entry:
-                            if entry['image'].__class__.__name__ == 'DAFile':
-                                entry['image'].retrieve()
-                                if entry['image'].mimetype is not None and entry['image'].mimetype.startswith('image'):
-                                    the_item['image'] = dict(type='url', value=entry['image'].url_for())
-                            elif entry['image'].__class__.__name__ == 'DAFileList':
-                                entry['image'][0].retrieve()
-                                if entry['image'][0].mimetype is not None and entry['image'][0].mimetype.startswith('image'):
-                                    the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
-                            elif entry['image'].__class__.__name__ == 'DAStaticFile':
-                                the_item['image'] = dict(type='url', value=entry['image'].url_for())
-                            else:
-                                the_item['image'] = dict(type='decoration', value=entry['image'])
-                        if 'key' in entry and 'label' in entry:
-                            the_item['key'] = TextObject(entry['key'])
-                            the_item['label'] = TextObject(entry['label'])
-                            result.append(the_item)
-                            continue
-                    the_item['key'] = TextObject(entry[key])
-                    the_item['label'] = TextObject(key)
-                    result.append(the_item)
-            if isinstance(entry, list):
-                result.append(dict(key=TextObject(entry[0]), label=TextObject(entry[1])))
-            elif isinstance(entry, string_types):
-                result.append(dict(key=TextObject(entry), label=TextObject(entry)))
-            elif isinstance(entry, (int, float, bool, NoneType)):
-                result.append(dict(key=TextObject(text_type(entry)), label=TextObject(text_type(entry))))
-    elif isinstance(data, dict):
-        for key, value in sorted(data.items(), key=operator.itemgetter(1)):
-            result.append(dict(key=TextObject(value), label=TextObject(key)))
-    else:
-        raise DAError("Unknown data type in manual choices selection: " + re.sub(r'[<>]', '', repr(data)))
-    return(result)
-
 def extract_missing_name(the_error):
     #logmessage("extract_missing_name: string was " + str(string))
     m = nameerror_match.search(text_type(the_error))
@@ -5870,7 +6376,7 @@ def recurse_indices(expression_array, variable_list, pre_part, final_list, var_s
     if len(var_subs) == 0 and len(generic) == 0:
         recurse_indices(copy.copy(expression_array), variable_list, ['x'], final_list, var_subs_dict, var_subs, generic_dict, copy.copy(pre_part))
 
-def ensure_object_exists(saveas, datatype, user_dict, commands=None):
+def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
     # logmessage("ensure object exists: " + str(saveas))
     if commands is None:
         execute = True
@@ -5879,7 +6385,7 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
         execute = False
     already_there = False
     try:
-        eval(saveas, user_dict)
+        eval(saveas, the_user_dict)
         already_there = True
     except:
         pass
@@ -5894,14 +6400,14 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
     if parse_result['final_parts'][1] != '':
         if parse_result['final_parts'][1][0] == '.':
             try:
-                core_key = eval(parse_result['final_parts'][0], user_dict)
+                core_key = eval(parse_result['final_parts'][0], the_user_dict)
                 if hasattr(core_key, 'instanceName'):
                     method = 'attribute'
             except:
                 pass
         elif parse_result['final_parts'][1][0] == '[':
             try:
-                core_key = eval(parse_result['final_parts'][0], user_dict)
+                core_key = eval(parse_result['final_parts'][0], the_user_dict)
                 if hasattr(core_key, 'instanceName'):
                     method = 'index'
             except:
@@ -5928,7 +6434,7 @@ def ensure_object_exists(saveas, datatype, user_dict, commands=None):
     if execute:
         for command in commands:
             #logmessage("Doing " + command)
-            exec(command, user_dict)
+            exec(command, the_user_dict)
     
 def invalid_variable_name(varname):
     if not isinstance(varname, string_types):
@@ -6165,3 +6671,26 @@ def custom_jinja_env():
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.misc.get('docx_template', None))
+
+def get_docx_variables(the_path):
+    import docassemble.base.legal
+    names = set()
+    if not os.path.isfile(the_path):
+        raise DAError("Missing docx template file " + os.path.basename(the_path))
+    try:
+        docx_template = docassemble.base.file_docx.DocxTemplate(the_path)
+        the_env = custom_jinja_env()
+        the_xml = docx_template.get_xml()
+        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
+        the_xml = docx_template.patch_xml(the_xml)
+        parsed_content = the_env.parse(the_xml)
+    except Exception as the_err:
+        raise DAError("There was an error parsing the docx file: " + the_err.__class__.__name__ + " " + text_type(the_err))
+    for key in jinja2meta.find_undeclared_variables(parsed_content):
+        if not key.startswith('_'):
+            names.add(key)
+    for name in docassemble.base.legal.__all__:
+        if name in names:
+            names.remove(name)
+    return sorted(list(names))

@@ -1,0 +1,40 @@
+metadata:
+  title: Buttons that run code
+  documentation: "https://docassemble.org/docs/fields.html#code button"
+---
+objects:
+  person: DAList.using(object_type=Individual, there_are_any=True)
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } person?
+fields:
+  - Name: person[i].name.first
+---
+question: |
+  Is there another person?
+yesno: person.there_is_another
+---
+question: |
+  What kind of car does
+  ${ person[i] } want?
+buttons:
+  - Ford Focus:
+      code: |
+        person[i].car_model = "Focus"
+        person[i].car_make = "Ford"
+  - Toyota Camry:
+      code: |
+        person[i].car_model = "Camry"
+        person[i].car_make = "Toyota"
+---
+question: How to buy a car
+subquestion: |
+  % for item in person:
+  ${ item } needs to go to a
+  ${ item.car_make }
+  dealership and ask if they have a
+  ${ item.car_model } for sale.
+  
+  % endfor
+mandatory: True

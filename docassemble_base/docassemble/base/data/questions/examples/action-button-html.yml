@@ -1,0 +1,10 @@
+metadata:
+  title: Action button
+  short: Button
+  documentation: https://docassemble.org/docs/functions.html#action_button_html
+---
+mandatory: True
+question: |
+  Need more information?
+subquestion: |
+  ${ action_button_html("https://docassemble.org", label="Visit our web site", color="primary", size="md") }

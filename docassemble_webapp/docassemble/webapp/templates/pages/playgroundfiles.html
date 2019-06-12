@@ -20,17 +20,17 @@
             {{ myrender_hidden_field(form.section, value=section) }}
             {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
             <div class="form-actions">
-              {{ render_submit_field(form.submit, tabindex=565, id="uploadbutton") }}
+              {{ render_submit_field(form.submit, tabindex=565, id="dauploadbutton") }}
             </div>
           </form>
           <div class="mt-3">
             {%- if use_gd %}
-            <div class="onright">
+            <div class="daonright">
               <a tabindex="15" title="{{ word('Sync with Google Drive') }}" class="btn btn-success mb-2" href="{{ url_for('sync_with_google_drive', next=url_for('playground_files', section=section)) }}"><i class="fab fa-google-drive"></i>&nbsp;{{ word('Sync') }}</a>
             </div>
             {%- endif %}
             {%- if use_od %}
-            <div class="onright">
+            <div class="daonright">
               <a tabindex="15" title="{{ word('Sync with OneDrive') }}" class="btn btn-success mb-2" href="{{ url_for('sync_with_onedrive', next=url_for('playground_files', section=section)) }}"><i class="fab fa-windows"></i>&nbsp;{{ word('Sync') }}</a>
             </div>
             {%- endif %}            
@@ -82,7 +82,7 @@
                 <a tabindex="572" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
                   <i class="fas fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
-                <div class="dropdown-menu heightlim">
+                <div class="dropdown-menu daheightlim">
                   {%- if any_files %}
                   {%- for file in editable_files %}
                   {%- if file['name'] == current_file %}
@@ -107,7 +107,7 @@
                   {{ render_addon_field(formtwo.file_name, tabindex=579) }}
                 </div>
                 <div class="col-lg-6">
-                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
+                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
                 </div>
               </div>
               <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
@@ -123,7 +123,7 @@
 {%- if active_file %}
           <div class="col-md-4 pgright">
             <div id="playgroundbox" class="card bg-light playgroundbox">
-              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">

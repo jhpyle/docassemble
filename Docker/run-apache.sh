@@ -60,7 +60,7 @@ if [ "${DAPYTHONMANUAL:-0}" == "3" ]; then
     echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
 fi
 echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}" >> /etc/apache2/conf-available/docassemble.conf
+echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}" >> /etc/apache2/conf-available/docassemble.conf
 if [ -n "${CROSSSITEDOMAIN}" ]; then
     echo -e "Define DACROSSSITEDOMAIN\nDefine DACROSSSITEDOMAINVALUE ${CROSSSITEDOMAIN}" >> /etc/apache2/conf-available/docassemble.conf
 else
@@ -78,6 +78,9 @@ if [ "${USEHTTPS:-false}" == "true" ]; then
 else
     a2dismod ssl
     a2dissite -q docassemble-ssl &> /dev/null
+fi
+if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
+    echo "Listen 8080" >> /etc/apache2/ports.conf
 fi
 
 function stopfunc {

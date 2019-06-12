@@ -1,0 +1,20 @@
+metadata:
+  title: Image upload type
+  short title: Upload
+  example start: 1
+  example end: 2
+  documentation: "https://docassemble.org/docs/fields.html#image upload type"
+---
+question: |
+  Please upload a picture of yourself.
+fields:
+  - Picture: user_picture
+    datatype: file
+    maximum image size: 100
+    image upload type: jpeg
+---
+question: |
+  You're so small!
+subquestion: |
+  ${ user_picture }
+mandatory: True

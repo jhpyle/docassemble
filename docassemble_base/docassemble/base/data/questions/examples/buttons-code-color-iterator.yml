@@ -1,0 +1,46 @@
+metadata:
+  title: Buttons that run code
+  documentation: "https://docassemble.org/docs/fields.html#code button"
+---
+objects:
+  person: DAList.using(object_type=Individual, there_are_any=True)
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } person?
+fields:
+  - Name: person[i].name.first
+---
+question: |
+  Is there another person?
+yesno: person.there_is_another
+---
+question: |
+  What is ${ person[i].possessive('favorite color') }?
+buttons:
+  - Red:
+      question: |
+        Does ${ person[i] } prefer
+        dark red or light red?
+      field: person[i].favorite_color
+      buttons:
+        - Dark Red
+        - Light Red
+  - Green:
+      question: |
+        Does ${ person[i] } prefer dark
+        green or light green?
+      field: person[i].favorite_color
+      buttons:
+        - Dark Green
+        - Light Green
+---
+question: Summary
+subquestion: |
+  % for item in person:
+  ${ item.possessive('favorite color') }
+  is
+  ${ item.favorite_color }.
+  
+  % endfor
+mandatory: True

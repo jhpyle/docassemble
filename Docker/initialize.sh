@@ -8,6 +8,7 @@ if [ "${DAPYTHONVERSION}" == "2" ]; then
 else
     export DA_DEFAULT_LOCAL="local3.5"
 fi
+
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 
 echo "Activating with ${DA_ACTIVATE}"
@@ -18,11 +19,28 @@ export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-${DA_ROOT}/config/config.yml.
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
+echo "config.yml is at " $DA_CONFIG_FILE >&2
+
 echo "1" >&2
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get clean &> /dev/null
 apt-get -q -y update &> /dev/null
+
+if [ ! -x s3cmd ]; then
+    apt-get -q -y install s3cmd
+fi
+
+pandoc --help &> /dev/null || apt-get -q -y install pandoc
+
+PANDOC_VERSION=`pandoc --version | head -n1`
+
+if [ "${PANDOC_VERSION}" != "pandoc 2.7" ]; then
+   cd /tmp \
+   && wget -q https://github.com/jgm/pandoc/releases/download/2.7/pandoc-2.7-1-amd64.deb \
+   && dpkg -i pandoc-2.7-1-amd64.deb \
+   && rm pandoc-2.7-1-amd64.deb
+fi
 
 echo "2" >&2
 
@@ -97,6 +115,7 @@ fi
 echo "9" >&2
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
+    echo "Enable azure" >&2
     export AZUREENABLE=true
 fi
 
@@ -175,12 +194,12 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache) ]]; then
-	echo "There are apache files on Azure" >&2
+        echo "There are apache files on Azure" >&2
 	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
 	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-  		echo "Copying apache" >&2
+                echo "Copying apache file" $target_file >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "/etc/apache2/sites-available/${target_file}"
 	    fi
 	done
@@ -202,6 +221,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
   	echo "Copying config.yml" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
+	ls -l $DA_CONFIG_FILE >&2
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
 	echo "Copying redis" >&2
@@ -245,7 +265,12 @@ DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 
 echo "15" >&2
 
+if [ "${BEHINDHTTPSLOADBALANCER:-null}" == "true" ] && [ "${XSENDFILE:-null}" == "null" ]; then
+    export XSENDFILE=false
+fi
+
 if [ ! -f $DA_CONFIG_FILE ]; then
+    echo "There is no config file.  Creating one from source." >&2
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
 	-e 's/{{DBUSER}}/'"${DBUSER:-docassemble}"'/' \
@@ -278,6 +303,11 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
 	-e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
+	-e 's/{{XSENDFILE}}/'"${XSENDFILE:-true}"'/' \
+	-e 's/{{DAEXPOSEWEBSOCKETS}}/'"${DAEXPOSEWEBSOCKETS:-false}"'/' \
+	-e 's/{{DAWEBSOCKETSIP}}/'"${DAWEBSOCKETSIP:-null}"'/' \
+	-e 's/{{DAWEBSOCKETSPORT}}/'"${DAWEBSOCKETSPORT:-null}"'/' \
+	-e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE
@@ -431,6 +461,14 @@ if [ -n "$PACKAGES" ]; then
     done
 fi
 
+echo "26.5" >&2
+
+if [ -n "$PYTHONPACKAGES" ]; then
+    for PACKAGE in "${PYTHONPACKAGES[@]}"; do
+        su -c "source $DA_ACTIVATE && pip install $PACKAGE" www-data
+    done
+fi
+
 echo "27" >&2
 
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
@@ -554,7 +592,9 @@ fi
 
 echo "37" >&2
 
-su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
+if [ "${DAUPDATEONSTART:-true}" = "true" ]; then
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE initialize" www-data || exit 1
+fi
 
 echo "38" >&2
 
@@ -610,11 +650,12 @@ python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 echo "43" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
+    echo "Listen 80" > /etc/apache2/ports.conf
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	if [ "${DAPYTHONVERSION}" == "2" ]; then
 	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
 	    if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
-		cd /tmp && wget http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
+		cd /tmp && wget -q http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
 	    fi
 	else
 	    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
@@ -660,11 +701,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
     fi
     echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-    echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}" >> /etc/apache2/conf-available/docassemble.conf
+    echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}" >> /etc/apache2/conf-available/docassemble.conf
     if [ -n "${CROSSSITEDOMAIN}" ]; then
 	echo "Define DACROSSSITEDOMAIN ${CROSSSITEDOMAIN}" >> /etc/apache2/conf-available/docassemble.conf
     fi
-    echo "Listen 80" >> /etc/apache2/ports.conf
     if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
 	echo "Listen 8081" >> /etc/apache2/ports.conf
 	a2ensite docassemble-redirect

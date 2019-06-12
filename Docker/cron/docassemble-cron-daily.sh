@@ -6,6 +6,8 @@ export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
+source "${DA_ACTIVATE}"
+
 set -- $LOCALE
 export LANG=$1
 
@@ -21,10 +23,6 @@ fi
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
     export AZUREENABLE=true
     blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    ${DA_ROOT}/webapp/run-cron.sh cron_daily
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
@@ -73,6 +71,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     fi
 fi
 
+if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+    ${DA_ROOT}/webapp/run-cron.sh cron_daily
+fi
+
 MONTHDAY=$(date +%m-%d)
 BACKUPDIR=${DA_ROOT}/backup/$MONTHDAY
 rm -rf $BACKUPDIR
@@ -80,7 +82,12 @@ mkdir -p $BACKUPDIR
 if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
     rsync -au ${DA_ROOT}/files $BACKUPDIR/
     rsync -au ${DA_ROOT}/config $BACKUPDIR/
-    rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
+    #rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
+    rsync -au ${DA_ROOT}/log $BACKUPDIR/
+fi
+
+if [ -f /var/lib/redis/dump.rdb ]; then
+    cp /var/lib/redis/dump.rdb $BACKUPDIR/redis.rdb
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
@@ -128,8 +135,10 @@ if [ "${AZUREENABLE:-false}" == "true" ]; then
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; then
-    for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
-        rm -rf "$old_dir"
-    done
+    if [ -d /tmp/files ]; then
+	for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
+            rm -rf "$old_dir"
+	done
+    fi
 fi
 

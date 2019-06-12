@@ -92,6 +92,7 @@
 "Deleted file: ": Null
 "Deleted interview": Null
 "Deleted interviews": Null
+"(Deleted)": Null
 "Deleted package": Null
 "Delete": Null
 "Dependencies": Null
@@ -117,6 +118,8 @@
 "Edit text files": Null
 "Edit User Profile": Null
 "e.g., 56.33.114.49": Null
+"E.g., docassemble.demo:data/questions/questions.yml": Null
+"E.g., es, fr, it": Null
 "e.g., *example.com": Null
 "E-mail address is required": Null
 "E-mail address": Null
@@ -128,10 +131,8 @@
 "E-mail this document": Null
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
-"Enter an ISO-639-1 language code (e.g., es, fr, it)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
-"Error accessing Google Drive": Null
 "Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
@@ -181,7 +182,6 @@
 "Google Drive is not configured": Null
 "Google Drive is not linked.": Null
 "Google Drive": Null
-"Google Drive Test": Null
 "Help is available for this question": Null
 "Help is available": Null
 "Help": Null
@@ -204,11 +204,13 @@
 "interview answers cannot be decrypted": Null
 "Interview answers cannot be decrypted": Null
 "Interview files": Null
+"Interview": Null
 "Interviews": Null
 "in the": Null
 "Invalid e-mail address": Null
 "Invalid E-mail": Null
 "Invalid Email": Null
+"Invalid interview": Null
 "Invalid invitation token": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
@@ -251,6 +253,7 @@
 "Modules": Null
 "Monitor": Null
 "month": Null
+"Move down": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "My Interviews": Null
@@ -261,6 +264,7 @@
 "Names defined": Null
 "New API Key": Null
 "New chat connection from": Null
+"New chat message": Null
 "New conversation above": Null
 "New conversation below": Null
 "(New file)": Null
@@ -376,6 +380,8 @@
 "Reconfigure": Null
 "Registration is invite only": Null
 "Remove": Null
+"Reorder by moving down": Null
+"Reorder by moving up": Null
 "Restarting": Null
 "Restart": Null
 "Resume": Null
@@ -535,6 +541,7 @@
 "Type your selection, or type skip to move on without selecting.": Null
 "Type your selection(s), separated by commas.": Null
 "Type your selection(s), separated by commas, or type none.": Null
+"Unable to decrypt interview.  Starting a new session instead.": Null
 "Unable to determine if the package is published on PyPI.": Null
 "Unable to determine if the package is published on your GitHub account.": Null
 "(Unable to display map)": Null
@@ -547,6 +554,7 @@
 "unavailable": Null
 "Unblock": Null
 "Undefined names": Null
+"Undelete": Null
 "Unit": Null
 "Unknown": Null
 "Unnamed User": Null
@@ -616,6 +624,8 @@
 "You have signed out successfully.": Null
 "You must attach a file.": Null
 "You must provide a file.": Null
+"You must provide a language": Null
+"You must provide an interview filename": Null
 "You must select an option.": Null
 "You must sign your name to continue.": Null
 "You must type at least %s characters.": Null
@@ -653,6 +663,7 @@
 "Your e-mail address": Null
 "Your GitHub integration has already been configured.": Null
 "Your information was saved.": Null
+"Your IP address is": Null
 "Your new API key, known internally as": Null
 "Your password is insecure and needs to be changed": Null
 "Your Playground is connected to your Google Drive.": Null

@@ -3,7 +3,7 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
           <p>{{ version }}</p>
-          <form action="" method="POST" role="form" class="configform">
+          <form action="" method="POST" role="form" class="daconfigform">
             {{ form.hidden_tag() }}
             <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
             <div class="form-actions mt-2">

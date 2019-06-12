@@ -1,0 +1,29 @@
+metadata:
+  title: Two-stage assembly
+  short: Two-stage
+  example start: 1
+  example end: 4
+---
+code: |
+  inserted_paragraph = "My favorite fruit is {{ favorite_fruit }} and I want the world to know."
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+attachment:
+  variable name: the_template
+  docx template file: twostage.docx
+  valid formats:
+    - docx
+---
+mandatory: True
+question: |
+  All done
+attachment:
+  name: A Document
+  filename: a_document
+  docx template file:
+    code: |
+      the_template.docx

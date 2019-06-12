@@ -1,0 +1,46 @@
+metadata:
+  title: Get data from Google Sheet
+  short title: Google Sheet
+  documentation: "https://docassemble.org/docs/functions.html#google sheets example three"
+  example start: 1
+  example end: 7
+---
+modules:
+  - .google_sheets
+---
+objects:
+  - court: Person
+---
+mandatory: True
+code: |
+  court_populated
+  final_screen
+---
+code: |
+  need(county)
+  for row in read_sheet('court_list'):
+    if row['County'] == county:
+      court.name.text = row['Name']
+      court.address.address = row['Address']
+      court.address.city = row['City']
+      court.address.state = row['State']
+      court.address.zip = row['Zip']
+      court.address.county = row['County']
+  court_populated = True
+---
+question: |
+  What is your county?
+field: county
+dropdown:
+  - Adams County
+  - Allen County
+  - Beaver County
+---
+event: final_screen
+question: |
+  Your local court
+subquestion: |
+  You need to go to the ${ court },
+  which is located at:
+
+  ${ court.address.block() }

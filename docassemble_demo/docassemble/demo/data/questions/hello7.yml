@@ -1,0 +1,15 @@
+metadata:
+  title: Hello World
+  documentation: "https://docassemble.org/docs/config.html#playground examples"
+  example start: 2
+  example end: 2
+---
+question: Hello, ${ planet }!
+buttons:
+  - Exit: exit
+mandatory: True
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet

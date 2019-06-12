@@ -4,10 +4,13 @@ import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 import docassemble.base.functions
-
+sys.stderr.write("1\n")
 import eventlet
+sys.stderr.write("2\n")
 eventlet.sleep()
+sys.stderr.write("3\n")
 eventlet.monkey_patch()
+sys.stderr.write("4\n")
 
 from flask_socketio import join_room, disconnect
 from docassemble.webapp.app_socket import app, db, socketio
@@ -80,7 +83,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             person = None
             user_is_temp = True
         else:
-            person = UserModel.query.filter_by(id=user_id).first()
+            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
             user_is_temp = False
         if person is not None and person.timezone is not None:
             the_timezone = pytz.timezone(person.timezone)
@@ -234,7 +237,7 @@ def chat_message(data):
     db.session.add(record)
     db.session.commit()
     if user_id is not None:
-        person = UserModel.query.filter_by(id=user_id).first()
+        person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
         person = None
     modtime = nice_utc_date(nowtime)
@@ -413,7 +416,7 @@ def monitor_thread(sid=None, user_id=None):
     with app.app_context():
         sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
         if user_id is not None:
-            person = UserModel.query.filter_by(id=user_id).first()
+            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
         else:
             person = None
         if person is not None and person.timezone is not None:
@@ -465,7 +468,7 @@ def monitor_thread(sid=None, user_id=None):
                         if str(data['userid']).startswith('t'):
                             name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
                         else:
-                            person = UserModel.query.filter_by(id=data['userid']).first()
+                            person = UserModel.query.options(db.joinedload('roles')).filter_by(id=data['userid']).first()
                             if person.first_name:
                                 name = str(person.first_name) + ' ' + str(person.last_name)
                             else:
@@ -784,7 +787,7 @@ def monitor_chat_message(data):
     user_id = session.get('user_id', None)
     if user_id is not None:
         user_id = int(user_id)
-    person = UserModel.query.filter_by(id=user_id).first()
+    person = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:
@@ -810,7 +813,9 @@ def monitor_chat_log(data):
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
+    scroll = data.get('scroll', True)
     #sys.stderr.write("Key is " + str(key) + "\n")
+    #sys.stderr.write("scroll is " + repr(scroll) + "\n")
     if key is None:
         sys.stderr.write("No key provided\n")
         return
@@ -854,7 +859,7 @@ def monitor_chat_log(data):
     if self_user_id is not None:
         self_user_id = int(self_user_id)
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
-    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages}, namespace='/monitor', room=request.sid)
+    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages, 'scroll': scroll}, namespace='/monitor', room=request.sid)
     #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")
 
 #observer
@@ -1021,4 +1026,29 @@ def terminate_observer_connection():
     #disconnect()
 
 if __name__ == '__main__':
-    socketio.run(app)
+    sys.stderr.write("5\n")
+    if daconfig.get('expose websockets', False):
+        try:
+            if 'websockets ip' in daconfig and daconfig['websockets ip']:
+                host = daconfig['websockets ip']
+            else:
+                import netifaces as ni
+                ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
+                host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
+            socketio.run(app, host=host, port=daconfig.get('websockets port', 5000))
+        except:
+            sys.stderr.write("Could not find the external IP address\n")
+            if 'websockets ip' in daconfig and daconfig['websockets ip']:
+                socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', 5000))
+            elif 'websockets port' in daconfig and daconfig['websockets port']:
+                socketio.run(app, port=daconfig['websockets port'])
+            else:
+                socketio.run(app)
+    else:
+        sys.stderr.write("6\n")
+        if 'websockets ip' in daconfig and daconfig['websockets ip']:
+            socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', daconfig.get('websockets port', 5000)))
+        elif 'websockets port' in daconfig and daconfig['websockets port']:
+            socketio.run(app, port=daconfig['websockets port'])
+        else:
+            socketio.run(app)

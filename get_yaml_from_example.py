@@ -46,7 +46,7 @@ def read_file(filename):
         metadata = dict()
         for the_block in blocks:
             if re.search(r'metadata:', the_block):
-                block_info = yaml.load(the_block)
+                block_info = yaml.load(the_block, Loader=yaml.FullLoader)
                 if 'metadata' in block_info:
                     metadata.update(block_info['metadata'])
         start_block = int(metadata.get('example start', 1))

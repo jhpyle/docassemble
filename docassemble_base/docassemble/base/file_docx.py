@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
 import os
-from six import string_types, text_type
+from copy import deepcopy
+from six import string_types, text_type, PY2
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt
 import docx.opc.constants
-from docassemble.base.functions import server, this_thread, package_template_filename
+from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
+from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
+from docassemble.base.functions import server, this_thread, package_template_filename, get_config
 import docassemble.base.filter
 from xml.sax.saxutils import escape as html_escape
 from docassemble.base.logger import logmessage
@@ -89,6 +92,32 @@ class InlineHyperlink(object):
     def __str__(self):
         return self._insert_link()
 
+def fix_subdoc(masterdoc, subdoc):
+    """Fix the images, styles, references, shapes, etc of a subdoc"""
+    composer = Composer(masterdoc) # Using docxcompose
+    composer.reset_reference_mapping()
+
+    # This is the same as the docxcompose function, except it doesn't copy the elements over.
+    # Copying the elements over is done by returning the subdoc XML in this function.
+    # Both sd.subdocx and the master template file are changed with these functions.
+    composer._create_style_id_mapping(subdoc)
+    for element in subdoc.element.body:
+        if isinstance(element, CT_SectPr):
+            continue
+        composer.add_referenced_parts(subdoc.part, masterdoc.part, element)
+        composer.add_styles(subdoc, element)
+        composer.add_numberings(subdoc, element)
+        composer.restart_first_numbering(subdoc, element)
+        composer.add_images(subdoc, element)
+        composer.add_shapes(subdoc, element)
+        composer.add_footnotes(subdoc, element)
+        composer.remove_header_and_footer_references(subdoc, element)
+
+    composer.add_styles_from_other_parts(subdoc)
+    composer.renumber_bookmarks()
+    composer.renumber_docpr_ids()
+    composer.fix_section_types(subdoc)
+
 def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
     if this_thread.evaluation_context is None:
@@ -99,7 +128,17 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
-    sd.subdocx._part = sd.docx._part
+
+    # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
+    # Given we're half way through processing the template, we can't fix the master template here
+    # we have to do it in post
+    if 'docx_subdocs' not in this_thread.misc:
+        this_thread.misc['docx_subdocs'] = []
+    this_thread.misc['docx_subdocs'].append(deepcopy(sd.subdocx))
+
+    # Fix the subdocs before they are included in the template
+    fix_subdoc(this_thread.misc['docx_template'], sd.subdocx)
+
     first_paragraph = sd.subdocx.paragraphs[0]
     for key, val in kwargs.items():
         if hasattr(val, 'instanceName'):
@@ -239,17 +278,159 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
+class SoupParser(object):
+    def __init__(self, tpl):
+        self.paragraphs = [dict(params=dict(style='p', indentation=0), runs=[RichText('')])]
+        self.current_paragraph = self.paragraphs[-1]
+        self.run = self.current_paragraph['runs'][-1]
+        self.bold = False
+        self.italic = False
+        self.underline = False
+        self.strike = False
+        self.indentation = 0
+        self.style = 'p'
+        self.still_new = True
+        self.size = None
+        self.tpl = tpl
+    def new_paragraph(self):
+        if self.still_new:
+            logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
+            self.current_paragraph['params']['style'] = self.style
+            self.current_paragraph['params']['indentation'] = self.indentation
+            return
+        logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
+        self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation), runs=[RichText('')])
+        self.paragraphs.append(self.current_paragraph)
+        self.run = self.current_paragraph['runs'][-1]
+        self.still_new = True
+    def __str__(self):
+        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+    def __unicode__(self):
+        output = ''
+        list_number = 1
+        for para in self.paragraphs:
+            logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
+            output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
+            if para['params']['style'] in ('ul', 'ol', 'blockquote'):
+                output += '<w:ind w:left="' + text_type(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
+            output += '<w:rPr></w:rPr></w:pPr>'
+            if para['params']['style'] == 'ul':
+                output += text_type(RichText("•\t"))
+            if para['params']['style'] == 'ol':
+                output += text_type(RichText(text_type(list_number) + ".\t"))
+                list_number += 1
+            else:
+                list_number = 1
+            for run in para['runs']:
+                output += text_type(run)
+            output += '</w:p>'
+        return output
+    def start_link(self, url):
+        ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+        self.current_paragraph['runs'].append('<w:hyperlink r:id="%s">' % (ref, ))
+        self.new_run()
+        self.still_new = False
+    def end_link(self):
+        self.current_paragraph['runs'].append('</w:hyperlink>')
+        self.new_run()
+        self.still_new = False
+    def new_run(self):
+        self.current_paragraph['runs'].append(RichText(''))
+        self.run = self.current_paragraph['runs'][-1]
+    def traverse(self, elem):
+        for part in elem.contents:
+            if isinstance(part, NavigableString):
+                self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.still_new = False
+            elif isinstance(part, Tag):
+                logmessage("Part name is " + text_type(part.name))
+                if part.name == 'p':
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'li':
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'ul':
+                    logmessage("Entering a UL")
+                    oldstyle = self.style
+                    self.style = 'ul'
+                    self.indentation += 10
+                    self.traverse(part)
+                    self.indentation -= 10
+                    self.style = oldstyle
+                    logmessage("Leaving a UL")
+                elif part.name == 'ol':
+                    logmessage("Entering a OL")
+                    oldstyle = self.style
+                    self.style = 'ol'
+                    self.indentation += 10
+                    self.traverse(part)
+                    self.indentation -= 10
+                    self.style = oldstyle
+                    logmessage("Leaving a OL")
+                elif part.name == 'strong':
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                elif part.name == 'em':
+                    self.italic = True
+                    self.traverse(part)
+                    self.italic = False
+                elif part.name == 'strike':
+                    self.strike = True
+                    self.traverse(part)
+                    self.strike = False
+                elif part.name == 'u':
+                    self.underline = True
+                    self.traverse(part)
+                    self.underline = False
+                elif part.name == 'blockquote':
+                    oldstyle = self.style
+                    self.style = 'blockquote'
+                    self.indentation += 20
+                    self.traverse(part)
+                    self.indentation -= 20
+                    self.style = oldstyle
+                elif re.match(r'h[1-6]', part.name):
+                    oldsize = self.size
+                    self.size = 60 - ((int(part.name[1]) - 1) * 10)
+                    self.new_paragraph()
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                    self.size = oldsize
+                elif part.name == 'a':
+                    self.start_link(part['href'])
+                    self.underline = True
+                    self.traverse(part)
+                    self.underline = False
+                    self.end_link()
+            else:
+                logmessage("Encountered a " + part.__class__.__name__)
+
 def markdown_to_docx(text, tpl):
-    source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
-    source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
-    #source_code = re.sub("\n", ' ', source_code)
-    #source_code = re.sub(">\s+<", '><', source_code)
-    rt = RichText('')
-    soup = BeautifulSoup(source_code, 'lxml')
-    html_parsed = deque()
-    html_parsed = html_linear_parse(soup)
-    rt = add_to_rt(tpl, rt, html_parsed)
-    return rt
+    if get_config('new markdown to docx', False):
+        source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+        source_code = re.sub("\n", ' ', source_code)
+        source_code = re.sub(">\s+<", '><', source_code)
+        soup = BeautifulSoup('<html>' + source_code + '</html>', 'html.parser')
+        parser = SoupParser(tpl)
+        for elem in soup.find_all(recursive=False):
+            parser.traverse(elem)
+        output = text_type(parser)
+        logmessage(output)
+        return output
+    else:
+        source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+        source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
+        #source_code = re.sub("\n", ' ', source_code)
+        #source_code = re.sub(">\s+<", '><', source_code)
+        rt = RichText('')
+        soup = BeautifulSoup(source_code, 'lxml')
+        html_parsed = deque()
+        html_parsed = html_linear_parse(soup)
+        rt = add_to_rt(tpl, rt, html_parsed)
+        return rt
 
 def pdf_pages(file_info, width):
     output = ''
@@ -285,3 +466,4 @@ def pdf_pages(file_info, width):
             output += "[Error including page image]"
         output += ' '
     return(output)
+
