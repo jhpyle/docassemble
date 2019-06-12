@@ -1023,4 +1023,14 @@ def terminate_observer_connection():
     #disconnect()
 
 if __name__ == '__main__':
-    socketio.run(app)
+    if daconfig.get('expose websockets', False):
+        try:
+            import netifaces as ni
+            ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
+            host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
+            socketio.run(app, host=host, port=5000)
+        except:
+            sys.stderr.write("Could not find the external IP address\n")
+            socketio.run(app)
+    else:
+        socketio.run(app)
