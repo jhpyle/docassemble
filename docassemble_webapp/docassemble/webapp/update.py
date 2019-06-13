@@ -599,18 +599,18 @@ if __name__ == "__main__":
             remove_inactive_hosts()
         else:
             check_for_updates()
-        from docassemble.base.config import daconfig
-        if USING_SUPERVISOR:
-            SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
-            container_role = os.environ.get('CONTAINERROLE', '')
-            if re.search(r':(web|celery|all):', container_role):
-                args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
-                result = call(args)
-        else:
-            sys.stderr.write("update: touched wsgi file" + "\n")
-            wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-            if os.path.isfile(wsgi_file):
-                with open(wsgi_file, 'a'):
-                    os.utime(wsgi_file, None)
+            from docassemble.base.config import daconfig
+            if USING_SUPERVISOR:
+                SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
+                container_role = os.environ.get('CONTAINERROLE', '')
+                if re.search(r':(web|celery|all):', container_role):
+                    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
+                    result = subprocess.call(args)
+            else:
+                sys.stderr.write("update: touched wsgi file" + "\n")
+                wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+                if os.path.isfile(wsgi_file):
+                    with open(wsgi_file, 'a'):
+                        os.utime(wsgi_file, None)
         db.engine.dispose()
     sys.exit(0)
