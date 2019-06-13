@@ -327,7 +327,9 @@ def rtf_to_docx(in_file, out_file):
     #logmessage("rtf_to_docx: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
     result = p.wait()
-    if not os.path.isfile(to_file):
+    if os.path.isfile(to_file):
+        result = 0
+    else:
         result = 1
     if result == 0:
         shutil.copyfile(to_file, out_file)

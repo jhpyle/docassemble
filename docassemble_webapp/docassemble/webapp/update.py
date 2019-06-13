@@ -16,6 +16,12 @@ from distutils.version import LooseVersion
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
+    if 'initialize' in sys.argv:
+        mode = 'initialize'
+    elif 'check_for_updates' in sys.argv:
+        mode = 'check_for_updates'
+    else:
+        mode = 'initialize'
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -583,18 +589,28 @@ if __name__ == "__main__":
         from docassemble.webapp.packages.models import Package, Install, PackageAuth
         from docassemble.webapp.daredis import r
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
-        update_versions()
-        any_package = Package.query.filter_by(active=True).first()
-        if any_package is None:
-            add_dependencies(1)
+        if mode == 'initialize':
             update_versions()
-        check_for_updates(doing_startup=True)
-        remove_inactive_hosts()
+            any_package = Package.query.filter_by(active=True).first()
+            if any_package is None:
+                add_dependencies(1)
+                update_versions()
+            check_for_updates(doing_startup=True)
+            remove_inactive_hosts()
+        else:
+            check_for_updates()
         from docassemble.base.config import daconfig
-        sys.stderr.write("update: touched wsgi file" + "\n")
-        wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-        if os.path.isfile(wsgi_file):
-            with open(wsgi_file, 'a'):
-                os.utime(wsgi_file, None)
+        if USING_SUPERVISOR:
+            SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
+            container_role = os.environ.get('CONTAINERROLE', '')
+            if re.search(r':(web|celery|all):', container_role):
+                args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
+                result = call(args)
+        else:
+            sys.stderr.write("update: touched wsgi file" + "\n")
+            wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+            if os.path.isfile(wsgi_file):
+                with open(wsgi_file, 'a'):
+                    os.utime(wsgi_file, None)
         db.engine.dispose()
     sys.exit(0)

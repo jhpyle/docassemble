@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.4.51] - 2019-06-12
+### Changed
+- Added the `initial` option for `update on start`.
+- Different mechanism for restarting server after software update.
+### Fixed
+- RTF to DOCX conversion was failing even though the file converted.
+
 ## [0.4.50] - 2019-06-12
 ### Added
 - The `update on start` Configuration directive.

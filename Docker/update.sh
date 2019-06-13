@@ -19,6 +19,6 @@ export HOME=/var/www
 set -- $LOCALE
 export LANG=$1
 
-python -m docassemble.webapp.update
+python -m docassemble.webapp.update $DA_CONFIG_FILE check_for_updates
 
 exit 0

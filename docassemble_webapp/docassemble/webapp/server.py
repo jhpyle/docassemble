@@ -3364,7 +3364,7 @@ def trigger_update(except_for=None):
                     logmessage("trigger_update: using http://localhost:9001")
                 else:
                     the_url = host.url
-                args = [SUPERVISORCTL, '-s', the_url, 'start update']
+                args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
                 result = call(args)
                 if result == 0:
                     logmessage("trigger_update: sent reset to " + str(host.hostname))
@@ -3379,7 +3379,7 @@ def restart_on(host):
     else:
         the_url = host.url
     if re.search(r':(web|all):', host.role):
-        args = [SUPERVISORCTL, '-s', the_url, 'start reset']
+        args = [SUPERVISORCTL, '-s', the_url, 'start', 'reset']
         result = call(args)
         if result == 0:
             logmessage("restart_on: sent reset to " + str(host.hostname))
@@ -12177,7 +12177,7 @@ def update_package_wait():
             if (daCheckinInterval != null){
               clearInterval(daCheckinInterval);
             }
-            daRestart();
+            //daRestart();
           }
           else if (data.status == 'failed' && !resultsAreIn){
             resultsAreIn = true;
@@ -12355,7 +12355,7 @@ def update_package():
                             existing_package.limitation = None
                         install_pip_package(existing_package.name, existing_package.limitation)
                 db.session.commit()
-        result = docassemble.webapp.worker.update_packages.delay()
+        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
         session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
@@ -12378,7 +12378,7 @@ def update_package():
                 pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
-                    result = docassemble.webapp.worker.update_packages.delay()
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
@@ -12399,7 +12399,7 @@ def update_package():
                         install_git_package(packagename, giturl, branch=branch)
                     else:
                         install_git_package(packagename, giturl)
-                    result = docassemble.webapp.worker.update_packages.delay()
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
@@ -12415,7 +12415,7 @@ def update_package():
                 packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
-                    result = docassemble.webapp.worker.update_packages.delay()
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
                 else:
@@ -12822,7 +12822,7 @@ def create_playground_package():
             # db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
-                result = docassemble.webapp.worker.update_packages.delay()
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 session['taskwait'] = result.id
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', file=current_package)))
                 #return redirect(url_for('playground_packages', file=current_package))
