@@ -32,7 +32,7 @@ else:
     USING_SUPERVISOR = False
 
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-container_role = os.environ.get('CONTAINERROLE', '')
+container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
 
 ONEDRIVE_CHUNK_SIZE = 2000000
 

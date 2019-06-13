@@ -602,7 +602,7 @@ if __name__ == "__main__":
             from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
-                container_role = os.environ.get('CONTAINERROLE', '')
+                container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
                     result = subprocess.call(args)
