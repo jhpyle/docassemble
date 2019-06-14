@@ -9,8 +9,8 @@ if __name__ == "__main__":
 
 def main():
     from docassemble.base.config import daconfig
-    container_role = os.environ.get('CONTAINERROLE', None)
-    if container_role and re.search(r':(all|cron):', container_role):
+    container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
+    if re.search(r':(all|cron):', container_role):
         import docassemble.webapp.fix_postgresql_tables
         docassemble.webapp.fix_postgresql_tables.main()
         import docassemble.webapp.create_tables

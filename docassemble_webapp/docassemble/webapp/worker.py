@@ -21,9 +21,18 @@ import iso8601
 import datetime
 import pytz
 import traceback
+from subprocess import call
 from requests.utils import quote
 from docassemble.webapp.files import SavedFile
 from io import open
+
+if os.environ.get('SUPERVISOR_SERVER_URL', None):
+    USING_SUPERVISOR = True
+else:
+    USING_SUPERVISOR = False
+
+WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
 
 ONEDRIVE_CHUNK_SIZE = 2000000
 
@@ -36,6 +45,8 @@ if backend is None:
 broker = daconfig.get('rabbitmq', None)
 if broker is None:
     broker = 'pyamqp://guest@' + socket.gethostname() + '//'
+
+SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 
 workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 importlib.import_module('docassemble.webapp.config_worker')
@@ -97,7 +108,7 @@ class RedisCredStorage(oauth2client.client.Storage):
     def __init__(self, r, user_id, app='googledrive'):
         self.r = r
         self.key = 'da:' + app + ':userid:' + str(user_id)
-        self.lockkey = 'da:' + app + ':lock:userid:' + str(user_id)        
+        self.lockkey = 'da:' + app + ':lock:userid:' + str(user_id)
     def acquire_lock(self):
         pipe = self.r.pipeline()
         pipe.set(self.lockkey, 1)
@@ -601,7 +612,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         #sys.stderr.write("Created shell " + quote(new_item_id) + " with " + repr(item_data) + "\n")
         #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     else:
-        is_new = False    
+        is_new = False
         #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
     the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
     body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace", "description": data['description'], "fileSystemInfo": { "@odata.type": "microsoft.graph.fileSystemInfo" }, "name": data['name']}}
@@ -657,7 +668,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     #     tries += 1
     sys.stderr.write("Returning " + text_type(new_item_id) + "\n")
     return new_item_id
-    
+
 @workerapp.task
 def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
@@ -694,6 +705,28 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     with worker_controller.flaskapp.app_context():
         worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
     return
+
+@workerapp.task
+def reset_server(result):
+    sys.stderr.write("reset_server in worker: starting\n")
+    if hasattr(result, 'ok') and not result.ok:
+        sys.stderr.write("reset_server in worker: not resetting because result did not succeed.\n")
+        return result
+    if USING_SUPERVISOR:
+        if re.search(r':(web|celery|all):', container_role):
+            args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
+            result = call(args)
+            sys.stderr.write("reset_server in worker: called " + ' '.join(args) + "\n")
+        else:
+            sys.stderr.write("reset_server in worker: did not reset due to container role\n")
+    else:
+        sys.stderr.write("reset_server in worker: supervisor not active, touching WSGI file\n")
+        wsgi_file = WEBAPP_PATH
+        if os.path.isfile(wsgi_file):
+            with open(wsgi_file, 'a'):
+                os.utime(wsgi_file, None)
+    sys.stderr.write("reset_server in worker: finishing\n")
+    return result
 
 @workerapp.task
 def update_packages():
@@ -822,7 +855,7 @@ def email_attachments(user_code, email_address, attachment_info):
 #                     except Exception as errmess:
 #                         sys.stderr.write(str(errmess) + "\n")
 #                         success = False
-    
+
 #     if success:
 #         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
 #     else:

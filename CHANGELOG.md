@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.51] - 2019-06-13
+### Changed
+- Added the `initial` option for `update on start`.
+- Using a different mechanism for restarting servers after a software
+  update.
+### Fixed
+- LibreOffice failing when multiple instances of LibreOffice run
+  simultaneously.
+
 ## [0.4.50] - 2019-06-12
 ### Added
 - The `update on start` Configuration directive.
