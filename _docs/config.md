@@ -1794,6 +1794,35 @@ set [`BEHINDHTTPSLOADBALANCER`] to `true`, then `xsendfile` will be
 set to `False` by default when the initial Configuration is first
 created.
 
+## <a name="websockets"></a><a name="websockets ip"></a><a name="websockets port"></a>Configuring the websockets server
+
+The [live help] features depend on a [WebSocket] server.  On [Docker],
+there is a [supervisor] service called `websockets` that runs the
+`docassemble.webapp.socketserver` module.  By default, the server runs
+on port 5000 on the localhost network (127.0.0.1).  This can be
+configured:
+
+{% highlight yaml %}
+websockets ip: 75.34.2.14
+websockets port: 5001
+{% endhighlight %}
+
+<a name="expose websockets"></a>The most common reason you might want
+the server to run on an IP address other than 127.0.0.1 is if you are
+running **docassemble** in a [Docker] container and want to connect to
+the server from outside the container.  This is necessary in order to
+run a [Docker] container [behind a reverse proxy].  If you set:
+
+{% highlight yaml %}
+expose websockets: True
+{% endhighlight %}
+
+then the server will attempt to connect to the first network that is
+not the local network.  Typically, inside a [Docker] container, there
+are two networks, `lo` and `eth0`.  Setting `expose websockets` to
+`true` will cause the server to connect to whatever address is
+associated with the `eth0` network.
+
 ## <a name="log"></a>Directory for log files
 
 **docassemble** writes messages to a log files stored in the directory
@@ -2599,6 +2628,44 @@ In a [multi-server arrangement] or [Docker], a [supervisor] process
 will run as root upon startup that will copy files from the [`certs`]
 directory to the `cert install directory` and set appropriate file
 permissions on the certificates.
+
+## <a name="update on start"></a>Whether software is updated on start
+
+By default, when a [Docker] container starts, whether it is starting
+for the first time during a [`docker run`] process, or restarting during a
+[`docker start`] process, one of the steps taken during the container
+initialization process is the updating of Python packages.
+
+This process is necessary in order to install any custom Python
+packages you have, such as interviews you have created.  If you
+replace a container with [`docker -t 60 stop`], [`docker rm`], and [`docker
+run`], you will want the new container to have the appropriate software
+on it.  When you use [Package Management] or the [packages folder] of
+the [Playground] to install a package on your system, the packages
+that get installed are tracked in the SQL database.  When you start up
+a new [Docker] container that uses that SQL database, the
+update process will install the packages listed in the database.
+
+This is the main reason why launching a [Docker] container can take a
+long time.
+
+By default, the update process happens any time the container starts,
+which is both during the [`docker run`] process and also during the
+[`docker start`] process.
+
+If you do not want your container to go through this update process
+when the container starts, you can set:
+
+{% highlight yaml %}
+update on start: False
+{% endhighlight %}
+
+Alternatively, if you want the update process to run during the
+[`docker run`] process but not subsequently, you can set:
+
+{% highlight yaml %}
+update on start: initial
+{% endhighlight %}
 
 ## <a name="log server"></a>Log server hostname
 
@@ -3545,3 +3612,12 @@ and Facebook API keys.
 [examples area]: {{ site.baseurl }}/docs/playground.html#examples
 [`docassemble.base:data/questions/example-list.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/example-list.yml
 [`code`]: {{ site.baseurl }}/docs/code.html#code
+[behind a reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+[Package Management]: {{ site.baseurl }}/docs/admin.html#package management
+[`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
+[`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
+[`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
+[`docker -t 60 stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
+[WebSocket]: https://en.wikipedia.org/wiki/WebSocket

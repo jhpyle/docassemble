@@ -299,7 +299,7 @@ that **docassemble** uses, including:
 * An in-memory data structure store, Redis, called `redis`.
 * A watchdog daemon that looks for out-of-control Apache processes and
   kills them, called `watchdog`.
-* A websockets server that supports the "live help" functionality,
+* A [WebSocket] server that supports the [live help] functionality,
   called `websockets`.
 
 In addition to starting background tasks, [Supervisor] coordinates the
@@ -510,10 +510,10 @@ To stop using the [Python virtual environment], type the command
 Services other than the [Apache] web server are an important part of
 **docassemble**'s operations.  For example, the upgrading and
 installation of [Python] packages takes place in a background process
-operated by the `celery` service.  In addition, the Live Help feature
-uses a service called `websockets`.  The `apache2`, `celery`, and
-`websockets` services all need to be restarted every time there is a
-change to the [Configuration] or a change to [Python] code.  To
+operated by the `celery` service.  In addition, the [live help]
+feature uses a service called `websockets`.  The `apache2`, `celery`,
+and `websockets` services all need to be restarted every time there is
+a change to the [Configuration] or a change to [Python] code.  To
 restart all of the services at once, you can do:
 
 {% highlight bash %}
@@ -823,6 +823,17 @@ container for the new configuration to take effect.
 * <a name="DABACKUPDAYS"></a>`DABACKUPDAYS`: The number of days
   backups should be kept.  The default is 14.  See the [`backup days`]
   configuration directive.
+* <a name="DAEXPOSEWEBSOCKETS"></a>`DAEXPOSEWEBSOCKETS`: You may need
+  to set this to `true` if you are operating a [Docker] container
+  [behind a reverse proxy] and you want to use the [WebSocket]-based
+  [live help] features.  See the [`expose websockets`] configuration
+  directive.
+* <a name="DAWEBSOCKETSIP"></a>`DAWEBSOCKETSIP`: You can set this if
+  you need to manually specify the address on which the `websockets`
+  service runs.  See the [`websockets ip`] configuration directive.
+* <a name="DAWEBSOCKETSPORT"></a>`DAWEBSOCKETSPORT`: You can set this
+  if you need to manually specify the port on which the `websockets`
+  service runs.  See the [`websockets port`] configuration directive.
 * <a name="DAPYTHONVERSION"></a>`DAPYTHONVERSION`: Set this to `3` in
   order to run **docassemble** using Python 3.5.  If `DAPYTHONVERSION`
   is not set, **docassemble** will be run using Python 2.7.  If you
@@ -1468,7 +1479,7 @@ The following example illustrates how to do this.  Your situation will
 probably be different, but this example will still help you figure out
 how to configure your system.
 
-In this example, we will show how to run **docassemble** using
+In this example, you will see how to run **docassemble** using
 [Docker] on an Ubuntu 16.04 server.  The machine will run a web server
 using encryption.  The web server will be accessible at
 `https://justice.example.com` and will serve resources other than
@@ -1482,7 +1493,7 @@ controlled by the user account `ubuntu`, which is assumed to have
 [sudo] privileges.
 
 First, let's install [Apache], [Let's Encrypt] (the [certbot]
-utility), and [Docker].  We log in to the server as `ubuntu` and do:
+utility), and [Docker].  You log in to the server as `ubuntu` and do:
 
 {% highlight bash %}
 sudo add-apt-repository ppa:certbot/certbot
@@ -1492,10 +1503,10 @@ sudo usermod -a -G docker ubuntu
 {% endhighlight %}
 
 The last command changes the user privileges of the `ubuntu` user.
-For these changes to take effect, we need to log out and log in again.
+For these changes to take effect, you need to log out and log in again.
 (E.g., exit the [ssh] session and start a new one.)
 
-Before we run [certbot], let's add some basic information to the
+Before you run [certbot], add some basic information to the
 [Apache] configuration.  Edit the standard HTTP configuration:
 
 {% highlight bash %}
@@ -1510,7 +1521,7 @@ ServerName justice.example.com
 ServerAdmin admin@example.com
 {% endhighlight %}
 
-We then do the same with the HTTPS configuration.
+You then do the same with the HTTPS configuration.
 
 {% highlight bash %}
 sudo vi /etc/apache2/sites-available/default-ssl.conf
@@ -1527,22 +1538,22 @@ sudo a2enmod headers
 sudo service apache2 reload
 {% endhighlight %}
 
-Then, we need to make sure that `justice.example.com` is directed to
-this server.  This may require going to our DNS provider and adding a
+Then, you need to make sure that `justice.example.com` is directed to
+this server.  This may require going to your DNS provider and adding a
 [CNAME record] or an [A record].
 
-We can test whether everything is working by going to
-`http://justice.example.com` in a web browser.  We should see the
+You can test whether everything is working by going to
+`http://justice.example.com` in a web browser.  You should see the
 default [Apache] page.
 
-Once that is done, we are ready to run [certbot].
+Once that is done, you are ready to run [certbot].
 
 {% highlight bash %}
 sudo certbot --apache
 {% endhighlight %}
 
 When [certbot] asks "Please choose whether HTTPS access is required or
-optional," we will select "Secure - Make all requests redirect to
+optional," you will select "Secure - Make all requests redirect to
 secure HTTPS access."  This will cause all HTTP traffic to be
 forwarded to HTTPS.
 
@@ -1550,11 +1561,11 @@ The [certbot] command will obtain certificates and modify the [Apache]
 configuration.  A [cron] job will be installed that takes care of
 renewing the certificates.
 
-We can test whether the SSL certificates work by going to
-`https://justice.example.com`.  We should see the default [Apache] page
+You can test whether the SSL certificates work by going to
+`https://justice.example.com`.  You should see the default [Apache] page
 again, but with encryption this time.
 
-Now we are ready to run **docassemble**.  First we need to create a
+Now you are ready to run **docassemble**.  First you need to create a
 short text file called `env.list` that contains some configuration
 options for **docassemble**.
 
@@ -1579,10 +1590,11 @@ paths, but `/da/` will be reserved for the exclusive use of
 **docassemble**.  The beginning slash and the trailing slash are both
 necessary.
 
-Setting `DAEXPOSEWEBSOCKETS` to `true` means that the websockets
-server running inside the container will expose port 5000 to the
-external IP address rather than port 5000 of 127.0.0.1, so that the
-web server on the host can act as a proxy server for it.
+Setting [`DAEXPOSEWEBSOCKETS`] to `true` means that the [WebSocket]
+server running inside the container (the [supervisor] process called
+`websockets`) will expose port 5000 to the external IP address rather
+than port 5000 of 127.0.0.1, so that the web server on the host can
+act as a proxy server for it.
 
 Now, let's download, install, and run **docassemble**.
 
@@ -1624,7 +1636,7 @@ Then restart the web server:
 sudo service apache2 restart
 {% endhighlight %}
 
-Now, when we go to `https://justice.example.com/da`, we will see the
+Now, when you go to `https://justice.example.com/da`, you will see the
 **docassemble** demo interview.
 
 # <a name="build"></a>Creating your own Docker image
@@ -1963,6 +1975,10 @@ line), as the containers depend on the images.
 [`DAHOSTNAME`]: #DAHOSTNAME
 [`USEHTTPS`]: #USEHTTPS
 [`USELETSENCRYPT`]: #USELETSENCRYPT
+[`DAEXPOSEWEBSOCKETS`]: #DAEXPOSEWEBSOCKETS
+[`DAWEBSOCKETSIP`]: #DAWEBSOCKETSIP
+[`DAWEBSOCKETSPORT`]: #DAWEBSOCKETSPORT
+[`DAUPDATEONSTART`]: #DAUPDATEONSTART
 [Celery]: http://www.celeryproject.org/
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
@@ -2058,5 +2074,10 @@ line), as the containers depend on the images.
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [Configuration]: {{ site.baseurl }}/docs/config.html
+[`expose websockets`]: {{ site.baseurl }}/docs/config.html#expose websockets
+[`websockets ip`]: {{ site.baseurl }}/docs/config.html#websockets ip
+[`websockets port`]: {{ site.baseurl }}/docs/config.html#websockets port
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
 [web interface]: {{ site.baseurl }}/docs/admin.html#configuration
+[behind a reverse proxy]: #forwarding
+[live help]: {{ site.baseurl }}/docs/livehelp.html
