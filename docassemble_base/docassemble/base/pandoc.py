@@ -8,6 +8,7 @@ else:
 import docassemble.base.filter
 import docassemble.base.functions
 import tempfile
+import filecmp
 import shutil
 import sys
 import re
@@ -24,6 +25,10 @@ import convertapi
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
+
+def copy_if_different(source, destination):
+    if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
+        shutil.copyfile(source, destination)
 
 def convertapi_to_pdf(from_file, to_file):
     convertapi.api_secret = daconfig.get('convertapi secret')
@@ -289,19 +294,21 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             use_libreoffice = False
         else:
             if method == 'default':
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
             else:
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:
             initialize_libreoffice()
             #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
+            docassemble.base.functions.server.applock('obtain', 'libreoffice')
             p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
             result = p.wait()
+            docassemble.base.functions.server.applock('release', 'libreoffice')
         if os.path.isfile(to_file):
             break
         result = 1
         tries += 1
-        time.sleep(2 + tries*random.random())
+        time.sleep(0.5 + tries*random.random())
         if use_libreoffice:
             logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
         else:
@@ -323,14 +330,21 @@ def rtf_to_docx(in_file, out_file):
     from_file = os.path.join(tempdir, "file.rtf")
     to_file = os.path.join(tempdir, "file.docx")
     shutil.copyfile(in_file, from_file)
-    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file, '--outdir', tempdir]
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
     #logmessage("rtf_to_docx: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
-    p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-    result = p.wait()
-    if os.path.isfile(to_file):
-        result = 0
-    else:
+    tries = 0
+    while tries < 5:
+        docassemble.base.functions.server.applock('obtain', 'libreoffice')
+        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+        result = p.wait()
+        docassemble.base.functions.server.applock('release', 'libreoffice')
+        if result != 0:
+            logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
+        if result == 0 and os.path.isfile(to_file):
+            break
         result = 1
+        tries += 1
+        time.sleep(0.5 + tries*random.random())
     if result == 0:
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
@@ -347,9 +361,20 @@ def word_to_markdown(in_file, in_format):
         from_file = os.path.join(tempdir, "file." + in_format)
         to_file = os.path.join(tempdir, "file.docx")
         shutil.copyfile(in_file, from_file)
-        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file, '--outdir', tempdir]
-        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-        result = p.wait()
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
+        tries = 0
+        while tries < 5:
+            docassemble.base.functions.server.applock('obtain', 'libreoffice')
+            p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+            result = p.wait()
+            docassemble.base.functions.server.applock('release', 'libreoffice')
+            if result != 0:
+                logmessage("word_to_markdown: call to LibreOffice returned non-zero response")
+            if result == 0 and os.path.isfile(to_file):
+                break
+            result = 1
+            tries += 1
+            time.sleep(0.5 + tries*random.random())
         if result != 0:
             return None
         in_file_to_use = to_file
@@ -393,8 +418,17 @@ def get_rtf_styles(filename):
 def update_references(filename):
     initialize_libreoffice()
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexer(' + filename + ')']
-    p = subprocess.Popen(subprocess_arguments, cwd=tempfile.gettempdir())
-    result = p.wait()
+    tries = 0
+    while tries < 5:
+        docassemble.base.functions.server.applock('obtain', 'libreoffice')
+        p = subprocess.Popen(subprocess_arguments, cwd=tempfile.gettempdir())
+        result = p.wait()
+        docassemble.base.functions.server.applock('release', 'libreoffice')
+        if result == 0:
+            break
+        logmessage("update_references: call to LibreOffice returned non-zero response")
+        tries += 1
+        time.sleep(0.5 + tries*random.random())
     if result != 0:
         return False
     return True
@@ -411,11 +445,11 @@ def initialize_libreoffice():
         word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None)
         del temp_file
         del word_file
+    orig_path = docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba')
     try:
         assert os.path.isdir(os.path.dirname(LIBREOFFICE_MACRO_PATH))
-        orig_path = docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba')
-        logmessage("Copying LibreOffice macro from " + orig_path)
-        shutil.copyfile(orig_path, LIBREOFFICE_MACRO_PATH)
+        #logmessage("Copying LibreOffice macro from " + orig_path)
+        copy_if_different(orig_path, LIBREOFFICE_MACRO_PATH)
     except:
         logmessage("Could not copy LibreOffice macro into place")
 

@@ -1069,6 +1069,7 @@ server.sms_body = null_func
 server.get_sms_session = null_func
 server.initiate_sms_session = null_func
 server.terminate_sms_session = null_func
+server.applock = null_func
 server.debug = False
 server.default_dialect = 'us'
 server.default_language = 'en'

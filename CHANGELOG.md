@@ -1,11 +1,13 @@
 # Change Log
 
-## [0.4.51] - 2019-06-12
+## [0.4.51] - 2019-06-13
 ### Changed
 - Added the `initial` option for `update on start`.
-- Different mechanism for restarting server after software update.
+- Using a different mechanism for restarting servers after a software
+  update.
 ### Fixed
-- RTF to DOCX conversion was failing even though the file converted.
+- LibreOffice failing when multiple instances of LibreOffice run
+  simultaneously.
 
 ## [0.4.50] - 2019-06-12
 ### Added
