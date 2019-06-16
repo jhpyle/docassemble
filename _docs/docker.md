@@ -603,6 +603,7 @@ to server).
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
   * `mail`: The [Docker] container will run [Exim] in order to accept [e-mails].
+  * `cron`: The [Docker] container will run the Cron service to schedule tasks. 
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
