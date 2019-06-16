@@ -592,18 +592,20 @@ to server).
 
 * <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
   colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.) that should be started by the server.  The
-  available options are:
+  `sql:log:redis`, etc.) that should be started by the server.  It is
+  only necessary to set a `CONTAINERROLE` if you are using a
+  [multi-server arrangement].  The available options are:
   * `all`: the [Docker] container will run all of the services of
     **docassemble** on a single container.
   * `web`: The [Docker] container will serve as a web server.
   * `celery`: The [Docker] container will serve as a [Celery] node.
   * `sql`: The [Docker] container will run the central [PostgreSQL] service.
+  * `cron`: The [Docker] container will run [scheduled tasks]. 
   * `redis`: The [Docker] container will run the central [Redis] service.
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
   * `mail`: The [Docker] container will run [Exim] in order to accept [e-mails].
-  * `cron`: The [Docker] container will run the Cron service to schedule tasks. 
+
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
