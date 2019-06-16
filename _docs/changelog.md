@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.52](https://github.com/jhpyle/docassemble/releases/tag/v0.4.52) - 2019-06-
+
+### Added
+- The `javascript` option for `log()`.
+
+### Fixed
+- Potential error in Playground sidebar if the same variable name is
+  used for two different types of object.
+
 ## [0.4.51](https://github.com/jhpyle/docassemble/releases/tag/v0.4.51) - 2019-06-13
 
 ### Changed

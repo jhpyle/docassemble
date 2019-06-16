@@ -1817,16 +1817,12 @@ recommended that you perform a system upgrade by running:
 {% highlight bash %}
 docker stop -t60 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
-docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 docker pull jhpyle/docassemble
+docker rmi $(docker images -f "dangling=true" -q)
 {% endhighlight %}
 
 Then, run whatever `docker run` command you use to launch
 **docassemble**.
-
-Technically, the [`docker pull`] command can be omitted, because
-[`docker run`] will pull the latest image if it cannot be found on the
-system.
 
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 

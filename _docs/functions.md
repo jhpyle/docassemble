@@ -4724,6 +4724,11 @@ The options for the `priority` are:
 * `'console'` - when the next screen loads in the user's browser, the
   message will appear in the browser log.  (This uses the
   [`console.log` JavaScript function].)
+* `'javascript'` - like `'console'`, except that the contents of the
+  "message" will be passed to the [`eval` JavaScript function] instead
+  of the [`console.log` JavaScript function].  This allows you to log
+  a message in the front end in your own custom fashion.  It can also
+  be used for tasks other than logging messages.
 * `'success'` - when the next screen loads in the user's browser, a
   popup message (a [Bootstrap alert]) will appear at the top of the
   page, using the [Bootstrap] color associated with "success"
@@ -6327,6 +6332,7 @@ $(document).on('daPageLoad', function(){
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
+[`eval` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
 [Bootstrap alert]: https://getbootstrap.com/docs/4.0/components/alerts/
 [`flash()`]: #flash
 [Google API key]: {{ site.baseurl }}/docs/config.html#google
