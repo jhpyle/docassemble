@@ -26,7 +26,8 @@ are:
 
 The default password ("password") will need to be changed.  Change it
 to something that is at least eight characters long with at least one
-lowercase letter and one number.
+lowercase letter and one number.  You can also change the e-mail
+address by going to [User List].
 
 Then, from the menu, select [Playground].  The [Playground] is a
 "sandbox" area where you can develop interviews and test them, all
@@ -673,3 +674,4 @@ the [GitHub subsection] of the [packages] section.
 [GitHub integration]: {{ site.baseurl }}/docs/packages.html#github
 [privileges]: {{ site.baseurl }}/docs/users.html
 [it is recommended]: {{ site.baseurl }}/docs/development.html
+[User List]: {{ site.baseurl }}/docs/admin.html#user list
