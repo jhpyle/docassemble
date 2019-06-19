@@ -268,9 +268,15 @@ def custom_resend_confirm_email():
         return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
     return user_manager.render_function(user_manager.resend_confirm_email_template, form=form)
 
+def as_int(val):
+    try:
+        return int(val)
+    except:
+        return 0
+
 def custom_register():
     """ Display registration form and create new User."""
-    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
         is_json = False
@@ -455,7 +461,7 @@ def custom_login():
     """ Prompt for username/email and password and sign the user in."""
     #sys.stderr.write("In custom_login\n")
     #logmessage("Doing custom_login")
-    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
         is_json = False
@@ -2913,17 +2919,18 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
-            functions.add(val)
             if val not in pg_code_cache:
                 pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
             name_info[val] = copy.copy(pg_code_cache[val])
+            if 'tag' in name_info[val]:
+                functions.add(val)
         elif type(user_dict[val]) is types.ModuleType:
-            modules.add(val)
             if val not in pg_code_cache:
                 pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
             name_info[val] = copy.copy(pg_code_cache[val])
+            if 'git' in name_info[val]:
+                modules.add(val)
         elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
-            classes.add(val)
             if val not in pg_code_cache:
                 bases = list()
                 for x in list(user_dict[val].__bases__):
@@ -2935,6 +2942,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
                 pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
             name_info[val] = copy.copy(pg_code_cache[val])
+            if 'methods' in name_info[val]:
+                classes.add(val)
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
@@ -3190,7 +3199,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     if len(functions):
         content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            if var in name_info:
+                content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
@@ -5047,7 +5057,7 @@ def index(action_argument=None):
     else:
         is_ajax = False
     return_fake_html = False
-    if (request.method == 'POST' and 'json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if (request.method == 'POST' and 'json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         the_interface = 'json'
         is_json = True
         is_js = False
@@ -8422,6 +8432,9 @@ def index(action_argument=None):
           if (message.priority == 'console'){
             console.log(message.message);
           }
+          else if (message.priority == 'javascript'){
+            eval(message.message);
+          }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             flash(message.message, message.priority);
           }
@@ -10022,7 +10035,7 @@ def interview_start():
     delete_session_for_interview()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
-    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
         is_json = False
@@ -16559,6 +16572,9 @@ def server_error(the_error):
           if (message.priority == 'console'){
             console.log(message.message);
           }
+          else if (message.priority == 'javascript'){
+            eval(message.message);
+          }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             flash(message.message, message.priority);
           }
@@ -17640,7 +17656,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
-    if ('json' in request.form and int(request.form['json'])) or ('json' in request.args and int(request.args['json'])):
+    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
         is_json = False

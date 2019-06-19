@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.52] - 2019-06-18
+### Added
+- The `javascript` option for `log()`.
+### Fixed
+- Potential error in Playground sidebar if the same variable name is
+  used for two different types of object.
+- Error if `json` URL parameter is not an integer.
+
 ## [0.4.51] - 2019-06-13
 ### Changed
 - Added the `initial` option for `update on start`.
