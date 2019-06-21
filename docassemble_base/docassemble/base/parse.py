@@ -5511,7 +5511,7 @@ class Interview:
                         question_data['buttons'] = qError.buttons
                     else:
                         buttons = list()
-                        if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
+                        if qError.show_exit:
                             exit_button = {word('Exit'): 'exit'}
                             if qError.url:
                                 exit_button.update(dict(url=qError.url))
@@ -5521,7 +5521,7 @@ class Interview:
                             if qError.url:
                                 leave_button.update(dict(url=qError.url))
                             buttons.append(leave_button)
-                        if qError.show_restart is not False:
+                        if qError.show_restart:
                             buttons.append({word('Restart'): 'restart'})
                         if len(buttons):
                             question_data['buttons'] = buttons
