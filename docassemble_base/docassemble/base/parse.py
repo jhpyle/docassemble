@@ -604,6 +604,8 @@ class InterviewStatus(object):
                     the_field['note'] = self.extras['note'][field.number]
                 if field.datatype == 'html' and 'html' in self.extras and field.number in self.extras['html']:
                     the_field['html'] = self.extras['html'][field.number]
+                if field.number in self.hints:
+                    the_field['hint'] = self.hints[field.number]
                 if field.number in self.labels:
                     the_field['label'] = self.labels[field.number]
                 if field.number in self.helptexts:
