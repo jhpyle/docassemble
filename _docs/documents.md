@@ -500,10 +500,10 @@ If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
 by providing specific options within the question block.
 
-# <a name="docx template file"></a>Filling DOCX templates
+# <a name="docx template file"></a>Assembling DOCX templates
 
-You can fill in fields in DOCX template files by referring to a `docx
-template file`.
+You can assemble documents from DOCX template files by referring to a
+`docx template file`.
 
 {% include side-by-side.html demo="docx-template" %}
 
@@ -884,9 +884,20 @@ contains newlines, the newlines will show up as spaces in the DOCX
 file.  Also, if the text contains [Markdown] formatting, it will be
 inserted into the DOCX file literally.
 
-If you want to insert formatted text into a DOCX file, you can put the
-text into a [`template`] and then insert the template variable into
-the DOCX file with:
+The `RichText` [Jinja2] filter allows you to include line breaks
+inside of variable text:
+
+> The swift brown {% raw %}{{r animal \| RichText }}{% endraw %}
+> jumped over the lazy dog.
+
+Using this filter, any newline (`\n`) in `animal` will be converted
+into a manual line break and any `\a` character will be converted into
+a paragraph break.  When using `RichText`, you must always use the `r`
+prefix, {% raw %}{{r ... }}{% endraw %}.
+
+If you want to insert [Markdown]-formatted text into a DOCX file, you
+can put the text into a [`template`] and then insert the template
+variable into the DOCX file with:
 
 > {% raw %}{{r the_template }}{% endraw %}
 
@@ -905,10 +916,22 @@ the new version, the paragraphs that are inserted will have the
 default paragraph style.  Thus, if you want a particular type of
 paragraph spacing, you can change the default style.
 
-If you want single newlines in the text to break paragraphs, you can
+If you want single newlines in your text to break paragraphs, you can
 use the function [`single_to_double_newlines()`].  (Under the rules of
 [Markdown], single newlines act as spaces, while double spaces act as
 paragraph breaks.)
+
+Another way to insert [Markdown] text is to use the `markdown`
+[Jinja2] filter.
+
+> {% raw %}{{r the_text \| markdown }}{% endraw %}
+
+Or, if using [`new markdown to docx`]:
+
+> {% raw %}{{p the_text \| markdown }}{% endraw %}
+
+If the variable `the_text` contains [Markdown] formatting, the
+[Markdown] formatting will be converted into DOCX formatting.
 
 ## <a name="update references"></a>Using tables of contents and other references in DOCX files
 

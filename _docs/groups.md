@@ -915,6 +915,15 @@ objects, the `edit` feature can also be used when the `rows` of the
 
 {% include side-by-side.html demo="table-dict-edit" %}
 
+If your [`DAList`] is not made up of objects, it can be made editable
+by setting `edit` to `True` instead of to a list of attributes.
+
+{% include side-by-side.html demo="edit-list-string" %}
+
+You can do the same with [`DADict`] groups that do not use objects:
+
+{% include side-by-side.html demo="table-dict-string" %}
+
 ## <a name="custom editing"></a>Customizing the editing interface
 
 If you do not want your users to be able to delete items, you can add

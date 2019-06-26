@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.53](https://github.com/jhpyle/docassemble/releases/tag/v0.4.53) - 2019-06-25
+
+### Added
+- Jinja2 filters `markdown` and `RichText`.
+
+### Changed
+- Ampersand correction for DOCX now happens in Jinja2 even if pipe
+  already used.
+
+### Fixed
+- The `hint` was missing from the data representation of a field.
+- The `note` and `html` were missing from the data representation of a
+  field when not standalone.
+- Group editing did not work with non-object lists and dictionaries.
+
 ## [0.4.52](https://github.com/jhpyle/docassemble/releases/tag/v0.4.52) - 2019-06-18
 
 ### Added

@@ -1660,7 +1660,7 @@ The file can be referenced in a number of ways:
 * `https://bootswatch.com/lumen/bootstrap.min.css`: a file on the internet.
 
 For more information about using custom [Bootstrap] themes, and for
-information about applying themese on a global level, see the
+information about applying themes on a global level, see the
 documentation for the [`bootstrap theme` configuration directive].
 
 ## <a name="inverse navbar"></a>Inverted Bootstrap navbar

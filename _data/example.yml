@@ -1577,6 +1577,15 @@
     already invaded England.
     % endif
   mandatory: True
+"dadatetime": |-
+  question: |
+    Enter a date.
+  subquestion: |
+    The session ID of this interview is
+    `${ user_info().session }`.
+  fields:
+    - Date: date_variable
+      datatype: date
 "dadict": |-
   objects:
     - player: DADict
@@ -2722,6 +2731,12 @@
     You can
     [edit your answers](${ url_action('review_interview') })
     if you want.
+"edit-list-string": "question: |\n  Who is the ${ ordinal(i) } person?\nfields:\n\
+  \  - Name: person[i]\n---\nquestion: |\n  Are there any more people\n  you would\
+  \ like to mention?\nyesno: person.there_is_another\n---\nmandatory: True\nquestion:\
+  \ |\n  All done\nsubquestion: |\n  The people are ${ person }.\n\n  ${ person.table\
+  \ }\n  \n  ${ person.add_action() }\n---\ntable: person.table\nrows: person\ncolumns:\n\
+  \  - \"#\": |\n      row_index + 1\n  - Name: |\n      row_item\nedit: True"
 "email-field": |-
   question: |
     What is your e-mail address?
@@ -5695,6 +5710,12 @@
     allow delete: False
     label: |
       ${ fruit_name }
+"list-collect-string": |-
+  question: |
+    Tell me about the fruit.
+  fields:
+    - Fruit name: fruit[i]
+  list collect: True
 "list-interview": |-
   code: |
     available_interviews = interview_menu()
@@ -6315,6 +6336,7 @@
   fields:
     - Value: target_variable
       datatype: currency
+      min: 0
 "name": |-
   question: |
     What are you fighting?
@@ -9494,6 +9516,7 @@
       cell: |
         row_item.seeds
 "table-dict": |-
+  scan for variables: False
   mandatory: True
   code: |
     income['employment'].receives = True
@@ -9580,6 +9603,29 @@
                            complete_attribute='complete',
                            minimum_number=3,
                            there_is_another=False)
+"table-dict-string": |-
+  question: |
+    Income from ${ i }
+  fields:
+    - "How much income do you get from ${ i }?": income[i]
+      datatype: currency
+  ---
+  question: |
+    What type of income would you
+    like to add?
+  fields:
+    - "Type of income": income.new_item_name
+  ---
+  table: income.table
+  rows: income
+  columns:
+    - Type: |
+        row_index
+    - Receives: |
+        'Yes' if row_item > 0 else 'No'
+    - Amount: |
+        currency(row_item) if row_item > 0 else ''
+  edit: True
 "table-empty": |-
   table: fruit_table
   rows: fruit
@@ -10593,6 +10639,25 @@
 "fish-example": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
   \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n \
   \ ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"flags": |-
+  image sets:
+    freepik:
+      attribution: |
+        Icons made by <a href="https://www.freepik.com/?__hstc=57440181.1fcb7629de44ad5220609e6254ecdbbf.1559232254037.1559232254037.1559232917862.2&__hssc=57440181.3.1559232917862&__hsfp=2541736765" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/"                title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"              title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
+      images:
+        flag-en: united-kingdom.svg
+        flag-es: mexico.svg
+        flag-de: germany.svg
+  ---
+  question: Pick a language
+  field: user_language
+  buttons:
+    - English: en
+      image: flag-en
+    - Spanish: es
+      image: flag-es
+    - German: de
+      image: flag-de
 "food-with-sig": "include:\n  - docassemble.demo:data/questions/examples/signature-diversion.yml\n\
   ---\nmandatory: True\nquestion: |\n  Here is your document.\nattachment:\n  name:\
   \ Summary of food\n  filename: food\n  content: |\n    [BOLDCENTER] Food Attestation\n\
@@ -11386,6 +11451,16 @@
   signature: user.signature
   under: |
     ${ user }
+"signature-template": "objects:\n  - signer: DAList.using(object_type=Individual,\
+  \ there_are_any=True)\n---\nquestion: |\n  Is there another signer?\nyesno: signer.there_is_another\n\
+  ---\nquestion: |\n  Tell me about the ${ ordinal(i) } signer.\nfields:\n  - First\
+  \ Name: signer[i].name.first\n  - Last Name: signer[i].name.last\n  - Likes Fruit:\
+  \ signer[i].likes_fruit\n    datatype: yesno\n---\ntemplate: signer[i].signature_block\n\
+  content: |\n  \\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\\
+  _\\_\\_\\_\\_\\_\\_\\_\\_\n  \n  ${ signer[i] }, fruit\n  % if signer[i].likes_fruit:\n\
+  \  lover\n  % else:\n  hater\n  % endif\n  \n  Dated: ${ today() }\n---\nmandatory:\
+  \ True\nquestion: |\n  Here is your document.\nattachment:\n  docx template file:\
+  \ signature_template.docx"
 "someone-already-mentioned": |-
   objects:
     cook: Individual
