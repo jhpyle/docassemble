@@ -1456,7 +1456,10 @@ class DAList(DAObject):
             items = []
             #if self.complete_attribute == 'complete':
             #    items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            if len(the_args):
+                items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            else:
+                items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
@@ -2217,7 +2220,10 @@ class DADict(DAObject):
             items = []
             if self.complete_attribute == 'complete':
                 items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            if len(the_args):
+                items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
+            else:
+                items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]

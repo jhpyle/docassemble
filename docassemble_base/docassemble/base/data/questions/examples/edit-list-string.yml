@@ -1,0 +1,38 @@
+metadata:
+  title: Edit list
+  short title: Edit list
+  documentation: "https://docassemble.org/docs/groups.html#editing"
+  example start: 2
+  example end: 5
+---
+objects:
+  - person: DAList.using(there_are_any=True)
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - Name: person[i]
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+mandatory: True
+question: |
+  All done
+subquestion: |
+  The people are ${ person }.
+
+  ${ person.table }
+  
+  ${ person.add_action() }
+---
+table: person.table
+rows: person
+columns:
+  - "#": |
+      row_index + 1
+  - Name: |
+      row_item
+edit: True

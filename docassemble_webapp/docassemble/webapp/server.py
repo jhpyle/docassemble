@@ -6078,7 +6078,10 @@ def index(action_argument=None):
             data = repr(data)
         if key == "_multiple_choice":
             if '_question_name' in post_data:
-                key = '_internal["answers"][' + repr(interview.questions_by_name[post_data['_question_name']].extended_question_name(user_dict)) + ']'
+                if post_data['_question_name'] == 'Question_Temp':
+                    key = '_internal["answers"][' + repr(interview_status.question.extended_question_name(user_dict)) + ']'
+                else:
+                    key = '_internal["answers"][' + repr(interview.questions_by_name[post_data['_question_name']].extended_question_name(user_dict)) + ']'
         if is_date:
             #logmessage("index: doing import docassemble.base.util")
             try:
@@ -21288,6 +21291,8 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                 body += "<p>The interview was " + text_type(interview_path) + "</p>"
             if email_address is not None:
                 body += "<p>The user was " + text_type(email_address) + "</p>"
+            if 'external hostname' in daconfig and daconfig['external hostname'] is not None:
+                body += "<p>The external hostname was " + text_type(daconfig['external hostname']) + "</p>"
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:

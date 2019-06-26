@@ -1,3 +1,8 @@
+metadata:
+  title: Signature template
+  example start: 1
+  example end: 5
+---
 objects:
   - signer: DAList.using(object_type=Individual, there_are_any=True)
 ---

@@ -600,9 +600,9 @@ class InterviewStatus(object):
                 if 'show_if_js' in self.extras:
                     the_field['show_if_js'] = field.extras['show_if_js']
             if hasattr(field, 'datatype'):
-                if field.datatype == 'note' and 'note' in self.extras and field.number in self.extras['note']:
+                if 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]
-                if field.datatype == 'html' and 'html' in self.extras and field.number in self.extras['html']:
+                if 'html' in self.extras and field.number in self.extras['html']:
                     the_field['html'] = self.extras['html'][field.number]
                 if field.number in self.hints:
                     the_field['hint'] = self.hints[field.number]
@@ -2260,11 +2260,14 @@ class Question:
                 reorder = False
             if 'edit' in data and data['edit'] is not False:
                 is_editable = True
-                if not isinstance(data['edit'], list) or len(data['edit']) == 0:
-                    raise DAError("The edit directive must be a list of attributes, or False" + self.idebug(data))
-                for attribute_name in data['edit']:
-                    if not isinstance(attribute_name, string_types):
-                        raise DAError("The edit directive must be a list of attribute names" + self.idebug(data))
+                if isinstance(data['edit'], list):
+                    if len(data['edit']) == 0:
+                        raise DAError("The edit directive must be a list of attributes, or True or False" + self.idebug(data))
+                    for attribute_name in data['edit']:
+                        if not isinstance(attribute_name, string_types):
+                            raise DAError("The edit directive must be a list of attribute names" + self.idebug(data))
+                elif not isinstance(data['edit'], bool):
+                    raise DAError("The edit directive must be a list of attributes, or True or False" + self.idebug(data))
                 keyword_args = ''
                 if 'delete buttons' in data and not data['delete buttons']:
                     keyword_args += ', delete=False'
@@ -2272,7 +2275,10 @@ class Question:
                     if not isinstance(data['read only'], string_types):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
-                column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                if isinstance(data['edit'], list):
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                else:
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index' + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], string_types):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -3648,6 +3654,8 @@ class Question:
                                     continue
                             else:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
+                            if isinstance(extras[key][field.number], string_types):
+                                extras[key][field.number] = extras[key][field.number].strip()
                 if hasattr(field, 'helptext'):
                     if skip_undefined:
                         try:
@@ -4038,6 +4046,8 @@ class Question:
                                 if key not in extras:
                                     extras[key] = dict()
                                 extras[key][field.number] = field.extras[key].text(user_dict)
+                                if isinstance(extras[key][field.number], string_types):
+                                    extras[key][field.number] = extras[key][field.number].strip()
                         for key in ('ml_train',):
                             if key in field.extras:
                                 if key not in extras:
@@ -5513,7 +5523,7 @@ class Interview:
                         question_data['buttons'] = qError.buttons
                     else:
                         buttons = list()
-                        if qError.show_exit:
+                        if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
                             exit_button = {word('Exit'): 'exit'}
                             if qError.url:
                                 exit_button.update(dict(url=qError.url))
@@ -5523,7 +5533,7 @@ class Interview:
                             if qError.url:
                                 leave_button.update(dict(url=qError.url))
                             buttons.append(leave_button)
-                        if qError.show_restart:
+                        if qError.show_restart is not False:
                             buttons.append({word('Restart'): 'restart'})
                         if len(buttons):
                             question_data['buttons'] = buttons
@@ -5532,9 +5542,10 @@ class Interview:
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
+                    new_question.embeds = True
                     # will this be a problem?  Maybe, since the question name can vary by thread.
-                    #the_question = new_question.follow_multiple_choice(user_dict)
-                    interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
+                    the_question = new_question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
+                    interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except AttributeError as the_error:
                     #logmessage("Regular attributeerror")
@@ -6136,9 +6147,10 @@ class Interview:
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
+                new_question.embeds = True
                 # will this be a problem? yup
-                # the_question = new_question.follow_multiple_choice(user_dict)
-                return(new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
+                the_question = new_question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
+                return(the_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable))
             except CodeExecute as code_error:
                 #logmessage("CodeExecute")
                 docassemble.base.functions.reset_context()
@@ -6563,8 +6575,8 @@ class DAExtension(Extension):
                 if not met_pipe:
                     yield Token(token.lineno, 'pipe', None)
                     yield Token(token.lineno, 'name', 'ampersand_filter')
-            if in_var and token.type == 'pipe':
-                met_pipe = True
+            # if in_var and token.type == 'pipe':
+            #     met_pipe = True
             yield token
 
 class DAEnvironment(Environment):
@@ -6602,9 +6614,13 @@ class DAEnvironment(Environment):
             return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
-    if value.__class__.__name__ in ('DAFile', 'DALink'): #, 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc'
+    if value.__class__.__name__ in ('DAFile', 'DALink'):
         return value
-    return re.sub(r'&(?!#\d{4};|amp;)', '&amp;', text_type(value))
+    if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate'):
+        return text_type(value)
+    if isinstance(value, string_types) and ('<w:r>' in value or '</w:t>' in value):
+        return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(value))
+    return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(value))))
 
 class DAStrictUndefined(StrictUndefined):
     __slots__ = ('_undefined_type')
@@ -6669,6 +6685,7 @@ def custom_jinja_env():
     env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
+    env.filters['RichText'] = docassemble.base.file_docx.RichText
     return env
 
 def markdown_filter(text):

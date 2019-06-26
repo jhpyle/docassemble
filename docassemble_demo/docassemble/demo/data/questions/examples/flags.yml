@@ -1,3 +1,8 @@
+metadata:
+  title: Flags
+  example start: 1
+  example end: 2
+---
 image sets:
   freepik:
     attribution: |
