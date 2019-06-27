@@ -1307,17 +1307,15 @@ def add_terms_mako(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
-    else:
-        #logmessage(lower_termname + " is not in terms dictionary\n")
-        return '[[' + termname + ']]'
+    #logmessage(lower_termname + " is not in terms dictionary\n")
+    return '[[' + termname + ']]'
 
 def add_terms(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
-    else:
-        #logmessage(lower_termname + " is not in terms dictionary\n")
-        return '[[' + termname + ']]'
+    #logmessage(lower_termname + " is not in terms dictionary\n")
+    return '[[' + termname + ']]'
 
 def audio_control(files, preload="metadata", title_text=None):
     for d in files:

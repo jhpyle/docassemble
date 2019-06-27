@@ -383,6 +383,8 @@ class InterviewStatus(object):
             allow_append = self.extras['list_collect_allow_append']
             iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
             list_len = len(self.extras['list_collect'].elements)
+            if list_len == 0:
+                list_len = 1
             if self.extras['list_collect'].ask_object_type or not allow_append:
                 extra_amount = 0
             else:
@@ -1741,6 +1743,7 @@ class Question:
         if 'terms' in data and 'question' in data:
             if not isinstance(data['terms'], (dict, list)):
                 raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
+
             if isinstance(data['terms'], dict):
                 data['terms'] = [data['terms']]
             for termitem in data['terms']:
@@ -1753,7 +1756,7 @@ class Question:
                     re_dict = dict()
                     re_dict[self.language] = re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)
                     for lang, tr_tuple in term_textobject.other_lang.items():
-                        re_dict[lang] = re.compile(r"{(?i)(%s)}" % (tr_tuple[0],), re.IGNORECASE)
+                        re_dict[lang] = re.compile(r"{(?i)(%s)}" % (tr_tuple[0].lower(),), re.IGNORECASE)
                         alt_terms[lang] = tr_tuple[0]
                     self.terms[lower_term] = {'definition': TextObject(definitions + text_type(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
@@ -3465,7 +3468,7 @@ class Question:
             extras['terms'] = dict()
             for termitem, definition in self.terms.items():
                 if lang in definition['alt_terms']:
-                    extras['terms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                    extras['terms'][definition['alt_terms'][lang].lower()] = dict(definition=definition['definition'].text(user_dict))
                 else:
                     extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if len(self.autoterms):
@@ -3473,7 +3476,7 @@ class Question:
             extras['autoterms'] = dict()
             for termitem, definition in self.autoterms.items():
                 if lang in definition['alt_terms']:
-                    extras['autoterms'][definition['alt_terms'][lang]] = dict(definition=definition['definition'].text(user_dict))
+                    extras['autoterms'][definition['alt_terms'][lang].lower()] = dict(definition=definition['definition'].text(user_dict))
                 else:
                     extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if self.css is not None:

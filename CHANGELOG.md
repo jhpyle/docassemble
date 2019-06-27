@@ -1,6 +1,21 @@
 # Change Log
 
-## [0.4.53] - 2019-06-25
+## [0.4.54] - 2019-06-26
+### Added
+- The `language map` directive under the `voicerss` Configuration
+  directive.
+### Changed
+- Renamed `languages` under the `voicerss` Configuration directive to
+  `dialects` (with backwards compatibility).
+### Fixed
+- `list collect` on empty non-object list did not show the first item.
+- Wrong protection on some cells in translation spreadsheets.
+- `nan` values appeared in translation spreadsheets.
+- Terms with capital letters were not being translated.
+- System terms were not appearing in translation YAML when Google
+  Cloud Translation API was not configured.
+
+## [0.4.53] - 2019-06-26
 ### Added
 - Jinja2 filters `markdown` and `RichText`.
 ### Changed
@@ -11,6 +26,7 @@
 - The `note` and `html` were missing from the data representation of a
   field when not standalone.
 - Group editing did not work with non-object lists and dictionaries.
+- Buttons on `message()` screens did not work.
 
 ## [0.4.52] - 2019-06-18
 ### Added
@@ -87,7 +103,7 @@
 - Inserting certain types of images into RTF files resulted in a fatal
   error rather than a non-fatal error.
 
-## [0.4.44] - 2019-05-21
+# [0.4.44] - 2019-05-21
 ### Added
 - Version-specific caching of CSS and JavaScript files.
 - The `sort()` and `sort_elements()` methods for `DAList`.
