@@ -16868,7 +16868,7 @@ def utilities():
                     if isinstance(resp, dict) and u'translations' in resp and isinstance(resp[u'translations'], list) and len(resp[u'translations']) == len(chunk):
                         for index in range(len(chunk)):
                             if isinstance(resp[u'translations'][index], dict) and 'translatedText' in resp[u'translations'][index]:
-                                result[language][chunk[index]] = re.sub(r'&#39;', r"'", resp['translations'][index]['translatedText'])
+                                result[language][chunk[index]] = re.sub(r'&#39;', r"'", text_type(resp['translations'][index]['translatedText']))
                             else:
                                 result[language][chunk[index]] = 'XYZNULLXYZ'
                                 uses_null = True
@@ -16880,11 +16880,10 @@ def utilities():
                     for the_word in chunk:
                         result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
-            if PY2:
-                word_box = text_type(ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode())
-            else:
-                word_box = text_type(ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000))
+            word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000)
             word_box = re.sub(r'"XYZNULLXYZ"', r'null', word_box)
+            if PY2:
+                word_box = word_box.decode('utf-8', 'ignore')
         if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
             filename = secure_filename(request.files['pdfdocxfile'].filename)
             extension, mimetype = get_ext_and_mimetype(filename)
