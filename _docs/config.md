@@ -57,7 +57,7 @@ default admin account:
 voicerss:
   enable: False
   key: ae8734983948ebc98239e9898f998432
-  languages:
+  dialects:
     en: us
     es: mx
     fr: fr
@@ -2197,7 +2197,7 @@ service allows 350 free requests per day.)
 voicerss:
   enable: True
   key: 347593849874e7454b9872948a87987d
-  languages:
+  dialects:
     en: us
     es: mx
     fr: fr
@@ -2205,8 +2205,30 @@ voicerss:
 
 The `enable` key must be set to `True` in order for the text-to-speech
 feature to work.  The `key` is the [VoiceRSS] API key.  The
-`languages` key refers to a dictionary that associates languages with
-default dialects to be used with that language.
+`dialects` key refers to a dictionary that associates languages with
+the dialect to be used with that language.  For more information about
+dialects, see the [VoiceRSS] documentation.
+
+Sometimes, the language code you use in your interview is not the same
+as the language code that [VoiceRSS] uses for that language.  In this
+case, you can add a `language map` to your [VoiceRSS] configuration to
+remap your language code so that it is compatible with [VoiceRSS].
+
+For example, suppose the language code used in your interview is `zho`
+for Chinese.  But the language that [VoiceRSS] recognizes for Chinese
+is `zh`, and the dialects that [VoiceRSS] recognizes for `zh` include
+`cn`, `hk`, and `tw`.  Suppose you want to use `cn` as the dialect.
+You would set your `voicerss` configuration as follows:
+
+{% highlight yaml %}
+voicerss:
+  enable: True
+  key: 347593849874e7454b9872948a87987d
+  language map:
+    zho: zh
+  dialects:
+    zh: cn
+{% endhighlight %}
 
 ## <a name="ocr languages"></a>OCR language settings
 
