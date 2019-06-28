@@ -2605,8 +2605,11 @@ class Question:
                                     if 'datatype' not in field:
                                         auto_determine_type(field_info)
                                     for item in field_info['selections']['values']:
-                                        if not item['key'].uses_mako:
-                                            manual_keys.add(item['key'].original_text)
+                                        if isinstance(item['key'], TextObject):
+                                            if not item['key'].uses_mako:
+                                                manual_keys.add(item['key'].original_text)
+                                        else:
+                                            manual_keys.add(item['key'])
                                 if 'exclude' in field:
                                     if isinstance(field['exclude'], dict):
                                         raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
@@ -3798,7 +3801,10 @@ class Question:
                                     new_item['help'] = choice['help'].text(user_dict)
                                 if 'default' in choice:
                                     new_item['default'] = choice['default']
-                                new_item['key'] = choice['key'].text(user_dict)
+                                if isinstance(choice['key'], TextObject):
+                                    new_item['key'] = choice['key'].text(user_dict)
+                                else:
+                                    new_item['key'] = choice['key']
                                 new_item['label'] = choice['label'].text(user_dict)
                                 selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
@@ -3859,7 +3865,10 @@ class Question:
                             to_exclude = unpack_list(to_exclude)
                             selectcompute[field.number] = list()
                             for candidate in field.selections['values']:
-                                new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
+                                if isinstance(candidate['key'], TextObject):
+                                    new_item = dict(key=candidate['key'].text(user_dict), label=candidate['label'].text(user_dict))
+                                else:
+                                    new_item = dict(key=candidate['key'], label=candidate['label'].text(user_dict))
                                 if 'image' in candidate:
                                     new_item['image'] = candidate['image']
                                 if 'help' in candidate:
@@ -3871,7 +3880,10 @@ class Question:
                         else:
                             selectcompute[field.number] = list()
                             for item in field.selections['values']:
-                                new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                                if isinstance(item['key'], TextObject):
+                                    new_item = dict(key=item['key'].text(user_dict), label=item['label'].text(user_dict))
+                                else:
+                                    new_item = dict(key=item['key'], label=item['label'].text(user_dict))
                                 if 'image' in item:
                                     new_item['image'] = item['image']
                                 if 'help' in item:
@@ -3893,7 +3905,10 @@ class Question:
                                 new_item['help'] = item['help'].text(user_dict)
                             if 'default' in item:
                                 new_item['default'] = item['default']
-                            new_item['key'] = item['key'].text(user_dict)
+                            if isinstance(item['key'], TextObject):
+                                new_item['key'] = item['key'].text(user_dict)
+                            else:
+                                new_item['key'] = item['key']
                             new_item['label'] = item['label'].text(user_dict)
                             selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
@@ -4218,7 +4233,8 @@ class Question:
                         self.find_fields_in(value)
                     else:
                         result_dict['label'] = TextObject(key, question=self)
-                        result_dict['key'] = TextObject(value, question=self)
+                        #result_dict['key'] = TextObject(value, question=self)
+                        result_dict['key'] = value
                 elif isinstance(value, dict):
                     result_dict['label'] = TextObject(key, question=self)
                     self.embeds = True
@@ -4755,11 +4771,13 @@ class Question:
                                 else:
                                     the_item['image'] = dict(type='decoration', value=entry['image'])
                             if 'key' in entry and 'label' in entry:
-                                the_item['key'] = TextObject(entry['key'], question=self)
+                                #the_item['key'] = TextObject(entry['key'], question=self)
+                                the_item['key'] = entry['key']
                                 the_item['label'] = TextObject(entry['label'], question=self)
                                 result.append(the_item)
                                 continue
-                        the_item['key'] = TextObject(entry[key], question=self)
+                        #the_item['key'] = TextObject(entry[key], question=self)
+                        the_item['key'] = entry[key]
                         the_item['label'] = TextObject(key, question=self)
                         result.append(the_item)
                 if isinstance(entry, list):
@@ -4809,8 +4827,12 @@ def is_boolean(field_data):
         return False
     for entry in field_data['choices']:
         if 'key' in entry and 'label' in entry:
-            if not isinstance(entry['key'].original_text, bool):
-                return False
+            if isinstance(entry['key'], TextObject):
+                if not isinstance(entry['key'].original_text, bool):
+                    return False
+            else:
+                if not isinstance(entry['key'], bool):
+                    return False
     return True
 
 def is_threestate(field_data):
@@ -4820,8 +4842,12 @@ def is_threestate(field_data):
         return False
     for entry in field_data['choices']:
         if 'key' in entry and 'label' in entry:
-            if not isinstance(entry['key'].original_text, (bool, NoneType)):
-                return False
+            if isinstance(entry['key'], TextObject):
+                if not isinstance(entry['key'].original_text, (bool, NoneType)):
+                    return False
+            else:
+                if not isinstance(entry['key'], (bool, NoneType)):
+                    return False
     return True
 
 class TableInfo(object):

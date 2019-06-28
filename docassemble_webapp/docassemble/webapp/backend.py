@@ -5,7 +5,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning #Attachments
+from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.base.generate_key import random_string, random_bytes
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -193,6 +193,50 @@ def url_for(*pargs, **kwargs):
             kwargs['js_target'] = docassemble.base.functions.this_thread.misc['jsembed']
     return base_url_for(*pargs, **kwargs)
 
+def sql_get(key, secret=None):
+    for record in GlobalObjectStorage.query.filter_by(key=key):
+        if record.encrypted:
+            try:
+                result = decrypt_object(record.value, secret)
+            except:
+                raise Exception("Unable to decrypt stored object.")
+        else:
+            try:
+                result = unpack_object(record.value)
+            except:
+                raise Exception("Unable to unpack stored object.")
+        return result
+    return None
+
+def sql_defined(key):
+    record = GlobalObjectStorage.query.filter_by(key=key).with_entities(GlobalObjectStorage.id).first()
+    if record is None:
+        return False
+    return True
+
+def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
+    user_id, temp_user_id = parse_the_user_id(the_user_id)
+    updated = False
+    for record in GlobalObjectStorage.query.filter_by(key=key).with_for_update():
+        record.user_id = user_id
+        record.temp_user_id = temp_user_id
+        if encrypted:
+            record.value = encrypt_object(val, secret)
+        else:
+            record.value = pack_object(val)
+        updated = True
+    if not updated:
+        if encrypted:
+            record = GlobalObjectStorage(key=key, value=encrypt_object(val, secret), encrypted=True, user_id=user_id, temp_user_id=temp_user_id)
+        else:
+            record = GlobalObjectStorage(key=key, value=pack_object(val), encrypted=False, user_id=user_id, temp_user_id=temp_user_id)
+        db.session.add(record)
+    db.session.commit()
+
+def sql_delete(key):
+    GlobalObjectStorage.query.filter_by(key=key).delete()
+    db.session.commit()
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
@@ -212,7 +256,11 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          get_new_file_number=get_new_file_number,
                                          get_ext_and_mimetype=get_ext_and_mimetype,
                                          file_finder=get_info_from_file_reference,
-                                         file_number_finder=get_info_from_file_number)
+                                         file_number_finder=get_info_from_file_number,
+                                         server_sql_get=sql_get,
+                                         server_sql_defined=sql_defined,
+                                         server_sql_set=sql_set,
+                                         server_sql_delete=sql_delete)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
@@ -365,6 +413,25 @@ def pack_object(the_object):
 def unpack_object(the_string):
     the_string = bytearray(the_string, encoding='utf-8')
     return fix_pickle_dict(codecs.decode(the_string, 'base64'))
+
+def encrypt_object(obj, secret):
+    iv = random_bytes(16)
+    encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
+    return (iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(safe_pickle(obj)))), 'base64')).decode()
+
+def decrypt_object(obj_string, secret):
+    obj_string = bytearray(obj_string, encoding='utf-8')
+    decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, obj_string[:16])
+    return fix_pickle_obj(unpad(decrypter.decrypt(codecs.decode(obj_string[16:], 'base64'))))
+
+def parse_the_user_id(the_user_id):
+    m = re.match(r'(t?)([0-9]+)', text_type(the_user_id))
+    if m:
+        if m.group(1) == 't':
+            return None, int(m.group(2))
+        else:
+            return int(m.group(2)), None
+    raise Exception("Invalid user ID")
 
 def safe_pickle(the_object):
     if type(the_object) is list:

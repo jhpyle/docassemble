@@ -806,7 +806,7 @@ from docassemble.base.functions import pickleable_objects, word, comma_and_list,
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for
 from docassemble.webapp.fixpickle import fix_pickle_obj
-from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning #Attachments
+from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
@@ -9509,7 +9509,7 @@ def index(action_argument=None):
             the_language = voicerss_config['language map'][the_language]
         if the_language == util_language and util_dialect is not None:
             the_dialect = util_dialect
-        elif voicerss_config and 'dialects' in voicerss_config and isinstance(voicerss_config['dialects']) and the_language in voicerss_config['dialects']:
+        elif voicerss_config and 'dialects' in voicerss_config and isinstance(voicerss_config['dialects'], dict) and the_language in voicerss_config['dialects']:
             the_dialect = voicerss_config['dialects'][the_language]
         elif the_language in valid_voicerss_dialects:
             the_dialect = valid_voicerss_dialects[the_language][0]
@@ -17829,6 +17829,29 @@ def login_or_register(sender, user, **extra):
         for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).with_for_update().all():
             chat_entry.owner_id = user.id
             chat_entry.temp_owner_id = None
+        db.session.commit()
+        keys_in_use = dict()
+        for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).all():
+            if object_entry.key.startswith('da:userid:{s}:'.format(user.id)):
+                if object_entry.key not in keys_in_use:
+                    keys_in_use[object_entry.key] = list()
+                keys_in_use[object_entry.key].append(object_entry.id)
+        ids_to_delete = list()
+        for object_entry in GlobalObjectStorage.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+            object_entry.user_id = user.id
+            object_entry.temp_user_id = None
+            if object_entry.key.startswith('da:userid:t{s}:'.format(session['tempuser'])):
+                new_key = re.sub(r'^da:userid:t{s}:'.format(session['tempuser']), 'da:userid:{s}:'.format(user.id), object_entry.key)
+                object_entry.key = new_key
+                if new_key in keys_in_use:
+                    ids_to_delete.extend(keys_in_use[new_key])
+            if object_entry.encrypted and 'newsecret' in session:
+                try:
+                    object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
+                except:
+                    logmessage("Failure to change encryption of object " + object_entry.key)
+        for the_id in ids_to_delete:
+            GlobalObjectStorage.query.filter_by(id=the_id).delete()
         db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id

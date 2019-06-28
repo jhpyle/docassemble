@@ -75,63 +75,65 @@ if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     ${DA_ROOT}/webapp/run-cron.sh cron_daily
 fi
 
-MONTHDAY=$(date +%m-%d)
-BACKUPDIR=${DA_ROOT}/backup/$MONTHDAY
-rm -rf $BACKUPDIR
-mkdir -p $BACKUPDIR
-if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
-    rsync -au ${DA_ROOT}/files $BACKUPDIR/
-    rsync -au ${DA_ROOT}/config $BACKUPDIR/
-    #rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
-    rsync -au ${DA_ROOT}/log $BACKUPDIR/
-fi
+if [ "${DABACKUPDAYS}" != "0" ]; then
+    MONTHDAY=$(date +%m-%d)
+    BACKUPDIR=${DA_ROOT}/backup/$MONTHDAY
+    rm -rf $BACKUPDIR
+    mkdir -p $BACKUPDIR
+    if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
+	rsync -au ${DA_ROOT}/files $BACKUPDIR/
+	rsync -au ${DA_ROOT}/config $BACKUPDIR/
+	#rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
+	rsync -au ${DA_ROOT}/log $BACKUPDIR/
+    fi
 
-if [ -f /var/lib/redis/dump.rdb ]; then
-    cp /var/lib/redis/dump.rdb $BACKUPDIR/redis.rdb
-fi
+    if [ -f /var/lib/redis/dump.rdb ]; then
+	cp /var/lib/redis/dump.rdb $BACKUPDIR/redis.rdb
+    fi
 
-if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
-    PGBACKUPDIR=`mktemp -d`
-    chown postgres.postgres "$PGBACKUPDIR"
-    su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
-    rsync -au "$PGBACKUPDIR/" $BACKUPDIR/postgres
+    if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+	PGBACKUPDIR=`mktemp -d`
+	chown postgres.postgres "$PGBACKUPDIR"
+	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+	rsync -au "$PGBACKUPDIR/" $BACKUPDIR/postgres
+	if [ "${S3ENABLE:-false}" == "true" ]; then
+	    s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+	fi
+	if [ "${AZUREENABLE:-false}" == "true" ]; then
+	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
+		target_file=`basename $the_file`
+		blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
+	    done
+	fi
+	rm -rf "$PGBACKUPDIR"
+    fi
+    if [ "${AZUREENABLE:-false}" == "false" ]; then
+       rm -rf `find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print`
+    fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+	if [ "${EC2:-false}" == "true" ]; then
+	    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	else
+	    export LOCAL_HOSTNAME=`hostname --fqdn`
+	fi
+	s3cmd sync ${DA_ROOT}/backup/ s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}/
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
-	for the_file in $( find "$PGBACKUPDIR/" -type f ); do
-	    target_file=`basename $the_file`	    
-	    blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}"/postgres/$target_file"
+	if [ "${EC2:-false}" == "true" ]; then
+	    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	else
+	    export LOCAL_HOSTNAME=`hostname --fqdn`
+	fi
+	for the_file in $( find ${DA_ROOT}/backup/ -type f | cut -c 31- ); do
+	    blob-cmd -f cp "${DA_ROOT}/backup/$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'${the_file}
+	done
+	for the_dir in $( find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print | cut -c 31- ); do
+	    for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
+		blob-cmd -f rm 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'$( $the_file )
+	    done
+	    rm -rf ${DA_ROOT}/backup/$the_dir
 	done
     fi
-    rm -rf "$PGBACKUPDIR"
-fi
-if [ "${AZUREENABLE:-false}" == "false" ]; then
-   rm -rf `find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print`
-fi
-if [ "${S3ENABLE:-false}" == "true" ]; then
-    if [ "${EC2:-false}" == "true" ]; then
-	export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
-    else
-	export LOCAL_HOSTNAME=`hostname --fqdn`
-    fi
-    s3cmd sync ${DA_ROOT}/backup/ s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}/
-fi
-if [ "${AZUREENABLE:-false}" == "true" ]; then
-    if [ "${EC2:-false}" == "true" ]; then
-	export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
-    else
-	export LOCAL_HOSTNAME=`hostname --fqdn`
-    fi
-    for the_file in $( find ${DA_ROOT}/backup/ -type f | cut -c 31- ); do
-	blob-cmd -f cp "${DA_ROOT}/backup/$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'${the_file}
-    done
-    for the_dir in $( find ${DA_ROOT}/backup -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print | cut -c 31- ); do
-	for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
-            blob-cmd -f rm 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/backup/'${LOCAL_HOSTNAME}'/'$( $the_file )
-	done
-	rm -rf ${DA_ROOT}/backup/$the_dir
-    done
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; then
@@ -141,4 +143,3 @@ if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; 
 	done
     fi
 fi
-

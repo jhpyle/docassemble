@@ -104,7 +104,7 @@ if __name__ == "__main__":
     if 'backup days' in daconfig:
         try:
             days = int(daconfig['backup days'])
-            assert days > 0
+            assert days >= 0
         except:
             days = 14
         print('export DABACKUPDAYS="' + str(days) + '"')

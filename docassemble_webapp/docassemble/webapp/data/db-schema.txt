@@ -146,3 +146,9 @@ userdictkeys|filename|text||
 userdictkeys|key|character varying|250|
 userdictkeys|user_id|integer||
 userdictkeys|temp_user_id|integer||
+globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
+globalobjectstorage|key|text||
+globalobjectstorage|value|text||
+globalobjectstorage|encrypted|boolean||true
+globalobjectstorage|user_id|integer||
+globalobjectstorage|temp_user_id|integer||
