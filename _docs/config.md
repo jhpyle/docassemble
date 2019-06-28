@@ -1507,6 +1507,9 @@ days can be changed using the `backup days` directive.
 backup days: 7
 {% endhighlight %}
 
+If you set `backup days` to `0`, the daily backup process will be
+disabled.
+
 ## <a name="password secretkey"></a>Secret key for passwords
 
 The `password secretkey` is used in the process of encrypting

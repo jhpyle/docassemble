@@ -1898,6 +1898,14 @@ after which the data should be removed from [Redis].
 
 {% include side-by-side.html demo="redis-data" %}
 
+## <a name="DAStore"></a>DAStore
+
+The `DAStore` is similar to `DARedis`, but it stores data in SQL and
+it allows for encryption.  It is also similar in functionality to the
+`write_record()` and `read_records()` functions.
+
+{% include side-by-side.html demo="dastore" %}
+
 ## <a name="DACloudStorage"></a>DACloudStorage
 
 The `DACloudStorage` object allows you to access low-level

@@ -1743,6 +1743,31 @@
     What is the color of the ${ x }?
   fields:
     - Color: x.color
+"dastore": |-
+  objects:
+    - userdata: DAStore
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: preferences.favorite_fruit
+  ---
+  code: |
+    preferences = userdata.get("prefs") or Thing('preferences')
+  ---
+  mandatory: True
+  code: |
+    preferences.favorite_fruit
+    userdata.set("prefs", preferences)
+  ---
+  mandatory: True
+  code: |
+    final_screen
+  ---
+  event: final_screen
+  question: All done
+  subquestion: |
+    ${ userdata.get("prefs").favorite_fruit }
 "data": |-
   variable name: fruits
   data:

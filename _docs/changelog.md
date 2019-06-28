@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.55](https://github.com/jhpyle/docassemble/releases/tag/v0.4.55) - 2019-06-28
+
+### Added
+- The `DAStore` object.
+
+### Changed
+- Mako no longer allowed in non-label items of `choices` or `buttons`.
+- If `backup days` is `0`, no daily backups will be done.
+
+### Fixed
+- Error when `dialects` enabled under `voicerss`.
+
 ## [0.4.54](https://github.com/jhpyle/docassemble/releases/tag/v0.4.54) - 2019-06-26
 
 ### Added
