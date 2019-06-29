@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.56](https://github.com/jhpyle/docassemble/releases/tag/v0.4.56) - 2019-06-29
+
+### Added
+- The `initializeObject` method of `DAList`.
+
+### Fixed
+- Error gathering `DAList` of `datatype: checkboxes` items.
+- Error when using `default` and `list collect`.
+- Errors with `DAStore`.
+
 ## [0.4.55](https://github.com/jhpyle/docassemble/releases/tag/v0.4.55) - 2019-06-28
 
 ### Added
@@ -142,7 +152,7 @@ short_title: Change Log
 - Inserting certain types of images into RTF files resulted in a fatal
   error rather than a non-fatal error.
 
-## [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
+# [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
 
 ### Added
 - Version-specific caching of CSS and JavaScript files.

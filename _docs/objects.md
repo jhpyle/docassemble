@@ -798,6 +798,9 @@ Other methods available on a `DAList` are:
   changed.  While the `filter()` method can be a useful shorthand, its
   features are very limited.  In most situations, it is probably
   better to use a [list comprehension].
+* <a name="DAList.initializeObject"></a> - Calling
+  `my_list.initializeObject(0, DAObject)` will set the first item in
+  the list to a `DAObject`, with an appropriate instance name.
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -1900,11 +1903,110 @@ after which the data should be removed from [Redis].
 
 ## <a name="DAStore"></a>DAStore
 
-The `DAStore` is similar to `DARedis`, but it stores data in SQL and
+The `DAStore` is similar to `DARedis`, except it stores data in SQL and
 it allows for encryption.  It is also similar in functionality to the
 `write_record()` and `read_records()` functions.
 
+`DAStore` objects provide an interface to a database based on keys and
+values (like [Redis]).  The keys are strings and the values are any
+[Python] objects that can be [pickled].  Unlike the interview answers,
+which are tied to a particular session, the information in this
+database is global and can be accessed from any interview.
+
 {% include side-by-side.html demo="dastore" %}
+
+In the above example, the user's preferences are stored in the
+database using a key that is specific to the user.  The first time the
+user uses the interview, the user is asked for their favorite fruit.
+If the user restarts the interview (which permanently erases the
+interview answers), the user's favorite fruit will be retrieved from
+the `DAStore`, and it will not need to be asked of the user.  The
+object stored in the database is a [`DAObject`], and the favorite
+fruit is an attribute of that object.  In the database, the object is
+stored under key called `prefs`.  This key is specific to the user, so
+that each user will have their own personal `prefs` entry in the
+database.
+
+By default, information stored in this database is encrypted, so that
+only the user who stored the information can retrieve it.  An
+exception will be raised if an attempt is made to access an encrypted
+record using the incorrect encryption key.  As with the interview
+answers, the encryption key is based on the user's password (or a
+randomly-generted key if the user is not logged in).
+
+Assume you have a `DAStore` object called `mystore`.
+
+{% highlight yaml %}
+objects:
+  - mystore: DAStore
+{% endhighlight %}
+
+<a name="DAStore.get"></a>If you call `mystore.get('fruit')`, you will
+retrieve the object from storage that is stored under the key
+`'fruit'`.  If no such object exists, `None` will be returned.
+
+<a name="DAStore.set"></a>If you call `mystore.set('fruit',
+favorite_fruit)`, you will save the object `favorite_fruit` under the
+key `'fruit'`.
+
+<a name="DAStore.delete"></a>If you call `mystore.delete('fruit')`, it
+will delete the record from the database for the key `'fruit'`.  No
+error is raised if the record did not exist.
+
+<a name="DAStore.defined"></a>If you call `mystore.defined('fruit')`,
+it will return `True` if an object is stored under the key `'fruit'`
+and `False` otherwise.
+
+<a name="DAStore.is_encrypted"></a>If you call
+`mystore.is_encrypted()`, it will return `True` or `False` depending
+on whether encryption is enabled for the data store.
+
+The operations of the `DAStore` object can be configured using two
+optional attributes: `base` and `encrypted`.
+
+<a name="DAStore.base"></a>**docassemble** stores `DAStore` data in a
+SQL table where each record is identified by a "key" that is a string
+(similarly to the way [Redis] works).  The key that you pass to the
+`get()`, `set()`, `delete()`, and `defined()` methods makes up part of
+this key, but it is not the only part of it; there is a prefix that
+comes before it.  The `base` attribute determines what this prefix is,
+and also determines whether the object should be encrypted by default.
+For a storage object `mystore`, you can set `mystore.base` to:
+
+* `'user'` - The prefix will be based on the user's ID.
+  (If the user is not logged in, but then registers, the key will be
+  automatically re-assigned to the logged-in user's ID.)  By 
+* `'interview'` - The prefix will be based on the interview name
+  (e.g., `docassemble.demo:data/questions/questions.yml`).  By
+  default, the objects will not be encrypted.
+* `'global'` - Effectively, this means there is no prefix.  From any
+  interview on your server, regardless of who the user is, calling
+  `mystore.get('fruit')` will retrieve the same object.
+* A string of your own choosing.  For example, if you have a
+  collection of family law interviews and a collection of consumer law
+  interviews, and the key names you are using overlap between these
+  two collections, but you want the data to be separate for each
+  collection, you could use `'family'` as the `base` in the family law
+  interviews, and `'consumer'` as the `base` in the consumer law
+  interviews.  Then the data would be isolated between the two
+  collections, but common within each collection.  By default,
+  encryption is disabled when you use a string of your own choosing as
+  the `base`.
+  
+<a name="DAStore.encrypted"></a>If you want to override the defaults
+on whether the objects are encrypted, you can set the `encrypted`
+attribute to `True` if you want encryption, and `False` if you do not
+want encryption.
+
+You can set these attributes when you initialize the object:
+
+{% highlight yaml %}
+objects:
+  - mystore: DAStore.using(base='global')
+{% endhighlight %}
+
+If you want to use different settings for different keys, you can
+include more than one `DAStore` variable in your interview.
 
 ## <a name="DACloudStorage"></a>DACloudStorage
 
