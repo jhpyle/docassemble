@@ -220,6 +220,7 @@ def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
     for record in GlobalObjectStorage.query.filter_by(key=key).with_for_update():
         record.user_id = user_id
         record.temp_user_id = temp_user_id
+        record.encrypted = encrypted
         if encrypted:
             record.value = encrypt_object(val, secret)
         else:

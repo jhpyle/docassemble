@@ -3758,6 +3758,9 @@ class Question:
                                         selectcompute[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'defaults':
                                 defaults[str(list_indexno) + '_' + str(field_num)] = val
+                                if list_indexno == length_to_use - 1:
+                                    for ii in range(1, extra_amount + 1):
+                                        defaults[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'hints':
                                 hints[str(list_indexno) + '_' + str(field_num)] = val
                                 if list_indexno == length_to_use - 1:

@@ -64,18 +64,30 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 class DAStore(DAObject):
     """A class used to save objects to SQL."""
     def init(self, *pargs, **kwargs):
-        self.encrypted = True
         super(DAStore, self).init(*pargs, **kwargs)
+    def is_encrypted(self):
+        """Returns True if the storage object is using encryption, otherwise returns False."""
+        if hasattr(self, 'encrypted'):
+            return self.encrypted
+        if hasattr(self, 'base'):
+            if self.base == 'interview':
+                return False
+            if self.base == 'user':
+                return True
+            if self.base == 'global':
+                return False
+            return False
+        return True
     def _get_base_key(self):
         if hasattr(self, 'base'):
             if self.base == 'interview':
                 return 'da:i:' + this_thread.current_info.get('yaml_filename', '')
             if self.base == 'user':
-                return 'da:userid:' + this_thread.current_info['user']['the_user_id']
+                return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
             if self.base == 'global':
                 return 'da:global'
-            return self.base
-        return 'da:userid:' + this_thread.current_info['user']['the_user_id']
+            return text_type(self.base)
+        return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
     def defined(self, key):
         """Returns True if the key exists in the data store, otherwise returns False."""
         the_key = self._get_base_key() + ':' + key
@@ -84,10 +96,10 @@ class DAStore(DAObject):
         """Reads an object from the data store for the given key."""
         the_key = self._get_base_key() + ':' + key
         return server.server_sql_get(the_key, secret=this_thread.current_info.get('secret', None))
-    def set(self, key, value, encrypted=True):
+    def set(self, key, value):
         """Writes an object to the data store under the given key."""
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_set(the_key, value, encrypted=self.encrypted, secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
+        server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
     def delete(self, key):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key

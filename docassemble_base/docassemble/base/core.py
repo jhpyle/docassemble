@@ -798,6 +798,41 @@ class DAList(DAObject):
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         return super(DAList, self).init(*pargs, **kwargs)
+    def initializeObject(self, *pargs, **kwargs):
+        """Creates a new object and creates an entry in the list for it.
+        The first argument is the index to set.
+        Takes an optional second argument, which is the type of object
+        the new object should be.  If no object type is provided, the
+        object type given by .object_type is used, and if that is not
+        set, DAObject is used.
+
+        """
+        objectFunction = None
+        pargs = [x for x in pargs]
+        index = pargs.pop(0)
+        if len(pargs) > 0:
+            objectFunction = pargs.pop(0)
+        new_obj_parameters = dict()
+        if isinstance(objectFunction, DAObjectPlusParameters):
+            for key, val in objectFunction.parameters.items():
+                new_obj_parameters[key] = val
+            objectFunction = objectFunction.object_type
+        if objectFunction is None:
+            if self.object_type is not None:
+                objectFunction = self.object_type
+                for key, val in self.object_type_parameters.items():
+                    new_obj_parameters[key] = val
+            else:
+                objectFunction = DAObject
+                object_type_parameters = dict()
+        for key, val in kwargs.items():
+            new_obj_parameters[key] = val
+        newobject = objectFunction(self.instanceName + '[' + repr(index) + ']', *pargs, **new_obj_parameters)
+        for pre_index in range(index):
+            self.elements.append(None)
+        self[index] = newobject
+        self.there_are_any = True
+        return newobject
     def gathered_and_complete(self):
         """Ensures all items in the list are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):

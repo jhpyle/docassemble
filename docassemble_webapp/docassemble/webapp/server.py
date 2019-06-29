@@ -804,7 +804,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -1384,6 +1384,16 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         #logmessage("substitute_secret: returning new secret without doing anything")
         return newsecret
     #logmessage("substitute_secret: continuing")
+    updated = False
+    for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).with_for_update().all():
+        if object_entry.encrypted:
+            try:
+                object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
+            except Exception as err:
+                logmessage("Failure to change encryption of object " + object_entry.key + text_type(err))
+            updated = True
+    if updated:
+        db.session.commit()
     user_code = session.get('uid', None)
     if to_convert is None:
         to_do = set()
@@ -5798,7 +5808,8 @@ def index(action_argument=None):
                     vars_set.add(core_key_name)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
-                    #logmessage("Checkbox object is " + index_name)
+                    if index_name in ('i', 'j', 'k', 'l', 'm', 'n'):
+                        index_name = user_dict.get(index_name, index_name)
                     if datatype == 'checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
@@ -17832,7 +17843,7 @@ def login_or_register(sender, user, **extra):
         db.session.commit()
         keys_in_use = dict()
         for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).all():
-            if object_entry.key.startswith('da:userid:{s}:'.format(user.id)):
+            if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
                 if object_entry.key not in keys_in_use:
                     keys_in_use[object_entry.key] = list()
                 keys_in_use[object_entry.key].append(object_entry.id)
@@ -17840,16 +17851,16 @@ def login_or_register(sender, user, **extra):
         for object_entry in GlobalObjectStorage.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
             object_entry.user_id = user.id
             object_entry.temp_user_id = None
-            if object_entry.key.startswith('da:userid:t{s}:'.format(session['tempuser'])):
-                new_key = re.sub(r'^da:userid:t{s}:'.format(session['tempuser']), 'da:userid:{s}:'.format(user.id), object_entry.key)
+            if object_entry.key.startswith('da:userid:t{:d}:'.format(session['tempuser'])):
+                new_key = re.sub(r'^da:userid:t{:d}:'.format(session['tempuser']), 'da:userid:{:d}:'.format(user.id), object_entry.key)
                 object_entry.key = new_key
                 if new_key in keys_in_use:
                     ids_to_delete.extend(keys_in_use[new_key])
             if object_entry.encrypted and 'newsecret' in session:
                 try:
                     object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
-                except:
-                    logmessage("Failure to change encryption of object " + object_entry.key)
+                except Exception as err:
+                    logmessage("Failure to change encryption of object " + object_entry.key + text_type(err))
         for the_id in ids_to_delete:
             GlobalObjectStorage.query.filter_by(id=the_id).delete()
         db.session.commit()

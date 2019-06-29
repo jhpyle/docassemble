@@ -1,3 +1,8 @@
+metadata:
+  title: DAStore
+  example start: 1
+  example end: 6
+  documentation: "https://docassemble.org/docs/objects.html#DAStore"
 ---
 objects:
   - userdata: DAStore
@@ -8,12 +13,13 @@ fields:
   - Fruit: preferences.favorite_fruit
 ---
 code: |
-  preferences = userdata.get("prefs") or Thing('preferences')
+  preferences = userdata.get("prefs") or DAObject('preferences')
 ---
 mandatory: True
 code: |
   preferences.favorite_fruit
-  userdata.set("prefs", preferences)
+  if not userdata.defined("prefs"):
+    userdata.set("prefs", preferences)
 ---
 mandatory: True
 code: |

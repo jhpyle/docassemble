@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.4.56] - 2019-06-29
+### Added
+- The `initializeObject` method of `DAList`.
+### Fixed
+- Error gathering `DAList` of `datatype: checkboxes` items.
+- Error when using `default` and `list collect`.
+- Errors with `DAStore`.
+
 ## [0.4.55] - 2019-06-28
 ### Added
 - The `DAStore` object.
