@@ -927,14 +927,17 @@ in multiple choice questions, see the
 
 ## <a name="code"></a>`code`
 
-If you have a multiple-choice question and you want to reuse the same
-selections several times, you do not need to type in the whole list
-every time.  You can define a variable to contain the list and a
-[`code`] block that defines the variable.
+If you have a multiple-choice question (radio buttons, checkboxes,
+dropdown) and you want to reuse the same selections several times, you
+do not need to type in the whole list every time.  You can define a
+variable to contain the list and a [`code`] block that defines the
+variable.
 
 Adding `code` to a field makes it a multiple-choice question.  The
 `code` itself refers to [Python] code that generates a list of
-possible options for a multiple choice field.
+possible options for a multiple choice field.  The `code` field
+modifier is used in place of a [`choices`] field modifer, which you
+would use to specify the choices manually.
 
 {% include side-by-side.html demo="fields-mc" %}
 
@@ -942,8 +945,9 @@ The [Python] code runs at the time the question is asked.  Therefore,
 you can use the `code` feature to create multiple-choice questions
 that have dynamically-created lists of choices.
 
-The [Python] code needs to be a single expression.  The result of the
-expression can take several forms.
+The [Python] code needs to be a single [Python expression] (which can
+be a simple variable, or something more complex, like a [list
+comprehension]).  The result of the expression can take several forms.
 
 It can be a [list] of single-item [dictionaries], as in the example above.
 
@@ -1463,7 +1467,7 @@ example, if the object in a `choices` list is an [`Individual`], the
 label for the object will be the textual representation for an
 [`Individual`], which is the individual's name.  To use an alternate
 label, provide a `object labeler`.  The `object labeler` must be a
-Python expression that evaluates to a function.
+[Python expression] that evaluates to a function.
 
 For example:
 
@@ -2262,3 +2266,5 @@ why this needs to be done manually as opposed to automatically:
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions

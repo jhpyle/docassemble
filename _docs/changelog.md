@@ -152,7 +152,7 @@ short_title: Change Log
 - Inserting certain types of images into RTF files resulted in a fatal
   error rather than a non-fatal error.
 
-# [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
+## [0.4.44](https://github.com/jhpyle/docassemble/releases/tag/v0.4.44) - 2019-05-21
 
 ### Added
 - Version-specific caching of CSS and JavaScript files.
