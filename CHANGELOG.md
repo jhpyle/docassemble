@@ -1,8 +1,6 @@
 # Change Log
 
 ## [0.4.57] - 2019-06-
-### Changed
-- Google sign-in button moved back to main login page.
 ### Fixed
 - Problems with Google sign-in on Python 3.
 

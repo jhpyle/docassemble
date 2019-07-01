@@ -19,7 +19,7 @@ if PY2:
     from urllib import quote as urllibquote
     from urllib import unquote as urllibunquote
     from urllib import urlencode, urlretrieve
-    from urlparse import urlparse, parse_qsl, urlunparse
+    from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
     the_method_type = types.MethodType
 else:
     from urllib.parse import quote as urllibquote
@@ -3592,7 +3592,7 @@ class GoogleSignIn(OAuthSignIn):
         )
     def authorize(self):
         if PY2:
-            result = urlparse.parse_qs(request.data)
+            result = parse_qs(request.data)
         else:
             result = urllib.parse.parse_qs(request.data.decode())
         # logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
