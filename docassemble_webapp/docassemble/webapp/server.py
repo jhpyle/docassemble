@@ -3717,21 +3717,21 @@ def safe_json_loads(data):
 class Auth0SignIn(OAuthSignIn):
     def __init__(self):
         super(Auth0SignIn, self).__init__('auth0')
-        if self.consumer_domain is None:
-            raise Exception("To use Auth0, you need to set your domain in the configuration.")
         self.service = OAuth2Service(
             name='auth0',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url='https://' + self.consumer_domain + '/authorize',
-            access_token_url='https://' + self.consumer_domain + '/oauth/token',
-            base_url='https://' + self.consumer_domain
+            authorize_url='https://' + text_type(self.consumer_domain) + '/authorize',
+            access_token_url='https://' + text_type(self.consumer_domain) + '/oauth/token',
+            base_url='https://' + text_type(self.consumer_domain)
         )
     def authorize(self):
+        if 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and daconfig['oauth']['auth0'].get('enable', True) and self.consumer_domain is None:
+            raise Exception("To use Auth0, you need to set your domain in the configuration.")
         return redirect(self.service.get_authorize_url(
             response_type='code',
             scope='openid profile email',
-            audience='https://' + self.consumer_domain + '/userinfo',
+            audience='https://' + text_type(self.consumer_domain) + '/userinfo',
             redirect_uri=self.get_callback_url())
         )
     def callback(self):
