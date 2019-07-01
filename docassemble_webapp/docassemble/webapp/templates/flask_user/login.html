@@ -151,14 +151,12 @@ function daFixButton(){
         var elem = $("div.g-signin2").find("div").first()[0];
         elem.style.height = "auto";
         elem.style.width = "auto";
-        elem.style.box-shadow = "none";
+        elem.style.boxShadow = "none";
     }, 10);
 }
-</script>
-<script src="https://apis.google.com/js/platform.js?onload=daFixButton"></script>
-<script>
 function onSignIn(googleUser) {
   var profile = googleUser.getBasicProfile();
+  console.log("onSignIn");
   //console.log('ID: ' + profile.getId());
   //console.log('Name: ' + profile.getName());
   //console.log('Image URL: ' + profile.getImageUrl());
@@ -186,5 +184,6 @@ function onSignIn(googleUser) {
   }
 }
 </script>
+<script src="https://apis.google.com/js/platform.js?onload=daFixButton"></script>
 {%- endif %}
 {%- endblock %}
