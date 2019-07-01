@@ -7,7 +7,7 @@
 <div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
-<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script src="https://apis.google.com/js/platform.js"></script>
 <script>
 function onSignIn(googleUser) {
   var profile = googleUser.getBasicProfile();

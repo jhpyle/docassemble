@@ -3591,9 +3591,13 @@ class GoogleSignIn(OAuthSignIn):
             base_url=None
         )
     def authorize(self):
-        result = urlparse.parse_qs(request.data)
-        logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
-        logmessage("GoogleSignIn, request: " + str(request.data))
+        if PY2:
+            result = urlparse.parse_qs(request.data)
+        else:
+            result = urllib.parse.parse_qs(request.data.decode())
+        # logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        # logmessage("GoogleSignIn, request: " + str(request.data))
+        # logmessage("GoogleSignIn, result: " + repr(raw_result))
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
         session['google_name'] = result.get('name', [None])[0]

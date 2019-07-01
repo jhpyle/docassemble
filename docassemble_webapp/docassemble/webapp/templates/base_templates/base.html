@@ -5,7 +5,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
+{%- if (request.path == "/user/google-sign-in" or request.path == "/user/sign-in") and config['USE_GOOGLE_LOGIN'] %}
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
