@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.57](https://github.com/jhpyle/docassemble/releases/tag/v0.4.57) - 2019-07-01
+
+### Added
+- The `explain()`, `clear_explanations()`, and `explanation()`
+  functions.
+
+### Fixed
+- Problems with Google sign-in on Python 3.
+
 ## [0.4.56](https://github.com/jhpyle/docassemble/releases/tag/v0.4.56) - 2019-06-29
 
 ### Added

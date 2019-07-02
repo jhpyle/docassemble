@@ -2695,6 +2695,75 @@ number of times the task has been performed.
 `remind_user` task to zero, which means that
 `task_performed('remind_user')` would subsequently return `False`.
 
+# <a name="explanation"></a>Tracking reasoning
+
+It may be important that the logic of your interview be explainable.
+There are many ways to write your interviews in such a way you can
+explain to the user the reasoning you are applying, and there is no
+one right way to do this; nor is there a way that this process can be
+feasibly automated.
+
+The functions in this subsection may be of use for explaining
+reasoning.  They allow you to write "comment"-like phrases in your
+code that are saved into a list as the user goes through the
+interview.  Then you can present the user with the list of phrases.
+
+Here is an illustrative example:
+
+{% include demo-side-by-side.html demo="explain" %}
+
+The contents of the referenced module, [`somefuncs.py`], are:
+
+{% highlight python %}
+from docassemble.base.util import explain
+
+__all__ = ['wrong_vegetable']
+
+def wrong_vegetable(vegetable):
+    if vegetable == 'turnip':
+        explain("You also said your favorite vegetable was turnip.")
+        return True
+    else:
+        explain("You also said your favorite vegetable was " + vegetable + ".")
+        return False
+{% endhighlight %}
+
+Note that even though the call to `explain` takes place in a module,
+and even though it references no variables in your interview answers,
+the phrase is tracked in the list of explanations.
+
+## <a name="explain"></a>explain()
+
+The `explain()` function stores a phrase in the list of explanations.
+If the same phrase, verbatim, already exists in the list, the phrase
+is not added.
+
+The `explain()` function takes an optional keyword argument,
+`category`.  This allows you to keep track of more than one list of
+explanations.  By default, the `category` is `'default'`.  The two
+category names that are reserved are `'default'` and `'all'`.
+
+## <a name="clear_explanations"></a>explain()
+
+The `clear_explanations()` function resets the explanation list.  It
+takes an optional keyword argument `category`, which resets the given
+list.  If you set `category` to `'all'`, every list is reset.
+
+It is a good idea to call `clear_explanations()` every time the screen
+loads.  If your users can edit their answers, then reasoning that has
+been made obsolete by changes to the variables may persist in the
+explanations list.  Clearing the history and running through all of
+the logic every time the screen loads will help make sure that the
+explanations are corrected.
+
+## <a name="explanation"></a>explanation()
+
+The `explanation()` function returns the explanation list as a [Python
+list].  If the list does not exist, an empty list is returned.  This
+function takes an optional keyword argument `category`, which
+indicates the category of explanation list you would like to be
+returned.
+
 # <a name="translation"></a>Simple translation of words
 
 ## <a name="word"></a>word()
@@ -6429,6 +6498,7 @@ $(document).on('daPageLoad', function(){
 [`js show if`]: {{ site.baseurl }}/docs/fields.html#js show if
 [redact_demo.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.docx
 [redact_demo.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.pdf
+[`somefuncs.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/somefuncs.py
 [`NameError`]: https://docs.python.org/2/library/exceptions.html#exceptions.NameError
 [`try`/`except`]: https://docs.python.org/2.7/tutorial/errors.html#handling-exceptions
 [`redact: False`]: {{ site.baseurl }}/docs/documents.html#redact
