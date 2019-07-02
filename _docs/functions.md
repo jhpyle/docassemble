@@ -2743,7 +2743,7 @@ The `explain()` function takes an optional keyword argument,
 explanations.  By default, the `category` is `'default'`.  The two
 category names that are reserved are `'default'` and `'all'`.
 
-## <a name="clear_explanations"></a>explain()
+## <a name="clear_explanations"></a>clear_explanations()
 
 The `clear_explanations()` function resets the explanation list.  It
 takes an optional keyword argument `category`, which resets the given
