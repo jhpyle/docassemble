@@ -54,7 +54,7 @@ import types
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation']
 
 #knn_machine_learner = DummyObject
 
@@ -204,7 +204,7 @@ class DAGoogleAPI(DAObject):
     def google_cloud_storage_client(self, scope=None):
         """Returns a google.cloud.storage.Client object."""
         return server.google_api.google_cloud_storage_client(scope)
-        
+
 def run_python_module(module, arguments=None):
     """Runs a python module, as though from the command line, and returns the output."""
     if re.search(r'\.py$', module):
@@ -240,7 +240,7 @@ def today(timezone=None, format=None):
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
 def month_of(the_date, as_word=False, language=None):
-    """Interprets the_date as a date and returns the month.  
+    """Interprets the_date as a date and returns the month.
     Set as_word to True if you want the month as a word."""
     ensure_definition(the_date, as_word, language)
     if language is None:
@@ -456,14 +456,14 @@ def dt(obj):
     return datetime.datetime(obj.year, obj.month, obj.day, obj.hour, obj.minute, obj.second, obj.microsecond, obj.tzinfo)
 
 def date_interval(**kwargs):
-    """Expresses a date and time interval.  Passes through all arguments 
+    """Expresses a date and time interval.  Passes through all arguments
     to dateutil.relativedelta.relativedelta."""
     ensure_definition(**kwargs)
     return dateutil.relativedelta.relativedelta(**kwargs)
 
 def date_difference(starting=None, ending=None, timezone=None):
-    """Calculates the difference between the date indicated by "starting" 
-    and the date indicated by "ending."  Returns an object with attributes weeks, 
+    """Calculates the difference between the date indicated by "starting"
+    and the date indicated by "ending."  Returns an object with attributes weeks,
     days, hours, minutes, seconds, and delta."""
     ensure_definition(starting, ending, timezone)
     if starting is None:
@@ -587,19 +587,19 @@ def last_access_delta(*pargs, **kwargs):
     return current_datetime() - last_time
 
 def last_access_days(*pargs, **kwargs):
-    """Returns the number of days since the last time the interview 
+    """Returns the number of days since the last time the interview
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return delta.days + (delta.seconds / 86400.0)
 
 def last_access_hours(*pargs, **kwargs):
-    """Returns the number of hours since the last time the interview 
+    """Returns the number of hours since the last time the interview
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 24.0) + (delta.seconds / 3600.0)
 
 def last_access_minutes(*pargs, **kwargs):
-    """Returns the number of minutes since the last time the interview 
+    """Returns the number of minutes since the last time the interview
     was accessed."""
     delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
@@ -787,7 +787,7 @@ class IndividualName(Name):
             return super(IndividualName, self).defined()
         return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
-        """Returns the full name.  Has optional keyword arguments middle 
+        """Returns the full name.  Has optional keyword arguments middle
         and use_suffix."""
         if not self.uses_parts:
             return super(IndividualName, self).full()
@@ -815,7 +815,7 @@ class IndividualName(Name):
             return super(IndividualName, self).firstlast()
         return(self.first + " " + self.last)
     def lastfirst(self):
-        """Returns the last name followed by a comma, followed by the 
+        """Returns the last name followed by a comma, followed by the
         last name, followed by the suffix (if a suffix exists)."""
         if not self.uses_parts:
             return super(IndividualName, self).lastfirst()
@@ -1112,7 +1112,7 @@ class Address(DAObject):
             return word("Room", language=language) + " " + text_type(self.room)
         return ''
     def line_one(self, language=None):
-        """Returns the first line of the address, including the unit 
+        """Returns the first line of the address, including the unit
         number if there is one."""
         if self.city_only:
             return ''
@@ -1183,7 +1183,7 @@ class Event(DAObject):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         return text_type(self.address)
-    
+
 class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, *pargs, **kwargs):
@@ -1240,9 +1240,9 @@ class Person(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def possessive(self, target, **kwargs):
-        """Given a word like "fish," returns "your fish" or 
+        """Given a word like "fish," returns "your fish" or
         "John Smith's fish," depending on whether the person is the user."""
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
@@ -1311,7 +1311,7 @@ class Person(DAObject):
     #         return self.age_in_years
     #     today = date.today()
     #     born = self.birthdate
-    #     try: 
+    #     try:
     #         birthday = born.replace(year=today.year)
     #     except ValueError:
     #         birthday = born.replace(year=today.year, month=born.month+1, day=1)
@@ -1369,7 +1369,7 @@ class Person(DAObject):
         #logmessage(the_verb + " " + tense)
         output = verb_past(the_verb, tense, **kwargs)
     def subject(self, **kwargs):
-        """Returns "you" or the person's name, depending on whether the 
+        """Returns "you" or the person's name, depending on whether the
         person is the user."""
         if self == this_thread.global_vars.user:
             output = word('you', **kwargs)
@@ -1431,15 +1431,15 @@ class Individual(Person):
         else:
             return int(rd.years)
     def first_name_hint(self):
-        """If the individual is the user and the user is logged in and 
-        the user has set up a name in the user profile, this returns 
+        """If the individual is the user and the user is logged in and
+        the user has set up a name in the user profile, this returns
         the user's first name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
             return this_thread.current_info['user']['firstname'];
         return ''
     def last_name_hint(self):
-        """If the individual is the user and the user is logged in and 
-        the user has set up a name in the user profile, this returns 
+        """If the individual is the user and the user is logged in and
+        the user has set up a name in the user profile, this returns
         the user's last name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
             return this_thread.current_info['user']['lastname'];
@@ -1460,7 +1460,7 @@ class Individual(Person):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
         if self == this_thread.global_vars.user:
@@ -1493,7 +1493,7 @@ class Individual(Person):
         else:
             return(output)
     def yourself_or_name(self, **kwargs):
-        """Returns a "yourself" if the individual is the user, otherwise 
+        """Returns a "yourself" if the individual is the user, otherwise
         returns the individual's name."""
         if self == this_thread.global_vars.user:
             output = word('yourself', **kwargs)
@@ -1544,7 +1544,7 @@ class FinancialList(DADict):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         return text_type(self.total())
-    
+
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
     def init(self, *pargs, **kwargs):
@@ -1611,7 +1611,7 @@ class Value(DAObject):
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
     def amount(self, period_to_use=1):
-        """Returns the periodic value's amount for a full period, 
+        """Returns the periodic value's amount for a full period,
         or 0 if the value does not exist."""
         if not self.exists:
             return 0
@@ -1637,7 +1637,7 @@ class Organization(Person):
             del kwargs['offices']
         return super(Organization, self).init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
-        """Returns True or False depending on whether the organization 
+        """Returns True or False depending on whether the organization
         serves the given county and/or handles the given problem."""
         ensure_definition(problem, county)
         if problem:
@@ -1669,7 +1669,7 @@ class Organization(Person):
         return None
 
 # twilio_config = None
-    
+
 # def set_twilio_config(the_config):
 #     global twilio_config
 #     twilio_config = the_config
@@ -1826,7 +1826,7 @@ class FaxStatus(object):
             return True
         else:
             return False
-        
+
 def send_fax(fax_number, file_object, config='default', country=None):
     if server.twilio_config is None:
         logmessage("send_fax: ignoring because Twilio not enabled")
@@ -1900,7 +1900,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                 if failed:
                     success = False
             else:
-                success = False    
+                success = False
             continue
         else:
             success = False
@@ -2186,7 +2186,7 @@ def path_and_mimetype(file_ref):
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):
         pass
-    
+
 SimpleTextMachineLearner = DummyObject
 
 def set_knn_machine_learner(target):
@@ -2204,7 +2204,7 @@ RandomForestMachineLearner = DummyObject
 def set_random_forest_machine_learner(target):
     global RandomForestMachineLearner
     RandomForestMachineLearner = target
-    
+
 MachineLearningEntry = DummyObject
 
 def set_machine_learning_entry(target):
@@ -2257,7 +2257,7 @@ class DAModel(DAObject):
         else:
             self.prediction = None
             self.probability = 1.0
-            
+
 def pdf_concatenate(*pargs, **kwargs):
     """Concatenates PDF files together and returns a DAFile representing
     the new PDF.
@@ -2307,7 +2307,7 @@ def recurse_zip_params(param, root, files):
         file_info = server.file_finder(param)
         files.append((root + file_info['filename'], file_info['fullpath']))
     return files
-    
+
 def zip_file(*pargs, **kwargs):
     """Returns a ZIP file as a DAFile containing the files provided as arguments."""
     files = list()
@@ -2339,7 +2339,7 @@ def invalid_variable_name(varname):
         return True
     varname = re.sub(r'[\.\[].*', '', varname)
     if not valid_variable_match.match(varname):
-        return True 
+        return True
     return False
 
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
@@ -2480,5 +2480,30 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     outfile.commit()
     outfile.retrieve()
     return outfile
+
+def explain(explanation, category='default'):
+    """Add a line to the explanations history."""
+    if 'explanations' not in this_thread.internal:
+        this_thread.internal['explanations'] = dict()
+    if category not in this_thread.internal['explanations']:
+        this_thread.internal['explanations'][category] = list()
+    if explanation not in this_thread.internal['explanations'][category]:
+        this_thread.internal['explanations'][category].append(explanation)
+
+def clear_explanations(category='default'):
+    """Erases the history of explanations."""
+    if 'explanations' not in this_thread.internal:
+        return
+    if category == 'all':
+        this_thread.internal['explanations'] = dict()
+    if category not in this_thread.internal['explanations']:
+        return
+    this_thread.internal['explanations'][category] = list()
+
+def explanation(category='default'):
+    """Returns the list of explanations."""
+    if 'explanations' not in this_thread.internal:
+        return []
+    return this_thread.internal['explanations'].get(category, [])
 
 from docassemble.base.oauth import DAOAuth

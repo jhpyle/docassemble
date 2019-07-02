@@ -1,6 +1,9 @@
 # Change Log
 
-## [0.4.57] - 2019-06-
+## [0.4.57] - 2019-07-01
+### Added
+- The `explain()`, `clear_explanations()`, and `explanation()`
+  functions.
 ### Fixed
 - Problems with Google sign-in on Python 3.
 
