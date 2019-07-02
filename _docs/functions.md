@@ -2695,7 +2695,7 @@ number of times the task has been performed.
 `remind_user` task to zero, which means that
 `task_performed('remind_user')` would subsequently return `False`.
 
-# <a name="explanation"></a>Tracking reasoning
+# <a name="explaining"></a>Tracking reasoning
 
 It may be important that the logic of your interview be explainable.
 There are many ways to write your interviews in such a way you can
