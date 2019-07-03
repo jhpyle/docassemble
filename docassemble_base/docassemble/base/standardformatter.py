@@ -1117,7 +1117,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         #else:
         #    output += "                <p>Error: no fields</p>\n"
         #output += '</div>\n'
-        if status.extras.get('list_collect', False):
+        if status.extras.get('list_collect', False) is not False:
             output += '                <input type="hidden" name="_list_collect_list" value=' + myb64doublequote(json.dumps(status.extras['list_collect'].instanceName)) + '/>\n'
         if status.extras.get('list_collect_is_final', False) and status.extras['list_collect'].auto_gather:
             if status.extras['list_collect'].ask_number:

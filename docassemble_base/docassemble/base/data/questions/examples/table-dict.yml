@@ -10,6 +10,7 @@ objects:
                          keys=['employment', 'benefits', 'interest'],
                          gathered=True)
 ---
+scan for variables: False
 mandatory: True
 code: |
   income['employment'].receives = True

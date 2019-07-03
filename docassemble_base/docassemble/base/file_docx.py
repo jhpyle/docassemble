@@ -294,11 +294,11 @@ class SoupParser(object):
         self.tpl = tpl
     def new_paragraph(self):
         if self.still_new:
-            logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
+            # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
             self.current_paragraph['params']['style'] = self.style
             self.current_paragraph['params']['indentation'] = self.indentation
             return
-        logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
+        # logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
         self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation), runs=[RichText('')])
         self.paragraphs.append(self.current_paragraph)
         self.run = self.current_paragraph['runs'][-1]
@@ -309,7 +309,7 @@ class SoupParser(object):
         output = ''
         list_number = 1
         for para in self.paragraphs:
-            logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
+            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
             output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
             if para['params']['style'] in ('ul', 'ol', 'blockquote'):
                 output += '<w:ind w:left="' + text_type(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
@@ -343,7 +343,7 @@ class SoupParser(object):
                 self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
                 self.still_new = False
             elif isinstance(part, Tag):
-                logmessage("Part name is " + text_type(part.name))
+                # logmessage("Part name is " + text_type(part.name))
                 if part.name == 'p':
                     self.new_paragraph()
                     self.traverse(part)
@@ -351,23 +351,23 @@ class SoupParser(object):
                     self.new_paragraph()
                     self.traverse(part)
                 elif part.name == 'ul':
-                    logmessage("Entering a UL")
+                    # logmessage("Entering a UL")
                     oldstyle = self.style
                     self.style = 'ul'
                     self.indentation += 10
                     self.traverse(part)
                     self.indentation -= 10
                     self.style = oldstyle
-                    logmessage("Leaving a UL")
+                    # logmessage("Leaving a UL")
                 elif part.name == 'ol':
-                    logmessage("Entering a OL")
+                    # logmessage("Entering a OL")
                     oldstyle = self.style
                     self.style = 'ol'
                     self.indentation += 10
                     self.traverse(part)
                     self.indentation -= 10
                     self.style = oldstyle
-                    logmessage("Leaving a OL")
+                    # logmessage("Leaving a OL")
                 elif part.name == 'strong':
                     self.bold = True
                     self.traverse(part)
@@ -418,7 +418,7 @@ def markdown_to_docx(text, tpl):
         for elem in soup.find_all(recursive=False):
             parser.traverse(elem)
         output = text_type(parser)
-        logmessage(output)
+        # logmessage(output)
         return output
     else:
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)

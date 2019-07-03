@@ -1,0 +1,61 @@
+metadata:
+  title: Explain
+  documentation: "https://docassemble.org/docs/functions.html#explain"
+  example start: 1
+  example end: 3
+---
+modules:
+  - .somefuncs
+---
+mandatory: True
+code: |
+  clear_explanations()
+  if favorite_fruit in ('apple', 'orange'):
+    explain("You said your favorite fruit was " + favorite_fruit + ".")
+    if wrong_vegetable(favorite_vegetable):
+      explain("Because your favorite vegetable is disgusting, you are not eligible for the space program.")
+      eligible = False
+    else:
+      explain("Since you like apple or orange, and turnips are not your favorite, you are mentally fit to go to the moon.")
+      eligible = True
+  else:
+    explain("Since you do not like apple or orange, you are not eligible for the space program.")
+    eligible = False
+  final_screen
+---
+event: final_screen
+question: |
+  % if eligible:
+  You will be joining the Apollo mission.
+  % else:
+  You are not allowed to enter the space program.
+  % endif
+subquestion: |
+  Reasoning:
+
+  % for reason in explanation():
+  * ${ reason }
+  % endfor
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+    choices:
+      - apple
+      - orange
+      - peach
+      - apricot
+      - mango
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+    choices:
+      - potato
+      - turnip
+      - beets
+      - spinach
+      - broccoli
+    

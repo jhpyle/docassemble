@@ -1,5 +1,69 @@
 # Change Log
 
+## [0.4.58] - 2019-07-03
+### Changed
+- CORS headers now handled by Flask rather than Apache.
+
+## [0.4.57] - 2019-07-01
+### Added
+- The `explain()`, `clear_explanations()`, and `explanation()`
+  functions.
+### Fixed
+- Problems with Google sign-in on Python 3.
+
+## [0.4.56] - 2019-06-29
+### Added
+- The `initializeObject` method of `DAList`.
+### Fixed
+- Error gathering `DAList` of `datatype: checkboxes` items.
+- Error when using `default` and `list collect`.
+- Errors with `DAStore`.
+
+## [0.4.55] - 2019-06-28
+### Added
+- The `DAStore` object.
+### Changed
+- Mako no longer allowed in non-label items of `choices` or `buttons`.
+- If `backup days` is `0`, no daily backups will be done.
+### Fixed
+- Error when `dialects` enabled under `voicerss`.
+
+## [0.4.54] - 2019-06-26
+### Added
+- The `language map` directive under the `voicerss` Configuration
+  directive.
+### Changed
+- Renamed `languages` under the `voicerss` Configuration directive to
+  `dialects` (with backwards compatibility).
+### Fixed
+- `list collect` on empty non-object list did not show the first item.
+- Wrong protection on some cells in translation spreadsheets.
+- `nan` values appeared in translation spreadsheets.
+- Terms with capital letters were not being translated.
+- System terms were not appearing in translation YAML when Google
+  Cloud Translation API was not configured.
+
+## [0.4.53] - 2019-06-26
+### Added
+- Jinja2 filters `markdown` and `RichText`.
+### Changed
+- Ampersand correction for DOCX now happens in Jinja2 even if pipe
+  already used.
+### Fixed
+- The `hint` was missing from the data representation of a field.
+- The `note` and `html` were missing from the data representation of a
+  field when not standalone.
+- Group editing did not work with non-object lists and dictionaries.
+- Buttons on `message()` screens did not work.
+
+## [0.4.52] - 2019-06-18
+### Added
+- The `javascript` option for `log()`.
+### Fixed
+- Potential error in Playground sidebar if the same variable name is
+  used for two different types of object.
+- Error if `json` URL parameter is not an integer.
+
 ## [0.4.51] - 2019-06-13
 ### Changed
 - Added the `initial` option for `update on start`.

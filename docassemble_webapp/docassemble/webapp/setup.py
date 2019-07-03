@@ -1,7 +1,7 @@
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
-da_version = '0.4.51'
+da_version = '0.4.57'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -40,7 +40,7 @@ if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
     app.config['USE_MFA'] = False
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800
-app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', True)
+app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', (True if daconfig.get('cross site domain', None) is None else False))
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
 app.config['USER_SEND_REGISTERED_EMAIL'] = False

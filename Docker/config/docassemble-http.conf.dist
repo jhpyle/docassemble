@@ -12,12 +12,6 @@ ServerName ${DAHOSTNAME}
     RewriteRule ${DAPOSTURLROOT}ws/(.*)  ws://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/$1 [P,L]
     ProxyPass        ${DAPOSTURLROOT}ws/ http://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/
     ProxyPassReverse ${DAPOSTURLROOT}ws/ http://${DAWEBSOCKETSIP}:${DAWEBSOCKETSPORT}/
-    <IfDefine DACROSSSITEDOMAIN>
-        Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAINVALUE}"
-        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-        Header set Access-Control-Allow-Headers "Content-Type, origin"
-        Header set Access-Control-Allow-Credentials "true"
-    </IfDefine>
     <IfModule !mod_ssl.c>
         XSendFile on
         XSendFilePath /usr

@@ -108,6 +108,22 @@ def load(**kwargs):
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
         sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
         del daconfig['keymap']
+    if 'voicerss' in daconfig and isinstance(daconfig['voicerss'], dict) and 'languages' in daconfig['voicerss']:
+        daconfig['voicerss']['dialects'] = daconfig['voicerss']['languages']
+        del daconfig['voicerss']['languages']
+    if 'cross site domain' in daconfig and 'cross site domains' not in daconfig:
+        daconfig['cross site domains'] = [daconfig['cross site domain']]
+        del daconfig['cross site domain']
+    if 'cross site domains' in daconfig:
+        if isinstance(daconfig['cross site domains'], list):
+            for item in daconfig['cross site domains']:
+                if not isinstance(item, string_types):
+                    sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list of strings.\n")
+                    del daconfig['cross site domains']
+                    break
+        else:
+            sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list.\n")
+            del daconfig['cross site domains']
     if 'vim' in daconfig:
         sys.stderr.write("WARNING!  The configuration directive vim is deprecated.  Please use keymap instead.\n")
         if daconfig['vim'] and 'keymap' not in daconfig:
