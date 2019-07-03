@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.58] - 2019-07-03
+### Changed
+- CORS headers now handled by Flask rather than Apache.
+
 ## [0.4.57] - 2019-07-01
 ### Added
 - The `explain()`, `clear_explanations()`, and `explanation()`

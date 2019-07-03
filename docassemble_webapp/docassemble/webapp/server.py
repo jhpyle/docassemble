@@ -711,6 +711,7 @@ from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
 from flask_user import UserManager, SQLAlchemyAdapter
+from flask_cors import cross_origin
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
@@ -19266,7 +19267,8 @@ def translation_file():
     return(response)
 
 @app.route('/api/user_list', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_user_list():
     if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
@@ -19314,7 +19316,8 @@ def make_user_inactive(user_id=None, email=None):
 
 @app.route('/api/user', methods=['GET', 'POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'POST', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
 def api_user():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19341,7 +19344,8 @@ def api_user():
 
 @app.route('/api/user/privileges', methods=['GET'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_user_privileges():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19356,7 +19360,8 @@ def api_user_privileges():
 
 @app.route('/api/user/new', methods=['POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['POST', 'HEAD'])
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_create_user():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
@@ -19400,7 +19405,8 @@ def api_create_user():
     return jsonify_with_status(dict(user_id=user_id, password=password), 200)
 
 @app.route('/api/user_info', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_user_info():
     if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
@@ -19417,7 +19423,8 @@ def api_user_info():
 
 @app.route('/api/user/<int:user_id>', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'POST', 'HEAD'], automatic_options=True)
 def api_user_by_id(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19454,7 +19461,8 @@ def api_user_by_id(user_id):
 
 @app.route('/api/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'POST', 'HEAD'], automatic_options=True)
 def api_privileges():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19527,7 +19535,8 @@ def remove_privilege(privilege):
 
 @app.route('/api/user/<int:user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'POST', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'POST', 'HEAD'], automatic_options=True)
 def api_user_by_id_privileges(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19717,7 +19726,8 @@ def set_user_info(**kwargs):
     #clear_user_cache()
 
 @app.route('/api/secret', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_get_secret():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19746,7 +19756,8 @@ def get_secret(username, password):
 
 @app.route('/api/users/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_users_interviews():
     if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
@@ -19774,7 +19785,8 @@ def api_users_interviews():
 
 @app.route('/api/user/<int:user_id>/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_user_user_id_interviews(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19803,7 +19815,8 @@ def api_user_user_id_interviews(user_id):
 
 @app.route('/api/session/back', methods=['POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['POST', 'HEAD'])
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_session_back():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19850,7 +19863,8 @@ def transform_json_variables(obj):
 
 @app.route('/api/session', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_session():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -19969,7 +19983,8 @@ def api_session():
         return ('', 204)
 
 @app.route('/api/file/<int:file_number>', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_file(file_number):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20140,7 +20155,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     return data
 
 @app.route('/api/session/new', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_session_new():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20200,7 +20216,8 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     return (encrypted, session_id)
 
 @app.route('/api/session/question', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_session_question():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20343,7 +20360,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
 
 @app.route('/api/session/action', methods=['POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['POST', 'HEAD'])
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_session_action():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20426,7 +20444,8 @@ def api_session_action():
 
 @app.route('/api/login_url', methods=['POST'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['POST', 'HEAD'])
+#@crossdomain(origin='*', methods=['POST', 'HEAD'])
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_login_url():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
@@ -20477,7 +20496,8 @@ def api_login_url():
     return jsonify(url_for('auto_login', key=encryption_key + code, _external=True))
 
 @app.route('/api/list', methods=['GET'])
-@crossdomain(origin='*', methods=['GET', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_list():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20485,7 +20505,8 @@ def api_list():
 
 @app.route('/api/user/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_user_interviews():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -20513,7 +20534,8 @@ def api_user_interviews():
 
 @app.route('/api/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_interviews():
     if not api_verify(request, roles=['admin', 'advocate']):
         return jsonify_with_status("Access denied.", 403)
@@ -20541,7 +20563,8 @@ def api_interviews():
 
 @app.route('/api/playground', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
-@crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
+#@crossdomain(origin='*', methods=['GET', 'POST', 'DELETE', 'HEAD'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_playground():
     if not api_verify(request, roles=['admin', 'developer']):
         return jsonify_with_status("Access denied.", 403)
