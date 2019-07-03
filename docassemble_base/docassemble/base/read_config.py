@@ -164,6 +164,8 @@ if __name__ == "__main__":
         print('export SERVERADMIN="webmaster@localhost"')
     if 'cross site domain' in daconfig and daconfig['cross site domain'] is not None:
         print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domain']) + '"')
+    elif 'cross site domains' in daconfig and isinstance(daconfig['cross site domains'], list) and len(daconfig['cross site domains']):
+        print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domains'][0]) + '"')
     if 'web server timeout' in daconfig and daconfig['web server timeout'] is not None:
         print('export DATIMEOUT="' + str(daconfig['web server timeout']) + '"')
     sys.exit(0)
