@@ -408,6 +408,19 @@ If you want to load all of the [JavaScript] dependencies except for
     <script src="https://interview.example.com/static/app/bundlenojquery.js"></script>
 {% endhighlight %}
 
+Another complication of embedding using a `<div>` is avoidance of
+problems with [CORS].  In the [Configuration], set [`cross site
+domains`] to the URL of your site:
+
+{% highlight yaml %}
+cross site domains:
+  - https://example.com
+{% endhighlight %}
+
+After changing this value, you will need to fully restart your system,
+for example by doing `docker stop -t 60 <container ID>` followed by
+`docker start <container ID>`.
+
 ## <a name="reset"></a>Starting an interview from the beginning
 
 The **docassemble** web application uses browser cookies to keep track
@@ -840,3 +853,6 @@ For more information about [YAML], see the [YAML specification].
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [Font Awesome]: https://fontawesome.com
 [jQuery]: https://jquery.com/
+[Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domain

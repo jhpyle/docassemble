@@ -128,14 +128,14 @@ Access-Control-Max-Age: 21600
 Access-Control-Allow-Headers: Content-Type, origin
 {% endhighlight %}
 
-However, if you configure [`cross site domain`] in your
+However, if you configure [`cross site domains`] in your
 [Configuration], the headers indicated by the configuration setting
 will be sent instead.
 
 Note that the library you use for calling the API may impose [CORS]
 limitations on you, which you may need to override, if they can be
 overridden at all.  If you want to send an API key as a cookie, you
-may need to set [`cross site domain`] to a specific domain, because
+may need to set [`cross site domains`] to a specific domain, because
 otherwise the library may not allow you to send a cookie.  Typically,
 server-side libraries do not impose these restrictions, but you will
 encounter them if you try to use them from a web browser.
@@ -1587,7 +1587,7 @@ function.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`requests`]: https://pypi.python.org/pypi/requests
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
-[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
+[`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domains
 [interview `metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`tags`]: {{ site.baseurl }}/docs/initial.html#tags
 [`/api/interviews`]: #interviews

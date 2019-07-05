@@ -2604,25 +2604,20 @@ a running server, but they will only be effective if you restart the
 system using `docker stop -t60 <container ID>` followed by 
 `docker start <container ID>`.
 
-## <a name="cross site domain"></a>Cross-Origin Resource Sharing (CORS)
+## <a name="cross site domains"></a>Cross-Origin Resource Sharing (CORS)
 
-Set the `cross site domain` directive if you want your [Apache] server
+Set the `cross site domains` directive if you want your [Apache] server
 to be configured to send `Access-Control-Allow-Origin` headers in
-order to permit [Cross-Origin Resource Sharing].  If you set it to
-`*`, resource sharing will be allowed to any origin.  Or, you could
-set it to, e.g., `api.example.com` to limit sharing to a particular
-domain.
+order to permit [Cross-Origin Resource Sharing].
 
 {% highlight yaml %}
-cross site domain: api.example.com
+cross site domains:
+  - example.com
+  - help.example.com
 {% endhighlight %}
 
 This variable is only used if **docassemble** is running on
 [Docker].
-
-If you change this variable, you need to do a complete restart of the
-system for the change to take effect.  (That is, 
-`docker stop -t60 <container ID>` followed by `docker start <container ID>`).
 
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 

@@ -383,46 +383,27 @@ cannot be turned off.
 
 Depending on how your custom front end calls **docassemble**, you may
 need to change the headers that the **docassemble** web server
-returns.  By setting the [`cross site domain`] directive in the
-[Configuration] to `https://otherserver.com`, you will activate the
-following headers:
+returns.  By setting the [`cross site domains`] directive in the
+[Configuration] to include `https://otherserver.com`, you will
+activate the following headers:
 
 {% highlight text %}
 Access-Control-Allow-Origin: https://otherserver.com
-Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-Access-Control-Allow-Headers "Content-Type, origin"
 Access-Control-Allow-Credentials "true"
 {% endhighlight %}
 
-In some circumstances you can set [`cross site domain`] to `*` in
-order to allow connections from anywhere.  But when cookies are used,
-this is not allowed.  See the "Credentialed requests and wildcards"
-section of Mozilla's
-[Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+In some circumstances you can set [`cross site domains`] to include
+`*` in order to allow connections from anywhere.  But when cookies are
+used, this is not allowed.  See the "Credentialed requests and
+wildcards" section of Mozilla's [Cross-Origin Resource
+Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 documentation.
-
-If you really need to support access to your server from more than one
-origin, you can edit your Apache configuration manually.  The
-following Apache configuration allows connections from any port on any
-site:
-
-{% highlight text %}
-SetEnvIf Origin ^(https?://.+(?::\d{1,5})?)$ CORS_ALLOW_ORIGIN=$1
-Header set Access-Control-Allow-Origin  %{CORS_ALLOW_ORIGIN}e   env=CORS_ALLOW_ORIGIN
-Header merge  Vary "Origin"
-Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-Header set Access-Control-Allow-Headers "Content-Type, origin"
-Header set Access-Control-Allow-Credentials "true"
-{% endhighlight %}
-
-However, there may be serious security implications to using a setup
-like this.
 
 Using the [API] avoids issues with [CORS].
 
 [API]: {{ site.baseurl }}/docs/api.html
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
+[`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domains
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`require referer`]: {{ site.baseurl }}/docs/config.html#root
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer

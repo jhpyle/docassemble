@@ -12,7 +12,7 @@ data structures: lists, dictionaries, and sets.  These mirror the
 
 ## <a name="list"></a>List
 
-A **list** is a **group that has a defined order**.  Elements are
+A "list" is a **group that has a defined order**.  Elements are
 numbered with an index that starts from zero.  In [Python], if a list is
 defined as:
 
@@ -20,8 +20,8 @@ defined as:
 fruit = ['apple', 'orange', 'pear']
 {% endhighlight %}
 
-then `fruit[0]` will return `apple`, `fruit[1]` will return `orange`,
-and `fruit[2]` will return `pear`.  You can try this out in a
+then `fruit[0]` will return `'apple'`, `fruit[1]` will return `'orange'`,
+and `fruit[2]` will return `'pear'`.  You can try this out in a
 [Python interpreter]:
 
 {% highlight python %}
@@ -48,15 +48,15 @@ Adding a new element to the list is called "appending" to the list.
 The [`sorted()` function] is a built-in [Python] function that
 arranges a list in order.
 
-In **docassemble**, lists are objects of type [`DAList`], which behave
-much like [Python lists].
+In **docassemble**, lists are typically defined as special [objects]
+of type [`DAList`], which behave much like [Python lists].
 
 ## <a name="dictionary"></a>Dictionary
 
-A dictionary, or **dict**, is a **group of key/value pairs**.  By
-analogy with a dictionary, the "key" represents the word and the
-"value" represents the definition.  In [Python], if a dictionary is
-defined as:
+A "dictionary" is a **group of key/value pairs**.  By analogy with an
+actual dictionary, the "key" represents the word and the "value"
+represents the definition.  In [Python], if a dictionary is defined
+as:
 
 {% highlight python %}
 feet = {'dog': 4, 'human': 2, 'bird': 2}
@@ -78,6 +78,12 @@ and `feet['bird']` will return `2`.  The keys are `'dog'`, `'human'`, and
 ['dog', 'human', 'bird']
 >>> feet.values()
 [4, 2, 2]
+>>> for key, val in feet.items():
+...   print("{animal} has {feet} feet".format(animal=key, feet=val))
+... 
+dog has 4 feet
+human has 2 feet
+bird has 2 feet
 {% endhighlight %}
 
 The keys of a dictionary are unique.  Setting `feet['rabbit'] = 4`
@@ -87,16 +93,16 @@ items in a dictionary are stored in no particular order; [Python] will
 not remember the order in which you add them.  (See the
 [`DAOrderedDict`] for an alternative to this.)
 
-In **docassemble**, dictionaries are objects of type [`DADict`], which
-behave much like [Python dict]s.
+In **docassemble**, dictionaries are typically [objects] of type
+[`DADict`], which behave much like [Python dict]s.
 
 ## <a name="set"></a>Set
 
-A **set** is a **group of unique items with no order**.  There is no
+A "set" is a **group of unique items with no order**.  There is no
 index or key that allows you to refer to a particular item; an item is
 either in the set or is not.  (A set in Python behaves much like a set
-in mathematical [set theory].)  In [Python], a set can be defined with a
-statement like `colors = set(['blue', 'red'])`. Adding a new item to
+in mathematical [set theory].)  In [Python], a set can be defined with
+a statement like `colors = set(['blue', 'red'])`. Adding a new item to
 the set is called "adding," not "appending."  For example:
 `colors.add('green')`.  If you add an item to a set when the item is
 already in the set, this will have no effect on the set.
@@ -113,36 +119,22 @@ set(['blue', 'green', 'red'])
 set(['blue', 'green'])
 {% endhighlight %}
 
-In **docassemble**, sets are objects of type [`DASet`], which behave
-much like [Python set]s.
+In **docassemble**, sets are typically [objects] of type [`DASet`],
+which behave much like [Python set]s.
 
 # <a name="gathering"></a>Lists, dictionaries, and sets in **docassemble**
-
-In **docassemble**, you can track groups of things using objects of
-types [`DAList`], [`DADict`], or [`DASet`].
-
-{% include side-by-side.html demo="object-demo" %}
-
-In your **docassemble** interviews, you will typically not use these
-object types directly, but rather you will use subtypes of these basic
-objects.  For example, if you include the [`basic-questions.yml`] file
-(see [legal applications]), an object of type [`Case`] will be created
-(called `case`), which allows you to refer to the plaintiffs and
-defendants in the case as `case.plaintiff` or `case.defendant`,
-respectively.  Both of these objects are objects of type
-[`PartyList`], which is a subtype of [`DAList`].  The first plaintiff
-is `case.plaintiff[0]` and the second plaintiff, if there is one, will
-be `case.plaintiff[1]`.
 
 When you want to gather information from the user into a list,
 dictionary, or set, you should use the objects [`DAList`], [`DADict`],
 and [`DASet`] (or subtypes thereof) instead of [Python]'s basic
 [list], [dict], and [set] data types.  These objects have special
-attributes that help interviews find the right questions to ask the
-user in order to populate the items of the group.  (If you want to,
-you can use [Python]'s basic [list], [dict], and [set] data types in
-your interviews; nothing will stop you -- but there are no special
-features to help you populate these objects with user input.)
+attributes that help interviews find the right blocks to use to
+populate the items of the group.
+
+If you want to, you can use [Python]'s basic [list], [dict], and [set]
+data types in your interviews; nothing will stop you -- but there are
+no special features to help you gather these groups using [`question`
+blocks] or [`code` blocks].
 
 # <a name="gather list"></a>Gathering information into lists
 
@@ -172,20 +164,26 @@ subquestion: |
 
 Since this [`question`] is [`mandatory`], **docassemble** tries to ask
 it.  However, it encounters `fruit.number_as_word()`, which returns
-the number of items in the list.  But in order to know how many items
-are in the list, **docassemble** needs to ask the user what those
-items are.  So the reference to `fruit.number_as_word()` will
-implicitly trigger the process of asking these questions.  (The
-reference to `${ fruit }` would also trigger the same process, but
-**docassemble** will encounter `fruit.number_as_word()` first.)
+the number of items in the list (e.g., "two," "three," etc.).  But in
+order to know how many items are in the list, **docassemble** needs to
+ask the user what those items are.  So the reference to
+`fruit.number_as_word()` will implicitly trigger the process of asking
+questions to gather the list.  The reference to `${ fruit }` would
+also trigger the same process, but **docassemble** will encounter
+`fruit.number_as_word()` first.
 
-Behind the scenes, when `fruit.number_as_word()` is run,
-**docassemble** runs `fruit.gather()`, which is an auto-gathering
-algorithm.  The `.gather()` method orchestrates the gathering process
-by triggering the seeking of variables necessary to gather the list.
+Behind the scenes, when `fruit.number_as_word()` is run, and
+**docassemble** needs the list to be gathered, it runs
+`fruit.gather()`, a gathering algorithm.  The [`.gather()`] method
+orchestrates the gathering process by triggering the seeking of
+variables necessary to gather the list.
 
-The auto-gathering algorithm behaves like a lawyer interrogating a
-witness.
+Many things other than `${ fruit.number_as_word()` will implicitly
+trigger the gathering of the `fruit` list.  If you want to be explicit
+about when the list-gathering questions are asked, you can call
+`fruit.gather()` yourself in a [`code` block].
+
+The gathering algorithm behaves like a lawyer interrogating a witness.
 
 "Do you have any children?" asks the lawyer.
 
@@ -207,7 +205,7 @@ witness.
 
 "No"
 
-The `.gather()` method asks questions like these by seeking the values
+The [`.gather()`] method asks questions like these by seeking the values
 of various variables:
 
 * `fruit.there_are_any`: should there be any items in the list at all?
@@ -267,7 +265,7 @@ in `fruit` (in this case, 2).  When **docassemble** later encounters
 elements in the list, it does not need to ask any further questions.
 `${ fruit }` will result in `apples and oranges`.
 
-<a name="i"></a>Note that the variable `i` is special in
+<a name="i"></a>Note that the variable `i` is a [special variable] in
 **docassemble**.  When the interview seeks a definition for
 `fruit[0]`, the interview will first look for a question that offers
 to define `fruit[0]`.  If it does not find one, it will take a more
@@ -275,25 +273,53 @@ general approach and look for a question that offers to define
 `fruit[i]`.  The question that offers to define `fruit[i]` will be
 reused as many times as necessary.
 
-## Customizing the way information is gathered
+Since the index variable `i` is a [special variable], you should never
+attempt to set it yourself; you will likely get a confusing error if
+you try.
 
-The way that **docassemble** asks questions to populate the list can
-be customized by setting attributes of `fruit`.  For example, perhaps
-you would prefer that the questions in the interview go like this:
+Nor should you ever use `i` in [`mandatory`] or [`initial`] blocks.
+The use of `i` is reserved for blocks that **docassemble** calls upon
+when it is seeking to define a variable with an index, such as
+`fruit[2]`, and there is no block that explicitly defines `fruit[2]`.
+If you use `i` in a [`mandatory`] block, you will get an error that
+`i` is undefined, or if `i` is defined, it might be defined as a value
+that makes no sense for the context in which you are using `i`.
+
+For more information, see the sections on [index variables] and [how
+docassemble finds questions for variables].
+
+## <a name="customizing"></a>Customizing the way information is gathered
+
+The way that **docassemble** asks questions to populate a list like
+`fruit` can be customized by setting attributes of `fruit`.  For
+example, perhaps you would prefer that the questions in the interview
+go like this:
 
 1. How many fruits are there?
 2. What is the name of the first fruit?
 3. What is the name of the second fruit?
 4. etc.
 
-To ask questions this way, include a [`mandatory`]<span></span>
-[`code` block] up front that sets the `.ask_number` attribute of
+To ask questions this way, set the `.ask_number` attribute of
 `fruit` to `True`.  Also include a question that asks "How many fruits
 are there?" and use `fruit.target_number` as the variable set by the
 question.  (The `.target_number` attribute is a special attribute,
 like `.there_is_another`.)
 
 {% include side-by-side.html demo="gather-fruit-number" %}
+
+This example uses the [`using()` method] to initialize the
+`ask_number` attribute of `fruit`.  Another way to initialize the
+attribute would be to use a [`mandatory`] block at the start of the
+interview:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  fruit.ask_number = True
+{% endhighlight %}
+
+Generally, it is best to use the [`using()` method].
 
 <a name="minimum_number"></a>You can avoid the `.there_are_any`
 question by setting the `.minimum_number` to a value:
@@ -320,15 +346,12 @@ example, [`DAEmailRecipientList`] lists have an `.object_type` of
 {% include side-by-side.html demo="gather-list-email-recipients" %}
 
 During the gathering process, **docassemble** only gathers the
-attributes necessary to display each object as text.  So if you do:
+attributes necessary to display each object as text (by default).  So
+if you do:
 
 {% highlight yaml %}
 objects:
-  - friend: DAList
----
-mandatory: True
-code: |
-  friend.object_type = Individual
+  - friend: DAList.using(object_type=Individual)
 {% endhighlight %}
 
 then the list will consist of [`Individual`]s, and **docassemble**
@@ -346,8 +369,7 @@ result in `y.block()`, which depends on the `address`, `city`, and
 the [`DAObject`] is meant to be a "base class," with no meaningful
 attributes of its own.  Thus, calling `str(y)` on a plain [`DAObject`]
 will simply return a name based on the variable name; no questions
-will be asked.  Thus, it is not recommended that you set `object_type`
-to `DAObject`.
+will be asked.
 
 If your interview has a list of [`Individual`]s and uses attributes of
 the [`Individual`]s besides the name, **docassemble** will eventually
@@ -357,6 +379,17 @@ in the list will it start asking about the other attributes.  Here is
 an interview that does this:
 
 {% include side-by-side.html demo="gather-list-friend-bad-order" %}
+
+The order of the questions is:
+
+1. What is the name of your first friend?
+2. Do you have any other friends?
+3. What is the name of your second friend?
+4. Do you have any other friends?
+5. What is Fred’s favorite animal?
+6. What is Fred’s birthdate?
+7. What is Sally’s favorite animal?
+8. What is Sally’s birthdate?
 
 <a name="complete_attribute"></a>If you would prefer that all of the
 questions about each individual be asked together, you can use the
@@ -371,21 +404,32 @@ In the above example, we can accomplish this by doing
 block that sets `friend[i].complete = True`.  This tells
 **docassemble** that an item `friend[i]` is not fully gathered until
 `friend[i].complete` is defined.  Thus, before **docassemble** moves
-on to the next item in a list, it will run this code block.  This
-`code` block will cause other attributes of `friend[i]` to be defined,
-including `.birthdate` and `.favorite_animal`.  Here is what the
-revised interview looks like:
+on to the next item in a list, it will run this [`code` block] to
+completion.  This [`code` block] will cause other attributes of
+`friend[i]` to be defined, including `.birthdate` and
+`.favorite_animal`.  Here is what the revised interview looks like:
 
 {% include side-by-side.html demo="gather-list-friend-good-order" %}
 
+Now the order of questions is:
+
+1. What is the name of your first friend?
+2. What is Fred’s birthdate?
+3. What is Fred’s favorite animal?
+4. Do you have any other friends?
+5. What is the name of your second friend?
+6. What is Sally’s birthdate?
+7. What is Sally’s favorite animal?
+8. Do you have any other friends?
+
 You can use any attribute you want as the `complete_attribute`.
-Defining a `complete_attribute` simply means that in addition to
-ensuring that a list item is displayable (i.e., gathering the name of
-an `Individual`), **docassemble** will also seek a definition of the
-attribute indicated by `complete_attribute`.  If `.birthdate` was the
-only other element we wanted to define during the gathering process,
-we could have written `friend.complete_attribute = 'birthdate'` and
-skipped the [`code` block] entirely.
+Defining a `complete_attribute` simply means that instead of ensuring
+that a list item is displayable (i.e., gathering the name of an
+`Individual`), **docassemble** will seek a definition of the attribute
+indicated by `complete_attribute`.  If `.birthdate` was the only
+element we wanted to define during the gathering process, we could
+have written `friend.complete_attribute = 'birthdate'` and skipped the
+[`code` block] entirely.
 
 When you write your own class definitions, you can set a
 default `complete_attribute` that is not really an attribute, but a method
@@ -421,6 +465,329 @@ class Fish(DAObject):
 Here is an interview that uses this class definition.
 
 {% include demo-side-by-side.html demo="complete-attribute-method" %}
+
+## <a name="nested lists"></a>Gathering lists within lists
+
+Here is an example of gathering nested lists (a list within a list within a list).
+
+{% include side-by-side.html demo="nested-loop" %}
+
+The first block defines the objects we will use.
+
+{% highlight yaml %}
+objects:
+  - person: DAList.using(object_type=Individual, minimum_number=1, complete_attribute='complete')
+  - person[i].child: DAList.using(object_type=Individual, complete_attribute='complete')
+{% endhighlight %}
+
+The list `person` will be a list of objects of type [`Individual`].
+We assume that there is at least one individual in the list, so we set
+`minimum_number=1`.  Since we want to gather more information about
+each individual in the list than simply the individual's name (the
+textual representation of an [`Individual`]), we set
+`complete_attribute='complete'` to indicate that an individual is not
+"complete" until the attribute `.complete` is defined.
+
+We also assert here that the attribute `child` for any given person in
+the list of people (`person[i].child`) is a list of [`Individual`]s,
+each of which will be "complete" when the `.complete` attribute is
+defined.  The variable `i` here is a [special variable] that is set by
+**docassemble** during the list gathering process.  (You should never
+try to set `i` yourself.)  If **docassemble** wants the definition of
+`person[0].child`, it will set `i = 0` and then define
+`person[0].child` by running the second line in the [`objects`] block.
+
+The next block specifies what it means for an [`Individual`] item in
+the `person` list to be "complete."
+
+{% highlight yaml %}
+code: |
+  person[i].name.first
+  person[i].name.last
+  person[i].allergy.gather()
+  person[i].child.gather()
+  person[i].complete = True
+{% endhighlight %}
+
+This says that a given [`Individual`] in the `person` list
+(`person[i]`) is "complete" when the person's name is defined, when we
+have gathered a list of the person;s allergies, and when we have
+gathered a list of their children.
+
+We have seen the block that defines `person[i].child` for any `i`.
+Later on we will see the block that defines `person[i].allergy`.
+
+When **docassemble** wants to make a `person[0]` "complete," it will
+set `i = 0` and then run this [Python] code block.  It will keep
+running this block until it gets the answers it needs.  First it will
+ask for the person's name, then it will go through a list gathering
+process to gather the allergies, and then go through a list gathering
+process to gather the children, and when there are no more children to
+gather, it will define the `complete` attribute by setting it to
+`True`.  Then the `person[i]` will be "complete," and **docassemble**
+will continue gathering the `person` list.
+
+The next block defines what it means for a child of a given
+`person[i]` to be complete.  It is similar to the previous block,
+except the interview doesn't ask about a child's children.
+
+{% highlight yaml %}
+code: |
+  person[i].child[j].name.first
+  person[i].child[j].name.last
+  person[i].child[j].allergy.gather()
+  person[i].child[j].complete = True
+{% endhighlight %}
+
+While **docassemble** is running `person[i].child.gather()`, it will
+ask questions to gather the items in `person[i].child` and to make
+each item, such as `person[0].child[1]` (for the first person's second
+child) "complete."  Since the `child` attribute is defined with
+`complete_attribute='complete'`, **docassemble** will try to make
+`person[0].child[1]` "complete" by seeking a definition of
+`person[0].child[1].complete`.  There is no block in the interview
+that offers to define `person[0].child[1].complete` specifically, but
+the [`code` block] above offers to define
+`person[i].child[j].complete` for any arbitrary `i` and `j`.  So
+**docassemble** will set `i = 0` and `j = 1`, and then try running
+this [`code` block].  The [Python] code in this block will trigger all
+the necessary questions to make the child object "complete."
+
+It is very important that the code in this [`code` block] is in a
+separate block from the previous [`code` block].  Each [`code` block]
+represents a separate statement of truth.  The first [`code` block]
+says what it takes to be finished asking questions about a
+`person[i]`, and the second [`code` block] says what it takes to be
+finished asking questions about one of that person's children.
+
+If you tried to merge this code with the code from the previous block,
+then you might get an error about the variable `j` being undefined.
+If **docassemble** is looking to define an attribute of `person[i]`,
+it will define `i` and then run the block that offers to define the
+attribute of `person[i]`.  But if **docassemble**, in the course of
+running a block that defines the attribute of `person[i]`, encounters
+the variable `j`, it will not know what to do with that; it didn't set
+`j` to anything before running the code block, so `j` will be
+undefined.
+
+While [Python] is a "procedural" language, the way **docassemble**
+works is more "declarative."  In most cases, your `code` blocks should
+be self-contained declarations about how a single variable should be
+defined, even if they cause other variables to be defined as a side
+effect.  In this example, those single variables are
+`person[i].complete` and `person[i].child[j].complete`.  The blocks
+that define these variables will be called upon at multiple times in
+your interview for the specific purpose of defining
+`person[i].complete` or `person[i].child[j].complete`.
+
+The next block is a reusable [`question`].
+    
+{% highlight yaml %}
+question: |
+  What is the name of the
+  ${ ordinal(i) }
+  person?
+fields:
+  - First: person[i].name.first
+  - Last: person[i].name.last
+{% endhighlight %}
+
+This [`question`] will be used for `person[0]`, `person[1]`, and any
+other `person[i]` in the `person` list.  If **docassemble** wants to
+know `person[1].name.first`, it will set `i = 1` and then ask this
+[`question`].
+
+The next block is used whenever **docassemble** wants to know whether
+there are more items to be added to a list.
+
+{% highlight yaml %}
+question: |
+  Is there another person?
+yesno: person.there_is_another
+{% endhighlight %}
+
+The [`.gather()`] method of the [`DAList`] class will undefine the
+`.there_is_another` attribute after each item is gathered, and then
+re-seek a definition of `.there_is_another` to figure out if more
+items need to be gathered.
+
+The next block asks whether a person in the `person` list has any
+children.
+
+{% highlight yaml %}
+question: |
+  Does ${ person[i] } have any children?
+yesno: person[i].child.there_are_any
+{% endhighlight %}
+
+This is the first [`question`] that will be asked when **docassemble**
+runs `person[i].child.gather()`.
+
+The next [`question`] illustrates the use of two index variables.
+
+{% highlight yaml %}
+question: |
+  What is the name of
+  ${ person[i].possessive(ordinal(j) + ' child') }?
+fields:
+  - First: person[i].child[j].name.first
+  - Last: person[i].child[j].name.last
+{% endhighlight %}
+
+The use of the index variables `i` and `j` mean that if
+**docassemble** wants to find a definition for
+`person[1].child[2].name.first`, it will set `i = 1`, set `j = 2`, and
+then ask this question.
+
+If you wanted to ask the question a different way for the first person
+in the list, you could include the following block:
+
+{% highlight yaml %}
+question: |
+  What is the name of the first person's
+  ${ ordinal(j) } child?
+fields:
+  - First: person[0].child[i].name.first
+  - Last: person[0].child[i].name.last
+{% endhighlight %}
+
+Here, the index variable `i` is used instead of `j`.  **docassemble**
+will only try to ask this [`question`] if the variable it seeks begins
+with `person[0].child`.  If **docassemble** is looking to define
+`person[1].child[0].name.first`, it will disregard this [`question`],
+because `person[0].child[i].name.first` doesn't generalize to
+`person[1].child[0].name.first`.
+
+Likewise, if you wanted to ask the question a different way for the
+first child, you could include:
+
+{% highlight yaml %}
+question: |
+  What is the name of
+  ${ person[i].possessive(ordinal(j) + ' first born child') }?
+fields:
+  - First: person[i].child[0].name.first
+  - Last: person[i].child[0].name.last
+{% endhighlight %}
+
+This question offers to define `person[i].child[0].name.first` for any
+`i`.
+
+You would never have a block that mentions `j` without also
+mentioning `i`, and you would never have a block that mentions `k`
+without also mentioning `j` and `i`.  The variable `i` needs to be
+used for the first index variable that is generalizable, and `j` needs
+to be used for the second index variable that is generalizable.
+
+Next is the block that asks whether a person has any more children.
+
+{% highlight yaml %}
+question: |
+  Does ${ person[i] } have any
+  children other than ${ person[i].child }?
+yesno: person[i].child.there_is_another
+{% endhighlight %}
+
+Next we have a series of blocks relating to gathering the allergies of
+people.  These are similar in functionality to other blocks in this
+interview, but they are different because they use the [`generic
+object`] modifier and the [special variable] `x`, which represents the
+"generic" object.
+
+{% highlight yaml %}
+generic object: Individual
+objects:
+  - x.allergy: DAList
+---
+generic object: Individual
+question: |
+  Does ${ x } have any allergies?
+yesno: x.allergy.there_are_any
+---
+generic object: Individual
+question: |
+  What allergy does ${ x } have?
+fields:
+  - Allergy: x.allergy[i]
+---
+generic object: Individual
+question: |
+  Does ${ x } have any allergies
+  other than ${ x.allergy }?
+yesno: x.allergy.there_is_another
+{% endhighlight %}
+
+The variable `x` works in a similar way to the way that index
+variables like `i` and `j` work.  If **docassemble** wants to define
+the attribute `allergy` for an object `person[0]`, and the object is
+of type `Individual`, it can run `x = person[0]` and then process the
+`x.allergy: DAList` line of the [`objects`] block.  Likewise, if
+**docassemble wants to define `person[1].child[0].allergy[3]`, it can
+set `x = person[1].child[0]`, set `i = 3`, and then ask the
+[`question`] that defines `x.allergy[i]`.  By using the [`generic
+object`] feature, we save ourselves the trouble of writing separate
+questions for gathering the allergies of `person[i]` and
+`person[i].child[j]`.
+
+Finally, we have the single [`mandatory`] block of the interview,
+which presents to the user all of the information that was gathered
+during the interview.
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  Information retrieved
+subquestion: |
+  You told me about
+  ${ person.quantity_noun('individual') },
+  their allergies, their children,
+  and their children's allergies.
+
+  % for p in person:
+  You told me about ${ p }.
+    % if p.allergy.number() > 0:
+  ${ p } is allergic to ${ p.allergy }.
+    % endif
+    % for c in p.child:
+  ${ p } has a child named ${ c }.
+    % if c.allergy.number() > 0:
+  ${ c } is allergic to ${ c.allergy }.
+    % endif
+    % endfor
+    
+  % endfor
+{% endhighlight %}
+
+All of the questions that are asked during the interview are triggered
+by the line `% for p in person:`.  In order to iterate through
+`person`, `person` first needs to be defined.  That triggers the use
+of the first [`objects`] block to define `person`.  Then `person`
+needs to be gathered, because you can't iterate through a list that
+hasn't been gathered yet.  That causes **docassemble** to gather the
+items in `person` and to make them "complete."  Before any given
+`person[i]` can be "complete," the person's name needs to be
+collected, the allergies need to be gathered, and the children need to
+be gathered.  Before a child can be "complete," the child's
+allergies need to be gathered.  All of these questions are triggered
+because each time the screen loads, **docassemble** tries to show the
+`mandatory` question, and each time, it keeps encountering `% for p in
+person:`.
+
+Once `person` is gathered, the "for" loops all have enough
+information, so no further questions needs to be asked.
+
+Note that while the `% for`, `% endfor`, `% if`, and `% endif` lines
+are indented when nested, the actual lines of text are not indented.
+This is because indentation in [Markdown] has a special meaning (in
+particular, to indicate that text should be formatted with a
+fixed-width font).  The indentation of `% for`, `% endfor`, `% if`,
+and `% endif` is not necessary, but it helps make the code more readable.
+
+Note that the line `${ c } is allergic to ${ c.allergy }` makes use of
+the fact that the textual representation of a [`DAList`] is the result
+of running the [`comma_and_list()`] method on the list.  So the
+resulting sentence might be "Jane Doe is allergic to shellfish,
+peanuts, and dust."
 
 ## <a name="mixed object types"></a>Mixed object types
 
@@ -644,7 +1011,7 @@ same method used when the process is implicitly triggered.)
 
 {% include side-by-side.html demo="gather-fruit-gather" %}
 
-The `.gather()` method accepts some optional keyword arguments:
+The [`.gather()`] method accepts some optional keyword arguments:
 
 * `minimum` can be set to the minimum number of items you want to
   gather.  The `.there_are_any` attribute will not be sought.  The
@@ -659,11 +1026,11 @@ The `.gather()` method accepts some optional keyword arguments:
   can also set the [`complete_attribute`] attribute of the group object
   itself.
 
-The `.gather()` method is not the only way that a gathering process
+The [`.gather()`] method is not the only way that a gathering process
 can be triggered.  The `.auto_gather` attribute controls whether the
-`.gather()` method is invoked.  If `.auto_gather` is `True` (which is
+[`.gather()`] method is invoked.  If `.auto_gather` is `True` (which is
 the default), then the gathering process will be triggered using
-`.gather()`.  If `.auto_gather` is `False`, the gathering process will
+[`.gather()`].  If `.auto_gather` is `False`, the gathering process will
 be triggered in a simpler way: by seeking the value of `.gathered`.
 Thus, you can provide a [`code` block] that sets `.gathered` to
 `True`.  For example:
@@ -773,7 +1140,7 @@ apples, peaches, and pears.  Are there any additional fruits?"
 In addition to these two attributes, there is special method,
 `fruit.gather()`, which will cause appropriate questions to be asked
 and will return `True` when the list has been fully populated.  The
-`.gather()` method looks for definitions for `fruit.there_are any`,
+[`.gather()`] method looks for definitions for `fruit.there_are any`,
 `fruit[i]`, and `fruit.there_is_another`.  It makes
 `fruit.there_is_another` undefined as necessary.
 
@@ -1138,7 +1505,9 @@ after it is defined.
 [`range()` function]: https://docs.python.org/2/library/functions.html#sorted
 [`for` loop]: {{ site.baseurl }}/docs/markup.html#for
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`code` block]: {{ site.baseurl }}/docs/code.html#code
+[`code` blocks]: {{ site.baseurl }}/docs/code.html#code
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
@@ -1147,6 +1516,7 @@ after it is defined.
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`question` blocks]: {{ site.baseurl }}/docs/questions.html#question
 [selecting objects]: {{ site.baseurl }}/docs/fields.html#objects
 [disable the automatic gathering system]: #manual
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
@@ -1167,3 +1537,10 @@ after it is defined.
 [`DAOrderedDict`]: {{ site.baseurl }}/docs/objects.html#DAOrderedDict
 [set theory]: https://en.wikipedia.org/wiki/Set_theory
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[special variable]: {{ site.baseurl }}/docs/special.html
+[`.gather()`]: {{ site.baseurl }}/docs/objects.html#DAList.gather
+[Markdown]: https://daringfireball.net/projects/markdown/
+[`comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
+[how docassemble finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
+[index variables]: {{ site.baseurl }}/docs/fields.html#index variables
+[`using()` method]: {{ site.baseurl }}/docs/objects.html#DAObject.using

@@ -4538,9 +4538,8 @@
     Are there any others?
   yesno: fruit.there_is_another
 "gather-fruit-at-least-two": |-
-  mandatory: True
-  code: |
-    fruit.minimum_number = 2
+  objects:
+    - fruit: DAList.using(minimum_number=2)
 "gather-fruit-gather": |-
   mandatory: True
   code: |
@@ -4571,11 +4570,7 @@
     The fruits are ${ fruit }.
 "gather-fruit-number": |-
   objects:
-    - fruit: DAList
-  ---
-  mandatory: True
-  code: |
-    fruit.ask_number = True
+    - fruit: DAList.using(ask_number=True)
   ---
   question: |
     How many fruits are there?
@@ -4602,19 +4597,30 @@
     The fruits are ${ fruit }.
 "gather-list-email-recipients": |-
   objects:
-    - recipient: DAEmailRecipientList
+    - recipient: DAEmailRecipientList.using(there_are_any=True)
   ---
   mandatory: True
-  code: |
-    recipient.there_are_any = True
+  question: |
+    The list of recipients
+  subquestion: |
+    % for x in recipient:
+    * ${ x }
+    % endfor
+  ---
+  question: |
+    What is the ${ ordinal(i) } e-mail
+    address?
+  fields:
+    - E-mail: recipient[i].address
+      datatype: email
+  ---
+  question: |
+    Would you like to add another
+    e-mail recipient?
+  yesno: recipient.there_is_another
 "gather-list-friend-bad-order": |-
   objects:
-    - friend: DAList
-  ---
-  mandatory: True
-  code: |
-    friend.there_are_any = True
-    friend.object_type = Individual
+    - friend: DAList.using(object_type=Individual, there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -4652,13 +4658,11 @@
   yesno: friend.there_is_another
 "gather-list-friend-good-order": |-
   objects:
-    - friend: DAList
-  ---
-  mandatory: True
-  code: |
-    friend.there_are_any = True
-    friend.object_type = Individual
-    friend.complete_attribute = 'complete'
+    - friend: |
+        DAList.using(
+          object_type=Individual,
+          complete_attribute='complete',
+          there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -4673,6 +4677,7 @@
     % endfor
   ---
   code: |
+    friend[i].name.first
     friend[i].birthdate
     friend[i].favorite_animal
     friend[i].complete = True
@@ -4701,12 +4706,7 @@
   yesno: friend.there_is_another
 "gather-list-objects": |-
   objects:
-    - location: DAList
-  ---
-  mandatory: True
-  code: |
-    location.there_are_any = True
-    location.object_type = Address
+    - location: DAList.using(object_type=Address, there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -6408,35 +6408,6 @@
     soon you'll be driving a
     ${ favorite_color } car!
     % endif
-"nested-for-loop": |-
-  objects:
-    - person: PartyList.using(minimum_number=1, complete_attribute='complete')
-    - person[i].child: ChildList.using(complete_attribute='complete')
-    - person[i].child[j].allergy: DAList
-  ---
-  mandatory: True
-  question: |
-    Information retrieved
-  subquestion: |
-    The people are:
-
-    % for item in person:
-    * ${ item }
-    % endfor
-  buttons:
-    - Restart: restart
-  ---
-  code: |
-    person[i].name.first
-    person[i].name.last
-    person[i].child.gather()
-    person[i].complete = True
-  ---
-  code: |
-    person[i].child[j].name.first
-    person[i].child[j].name.last
-    person[i].child[j].allergy.gather()
-    person[i].child[j].complete = True
 "nested-gather": |-
   modules:
     - docassemble.base.legal
@@ -6489,6 +6460,32 @@
     ${ x } likes, besides
     ${ x.favorite_food }?
   yesno: x.favorite_food.there_is_another
+"nested-loop": "objects:\n  - person: DAList.using(object_type=Individual, minimum_number=1,\
+  \ complete_attribute='complete')\n  - person[i].child: DAList.using(object_type=Individual,\
+  \ complete_attribute='complete')\n---\ncode: |\n  person[i].name.first\n  person[i].name.last\n\
+  \  person[i].allergy.gather()\n  person[i].child.gather()\n  person[i].complete\
+  \ = True\n---\ncode: |\n  person[i].child[j].name.first\n  person[i].child[j].name.last\n\
+  \  person[i].child[j].allergy.gather()\n  person[i].child[j].complete = True\n---\n\
+  question: |\n  What is the name of the\n  ${ ordinal(i) }\n  person?\nfields:\n\
+  \  - First: person[i].name.first\n  - Last: person[i].name.last\n---\nquestion:\
+  \ |\n  Is there another person?\nyesno: person.there_is_another\n---\nquestion:\
+  \ |\n  Does ${ person[i] } have any children?\nyesno: person[i].child.there_are_any\n\
+  ---\nquestion: |\n  What is the name of\n  ${ person[i].possessive(ordinal(j) +\
+  \ ' child') }?\nfields:\n  - First: person[i].child[j].name.first\n  - Last: person[i].child[j].name.last\n\
+  ---\nquestion: |\n  Does ${ person[i] } have any\n  children other than ${ person[i].child\
+  \ }?\nyesno: person[i].child.there_is_another\n---\ngeneric object: Individual\n\
+  objects:\n  - x.allergy: DAList\n---\ngeneric object: Individual\nquestion: |\n\
+  \  Does ${ x } have any allergies?\nyesno: x.allergy.there_are_any\n---\ngeneric\
+  \ object: Individual\nquestion: |\n  What allergy does ${ x } have?\nfields:\n \
+  \ - Allergy: x.allergy[i]\n---\ngeneric object: Individual\nquestion: |\n  Does\
+  \ ${ x } have any allergies\n  other than ${ x.allergy }?\nyesno: x.allergy.there_is_another\n\
+  ---\nmandatory: True\nquestion: |\n  Information retrieved\nsubquestion: |\n  You\
+  \ told me about\n  ${ person.quantity_noun('individual') },\n  their allergies,\
+  \ their children,\n  and their children's allergies.\n\n  % for p in person:\n \
+  \ You told me about ${ p }.\n    % if p.allergy.number() > 0:\n  ${ p } is allergic\
+  \ to ${ p.allergy }.\n    % endif\n    % for c in p.child:\n  ${ p } has a child\
+  \ named ${ c }.\n    % if c.allergy.number() > 0:\n  ${ c } is allergic to ${ c.allergy\
+  \ }.\n    % endif\n    % endfor\n    \n  % endfor"
 "nested-objects": "objects:\n  - user: Individual\n  - user.sibling: DAList.using(object_type=Individual)\n\
   \  - user.sibling[i].company_hired: |\n      DADict.using(object_type=Organization,\n\
   \                   auto_gather=False,\n                   complete_attribute='complete')\n\

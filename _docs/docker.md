@@ -786,13 +786,6 @@ container for the new configuration to take effect.
 * <a name="DAUPDATEONSTART"></a>`DAUPDATEONSTART`: Set this to `false`
   if you do not want the container to update its software using `pip`
   when it starts up.
-* <a name="CROSSSITEDOMAIN"></a>`CROSSSITEDOMAIN`: If this is set, the
-  [Apache] server will be configured to send a
-  `Access-Control-Allow-Origin` header, which enables
-  [Cross-Origin Resource Sharing].  Set this to `*` to allow sharing
-  to any domain, or, e.g., `*.example.com` to limit sharing to a
-  particular domain or subdomain.  See the [`cross site domain`]
-  configuration directive.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
@@ -2043,7 +2036,7 @@ line), as the containers depend on the images.
 [region]: http://docs.aws.amazon.com/general/latest/gr/rande.html
 [`secretkey`]: {{ site.baseurl }}/docs/config.html#secretkey
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-[`cross site domain`]: {{ site.baseurl }}/docs/config.html#cross site domain
+[`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domains
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
 [installation]: {{ site.baseurl }}/docs/installation.html
