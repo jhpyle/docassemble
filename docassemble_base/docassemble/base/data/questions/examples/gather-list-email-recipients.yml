@@ -3,14 +3,10 @@ metadata:
   short title: E-mail list
   documentation: "https://docassemble.org/docs/groups.html#list of objects"
   example start: 1
-  example end: 2
+  example end: 4
 ---
 objects:
-  - recipient: DAEmailRecipientList
----
-mandatory: True
-code: |
-  recipient.there_are_any = True
+  - recipient: DAEmailRecipientList.using(there_are_any=True)
 ---
 mandatory: True
 question: |

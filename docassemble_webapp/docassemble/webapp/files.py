@@ -81,7 +81,8 @@ class SavedFile(object):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
                 server_time = key.get_epoch_modtime()
-                if not (os.path.isfile(fullpath) and os.path.getmtime(fullpath) == server_time):
+                local_time = os.path.getmtime(fullpath)
+                if not (os.path.isfile(fullpath) and local_time == server_time and time.time() - local_time < 5400):
                     key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))

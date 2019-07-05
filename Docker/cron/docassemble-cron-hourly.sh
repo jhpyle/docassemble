@@ -18,10 +18,10 @@ for old_file in $( find /tmp -maxdepth 1 -type f -mmin +60 -path "/tmp/datemp*" 
 done
 
 if [ -d /tmp/files ]; then
-    for old_file in $( find /tmp/files -type f -atime +1 ); do
+    for old_file in $( find /tmp/files -type f -amin +120 ); do
 	rm -f "$old_file"
     done
-    for old_file in $( find /tmp/files -type l -atime +1 ); do
+    for old_file in $( find /tmp/files -type l -amin +120 ); do
 	rm -f "$old_file"
     done
     find /tmp/files -type d -empty -delete

@@ -170,7 +170,7 @@
     - gather-set
     - gather-set-object
     - mako-06
-    - nested-for-loop
+    - nested-loop
     - madlibs
 - Utility functions:
     - defined

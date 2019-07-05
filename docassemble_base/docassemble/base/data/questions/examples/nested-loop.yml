@@ -1,0 +1,94 @@
+metadata:
+  title: Nested loop
+  documentation: "https://docassemble.org/docs/groups.html"
+  example start: 1
+  example end: 13
+---
+objects:
+  - person: DAList.using(object_type=Individual, minimum_number=1, complete_attribute='complete')
+  - person[i].child: DAList.using(object_type=Individual, complete_attribute='complete')
+---
+code: |
+  person[i].name.first
+  person[i].name.last
+  person[i].allergy.gather()
+  person[i].child.gather()
+  person[i].complete = True
+---
+code: |
+  person[i].child[j].name.first
+  person[i].child[j].name.last
+  person[i].child[j].allergy.gather()
+  person[i].child[j].complete = True
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) }
+  person?
+fields:
+  - First: person[i].name.first
+  - Last: person[i].name.last
+---
+question: |
+  Is there another person?
+yesno: person.there_is_another
+---
+question: |
+  Does ${ person[i] } have any children?
+yesno: person[i].child.there_are_any
+---
+question: |
+  What is the name of
+  ${ person[i].possessive(ordinal(j) + ' child') }?
+fields:
+  - First: person[i].child[j].name.first
+  - Last: person[i].child[j].name.last
+---
+question: |
+  Does ${ person[i] } have any
+  children other than ${ person[i].child }?
+yesno: person[i].child.there_is_another
+---
+generic object: Individual
+objects:
+  - x.allergy: DAList
+---
+generic object: Individual
+question: |
+  Does ${ x } have any allergies?
+yesno: x.allergy.there_are_any
+---
+generic object: Individual
+question: |
+  What allergy does ${ x } have?
+fields:
+  - Allergy: x.allergy[i]
+---
+generic object: Individual
+question: |
+  Does ${ x } have any allergies
+  other than ${ x.allergy }?
+yesno: x.allergy.there_is_another
+---
+mandatory: True
+question: |
+  Information retrieved
+subquestion: |
+  You told me about
+  ${ person.quantity_noun('individual') },
+  their allergies, their children,
+  and their children's allergies.
+
+  % for p in person:
+  You told me about ${ p }.
+    % if p.allergy.number() > 0:
+  ${ p } is allergic to ${ p.allergy }.
+    % endif
+    % for c in p.child:
+  ${ p } has a child named ${ c }.
+    % if c.allergy.number() > 0:
+  ${ c } is allergic to ${ c.allergy }.
+    % endif
+    % endfor
+ 
+  % endfor

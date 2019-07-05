@@ -3,15 +3,10 @@ metadata:
   short title: List of objects
   documentation: "https://docassemble.org/docs/groups.html#list of objects"
   example start: 1
-  example end: 5
+  example end: 4
 ---
 objects:
-  - location: DAList
----
-mandatory: True
-code: |
-  location.there_are_any = True
-  location.object_type = Address
+  - location: DAList.using(object_type=Address, there_are_any=True)
 ---
 mandatory: True
 question: |

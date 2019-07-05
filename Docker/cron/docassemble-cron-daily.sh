@@ -135,11 +135,3 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	done
     fi
 fi
-
-if [ "${AZUREENABLE:-false}" == "true" ] || [ "${S3ENABLE:-false}" == "true" ]; then
-    if [ -d /tmp/files ]; then
-	for old_dir in $( find /tmp/files -type d -mmin +1440 -path "/tmp/files/*" ); do
-            rm -rf "$old_dir"
-	done
-    fi
-fi

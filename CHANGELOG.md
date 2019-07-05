@@ -1,8 +1,15 @@
 # Change Log
 
-## [0.4.58] - 2019-07-03
+## [0.4.58] - 2019-07-05
 ### Changed
-- CORS headers now handled by Flask rather than Apache.
+- CORS headers now handled by Flask rather than Apache.  If you are
+  using the `cross site domain` Configuration directive, do a system
+  upgrade or manually remove CORS-related lines from your Apache2
+  configuration.
+- The `cross site domain` Configuration directive is renamed to `cross
+  site domains` and the value must be a list.
+- Removed the `CROSSSITEDOMAIN` Docker environment variable.
+- More frequent deletion of temporary files.
 
 ## [0.4.57] - 2019-07-01
 ### Added
