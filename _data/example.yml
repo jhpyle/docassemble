@@ -4359,14 +4359,12 @@
     % endfor
 "gather-another": |-
   objects:
-    - fruit: DAList
-  ---
-  mandatory: True
-  code: |
-    fruit.auto_gather = False
-    fruit.gathered = True
+    - fruit: |
+        DAList.using(
+          auto_gather=False,
+          gathered=True)
   comment: |
-    This code block disables the automatic
+    These attributes disable the automatic
     gathering system.
   ---
   mandatory: True
@@ -4471,16 +4469,15 @@
     the database?
   fields:
     - Fruit: fruit.new_item_name
-"gather-dict-object": "objects:\n  - pet: DADict\n---\nmandatory: True\ncode: |\n\
-  \  pet.object_type = DAObject\n---\nmandatory: True\nquestion: |\n  You have ${\
-  \ pet.number_as_word() }\n  pets.\nsubquestion: |\n  % for item in pet:\n  Your\
-  \ pet ${ item } named\n  ${ pet[item].name } has \n  ${ pet[item].feet } feet.\n\
-  \  % endfor\n---\nquestion: |\n  Do you have any pets?\nyesno: pet.there_are_any\n\
-  ---\nquestion: |\n  What kind of pet do you have?\nfields:\n  - Type of pet: pet.new_item_name\n\
-  ---\nquestion: |\n  Describe your pet ${ i }.\nfields:\n  - Name: pet[i].name\n\
-  \  - Number of feet: pet[i].feet\n    datatype: integer\n    min: 0\n---\nquestion:\
-  \ |\n  So far, you have told me about your\n  ${ pet }.  Do you have any other\n\
-  \  pets?\nyesno: pet.there_is_another"
+"gather-dict-object": "objects:\n  - pet: DADict.using(object_type=DAObject)\n---\n\
+  mandatory: True\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
+  \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item].name } has\
+  \ \n  ${ pet[item].feet } feet.\n  % endfor\n---\nquestion: |\n  Do you have any\
+  \ pets?\nyesno: pet.there_are_any\n---\nquestion: |\n  What kind of pet do you have?\n\
+  fields:\n  - Type of pet: pet.new_item_name\n---\nquestion: |\n  Describe your pet\
+  \ ${ i }.\nfields:\n  - Name: pet[i].name\n  - Number of feet: pet[i].feet\n   \
+  \ datatype: integer\n    min: 0\n---\nquestion: |\n  So far, you have told me about\
+  \ your\n  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another"
 "gather-dict-value": |-
   objects:
     - fruit: DADict
@@ -4597,7 +4594,9 @@
     The fruits are ${ fruit }.
 "gather-list-email-recipients": |-
   objects:
-    - recipient: DAEmailRecipientList.using(there_are_any=True)
+    - recipient: |
+        DAEmailRecipientList.using(
+          there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -4620,7 +4619,10 @@
   yesno: recipient.there_is_another
 "gather-list-friend-bad-order": |-
   objects:
-    - friend: DAList.using(object_type=Individual, there_are_any=True)
+    - friend: |
+        DAList.using(
+          object_type=Individual,
+          there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -4706,7 +4708,10 @@
   yesno: friend.there_is_another
 "gather-list-objects": |-
   objects:
-    - location: DAList.using(object_type=Address, there_are_any=True)
+    - location: |
+        DAList.using(
+          object_type=Address,
+          there_are_any=True)
   ---
   mandatory: True
   question: |
@@ -6169,12 +6174,10 @@
       maxlength: 15
 "mixed-list": |-
   objects:
-    - location: DAList
-  ---
-  mandatory: True
-  code: |
-    location.there_are_any = True
-    location.ask_object_type = True
+    - location: |
+        DAList.using(
+          there_are_any=True,
+          ask_object_type=True)
   ---
   mandatory: True
   question: |
@@ -6460,14 +6463,14 @@
     ${ x } likes, besides
     ${ x.favorite_food }?
   yesno: x.favorite_food.there_is_another
-"nested-loop": "objects:\n  - person: DAList.using(object_type=Individual, minimum_number=1,\
-  \ complete_attribute='complete')\n  - person[i].child: DAList.using(object_type=Individual,\
-  \ complete_attribute='complete')\n---\ncode: |\n  person[i].name.first\n  person[i].name.last\n\
-  \  person[i].allergy.gather()\n  person[i].child.gather()\n  person[i].complete\
-  \ = True\n---\ncode: |\n  person[i].child[j].name.first\n  person[i].child[j].name.last\n\
-  \  person[i].child[j].allergy.gather()\n  person[i].child[j].complete = True\n---\n\
-  question: |\n  What is the name of the\n  ${ ordinal(i) }\n  person?\nfields:\n\
-  \  - First: person[i].name.first\n  - Last: person[i].name.last\n---\nquestion:\
+"nested-loop": "objects:\n  - person: |\n      DAList.using(\n        object_type=Individual,\n\
+  \        minimum_number=1,\n        complete_attribute='complete')\n  - person[i].child:\
+  \ |\n      DAList.using(\n        object_type=Individual,\n        complete_attribute='complete')\n\
+  ---\ncode: |\n  person[i].name.first\n  person[i].name.last\n  person[i].allergy.gather()\n\
+  \  person[i].child.gather()\n  person[i].complete = True\n---\ncode: |\n  person[i].child[j].name.first\n\
+  \  person[i].child[j].name.last\n  person[i].child[j].allergy.gather()\n  person[i].child[j].complete\
+  \ = True\n---\nquestion: |\n  What is the name of the\n  ${ ordinal(i) }\n  person?\n\
+  fields:\n  - First: person[i].name.first\n  - Last: person[i].name.last\n---\nquestion:\
   \ |\n  Is there another person?\nyesno: person.there_is_another\n---\nquestion:\
   \ |\n  Does ${ person[i] } have any children?\nyesno: person[i].child.there_are_any\n\
   ---\nquestion: |\n  What is the name of\n  ${ person[i].possessive(ordinal(j) +\
@@ -6485,7 +6488,7 @@
   \ You told me about ${ p }.\n    % if p.allergy.number() > 0:\n  ${ p } is allergic\
   \ to ${ p.allergy }.\n    % endif\n    % for c in p.child:\n  ${ p } has a child\
   \ named ${ c }.\n    % if c.allergy.number() > 0:\n  ${ c } is allergic to ${ c.allergy\
-  \ }.\n    % endif\n    % endfor\n    \n  % endfor"
+  \ }.\n    % endif\n    % endfor\n \n  % endfor"
 "nested-objects": "objects:\n  - user: Individual\n  - user.sibling: DAList.using(object_type=Individual)\n\
   \  - user.sibling[i].company_hired: |\n      DADict.using(object_type=Organization,\n\
   \                   auto_gather=False,\n                   complete_attribute='complete')\n\
@@ -9576,10 +9579,12 @@
   delete buttons: True
 "table-dict-edit": |-
   objects:
-    - income: DADict.using(object_type=DAObject,
-                           keys=['employment', 'benefits', 'interest'],
-                           complete_attribute='complete',
-                           there_is_another=False)
+    - income: |
+        DADict.using(
+          object_type=DAObject,
+          keys=['employment', 'benefits', 'interest'],
+          complete_attribute='complete',
+          there_is_another=False)
   ---
   code: |
     if income[i].receives:
@@ -9621,11 +9626,13 @@
   delete buttons: False
 "table-dict-edit-minimum-number": |-
   objects:
-    - income: DADict.using(object_type=DAObject,
-                           keys=['employment', 'benefits', 'interest'],
-                           complete_attribute='complete',
-                           minimum_number=3,
-                           there_is_another=False)
+    - income: |
+        DADict.using(
+          object_type=DAObject,
+          keys=['employment', 'benefits', 'interest'],
+          complete_attribute='complete',
+          minimum_number=3,
+          there_is_another=False)
 "table-dict-string": |-
   question: |
     Income from ${ i }
@@ -10588,6 +10595,33 @@
 "complete-attribute-method": |-
   modules:
     - .fishlist
+  ---
+  objects:
+    - fishes: FishList
+  ---
+  question: |
+    Are there any fish?
+  yesno: fishes.there_are_any
+  ---
+  question: |
+    Are there any more fish?
+  yesno: fishes.there_is_another
+  ---
+  question: |
+    What is the ${ ordinal(i) } fish's common name?
+  fields:
+    - Name: fishes[i].common_name
+  ---
+  question: |
+    Tell me more about the ${ fishes[i] }.
+  fields:
+    - Species name: fishes[i].species
+    - Number of scales: fishes[i].scales
+      datatype: integer
+  ---
+  mandatory: True
+  question: |
+    Thank you for telling me about ${ fishes }.
 "context": |-
   variable name: fruits
   use objects: True

@@ -8,9 +8,9 @@ To help you organize groups of things, **docassemble** offers three
 data structures: lists, dictionaries, and sets.  These mirror the
 [list], [dict], and [set] data types that exist in [Python].
 
-# Overview of types of data structures
+# <a name="overview"></a>Overview of types of data structures
 
-## <a name="list"></a>List
+## <a name="list"></a>Lists in Python
 
 A "list" is a **group that has a defined order**.  Elements are
 numbered with an index that starts from zero.  In [Python], if a list is
@@ -51,7 +51,7 @@ arranges a list in order.
 In **docassemble**, lists are typically defined as special [objects]
 of type [`DAList`], which behave much like [Python lists].
 
-## <a name="dictionary"></a>Dictionary
+## <a name="dictionary"></a>Dictionaries in Python
 
 A "dictionary" is a **group of key/value pairs**.  By analogy with an
 actual dictionary, the "key" represents the word and the "value"
@@ -96,7 +96,7 @@ not remember the order in which you add them.  (See the
 In **docassemble**, dictionaries are typically [objects] of type
 [`DADict`], which behave much like [Python dict]s.
 
-## <a name="set"></a>Set
+## <a name="set"></a>Sets in Python
 
 A "set" is a **group of unique items with no order**.  There is no
 index or key that allows you to refer to a particular item; an item is
@@ -133,8 +133,8 @@ populate the items of the group.
 
 If you want to, you can use [Python]'s basic [list], [dict], and [set]
 data types in your interviews; nothing will stop you -- but there are
-no special features to help you gather these groups using [`question`
-blocks] or [`code` blocks].
+no special features to help you gather information into these data
+structures using [`question` blocks] or [`code` blocks].
 
 # <a name="gather list"></a>Gathering information into lists
 
@@ -149,6 +149,13 @@ The variable `fruit` is defined as a [`DAList`] <span></span>
 objects:
   - fruit: DAList
 {% endhighlight %}
+
+An [`objects`] block is like a [`code` block], except that it performs
+a special purpose of defining **docassemble** [objects].  If
+**docassemble** needs to know the definition of the variable `fruit`,
+it will use this block and initialize `fruit` as a [`DAList`].  (If you
+are familiar with [Python], you can think of this as a block that runs
+`fruit = DAList('fruit')` where `DAList` is a [Python class].)
 
 The next block contains the end point of the interview, a screen that
 says how many fruits are in the list and lists them.
@@ -179,9 +186,15 @@ orchestrates the gathering process by triggering the seeking of
 variables necessary to gather the list.
 
 Many things other than `${ fruit.number_as_word()` will implicitly
-trigger the gathering of the `fruit` list.  If you want to be explicit
-about when the list-gathering questions are asked, you can call
-`fruit.gather()` yourself in a [`code` block].
+trigger the gathering of the `fruit` list.  If you iterate on `fruit`,
+or run a method that uses the items in the list, this will trigger
+gathering.  The advantage of implicit triggering is that your code can
+be concise, and your interview will be parsimonious about whether to
+ask questions to gather the list; if you have no code that requires
+knowing the items in the list, then the gathering questions will not
+be asked.  If you want to be explicit about when the list-gathering
+questions are asked, you can call `fruit.gather()` yourself, perhaps
+in a [`mandatory`] <span></span> [`code` block].
 
 The gathering algorithm behaves like a lawyer interrogating a witness.
 
@@ -205,8 +218,8 @@ The gathering algorithm behaves like a lawyer interrogating a witness.
 
 "No"
 
-The [`.gather()`] method asks questions like these by seeking the values
-of various variables:
+The [`.gather()`] method triggers these questions by seeking the
+values of various variables:
 
 * `fruit.there_are_any`: should there be any items in the list at all?
 * `fruit[i]`: the name of the `i`th fruit in the list.
@@ -235,6 +248,12 @@ question: |
 fields:
   - Fruit: fruit[i]
 {% endhighlight %}
+
+This [`question`] uses the [index variable] `i`.  The [special
+variable] `i` means that the question is generalized; it can be used
+and re-used for any `i` (`0`, `1`, `2`, `3`, etc.).  **docassemble**'s
+gathering process automatically takes care of setting the variable `i`
+to the right value before using this [`question`].
 
 Assume the user enters "apples."
 
@@ -285,8 +304,8 @@ If you use `i` in a [`mandatory`] block, you will get an error that
 `i` is undefined, or if `i` is defined, it might be defined as a value
 that makes no sense for the context in which you are using `i`.
 
-For more information, see the sections on [index variables] and [how
-docassemble finds questions for variables].
+For more information on using variables like `i`, see the sections on
+[index variables] and [how docassemble finds questions for variables].
 
 ## <a name="customizing"></a>Customizing the way information is gathered
 
@@ -476,9 +495,20 @@ The first block defines the objects we will use.
 
 {% highlight yaml %}
 objects:
-  - person: DAList.using(object_type=Individual, minimum_number=1, complete_attribute='complete')
-  - person[i].child: DAList.using(object_type=Individual, complete_attribute='complete')
+  - person: |
+      DAList.using(
+        object_type=Individual,
+        minimum_number=1,
+        complete_attribute='complete')
+  - person[i].child: |
+      DAList.using(
+        object_type=Individual,
+        complete_attribute='complete')
 {% endhighlight %}
+
+(Note that the line breaks here are not meaningful to the syntax;
+[Python] allows you to use line breaks in this context for aesthetic
+reasons.)
 
 The list `person` will be a list of objects of type [`Individual`].
 We assume that there is at least one individual in the list, so we set
@@ -947,10 +977,8 @@ are objects of type [`DAObject`] with attributes `.name` (e.g.,
 `'Mittens'`, `'Spot'`) and `.feet` (e.g., `4`).  We need to start by
 telling **docassemble** that the [`DADict`] is a dictionary of
 objects.  We do this by setting the `.object_type` attribute of the
-[`DADict`] to [`DAObject`], using some [`mandatory`] code.
-(Alternatively, the [`objects`] block could have included the line
-`pet: DADict.using(object_type=DAObject)`) Then we provide a question 
-that sets the `.new_item_name` attribute.
+[`DADict`] to [`DAObject`].  Then we provide a question that sets the
+`.new_item_name` attribute.
 
 When a `.object_type` is provided, **docassemble** will take care of
 initializing the value of each entry as an object of this type.  It
@@ -1082,8 +1110,11 @@ To gather the list manually, it is necessary to [disable the automatic
 gathering system]:
 
 {% highlight python %}
-fruit.auto_gather = False
-fruit.gathered = True
+objects:
+  - fruit: |
+      DAList.using(
+        auto_gather=False,
+        gathered=True)
 {% endhighlight %}
 
 This example uses a little bit of [Python] code to ask the appropriate
@@ -1543,4 +1574,6 @@ after it is defined.
 [`comma_and_list()`]: {{ site.baseurl }}/docs/objects.html#DAList.comma_and_list
 [how docassemble finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [index variables]: {{ site.baseurl }}/docs/fields.html#index variables
+[index variable]: {{ site.baseurl }}/docs/fields.html#index variables
 [`using()` method]: {{ site.baseurl }}/docs/objects.html#DAObject.using
+[Python class]: https://docs.python.org/2/tutorial/classes.html
