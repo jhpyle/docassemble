@@ -655,6 +655,46 @@ if [ ! -f ${DA_ROOT}/certs/exim.crt ] && [ -f ${DA_ROOT}/certs/exim.crt.orig ]; 
 fi
 python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
 
+function backup_apache {
+    if [ "${S3ENABLE:-false}" == "true" ]; then
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+	    cd /
+	    rm -f /tmp/letsencrypt.tar.gz
+	    if [ -d etc/letsencrypt ]; then
+		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+		rm -f /tmp/letsencrypt.tar.gz
+	    fi
+	fi
+	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+    elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+	    cd /
+	    rm -f /tmp/letsencrypt.tar.gz
+	    if [ -d etc/letsencrypt ]; then
+		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		echo "Saving lets encrypt" >&2
+		blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+		rm -f /tmp/letsencrypt.tar.gz
+	    fi
+	fi
+	for the_file in $(find /etc/apache2/sites-available/ -type f); do
+	    target_file=`basename $the_file`
+	    echo "Saving apache" >&2
+	    blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$target_file"
+	done
+    else
+	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+	    cd /
+	    rm -f ${DA_ROOT}/backup/letsencrypt.tar.gz
+	    tar -zcf ${DA_ROOT}/backup/letsencrypt.tar.gz etc/letsencrypt
+	fi
+	rm -rf ${DA_ROOT}/backup/apache
+	mkdir -p ${DA_ROOT}/backup/apache
+	rsync -auv /etc/apache2/sites-available/ ${DA_ROOT}/backup/apache/
+    fi
+}
+
 echo "43" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
@@ -722,7 +762,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2enmod ssl
 	a2ensite docassemble-ssl
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-	    cd ${DA_ROOT}/letsencrypt 
+	    cd ${DA_ROOT}/letsencrypt
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
 		./letsencrypt-auto renew
 	    else
@@ -738,43 +778,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2dismod ssl
 	a2dissite -q docassemble-ssl &> /dev/null
     fi
-    if [ "${S3ENABLE:-false}" == "true" ]; then
-	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-	    cd /
-	    rm -f /tmp/letsencrypt.tar.gz
-	    if [ -d etc/letsencrypt ]; then
-		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-		s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
-		rm -f /tmp/letsencrypt.tar.gz
-	    fi
-	fi
-	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
-    elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-	    cd /
-	    rm -f /tmp/letsencrypt.tar.gz
-	    if [ -d etc/letsencrypt ]; then
-		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-		echo "Saving lets encrypt" >&2
-		blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
-		rm -f /tmp/letsencrypt.tar.gz
-	    fi
-	fi
-	for the_file in $(find /etc/apache2/sites-available/ -type f); do
-	    target_file=`basename $the_file`
-	    echo "Saving apache" >&2
-	    blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$target_file" 
-	done
-    else
-	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-	    cd /
-	    rm -f ${DA_ROOT}/backup/letsencrypt.tar.gz
-	    tar -zcf ${DA_ROOT}/backup/letsencrypt.tar.gz etc/letsencrypt
-	fi
-	rm -rf ${DA_ROOT}/backup/apache
-	mkdir -p ${DA_ROOT}/backup/apache
-	rsync -auv /etc/apache2/sites-available/ ${DA_ROOT}/backup/apache/
-    fi
+    backup_apache
 fi
 
 echo "44" >&2
@@ -885,25 +889,28 @@ echo "51" >&2
 function deregister {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
+	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    s3cmd -q sync ${DA_ROOT}/log/ s3://${S3BUCKET}/log/
 	fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
+	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    for the_file in $(find ${DA_ROOT}/log -type f | cut -c 28-); do
 		echo "Saving log file $the_file" >&2
-		blob-cmd -f cp "${DA_ROOT}/log/$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
+		blob-cmd -f cp "${DA_ROOT}/log/$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file"
 	    done
 	fi
     else
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    rm -rf ${DA_ROOT}/backup/log
 	    rsync -auv ${DA_ROOT}/log ${DA_ROOT}/backup/
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	    rm -rf ${DA_ROOT}/backup/apachelogs
 	    mkdir -p ${DA_ROOT}/backup/apachelogs
 	    rsync -auv /var/log/apache2/ ${DA_ROOT}/backup/apachelogs/
+	    backup_apache
 	fi
 	rm -f ${DA_ROOT}/backup/config.yml
 	cp $DA_CONFIG_FILE ${DA_ROOT}/backup/config.yml

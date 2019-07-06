@@ -21490,21 +21490,21 @@ def random_social():
 with app.app_context():
     app.user_manager.random_social = random_social
     if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
-        app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
+        app.config['BOOTSTRAP_THEME'] = text_type(get_url_from_file_reference(daconfig['bootstrap theme']))
         app.config['BOOTSTRAP_THEME_DEFAULT'] = False
     else:
         app.config['BOOTSTRAP_THEME'] = None
         app.config['BOOTSTRAP_THEME_DEFAULT'] = True
     if 'global css' in daconfig:
         for fileref in daconfig['global css']:
-            global_css += "\n" + '    <link href="' + get_url_from_file_reference(fileref) + '" rel="stylesheet">'
+            global_css += "\n" + '    <link href="' + text_type(get_url_from_file_reference(fileref)) + '" rel="stylesheet">'
     if 'global javascript' in daconfig:
         for fileref in daconfig['global javascript']:
-            global_js += "\n" + '    <script src="' + get_url_from_file_reference(fileref) + '"></script>';
+            global_js += "\n" + '    <script src="' + text_type(get_url_from_file_reference(fileref)) + '"></script>';
     if 'raw global css' in daconfig:
-        global_css += "\n" + daconfig['raw global css']
+        global_css += "\n" + text_type(daconfig['raw global css'])
     if 'raw global javascript' in daconfig:
-        global_js += "\n" + daconfig['raw global javascript']
+        global_js += "\n" + text_type(daconfig['raw global javascript'])
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts

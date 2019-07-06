@@ -6,14 +6,12 @@ metadata:
   example end: 7
 ---
 objects:
-  - fruit: DAList
----
-mandatory: True
-code: |
-  fruit.auto_gather = False
-  fruit.gathered = True
+  - fruit: |
+      DAList.using(
+        auto_gather=False,
+        gathered=True)
 comment: |
-  This code block disables the automatic
+  These attributes disable the automatic
   gathering system.
 ---
 mandatory: True

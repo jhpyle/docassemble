@@ -3,15 +3,13 @@ metadata:
   short title: "Mixed list"
   documentation: "https://docassemble.org/docs/groups.html#mixed object types"
   example start: 1
-  example end: 7
+  example end: 6
 ---
 objects:
-  - location: DAList
----
-mandatory: True
-code: |
-  location.there_are_any = True
-  location.ask_object_type = True
+  - location: |
+      DAList.using(
+        there_are_any=True,
+        ask_object_type=True)
 ---
 mandatory: True
 question: |

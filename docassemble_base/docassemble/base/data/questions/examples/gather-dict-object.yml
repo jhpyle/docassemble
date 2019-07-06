@@ -3,14 +3,10 @@ metadata:
   short title: "Dictionary: gather keys, objects"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 7
+  example end: 6
 ---
 objects:
-  - pet: DADict
----
-mandatory: True
-code: |
-  pet.object_type = DAObject
+  - pet: DADict.using(object_type=DAObject)
 ---
 mandatory: True
 question: |

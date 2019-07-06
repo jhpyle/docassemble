@@ -6,7 +6,9 @@ metadata:
   example end: 4
 ---
 objects:
-  - recipient: DAEmailRecipientList.using(there_are_any=True)
+  - recipient: |
+      DAEmailRecipientList.using(
+        there_are_any=True)
 ---
 mandatory: True
 question: |

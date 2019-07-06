@@ -6,7 +6,10 @@ metadata:
   example end: 4
 ---
 objects:
-  - location: DAList.using(object_type=Address, there_are_any=True)
+  - location: |
+      DAList.using(
+        object_type=Address,
+        there_are_any=True)
 ---
 mandatory: True
 question: |
