@@ -4,13 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.59](https://github.com/jhpyle/docassemble/releases/tag/v0.4.59) - 2019-07-05
+
+### Changed
+- Changes manually made to `/etc/apache2/sites-available` files while
+  the container is running will now be backed up upon shutdown and
+  restored upon startup.
+
+### Fixed
+- Fatal error when invalid global javascript file referenced in
+  Configuration.
+
 ## [0.4.58](https://github.com/jhpyle/docassemble/releases/tag/v0.4.58) - 2019-07-05
 
 ### Changed
-- CORS headers now handled by Flask rather than Apache.  If you are
-  using the `cross site domain` Configuration directive, do a system
-  upgrade or manually remove CORS-related lines from your Apache2
-  configuration.
+- CORS headers now handled by Flask rather than Apache.
 - The `cross site domain` Configuration directive is renamed to `cross
   site domains` and the value must be a list.
 - Removed the `CROSSSITEDOMAIN` Docker environment variable.

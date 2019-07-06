@@ -413,7 +413,7 @@ If you are get a "server error" in your web browser when trying to
 access **docassemble**, there should be an error message in
 `/var/log/apache2/error.log`.  If you see a message about a
 "blueprint's name collision," this is almost always not the real
-error; you need to scroll up through several error message to find the
+error; you need to scroll up through several error messages to find the
 actual error.  When [Apache] crashes, the error that initiated the
 crash causes other errors inside of the code of the [Flask] framework,
 and a "blueprint's name collision" error is typically the last error
