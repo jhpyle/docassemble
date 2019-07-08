@@ -535,6 +535,26 @@ usually works well when you make [Configuration] and [Python] code
 changes, but if [Apache] has crashed, `supervisorctl start reset` will
 not bring it back to life.
 
+If you want to access the [Redis] data, do [`docker exec`] to get
+inside the container and then run `redis-cli` (assuming that your
+[Redis] server is the default local [Redis] server).  Note that
+**docassemble** uses several of the [Redis] databases.  If you do
+`redis-cli -n 1` (the default), you will access the database used on a
+system level.  If you do `redis-cli -n 2`, you will access the
+database used by [`DARedis`].
+
+Unless you specify a different SQL server, the [PostgreSQL] data for
+your **docassemble** server is inside the `docassemble` database
+running on the Docker container.  The default username is
+`docassemble` and the default password is `abc123`.  After doing
+[`docker exec`] to get inside the container, run:
+
+{% highlight bash %}
+psql -U docassemble -d docassemble -h localhost -W
+{% endhighlight %}
+
+When prompted, enter password `abc123`.
+
 For more information about troubleshooting **docassemble**, see
 the [debugging subsection] of the [installation] section.
 
@@ -2073,3 +2093,4 @@ line), as the containers depend on the images.
 [web interface]: {{ site.baseurl }}/docs/admin.html#configuration
 [behind a reverse proxy]: #forwarding
 [live help]: {{ site.baseurl }}/docs/livehelp.html
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis

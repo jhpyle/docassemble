@@ -1337,6 +1337,12 @@ following before you run any [Python] commands:
 source /usr/share/docassemble/local/bin/activate
 {% endhighlight %}
 
+Or, if you are using [Python] 3.5, the command is:
+
+{% highlight bash %}
+source /usr/share/docassemble/local3.5/bin/activate
+{% endhighlight %}
+
 If you encounter any errors, please register an "issue" on the
 **docassemble** [issues page]({{ site.github.repository_url }}/issues).
 

@@ -20,13 +20,13 @@ To run this, first set up your server using [Docker].
 Once **docassemble** is up and running in your web browser, click "Log
 in" in the upper right hand corner.  The default username and password
 are:
- 
+
    * **E-mail**: admin@admin.com
    * **Password**: password
 
 The default password ("password") will need to be changed.  Change it
 to something that is at least eight characters long with at least one
-lowercase letter and one number.  You can also change the e-mail
+lowercase letter and one number.  You should also change the e-mail
 address by going to [User List].
 
 Then, from the menu, select [Playground].  The [Playground] is a
@@ -36,7 +36,8 @@ inside the web browser.
 ![Playground]({{ site.baseurl }}/img/menu-selection-playground.png)
 
 Then, click the ![Add]({{ site.baseurl }}/img/playground-button-add.png)
-button to create a new interview.  Call it "hello.yml."
+button to create a new interview.  Call it "hello.yml."  (`.yml` is
+the file extension for the data format known as [YAML].)
 
 ![New interview]({{ site.baseurl }}/img/playground-new-interview.png)
 
@@ -134,20 +135,20 @@ fields:
 ([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
 
 Note that the order in which the [question] and [code] blocks appear
-does not determine the order in which questions are asked.  This is
-because **docassemble** only asks questions as needed and when needed.
-The path of this interview is driven by the single [`mandatory`]
-question.  In order to say "Hello, \_\_\_\_\_\_", **docassemble** needs to
-know what `planet` is, so it asks the question "What is your planet's
-name?"  Then, in order to say "I surmise that you have no more than
-\_\_\_\_ inhabitants," **docassemble** needs to know what
-`inhabitant_count` is, so it runs the `code` that computes
-`inhabitant_count`.  However, in order to compute that,
-**docassemble** needs to know `favorite_number`, so it asks "What is
-your favorite number?"  Then it knows everything it needs to know in
-order to display the `mandatory` question.
+in the [YAML] does not determine the order in which questions are
+asked.  This is because **docassemble** only asks questions as needed
+and when needed.  The path of this interview is driven by the single
+[`mandatory`] question.  In order to say "Hello, \_\_\_\_\_\_",
+**docassemble** needs to know what `planet` is, so it asks the
+question "What is your planet's name?"  Then, in order to say "I
+surmise that you have no more than \_\_\_\_ inhabitants,"
+**docassemble** needs to know what `inhabitant_count` is, so it runs
+the [`code`] that computes `inhabitant_count`.  However, in order to
+compute that, **docassemble** needs to know `favorite_number`, so it
+asks "What is your favorite number?"  Then it knows everything it
+needs to know in order to display the [`mandatory`] question.
 
-The `code` block contains [Python] code.  The syntax needs to follow
+The [`code`] block contains [Python] code.  The syntax needs to follow
 all the rules of [Python].  For example, the `==` syntax tests whether
 the `favorite_number` is 42 or not.  The `+` performs addition and the
 `*` performs multiplication.  The `=` sets the value of a variable.
@@ -228,11 +229,13 @@ To do this, go to the Folders menu and select "Templates."
 
 ![Templates]({{ site.baseurl }}/img/playground-menu-templates.png)
 
-Then, go to "Upload a template file" and click "Browse."
+Then, go to "Upload a template file" and click
+![Browse]({{ site.baseurl }}/img/playground-templates-browse-button.png).
 
 ![Upload a template file]({{ site.baseurl }}/img/playground-files-upload-template.png)
 
-Locate your DOCX file on your computer and select it.  Then click "Upload."
+Locate your DOCX file on your computer and select it.  Then click
+![Upload]({{ site.baseurl }}/img/playground-templates-upload-button.png).
 
 Now you should see the DOCX file listed as one of your Templates.
 
@@ -246,7 +249,7 @@ main page of the [Playground].
 
 Now you need to edit the interview so that it uses the DOCX file.
 
-In the block with the `attachment`, replace the `content`
+In the block with the [`attachment`], replace the `content`
 specifier with a [`docx template file`] specifier that references the
 file you uploaded.  The interview should look like this:
 
@@ -299,18 +302,20 @@ unlike templates, which can be different every time.)
 
 ![Static files]({{ site.baseurl }}/img/playground-menu-static.png)
 
-Then, go to "Upload a static file" and click "Browse."
+Then, go to "Upload a static file" and click
+![Browse]({{ site.baseurl }}/img/playground-templates-browse-button.png).
 
 ![Upload a static file]({{ site.baseurl }}/img/playground-files-upload.png)
 
 After you select the file (or files) on your computer that you want to
-upload, click "Upload."
+upload, click
+![Upload]({{ site.baseurl }}/img/playground-templates-upload-button.png).
 
 You should now see the file listed as one of the "Static files."
 
 ![File uploaded]({{ site.baseurl }}/img/playground-files-listing.png)
 
-In this example, the name of the file is `globe.svg`.
+In this example, the file is [globe.svg], a picture of a globe.
 
 Now, click ![Back]({{ site.baseurl
 }}/img/playground-button-back-to-playground.png) or
@@ -329,12 +334,13 @@ image sets:
 ---
 {% endhighlight %}
 
-The file `globe.svg` is a copyrighted image obtained from the Internet
-with an attribution-only license.  The `image sets` block facilitates
-the use of such images.  It defines a set of images, called `freepik`,
-that share a common attribution.  All the images you obtain from this
-source can be added to this image set, and an appropriate attribution
-line will be added to the screen whenever the image is used.
+The file [globe.svg] is a copyrighted image obtained from [Freepik]
+with an attribution-only license.  The [`image sets`] block
+facilitates the use of such images.  It defines a set of images,
+called `freepik`, that share a common attribution.  All the images you
+obtain from this source can be added to this image set, and an
+appropriate attribution line will be added to the screen whenever the
+image is used.
 
 Under `images`, we indicate that the shorthand name we will give our
 image is `earth`.
@@ -371,23 +377,23 @@ feedback.
 The "Save and Run" button is not the only way to start using an
 interview in your [Playground].  Any interview in the [Playground] can
 be started by visiting its hyperlink.  To get this hyperlink,
-right-click on the "<i class="glyphicon glyphicon-link"
-aria-hidden="true"></i> Share" button and copy the URL to your
+right-click on the <a href="#testing" class="badge badge-secondary"><i class="fas fa-link"
+aria-hidden="true"></i> Share</a> button and copy the URL to your
 clipboard.  You can share this URL with other people, or bookmark it
 in your browser.  When people visit this URL, they will start an
 interview session.  (Note that this only works if the server you are
 using is accessible to the user's device; if you are using a personal
 computer, your computer's firewall might prevent other people from
-accessing you).
+accessing it.)
 
 # <a name="packaging"></a>Packaging your interview
 
 So far, we have been running our interview from the [Playground],
 which is a testing area where we can test things, break things, and
-"play" around with different possibilities.  If our interview has
-reached a point where it is flawless and we want to put it into
-"production" to that users can use it, we need to move it out of the
-[Playground] and install it in a more "permanent" place.
+"play" with different possibilities.  If our interview has reached a
+point where it is flawless and we want to put it into "production" to
+that users can use it, we need to move it out of the [Playground] and
+install it in a more "permanent" place.
 
 To do this, we bundle our interview into a "package."  Packages can be
 installed on the same system, or another system, or they can be shared
@@ -675,3 +681,6 @@ the [GitHub subsection] of the [packages] section.
 [privileges]: {{ site.baseurl }}/docs/users.html
 [it is recommended]: {{ site.baseurl }}/docs/development.html
 [User List]: {{ site.baseurl }}/docs/admin.html#user list
+[globe.svg]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/static/globe.svg
+[Freepik]: http://www.flaticon.com/authors/freepik
+[`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
