@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.60](https://github.com/jhpyle/docassemble/releases/tag/v0.4.60) - 2019-07-09
+
+### Changed
+- More robust Docker scripts.
+
+### Fixed
+- Error with cloud cache.
+
 ## [0.4.59](https://github.com/jhpyle/docassemble/releases/tag/v0.4.59) - 2019-07-05
 
 ### Changed

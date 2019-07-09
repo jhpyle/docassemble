@@ -112,6 +112,9 @@ complicated to use than the basic [Docker] command line.
 
 First, make sure you are running [Docker] on a computer or virtual
 computer with at least 2GB of memory and 20GB of hard drive space.
+The **docassemble** installation will use up about 10GB of space, and
+you should always have at least 10GB free when you are running
+**docassemble**.
 
 If you have a Windows PC, follow the
 [Docker installation instructions for Windows]{:target="_blank"}.  You
@@ -561,7 +564,7 @@ the [debugging subsection] of the [installation] section.
 # <a name="configuration options"></a>Configuration options
 
 In the example [above](#single server arrangement), we started
-**docassemble** with `docker run -d -p 80:80 jhpyle/docassemble`.
+**docassemble** with `docker run -d -p 80:80 --env DAPYTHONVERSION=3 jhpyle/docassemble`.
 This command will cause **docassemble** to use default values for all
 configuration options.  You can also communicate specific
 configuration options to the container.
@@ -1232,7 +1235,7 @@ For example:
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=sql:redis \
+--env CONTAINERROLE=sql:redis \
 ...
 -d -p 5432:5432 -p 6379:6379 -p 9001:9001 \
 jhpyle/docassemble
@@ -1240,7 +1243,7 @@ jhpyle/docassemble
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=web:celery \
+--env CONTAINERROLE=web:celery \
 ...
 -d -p 80:80 -p 443:443 -p 9001:9001 \
 jhpyle/docassemble
@@ -1290,10 +1293,10 @@ central server, you can do:
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=sql:redis:rabbitmq:log:cron:mail \
--e S3BUCKET=docassemble-example-com \
--e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
--e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
+--env CONTAINERROLE=sql:redis:rabbitmq:log:cron:mail \
+--env S3BUCKET=docassemble-example-com \
+--env S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
+--env S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
 -d -p 80:8080 -p 25:25 -p 5432:5432 -p 514:514 \
 -p 6379:6379 -p 4369:4369 -p 5671:5671 \
 -p 5672:5672 -p 25672:25672 -p 9001:9001 \
@@ -1304,10 +1307,10 @@ To run an application server, you can do:
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=web:celery \
--e S3BUCKET=docassemble-example-com \
--e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
--e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
+--env CONTAINERROLE=web:celery \
+--env S3BUCKET=docassemble-example-com \
+--env S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
+--env S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
 -d -p 80:80 -p 443:443 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
@@ -1767,7 +1770,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:
@@ -1853,7 +1856,7 @@ cd docassemble
 git checkout v0.3.21
 docker build -t yourname/mydocassemble .
 cd ..
-docker run -d -p 80:80 -p 443:443 yourname/mydocassemble
+docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 yourname/mydocassemble
 {% endhighlight %}
 
 The [`docker run`] command that you use may have other options; this
