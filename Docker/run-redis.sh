@@ -9,7 +9,7 @@ else
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 
 source "${DA_ACTIVATE}"
 
@@ -37,11 +37,11 @@ function stopfunc {
     redis-cli shutdown
     echo backing up redis
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd -q put "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb
+	s3cmd -q put "/var/lib/redis/dump.rdb" "s3://${S3BUCKET}/redis.rdb"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
     else
-	cp /var/lib/redis/dump.rdb ${DA_ROOT}/backup/redis.rdb
+	cp /var/lib/redis/dump.rdb "${DA_ROOT}/backup/redis.rdb"
     fi
     exit 0
 }
