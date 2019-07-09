@@ -21,8 +21,8 @@ if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
 fi
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
-    export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
+    export AWS_ACCESS_KEY_ID="${S3ACCESSKEY}"
+    export AWS_SECRET_ACCESS_KEY="${S3SECRETACCESSKEY}"
 fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then

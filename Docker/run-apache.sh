@@ -41,9 +41,9 @@ if [ "${DAHOSTNAME:-none}" == "none" ]; then
 	export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
     else
 	export LOCAL_HOSTNAME=`hostname --fqdn`
-	export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
+	export PUBLIC_HOSTNAME="${LOCAL_HOSTNAME}"
     fi
-    export DAHOSTNAME=$PUBLIC_HOSTNAME
+    export DAHOSTNAME="${PUBLIC_HOSTNAME}"
 fi
 
 if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then

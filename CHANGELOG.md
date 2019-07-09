@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.60] - 2019-07-09
+### Changed
+- More robust Docker scripts.
+
 ## [0.4.59] - 2019-07-05
 ### Changed
 - Changes manually made to `/etc/apache2/sites-available` files while
