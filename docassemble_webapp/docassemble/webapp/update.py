@@ -430,13 +430,14 @@ def install_package(package):
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
-    use_pip_cache = r.get('da:updatepackage:use_pip_cache')
-    if use_pip_cache is None:
-        disable_pip_cache = False
-    elif int(use_pip_cache):
-        disable_pip_cache = False
-    else:
-        disable_pip_cache = True
+    #use_pip_cache = r.get('da:updatepackage:use_pip_cache')
+    #if use_pip_cache is None:
+    #    disable_pip_cache = False
+    #elif int(use_pip_cache):
+    #    disable_pip_cache = False
+    #else:
+    #    disable_pip_cache = True
+    disable_pip_cache = True
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
         commands = ['pip', 'install']
