@@ -120,14 +120,6 @@ and then use [GitHub] to obtain a special URL for the repository that
 embeds an "OAuth" authentication code.  These URLs can be used in
 the "Github URL" field of "Package Management."
 
-There is a checkbox labeled "Use pip cache."  It is checked by
-default.  You might it helpful to uncheck this checkbox if you are
-installing and re-installing the same package from [PyPI] repeatedly
-over a short period of time.  If the checkbox is unchecked, then `pip`
-runs with the `--no-cache-dir` option, which means that `pip` will
-always go onto the internet to retrieve a new version of a package
-instead of looking in its cache.
-
 ### <a name="update"></a>Update or uninstall an existing package
 
 In this part of the "Package Management" screen, you can see a list of

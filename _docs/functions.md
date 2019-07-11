@@ -6301,7 +6301,7 @@ $(document).on('daPageLoad', function(){
 [Redis]: https://redis.io/
 [in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
 [object]: {{ site.baseurl }}/docs/objects.html
-[pickled]: https://docs.python.org/2/library/pickle.html
+[pickled]: https://docs.python.org/3/library/pickle.html
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [PostgreSQL]: http://www.postgresql.org/
 [`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval

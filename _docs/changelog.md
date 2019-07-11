@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.61](https://github.com/jhpyle/docassemble/releases/tag/v0.4.61) - 2019-07-10
+
+### Added
+- The `set_status()` and `get_status()` functions.
+
+### Changed
+- Disabled `pip` cache.
+- Restored pre-0.4.55 behavior allowing Mako in multiple choice
+  values.
+
 ## [0.4.60](https://github.com/jhpyle/docassemble/releases/tag/v0.4.60) - 2019-07-09
 
 ### Changed

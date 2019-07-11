@@ -10693,6 +10693,36 @@
   content: |
     All records of any type whatsoever relating to the unit rented by ${
     client }.
+"docxproperties": |-
+  attachment:
+    variable name: assembled_file
+    docx template file: docx-with-metadata.docx
+    valid formats:
+      - docx
+  ---
+  mandatory: True
+  code: |
+    assembled_file
+    user_name
+    from docx import Document
+    docx = Document(assembled_file.path())
+    docx.core_properties.author = user_name
+    docx.save(assembled_file.path())
+    del docx
+  ---
+  mandatory: True
+  question: Your document
+  attachment code: assembled_file
+  ---
+  question: |
+    What planet are you from?
+  fields:
+    - Planet: planet
+  ---
+  question: |
+    What is your name?
+  fields:
+    - Name: user_name
 "explain": |-
   modules:
     - .somefuncs

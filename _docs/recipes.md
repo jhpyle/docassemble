@@ -413,6 +413,30 @@ template and then you use the DOCX output as the input for another assembly.
 
 {% include demo-side-by-side.html demo="twostage" %}
 
+# <a name="docxproperties"></a>Altering metadata of generated DOCX files
+
+This example demonstrates using the [docx] package to modify the
+[core document properties] of a generated DOCX file.
+
+{% include demo-side-by-side.html demo="docxproperties" %}
+
+Note that this interview uses [Python] code in a [`code`] block that
+should ideally go into a module file.  The `docx` variable is an
+object from a third party module and is not able to be [pickled].  The
+code works this way in this interview because the [`code`] block
+ensures that the variable `user_name` is defined before the `docx`
+variable is created, and it deletes the `docx` variable with `del
+docx` before the [`code`] block finishes.  If the variable `user_name`
+was undefined, **docassemble** would try to save the variable `docx`
+in the interview answers before asking about `user_name`, and this
+would result in a pickling error.  If the `docx` variable only existed
+inside of a function in a module, there would be no problem with
+[pickling].
+
+[core document properties]: https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html
+[pickled]: https://docs.python.org/3/library/pickle.html
+[pickling]: https://docs.python.org/3/library/pickle.html
+[docx]: https://python-docx.readthedocs.io/
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
@@ -421,3 +445,5 @@ template and then you use the DOCX output as the input for another assembly.
 [`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others
 [`object` datatype]: {{ site.baseurl }}/docs/fields.html#object
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
+[`code`]: {{ site.baseurl }}/docs/code.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
