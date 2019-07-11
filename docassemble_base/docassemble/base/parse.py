@@ -118,7 +118,7 @@ def textify(data, the_user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -766,10 +766,10 @@ class InterviewStatus(object):
 # increment_question_counter = new_counter()
 
 class TextObject(object):
-    def __init__(self, x, question=None):
+    def __init__(self, x, question=None, translate=True):
         self.original_text = x
         self.other_lang = dict()
-        if question is not None and question.interview.source.translating and isinstance(x, string_types) and re.search(r'[^\s0-9]', self.original_text) and not re.search(r'\<%doc\>\s*do not translate', self.original_text, re.IGNORECASE) and self.original_text != 'no label':
+        if translate and question is not None and question.interview.source.translating and isinstance(x, string_types) and re.search(r'[^\s0-9]', self.original_text) and not re.search(r'\<%doc\>\s*do not translate', self.original_text, re.IGNORECASE) and self.original_text != 'no label':
             if not hasattr(question, 'translations'):
                 question.translations = list()
             if self.original_text not in question.translations:
@@ -786,7 +786,7 @@ class TextObject(object):
             self.uses_mako = True
         else:
             self.uses_mako = False
-        if question is not None and len(question.interview.translations) and isinstance(x, string_types):
+        if translate and question is not None and len(question.interview.translations) and isinstance(x, string_types):
             if self.original_text in question.interview.translation_dict:
                 if question.language == '*':
                     self.language = docassemble.base.functions.server.default_language
@@ -4236,8 +4236,7 @@ class Question:
                         self.find_fields_in(value)
                     else:
                         result_dict['label'] = TextObject(key, question=self)
-                        #result_dict['key'] = TextObject(value, question=self)
-                        result_dict['key'] = value
+                        result_dict['key'] = TextObject(value, question=self, translate=False)
                 elif isinstance(value, dict):
                     result_dict['label'] = TextObject(key, question=self)
                     self.embeds = True
@@ -4258,7 +4257,7 @@ class Question:
                         pass
                     else:
                         result_dict['label'] = TextObject(key, question=self)
-                        result_dict['key'] = value
+                        result_dict['key'] = TextObject(key, question=self, translate=False)
                 elif isinstance(value, bool):
                     result_dict['label'] = TextObject(key, question=self)
                     result_dict['key'] = value
@@ -4774,13 +4773,11 @@ class Question:
                                 else:
                                     the_item['image'] = dict(type='decoration', value=entry['image'])
                             if 'key' in entry and 'label' in entry:
-                                #the_item['key'] = TextObject(entry['key'], question=self)
-                                the_item['key'] = entry['key']
+                                the_item['key'] = TextObject(entry['key'], question=self, translate=False)
                                 the_item['label'] = TextObject(entry['label'], question=self)
                                 result.append(the_item)
                                 continue
-                        #the_item['key'] = TextObject(entry[key], question=self)
-                        the_item['key'] = entry[key]
+                        the_item['key'] = TextObject(entry[key], question=self, translate=False)
                         the_item['label'] = TextObject(key, question=self)
                         result.append(the_item)
                 if isinstance(entry, list):

@@ -4975,6 +4975,8 @@ def get_variables():
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         return jsonify(success=False)
+    if (not DEBUG) and '_internal' in user_dict and 'misc' in user_dict['_internal'] and 'variable_access' in user_dict['_internal']['misc'] and user_dict['_internal']['misc']['variable_access'] is False:
+        return jsonify(success=False)
     variables = docassemble.base.functions.serializable_dict(user_dict, include_internal=True)
     #variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
     return jsonify(success=True, variables=variables, steps=steps, encrypted=is_encrypted, uid=session_id, i=yaml_filename)
@@ -12351,11 +12353,11 @@ def update_package():
         session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
-        use_pip_cache = form.use_cache.data
-        pipe = r.pipeline()
-        pipe.set('da:updatepackage:use_pip_cache', 1 if use_pip_cache else 0)
-        pipe.expire('da:updatepackage:use_pip_cache', 120)
-        pipe.execute()
+        #use_pip_cache = form.use_cache.data
+        #pipe = r.pipeline()
+        #pipe.set('da:updatepackage:use_pip_cache', 1 if use_pip_cache else 0)
+        #pipe.expire('da:updatepackage:use_pip_cache', 120)
+        #pipe.execute()
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
                 the_file = request.files['zipfile']

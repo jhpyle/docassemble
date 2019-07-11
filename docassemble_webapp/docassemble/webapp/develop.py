@@ -28,7 +28,6 @@ class UpdatePackageForm(FlaskForm):
     gitbranch = SelectField(word('GitHub Branch'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
-    use_cache = BooleanField(word('Use pip cache'), default=True)
     submit = SubmitField(word('Update'))
 
 class ConfigForm(FlaskForm):
