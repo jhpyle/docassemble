@@ -2049,6 +2049,52 @@ tags associated with the interview session.
 
 {% include side-by-side.html demo="tags" %}
 
+## <a name="set_status"></a>set_status()
+
+The `set_status()` function allows you to configure global settings
+for the interview session.  You give it keyword arguments for one or
+more settings, and it will save the values for the session.
+
+Currently, there is only one setting available, `variable_access`,
+which turns off the [`get_interview_variables()`] feature on a
+production server.  By default, the [`get_interview_variables()`]
+function can be called from [JavaScript] and all of the variables in
+the interview answers will be returned in [JSON] format.  While this
+function is useful for many applications, it also poses a risk of
+revealing confidential information, particularly in [multi-user
+interviews] where users should not be able to find out other users'
+answers.  Setting `variable_access` to `False` with `set_status()`
+will disable this feature.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  set_status(variable_access=False)
+{% endhighlight %}
+
+However, if your server is a development server (the [`debug`]
+directive in the [Configuration] is set to `True`), then this has no
+effect.
+
+## <a name="get_status"></a>get_status()
+
+If you set a value using `set_status()`, you can retrieve the value
+using `get_status()`.  For example:
+
+{% highlight yaml %}
+field: variable_access_shown
+question: |
+  % if get_status('variable_access') is False:
+  The `get_interview_variables()` function is
+  disabled.
+  % else:
+  The `get_interview_variables()` function is
+  enabled.
+  % endif
+{% endhighlight %}
+
+If a setting has not been set, the function returns `None`.
+
 # <a name="browser"></a>Functions for determining information about the browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
@@ -6530,3 +6576,5 @@ $(document).on('daPageLoad', function(){
 [`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util
 [ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes
+[`get_interview_variables()`]: #js_get_interview_variables
+[`debug`]: {{ site.baseurl }}/docs/config.html#debug
