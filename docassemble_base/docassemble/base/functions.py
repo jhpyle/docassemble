@@ -15,6 +15,7 @@ import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
+from docassemble.base.generate_key import random_string
 import locale
 import decimal
 import docassemble.base.astparser
@@ -552,7 +553,40 @@ def interview_url(**kwargs):
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map(lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1])), args.items()))
+    if 'temporary' in args:
+        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
+            expire_seconds = int(args['temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, False)
+    if 'once_temporary' in args:
+        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
+            expire_seconds = int(args['once_temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, True)
     return url
+
+def temp_redirect(url, expire_seconds, do_local, one_time):
+    if one_time:
+        the_type = 'run_temp_once'
+        the_prefix = 'temporary_url_once'
+    else:
+        the_type = 'run_temp'
+        the_prefix = 'temporary_url'
+    while True:
+        code = random_string(32)
+        the_key = 'da:' + the_prefix + ':' + code
+        if server.server_redis.get(the_key) is None:
+            break
+    pipe = server.server_redis.pipeline()
+    pipe.set(the_key, url)
+    pipe.expire(the_key, expire_seconds)
+    pipe.execute()
+    if do_local:
+        return server.url_for(the_type, c=code)
+    else:
+        return server.url_for(the_type, c=code, _external=True)
 
 def set_parts(**kwargs):
     """Sets parts of the page, such as words in the navigation bar and
@@ -713,6 +747,18 @@ def interview_url_action(action, **kwargs):
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map((lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1]))), args.items()))
+    if 'temporary' in args:
+        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
+            expire_seconds = int(args['temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, False)
+    if 'once_temporary' in args:
+        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
+            expire_seconds = int(args['once_temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, True)
     return url
 
 def interview_url_as_qr(**kwargs):

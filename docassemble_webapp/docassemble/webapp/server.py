@@ -3421,8 +3421,8 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
-        if 'session' in request.cookies:
-            unique_id = str(request.cookies.get('session'))[5:15]
+        if 'session' in req.cookies:
+            unique_id = str(req.cookies.get('session'))[5:15]
         else:
             unique_id = ''
         if unique_id == '':
@@ -3777,6 +3777,29 @@ def load_user(id):
 #     # else:
 #     #     logmessage("post_login: no newsecret")
 #     return response
+
+@app.route('/run', methods=['GET'])
+def run_temp():
+    code = request.args.get('c', None)
+    if code is None:
+        abort(403)
+    the_key = 'da:temporary_url:' + str(code)
+    url = r.get(the_key)
+    if url is None:
+        raise DAError(word("The link has expired."), code=403)
+    return redirect(url)
+
+@app.route('/goto', methods=['GET'])
+def run_temp_once():
+    code = request.args.get('c', None)
+    if code is None:
+        abort(403)
+    the_key = 'da:temporary_url_once:' + str(code)
+    url = r.get(the_key)
+    if url is None:
+        raise DAError(word("The link has expired."), code=403)
+    r.delete(the_key)
+    return redirect(url)
 
 @app.route('/user/autologin', methods=['GET'])
 def auto_login():
@@ -8265,10 +8288,10 @@ def index(action_argument=None):
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#dapeerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="badge badge-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
             }
             else{
-              $("#dapeerMessage").html('<span class="btn btn-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="badge badge-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
             }
             $("#dapeerMessage").removeClass("dainvisible");
           }
@@ -16574,7 +16597,11 @@ def server_error(the_error):
         session['in error'] = True
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
         return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)})
-    return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html), error_code
+    if (not DEBUG) and isinstance(the_error, DAError):
+        show_debug = False
+    else:
+        show_debug = True
+    return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug), error_code
 
 @app.route('/bundle.css', methods=['GET'])
 def css_bundle():
@@ -20424,10 +20451,13 @@ def api_login_url():
             info[key] = post_data[key]
     if len(url_args):
         info['url_args'] = url_args
-    code = random_string(24)
     encryption_key = random_string(16)
     encrypted_text = encrypt_dictionary(info, encryption_key)
-    the_key = 'da:auto_login:' + code
+    while True:
+        code = random_string(24)
+        the_key = 'da:auto_login:' + code
+        if r.get(the_key) is None:
+            break
     pipe = r.pipeline()
     pipe.set(the_key, encrypted_text)
     pipe.expire(the_key, 15)

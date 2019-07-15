@@ -11,7 +11,7 @@
 {%- if verbose %}
 {{ error|safe }}
 
-{%- if historytext != 'None' %}
+{%- if show_debug and historytext != 'None' %}
 
 <h3>{{ word('History') }}</h3>
 
@@ -20,7 +20,7 @@
 <p><a target="_blank" href="{{ url_for('get_variables') }}">{{ word('Show variables and values') }}</a></p>
 {%- endif %}
 
-{%- if logtext != 'None' %}
+{%- if show_debug and logtext != 'None' %}
 
 <h3>{{ word('Log') }}</h3>
 

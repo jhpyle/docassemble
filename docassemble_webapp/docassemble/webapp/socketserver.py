@@ -67,10 +67,17 @@ def obtain_lock(user_code, filename):
     pipe.set(key, 1)
     pipe.expire(key, 4)
     pipe.execute()
-    
+
 def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     rr.delete(key)
+
+@app.teardown_appcontext
+def close_db(error):
+    sys.stderr.write("Teardown of app context\n")
+    if hasattr(db, 'engine'):
+        sys.stderr.write("Tearing down\n")
+        db.engine.dispose()
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
     if user_id is not None:
@@ -89,12 +96,13 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             the_timezone = pytz.timezone(person.timezone)
         else:
             the_timezone = pytz.timezone(get_default_timezone())
-        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
 
-        partners = set()
-        pubsub = r.pubsub()
-        pubsub.subscribe([sid])
-        for item in pubsub.listen():
+    partners = set()
+    pubsub = r.pubsub()
+    pubsub.subscribe([sid])
+    for item in pubsub.listen():
+        with app.app_context():
             sys.stderr.write("0\n" + repr(item) + "\n")
             if item['type'] != 'message':
                 continue
@@ -163,7 +171,7 @@ def interview_start_being_controlled(message):
 def handle_message(message):
     socketio.emit('mymessage', {'data': "Hello"}, namespace='/wsinterview', room=request.sid)
     #sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
-    
+
 @socketio.on('chat_log', namespace='/wsinterview')
 def chat_log(message):
     user_dict = get_dict()
@@ -183,7 +191,7 @@ def chat_log(message):
         temp_user_id = int(temp_user_id)
     secret = request.cookies.get('secret', None)
     if secret is not None:
-        secret = str(secret)    
+        secret = str(secret)
     #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
     socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
@@ -270,7 +278,7 @@ def on_interview_reconnect(data):
     interview_connect()
     rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
     socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
-    
+
 def interview_connect():
     session_id = session.get('uid', None)
     if session_id is not None:
@@ -285,7 +293,7 @@ def interview_connect():
             sys.stderr.write("user_dict did not exist.\n")
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
-        
+
         chat_info = user_dict['_internal']['livehelp']
         if chat_info['availability'] == 'unavailable':
             sys.stderr.write("Socket started but chat is unavailable.\n")
@@ -299,7 +307,7 @@ def interview_connect():
 
         yaml_filename = session.get('i', None)
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
-        
+
         if request.sid not in threads:
             #sys.stderr.write('Starting thread for sid ' + str(request.sid) + "\n")
             threads[request.sid] = socketio.start_background_task(target=background_thread, sid=request.sid, user_id=session.get('user_id', None), temp_user_id=session.get('tempuser', None))
@@ -423,11 +431,12 @@ def monitor_thread(sid=None, user_id=None):
             the_timezone = pytz.timezone(person.timezone)
         else:
             the_timezone = pytz.timezone(get_default_timezone())
-        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
-        listening_sids = set()
-        pubsub = r.pubsub()
-        pubsub.subscribe(['da:monitor', sid])
-        for item in pubsub.listen():
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
+    listening_sids = set()
+    pubsub = r.pubsub()
+    pubsub.subscribe(['da:monitor', sid])
+    for item in pubsub.listen():
+        with app.app_context():
             sys.stderr.write("1\n" + repr(item) + "\n")
             if item['type'] != 'message':
                 continue
@@ -561,7 +570,7 @@ def monitor_block(data):
     else:
         sys.stderr.write("Could not block because could not get sid\n")
     socketio.emit('block', {'key': key}, namespace='/monitor', room=request.sid)
-    
+
 @socketio.on('unblock', namespace='/monitor')
 def monitor_unblock(data):
     if 'monitor' not in session:
@@ -806,7 +815,7 @@ def monitor_chat_message(data):
     modtime = nice_utc_date(nowtime)
     rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
     #sys.stderr.write('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
-    
+
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
     if 'monitor' not in session:
@@ -865,12 +874,12 @@ def monitor_chat_log(data):
 #observer
 
 def observer_thread(sid=None, key=None):
-    with app.app_context():
-        sys.stderr.write("Started observer thread for " + str(sid) + "\n")
-        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
-        pubsub = r.pubsub()
-        pubsub.subscribe([key, sid])
-        for item in pubsub.listen():
+    sys.stderr.write("Started observer thread for " + str(sid) + "\n")
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
+    pubsub = r.pubsub()
+    pubsub.subscribe([key, sid])
+    for item in pubsub.listen():
+        with app.app_context():
             sys.stderr.write("2\n" + repr(item) + "\n")
             if item['type'] != 'message':
                 continue
@@ -1015,7 +1024,7 @@ def on_observer_disconnect():
         sys.stderr.write("Calling controllerexit 2");
         rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
-    
+
 @socketio.on('terminate', namespace='/observer')
 def terminate_observer_connection():
     sys.stderr.write("terminate_observer_connection\n")

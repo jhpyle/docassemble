@@ -5956,6 +5956,7 @@ class Interview:
                             pass
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
+                        docassemble.base.functions.this_thread.current_question = question
                         exec_with_trap(question, user_dict)
                         interview_status.mark_tentative_as_answered(user_dict)
                         if missing_var in variable_stack:
