@@ -432,7 +432,7 @@ there is no "Help" tab in the navigation bar (i.e. because no
 user will be able to access the "help" tab by clicking the live chat
 icon:
 
-![chat-green-icon]({{ site.baseurl }}/img/chat-green-icon.png)
+![Chat icon]({{ site.baseurl }}/img/chat-grey-icon.png)
 
 ## An example
 
@@ -606,9 +606,7 @@ which is the country code for the United States, and must then be
 followed by the area code and the rest of the phone number.
 
 Once the phone number is entered, and it is not invalid, buttons for
-activating call forwarding will appear within each session.  When call
-forwarding is not available, the button looks like
-![phone-button-grey]({{ site.baseurl }}/img/phone-button-grey.png).
+activating call forwarding will appear within each session.
 
 After the operator clicks the button, the operator's screen will look
 like this, indicating that telephone calls with the first session are enabled.

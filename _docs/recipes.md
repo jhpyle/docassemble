@@ -433,6 +433,60 @@ would result in a pickling error.  If the `docx` variable only existed
 inside of a function in a module, there would be no problem with
 [pickling].
 
+# <a name="idle"></a>Log out a user who has been idle for too long
+
+Create a static file called `idle.js` with the following contents.
+
+{% highlight javascript %}
+var idleTime = 0;
+var idleInterval;
+$(document).on('daPageLoad', function(){
+    idleInterval = setInterval(idleTimerIncrement, 60000);
+    $(document).mousemove(function (e) {
+        idleTime = 0;
+    });
+    $(document).keypress(function (e) {
+        idleTime = 0;
+    });
+});
+
+function idleTimerIncrement() {
+    idleTime = idleTime + 1;
+    if (idleTime > 60){
+        url_action_perform('log_user_out');
+        clearInterval(idleInterval);
+    }
+}
+{% endhighlight %}
+
+In your interview, include `idle.js` in a [`features`] block.
+
+{% highlight yaml %}
+features:
+  javascript: idle.js
+---
+mandatory: True
+code: |
+  welcome_screen_seen
+  final_screen
+---
+question: |
+  Welcome to the interview.
+field: welcome_screen_seen
+---
+event: final_screen
+question: |
+  You are done with the interview.
+---
+event: log_user_out
+code: |
+  command('logout')
+{% endhighlight %}
+
+This logs the user out after 60 minutes of inactivity in the browser.
+To use a different number of minutes, edit the line 
+`if (idleTime > 60){`.
+
 [core document properties]: https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html
 [pickled]: https://docs.python.org/3/library/pickle.html
 [pickling]: https://docs.python.org/3/library/pickle.html
@@ -446,4 +500,5 @@ inside of a function in a module, there would be no problem with
 [`object` datatype]: {{ site.baseurl }}/docs/fields.html#object
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`code`]: {{ site.baseurl }}/docs/code.html
+[`features`]: {{ site.baseurl }}/docs/initial.html#javascript
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

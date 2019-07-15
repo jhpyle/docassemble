@@ -5428,17 +5428,11 @@
   subquestion: |
     To invite someone else to complete
     this interview, ask them to go to
-    the following URL:
-    ${ interview_url() }
+    [this URL](${ interview_url() }).
 
     To proceed with the interview,
     click "Yes."
   yesno: ready_to_proceed
-  ---
-  question: All done
-  subquestion: |
-    Now we are done with the interview.
-  sets: final_screen
 "interview-url-refer": |-
   mandatory: true
   question: |
@@ -5476,6 +5470,22 @@
   subquestion: |
     Now we are done with the interview.
   event: all_done
+"interview-url-temp": |-
+  mandatory: True
+  code: |
+    multi_user = True
+  ---
+  question: |
+    Ready to proceed?
+  subquestion: |
+    To invite someone else to complete
+    this interview, ask them to go to
+    [this URL](${ interview_url(temporary=1) })
+    within the next hour.
+
+    To proceed with the interview,
+    click "Yes."
+  yesno: ready_to_proceed
 "interview-vegetables": |-
   question: |
     What is your favorite vegetable?

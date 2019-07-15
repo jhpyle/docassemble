@@ -961,6 +961,8 @@ provides a direct link to the interview and the current variable
 store.  This is used in [multi-user interviews] to invite additional
 users to participate.
 
+{% include side-by-side.html demo="interview-url" %}
+
 People who click on the link (other than the current user) will not be
 able to access the interview answers unless [`multi_user`] is set to
 `True`.  This is because interviews are encrypted on the server by
@@ -994,11 +996,39 @@ underlying URL is relative.  However, **docassemble** treats URLs
 differently if they begin with `http:`/`https:` or `?`: links that
 begin with `http` will open in another tab.
 
+There are security risks with URLs created using `interview_url()`.
+The URLs contain a `session` key, and if `multi_user` is `True`,
+anyone with that `session` key can access the interview session.  If
+you e-mail the result of `interview_url()`, the `session` key may be
+stored permanently in the person's e-mail account, where a third party
+may see it.
+
+One way around this potential security risk is to set the keyword argument
+`temporary`.  Then a special URL will be returned, which will contain
+a code that will expire after a certain number of hours.  For example,
+if you add `temporary=48` to the keyword arguments, the link will
+expire after 48 hours.  When the user clicks visits the link, the user
+will be redirected to the location that `interview_url()` would return
+if `temporary` was not set.  By using a temporary URL, you will avoid
+sharing the actual session ID, and you will protect against any
+unauthorized access that would take place after 48 hours have expired.
+
+{% include side-by-side.html demo="interview-url-temp" %}
+
+If you set `temporary` to `0` or to a non-number, the expiration
+period will default to 24 hours.
+
+You can add additional security by using the keyword argument
+`once_temporary` instead of the keyword argument `temporary`.  This
+works the same way as `temporary`, except the link will also expire
+immediately after it is used for the first time.
+
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
-Like `interview_url()`, except it inserts into the markup a [QR code]
-linking to the interview.  The resulting [QR code] can be used to pass
-control from a web browser or a paper handout to a mobile device.
+`interview_url_as_qr()` is like `interview_url()`, except it inserts
+into the markup a [QR code] linking to the interview.  The resulting
+[QR code] can be used to pass control from a web browser or a paper
+handout to a mobile device.
 
 ## <a name="interview_url_action"></a>interview_url_action()
 
@@ -1016,12 +1046,14 @@ be embedded in a URL.
 
 ## <a name="interview_url_action_as_qr"></a>interview_url_action_as_qr()
 
-Like `interview_url_action()`, except it inserts into the markup a
-[QR code] linking to the interview, with the specified actions.
+`interview_url_action_as_qr()` is like `interview_url_action()`,
+except it inserts into the markup a [QR code] linking to the
+interview, with the specified actions.
 
 Note that there is a limit to the number of characters a [QR code] can
 hold, and you might run up against this limit if you try to add too
-many arguments to the URL.
+many arguments to the URL.  Using the `temporary` keyword parameter is
+one way around this limitation.
 
 ## <a name="action_arguments"></a>action_arguments()
 

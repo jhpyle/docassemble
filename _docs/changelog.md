@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.62](https://github.com/jhpyle/docassemble/releases/tag/v0.4.62) - 2019-07-14
+
+### Added
+- The `temporary` and `once_temporary` options to the
+  `interview_url()` and related functions.
+
+### Fixed
+- Too many monitor connections led to SQL error.
+- Some functions did not work in actions.
+
 ## [0.4.61](https://github.com/jhpyle/docassemble/releases/tag/v0.4.61) - 2019-07-10
 
 ### Added
