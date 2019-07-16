@@ -454,6 +454,23 @@ For other session restarting options, see the `'restart'` and
 `'new_session'` options for the [`url_of()`] and [`command()`]
 functions, and the `restart` and `new_session` [special buttons].
 
+## <a name="resume"></a>Resuming an interview with a POST request
+
+If you do not want your users' browsers to pass a session ID as a URL
+parameter (`session`) to a [GET] request to `/interview`, you can
+cause the user's browser to send a [POST] request to `/resume` with
+the following parameters:
+
+* `i` containing the name of the interview (e.g.,
+  `docassemble.mypackage:data/questions/myinterview.yml`)
+* `session` containing the session ID of the session.
+
+The server will respond with a 302 redirect to `/interview`.  All
+parameters that you pass to [POST], except for `session`, will become
+URL parameters of the [GET] request that the browser will send after
+the redirect.  Thus you can set [`url_args`] using the parameters of
+the [POST] request to `/resume`.
+
 # <a name="howstored"></a>How answers are stored
 
 When a user starts a new interview, a new "variable store" is created.
@@ -856,3 +873,6 @@ For more information about [YAML], see the [YAML specification].
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domain
+[GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
+[POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+[`url_args`]: {{ site.baseurl }}/docs/special.html#url_args

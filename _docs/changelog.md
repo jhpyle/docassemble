@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.63](https://github.com/jhpyle/docassemble/releases/tag/v0.4.63) - 2019-07-16
+
+### Added
+- The `/resume` endpoint.
+
+### Fixed
+- Unpickleable object added to the document cache in the internal
+  variables.
+
 ## [0.4.62](https://github.com/jhpyle/docassemble/releases/tag/v0.4.62) - 2019-07-14
 
 ### Added
