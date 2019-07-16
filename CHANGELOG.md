@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.4.63] - 2019-07-16
+### Added
+- The `/resume` endpoint.
+### Fixed
+- Unpickleable object added to the document cache in the internal
+  variables.
+
 ## [0.4.62] - 2019-07-14
 ### Added
 - The `temporary` and `once_temporary` options to the

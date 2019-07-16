@@ -79,8 +79,11 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
 fi
 
 function stopfunc {
+    echo "Sending stop command"
     /usr/sbin/apache2ctl stop
+    echo "Waiting for apache to stop"
     while pgrep apache2 > /dev/null; do sleep 1; done
+    echo "Apache stopped"
     exit 0
 }
 

@@ -5046,6 +5046,24 @@ def test_embed():
     scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(interview_status, yaml_filename) + global_js
     return render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True)), 200
 
+@app.route("/resume", methods=['POST'])
+@csrf.exempt
+def resume():
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    if 'session' not in post_data or 'i' not in post_data:
+        abort(403)
+    session['uid'] = post_data['session']
+    session['i'] = post_data['i']
+    del post_data['session']
+    if 'ajax' in post_data:
+        ajax_value = int(post_data['ajax'])
+        del post_data['ajax']
+        if ajax_value:
+            return jsonify(action='redirect', url=url_for('index', **post_data), csrf_token=generate_csrf())
+    return redirect(url_for('index', **post_data))
+
 @app.route("/interview", methods=['POST', 'GET'])
 def index(action_argument=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):

@@ -4185,9 +4185,9 @@ class Question:
                             if hasattr(the_dafile, 'number'):
                                 file_dict[doc_format] = the_dafile.number
                     if 'formats' not in the_att.info:
-                        the_att.info['formats'] = file_dict.keys()
+                        the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
-                            the_att.info['valid_formats'] = file_dict.keys()
+                            the_att.info['valid_formats'] = list(file_dict.keys())
                     result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str()})
                     #convert_to_pdf_a
                     #file is dict of file numbers
