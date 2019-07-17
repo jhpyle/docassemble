@@ -7803,7 +7803,7 @@ def index(action_argument=None):
                 daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#dauploadiframe").contents().text())), form, 1);
               }
               catch (e){
-                daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML);
+                daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML, e);
               }
             }, 0);
           });
@@ -7950,8 +7950,8 @@ def index(action_argument=None):
           }
         }
       });
-      function daShowErrorScreen(data){
-        console.log('daShowErrorScreen');
+      function daShowErrorScreen(data, error){
+        console.log('daShowErrorScreen: ' + error);
         if ("activeElement" in document){
           document.activeElement.blur();
         }
