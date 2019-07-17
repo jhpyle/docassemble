@@ -7534,8 +7534,8 @@ def index(action_argument=None):
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daUnfakeHtmlResponse(text){
-        text = text.replace(/^.*ABCDABOUNDARYSTARTABC/, '');
-        text = text.replace(/ABCDABOUNDARYENDABC.*/, '').replace(/\s/g, '');;
+        text = text.substr(text.indexOf('ABCDABOUNDARYSTARTABC'));
+        text = text.substr(0, text.indexOf('ABCDABOUNDARYENDABC')).replace(/\s/g, '');
         text = atob(text);
         return text;
       }

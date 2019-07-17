@@ -10,6 +10,7 @@ import re
 import sys
 import shutil
 import time
+import fcntl
 from io import open
 
 from distutils.version import LooseVersion
@@ -28,6 +29,12 @@ if supervisor_url:
     USING_SUPERVISOR = True
 else:
     USING_SUPERVISOR = False
+
+def fix_fnctl():
+    flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
+    fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+    flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
+    fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
 
 def remove_inactive_hosts():
     from docassemble.base.config import hostname
@@ -479,6 +486,7 @@ def install_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
@@ -511,6 +519,7 @@ def uninstall_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
