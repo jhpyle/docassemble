@@ -30,9 +30,11 @@ as possible.
 
 then you get text that looks like this:
 
-> It is *very* important that you obtain your
-> [free credit report](https://www.annualcreditreport.com) as soon
-> as possible.
+<blockquote class="blockquote">
+It is <strong>very</strong> important that you obtain your 
+<a href="https://www.annualcreditreport.com">free credit report</a> 
+as soon as possible.
+</blockquote>
 
 [Python] is a language designed to be readable and easy to learn.
 Interview developers do not need to have any prior experience with
@@ -57,9 +59,10 @@ knowledgeable developers on the [**docassemble** Slack group].  If you
 find a bug, you can [submit an issue on GitHub].  You can also [e-mail
 the developer].
 
-In June 2018 and June 2019, the **docassemble** community convened for <a
-href="https://docacon.com">Docacon</a>, a one-day docassemble
-conference.
+In June 2018 and June 2019, the **docassemble** community convened for
+<a href="https://docacon.com">Docacon</a>, a one-day docassemble
+conference.  There have been sessions on **docassemble** at a variety
+of conferences on law and technology.
 
 [get help]: {{ site.baseurl }}/docs/support.html
 [documentation]: {{ site.baseurl }}/docs.html

@@ -61,8 +61,8 @@ code: |
     jurisdiction_is_proper = True
 {% endhighlight %}
 
-If you want, you can even use "fuzzy logic" with **docassemble**'s
-[Machine Learning] feature.
+You can even use "fuzzy logic" with **docassemble**'s [Machine
+Learning] feature.
 
 **docassemble** decides which questions to ask, and the order in which
 to ask them, according to the [Interview Logic].  You can specify the
@@ -71,7 +71,8 @@ specify an end goal and let **docassemble** figure everything out on
 its own.
 
 A popular use of interviews is the assembly of [Documents] (hence the
-name **docassemble**).  You write documents the same way you write
+name **docassemble**).  You can write document templates in [DOCX] or
+[PDF] formats.  You can also write documents the same way you write
 questions, in plain text with [Markup] to indicate formatting.
 
 As your interviews become more sophisticated, you will find it useful
@@ -137,8 +138,9 @@ the operator's actual phone number.
 System administrators will be pleased to know that **docassemble** has
 excellent [Scalability] when deployed in the cloud.
 
-Lawyers will be pleased to know that **docassemble** has a number of
-[Security] features, such as server-side encryption.
+If your interviews will work with sensitive information, you may be
+interested to know that **docassemble** has a number of [Security]
+features, such as server-side encryption.
 
 Developers will invariably make mistakes and encounter [Errors].
 **docassemble** tries to provide helpful error messages in the browser
@@ -238,3 +240,5 @@ to decide to ask that question.
 [touchscreen signatures]: {{ site.baseurl }}/docs/fields.html#signature
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [Deploy]: {{ site.baseurl }}/deploy.html
+[DOCX]: {{ site.baseurl }}/docs/documents.html#docx template file
+[PDF]: {{ site.baseurl }}/docs/documents.html#pdf template file

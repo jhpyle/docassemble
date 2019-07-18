@@ -5190,13 +5190,37 @@ object of type [`DARedis`].  This object can now be used to
 communicate with the redis server, much as though it had been created
 by calling `redis.StrictRedis()`.
 
-## <a name="sql"></a>With SQL
+## <a name="dastore"></a>With SQL
 
 Since [Redis] is an [in-memory database], it is not appropriate for
 long-term storage or for the storage of large amounts of data.
 
-An alternative is to store data in SQL.  **docassemble** provides three
-functions that allow you to store, retrieve, and delete data.
+An alternative is to store data in SQL.  **docassemble** provides
+an object called [`DAStore`] that is similar to [`DARedis`], except it
+uses SQL instead of [Redis], and it supports encryption.
+
+{% include side-by-side.html demo="dastore" %}
+
+In the above example, the user's preferences are stored in the
+database using a key that is specific to the user.  The first time the
+user uses the interview, the user is asked for their favorite fruit.
+If the user restarts the interview (which permanently erases the
+interview answers), the user's favorite fruit will be retrieved from
+the `DAStore`, and it will not need to be asked of the user.  The
+object stored in the database is a [`DAObject`], and the favorite
+fruit is an attribute of that object.  In the database, the object is
+stored under key called `prefs`.  This key is specific to the user, so
+that each user will have their own personal `prefs` entry in the
+database.
+
+For more information, see the [`DAStore`] documentation.
+
+### <a name="sql">write_record(), read_record(), and delete_record()</a>
+
+There are also three functions, `write_record()`, `read_record()`, and
+`delete_record()`, for managing data in SQL.  These functions are
+useful when you want to store a list of one or more "records" under a
+single "key."  Encryption is not used.
 
 {% include side-by-side.html demo="database_storage" %}
 
@@ -5228,7 +5252,7 @@ names you choose.
 `write_record()` by converting any item that cannot be [pickled] to
 `None`.
 
-### <a name="sql example"></a>Example of using stored objects
+### <a name="sql example"></a>Example of using stored objects with write_record()
 
 Suppose you have an interview that your user might complete several
 times for different situations, but you do not want the user to have
@@ -6610,3 +6634,4 @@ $(document).on('daPageLoad', function(){
 [country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes
 [`get_interview_variables()`]: #js_get_interview_variables
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug
+[`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
