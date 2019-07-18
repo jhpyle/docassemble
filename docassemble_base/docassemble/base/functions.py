@@ -3432,7 +3432,7 @@ def indent(text, by=None):
     ensure_definition(text, by)
     if by is None:
         by = 4
-    text = " " * 4 + text_type(text)
+    text = " " * by + text_type(text)
     text = re.sub(r'\r', '', text)
     text = re.sub(r'\n', '\n' + (" " * by), text)
     return text

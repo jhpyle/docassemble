@@ -1,8 +1,8 @@
-import { buildLineContent } from "../line/line_data"
-import { lineNumberFor } from "../line/utils_line"
-import { ie, ie_version } from "../util/browser"
-import { elt } from "../util/dom"
-import { signalLater } from "../util/operation_group"
+import { buildLineContent } from "../line/line_data.js"
+import { lineNumberFor } from "../line/utils_line.js"
+import { ie, ie_version } from "../util/browser.js"
+import { elt } from "../util/dom.js"
+import { signalLater } from "../util/operation_group.js"
 
 // When an aspect of a line changes, a string is added to
 // lineView.changes. This updates the relevant part of the line's
@@ -113,8 +113,8 @@ function updateLineGutter(cm, lineView, lineN, dims) {
         elt("div", lineNumberFor(cm.options, lineN),
             "CodeMirror-linenumber CodeMirror-gutter-elt",
             `left: ${dims.gutterLeft["CodeMirror-linenumbers"]}px; width: ${cm.display.lineNumInnerWidth}px`))
-    if (markers) for (let k = 0; k < cm.options.gutters.length; ++k) {
-      let id = cm.options.gutters[k], found = markers.hasOwnProperty(id) && markers[id]
+    if (markers) for (let k = 0; k < cm.display.gutterSpecs.length; ++k) {
+      let id = cm.display.gutterSpecs[k].className, found = markers.hasOwnProperty(id) && markers[id]
       if (found)
         gutterWrap.appendChild(elt("div", [found], "CodeMirror-gutter-elt",
                                    `left: ${dims.gutterLeft[id]}px; width: ${dims.gutterWidth[id]}px`))

@@ -1,10 +1,12 @@
-bootstrap-slider [![Build Status](https://travis-ci.org/seiyria/bootstrap-slider.png?branch=master)](https://travis-ci.org/seiyria/bootstrap-slider) [![Code Climate](https://codeclimate.com/github/seiyria/bootstrap-slider/badges/gpa.svg)](https://codeclimate.com/github/seiyria/bootstrap-slider)
+bootstrap-slider [![Build Status](https://travis-ci.org/seiyria/bootstrap-slider.png?branch=master)](https://travis-ci.org/seiyria/bootstrap-slider)
 ================
 Originally began as a loose "fork" of bootstrap-slider found on http://www.eyecon.ro/ by Stefan Petre.
 
 Over time, this project has diverged sigfinicantly from Stefan Petre's version and is now almost completely different.
 
 __Please ensure that you are using this library instead of the Petre version before creating issues in the repository issue tracker!!__
+
+__Note also that Bootstrap 4 is not yet supported, see issue [#689](https://github.com/seiyria/bootstrap-slider/issues/689).__
 
 Installation
 ============
@@ -91,7 +93,7 @@ turns it into a slider. Options can be supplied via `data-slider-` attributes.
 What if there is already a _slider_ plugin bound to the JQuery namespace?
 ======================
 
-If there is already a JQuery plugin named _slider_ bound to the JQuery namespace, then this plugin will emit a console warning telling you this namespace has already been taken and will encourage you to use the alternate namespace _bootstrapSlider_ instead.
+If there is already a JQuery plugin named _slider_ bound to the JQuery namespace, then this plugin will provide an alternative namespace _bootstrapSlider_ and will emit a console warning telling you the _slider_ namespace has already been taken and will encourage you to use the alternate namespace instead. If the _slider_ namespace is available however, the _bootstrapSlider_ namespace will not exist.
 
 ```js
 // Instantiate a slider
@@ -195,10 +197,11 @@ Options can be passed either as a data (data-slider-foo) attribute, or as part o
 | ticks_labels | array | [ ] | Defines the labels below the tick marks. Accepts HTML input. |
 | ticks_snap_bounds | float | 0 | Used to define the snap bounds of a tick. Snaps to the tick if value is within these bounds. |
 | ticks_tooltip | bool | false | Used to allow for a user to hover over a given tick to see it's value. Useful if custom formatter passed in |
-| scale | string | 'linear' | Set to 'logarithmic' to use a logarithmic scale. |
+| scale | string | 'linear' | Set to 'logarithmic' to use a logarithmic scale. Logarithmic scales will be calculated based on the difference between min to max; e.g. (0..10000) (-100..9900) both have a net range of 10001 and will slide in the same net increments. |
 | focus | bool | false | Focus the appropriate slider handle after a value change. |
 | labelledby | string,array | null | ARIA labels for the slider handle's, Use array for multiple values in a range slider. |
 | rangeHighlights | array | [] | Defines a range array that you want to highlight, for example: [{'start':val1, 'end': val2, 'class': 'optionalAdditionalClassName'}]. |
+| lock_to_ticks | bool | false | Lock the selection to the values defined at ticks array. |
 
 Functions
 =========
@@ -216,7 +219,7 @@ __NOTE:__ Optional parameters are italicized.
 | isEnabled | --- |Returns true if enabled, false if disabled |
 | setAttribute | attribute, value | Updates the slider's [attributes](#options) |
 | getAttribute | attribute | Get the slider's [attributes](#options) |
-| refresh | --- | Refreshes the current slider |
+| refresh | _options_ | Refreshes the current slider and resets the slider's value to its default value on initial setup. To override this behaviour and instead maintain the slider's current value, pass the optional `options` parameter with the property `useCurrentValue` set to `true` (eg. `refresh({ useCurrentValue: true })`. |
 | on | eventType, callback | When the slider event _eventType_ is triggered, the callback function will be invoked |
 | off | eventType, callback | Removes the callback function from the slider event _eventType_ |
 | relayout | --- | Renders the tooltip again, after initialization. Useful in situations when the slider and tooltip are initially hidden. |
@@ -263,6 +266,8 @@ The following is a list of the commonly-used command line tasks:
 
 Version Bumping and Publishing (Maintainers Only)
 =======
+For versioning rules, we follow the [Semver convention](https://semver.org/).
+
 To do the following release tasks:
 * bump the version
 * publish a new version to NPM
@@ -289,6 +294,7 @@ Other Platforms & Libraries
 - [Ruby on Rails](https://github.com/YourCursus/bootstrap-slider-rails)
 - [knockout.js](https://github.com/cosminstefanxp/bootstrap-slider-knockout-binding) ([@cosminstefanxp](https://github.com/cosminstefanxp), [#81](https://github.com/seiyria/bootstrap-slider/issues/81))
 - [AngularJS](https://github.com/seiyria/angular-bootstrap-slider)
+- [Angular](https://github.com/moritzvieli/ngx-bootstrap-slider) ([@moritzvieli](https://github.com/moritzvieli))
 - [EmberJS](https://github.com/lifegadget/ui-slider) ([@ksnyde](https://github.com/ksnyde))
 - [ReactJS](https://github.com/brownieboy/react-bootstrap-slider)
 - [NuGet](https://www.nuget.org/packages/bootstrap-slider/) ([@ChrisMissal](https://github.com/ChrisMissal))

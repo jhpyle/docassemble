@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.4.64] - 2019-07-17
+### Changed
+- Upgraded CSS and JavaScript dependencies.
+### Fixed
+- JavaScript for file uploads was incompatible with a Firefox add-on.
+- Error during initialize process possibly caused by stderr being made
+  non-blocking.
+- Bug in `indent()` function.
+- File upload previews shown twice under certain circumstances due to
+  `show if` JavaScript.
+
 ## [0.4.63] - 2019-07-16
 ### Added
 - The `/resume` endpoint.

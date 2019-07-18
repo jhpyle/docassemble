@@ -31,10 +31,18 @@ else:
     USING_SUPERVISOR = False
 
 def fix_fnctl():
-    flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
-    fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
-    flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
-    fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+    try:
+        flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stdout\n")
+    except:
+        pass
+    try:
+        flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stderr\n")
+    except:
+        pass
 
 def remove_inactive_hosts():
     from docassemble.base.config import hostname

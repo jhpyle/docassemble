@@ -7534,7 +7534,7 @@ def index(action_argument=None):
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daUnfakeHtmlResponse(text){
-        text = text.substr(text.indexOf('ABCDABOUNDARYSTARTABC'));
+        text = text.substr(text.indexOf('ABCDABOUNDARYSTARTABC') + 21);
         text = text.substr(0, text.indexOf('ABCDABOUNDARYENDABC')).replace(/\s/g, '');
         text = atob(text);
         return text;
@@ -9007,7 +9007,7 @@ def index(action_argument=None):
               var daThis = this;
               if (!daShowIfInProcess){
                 daShowIfInProcess = true;
-                $(":input").each(function(){
+                $(":input").not("[type='file']").each(function(){
                   if (this != daThis){
                     $(this).trigger('change');
                   }
@@ -9034,18 +9034,13 @@ def index(action_argument=None):
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
-            //console.log("Set showIfVarEscaped " + showIfVar + " to alternate, " + daVarLookup[showIfVar]);
             showIfVar = daVarLookup[showIfVar];
             showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
-          //console.log("showIfVar is now " + showIfVar);
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
-          //var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
-          //console.log("Processing saveAs " + atob(saveAs) + " with showIfVar " + atob(showIfVar));
           var showHideDiv = function(speed){
-            //console.log("showHideDiv for saveAs " + atob(saveAs) + " with showIfVar " + showIfVar);
             var theVal;
             var showifParents = $(this).parents(".dashowif");
             if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
@@ -9084,43 +9079,33 @@ def index(action_argument=None):
             }
             //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
             if(daShowIfCompare(theVal, showIfVal)){
-              //console.log("They are the same");
               if (showIfSign){
-                //console.log("Showing1!");
-                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
-                //console.log("Hiding1!");
-                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
             else{
-              //console.log("They are not the same");
               if (showIfSign){
-                //console.log("Hiding2!");
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
-                //$(showIfDiv).addClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
-                //console.log("Showing2!");
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
-                //$(showIfDiv).removeClass("dainvisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
             var daThis = this;
             if (!daShowIfInProcess){
               daShowIfInProcess = true;
-              $(":input").each(function(){
+              $(":input").not("[type='file']").each(function(){
                 if (this != daThis){
                   $(this).trigger('change');
                 }
@@ -9134,7 +9119,6 @@ def index(action_argument=None):
           var showHideDivFast = function(){
             showHideDiv.apply(this, ['fast']);
           }
-          //console.log("showIfVarEscaped is #" + showIfVarEscaped);
           $("#" + showIfVarEscaped).each(showHideDivImmediate);
           $("#" + showIfVarEscaped).change(showHideDivFast);
           $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
@@ -10779,56 +10763,161 @@ def observer():
           event.preventDefault();
           $('#daquestionlabel').tab('show');
         });
+        daShowIfInProcess = true;
+        daValLookup = Object();
+        $(".dajsshowif").each(function(){
+          var showIfDiv = this;
+          var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
+          var showIfSign = jsInfo['sign'];
+          var jsExpression = jsInfo['expression'];
+          var n = jsInfo['vars'].length;
+          for (var i = 0; i < n; ++i){
+            var showIfVar = btoa(jsInfo['vars'][i]);
+            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
+              showIfVar = daVarLookup[showIfVar];
+              showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            }
+            var varList = $("[name='" + showIfVarEscaped + "']");
+            if (varList.length == 0){
+              varList = $("input[type='radio'][name='" + showIfVarEscaped + "']");
+            }
+            if (varList.length == 0){
+              varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
+            }
+            if (varList.length > 0){
+              daValLookup[jsInfo['vars'][i]] = varList[0];
+            }
+            else{
+              console.log("ERROR: could not set " + jsInfo['vars'][i]);
+            }
+            var showHideDiv = function(speed){
+              var resultt = eval(jsExpression);
+              if(resultt){
+                if (showIfSign){
+                  $(showIfDiv).show(speed);
+                  $(showIfDiv).data('isVisible', '1');
+                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                }
+                else{
+                  $(showIfDiv).hide(speed);
+                  $(showIfDiv).data('isVisible', '0');
+                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                }
+              }
+              else{
+                if (showIfSign){
+                  $(showIfDiv).hide(speed);
+                  $(showIfDiv).data('isVisible', '0');
+                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                }
+                else{
+                  $(showIfDiv).show(speed);
+                  $(showIfDiv).data('isVisible', '1');
+                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                }
+              }
+              var daThis = this;
+              if (!daShowIfInProcess){
+                daShowIfInProcess = true;
+                $(":input").not("[type='file']").each(function(){
+                  if (this != daThis){
+                    $(this).trigger('change');
+                  }
+                });
+                daShowIfInProcess = false;
+              }
+            };
+            var showHideDivImmediate = function(){
+              showHideDiv.apply(this, [null]);
+            }
+            var showHideDivFast = function(){
+              showHideDiv.apply(this, ['fast']);
+            }
+            $("#" + showIfVarEscaped).each(showHideDivImmediate);
+            $("#" + showIfVarEscaped).change(showHideDivFast);
+            $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+          }
+        });
         $(".dashowif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
           var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
+            showIfVar = daVarLookup[showIfVar];
+            showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          }
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
-          //var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(speed){
-            if($(this).parents(".dashowif").length !== 0){
-              return;
-            }
             var theVal;
-            if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
+            var showifParents = $(this).parents(".dashowif");
+            if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
+              theVal = '';
+              //console.log("Setting theVal to blank.");
+            }
+            else if ($(this).attr('type') == "checkbox"){
               theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+              if (typeof(theVal) == 'undefined'){
+                //console.log('manually setting checkbox value to False');
+                theVal = 'False';
+              }
+            }
+            else if ($(this).attr('type') == "radio"){
+              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+              if (typeof(theVal) == 'undefined'){
+                theVal = '';
+              }
+              else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
+                try{
+                  theVal = atob(theVal);
+                }
+                catch(e){
+                }
+              }
             }
             else{
               theVal = $(this).val();
+              if (theVal != '' && $(this).hasClass("daobject")){
+                try{
+                  theVal = atob(theVal);
+                }
+                catch(e){
+                }
+              }
             }
-            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
-            if($(this).parent().is(":visible") && daShowIfCompare(theVal, showIfVal)){
-              //console.log("They are the same");
+            if(daShowIfCompare(theVal, showIfVal)){
               if (showIfSign){
                 $(showIfDiv).show(speed);
-                //$(showIfDiv).removeClass("dainvisible");
+                $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
               else{
                 $(showIfDiv).hide(speed);
-                //$(showIfDiv).addClass("dainvisible");
+                $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
             }
             else{
-              //console.log("They are not the same");
               if (showIfSign){
                 $(showIfDiv).hide(speed);
-                //$(showIfDiv).addClass("dainvisible");
+                $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
               }
               else{
                 $(showIfDiv).show(speed);
-                //$(showIfDiv).removeClass("dainvisible");
+                $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
               }
             }
             var daThis = this;
             if (!daShowIfInProcess){
               daShowIfInProcess = true;
-              $(":input").each(function(){
+              $(":input").not("[type='file']").each(function(){
                 if (this != daThis){
                   $(this).trigger('change');
                 }
@@ -16827,6 +16916,12 @@ def docx_variable_fix(variable):
     variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
     return variable
 
+def sanitize(default):
+    default = re.sub(r'\n?\r\n?', "\n", text_type(default))
+    if re.search(r'[\n\r\"\'\[\]\{\}]+', default):
+        return "|\n" + docassemble.base.functions.indent(default, by=10)
+    return default
+
 @app.route('/utilities', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -16919,7 +17014,7 @@ def utilities():
                     fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file.filename) + "\n    fields:\n"
                     for field, default, pageno, rect, field_type in fields:
                         if field not in fields_seen:
-                            fields_output += '      - "' + text_type(field) + '": ' + text_type(default) + "\n"
+                            fields_output += '      - "' + text_type(field) + '": ' + sanitize(default) + "\n"
                             fields_seen.add(field)
                     fields_output += "---"
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
