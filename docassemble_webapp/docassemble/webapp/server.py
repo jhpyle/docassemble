@@ -11374,7 +11374,7 @@ def monitor():
           //console.log("daCheckPhone");
           $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
           var the_number = $("#daPhoneNumber").val();
-          if (the_number[0] != '+'){
+          if (the_number != '' && the_number[0] != '+'){
               $("#daPhoneNumber").val('+' + the_number);
           }
           if (daPhoneNumberOk()){

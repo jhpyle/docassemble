@@ -579,7 +579,7 @@ def sync_with_onedrive(user_id):
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
                         sys.stderr.write("post-finalize: updating OD modtime on file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
                         headers = { 'Content-Type': 'application/json' }
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime })))
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }), sort_keys=True))
                         if int(r['status']) != 200:
                             return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
@@ -615,10 +615,10 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         is_new = False
         #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
     the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
-    body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace", "description": data['description'], "fileSystemInfo": { "@odata.type": "microsoft.graph.fileSystemInfo" }, "name": data['name']}}
-    r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data))
+    body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace"}}
+    r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data, sort_keys=True))
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + repr(data) + " and is_new is " + repr(is_new), restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
     sys.stderr.write("Upload session created.\n")
     upload_url = json.loads(content.decode())["uploadUrl"]
     sys.stderr.write("Upload url obtained.\n")
@@ -652,7 +652,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
         del item_data['fileSystemInfo']['createdDateTime']
     sys.stderr.write("Patching with " + repr(item_data) + " to " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " and headers " + repr(headers) + "\n")
-    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data))
+    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data, sort_keys=True))
     sys.stderr.write("PATCH request sent\n")
     if int(r['status']) != 200:
         return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)

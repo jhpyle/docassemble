@@ -383,6 +383,8 @@ def add_dependencies(user_id):
     for package in installed_packages:
         if package.key in package_by_name:
             continue
+        if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
+            continue
         pip_info = get_pip_info(package.key)
         #sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
         Package.query.filter_by(name=package.key).delete()
