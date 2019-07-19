@@ -17,7 +17,9 @@ the cloud" on [Amazon Web Services], [Digital Ocean], or another
 hosting service.  The [Deploy] page describes a variety of ways you
 can get your own **docassemble** instance up and running.  You can
 install **docassemble** on a server using [Docker] or (if you are an
-expert) follow the detailed [Installation] instructions.
+expert) follow the detailed [Installation] instructions.  For the most
+part, the [Administration] and [Configuration] of **docassemble** can
+be handled through the web interface.
 
 # <a name="intro"></a>Introduction to **docassemble**
 
@@ -89,13 +91,15 @@ designed to be interoperable with other applications.  There are a
 variety of ways to work with [External Data]; you can move information
 easily into and out of a **docassemble** interview session.  There is
 also a full-featured [API] for interacting with **docassemble**
-programmatically.
+programmatically.  You can also design your own [Custom Front Ends].
 
 Developers can prototype and test their interviews in the browser, using
 the "interview developers' [Playground]."
 
 Once you get a **docassemble** server up and running, go through the
-[Hello World] tutorial to learn more about how interviews work.
+[Hello World] tutorial to learn more about how interviews work.  As
+you become more experienced using the system, you may want to explore
+using other [Development Workflows] than just the [Playground].
 
 One of **docassemble**'s most powerful features is its ability to
 operate multi-user interviews through the [Roles] feature.  For
@@ -117,7 +121,8 @@ that specific purpose.
 
 If you need to make an interview available in more than one language,
 **docassemble**'s [Language Support] features can help you manage
-translations.
+translations.  **docassemble** also has a number of features for
+[Accessibility] by persons with disabilities.
 
 **docassemble** was built on the model of the open-source software
 development community.  Interviews can be bundled into [Packages],
@@ -146,9 +151,16 @@ Developers will invariably make mistakes and encounter [Errors].
 **docassemble** tries to provide helpful error messages in the browser
 or in logs stored on the server.
 
-Financial officers will be pleased to know that **docassemble** is
-free software available with a highly permissive open-source
-[License].
+If you get stuck, you can seek out [Support] from the **docassemble**
+community.  You might also find that there is an example interview in
+the [Recipes] that will help you solve your problem.
+
+**docassemble** is free software available with a highly permissive
+open-source [License].  It gets updated frequently, and you can see
+what new features are available by inspecting the [Change Log].
+
+If you have been using **docassemble** for a long time, you need
+learn about the necessity of doing a [Python Upgrade].
 
 # <a name="using documentation"></a>Using the documentation
 
@@ -188,9 +200,8 @@ to decide to ask that question.
 {% endfor %}
 </ul>
 
-[Installation]: {{ site.baseurl }}/docs/installation.html
-[Configuration]: {{ site.baseurl }}/docs/config.html
 [Hello World]: {{ site.baseurl }}/docs/helloworld.html
+
 [Interviews]: {{ site.baseurl }}/docs/interviews.html
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
@@ -198,29 +209,44 @@ to decide to ask that question.
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Code]: {{ site.baseurl }}/docs/code.html
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
-[Documents]: {{ site.baseurl }}/docs/documents.html
 [Markup]: {{ site.baseurl }}/docs/markup.html
+[Documents]: {{ site.baseurl }}/docs/documents.html
 [Objects]: {{ site.baseurl }}/docs/objects.html
 [Groups]: {{ site.baseurl }}/docs/groups.html
 [Functions]: {{ site.baseurl }}/docs/functions.html
-[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[External Data]: {{ site.baseurl}}/docs/external.html
 [Legal Applications]: {{ site.baseurl }}/docs/legal.html
-[Roles]: {{ site.baseurl }}/docs/roles.html
 [Special Variables]: {{ site.baseurl }}/docs/special.html
+
+[Language Support]: {{ site.baseurl }}/docs/language.html
+[Accessibility]: {{ site.baseurl }}/docs/accessibility.html
+[Roles]: {{ site.baseurl }}/docs/roles.html
 [background tasks]: {{ site.baseurl }}/docs/background.html
 [Background Tasks]: {{ site.baseurl }}/docs/background.html
 [Machine Learning]: {{ site.baseurl }}/docs/ml.html
-[Errors]: {{ site.baseurl }}/docs/errors.html
-[Language Support]: {{ site.baseurl }}/docs/language.html
-[User Login]: {{ site.baseurl }}/docs/users.html
-[Packages]: {{ site.baseurl }}/docs/packages.html
-[Playground]: {{ site.baseurl }}/docs/playground.html
-[Live Help]: {{ site.baseurl }}/docs/livehelp.html
 [Text Messaging]: {{ site.baseurl }}/docs/sms.html
+[API]: {{ site.baseurl}}/docs/api.html
+[Custom Front Ends]: {{ site.baseurl }}/docs/frontend.html
+[User Login]: {{ site.baseurl }}/docs/users.html
+[Live Help]: {{ site.baseurl }}/docs/livehelp.html
+[Development Workflows]: {{ site.baseurl }}/docs/development.html
+[Playground]: {{ site.baseurl }}/docs/playground.html
+[Packages]: {{ site.baseurl }}/docs/packages.html
+[Errors]: {{ site.baseurl }}/docs/errors.html
+[Support]: {{ site.baseurl }}/docs/support.html
+[Recipes]: {{ site.baseurl }}/docs/recipes.html
+
+[Administration]: {{ site.baseurl }}/docs/admin.html
+[Installation]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
+[Configuration]: {{ site.baseurl }}/docs/config.html
 [Scalability]: {{ site.baseurl }}/docs/scalability.html
 [Security]: {{ site.baseurl }}/docs/security.html
+[Change Log]: {{ site.baseurl }}/docs/changelog.html
+[Python Upgrade]: {{ site.baseurl }}/docs/twotothree.html
 [License]: {{ site.baseurl }}/docs/license.html
+
+[actions]: {{ site.baseurl }}/docs/functions.html#actions
 [Demonstration]: {{ site.baseurl }}/demo.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -233,8 +259,6 @@ to decide to ask that question.
 [Playground]: {{ site.baseurl}}/docs/playground.html
 [Digital Ocean]: https://www.digitalocean.com/
 [Amazon Web Services]: https://aws.amazon.com/ec2/
-[External Data]: {{ site.baseurl}}/docs/external.html
-[API]: {{ site.baseurl}}/docs/api.html
 [many different types]: {{ site.baseurl }}/docs/fields.html#data types
 [file uploads]: {{ site.baseurl }}/docs/fields.html#file
 [touchscreen signatures]: {{ site.baseurl }}/docs/fields.html#signature

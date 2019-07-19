@@ -896,28 +896,39 @@ After the configuration is changed and the system restarts, users with
 ## <a name="onedrive"></a>Setting up OneDrive integration
 
 To enable the [OneDrive synchronization] feature, you need to sign in
-to the [Microsoft Application Registration Portal] and create an
-application.  Make a note of your "Application ID."  Under "Application
-Secrets," click "Generate New Password."  Make a note of the password.
+to the [Azure Portal] and register an App.  Give it a name
+(e.g. "Docassemble OneDrive") and set the Redirect URI to
+`https://example.com/onedrive_callback`, substituting your own server
+URL for `https://example.com`.
 
-Under "Platforms," click "Add Platform" and add a "web" platform.
-Under "Redirect URLs," add `https://example.com/onedrive_callback`
-substituting your own server URL for `https://example.com`.
+Make a note of your "Application (client) ID."
 
-Under "Microsoft Graph Permissions," add the permissions of
-`Files.ReadWrite.All` and `User.Read`.
+Using the sidebar, navigate to "Certificates & secrets."  Click "New
+client secret."  Give it a description (e.g., "Secret for OneDrive").
+Set the "Expires" to "Never" unless you want the secret to expire.
 
-Under "Profile," provide a logo and URLs for your home page, terms of
+Make a note of the "Value" of the secret you just created.
+
+Using the sidebar, navigate to "API permissions" and click "Add a
+permission."  Click the box for "Microsoft Graph," then click the box
+for "Application permissions."  Under "Files," check the checkbox for
+`Files.ReadWrite.All`.  Under "User," check the checkbox for
+`User.Read.All`.  Then click "Add permissions."
+
+Using the sidebar, navigate to "Branding."  Upload a logo (square
+image files work best) and enter URLs for your home page, terms of
 service, and privacy statement.  Note that the only people who will
 see these things are your developers.
 
-Then press "Save" to save your application.
+Using the sidebar, navigate to "Authentication."  Under "Supported
+Account Types," select "Accounts in any organization directory."  Then
+press "Save."
 
 Then, go to your [Configuration].  Edit the [`onedrive`] directive
-under `oauth`.  Set the `id` to the "Application ID" you obtained
-earlier, and set the `secret` to the "Password" you obtained earlier.
-Note that you may need to put quotes around the password in order
-to avoid [YAML] problems.
+under `oauth`.  Set the `id` to the "Application (client) ID" you
+obtained earlier, and set the `secret` to the "Value" of the secret
+you obtained earlier.  Note that you may need to put quotes around the
+password in order to avoid [YAML] problems.
 
 When this is enabled, users on your server who have the [privileges]
 of `admin` or `developer` will be able to go to their "Profile" page

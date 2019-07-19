@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.65](https://github.com/jhpyle/docassemble/releases/tag/v0.4.65) - 2019-07-19
+
+### Fixed
+- Erasing phone number in Monitor raised an error.
+- OneDrive synchronization error.
+
 ## [0.4.64](https://github.com/jhpyle/docassemble/releases/tag/v0.4.64) - 2019-07-17
 
 ### Changed
