@@ -6883,6 +6883,10 @@
         - protagonist
         - antagonist
 "object-radio-address": |-
+  objects:
+    - shipping: Address
+    - billing: Address
+  ---
   question: |
     What is your shipping address?
   fields:
@@ -6916,7 +6920,33 @@
         variable: shipping
         is: null
       Zip: shipping.zip
+  ---
+  question: |
+    What is your billing address?
+  fields:
+    - Address: billing.address
+    - Unit: billing.unit
+      required: False
+    - City: billing.city
+    - State: billing.state
+      code:
+        states_list()
+    - Zip: billing.zip
+  ---
+  mandatory: True
+  question: |
+    Your order
+  subquestion: |
+    I will send your bill to
+    ${ billing.on_one_line() }.
+
+    I will ship your order to
+    ${ shipping.on_one_line() }.
 "object-radio-address-2": |-
+  objects:
+    - billing: Address.using(name_on_billing_choices_list='Your billing address')
+    - shipping_manual: Address.using(name_on_billing_choices_list='A different address')
+  ---
   question: |
     What address should I use as your shipping address?
   fields:
@@ -6927,6 +6957,40 @@
         - shipping_manual
       object labeler: |
         lambda y: y.name_on_billing_choices_list
+  ---
+  question: |
+    What is your shipping address?
+  fields:
+    - Address: shipping_manual.address
+    - Unit: shipping_manual.unit
+      required: False
+    - City: shipping_manual.city
+    - State: shipping_manual.state
+      code:
+        states_list()
+    - Zip: shipping_manual.zip
+  ---
+  question: |
+    What is your billing address?
+  fields:
+    - Address: billing.address
+    - Unit: billing.unit
+      required: False
+    - City: billing.city
+    - State: billing.state
+      code:
+        states_list()
+    - Zip: billing.zip
+  ---
+  mandatory: True
+  question: |
+    Your order
+  subquestion: |
+    I will send your bill to
+    ${ billing.on_one_line() }.
+
+    I will ship your order to
+    ${ shipping.on_one_line() }.
 "object-radio-nota": |-
   question: Who is the villain?
   fields:
@@ -10644,6 +10708,29 @@
 "advocate": |-
   objects:
     - child: Individual
+"background-tail": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  log_key\
+  \ = r.key('log:' + user_info().session)\n  messages = list()\n---\nmandatory: True\n\
+  code: |\n  if the_task.ready():\n    last_messages_retrieved\n    final_screen\n\
+  \  else:\n    waiting_screen\n---\ncode: |\n  the_task = background_action('bg_task',\
+  \ 'refresh', additional=value_to_add)\n---\nquestion: |\n  How much shall I add\
+  \ to 553?\nfields:\n  - Number: value_to_add\n    datatype: integer\n---\nevent:\
+  \ bg_task\ncode: |\n  import time\n  r.rpush(log_key, 'Waking up.')\n  time.sleep(10)\n\
+  \  r.rpush(log_key, 'Ok, I am awake now.')\n  value = 553 + action_argument('additional')\n\
+  \  time.sleep(17)\n  r.rpush(log_key, 'I did the hard work.')\n  time.sleep(14)\n\
+  \  r.rpush(log_key, 'Ok, I am done.')\n  background_response_action('bg_resp', ans=value)\n\
+  ---\nevent: bg_resp\ncode: |\n  answer = action_argument('ans')\n  background_response()\n\
+  ---\nevent: waiting_screen\nquestion: |\n  Your process is running.\nsubquestion:\
+  \ |\n  #### Message log\n  \n  <ul class=\"list-group\" id=\"logMessages\">\n  </ul>\n\
+  check in: get_log\n---\nevent: get_log\ncode: |\n  import json\n  new_messages =\
+  \ ''\n  while True:\n    message = r.lpop(log_key)\n    if message:\n      messages.append(message.decode())\n\
+  \      new_messages += '<li class=\"list-group-item\">' + message.decode() + '</li>'\n\
+  \      continue\n    break\n  background_response('$(\"#logMessages\").append('\
+  \ + json.dumps(new_messages) + ')', 'javascript')\n---\ncode: |\n  while True:\n\
+  \    message = r.lpop(log_key)\n    if message:\n      messages.append(message.decode())\n\
+  \      continue\n    break\n  last_messages_retrieved = True\n---\nevent: final_screen\n\
+  question: |\n  The answer is ${ answer }.\nsubquestion: |\n  #### Message log\n\
+  \  \n  <ul class=\"list-group\" id=\"logMessages\">\n  % for message in messages:\n\
+  \    <li class=\"list-group-item\">${ message }</li>\n  % endfor\n  </ul>"
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
@@ -10840,6 +10927,39 @@
   \ }.\n\n    My favorite vegetable is\n    ${ favorite_vegetable }.\n\n    I solemnly\
   \ swear that the\n    foregoing is true and\n    correct.\n\n    ${ user.signature.show(width=\"\
   2in\") }\n\n    ${ user }"
+"generic-document": |-
+  objects:
+    - plaintiff: Individual
+    - defendant: Individual
+  ---
+  code: |
+    plaintiff.opponent = defendant
+    defendant.opponent = plaintiff
+  ---
+  code: |
+    title = "Summary of case"
+  ---
+  question: |
+    What is the name of the plaintiff?
+  fields:
+    - Name: plaintiff.name.first
+  ---
+  question: |
+    What is the name of the defendant?
+  fields:
+    - Name: defendant.name.first
+  ---
+  generic object: Individual
+  attachment:
+    variable name: x.document
+    name: Document for ${ x.name.first }
+    docx template file: generic-document.docx
+  ---
+  mandatory: True
+  question: |
+    Here are your documents.
+  attachment code: |
+    [plaintiff.document, defendant.document]
 "get-time": |-
   modules:
     - docassemble.demo.gettime

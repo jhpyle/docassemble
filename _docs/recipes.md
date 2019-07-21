@@ -403,6 +403,18 @@ in a Google Sheet.
 
 {% include demo-side-by-side.html demo="google-sheet-3" %}
 
+# <a name="generic document"></a>Documents based on objects
+
+This example is similar to the [mail merge example] in that it uses a
+single template to create multiple documents.  In this case, however,
+the same template is used to generate a document for two different
+objects.
+
+{% include demo-side-by-side.html demo="generic-document" %}
+
+This makes use of the [`generic object` modifier].  The template file
+[generic-document.docx] refers to the person using the variable `x`.
+
 # <a name="two stage"></a>Inserting Jinja2 with Jinja2
 
 If you use Jinja2 to insert Jinja2 template tags into a document
@@ -487,6 +499,30 @@ This logs the user out after 60 minutes of inactivity in the browser.
 To use a different number of minutes, edit the line 
 `if (idleTime > 60){`.
 
+# <a name="background tail"></a>Seeing the progress of a running background task
+
+Since [background tasks] run in a separate [Celery] process, there is
+no simple way to get information from them while they are running.
+
+However, [Redis] lists provide a helpful mechanism for keeping track
+of log messages.
+
+Here is an example that uses a [`DARedis`] object to store log
+messages about a long-running [background task].  It uses [`check in`]
+to poll the server for new log messages.
+
+{% include demo-side-by-side.html demo="background-tail" %}
+
+Since the task in this case (adding one number to another) is not
+actually long-running, the interview uses `time.sleep()` to make it
+artificially long-running.
+
+[`check in`]: {{ site.baseurl }}/docs/background.html#
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[Redis]: https://redis.io/
+[Celery]: http://www.celeryproject.org/
+[background task]: {{ site.baseurl }}/docs/background.html#background
+[background tasks]: {{ site.baseurl }}/docs/background.html#background
 [core document properties]: https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html
 [pickled]: https://docs.python.org/3/library/pickle.html
 [pickling]: https://docs.python.org/3/library/pickle.html
@@ -502,3 +538,6 @@ To use a different number of minutes, edit the line
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`features`]: {{ site.baseurl }}/docs/initial.html#javascript
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[mail merge example]: #mail merge
+[generic-document.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/generic-document.docx
+[`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
