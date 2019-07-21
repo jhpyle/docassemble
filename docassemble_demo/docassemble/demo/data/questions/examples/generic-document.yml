@@ -1,0 +1,39 @@
+metadata:
+  title: Generic document
+  short title: Generic
+  documentation: "https://docassemble.org/docs/recipes.html#generic document"
+  example start: 1
+  example end: 7
+---
+objects:
+  - plaintiff: Individual
+  - defendant: Individual
+---
+code: |
+  plaintiff.opponent = defendant
+  defendant.opponent = plaintiff
+---
+code: |
+  title = "Summary of case"
+---
+question: |
+  What is the name of the plaintiff?
+fields:
+  - Name: plaintiff.name.first
+---
+question: |
+  What is the name of the defendant?
+fields:
+  - Name: defendant.name.first
+---
+generic object: Individual
+attachment:
+  variable name: x.document
+  name: Document for ${ x.name.first }
+  docx template file: generic-document.docx
+---
+mandatory: True
+question: |
+  Here are your documents.
+attachment code: |
+  [plaintiff.document, defendant.document]

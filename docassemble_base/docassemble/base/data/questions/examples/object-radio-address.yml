@@ -1,3 +1,8 @@
+metadata:
+  title: Billing and shipping
+  example start: 1
+  example end: 4
+---
 objects:
   - shipping: Address
   - billing: Address
