@@ -33,6 +33,9 @@ example:
 {% include demo-side-by-side.html demo="turnips-worms" %}
 
 You can click the screenshot above to see this interview in action.
+If you hover over the source code, three dots will appear in the
+lower-right corner; if you click the three dots, you can see full
+interview [YAML] behind the sample interview.
 
 Some blocks are [Question Blocks] that represent screens that the user
 will actually see.  (Two examples are above.)  The basic structure of
@@ -48,10 +51,13 @@ of [Special Variables] that already have their own meaning.
 [file uploads] and [touchscreen signatures].  One of the most powerful
 features is the ability to store information in a structured way using
 [Objects].  When you want to collect one or more pieces of related
-information, you can collect the information into [Groups].
+information, you can collect the information into [Groups] such as
+[lists] and [dictionaries].
 
-Besides [`question`] blocks, other blocks include [Initial Blocks],
-which set interview-wide options, like the default language.
+There are other types of blocks besides [`question`] blocks.
+
+[Initial Blocks] set interview-wide options, like the special
+[features] of an interview, or the default [screen parts].
 
 [Code] blocks allow you to set variables through computation.  Code is
 written in [Python].  To write an interview, you do not need to know
@@ -75,10 +81,10 @@ its own.
 A popular use of interviews is the assembly of [Documents] (hence the
 name **docassemble**).  You can write document templates in [DOCX] or
 [PDF] formats.  You can also write documents the same way you write
-questions, in plain text with [Markup] to indicate formatting.
+questions, in plain text using [Markup] to indicate formatting.
 
 As your interviews become more sophisticated, you will find it useful
-to use [Functions] to do things like conjugate verbs, compute
+to invoke [Functions] to do things like conjugate verbs, compute
 differences between dates, or offer the user hyperlinks that perform
 special [actions].
 
@@ -94,9 +100,9 @@ also a full-featured [API] for interacting with **docassemble**
 programmatically.  You can also design your own [Custom Front Ends].
 
 Developers can prototype and test their interviews in the browser, using
-the "interview developers' [Playground]."
+the interview developers' [Playground].
 
-Once you get a **docassemble** server up and running, go through the
+Once you get a **docassemble** server [up and running], go through the
 [Hello World] tutorial to learn more about how interviews work.  As
 you become more experienced using the system, you may want to explore
 using other [Development Workflows] than just the [Playground].
@@ -110,9 +116,9 @@ advice, which the user would see the next time they log in.
 Using the [Background Tasks] features, you can have your interviews do
 things on the server at times other than times when the user presses a
 button to advance to a new page.  Time-intensive tasks can run in the
-background; the interview can evaluate user input before the user
-submits it; and interviews can do things when the user is not logged
-in, like send a reminder e-mail to a user about a deadline as the date
+[background].  The interview can [evaluate user input] before the user
+submits it.  Interviews can do things [when the user is not logged
+in], like send a reminder [e-mail] to a user about a deadline as the date
 approaches.
 
 **docassemble** is a multi-purpose platform, but it is particularly
@@ -125,8 +131,8 @@ translations.  **docassemble** also has a number of features for
 [Accessibility] by persons with disabilities.
 
 **docassemble** was built on the model of the open-source software
-development community.  Interviews can be bundled into [Packages],
-which can be shared on [GitHub] or moved between servers as ZIP files.
+development world.  Interviews can be bundled into [Packages], which
+can be shared on [GitHub] or moved between servers as ZIP files.
 
 The mobile-friendly web interface is the primary way that users will
 run interviews, but there is also the option of making interviews
@@ -140,27 +146,29 @@ communication by phone is necessary, operators can provide users with
 a special phone number and code that forwards a call without revealing
 the operator's actual phone number.
 
-System administrators will be pleased to know that **docassemble** has
-excellent [Scalability] when deployed in the cloud.
+**docassemble** has excellent [Scalability] when deployed in the
+cloud, so you don't have to worry about what will happen if your
+interviews get a lot of traffic.
 
-If your interviews will work with sensitive information, you may be
-interested to know that **docassemble** has a number of [Security]
-features, such as server-side encryption.
+If your interviews will process sensitive information, **docassemble**
+has a number of [Security] features to keep that information safe,
+such as server-side encryption.
 
 Developers will invariably make mistakes and encounter [Errors].
 **docassemble** tries to provide helpful error messages in the browser
 or in logs stored on the server.
 
 If you get stuck, you can seek out [Support] from the **docassemble**
-community.  You might also find that there is an example interview in
+community, in particular by posting a question on the **docassemble**
+[Slack].  You might also find that there is an example interview in
 the [Recipes] that will help you solve your problem.
 
 **docassemble** is free software available with a highly permissive
-open-source [License].  It gets updated frequently, and you can see
-what new features are available by inspecting the [Change Log].
+open-source [License].  The software is updated frequently, and you
+can see what new features are available by reading the [Change Log].
 
-If you have been using **docassemble** for a long time, you need
-learn about the necessity of doing a [Python Upgrade].
+Note that if you have been using **docassemble** for a long time, you
+need learn about the necessity of doing a [Python Upgrade].
 
 # <a name="using documentation"></a>Using the documentation
 
@@ -168,9 +176,9 @@ The **docassemble** documentation is intended more as a reference
 guide than as a manual that you have to read before getting started.
 
 The best way to learn about **docassemble** is to start creating your
-own interview.  There is a "Hello, world" [tutorial] that explains how
-to create a simple interview.  Once you get that working, you can
-experiment with adding more questions to it.
+own interview.  Start by following along with the "Hello, world"
+[tutorial] that explains how to create a simple interview.  Once you
+get that working, you can experiment with adding more questions to it.
 
 The best way to learn about more advanced **docassemble** features is
 to study working examples.  The sections of this documentation site
@@ -201,7 +209,6 @@ to decide to ask that question.
 </ul>
 
 [Hello World]: {{ site.baseurl }}/docs/helloworld.html
-
 [Interviews]: {{ site.baseurl }}/docs/interviews.html
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
@@ -217,7 +224,6 @@ to decide to ask that question.
 [External Data]: {{ site.baseurl}}/docs/external.html
 [Legal Applications]: {{ site.baseurl }}/docs/legal.html
 [Special Variables]: {{ site.baseurl }}/docs/special.html
-
 [Language Support]: {{ site.baseurl }}/docs/language.html
 [Accessibility]: {{ site.baseurl }}/docs/accessibility.html
 [Roles]: {{ site.baseurl }}/docs/roles.html
@@ -235,7 +241,6 @@ to decide to ask that question.
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [Support]: {{ site.baseurl }}/docs/support.html
 [Recipes]: {{ site.baseurl }}/docs/recipes.html
-
 [Administration]: {{ site.baseurl }}/docs/admin.html
 [Installation]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
@@ -245,7 +250,6 @@ to decide to ask that question.
 [Change Log]: {{ site.baseurl }}/docs/changelog.html
 [Python Upgrade]: {{ site.baseurl }}/docs/twotothree.html
 [License]: {{ site.baseurl }}/docs/license.html
-
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
 [Demonstration]: {{ site.baseurl }}/demo.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -253,7 +257,6 @@ to decide to ask that question.
 [GitHub]: https://github.com/
 [Reserved Names]: {{ site.baseurl }}/docs/special.html#reserved
 [demonstration]: {{ site.baseurl }}/demo.html
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [demonstration page]: {{ site.baseurl}}/demo.html
 [tutorial]: {{ site.baseurl}}/docs/helloworld.html
 [Playground]: {{ site.baseurl}}/docs/playground.html
@@ -266,3 +269,13 @@ to decide to ask that question.
 [Deploy]: {{ site.baseurl }}/deploy.html
 [DOCX]: {{ site.baseurl }}/docs/documents.html#docx template file
 [PDF]: {{ site.baseurl }}/docs/documents.html#pdf template file
+[lists]: {{ site.baseurl }}/docs/groups.html#gather list
+[dictionaries]: {{ site.baseurl }}/docs/groups.html#gather dictionary
+[features]: {{ site.baseurl }}/docs/initial.html#features
+[screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[up and running]: {{ site.baseurl }}/deploy.html
+[background]: {{ site.baseurl }}/docs/background.html#background
+[evaluate user input]: {{ site.baseurl }}/docs/background.html#check in
+[when the user is not logged in]: {{ site.baseurl }}/docs/background.html#scheduled
+[e-mail]: {{ site.baseurl }}/docs/functions.html#send_email
+[Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg

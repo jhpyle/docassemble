@@ -1,7 +1,8 @@
     <footer style="text-align:center;padding-bottom:20px">
 {% include footer-attribution.html %}
       <p>
-      {%- for thepage in site.pages %}
+      {%- assign sorted_pages = site.pages | sort:"order" %}
+      {%- for thepage in sorted_pages %}
       {%- if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html'%}
 	{%- continue %}
       {%- endif %}

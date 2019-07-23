@@ -148,12 +148,12 @@ compute that, **docassemble** needs to know `favorite_number`, so it
 asks "What is your favorite number?"  Then it knows everything it
 needs to know in order to display the [`mandatory`] question.
 
-The [`code`] block contains [Python] code.  The syntax needs to follow
-all the rules of [Python].  For example, the `==` syntax tests whether
-the `favorite_number` is 42 or not.  The `+` performs addition and the
-`*` performs multiplication.  The `=` sets the value of a variable.
+The [`code`] block contains [Python] code.  The syntax follows the
+rules of [Python].  For example, the `==` syntax tests whether the
+`favorite_number` is 42 or not.  The `+` performs addition and the `*`
+performs multiplication.  The `=` sets the value of a variable.
 
-# Creating a document
+# <a name="create document"></a>Creating a document
 
 Now let's provide the user with a [document] by adding an [`attachment`].
 
@@ -298,7 +298,7 @@ First you need to upload the image you want to use.
 
 From the [Playground], go to the Folders menu and select "Static
 files."  (The files are called "[static]" because they do not change,
-unlike templates, which can be different every time.)
+unlike templates, which can produce different files every time.)
 
 ![Static files]({{ site.baseurl }}/img/playground-menu-static.png)
 
@@ -428,7 +428,11 @@ Under "Static files," select your `globe.svg` file.
 
 ![Static files]({{ site.baseurl }}/img/playground-packages-static-files.png)
 
-If you were creating an actual package for distribution, you should
+Under "Template files," select your `hello_planet.docx` file.
+
+![Template files]({{ site.baseurl }}/img/playground-packages-template-files.png)
+
+If you were creating an actual package for distribution, you would
 type a careful description of your package and the contents of a
 "README" file here.  But since this is only a tutorial, you can skip
 that.
@@ -497,9 +501,9 @@ contents of your ZIP file into the [Playground].
 
 A **docassemble** package is really just a regular [Python] package.
 It follows all of the conventions of [Python] software package
-distribution.  As a result, you can share your package on [PyPI], the
-central repository for [Python] software.  This means that other
-people can install your package on their servers, just as they would
+distribution.  That means you can share your package on [PyPI], the
+central repository for [Python] software.  Other people can then
+install your package on their servers using [pip], just as they would
 install any [Python] software.
 
 This section of the tutorial will explain how to upload the
@@ -507,21 +511,22 @@ This section of the tutorial will explain how to upload the
 you try this yourself on a package called `docassemble.helloworld`,
 you will probably get an error because package names on [PyPI] are
 unique and the `docassemble.helloworld` package has already been
-uploaded (by me!).  However, these instructions will work if you adapt
-them to a package name of your own invention.
+uploaded (namely, by me, when I was creating this tutorial).  However,
+these instructions will work if you use a package name of your own
+invention.
 
 First, you need to create a username and password on [PyPI].
 
 The **docassemble** [configuration] on your server will need to be set
-up to allow publishing to [PyPI].  To configure this, a user with
-`admin` [privileges] needs to go to "Configuration" on the menu and
-add the following to the [configuration]:
+up to allow publishing to [PyPI].  To configure this, log in as a user
+with `admin` [privileges], go to "Configuration" on the menu, and add
+the following to the [configuration]:
 
 {% highlight yaml %}
 pypi: True
 {% endhighlight %}
 
-If this configuration has been done, you can go to "Profile" from the
+If this configuration has been made, you can go to "Profile" from the
 menu and scroll down to the "PyPI Username" and "PyPI Password"
 fields.  Fill in these fields with the username and password you just
 obtained.
@@ -580,9 +585,9 @@ Your **docassemble** configuration will need to be configured to allow
 }}/docs/installation.html#github).
 
 Once your server allows [GitHub integration], you can go to "Profile"
-on the menu and click the link for "GitHub integration."  Follow
-the instructions to connect your [GitHub] account with your
-**docassemble** account.
+on the menu, open "Other settings," and click the link for "GitHub
+integration."  Follow the instructions to connect your [GitHub]
+account with your **docassemble** account.
 
 Once you have connected your [GitHub] account with your
 **docassemble** account, go to the ["Packages" folder] of the
@@ -684,3 +689,4 @@ the [GitHub subsection] of the [packages] section.
 [globe.svg]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/static/globe.svg
 [Freepik]: http://www.flaticon.com/authors/freepik
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
+[pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29

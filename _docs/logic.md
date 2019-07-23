@@ -636,23 +636,9 @@ stamp [YAML] file gets updated on the server when the law changes.
 
 ## <a name="fallback"></a>Fallback questions
 
-If a more recently-defined [`question`] or [`code`] block does not,
-for whatever reason, actually define the variable, **docassemble**
-will fall back to a block that is located earlier in the [YAML] file.
-For example:
-
-{% include side-by-side.html demo="fallback" %}
-
-In this case, the special [`continue`] choice causes **docassemble**
-to skip the [`question`] block and look elsewhere for a definition of
-`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
-version of the question that exists within `question-library.yml`.
-When looking for a block that offers to define a variable,
-**docassemble** starts at the bottom and works its way up.
-
-Such fall-backs can also happen with [Python] code that could
-potentially define a variable, but for whatever reason does not
-actually do so.  For example:
+If a [`code`] block does not, for whatever reason, actually define the
+variable, **docassemble** will "fall back" to a block that is located
+earlier in the [YAML] file.  For example:
 
 {% include side-by-side.html demo="fallback2" %}
 
@@ -668,11 +654,27 @@ value for `user_wants_to_got_to_dance`.  Not giving up,
 questions included by reference from `question_library.yml`, namely
 the question "Interested in going to the dance tonight?"
 
-So, to summarize: when **docassemble** considers what blocks it _must_
-process, it goes from top to bottom through your interview [YAML]
-file, looking for [`mandatory`] and [`initial`] blocks; if a block is
-later in the file, it is processed later in time.  However, when
-**docassemble** considers what question it should ask to define a
+This "fall back" process can also happen with special [`question`]
+blocks that use the [`continue`] option.
+
+{% include side-by-side.html demo="fallback" %}
+
+In this case, the special [`continue`] choice causes **docassemble**
+to skip the [`question`] block and look elsewhere for a definition of
+`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
+version of the question that exists within `question-library.yml`.
+When looking for a block that offers to define a variable,
+**docassemble** starts at the bottom and works its way up.
+
+(Note that [`question`]s using [`continue`] are of limited utility
+because they cannot use the [`generic object` modifier] or [index
+variables].  However, [`code`] blocks do not have this limitation.)
+
+So, to recapitulate: when **docassemble** considers what blocks it
+_must_ process, it goes from top to bottom through your interview
+[YAML] file, looking for [`mandatory`] and [`initial`] blocks; if a
+block is later in the file, it is processed later in time.  However,
+when **docassemble** considers what question it should ask to define a
 particular variable, it goes from bottom to top; if a block is later
 in the file, it is considered to "supersede" blocks that are earlier
 in the file.
@@ -1092,3 +1094,4 @@ forget others.
 [`show dispatch link`]: {{ site.baseurl }}/docs/config.html#show dispatch link
 [Redis]: {{ site.baseurl }}/docs/functions.html#redis
 [Google Analytics feature]: {{ site.baseurl }}/docs/config.html#google analytics
+[`generic object` modifier]: {{ site.baseurl }}/docs/fields.html#generic

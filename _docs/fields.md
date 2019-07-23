@@ -89,7 +89,8 @@ and will set `over_eighteen` to `True` if "Yes" is pressed, and
 {% include side-by-side.html demo="noyes" %}
 
 Note that yes/no fields can also be gathered on a screen along with
-other fields; to make screens like that, use [`fields`] below.
+other fields; to make screens like that, use [`fields`](#fields
+yesnoradio) below.
 
 ### <a name="yesnomaybe"></a><a name="noyesmaybe"></a>`yesnomaybe` or `noyesmaybe`
 
@@ -168,6 +169,12 @@ You can use `buttons` as an alternative to [`yesno`] where you want
 different text in the labels.
 
 {% include side-by-side.html demo="yesno-custom" %}
+
+In order for the variable to be set to the special [Python] values
+`True` and `False`, you need to make sure that the only values you
+list are `True` and `False`, and nothing else, just like in the
+example above.  If you include a different value, your variable will
+be set to `'True'` or `'False'`, which could cause problems.
 
 ## <a name="field with choices"></a>Multiple choice list
 
@@ -276,7 +283,7 @@ To undo a user's choice on a [`question`] that embeds blocks, tag the
 [`question`] with an [`id`] and call the [`forget_result_of()`]
 function with the ID.
 
-# <a name="field"></a>A simple "continue" button that sets a variable
+# <a name="field"></a>Questions with only a "continue" button
 
 {% include side-by-side.html demo="continue-participation" %}
 
@@ -284,30 +291,45 @@ A [`question`] with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
-# <a name="fields"></a>Setting multiple variables with one screen
+If you are using [`fields`] but you want the "Continue" button to set
+a variable to `True` the way that this [`question`] type does, use the
+[`continue button field`] specifier.
 
-`fields` is used to present the user with a list of fields.
+# <a name="fields"></a>Questions that collect one or more fields on a screen
+
+So far, we have discussed [questions that set a single multiple-choice
+variable](#mconevar) and the use of [`field`] by itself to set a
+single variable to `True`.  These are helpful when you are collecting
+`True` or `False` values or multiple choice values.  However,
+**docassemble**'s primary tool for collecting information in is the
+`fields` specifier.  `fields` allows you to collect many different
+[types of information](#data types) and to collect more than one piece
+of information on a screen.
 
 {% include side-by-side.html demo="text-field-example" %}
 
-The `fields` must consist of a list in which each list item consists
-of one or more key/value pairs.  One of these keys
-([typically](#label)) is the label the user sees, where the value
-associated with the key is the name of the variable that will store
-the user-provided information for that field.  The other key/value
-pairs in the item (if any) allow you to modify how the field is
-displayed to the user.
+The `fields` specifier must refer to a [YAML] list of one or more
+"fields".  Each list item must consist of one or more key/value pairs.
+One of these keys ([typically](#label)) is the label the user sees,
+where the value associated with the key is the name of the variable
+that will store the user-provided information for that field.  The
+other key/value pairs in the item (if any) allow you to modify how the
+field is displayed to the user.
 
 These field modifiers are distinguished from label/variable pairs
-based on the key; if the key is uses one of the names listed below, it
+based on the key; if the key uses one of the names listed below, it
 will be treated as a field modifier; if it is anything else, it will
 be treated as a label.
 
-# <a name="data types"></a><a name="input types"></a>Data types and input types in [`fields`]
+The next section describes the different types of variables you can
+gather with `fields` and the different types of user interfaces you
+can use.
+
+# <a name="data types"></a><a name="input types"></a>Data types and input types
 
 Within a [`fields`] question, there are many possible [`datatype`]
-values, which affect what the user sees and how the input is stored in
-a variable.
+values that you can use.  These affect what the user sees and how the
+input is stored in a variable.
 
 The possible values of [`datatype`] are:
 
@@ -831,7 +853,7 @@ that is "trained" to classify user input.
 For more information about how to use machine learning variables, see
 the [machine learning section].
 
-# <a name="fields options"></a>Options for [`fields`] items
+# <a name="fields options"></a>Options for items in `fields`
 
 The following are the keys that have special meaning within a list
 item under [`fields`].
@@ -1208,7 +1230,7 @@ and the variable name using the `field` key.
 
 {% include side-by-side.html demo="label" %}
 
-# <a name="misc features"><a>Other features of [`fields`]
+# <a name="misc features"><a>Special features
 
 ## <a name="emptychoices"></a>When the list of choices is empty
 
@@ -1647,7 +1669,7 @@ Here is a lengthy example that illustrates many of the features of
 
 {% include side-by-side.html demo="fields" %}
 
-# <a name="uploads"></a>Uploads
+# <a name="uploads"></a>Questions that upload files
 
 ## <a name="uploading"></a>Storing files as variables
 
@@ -1666,8 +1688,10 @@ uploaded files, see [inserting images].
 
 ## <a name="signature"></a>Gathering the user's signature into a file variable
 
-The `signature` block presents a special screen in which the user
-can sign his or her name with the trackpad or other pointing device.
+The `signature` block presents a special screen in which the user can
+sign his or her name with the trackpad or other pointing device.  When
+the user presses "Continue," the signature image will be uploaded to
+the **docassemble** server as a transparent [PNG] file.
 
 {% include side-by-side.html demo="signature" %}
 
@@ -1850,11 +1874,12 @@ from the menu or from hyperlinks embedded in question text.  For
 information and examples, see [url_action()], [process_action()],
 [action_menu_item()], and [menu_items].
 
-However, `event` is not appropriate for `question`s that set
-variables.  If you want to take the user to a screen that sets a
-variable, refer to an undefined variable so that **docassemble** will
-seek out the definition of the variable and show the `question` that
-defines the variable.  Or, if the variable is already defined, use
+However, `event` is not appropriate for `question`s that set variables
+(e.g., that use `yesno`, `noyes`, `field`, `fields`, `signature`,
+etc.).  If you want to take the user to a screen that sets a variable,
+refer to an undefined variable so that **docassemble** will seek out
+the definition of the variable and show the `question` that defines
+the variable.  Or, if the variable is already defined, use
 `force_ask()`.  The [interview logic] system in **docassemble** is not
 like a flow chart, where you "go to" question 1 and then "go to"
 question 2; it is based on seeking definitions of variables and
@@ -2268,3 +2293,5 @@ why this needs to be done manually as opposed to automatically:
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
+[`continue button field`]: #continue button field
+[`field`]: #field

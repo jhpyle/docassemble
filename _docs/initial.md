@@ -4,6 +4,13 @@ title: Initial blocks
 short_title: Initial Blocks
 ---
 
+This section discusses blocks that will typically appear at the
+beginning of the [YAML] of your [interview].
+
+If you are new to **docassemble**, you probably will not need to use
+"initial blocks" until you attempt something more advanced, so you can
+skip this section and proceed to the [section on questions].
+
 # <a name="metadata"></a>Interview title and other `metadata`
 
 {% highlight yaml %}
@@ -1999,3 +2006,5 @@ features:
 [`DAContext`]: {{ site.baseurl }}/docs/objects.html#DAContext
 [`use objects`]: #use objects
 [`session_tags()`]: {{ site.baseurl}}/docs/functions.html#session_tags
+[interview]: {{ site.baseurl }}/docs/interviews.html
+[section on questions]: {{ site.baseurl }}/docs/questions.html

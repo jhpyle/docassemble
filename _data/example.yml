@@ -7884,7 +7884,8 @@
     You have ${ quantity_noun(4, "apple") }.
 "question": |-
   question: |
-    What is the airspeed velocity of an unladen swallow?
+    What is the airspeed velocity of an
+    unladen swallow?
   fields:
     - Velocity: swallow_velocity
 "question-autoterms": |-
@@ -7993,7 +7994,8 @@
   yesno: user_wants_to_go_to_dance
 "question-markup": |-
   question: |
-    What is the *airspeed* velocity of an unladen ${ african_or_european }
+    What is the *airspeed* velocity of an
+    unladen ${ african_or_european }
     swallow?
   fields:
     - Velocity: swallow_velocity
@@ -9548,7 +9550,8 @@
   \ },\n  you live in a\n  ${ subdivision_type(country) }.\n  \n  % endfor"
 "subquestion": |-
   question: |
-    What is the airspeed velocity of an unladen swallow?
+    What is the airspeed velocity of an
+    unladen swallow?
   subquestion: Be careful how you answer.
   fields:
     - Velocity: swallow_velocity

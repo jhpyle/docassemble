@@ -59,7 +59,7 @@ code: |
 If the interview ever needs to know the recommended insurance, it will
 run this code.  If it does not know the user's age, it will ask.  If
 the user is under 65, **docassemble** will ask questions to determine
-whether the household is low income.
+whether the household is low-income.
 
 A [YAML] interview file is simply a text file consisting of "blocks"
 separated by `---`.  For example, this interview has three blocks:
@@ -130,6 +130,275 @@ you can write.  These blocks are explained in the following sections:
   because they would conflict with the functionality of
   **docassemble** and [Python].
 
+# <a name="yaml"></a>Brief introduction to YAML
+
+**docassemble** interviews are written in [YAML] format, rather than
+assembled using a [graphical user interface], because once developers
+have climbed the **docassemble** learning curve, the text format is
+ideal for managing the complexity of advanced interviews, since it
+allows developers to copy-and-paste, search-and-replace, and organize
+text into multiple files.  [YAML] was chosen as the format because it
+is the cleanest-looking of data formats that are both machine-readable
+and human-readable.
+
+The hardest part about learning **docassemble** is not writing
+[Python] code, since sophisticated interviews can be built using
+nothing more complicated than a few [if/else statements].  The more
+difficult aspect may be learning [YAML].  While the [YAML] format
+looks simple, it can be frustrating.
+
+To understand [YAML], you first need to understand the difference
+between a "list" and a "dictionary."
+
+A "list" is an ordered collection of things.  If my to-do list for a
+Saturday afternoon was first to take out the garbage, and then to
+sweep the porch, this could be represented in [YAML] as:
+
+{% highlight yaml %}
+- Sweep the porch
+- Take out the garbage
+{% endhighlight %}
+
+A "dictionary," by contrast, associates things with other things.  For
+example, if I have some legal terms that I want to associate with an
+explanation, I could put this in a [YAML] dictionary:
+
+{% highlight yaml %}
+lawyer: A person who represents you.
+judge: A person who decides who wins or loses a court case.
+{% endhighlight %}
+
+While a list has an order to it (e.g., I need to first sweep the porch and
+then take out the garbage), the dictionary is just a jumble of words
+and definitions.  More generally, it associates "keys" with "values."
+
+[YAML] interprets lines of text and figures out whether you are
+talking about a list or a dictionary depending on what punctuation you
+use.  If it sees a hyphen, it thinks you are talking about a list.  If
+it sees a color, it thinks you are talking about a dictionary.
+
+Lists and dictionaries can be combined.  You can have a dictionary of
+lists and a list of dictionaries.  If I wanted to express the to-do
+lists of multiple people, I could write:
+
+{% highlight yaml %}
+Frank:
+  - Sweep the porch
+  - Take out the garbage
+  - Clean the toilets
+Sally:
+  - Rake the leaves
+  - Mow the lawn
+{% endhighlight %}
+
+Here, you have a dictionary with two keys: "Frank" and "Sally."  The
+value of the "Frank" key is a list with three items, and the value of
+the "Sally" key is a list with two items.
+
+If you are familiar with [Python]'s data notation, this translates
+into:
+
+{% highlight python %}
+{"Frank": ["Sweep the porch", "Take out the garbage", "Clean the toilets"], "Sally": ["Rake the leaves", "Mow the lawn"]}
+{% endhighlight %}
+
+The [JSON] representation is the same.
+
+You can also have a list of dictionaries:
+
+{% highlight yaml %}
+- title: Tale of Two Cities
+  author: Charles Dickens
+- title: Moby Dick
+  author: Herman Melville
+- title: Green Eggs and Ham
+  author: Dr. Seuss
+{% endhighlight %}
+
+In [Python]'s data notation, this translates into:
+
+{% highlight python %}
+[{'title': 'Tale of Two Cities', 'author': 'Charles Dickens'}, {'title': 'Moby Dick', 'author': 'Herman Melville'}, {'title': 'Green Eggs and Ham', 'author': 'Dr. Seuss'}]
+{% endhighlight %}
+
+[YAML] also allows you to divide up data into separate "documents"
+using the `---` separator.  Here is an example of using three
+documents to describe three different books:
+
+{% highlight yaml %}
+title: Tale of Two Cities
+author: Charles Dickens
+---
+title: Moby Dick
+author: Herman Melville
+---
+title: Green Eggs and Ham
+author: Dr. Seuss
+{% endhighlight %}
+
+[YAML]'s simplicity results from its use of simple punctuation marks.
+However, be careful about data that might confuse the computer.  For
+example, how should the computer read this shopping list?
+
+{% highlight yaml %}
+- apples
+- bread
+- olive oil, the good stuff
+- shortening: for cookies
+- flour
+{% endhighlight %}
+
+In [Python], this will be interpreted as:
+
+{% highlight python %}
+['apples', 'bread', 'olive oil, the good stuff', {'shortening': 'for cookies'}, 'flour']
+{% endhighlight %}
+
+This is a list of apples, bread, olive oil, a dictionary, and flour.
+That's not what you wanted!
+
+You wanted `shortening: for cookies` to be a piece of text.  But the
+computer assumed you wanted to indicate a dictionary.  [YAML]'s clean
+appearance makes it readable, but this kind of problem is the downside
+to [YAML].
+
+You can get around this problem by putting quote marks around text:
+
+{% highlight yaml %}
+- apples
+- bread
+- olive oil
+- "shortening: for cookies"
+- flour
+{% endhighlight %}
+
+This will result in all of the list elements being interpreted as
+plain text.  In [Python]:
+
+{% highlight python %}
+['apples', 'bread', 'olive oil', 'shortening: for cookies', 'flour']
+{% endhighlight %}
+
+[YAML] also allows text to be block quoted:
+
+{% highlight yaml %}
+title: |
+  Raspberry Jam: a "Fancy" Way to Eat Fruit
+author: |
+  Jeanne Trevaskis
+{% endhighlight %}
+
+The pipe character `|` followed by a line break indicates the start of
+the quote.  The indentation is important because it indicates where
+the block quote ends.  As long as you are indenting each line of text,
+you can write anything you want in the text (e.g., colons, quotation
+marks) without worrying that the computer will misinterpret what you
+are writing.
+
+The following values in [YAML] are special:
+
+* `null`, `Null`, `NULL` -- these become `None` in [Python]
+* `true`, `True`, `TRUE` -- these become `True` in [Python]
+* `false`, `False`, `FALSE` -- these become `False` in [Python]
+* numbers such as `54`, `3.14` -- these become numbers in [Python]
+
+These values will not be interpreted as literal pieces of text, but as
+values with special meaning in [Python].  This can cause confusion in
+your interviews, so if you ever use "True" and "False" as a label or
+value, make sure to enclose it in quotation marks.
+
+This [YAML] text:
+
+{% highlight yaml %}
+loopy: 'TRUE'
+smart: false
+pretty: TRUE
+energetic: "false"
+{% endhighlight %}
+
+becomes the following in [Python]:
+
+{% highlight python %}
+{'loopy': 'TRUE', 'smart': False, 'pretty': True, 'energetic': 'false'}
+{% endhighlight %}
+
+One feature of [YAML] that is rarely used, but that you may see, is
+the use of "explicit mapping."  Instead of writing:
+
+{% highlight yaml %}
+apple: red
+orange: orange
+banana: yellow
+{% endhighlight %}
+
+You can write:
+
+{% highlight yaml %}
+? apple
+: red
+? orange
+: orange
+? banana
+: yellow
+{% endhighlight %}
+
+Both mean the same thing.  You might want to use this technique if
+your labels in a [`fields`] specifier are long.  For example, instead
+of writing:
+
+{% highlight yaml %}
+question: |
+  Please answer these questions.
+fields:
+  "Where were you born?": place_of_birth
+  "What were the last words of the first President to fly in a Zeppelin?": words
+{% endhighlight %}
+
+you could write:
+
+{% highlight yaml %}
+question: |
+  Please answer these questions.
+fields:
+  ? Where were you born?
+  : place_of_birth
+  ? |
+    What were the last words of the 
+    first President to fly in a Zeppelin?
+  : words
+{% endhighlight %}
+
+Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
+`[`, and `]`, have special meaning in [YAML], so if you use them in
+your text, make sure to use quotation marks or block quotes.
+
+For more information about [YAML], see the [YAML specification].
+
+# <a name="htdevelop"></a>How to develop your own interviews
+
+To write and test your own interviews, you will need:
+
+1. A **docassemble** server (see [Docker]);
+2. An account on the [username and password system] of that server,
+   where the privileges of the account are "developer" or "admin."
+
+There are several to develop your own interviews:
+
+1. When logged in, go to the "Playground" from the menu in the upper
+   right hand corner.  The [playground] allows you to quickly edit and
+   run interview [YAML].
+2. Create a [package] on your local computer and then install it on
+   the **docassemble** server either through [GitHub] or by uploading a ZIP
+   file.
+3. Create a [package], push it to [GitHub], and then edit your
+   interviews using [GitHub]'s web interface.  (You can also upload
+   static files using [GitHub].)  To run your interview, update your
+   [package] on **docassemble** (which will retrieve your code from
+   [GitHub]).
+
+For more information about the development workflow, see the
+[development overview] section.
+
 # <a name="invocation"></a>How you run a **docassemble** interview
 
 Users start an interview by going to its URL, which is the
@@ -160,6 +429,11 @@ bar will change.  It will end with `#page1`, then `#page2`, then
 effect and the page number has no particular meaning; these tags exist
 for the sole purpose of enabling the user to click the browser's back
 button in order to go back one screen.
+
+The remainder of this subsection will discuss ways that you can
+customize the way that interviews are invoked.  This is a fairly
+advanced topic, so if you are new, feel free to skip to the section on
+[how answers are stored].
 
 If you want to use **docassemble** to give users a list of interviews
 from which to choose, there is also a special page of the site,
@@ -473,16 +747,40 @@ the [POST] request to `/resume`.
 
 # <a name="howstored"></a>How answers are stored
 
-When a user starts a new interview, a new "variable store" is created.
-A variable store is a [Python dictionary] containing the names of the
-variables that get defined during the course of the interview, such as
-`favorite_animal` in the example interview above.  The variable store
-is saved in **docassemble**'s database.
+When a user starts a new interview session, a new "variable store" or
+set of "interview answers" is created.  The interview answers are
+stored in a [Python dictionary] containing the names of the variables
+that get defined during the course of the interview, such as
+`favorite_animal` in the example interview above.  This dictionary is
+saved in **docassemble**'s database.
 
-**docassemble** keeps a copy of the variable store for every step of
-the interview.  If the user presses the **docassemble** back button
-(not the browser back button), **docassemble** will restore the
-variable store to the next earliest version.
+Because this [Python dictionary] can contain data structures and
+complicated [Python objects], before it can be saved in a database, it
+needs to "frozen" into a form that can be stored in a database and
+then "thawed" later.  The method that **docassemble** uses to "freeze"
+and "thaw" the interview answers is [Python]'s [pickle] method.
+
+**docassemble** keeps a snapshot of the interview answers for every
+step of the session.  If the user presses the back button,
+**docassemble** will restore the variable store to the next earliest
+version.  This has the effect of an "undo," and there is no "redo"
+button.
+
+Since the back button performs a permanent "undo," you should not
+encourage your end users to click the "Back" button as a means of
+changing past answers.  Instead, you should provide [review screens]
+where users can quickly find the answer they want to change, and
+change it without losing their work.
+
+Since the interview answers are stored in a [Python] data structure
+that can contain [Python objects], you have a great deal of
+flexibility in how you can structure the information you collect.
+This also means that the interview answers cannot easily be reduced to
+a spreadsheet the way that the results of a [Google Form] can be.  If
+you want to be able to store a session's interview answers in a
+spreadsheet form, you can write [Python] code to do so.  There are
+also some helpful [Objects] and [Functions] that you can use, such as
+the [`DAStore`] object and the [`write_record()`] function.
 
 # <a name="comingback"></a>Leaving an interview and coming back
 
@@ -494,10 +792,11 @@ If the user is logged in, however, then when the user logs in again,
 the user will be able to resume the interview where he left off.
 
 If a new user starts an interview without being logged in, and then
-clicks the link to log in, and then clicks the link to register, the
-user will be logged in and will immediately be directed back to the
-interview they had been using, and they will immediately pick up where
-they left off.
+clicks the "Sign in or sign up to save answers" link to log in, and
+then clicks the link to register, the user will immediately be
+directed back to the interview they had been using, and they will
+immediately pick up where they left off, the only difference being
+that they are now logged in.
 
 If a logged-in user leaves an interview without completing it, closes
 their browser, then opens their browser at a later time, and visits
@@ -537,273 +836,6 @@ For other exiting options, see the `'exit'`, `'leave'`, `'logout'`, and
 `'exit_logout'` options for the [`url_of()`] and [`command()`]
 functions.
 
-# <a name="htdevelop"></a>How to develop your own interviews
-
-To write and test your own interviews, you will need:
-
-1. A **docassemble** server (see [installation]);
-2. An account on the [username and password system] of that server,
-   where the privileges of the account have been upgraded to
-   "developer" or "admin."
-
-There are three ways to develop your own interviews:
-
-1. When logged in, go to the "Playground" from the menu in the upper
-   right hand corner.  The [playground] allows you to quickly edit and
-   run interview [YAML].
-2. Create a [package] on your local computer and then install it on
-   the **docassemble** server either through [GitHub] or by uploading a ZIP
-   file.
-3. Create a [package], push it to [GitHub], and then edit your
-   interviews using [GitHub]'s web interface.  (You can also upload
-   static files using [GitHub].)  To run your interview, update your
-   [package] on **docassemble** (which will retrieve your code from
-   [GitHub]).
-
-# <a name="yaml"></a>Brief introduction to YAML
-
-**docassemble** interviews are written in [YAML] format, rather than
-assembled using a [graphical user interface], because once developers
-have climbed the **docassemble** learning curve, the text format is
-ideal for managing the complexity of advanced interviews, since it
-allows developers to copy-and-paste, search-and-replace, and organize
-text into multiple files.  [YAML] was chosen as the format because it
-is the cleanest-looking of data formats that are both machine-readable
-and human-readable.
-
-The hardest part about learning **docassemble** is not writing
-[Python] code, since sophisticated interviews can be built using
-nothing more complicated than a few [if/else statements].  The more
-difficult aspect may be learning [YAML].  While the [YAML] format
-looks simple, it can be frustrating.
-
-To understand [YAML], you first need to understand the difference
-between a "list" and a "dictionary."
-
-A "list" is an ordered collection of things.  If my to-do list for a
-Saturday afternoon was first to take out the garbage, and then to
-sweep the porch, this could be represented in [YAML] as:
-
-{% highlight yaml %}
-- Sweep the porch
-- Take out the garbage
-{% endhighlight %}
-
-A "dictionary," by contrast, associates things with other things.  For
-example, if I have some legal terms that I want to associate with an
-explanation, I could put this in a [YAML] dictionary:
-
-{% highlight yaml %}
-lawyer: A person who represents you.
-judge: A person who decides who wins or loses a court case.
-{% endhighlight %}
-
-While a list has an order to it (e.g., I need to first sweep the porch and
-then take out the garbage), the dictionary is just a jumble of words
-and definitions.  More generally, it associates "keys" with "values."
-
-[YAML] interprets lines of text and figures out whether you are
-talking about a list or a dictionary depending on what punctuation you
-use.  If it sees a hyphen, it thinks you are talking about a list.  If
-it sees a color, it thinks you are talking about a dictionary.
-
-Lists and dictionaries can be combined.  You can have a dictionary of
-lists and a list of dictionaries.  If I wanted to express the to-do
-lists of multiple people, I could write:
-
-{% highlight yaml %}
-Frank:
-  - Sweep the porch
-  - Take out the garbage
-  - Clean the toilets
-Sally:
-  - Rake the leaves
-  - Mow the lawn
-{% endhighlight %}
-
-Here, you have a dictionary with two keys: "Frank" and "Sally."  The
-value of the "Frank" key is a list with three items, and the value of
-the "Sally" key is a list with two items.
-
-If you are familiar with [Python]'s data notation, this translates
-into:
-
-{% highlight python %}
-{"Frank": ["Sweep the porch", "Take out the garbage", "Clean the toilets"], "Sally": ["Rake the leaves", "Mow the lawn"]}
-{% endhighlight %}
-
-The [JSON] representation is the same.
-
-You can also have a list of dictionaries:
-
-{% highlight yaml %}
-- title: Tale of Two Cities
-  author: Charles Dickens
-- title: Moby Dick
-  author: Herman Melville
-- title: Green Eggs and Ham
-  author: Dr. Seuss
-{% endhighlight %}
-
-In [Python]'s data notation, this translates into:
-
-{% highlight python %}
-[{'title': 'Tale of Two Cities', 'author': 'Charles Dickens'}, {'title': 'Moby Dick', 'author': 'Herman Melville'}, {'title': 'Green Eggs and Ham', 'author': 'Dr. Seuss'}]
-{% endhighlight %}
-
-[YAML] also allows you to divide up data into separate "documents"
-using the `---` separator.  Here is an example of using three
-documents to describe three different books:
-
-{% highlight yaml %}
-title: Tale of Two Cities
-author: Charles Dickens
----
-title: Moby Dick
-author: Herman Melville
----
-title: Green Eggs and Ham
-author: Dr. Seuss
-{% endhighlight %}
-
-[YAML]'s simplicity results from its use of simple punctuation marks.
-However, be careful about data that might confuse the computer.  For
-example, how should the computer read this shopping list?
-
-{% highlight yaml %}
-- apples
-- bread
-- olive oil, the good stuff
-- shortening: for cookies
-- flour
-{% endhighlight %}
-
-In [Python], this will be interpreted as:
-
-{% highlight python %}
-['apples', 'bread', 'olive oil, the good stuff', {'shortening': 'for cookies'}, 'flour']
-{% endhighlight %}
-
-This is a list of apples, bread, olive oil, a dictionary, and flour.
-That's not what you wanted!
-
-You wanted `shortening: for cookies` to be a piece of text.  But the
-computer assumed you wanted to indicate a dictionary.  [YAML]'s clean
-appearance makes it readable, but this kind of problem is the downside
-to [YAML].
-
-You can get around this problem by putting quote marks around text:
-
-{% highlight yaml %}
-- apples
-- bread
-- olive oil
-- "shortening: for cookies"
-- flour
-{% endhighlight %}
-
-This will result in all of the list elements being interpreted as
-plain text.  In [Python]:
-
-{% highlight python %}
-['apples', 'bread', 'olive oil', 'shortening: for cookies', 'flour']
-{% endhighlight %}
-
-[YAML] also allows text to be block quoted:
-
-{% highlight yaml %}
-title: |
-  Raspberry Jam: a "Fancy" Way to Eat Fruit
-author: |
-  Jeanne Trevaskis
-{% endhighlight %}
-
-The pipe character `|` followed by a line break indicates the start of
-the quote.  The indentation is important because it indicates where
-the block quote ends.  As long as you are indenting each line of text,
-you can write anything you want in the text (e.g., colons, quotation
-marks) without worrying that the computer will misinterpret what you
-are writing.
-
-The following values in [YAML] are special:
-
-* `null`, `Null`, `NULL` -- these become `None` in [Python]
-* `true`, `True`, `TRUE` -- these become `True` in [Python]
-* `false`, `False`, `FALSE` -- these become `False` in [Python]
-* numbers such as `54`, `3.14` -- these become numbers in [Python]
-
-These values will not be interpreted as literal pieces of text, but as
-values with special meaning in [Python].  This can cause confusion in
-your interviews, so if you ever use "True" and "False" as a label or
-value, make sure to enclose it in quotation marks.
-
-This [YAML] text:
-
-{% highlight yaml %}
-loopy: 'TRUE'
-smart: false
-pretty: TRUE
-energetic: "false"
-{% endhighlight %}
-
-becomes the following in [Python]:
-
-{% highlight python %}
-{'loopy': 'TRUE', 'smart': False, 'pretty': True, 'energetic': 'false'}
-{% endhighlight %}
-
-One feature of [YAML] that is rarely used, but that you may see, is
-the use of "explicit mapping."  Instead of writing:
-
-{% highlight yaml %}
-apple: red
-orange: orange
-banana: yellow
-{% endhighlight %}
-
-You can write:
-
-{% highlight yaml %}
-? apple
-: red
-? orange
-: orange
-? banana
-: yellow
-{% endhighlight %}
-
-Both mean the same thing.  You might want to use this technique if
-your labels in a [`fields`] specifier are long.  For example, instead
-of writing:
-
-{% highlight yaml %}
-question: |
-  Please answer these questions.
-fields:
-  "Where were you born?": place_of_birth
-  "What were the last words of the first President to fly in a Zeppelin?": words
-{% endhighlight %}
-
-you could write:
-
-{% highlight yaml %}
-question: |
-  Please answer these questions.
-fields:
-  ? Where were you born?
-  : place_of_birth
-  ? |
-    What were the last words of the 
-    first President to fly in a Zeppelin?
-  : words
-{% endhighlight %}
-
-Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
-`[`, and `]`, have special meaning in [YAML], so if you use them in
-your text, make sure to use quotation marks or block quotes.
-
-For more information about [YAML], see the [YAML specification].
-
 [YAML specification]: http://yaml.org/spec/1.2/spec.html
 [if/else statements]: {{ site.baseurl }}/docs/code.html#if
 [graphical user interface]: https://en.wikipedia.org/wiki/Graphical_user_interface
@@ -830,6 +862,7 @@ For more information about [YAML], see the [YAML specification].
 [Markup]: {{ site.baseurl }}/docs/markup.html
 [Functions]: {{ site.baseurl }}/docs/functions.html
 [Documents]: {{ site.baseurl }}/docs/documents.html
+[Docker]: {{ site.baseurl }}/docs/docker.html
 [Roles]: {{ site.baseurl }}/docs/roles.html
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [username and password system]: {{ site.baseurl }}/docs/users.html
@@ -876,3 +909,12 @@ For more information about [YAML], see the [YAML specification].
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
+[pickle]: https://docs.python.org/3.5/library/pickle.html
+[review screens]: {{ site.baseurl }}/docs/fields.html#review
+[Python objects]: https://docs.python.org/2/tutorial/classes.html
+[Google Form]: https://www.google.com/forms/about/
+[`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
+[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
+[development overview]: {{ site.baseurl }}/docs/development.html
+[section on YAML]: #yaml
+[how answers are stored]: #howstored
