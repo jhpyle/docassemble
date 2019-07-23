@@ -16708,7 +16708,11 @@ def server_error(the_error):
         show_debug = False
     else:
         show_debug = True
-    return render_template('pages/501.html', verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug), error_code
+    if error_code == 404:
+        the_template = 'pages/404.html'
+    else:
+        the_template = 'pages/501.html'
+    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug), error_code
 
 @app.route('/bundle.css', methods=['GET'])
 def css_bundle():

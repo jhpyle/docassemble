@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.4.66] - 2019-07-23
+### Changed
+- Allow sending multiple invite e-mails at once.
+### Fixed
+- Canceling phone live help availability failed.
+- The 404 error from `/interview` did not use the 404 template.
+
 ## [0.4.65] - 2019-07-19
 ### Fixed
 - Erasing phone number in Monitor raised an error.

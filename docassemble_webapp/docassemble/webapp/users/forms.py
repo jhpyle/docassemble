@@ -2,12 +2,13 @@ import sys
 import re
 from flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
+from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
 from flask_login import current_user
+import email.utils
 
 try:
     import ldap
@@ -173,9 +174,23 @@ class RequestDeveloperForm(FlaskForm):
     submit = SubmitField(word('Submit'))
 
 class MyInviteForm(FlaskForm):
-    email = StringField(word('E-mail'), validators=[
-        validators.Required(word('E-mail is required')),
-        validators.Email(word('Invalid E-mail'))])
+    def validate(self):
+        has_error = False
+        from flask import flash
+        if self.email.data:
+            for email_address in re.split(r'[\n\r]+', self.email.data.strip()):
+                (part_one, part_two) = email.utils.parseaddr(email_address)
+                if part_two == '':
+                    the_errors = list(self.email.errors)
+                    the_errors.append(word("Invalid e-mail address: " + email_address))
+                    self.email.errors = tuple(the_errors)
+                    has_error = True
+        if has_error:
+            return False
+        return super(MyInviteForm, self).validate()
+    email = TextAreaField(word('One or more e-mail addresses (separated by newlines)'), validators=[
+        validators.Required(word('At least one e-mail address must be listed'))
+    ])
     role_id = SelectField(word('Role'))
     next = HiddenField()
     submit = SubmitField(word('Invite'))

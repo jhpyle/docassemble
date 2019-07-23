@@ -616,10 +616,11 @@ def update_monitor(message):
     phone_partners = dict()
     prefix = 'da:phonecode:monitor:' + str(session['user_id']) + ':uid:'
     for key in term_phone_partners:
-        the_code = rr.get(key)
+        key_for_phone_code = re.sub(r'da:session:uid:', prefix, key)
+        the_code = rr.get(key_for_phone_code)
         if the_code is not None:
             the_code = the_code.decode()
-            rr.delete(re.sub(r'da:session:uid:', prefix, key))
+            rr.delete(key_for_phone_code)
             rr.delete('da:callforward:' + the_code)
     if phone_number is None or phone_number == '':
         for key in rr.keys(prefix + '*'):
@@ -684,7 +685,7 @@ def update_monitor(message):
         pipe.expire(key, 60)
         pipe.execute()
     elif key_exists:
-        #sys.stderr.write("Deleting shit\n")
+        #sys.stderr.write("Not available to chat; deleting da:monitor:role\n")
         pipe = rr.pipeline()
         pipe.delete(key)
         for avail_key in rr.keys('da:monitor:role:*:userid:' + str(session['user_id'])):

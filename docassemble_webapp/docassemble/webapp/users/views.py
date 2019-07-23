@@ -18,6 +18,7 @@ import string
 import pytz
 import datetime
 import re
+import email.utils
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
@@ -235,7 +236,10 @@ def invite():
     if text_type(invite_form.role_id.data) == 'None':
         invite_form.role_id.data = text_type(user_role.id)
     if request.method=='POST' and invite_form.validate():
-        email = invite_form.email.data
+        email_addresses = list()
+        for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
+            (part_one, part_two) = email.utils.parseaddr(email_address)
+            email_addresses.append(part_two)
 
         the_role_id = None
         
@@ -246,33 +250,44 @@ def invite():
         if the_role_id is None:
             the_role_id = user_role.id
 
-        user, user_email = user_manager.find_user_by_email(email)
-        if user:
-            flash(word("A user with that e-mail has already registered"), "error")
-            return redirect(url_for('invite'))
-        else:
-            user_invite = MyUserInvitation(email=email, role_id=the_role_id, invited_by_user_id=current_user.id)
-            db.session.add(user_invite)
-            db.session.commit()
-        token = user_manager.generate_token(user_invite.id)
-        accept_invite_link = url_for('user.register',
-                                     token=token,
-                                     _external=True)
+        has_error = False
+        for email_address in email_addresses:
+            user, user_email = user_manager.find_user_by_email(email_address)
+            if user:
+                flash(word("A user with that e-mail has already registered") + " (" + email_address + ")", "error")
+                has_error = True
+                continue
+            else:
+                user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
+                db.session.add(user_invite)
+                db.session.commit()
+            token = user_manager.generate_token(user_invite.id)
+            accept_invite_link = url_for('user.register',
+                                         token=token,
+                                         _external=True)
 
-        user_invite.token = token
-        db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
-        try:
-            logmessage("Trying to send e-mail to " + text_type(user_invite.email))
-            emails.send_invite_email(user_invite, accept_invite_link)
-        except Exception as e:
-            logmessage("Failed to send e-mail")
-            db.session.delete(user_invite)
+            user_invite.token = token
             db.session.commit()
             #docassemble.webapp.daredis.clear_user_cache()
-            flash(word('Unable to send e-mail.  Error was: ') + text_type(e), 'error')
+            try:
+                logmessage("Trying to send e-mail to " + text_type(user_invite.email))
+                emails.send_invite_email(user_invite, accept_invite_link)
+            except Exception as e:
+                try:
+                    logmessage("Failed to send e-mail: " + text_type(e))
+                except:
+                    logmessage("Failed to send e-mail")
+                db.session.delete(user_invite)
+                db.session.commit()
+                #docassemble.webapp.daredis.clear_user_cache()
+                flash(word('Unable to send e-mail.  Error was: ') + text_type(e), 'error')
+                has_error = True
+        if has_error:
             return redirect(url_for('invite'))
-        flash(word('Invitation has been sent.'), 'success')
+        if len(email_addresses) > 1:
+            flash(word('Invitations have been sent.'), 'success')
+        else:
+            flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
     return render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)
