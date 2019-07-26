@@ -2710,7 +2710,8 @@ def process_action():
                     this_thread.current_info['action_list'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + text_type(err))
-        raise ForcedReRun()
+        force_ask(dict(action='_da_list_ensure_complete', arguments=dict(group=this_thread.current_info['action_list'].instanceName)))
+        #raise ForcedReRun()
     elif the_action == '_da_dict_remove':
         if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
             try:
@@ -2719,7 +2720,8 @@ def process_action():
                     this_thread.current_info['action_dict'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_dict_remove error: " + text_type(err))
-        raise ForcedReRun()
+        force_ask(dict(action='_da_dict_ensure_complete', arguments=dict(group=this_thread.current_info['action_dict'].instanceName)))
+        #raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:

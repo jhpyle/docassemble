@@ -2274,6 +2274,8 @@ class Question:
                 keyword_args = ''
                 if 'delete buttons' in data and not data['delete buttons']:
                     keyword_args += ', delete=False'
+                if 'confirm' in data and data['confirm']:
+                    keyword_args += ', confirm=True'
                 if 'read only' in data:
                     if not isinstance(data['read only'], string_types):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
@@ -2298,6 +2300,8 @@ class Question:
                     if not isinstance(data['read only'], string_types):
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
+                if 'confirm' in data and data['confirm']:
+                    keyword_args += ', confirm=True'
                 if 'delete buttons' in data and data['delete buttons']:
                     column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ')', '<delete button code>', 'eval'))
                 else:
@@ -5204,7 +5208,7 @@ class Interview:
                 help_item['content'] = source['content'].text(the_user_dict)
                 result.append(help_item)
         return result
-    def assemble(self, user_dict, interview_status=None, old_user_dict=None):
+    def assemble(self, user_dict, interview_status=None, old_user_dict=None, force_question=None):
         #sys.stderr.write("assemble\n")
         user_dict['_internal']['tracker'] += 1
         if interview_status is None:
@@ -5290,6 +5294,12 @@ class Interview:
                             exec(import_process_action, user_dict)
                         else:
                             exec(import_util, user_dict)
+                    if force_question is not None:
+                        if self.debug:
+                            interview_status.seeking.append({'question': question, 'reason': 'multiple choice question', 'time': time.time()})
+                        docassemble.base.functions.this_thread.current_question = force_question
+                        interview_status.populate(force_question.ask(user_dict, old_user_dict, 'None', [], None, None))
+                        raise MandatoryQuestion()
                     if not self.calls_process_action:
                         exec(run_process_action, user_dict)
                     for question in self.questions_list:

@@ -106,6 +106,7 @@ keymap = daconfig.get('keymap', None)
 google_config = daconfig.get('google', dict())
 
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
+is_integer = re.compile(r'[0-9]+')
 detect_mobile = re.compile('Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
@@ -5494,6 +5495,7 @@ def index(action_argument=None):
                 if the_key == '_multiple_choice' and '_question_name' in post_data:
                     question_name = post_data.get('_question_name', -100)
                     if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
+                        logmessage("it's a refresh or continue")
                         continue
                 should_assemble = True
                 #logmessage("index: pre-assembly necessary for " + the_key)
@@ -5714,6 +5716,7 @@ def index(action_argument=None):
     imported_core = False
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
+    special_question = None
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
@@ -6094,10 +6097,15 @@ def index(action_argument=None):
             data = repr(data)
         if key == "_multiple_choice":
             if '_question_name' in post_data:
-                if post_data['_question_name'] == 'Question_Temp':
+                question_name = post_data['_question_name']
+                if question_name == 'Question_Temp':
                     key = '_internal["answers"][' + repr(interview_status.question.extended_question_name(user_dict)) + ']'
                 else:
-                    key = '_internal["answers"][' + repr(interview.questions_by_name[post_data['_question_name']].extended_question_name(user_dict)) + ']'
+                    key = '_internal["answers"][' + repr(interview.questions_by_name[question_name].extended_question_name(user_dict)) + ']'
+                    if is_integer.match(text_type(post_data[orig_key])):
+                        the_choice = int(text_type(post_data[orig_key]))
+                        if len(interview.questions_by_name[question_name].fields[0].choices) > the_choice and 'key' in interview.questions_by_name[question_name].fields[0].choices[the_choice] and hasattr(interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'].question_type in ('restart', 'exit', 'logout', 'exit_logout', 'leave'):
+                            special_question = interview.questions_by_name[question_name].fields[0].choices[the_choice]['key']
         if is_date:
             #logmessage("index: doing import docassemble.base.util")
             try:
@@ -6171,7 +6179,7 @@ def index(action_argument=None):
                 logmessage("Error: " + text_type(errMess))
             except:
                 pass
-    if validated:
+    if validated and special_question is None:
         #for orig_key in blank_fields:
             #key = myb64unquote(orig_key)
             #logmessage("Found a blank field " + key + " of type " + known_datatypes[orig_key])
@@ -6192,7 +6200,7 @@ def index(action_argument=None):
                     eval(key, user_dict)
                 except:
                     exec(key + ' = None' , user_dict)
-    if validated:
+    if validated and special_question is None:
         if '_order_changes' in post_data:
             orderChanges = json.loads(post_data['_order_changes'])
             for tableName, changes in orderChanges.items():
@@ -6518,7 +6526,7 @@ def index(action_argument=None):
     else:
         #sys.stderr.write("index: calling fetch_user_dict4\n")
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-    if validated:
+    if validated and special_question is None:
         if '_collect_delete' in post_data and '_list_collect_list' in post_data:
             to_delete = json.loads(post_data['_collect_delete'])
             is_ok = True
@@ -6556,13 +6564,12 @@ def index(action_argument=None):
     #startTime = int(round(time.time() * 1000))
     #g.assembly_start = time.time()
     #logmessage("index: assemble 7")
-    interview.assemble(user_dict, interview_status, old_user_dict)
+    interview.assemble(user_dict, interview_status, old_user_dict, force_question=special_question)
     #g.assembly_end = time.time()
     #endTime = int(round(time.time() * 1000))
     #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
-    if current_language != DEFAULT_LANGUAGE:
-        session['language'] = current_language
+    session['language'] = current_language
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     # if len(interview_status.attachments) > 0:
@@ -6576,21 +6583,6 @@ def index(action_argument=None):
     if not changed and url_args_changed:
         changed = True
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
-    if interview_status.question.question_type == "new_session":
-        manual_checkout()
-        referer = user_dict['_internal'].get('referer', None)
-        user_dict = fresh_dictionary()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
-        release_lock(user_code, yaml_filename)
-        user_code, user_dict = reset_session(yaml_filename, secret)
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if 'visitor_secret' not in request.cookies:
-            save_user_dict_key(user_code, yaml_filename)
-            session['key_logged'] = True
-        steps = 1
-        changed = False
-        #logmessage("index: assemble 7.9")
-        interview.assemble(user_dict, interview_status)
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -6609,30 +6601,6 @@ def index(action_argument=None):
         changed = False
         #logmessage("index: assemble 8")
         interview.assemble(user_dict, interview_status)
-    will_save = True
-    if interview_status.question.question_type == "refresh":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        release_lock(user_code, yaml_filename)
-        return do_refresh(is_ajax, yaml_filename)
-    if interview_status.question.question_type == "signin":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
-    if interview_status.question.question_type == "register":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
-    if interview_status.question.question_type == "leave":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        release_lock(user_code, yaml_filename)
-        if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
-        else:
-            return do_redirect(exit_page, is_ajax, is_json, js_target)
-    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
-        user_dict['_internal']['progress'] = interview_status.question.progress
-    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
-        user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "exit":
         manual_checkout()
         reset_user_dict(user_code, yaml_filename)
@@ -6663,6 +6631,45 @@ def index(action_argument=None):
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
         return response
+    if interview_status.question.question_type == "new_session":
+        manual_checkout()
+        referer = user_dict['_internal'].get('referer', None)
+        user_dict = fresh_dictionary()
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
+        release_lock(user_code, yaml_filename)
+        user_code, user_dict = reset_session(yaml_filename, secret)
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+        if 'visitor_secret' not in request.cookies:
+            save_user_dict_key(user_code, yaml_filename)
+            session['key_logged'] = True
+        steps = 1
+        changed = False
+        #logmessage("index: assemble 7.9")
+        interview.assemble(user_dict, interview_status)
+    will_save = True
+    if interview_status.question.question_type == "refresh":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        release_lock(user_code, yaml_filename)
+        return do_refresh(is_ajax, yaml_filename)
+    if interview_status.question.question_type == "signin":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        release_lock(user_code, yaml_filename)
+        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+    if interview_status.question.question_type == "register":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        release_lock(user_code, yaml_filename)
+        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+    if interview_status.question.question_type == "leave":
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        release_lock(user_code, yaml_filename)
+        if interview_status.questionText != '':
+            return do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
+        else:
+            return do_redirect(exit_page, is_ajax, is_json, js_target)
+    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
+        user_dict['_internal']['progress'] = interview_status.question.progress
+    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
+        user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "response":
         if is_ajax:
             # Duplicative to save here?
@@ -8051,6 +8058,14 @@ def index(action_argument=None):
         return false;
       }
       function daEmbeddedAction(e){
+        if ($(this).hasClass("daremovebutton")){
+          if (confirm(""" + json.dumps(word("Are you sure you want to delete this item?")) + """)){
+            return true;
+          }
+          e.preventDefault();
+          $(this).blur();
+          return false;
+        }
         var data = decodeURIComponent($(this).data('embaction'));
         $.ajax({
           type: "POST",
@@ -9919,11 +9934,13 @@ def utility_processor():
             return re.sub(r'.*\$', '', the_user.social_id)
     if 'language' in session:
         docassemble.base.functions.set_language(session['language'])
+        lang = session['language']
     else:
         docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
+        lang = DEFAULT_LANGUAGE
     def in_debug():
         return DEBUG
-    return dict(word=docassemble.base.functions.word, in_debug=in_debug, user_designator=user_designator, get_part=get_part)
+    return dict(word=docassemble.base.functions.word, in_debug=in_debug, user_designator=user_designator, get_part=get_part, current_language=lang)
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -17972,7 +17989,7 @@ def login_or_register(sender, user, **extra):
         db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id
-    if user.language and user.language != DEFAULT_LANGUAGE:
+    if user.language:
         session['language'] = user.language
 
 @user_logged_in.connect_via(app)

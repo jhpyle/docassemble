@@ -1500,7 +1500,11 @@ class DAList(DAObject):
             items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm btn-secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-darevisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            if kwargs.get('confirm', False):
+                areyousure = ' daremovebutton'
+            else:
+                areyousure = ''
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-darevisit' + areyousure +'"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -1572,11 +1576,15 @@ class DADict(DAObject):
         if not hasattr(self, 'complete_attribute'):
             self.complete_attribute = None
         if 'ask_object_type' in kwargs:
-            self.ask_object_type = True
+            if kwargs['ask_object_type']:
+                self.ask_object_type = True
+            del kwargs['ask_object_type']
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
-        if 'keys' in kwargs and isinstance(kwargs['keys'], (DAList, DASet, abc.Iterable)) and not isinstance(kwargs['keys'], string_types):
-            self.new(kwargs['keys'])
+        if 'keys' in kwargs:
+            if isinstance(kwargs['keys'], (DAList, DASet, abc.Iterable)) and not isinstance(kwargs['keys'], string_types):
+                self.new(kwargs['keys'])
+            del kwargs['keys']
         return super(DADict, self).init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""
@@ -2264,7 +2272,11 @@ class DADict(DAObject):
             items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm btn-secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-darevisit"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            if kwargs.get('confirm', False):
+                areyousure = ' daremovebutton'
+            else:
+                areyousure = ''
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm btn-danger btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):

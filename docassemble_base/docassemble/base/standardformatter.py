@@ -1207,6 +1207,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 pairlist = list(status.selectcompute[status.question.fields[0].number])
                 if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                     random.shuffle(pairlist)
+                found_default = False
                 for pair in pairlist:
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
@@ -1219,16 +1220,17 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=True, do_terms=False)
                     if defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == text_type(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                        found_default = True
                     if status.question.question_variety == "radio":
                         if True or pair['key'] is not None: #not sure why this was added
                             output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                         else:
                             output += '                <div class="form-group row"><div class="col-md-12">' + help_wrap(markdown_to_html(pair['label'], status=status), helptext, status) + '</div></div>\n'
                     else:
-                        if True or pair['key'] is not None:
-                            inner_fieldlist.append('<option value="' + text_type(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
-
+                        inner_fieldlist.append('<option value="' + text_type(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
                     id_index += 1
+                if status.question.question_variety != "radio" and found_default:
+                    inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
                         combobox = ' combobox'
@@ -1248,8 +1250,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
             else:
                 indexno = 0
+                found_default = False
                 for choice in status.selectcompute[status.question.fields[0].number]:
-                #for choice in status.question.fields[0].choices:
                     if 'image' in choice:
                         the_icon = icon_html(status, choice['image']) + ' '
                     else:
@@ -1261,6 +1263,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'default' in choice:
                         is_a_default = choice['default']
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                        found_default = True
                     else:
                         is_a_default = False
                         ischecked = ''
@@ -1272,6 +1275,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         inner_fieldlist.append('<option value="' + str(indexno) + '"' + ischecked + '>' + formatted_key + '</option>')
                     id_index += 1
                     indexno += 1
+                if status.question.question_variety != "radio" and found_default:
+                    inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
                         combobox = ' combobox'
@@ -2034,16 +2039,17 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" ' + disable_others_data + '>'
+            first_option = ''
             if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and not embedded:
                 if placeholdertext == '':
-                    output += '<option value="">' + word('Select one') + '</option>'
+                    first_option += '<option value="">' + word('Select one') + '</option>'
                 else:
-                    output += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
+                    first_option += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
             else:
                 if placeholdertext == '':
-                    output += '<option value="">' + word('Select...') + '</option>'
+                    first_option += '<option value="">' + word('Select...') + '</option>'
                 else:
-                    output += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
+                    first_option += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
             try:
                 defaultvalue_printable = text_type(defaultvalue)
                 defaultvalue_is_printable = True
@@ -2053,14 +2059,20 @@ def input_for(status, field, wide=False, embedded=False):
             #logmessage("defaultvalue is " + repr(defaultvalue))
             #logmessage("defaultvalue_printable is " + repr(defaultvalue_printable))
             #logmessage("defaultvalue_is_printable is " + repr(defaultvalue_is_printable))
+            found_default = False
+            other_options = ''
             for pair in pairlist:
                 if True or pair['key'] is not None:
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, do_terms=False)
                     #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
-                    output += '<option value="' + text_type(pair['key']) + '"'
+                    other_options += '<option value="' + text_type(pair['key']) + '"'
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable):
-                        output += ' selected="selected"'
-                    output += '>' + formatted_item + '</option>'
+                        other_options += ' selected="selected"'
+                        found_default = True
+                    other_options += '>' + formatted_item + '</option>'
+            if (not status.extras['required'][field.number]) or (not found_default):
+                output += first_option
+            output += other_options
             if embedded:
                 output += '</select></span> '
             else:
