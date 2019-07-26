@@ -781,7 +781,9 @@ Other methods available on a `DAList` are:
   `delete` is false, the delete button is not shown.  If
   `edit_url_only` is true, a plain URL for the edit action is
   returned, rather than HTML.  If `delete_url_only` is true, a plain
-  URL for the delete action is returned, rather than HTML.
+  URL for the delete action is returned, rather than HTML.  If
+  `confirm` is true, the user will be asked to confirm before an item
+  is deleted.
 * <a name="DAList.filter"></a> - returns a shallow copy of the list
   object where the elements of the list are filtered according to
   criteria specified in keyword arguments.  For example, if `person`

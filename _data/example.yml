@@ -9688,6 +9688,18 @@
     Summary of income
   subquestion: |
     ${ income.table }
+"table-dict-confirm": |-
+  table: income.table
+  rows: income
+  columns:
+    - Type: |
+        row_index
+    - Receives: |
+        'Yes' if row_item.receives else 'No'
+    - Amount: |
+        currency(row_item.amount) if row_item.receives else ''
+  delete buttons: True
+  confirm: True
 "table-dict-delete-buttons": |-
   table: income.table
   rows: income

@@ -1341,6 +1341,12 @@ is longer than a certain length, you can give the [`DAList`] or
 
 {% include side-by-side.html demo="table-dict-edit-minimum-number" %}
 
+<a name="confirm"></a>If you have a [`DAList`] or a [`DADict`] and you
+want the user to confirm before deleting an item that they really
+meant to delete the item, you can include `confirm: True`.
+
+{% include side-by-side.html demo="table-dict-confirm" %}
+
 <a name="read only"></a>If you want specific items to be protected
 against editing and/or deletion, you can set a `read only` specifier:
 

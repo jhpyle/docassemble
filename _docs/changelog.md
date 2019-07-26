@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.67](https://github.com/jhpyle/docassemble/releases/tag/v0.4.67) - 2019-07-25
+
+### Added
+- The `confirm` option for table editing.
+
+### Changed
+- The "Select..." option on a dropdown is omitted when the field is
+  required and a default value is selected.
+
+### Fixed
+- The `keys()` method of `DADict` was removed when `keys` included in
+  constructor.
+- The language did not switch unless it did not match the default
+  language.
+- Restart buttons did not work from `event` screens.
+
 ## [0.4.66](https://github.com/jhpyle/docassemble/releases/tag/v0.4.66) - 2019-07-23
 
 ### Changed
