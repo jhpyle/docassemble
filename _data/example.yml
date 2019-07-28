@@ -5773,6 +5773,31 @@
     % else:
     There are no available interviews.
     % endif
+"list-table-manual-gather": |-
+  objects:
+    - person: DAList.using(object_type=Individual,
+                           complete_attribute='complete',
+                           auto_gather=False)
+  ---
+  code: |
+    person[0]
+    person[1]
+    for item in person.elements:
+      item.complete
+    person.gathered = True
+  ---
+  code: |
+    person[i].name.first
+    person[i].favorite_fruit
+    person[i].complete = True
+"list-table-manual-gather-simple": |-
+  objects:
+    - person: DAList.using(auto_gather=False)
+  ---
+  code: |
+    person[0]
+    person[1]
+    person.gathered = True
 "lists": |-
   mandatory: True
   code: |
@@ -11138,6 +11163,17 @@
     % endif
   buttons:
     - Restart: restart
+"hook-on-gather": |-
+  modules:
+    .income
+  ---
+  objects:
+    - income: |
+        IncomeDict.using(
+          object_type=DAObject,
+          keys=['employment', 'benefits', 'interest'],
+          complete_attribute='complete',
+          there_is_another=False)
 "interview_in_interview": "objects:\n  - user_global: Individual\n  - user: Individual\n\
   \  - endpoint: DADict\n---\nmandatory: True\ncode: |\n  while True:\n    del endpoint[user.goal]\n\
   \    del user\n---\nquestion: |\n  What interview would you like to complete?\n\

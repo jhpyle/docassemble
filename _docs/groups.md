@@ -1449,6 +1449,101 @@ the first three items in the list will not have Delete buttons.
 The `list collect` specifier only works on [`DAList`] variables, not
 on [`DADict`] or [`DASet`] variables.
 
+# <a name="hook"></a>Triggering your own code during the gathering process
+
+When you are gathering a group, you might want some code to run after
+the group is gathered, as well as whenever an item in the group is
+edited or deleted.
+
+If the code you need to run relates only to an item in the group, you
+can set [`complete_attribute`] to `'complete'` and write a [`code`
+block] that defines the `.complete` attribute for any item in the
+group.  This [`code` block] will be run for every item in the group
+during the gathering process and also whenever the user [edits] the
+group.
+
+However, sometimes the code you want to run relates to the group as a
+whole and not just to a particular item.  In this circumstance, you
+can use the "hook" methods [`hook_on_gather()`] and
+[`hook_after_gather()`].  In order to use these methods, you will need
+to define your own class using a module file, and make your class a
+subclass of whatever class you are using (e.g., [`DAList`],
+[`DADict`]).
+
+Here is an example that subclasses the [`DADict`].
+
+{% include demo-side-by-side.html demo="hook-on-gather" %}
+
+The module file that is referenced in the [`modules`] block,
+[`income.py`], looks like this:
+
+{% highlight python %}
+from docassemble.base.util import DADict
+
+__all__ = ['IncomeDict']
+
+class IncomeDict(DADict):
+    def hook_on_gather(self):
+        if 'benefits' in self.elements and self['benefits'].receives and 'employment' in self.elements and self['employment'].receives and self['benefits'].amount + self['employment'].amount > 2000:
+            self.reason_for_benefits
+        elif hasattr(self, 'reason_for_benefits'):
+            del self.reason_for_benefits
+    def hook_after_gather(self):
+        self.total_amount = sum(y.amount for y in self.values() if y.receives)
+{% endhighlight %}
+
+In this example, the [`hook_on_gather()`] method ensures that the user
+provides an explanation about their income if the user is employed,
+receives public benefits, and the total income from these income
+sources exceeds $2,000.
+
+The [`hook_after_gather()`] method performs a computation that uses
+all of the items in the dictionary.
+
+The advantage of putting this logic into the "hook" methods is that
+the logic will be applied automatically whenever a change is made to
+the items in the dictionary.  For example, if the user first puts in
+less than $2,000 of income but then edits the list to increase the
+income, the additional question will be asked.  If the user edits the
+list to decrease the income below $2,000, the attribute with the
+answer to that question is deleted.  Whenever a change is made to the
+list, the `total_amount` is updated.
+
+The [`hook_on_gather()`] method is run just before the dictionary is
+marked as gathered.  Every time the user edits the table, the
+dictionary is temporarly marked as ungathered, and is then marked as
+gathered again.  Since the dictionary can't be marked as gathered
+until the [`hook_on_gather()`] method runs to completion, you can be
+sure that the `.reason_for_benefits` attribute will get defined (or
+undefined if appropriate).
+
+By contrast, the [`hook_after_gather()`] method is run after the
+dictionary is marked as gathered.  It is guaranteed to run after the
+group is gathered or re-gathered.  Unlike [`hook_on_gather()`], it
+cannot trigger the asking of [`question` blocks] or [`code` blocks],
+at least not in a reliable way.
+
+In this example, the [`hook_after_gather()`] method computes a sum.
+This is done for demonstration purposes only.  In practice, if you
+just need to compute a sum, it is best to write a separate method for
+this, and then call that method whenever you need the sum.  (You can
+also write code in-line that computes the sum.)  You might want to use
+[`hook_after_gather()`] for code that calls an API, or other code that
+should not run unnecessarily.
+
+Note that since [`hook_on_gather()`] is called during the gathering
+process, it is careful not to do anything that relies upon the group
+being gathered.  For example, it refers to the `.elements` dictionary
+directly, which will not trigger gathering.  By contrast, the
+[`hook_after_gather()`] method assumes (correctly) that the group has
+already been gathered.
+
+[Subclassing] the [`DADict`] is an advanced [Python] technique, but it
+is ultimately easiest to write your logic in the form of "hooks,"
+because otherwise you have to try to anticipate all the different ways
+that users might be able to get past your logic by editing, deleting,
+or adding table items.
+
 # <a name="examples"></a>Examples
 
 ## <a name="nested objects"></a>List of dictionaries from checkbox
@@ -1583,3 +1678,8 @@ after it is defined.
 [index variable]: {{ site.baseurl }}/docs/fields.html#index variables
 [`using()` method]: {{ site.baseurl }}/docs/objects.html#DAObject.using
 [Python class]: https://docs.python.org/2/tutorial/classes.html
+[`hook_on_gather()`]: {{ site.baseurl }}/docs/objects.html#DAList.hook_on_gather
+[`hook_after_gather()`]: {{ site.baseurl }}/docs/objects.html#DAList.hook_after_gather
+[edits]: #editing
+[`income.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/income.py
+[Subclassing]: https://www.codesdope.com/python-subclass-of-a-class/

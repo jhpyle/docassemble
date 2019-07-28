@@ -784,7 +784,49 @@ Other methods available on a `DAList` are:
   URL for the delete action is returned, rather than HTML.  If
   `confirm` is true, the user will be asked to confirm before an item
   is deleted.
-* <a name="DAList.filter"></a> - returns a shallow copy of the list
+* <a name="DAList.hook_on_gather"></a><a
+  name="DADict.hook_on_gather"></a>`hook_on_gather()` - this method is
+  run automatically as part of the list gathering process.  It is run
+  immediately before the `.gathered` attribute is set to `True` to
+  mark the gathering process as finished.  If you use `.add_action()`,
+  `.item_actions()`, or a feature that uses them ([table editing]),
+  the `hook_on_gather()` method will run because these methods trigger
+  the gathering process.  By default, `hook_on_gather()` does nothing,
+  but it is useful in subclasses if you want to make sure that
+  something is done before the list is considered gathered.  When you
+  write `.hook_on_gather()` in subclasses, be careful that your code
+  does not assume that the list has been gathered, because it has not
+  been gathered.  For an example, see [using hooks].
+* <a name="DAList.hook_after_gather"></a><a
+  name="DADict.hook_after_gather"></a>`hook_after_gather()` - this
+  method is run automatically as part of the list gathering process.
+  It is run immediately after the `.gathered` attribute is set to
+  `True` to mark the gathering process as finished.  If you use
+  `.add_action()`, `.item_actions()`, or a feature that uses them
+  ([table editing]), the `hook_on_gather()` method will run because
+  these methods trigger the gathering process.  By default,
+  `hook_after_gather()` does nothing, but it is useful in subclasses
+  if you want to make sure that something is done after the list is
+  gathered.  This method is different from `hook_on_gather()` because
+  it is run after the list is gathered.  Thus, the method can rely on
+  the list having been fully gathered.  However, because it runs after
+  gathering is complete, `hook_after_gather()` should not trigger the
+  asking of any [`question`]s or the running of any [`code`] blocks,
+  because the logic will not be idempotent; there would be no reason
+  in the for the `hook_after_gather()` method to be called again.  By
+  contrast, the `hook_on_gather()` method can trigger the asking of
+  [`question`]s or the running of [`code`] blocks, since the
+  completion of `hook_on_gather()` is a prerequisite to the list being
+  gathered.  In short, `hook_on_gather()` is a prerequisite, and
+  `hook_after_gather()` is an afterthought.  For most purposes, you
+  should be able to get by with `hook_on_gather()`, but one reason to
+  use `hook_after_gather()` is if you have set `auto_gather` to
+  `False`; in this case, `hook_on_gather()` is run before the
+  `.gathered` attribute is sought, so it will be run before any code
+  in a [`code`] block that defines the `.gathered` attribute.  You
+  might want your logic to be applied after this code runs, not
+  before.  For an example, see [using hooks].
+* <a name="DAList.filter"></a>`filter()` - returns a shallow copy of the list
   object where the elements of the list are filtered according to
   criteria specified in keyword arguments.  For example, if `person`
   is a list of [`Individual`]s, and each individual has an attribute
@@ -800,7 +842,7 @@ Other methods available on a `DAList` are:
   changed.  While the `filter()` method can be a useful shorthand, its
   features are very limited.  In most situations, it is probably
   better to use a [list comprehension].
-* <a name="DAList.initializeObject"></a> - Calling
+* <a name="DAList.initializeObject"></a>`initializeObject()` - Calling
   `my_list.initializeObject(0, DAObject)` will set the first item in
   the list to a `DAObject`, with an appropriate instance name.
 
@@ -4467,3 +4509,5 @@ of the original [`DADateTime`] object.  See
 [OAuth2]: https://oauth.net/2/
 [Google Developers Console]: https://console.developers.google.com/
 [`oauth.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/oauth.py
+[table editing]: {{ site.baseurl }}/docs/groups.html#editing
+[using hooks]: {{ site.baseurl }}/docs/groups.html#hook

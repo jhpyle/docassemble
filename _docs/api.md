@@ -43,26 +43,26 @@ The output returned is in [JSON] format:
 {% highlight json %}
 [
   {
-    "filename": "docassemble.base:data/questions/examples/combobox.yml", 
-    "link": "http://localhost/interview?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fcombobox.yml", 
-    "package": "docassemble.base", 
-    "status_class": null, 
-    "subtitle": null, 
-    "subtitle_class": null, 
-    "tags": [], 
+    "filename": "docassemble.base:data/questions/examples/combobox.yml",
+    "link": "http://localhost/interview?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fcombobox.yml",
+    "package": "docassemble.base",
+    "status_class": null,
+    "subtitle": null,
+    "subtitle_class": null,
+    "tags": [],
     "title": "Combobox"
-  }, 
+  },
   {
-    "filename": "docassemble.demo:data/questions/questions.yml", 
-    "link": "http://localhost/interview?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml", 
-    "package": "docassemble.demo", 
-    "status_class": null, 
-    "subtitle": null, 
-    "subtitle_class": null, 
+    "filename": "docassemble.demo:data/questions/questions.yml",
+    "link": "http://localhost/interview?i=docassemble.demo%3Adata%2Fquestions%2Fquestions.yml",
+    "package": "docassemble.demo",
+    "status_class": null,
+    "subtitle": null,
+    "subtitle_class": null,
     "tags": [
-      "demo", 
+      "demo",
       "legal"
-    ], 
+    ],
     "title": "Demonstration interview"
   }
 ]
@@ -157,7 +157,7 @@ Path: `/api/user/new`
 
 Method: [POST]
 
-Parameters:
+Form data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -176,13 +176,13 @@ Parameters:
  - `subdivisionfirst` (optional): the user's state.
  - `subdivisionsecond` (optional): the user's county.
  - `subdivisionthird` (optional): the user's municipality.
- - `organization` (optional): the user's organization 
+ - `organization` (optional): the user's organization
  - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
  - `language` (optional): the user's language code (e.g., `en`).
 
-Required privileges: `admin`
+Required privileges: `admin`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate, or if
    the owner of the API key lacks `admin` privileges.
  - [400] "An e-mail address must be supplied." if the `username`
@@ -197,7 +197,7 @@ Responses on failure:
    is already using the given `username`.
  - [400] "Password too short or too long" if the password has fewer than
    four or more than 254 characters.
- 
+
 Response on success: [200]
 
 Body of response: a [JSON] object with the following keys:
@@ -222,9 +222,9 @@ Parameters:
 
 Required privileges:
  - `admin` or
- - `advocate`
+ - `advocate`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate or the
    required privileges are not present.
 
@@ -237,7 +237,7 @@ Body of response: a [JSON] list of objects with the following keys:
  - `country`: user's country code.
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
- - `id`: the integer ID of the user. 
+ - `id`: the integer ID of the user.
  - `language`: user's language code.
  - `last_name`: user's last name.
  - `organization`: user's organization.
@@ -261,9 +261,9 @@ Parameters:
 
 Required privileges:
  - `admin` or
- - `advocate`
+ - `advocate`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate or the
    required privileges are not present.
  - [400] "An e-mail address must be supplied." if the `username`
@@ -280,7 +280,7 @@ Body of response: a [JSON] object with the following keys:
  - `country`: user's country code.
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
- - `id`: the integer ID of the user. 
+ - `id`: the integer ID of the user.
  - `language`: user's language code.
  - `last_name`: user's last name.
  - `organization`: user's organization.
@@ -304,11 +304,11 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
- 
+
 Response on success: [200]
 
 Body of response: a [JSON] object with the following keys describing
@@ -316,10 +316,10 @@ the API owner:
  - `country`: user's country code.
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
- - `id`: the integer ID of the user. 
+ - `id`: the integer ID of the user.
  - `language`: user's language code.
  - `last_name`: user's last name.
- - `organization`: user's organization 
+ - `organization`: user's organization
  - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
@@ -345,7 +345,7 @@ Form data:
  - `subdivisionfirst` (optional): the user's state.
  - `subdivisionsecond` (optional): the user's county.
  - `subdivisionthird` (optional): the user's municipality.
- - `organization` (optional): the user's organization 
+ - `organization` (optional): the user's organization
  - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
  - `language` (optional): the user's language code (e.g., `en`).
  - `password` (optional): the user's password.
@@ -353,7 +353,7 @@ Form data:
 Required privileges: None, except that only users with `admin`
 privileges can use the API to change a password.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [403] "You must have admin privileges to change a password." if the
    `password` parameter is included but the owner of the API lacks
@@ -384,7 +384,7 @@ Parameters:
 Required privileges: `admin` or `advocate`, or the API owner's user ID is the
 same as `user_id`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "User ID must be an integer" if the user_id parameter cannot be
    interpreted as an integer.
@@ -399,10 +399,10 @@ the user with a user ID equal to the `user_id`:
  - `country`: user's country code (e.g., `US`).
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
- - `id`: the integer ID of the user. 
+ - `id`: the integer ID of the user.
  - `language`: user's language code (e.g., `en`).
  - `last_name`: user's last name.
- - `organization`: user's organization 
+ - `organization`: user's organization
  - `privileges`: list of the user's privileges (e.g., `'admin'`, `'developer'`).
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
@@ -425,9 +425,9 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
 
-Required privileges: `admin`
+Required privileges: `admin`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "User ID must be an integer" if the user_id parameter cannot be
    interpreted as an integer.
@@ -455,7 +455,7 @@ Form data:
  - `first_name` (optional): user's first name.
  - `language` (optional): user's language code (e.g., `en`).
  - `last_name` (optional): user's last name.
- - `organization` (optional): user's organization 
+ - `organization` (optional): user's organization
  - `subdivisionfirst` (optional): user's state.
  - `subdivisionsecond` (optional): user's county.
  - `subdivisionthird` (optional): user's municipality.
@@ -467,7 +467,7 @@ Required privileges: `admin`, or `user_id` is the same as the user ID
 of the API owner.  Only users with `admin` privileges can use the API
 to change a password.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [403] "You must have admin privileges to change a password." if the
    `password` parameter is included but the owner of the API lacks
@@ -499,9 +499,9 @@ Parameters:
 
 Required privileges:
 - `admin` or
-- `developer`
+- `developer`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
 
 Response on success: [200]
@@ -524,7 +524,7 @@ Form data:
 
 Required privileges: `admin`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "A privilege name must be provided" if the `privilege` data value
    is missing.
@@ -554,7 +554,7 @@ Form data:
 
 Required privileges: `admin`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "A privilege name must be provided" if the `privilege` data value
    is missing.
@@ -587,7 +587,7 @@ Form data:
 
 Required privileges: `admin`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "A privilege name must be provided" if the `privilege` data value
    is missing.
@@ -628,9 +628,9 @@ Parameters:
 
 Required privileges:
 - `admin` or
-- `advocate`
+- `advocate`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Error reading interview list." if there was a problem
    obtaining the list of interviews.
@@ -671,7 +671,7 @@ Path: `/api/interviews`
 
 Method: [DELETE]
 
-Required privileges: `admin`
+Required privileges: `admin`.
 
 Parameters:
 
@@ -684,7 +684,7 @@ Parameters:
  - `session` (optional): set to a session ID if you want to delete
    only the interview session with the given session ID.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Error reading interview list." if there was a problem
    obtaining the list of interviews to delete.
@@ -711,7 +711,7 @@ Path: `/api/user/interviews`
 
 Method: [GET]
 
-Required privileges: none.
+Required privileges: None.
 
 This works just like the [`/api/interviews`], except it only returns
 interviews belonging to the owner of the API.
@@ -725,7 +725,7 @@ Path: `/api/user/interviews`
 
 Method: [DELETE]
 
-Required privileges: none.
+Required privileges: None.
 
 This works just like the [DELETE] method of [`/api/interviews`],
 except it only deletes interview sessions associated with the owner of
@@ -805,9 +805,9 @@ Parameters:
    relative (i.e., will not include the hostname).  By default, the
    `link` URLs are absolute.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
 
 Response on success: [200]
@@ -842,9 +842,9 @@ Parameters:
  - `username`: the user name of the user whose secret you wish to retrieve.
  - `password`: the password of the user whose secret you wish to retrieve.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "A username and password must be supplied" if the username
    and/or password is not provided.
@@ -878,6 +878,11 @@ Form data:
  - `i` (optional): the filename of an interview to which the user will
    be redirected after they log in.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
+ - `session` (optional): the session ID for the interview session (if
+   `i` is also provided).  Providing this here rather than in the
+   `url_args` prevents sending the session ID to the user's browser.
+ - `expire` (optional): the number of seconds after which the URL will
+   expire.  The default is 15 seconds.
  - `url_args` (optional): a [JSON] object containing additional URL
    arguments that should be included in the URL to which the user is
    directed after they log in.  (If your request has the
@@ -891,7 +896,9 @@ Form data:
    `url_args` are supplied, these will be included in the resulting
    URL.
 
-Responses on failure: 
+Required privileges: `admin`.
+
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "A username and password must be supplied" if the username
    and/or password is not provided.
@@ -910,8 +917,92 @@ Response on success: [200]
 
 Body of response: a [JSON]-formatted URL.  It will be in a format like
 `https://docassemble.example.com/user/autologin?key=EaypzffGGDbmiBpjqkASSLCtFWPpbiCFqMNlEbti`.
-The code will expire in 15 seconds, so it is only useful if you
-immediately redirect a user to the URL after you obtain the URL.
+By default, the code will expire in 15 seconds, so it is primarily
+useful if you immediately redirect a user to the URL after you obtain
+it.
+
+## <a name="resume_url"></a>Obtain a redirect URL for an existing session
+
+Description: Returns a temporary URL, to which a user can be
+redirected, which will cause the user to resume an existing interview
+session.  The [`multi_user`] variable should be set to `True` in the
+interview session unless the user possesses the decryption key for the
+interview session.  The advantage of using this method rather than
+redirecting the user to an `/interview` URL with a `session` parameter
+is that this method does not transmit the session parameter to the
+user's browser.
+
+Path: `/api/resume_url`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `i`: the filename of an interview to which the user will
+   be redirected after they log in.  E.g.,
+   `docassemble.demo:data/questions/questions.yml`.
+ - `session` (optional): the session ID of the interview session to
+   which the user should be redirected.  If not included, the user is
+   redirected to a new interview session.
+ - `expire` (optional): the number of seconds after which the URL will
+   expire.  The default is 3,600 seconds (one hour).
+ - `one_time` (optional): if set to `1`, the URL will expire after
+   being used once.  The default is `0`.
+ - `url_args` (optional): a [JSON] object containing additional URL
+   arguments that should be included in the URL to which the user will
+   be directed.  (If your request has the `application/json` content
+   type, you do not need to convert the object to [JSON].)
+
+Required privileges: None.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "No filename supplied." if the `i` parameter is not included.
+ - [400] "Malformed URL arguments" if `url_args` are supplied and are
+   not a [JSON] object.
+ - [400] "Invalid number of seconds." if `expire` is not a number
+   greater than or equal to 1.
+
+Response on success: [200]
+
+Body of response: a [JSON]-formatted URL.  It will be in a format like
+`https://docassemble.example.com/launch?c=VnNNcACOTgOihEUQdeiLTKWzTowmwygn`.
+
+## <a name="temp_url"></a>Obtain a general-purpose redirect URL
+
+Description: Given any URL, returns a URL that will respond with a [302
+redirect] to the given URL.  The URL will expire after one hour, or
+after another period of time that you specify.  The URL can be
+configured so that it can only be used once.
+
+Path: `/api/temp_url`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `url`: the URL to which you want the user to be redirected.
+ - `expire` (optional): set this to the number of seconds after which
+   the URL should expire.  The default is 3,600 seconds (one hour).
+ - `one_time` (optional): if set to `1`, the URL will expire after
+   being used once.  The default is `0`.
+
+Required privileges: None.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "No url supplied." if the `url` is not provided.
+ - [400] "Invalid number of seconds." if `expire` is not a number
+   greater than or equal to 1.
+
+Response on success: [200]
+
+Body of response: a [JSON]-formatted URL.  It will be in a format like
+`https://docassemble.example.com/goto?c=AfQqwtZVYedxlYzsOHfvOhxdDejQkkyp`.
 
 ## <a name="session_new"></a>Start an interview
 
@@ -931,9 +1022,9 @@ Parameters:
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameter i is required" if the `i` parameter is not included.
 
@@ -988,9 +1079,9 @@ Parameters:
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
@@ -1076,7 +1167,7 @@ that if you include a file upload, you cannot use the
 `application/json` content type, and any arrays or objects you send as
 parameters will need to be individually converted to [JSON].
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
@@ -1170,8 +1261,8 @@ Parameters:
  - `session`: the session ID of the interview.
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
-   
-Responses on failure: 
+
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
@@ -1198,7 +1289,7 @@ following:
 {
   "message_log": [
     {
-      "message": "Hello, world!", 
+      "message": "Hello, world!",
       "priority": "info"
     }
   ],
@@ -1225,7 +1316,7 @@ Path: `/api/session/action`
 
 Method: [POST]
 
-Parameters:
+Form data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1256,7 +1347,7 @@ Responses on failure:
  - [400] "Could not send file" if there was a problem with a file
    [`response()`].
 
-Responses on success: 
+Responses on success:
  - [200] if content is included
  - [204] if no content is included
 
@@ -1291,7 +1382,7 @@ Form data:
    if you want to go back a step, but you do not want to trigger any
    side effects by causing the interview to be evaluated.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Cannot go back" if the interview is just beginning and
    cannot go back.
@@ -1332,9 +1423,9 @@ Parameters:
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
@@ -1363,9 +1454,9 @@ Parameters:
  - `filename` (optional): a specific filename to return from the given
    file's directory.
 
-Required privileges: none.
+Required privileges: None.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Parameters i and session are required" if the `i` parameter
    and `session` parameters are not included.
@@ -1395,9 +1486,11 @@ Parameters:
    obtain the list of files.  Must be one of `questions`, `sources`,
    `static`, `templates`, or `modules`.
 
-Required privileges: `admin` or `developer`
+Required privileges:
+- `admin` or
+- `developer`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Invalid user_id" if the user does not have administrative
    privileges and the `user_id` is different from the current user's
@@ -1430,9 +1523,11 @@ Parameters:
  - `filename`: the name of the file to be deleted.  If the filename
    does not exist, a success code is still returned.
 
-Required privileges: `admin` or `developer`
+Required privileges:
+- `admin` or
+- `developer`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Invalid user_id" if the user does not have administrative
    privileges and the `user_id` is different from the current user's
@@ -1452,7 +1547,7 @@ Path: `/api/playground`
 
 Method: [POST]
 
-Parameters:
+Form data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1463,11 +1558,15 @@ Parameters:
  - `folder` (optional): the folder in the [Playground] to which the
    uploaded file(s) should be written.  Must be one of `questions`,
    `sources`, `static`, `templates`, or `modules`.
+
+File data:
  - `file` or `files[]`: the files to upload.
 
-Required privileges: `admin` or `developer`
+Required privileges:
+- `admin` or
+- `developer`.
 
-Responses on failure: 
+Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
  - [400] "Invalid user_id" if the user does not have administrative
    privileges and the `user_id` is different from the current user's
@@ -1480,6 +1579,238 @@ Responses on failure:
 Response on success: [204]
 
 Body of response: empty.
+
+## <a name="config_read"></a>Get the server configuration
+
+Description: Returns the [Configuration] in [JSON] format.
+
+Path: `/api/config`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+
+Required privileges: `admin`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+ - [400] "Could not parse Configuration." if there is a problem with
+   the existing [Configuration].
+
+Response on success: [200]
+
+Body of response: a [JSON] representation of the [Configuration].
+
+## <a name="config_write"></a>Write the server configuration
+
+Description: Writes a new [Configuration] to the server and then
+restarts the system.  Note that the system may take significant time
+to restart.
+
+Path: `/api/config`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `config`: a [JSON] object representing the new [Configuration].
+   (If your request has the `application/json` content type, you do
+   not need to convert the object to [JSON].)
+
+Required privileges: `admin`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+ - [400] "Configuration not supplied." if the `config` parameter is
+   missing.
+ - [400] "Configuration was not valid JSON." if the `config` parameter
+   contained data that could not be parsed as [JSON].
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="package_list"></a>List the packages installed
+
+Description: Provides a list of [Python] packages installed on the system.
+
+Path: `/api/package`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+
+Required privileges: `admin`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+
+Response on success: [200]
+
+Body of response: a [JSON] list of objects, where each object has the
+following keys (when applicable):
+
+- `name`: The name of the package.
+- `version`: The installed version of the package.
+- `type`: Either `'pip'`, `'zip'`, or `'git'`, if the package was installed
+  from [PyPI], a ZIP file, or [GitHub], respectively.
+- `can_uninstall`: Whether or not the owner of the API key is allowed
+  to uninstall this package.
+- `can_update`: Whether or not the owner of the API key is allowed
+  to update this package.
+- `git_url`: If the `type` is `'git'`, this contains the [GitHub] URL of
+  from which the package was installed.
+- `branch`: if the `type` is `'git'`, and a particular branch of the
+  [GitHub] repository was installed, this is set to the name of the
+  branch.
+- `zip_file_number`: if the `type` is `'zip'`, this contains the file
+  number of the ZIP file from which the package was installed.
+
+## <a name="package_install"></a>Install or update a package
+
+Description: Installs or updates a package and returns a task ID that
+can be used to inspect the status of the package update process.
+
+Path: `/api/package`
+
+Method: [POST]
+
+Form data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `update` (optional): the name of an already-installed [Python]
+   package that you want to update.  (This is not useful if the
+   package was installed from an uploaded ZIP file.)
+ - `github_url` (optional): the URL of a [GitHub] package to install.
+ - `branch` (optional): if a `github_url` is provided and you want to
+   install from a non-standard branch, set `branch` to the name of the
+   branch you want to install.
+ - `pip` (optional): the name of [Python] package to install from [PyPI].
+
+File data:
+ - `zip`: a file upload of a ZIP file containing a package.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "No instructions provided." if no file was uploaded and
+   `update`, `github_url`, and `pip` are not provided.
+ - [400] "Only one package can be installed or updated at a time." if
+   more than one of `update`, `github_url`, `pip`, and `zip` were
+   provided.
+ - [400] "Package not found." if the package referenced in `update`
+   was not already installed.
+ - [400] "You are not allowed to update that package." if the package
+   referenced in `update` was not one that the owner of the API key is
+   allowed to update.
+ - [400] "You do not have permission to install that package." if the
+   package referenced by `github_url`, `pip`, or `zip` is not one that
+   the owner of the API key is allowed to install.
+ - [400] "There was an error when installing that package." if there
+   was an error while unpacking and reading the uploaded ZIP file.
+
+Response on success: [200]
+
+Body of response: a [JSON] object in which the key `task_id` refers to
+a code that can be passed to [`/api/package_update_status`] to check
+on the status and result of the package update process.  The `task_id`
+expires after one hour.
+
+## <a name="package_uninstall"></a>Uninstall a package
+
+Description: Uninstalls a package and returns a task ID that can be
+used to inspect the status of the package uninstallation process.
+
+Path: `/api/package`
+
+Method: [DELETE]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `package`: the name of an already-installed [Python] package that
+   you want to uninstall.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Missing package name." if the `package` parameter was not
+   provided.
+ - [400] "Package not found." if the package referenced in `package`
+   was not already installed.
+ - [400] "You are not allowed to uninstall that package." if the
+   package referenced by `package` is not one that the owner of the
+   API key is allowed to uninstall.
+
+Response on success: [200]
+
+Body of response: a [JSON] object in which the key `task_id` refers to
+a code that can be passed to [`/api/package_update_status`] to check
+on the status and result of the package update process.  The `task_id`
+expires after one hour.
+
+## <a name="package_update_status"></a>Poll the status of a package process
+
+Description: Obtains information about the status of a package update
+process.
+
+Path: `/api/package_update_status`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `task_id`: the task ID that was obtained from a [POST] or
+   [DELETE] call to the [`/api/package`] endpoint.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Missing task_id" if no `task_id` was provided.
+
+Response on success: [200]
+
+Body of response: a [JSON] object describing the status of the
+background task.  The keys are:
+
+- `status`: If this is `'working'`, the package update process is still
+  proceeding.  If it is `'completed'`, then the package update process
+  is done, and other information will be provided.  If it is
+  `'unknown'`, then the `task_id` has expired.  The API endpoint will
+  return a `'completed'` response only once, and then the `task_id` will
+  expire.
+- `ok`: This is provided when the `status` is `'completed'`.  It is set
+  to `true` or `false` depending on whether [pip] return an error
+  code.
+- `log`: if `status` is `'completed'` and `ok` is `true`, the `log` will
+  contain information from the output of [pip].
+- `error_message`: if `status` is `'completed'` and `ok` is `false`,
+  the `error_message` will contain a [pip] log or other error message
+  that may explain why the package update process did not succeed.
 
 # <a name="questionless"></a>Example of usage: questionless interview
 
@@ -1513,20 +1844,20 @@ obtain a session ID and encryption key for a new interview.
 
 {% highlight json %}
 {
-  "encrypted": true, 
-  "i": "docassemble.base:data/questions/examples/questionless.yml", 
-  "secret": "aZLbSszVzfVpnOfK", 
+  "encrypted": true,
+  "i": "docassemble.base:data/questions/examples/questionless.yml",
+  "secret": "aZLbSszVzfVpnOfK",
   "session": "YOwLSycrtezLXEWhIUheRSpLNLEfRMxP"
 }
 {% endhighlight %}
-   
+
 Next, do a [GET] request to `/api/session/question`, passing the
 `i`, `session`, and `secret` values as parameters.  You will get back:
 
 {% highlight json %}
 {
-  "message_log": [], 
-  "questionType": "undefined_variable", 
+  "message_log": [],
+  "questionType": "undefined_variable",
   "variable": "favorite_number"
 }
 {% endhighlight %}
@@ -1554,8 +1885,8 @@ interview will be returned:
 
 {% highlight json %}
 {
-  "message_log": [], 
-  "questionType": "undefined_variable", 
+  "message_log": [],
+  "questionType": "undefined_variable",
   "variable": "user_agrees_to_waive_penalties"
 }
 {% endhighlight %}
@@ -1567,7 +1898,7 @@ false}` yields the following response:
 
 {% highlight json %}
 {
-  "final": true, 
+  "final": true,
   "inhabitants": 3890
 }
 {% endhighlight %}
@@ -1621,3 +1952,9 @@ function.
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
 [ISO 8601]: https://en.wikipedia.org/wiki/ISO_8601
+[PyPI]: https://pypi.python.org/pypi
+[GitHub]: https://github.com/
+[`/api/package_update_status`]: #package_update_status
+[`/api/package`]: #package_install
+[pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
+[302 redirect]: https://en.wikipedia.org/wiki/HTTP_302

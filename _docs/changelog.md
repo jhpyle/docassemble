@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.68](https://github.com/jhpyle/docassemble/releases/tag/v0.4.68) - 2019-07-28
+
+### Added
+- The `/api/resume_url`, `/api/temp_url`, `/api/config`,
+  `/api/package`, and `/api/package_update_status` API endpoints.
+- The `expire` and `session` parameters of `/api/login_url`.
+- The `hook_on_gather()` and `hook_after_gather()` methods of
+  `DAList`, `DADict`, and `DASet`.
+
+### Fixed
+- Bug in the `complete_elements()` method of `DADict`.
+- Incomplete support for editing lists that have `auto_gather` turned
+  off.
+
 ## [0.4.67](https://github.com/jhpyle/docassemble/releases/tag/v0.4.67) - 2019-07-25
 
 ### Added
