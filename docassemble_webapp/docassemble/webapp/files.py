@@ -85,8 +85,13 @@ class SavedFile(object):
                     key.get_contents_to_filename(fullpath)
                 else:
                     local_time = os.path.getmtime(fullpath)
-                    if not (local_time == server_time and time.time() - local_time < 5400):
-                        key.get_contents_to_filename(fullpath)
+                    access_time = os.path.getatime(fullpath)
+                    if self.section == 'files':
+                        if not (local_time == server_time and time.time() - access_time < 7000):
+                            key.get_contents_to_filename(fullpath)
+                    else:
+                        if not (local_time == server_time):
+                            key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key

@@ -1159,6 +1159,7 @@ img.daimageicon {
     padding-top: 3.6px;
     line-height: normal;
     max-width: 90%;
+    white-space: nowrap;
 }
 
 span.daparenthetical {

@@ -16216,7 +16216,7 @@ def playground_page():
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
-    post_data = request.form.copy()
+    # post_data = request.form.copy()
     # if request.method == 'POST' and 'variablefile' in post_data:
     #     active_file = post_data['variablefile']
     #     if post_data['variablefile'] in files:
