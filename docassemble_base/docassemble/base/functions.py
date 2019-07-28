@@ -568,25 +568,22 @@ def interview_url(**kwargs):
     return url
 
 def temp_redirect(url, expire_seconds, do_local, one_time):
-    if one_time:
-        the_type = 'run_temp_once'
-        the_prefix = 'temporary_url_once'
-    else:
-        the_type = 'run_temp'
-        the_prefix = 'temporary_url'
     while True:
         code = random_string(32)
-        the_key = 'da:' + the_prefix + ':' + code
+        the_key = 'da:temporary_url:' + code
         if server.server_redis.get(the_key) is None:
             break
     pipe = server.server_redis.pipeline()
-    pipe.set(the_key, url)
+    if one_time:
+        pipe.set(the_key, json.dumps(dict(url=url, once=True)))
+    else:
+        pipe.set(the_key, json.dumps(dict(url=url)))
     pipe.expire(the_key, expire_seconds)
     pipe.execute()
     if do_local:
-        return server.url_for(the_type, c=code)
+        return server.url_for('run_temp', c=code)
     else:
-        return server.url_for(the_type, c=code, _external=True)
+        return server.url_for('run_temp', c=code, _external=True)
 
 def set_parts(**kwargs):
     """Sets parts of the page, such as words in the navigation bar and
@@ -2751,13 +2748,17 @@ def process_action():
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        #if the_list.ask_object_type:
-        #    the_list.append(None)
-        #else:
-        #    the_list.appendObject()
         if hasattr(the_list, 'gathered') and the_list.gathered:
             the_list.was_gathered = True
             the_list.reset_gathered()
+            if not the_list.auto_gather:
+                if the_list.ask_object_type:
+                    the_list.append(None)
+                else:
+                    if the_list.object_type is None:
+                        the_list.__getitem__(len(the_list.elements))
+                    else:
+                        the_list.appendObject()
         else:
             the_list.was_gathered = False
         if the_list.auto_gather:
@@ -2789,6 +2790,11 @@ def process_action():
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
         if hasattr(the_dict, 'gathered') and the_dict.gathered:
+            if not the_dict.auto_gather:
+                if hasattr(the_dict, 'new_item_name') and the_dict.new_item_name in the_dict.elements:
+                    delattr(the_dict, 'new_item_name')
+                else:
+                    the_dict[the_dict.new_item_name]
             the_dict.reset_gathered()
             if the_dict.auto_gather:
                 if the_dict.ask_number:

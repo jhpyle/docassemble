@@ -495,7 +495,7 @@ class DAObject(object):
     def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
-        of the new object that will be initialized.  E.g., 
+        of the new object that will be initialized.  E.g.,
         client.initializeAttribute('mother', Individual) initializes client.mother as an
         Individual with instanceName "client.mother"."""
         pargs = [x for x in pargs]
@@ -517,7 +517,7 @@ class DAObject(object):
     def reInitializeAttribute(self, *pargs, **kwargs):
         """Redefines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
-        of the new object that will be initialized.  E.g., 
+        of the new object that will be initialized.  E.g.,
         client.initializeAttribute('mother', Individual) initializes client.mother as an
         Individual with instanceName "client.mother"."""
         pargs = [x for x in pargs]
@@ -558,7 +558,7 @@ class DAObject(object):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns it."""
         return word('it', **kwargs)
@@ -578,7 +578,7 @@ class DAObject(object):
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
-    def pronoun_subjective(self, **kwargs):        
+    def pronoun_subjective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
     def __setattr__(self, key, value):
@@ -846,7 +846,9 @@ class DAList(DAObject):
         if self.auto_gather:
             self.gather()
         else:
+            self.hook_on_gather()
             self.gathered
+            self.hook_after_gather()
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
@@ -872,7 +874,7 @@ class DAList(DAObject):
         if len(new_list.elements) == 0:
             new_list.there_are_any = False
         return new_list
-        
+
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
@@ -998,7 +1000,7 @@ class DAList(DAObject):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
         the new object should be.  If no object type is provided,
-        the object type given by .object_type is used, and if 
+        the object type given by .object_type is used, and if
         that is not set, DAObject is used."""
         #sys.stderr.write("Called appendObject where len is " + str(len(self.elements)) + "\n")
         objectFunction = None
@@ -1086,7 +1088,7 @@ class DAList(DAObject):
                 tense = '3sg'
             return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
-        """Like does_verb(), except it returns the past tense of the verb."""        
+        """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
@@ -1095,7 +1097,7 @@ class DAList(DAObject):
         return verb_past(the_verb, tense, language=language)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its instanceName,
-        without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
+        without making it plural.  E.g., case.plaintiff.child.as_singular_noun()
         returns "child" even if there are multiple children."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
@@ -1161,7 +1163,7 @@ class DAList(DAObject):
             return 0
         return len(self.elements) - 1
     def number_as_word(self, language=None):
-        """Returns the number of elements in the list, spelling out the number if ten 
+        """Returns the number of elements in the list, spelling out the number if ten
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number(), language=language)
     def complete_elements(self, complete_attribute=None):
@@ -1292,6 +1294,7 @@ class DAList(DAObject):
                 #     getattr(self.__getitem__(the_length), complete_attribute)
         if hasattr(self, '_necessary_length'):
             del self._necessary_length
+        self.hook_on_gather()
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
@@ -1300,9 +1303,10 @@ class DAList(DAObject):
         if hasattr(self, 'was_gathered'):
             del self.was_gathered
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        self.hook_after_gather()
         return True
     def comma_and_list(self, **kwargs):
-        """Returns the elements of the list, separated by commas, with 
+        """Returns the elements of the list, separated by commas, with
         "and" before the last element."""
         self._trigger_gather()
         return comma_and_list(self.elements, **kwargs)
@@ -1433,7 +1437,7 @@ class DAList(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
         if self.number() == 1:
@@ -1545,6 +1549,10 @@ class DAList(DAObject):
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + text_type(message) + '</a>'
+    def hook_on_gather(self):
+        logmessage("hook_on_gather on " + self.instanceName)
+    def hook_after_gather(self):
+        logmessage("hook_after_gather on " + self.instanceName)
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -1819,7 +1827,7 @@ class DADict(DAObject):
                 tense = '3sg'
             return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
-        """Like does_verb(), except it returns the past tense of the verb."""        
+        """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
@@ -1833,7 +1841,7 @@ class DADict(DAObject):
         multiple players."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
-        return the_noun        
+        return the_noun
     def quantity_noun(self, *pargs, **kwargs):
         the_args = [self.number()] + list(pargs)
         return quantity_noun(*the_args, **kwargs)
@@ -1844,7 +1852,7 @@ class DADict(DAObject):
         player.as_noun() returns "player" or "players," as
         appropriate.  If an argument is supplied, the argument is used
         as the noun instead of the instanceName."""
-        language = kwargs.get('language', None)        
+        language = kwargs.get('language', None)
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         the_noun = re.sub(r'_', ' ', the_noun)
@@ -1891,14 +1899,14 @@ class DADict(DAObject):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
     def number_as_word(self, language=None):
-        """Returns the number of keys in the dictionary, spelling out the number if ten 
+        """Returns the number of keys in the dictionary, spelling out the number if ten
         or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number(), language=language)
     def complete_elements(self, complete_attribute=None):
         """Returns a dictionary containing the key/value pairs that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = list()
+        items = dict()
         for key, val in self.elements.items():
             if val is None:
                 continue
@@ -1955,7 +1963,9 @@ class DADict(DAObject):
         if self.auto_gather:
             self.gather()
         else:
+            self.hook_on_gather()
             self.gathered
+            self.hook_after_gather()
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
@@ -2040,10 +2050,12 @@ class DADict(DAObject):
                 #logmessage("4gather " + self.instanceName + ": del on there_is_another")
                 delattr(self, 'there_is_another')
         self._validate(item_object_type, complete_attribute, keys=keys)
+        self.hook_on_gather()
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        self.hook_after_gather()
         return True
     def _sorted_elements_values(self):
         return sorted(self.elements.values())
@@ -2061,7 +2073,7 @@ class DADict(DAObject):
                 text_type(elem)
         return
     def comma_and_list(self, **kwargs):
-        """Returns the keys of the list, separated by commas, with 
+        """Returns the keys of the list, separated by commas, with
         "and" before the last key."""
         self._trigger_gather()
         return comma_and_list(self._sorted_elements_keys(), **kwargs)
@@ -2221,7 +2233,7 @@ class DADict(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns them, or the pronoun for the only element."""
         if self.number() == 1:
@@ -2231,11 +2243,11 @@ class DADict(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
-    def pronoun_subjective(self, **kwargs):        
+    def pronoun_subjective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
     def item_actions(self, *pargs, **kwargs):
@@ -2319,6 +2331,10 @@ class DADict(DAObject):
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + text_type(message) + '</a>'
     def _new_elements(self):
         return dict()
+    def hook_on_gather(self):
+        logmessage("hook_on_gather on " + self.instanceName)
+    def hook_after_gather(self):
+        logmessage("hook_after_gather on " + self.instanceName)
 
 class DAOrderedDict(DADict):
     """A base class for objects that behave like Python OrderedDicts."""
@@ -2340,7 +2356,7 @@ class DAOrderedDict(DADict):
         return self.elements.values()
     def _sorted_elements_values(self):
         return self.elements.values()
-    
+
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
     def init(self, *pargs, **kwargs):
@@ -2354,6 +2370,43 @@ class DASet(DAObject):
             self.revisit = True
             del kwargs['elements']
         return super(DASet, self).init(*pargs, **kwargs)
+    def gathered_and_complete(self):
+        """Ensures all items in the set are complete and then returns True."""
+        if not hasattr(self, 'doing_gathered_and_complete'):
+            self.doing_gathered_and_complete = True
+            if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
+                for item in self.elements:
+                    if hasattr(item, self.complete_attribute):
+                        delattr(item, self.complete_attribute)
+            if hasattr(self, 'gathered'):
+                del self.gathered
+        if self.auto_gather:
+            self.gather()
+        else:
+            self.hook_on_gather()
+            self.gathered
+        if hasattr(self, 'doing_gathered_and_complete'):
+            del self.doing_gathered_and_complete
+        self.hook_after_gather()
+        return True
+    def complete_elements(self, complete_attribute=None):
+        """Returns a subset with the elements that are complete."""
+        if complete_attribute is None and hasattr(self, 'complete_attribute'):
+            complete_attribute = self.complete_attribute
+        items = set()
+        for item in self.elements:
+            if item is None:
+                continue
+            if complete_attribute is not None:
+                if not hasattr(item, complete_attribute):
+                    continue
+            else:
+                try:
+                    text_type(item)
+                except:
+                    continue
+            items.add(item)
+        return items
     def filter(self, *pargs, **kwargs):
         """Returns a filtered version of the set containing only items with particular values of attributes."""
         self._trigger_gather()
@@ -2454,7 +2507,7 @@ class DASet(DAObject):
                 tense = '3sg'
             return verb_present(the_verb, tense, language=language)
     def did_verb(self, the_verb, **kwargs):
-        """Like does_verb(), except it returns the past tense of the verb."""        
+        """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
         if self.number() > 1:
             tense = 'ppl'
@@ -2470,7 +2523,7 @@ class DASet(DAObject):
         """
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
-        return the_noun        
+        return the_noun
     def quantity_noun(self, *pargs, **kwargs):
         the_args = [self.number()] + list(pargs)
         return quantity_noun(*the_args, **kwargs)
@@ -2567,13 +2620,15 @@ class DASet(DAObject):
             elif hasattr(self, 'there_is_another'):
                 #logmessage("gather: " + self.instanceName + ": del on there_is_another")
                 del self.there_is_another
+        self.hook_on_gather()
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        self.hook_after_gather()
         return True
     def comma_and_list(self, **kwargs):
-        """Returns the items in the set, separated by commas, with 
+        """Returns the items in the set, separated by commas, with
         "and" before the last item."""
         self._trigger_gather()
         return comma_and_list(sorted(map(text_type, self.elements)), **kwargs)
@@ -2686,7 +2741,7 @@ class DASet(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns them, or the pronoun for the one element."""
         if self.number() == 1:
@@ -2696,13 +2751,17 @@ class DASet(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
-    def pronoun_subjective(self, **kwargs):        
+    def pronoun_subjective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
+    def hook_on_gather(self):
+        logmessage("hook_on_gather on " + self.instanceName)
+    def hook_after_gather(self):
+        logmessage("hook_after_gather on " + self.instanceName)
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
@@ -3142,7 +3201,7 @@ class DAFileList(DAList):
         for element in sorted(self.elements):
             if element.ok:
                 result += element.num_pages()
-        return result        
+        return result
     def is_encrypted(self):
         """Returns True if the first file is a PDF file and it is encrypted, otherwise returns False."""
         if len(self.elements) == 0:
@@ -3299,7 +3358,7 @@ class DAStaticFile(DAObject):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         return text_type(self.show())
-                
+
 class DAEmailRecipientList(DAList):
     """Represents a list of DAEmailRecipient objects."""
     def init(self, *pargs, **kwargs):
@@ -3314,7 +3373,7 @@ class DAEmailRecipientList(DAList):
             elif type(parg) is dict:
                 #logmessage("DAEmailRecipientList: parg type is dict")
                 self.appendObject(DAEmailRecipient, **parg)
-    
+
 class DAEmailRecipient(DAObject):
     """An object type used within DAEmail objects to represent a single
     e-mail address and the name associated with that e-mail address.
@@ -3354,7 +3413,7 @@ class DAEmailRecipient(DAObject):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return text_type(self.address)
         if name == '' and self.address != '':
-            return '[' + text_type(self.address) + '](mailto:' + text_type(self.address) + ')' 
+            return '[' + text_type(self.address) + '](mailto:' + text_type(self.address) + ')'
         return '[' + text_type(name) + '](mailto:' + text_type(self.address) + ')'
 
 class DAEmail(DAObject):
@@ -3369,7 +3428,7 @@ class DAEmail(DAObject):
 
 class DATemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
-    an object of this type.  The two attributes are "subject" and 
+    an object of this type.  The two attributes are "subject" and
     "content." """
     def init(self, *pargs, **kwargs):
         if 'content' in kwargs:
@@ -3487,7 +3546,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
 
 class DALazyTemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
-    an object of this type.  The two attributes are "subject" and 
+    an object of this type.  The two attributes are "subject" and
     "content." """
     def __getstate__(self):
         if hasattr(self, 'instanceName'):

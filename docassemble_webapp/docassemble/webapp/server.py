@@ -788,6 +788,7 @@ import flask_user.signals
 import flask_user.translations
 import flask_user.views
 import werkzeug
+import werkzeug.exceptions
 from rauth import OAuth1Service, OAuth2Service
 import apiclient
 import oauth2client.client
@@ -2485,15 +2486,24 @@ def uninstall_package(packagename):
     db.session.commit()
     return
 
-def summarize_results(results, logmessages):
-    output = '<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())])
+def summarize_results(results, logmessages, html=True):
+    if html:
+        output = '<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())])
+        if len(logmessages):
+            if len(output):
+                output += '<br><br><strong>'+ word("pip log") + ':</strong><br>'
+            else:
+                output = ''
+            output += re.sub(r'\n', r'<br>', logmessages)
+        return Markup(output)
+    output = '\n'.join([x + ': ' + results[x] for x in sorted(results.keys())])
     if len(logmessages):
         if len(output):
-            output += '<br><br><strong>'+ word("pip log") + ':</strong><br>'
+            output += "\n" + word("pip log") + ':\n'
         else:
             output = ''
-        output += re.sub(r'\n', r'<br>', logmessages)
-    return Markup(output)
+        output += logmessages
+    return output
 
 def install_zip_package(packagename, file_number):
     #logmessage("install_zip_package: " + packagename + " " + str(file_number))
@@ -3779,27 +3789,23 @@ def load_user(id):
 #     #     logmessage("post_login: no newsecret")
 #     return response
 
-@app.route('/run', methods=['GET'])
+@app.route('/goto', methods=['GET'])
 def run_temp():
     code = request.args.get('c', None)
     if code is None:
         abort(403)
     the_key = 'da:temporary_url:' + str(code)
-    url = r.get(the_key)
-    if url is None:
+    data = r.get(the_key)
+    if data is None:
         raise DAError(word("The link has expired."), code=403)
-    return redirect(url)
-
-@app.route('/goto', methods=['GET'])
-def run_temp_once():
-    code = request.args.get('c', None)
-    if code is None:
-        abort(403)
-    the_key = 'da:temporary_url_once:' + str(code)
-    url = r.get(the_key)
-    if url is None:
-        raise DAError(word("The link has expired."), code=403)
-    r.delete(the_key)
+    try:
+        data = json.loads(data.decode())
+        if data.get('once', False):
+            r.delete(the_key)
+        url = data.get('url')
+    except:
+        r.delete(the_key)
+        url = data.decode()
     return redirect(url)
 
 @app.route('/user/autologin', methods=['GET'])
@@ -3827,6 +3833,9 @@ def auto_login():
         if 'url_args' in info:
             url_info.update(info['url_args'])
         next_url = url_for('index', **url_info)
+        if 'session' in info:
+            session['uid'] = info['session']
+            session['i'] = info['i']
     elif 'next' in info:
         url_info = info.get('url_args', dict())
         next_url = get_url_from_file_reference(info['next'], **url_info)
@@ -5047,6 +5056,30 @@ def test_embed():
     scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(interview_status, yaml_filename) + global_js
     return render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True)), 200
 
+@app.route("/launch", methods=['GET'])
+def launch():
+    code = request.args.get('c', None)
+    if code is None:
+        abort(403)
+    the_key = 'da:resume_interview:' + str(code)
+    data = r.get(the_key)
+    if data is None:
+        raise DAError(word("The link has expired."), code=403)
+    data = json.loads(data.decode())
+    if data.get('once', False):
+        r.delete(the_key)
+    args = dict()
+    for key, val in request.args.items():
+        if key != 'session':
+            args[key] = val
+    args['i'] = data['i']
+    if 'session' in data:
+        session['i'] = data['i']
+        session['uid'] = data['session']
+    else:
+        args['new_session'] = '1'
+    return redirect(url_for('index', **args))
+
 @app.route("/resume", methods=['POST'])
 @csrf.exempt
 def resume():
@@ -5495,7 +5528,6 @@ def index(action_argument=None):
                 if the_key == '_multiple_choice' and '_question_name' in post_data:
                     question_name = post_data.get('_question_name', -100)
                     if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
-                        logmessage("it's a refresh or continue")
                         continue
                 should_assemble = True
                 #logmessage("index: pre-assembly necessary for " + the_key)
@@ -16638,6 +16670,8 @@ def server_error(the_error):
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code
+    elif isinstance(the_error, werkzeug.exceptions.HTTPException):
+        error_code = the_error.code
     else:
         error_code = 501
     if hasattr(the_error, 'user_dict'):
@@ -16725,6 +16759,8 @@ def server_error(the_error):
         show_debug = False
     else:
         show_debug = True
+    if int(int(error_code)/100) == 4:
+        show_debug = False
     if error_code == 404:
         the_template = 'pages/404.html'
     else:
@@ -17851,13 +17887,14 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
-    if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
+    if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         if is_json:
             return redirect(url_for('index', i=session['i'], json='1'))
         else:
             return redirect(url_for('index', i=session['i']))
-    if request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer)):
-        next_page = page_after_login()
+    if request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer)):
+        next_page = request.args.get('next', None)
+        next_page = request.args.get('next', page_after_login())
         if next_page is None:
             logmessage("Invalid page " + text_type(next_page))
             next_page = 'interview_list'
@@ -17873,7 +17910,7 @@ def interview_list():
     else:
         exclude_invalid = True
     resume_interview = request.args.get('resume', None)
-    if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or re.search(r'user/(register|sign-in)', str(request.referrer))):
+    if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
     if resume_interview is not None:
         interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dict=True)
@@ -20560,6 +20597,11 @@ def api_login_url():
         secret = get_secret(str(username), str(password))
     except Exception as err:
         return jsonify_with_status(str(err), 403)
+    try:
+        expire = int(post_data.get('expire', 15))
+        assert expire > 0
+    except:
+        return jsonify_with_status("Invalid number of seconds.", 400)
     if 'url_args' in post_data:
         if isinstance(post_data['url_args'], dict):
             url_args = post_data['url_args']
@@ -20580,7 +20622,7 @@ def api_login_url():
             assert not path.startswith('javascript')
         except:
             return jsonify_with_status("Unknown path for next", 400)
-    for key in ['i', 'next']:
+    for key in ['i', 'next', 'session']:
         if key in post_data:
             info[key] = post_data[key]
     if len(url_args):
@@ -20594,7 +20636,7 @@ def api_login_url():
             break
     pipe = r.pipeline()
     pipe.set(the_key, encrypted_text)
-    pipe.expire(the_key, 15)
+    pipe.expire(the_key, expire)
     pipe.execute()
     return jsonify(url_for('auto_login', key=encryption_key + code, _external=True))
 
@@ -20659,6 +20701,289 @@ def api_interviews():
             return jsonify_with_status("Error reading interview list.", 400)
         for info in the_list:
             user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
+        return ('', 204)
+
+def jsonify_task(result):
+    while True:
+        code = random_string(24)
+        the_key = 'da:install_status:' + code
+        if r.get(the_key) is None:
+            break
+    pipe = r.pipeline()
+    pipe.set(the_key, result.id)
+    pipe.expire(the_key, 3600)
+    pipe.execute()
+    return jsonify({'task_id': code})
+
+@app.route('/api/package', methods=['GET', 'POST', 'DELETE'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
+def api_package():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method == 'GET':
+        package_list, package_auth = get_package_info(exclude_core=True)
+        packages = list()
+        for package in package_list:
+            if not package.package.active:
+                continue
+            item = {'name': package.package.name, 'type': package.package.type, 'can_update': package.can_update, 'can_uninstall': package.can_uninstall}
+            if package.package.packageversion:
+                item['version'] = package.package.packageversion
+            if package.package.giturl:
+                item['git_url'] = package.package.giturl
+            if package.package.gitbranch:
+                item['branch'] = package.package.gitbranch
+            if package.package.upload:
+                item['zip_file_number'] = package.package.upload
+            packages.append(item)
+        return jsonify(packages)
+    if request.method == 'DELETE':
+        target = request.args.get('package', None)
+        if target is None:
+            return jsonify_with_status("Missing package name.", 400)
+        package_list, package_auth = get_package_info()
+        the_package = None
+        for package in package_list:
+            if package.package.name == target:
+                the_package = package
+                break
+        if the_package is None:
+            return jsonify_with_status("Package not found.", 400)
+        if not the_package.can_uninstall:
+            return jsonify_with_status("You are not allowed to uninstall that package.", 400)
+        uninstall_package(target)
+        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+        return jsonify_task(result)
+    if request.method == 'POST':
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
+        num_commands = 0
+        if 'update' in post_data:
+            num_commands += 1
+        if 'github_url' in post_data:
+            num_commands += 1
+        if 'pip' in post_data:
+            num_commands += 1
+        if 'zip' in request.files:
+            num_commands += 1
+        if num_commands == 0:
+            return jsonify_with_status("No instructions provided.", 400)
+        if num_commands > 1:
+            return jsonify_with_status("Only one package can be installed or updated at a time.", 400)
+        if 'update' in post_data:
+            target = post_data['update']
+            package_list, package_auth = get_package_info()
+            the_package = None
+            for package in package_list:
+                if package.package.name == target:
+                    the_package = package
+                    break
+            if the_package is None:
+                return jsonify_with_status("Package not found.", 400)
+            if not the_package.can_update:
+                return jsonify_with_status("You are not allowed to update that package.", 400)
+            existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
+            if existing_package is not None:
+                if existing_package.type == 'git' and existing_package.giturl is not None:
+                    if existing_package.gitbranch:
+                        install_git_package(target, existing_package.giturl, branch=existing_package.gitbranch)
+                    else:
+                        install_git_package(target, existing_package.giturl)
+                elif existing_package.type == 'pip':
+                    if existing_package.name == 'docassemble.webapp' and existing_package.limitation:
+                        existing_package.limitation = None
+                    install_pip_package(existing_package.name, existing_package.limitation)
+            db.session.commit()
+            result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+            return jsonify_task(result)
+        if 'github_url' in post_data:
+            github_url = post_data['github_url']
+            branch = post_data.get('branch', None)
+            packagename = re.sub(r'/*$', '', github_url)
+            packagename = re.sub(r'^git+', '', packagename)
+            packagename = re.sub(r'#.*', '', packagename)
+            packagename = re.sub(r'\.git$', '', packagename)
+            packagename = re.sub(r'.*/', '', packagename)
+            if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
+                if branch:
+                    install_git_package(packagename, github_url, branch=branch)
+                else:
+                    install_git_package(packagename, github_url)
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                return jsonify_task(result)
+            else:
+                jsonify_with_status("You do not have permission to install that package.", 403)
+        if 'pip' in post_data:
+            m = re.match(r'([^>=<]+)([>=<]+.+)', post_data['pip'])
+            if m:
+                packagename = m.group(1)
+                limitation = m.group(2)
+            else:
+                packagename = post_data['pip']
+                limitation = None
+            packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
+            if user_can_edit_package(pkgname=packagename):
+                install_pip_package(packagename, limitation)
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                return jsonify_task(result)
+            else:
+                return jsonify_with_status("You do not have permission to install that package.", 403)
+        if 'zip' in request.files and request.files['zip'].filename:
+            try:
+                the_file = request.files['zip']
+                filename = secure_filename(the_file.filename)
+                file_number = get_new_file_number(session.get('uid', None), filename)
+                saved_file = SavedFile(file_number, extension='zip', fix=True)
+                file_set_attributes(file_number, private=False, persistent=True)
+                zippath = saved_file.path
+                the_file.save(zippath)
+                saved_file.save()
+                saved_file.finalize()
+                pkgname = get_package_name_from_zip(zippath)
+                if user_can_edit_package(pkgname=pkgname):
+                    install_zip_package(pkgname, file_number)
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    return jsonify_task(result)
+                return jsonify_with_status("You do not have permission to install that package.", 403)
+            except:
+                return jsonify_with_status("There was an error when installing that package.", 400)
+
+@app.route('/api/package_update_status', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def api_package_update_status():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    code = request.args.get('task_id', None)
+    if code is None:
+        return jsonify_with_status("Missing task_id", 400)
+    the_key = 'da:install_status:' + text_type(code)
+    task_id = r.get(the_key)
+    if task_id is None:
+        return jsonify({'status': 'unknown'})
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
+    if result.ready():
+        r.delete(the_key)
+        the_result = result.get()
+        if isinstance(the_result, ReturnValue):
+            if the_result.ok:
+                return jsonify(status='completed', ok=True, log=summarize_results(the_result.results, the_result.logmessages, html=False))
+            elif hasattr(the_result, 'error_message'):
+                return jsonify(status='completed', ok=False, error_message=text_type(the_result.error_message))
+            elif hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+                return jsonify(status='completed', ok=False, error_message=summarize_results(the_result.results, the_result.logmessages, html=False))
+            else:
+                return jsonify(status='completed', ok=False, error_message=text_type("No error message.  Result is " + text_type(the_result)))
+        else:
+            return jsonify(status='completed', ok=False, error_message=text_type(the_result))
+    else:
+        return jsonify(status='working')
+
+@app.route('/api/temp_url', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def api_temporary_redirect():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    url = request.args.get('url', None)
+    if url is None:
+        return jsonify_with_status("No url supplied.", 400)
+    try:
+        one_time = True if int(request.args.get('one_time', 0)) else False
+    except:
+        one_time = False
+    try:
+        expire = int(request.args.get('expire', 3600))
+        assert expire > 0
+    except:
+        return jsonify_with_status("Invalid number of seconds.", 400)
+    return jsonify(docassemble.base.functions.temp_redirect(url, expire, False, one_time))
+
+@app.route('/api/resume_url', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_resume_url():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    filename = post_data.get('i', None)
+    if filename is None:
+        return jsonify_with_status("No filename supplied.", 400)
+    session = post_data.get('session', None)
+    if 'url_args' in post_data:
+        if isinstance(post_data['url_args'], dict):
+            url_args = post_data['url_args']
+        else:
+            try:
+                url_args = json.loads(post_data['url_args'])
+                assert isinstance(url_args, dict)
+            except:
+                return jsonify_with_status("Malformed URL arguments", 400)
+    else:
+        url_args = dict()
+    try:
+        one_time = True if int(post_data.get('one_time', 0)) else False
+    except:
+        one_time = False
+    try:
+        expire = int(post_data.get('expire', 3600))
+        assert expire > 0
+    except:
+        return jsonify_with_status("Invalid number of seconds.", 400)
+    info = dict(i=filename)
+    if session:
+        info['session'] = session
+    if one_time:
+        info['once'] = True
+    while True:
+        code = random_string(32)
+        the_key = 'da:resume_interview:' + code
+        if r.get(the_key) is None:
+            break
+    pipe = r.pipeline()
+    pipe.set(the_key, json.dumps(info))
+    pipe.expire(the_key, expire)
+    pipe.execute()
+    return jsonify(url_for('launch', c=code, _external=True))
+
+@app.route('/api/config', methods=['GET', 'POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
+def api_config():
+    if not api_verify(request, roles=['admin']):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method == 'GET':
+        try:
+            with open(daconfig['config file'], 'rU', encoding='utf-8') as fp:
+                content = fp.read()
+            data = yaml.load(content, Loader=yaml.FullLoader)
+        except:
+            return jsonify_with_status("Could not parse Configuration.", 400)
+        return jsonify(data)
+    if request.method == 'POST':
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
+        if 'config' not in post_data:
+            return jsonify_with_status("Configuration not supplied.", 400)
+        if isinstance(post_data['config'], dict):
+            data = post_data['config']
+        else:
+            try:
+                data = json.loads(post_data['config'])
+            except:
+                return jsonify_with_status("Configuration was not valid JSON.", 400)
+        yaml_data = ruamel.yaml.safe_dump(data, default_flow_style=False, default_style = '"', allow_unicode=True, width=10000)
+        if cloud is not None:
+            key = cloud.get_key('config.yml')
+            key.set_contents_from_string(yaml_data)
+        with open(daconfig['config file'], 'w', encoding='utf-8') as fp:
+            fp.write(yaml_data)
+        restart_all()
         return ('', 204)
 
 @app.route('/api/playground', methods=['GET', 'POST', 'DELETE'])

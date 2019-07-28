@@ -68,7 +68,7 @@ class DummyPackage(object):
         self.name = name
         self.type = 'pip'
         self.limitation = None
-            
+
 def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
@@ -184,7 +184,7 @@ def check_for_updates(doing_startup=False):
             changed = True
         if 'pycryptodome' not in here_already:
             sys.stderr.write("check_for_updates: installing pycryptodome\n")
-            install_package(DummyPackage('pycryptodome'))            
+            install_package(DummyPackage('pycryptodome'))
             changed = True
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
@@ -278,6 +278,8 @@ def check_for_updates(doing_startup=False):
             continue
         if package.name not in here_already:
             sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + "\n")
+            returnval = 1
+            newlog = ''
         else:
             returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
@@ -285,6 +287,9 @@ def check_for_updates(doing_startup=False):
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
             results[package.name] = 'pip uninstall command returned success code.  See log for details.'
+        elif returnval == 1:
+            Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            results[package.name] = 'pip uninstall was not run because the package was not installed.'
         else:
             results[package.name] = 'pip uninstall command returned failure code'
             ok = False
