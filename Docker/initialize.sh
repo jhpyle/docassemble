@@ -487,8 +487,8 @@ fi
 
 echo "27" >&2
 
-if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
-    echo $TIMEZONE > /etc/timezone
+if [ "${TIMEZONE:-undefined}" != "undefined" ] && [ -f /usr/share/zoneinfo/$TIMEZONE ]; then
+    ln -fs /usr/share/zoneinfo/$TIMEZONE /etc/localtime
     dpkg-reconfigure -f noninteractive tzdata
 fi
 

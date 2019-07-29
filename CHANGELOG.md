@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.69] - 2019-07-29
+### Fixed
+- Unnecessary file cache invalidation affected Playground performance
+  when using cloud storage.
+- Incorrect method of setting Debian timezone.
+
 ## [0.4.68] - 2019-07-28
 ### Added
 - The `/api/resume_url`, `/api/temp_url`, `/api/config`,
