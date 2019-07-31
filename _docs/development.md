@@ -1344,8 +1344,8 @@ Notice the popularity of the [DevOps] methodology in software
 development, which breaks down the silos of "operations" engineers and
 "development" engineers.  Your non-technical people who know the
 subject matter of your interview may not think of themselves as
-"engineers," but they similar in many ways to the "operations" side of
-[DevOps].
+"engineers," but they are similar in many ways to the "operations"
+side of [DevOps].
 
 You can involve a non-technical person on the team who knows how to
 communicate in writing with succinct phrases, who knows when the text

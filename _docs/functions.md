@@ -3462,16 +3462,9 @@ interview answers; so a session belonging to someone else might be not
 `valid` for you, but it would be `valid` for the user who started that
 session.
 
-You can also use [`interview_list()`] to delete sessions.  If you set
-the optional keyword parameter `action` to `'delete_all'`, all of the
-user's sessions will be deleted.  You can delete a particular session
-by setting `action` to `'delete'`, with optional keyword parameter
-`filename` set to the filename of the session's interview, and
-optional keyword parameter `session` set to the ID of the session.
-
-This function can be useful in interviews that replace the standard
-list of sessions.  See the [`session list interview`] configuration
-directive for more information.
+The [`interview_list()`] function can be useful in interviews that
+replace the standard list of sessions.  See the [`session list
+interview`] configuration directive for more information.
 
 Note that more than one user can be associated with any given session.
 Unless server-side encryption prevents it, any user who has the
@@ -3480,6 +3473,24 @@ the `i` and `session` parameters set.  This will associate the user
 with the session.  Thus, if a session has been joined by more than one
 user, it will show up multiple times in the list returned by
 `interview_list(user_id='all')`.
+
+You can use [`interview_list()`] to delete sessions.  If you set the
+optional keyword parameter `action` to `'delete_all'`, all of the
+user's sessions will be deleted.  Or, if you want to delete all of the
+sessions belonging to any user, you can set `user_id` to `'all'` and
+set `action` to `'delete_all'`.  You can delete a particular session
+by setting `action` to `'delete'`, with optional keyword parameter
+`filename` set to the filename of the session's interview, and
+optional keyword parameter `session` set to the ID of the session.  By
+default, the underlying session data associated with a particular user
+will not be deleted if it is shared by another user.  For example, if
+there was an interview with [`multi_user`] set to `True`, and two
+users accessed a session of this interview, and then one user deletes
+the session, the other user will still be able to access the session
+and all of its data.  However, if you set the optional keyword
+parameter `delete_shared` to `True`, then the session and its data
+will be deleted regardless of whether it is shared by one or more
+other users.
 
 For [API] versions of this function, see [`/api/interviews`],
 [`/api/user/interviews`], and [`/api/user/<user_id>/interviews`].
