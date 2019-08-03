@@ -1089,6 +1089,18 @@ code: |
 ---
 {% endhighlight %}
 
+If you are writing an [`initial`] block that calls `process_action()`
+and you want to know the name of the action itself before you call
+`process_action()`, you can retrieve the name of the action by calling
+`action_argument()` without an argument.  This will return the name of
+the action itself.  If the result is `None`, then no action was called
+for the current request (and `process_action()` will not do anything).
+
+You can only retrieve the action name with `process_action()` before
+you call `process_action()`.  During the processing of the action, and
+after `process_action()` returns, `process_action()` will always
+return `None`.
+
 ## <a name="url_of"></a>url_of()
 
 This function returns a URL to a file within a **docassemble**
@@ -1157,6 +1169,8 @@ The `url_of()` function also has a few special uses.
   on-going interviews of a signed-in user.
 * `url_of('dispatch')` returns a URL to the page listing the
   interviews defined in the [`dispatch`] directive of the [Configuration].
+* `url_of('manage')` returns a URL to a page where the user can delete
+  his or her account data.
 * `url_of('config')` returns a URL to the [Configuration] page.
 * `url_of('playground')` returns a URL to the [Playground].
 * `url_of('playgroundtemplate')` returns a URL to the Templates folder

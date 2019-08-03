@@ -380,6 +380,19 @@ and municipality are known by these attributes:
 * `subdivision_second`
 * `subdivision_third`
 
+Under "Other settings," you have the option to "Delete account but
+keep shared sessions."  This will delete the user's account and all of
+their data.  However, if any of the user's sessions are [multi-user
+interview] that had been joined by another user, those sessions will
+not be deleted.
+
+You also have the option under "Other settings" to "Delete account and
+shared sessions."  This will delete the user's account and all of
+their data, including any [multi-user interview] the user had joined.
+
+These account deletion options can be turned off using the [`admin can
+delete account`] directive in the [Configuration].
+
 ### <a name="add user"></a>Add a user
 
 On the "Add a user" page, you can create a new user account by
@@ -518,6 +531,21 @@ the following fields:
 * PyPI Username
 * PyPI Password
 
+From the Other settings menu, the user can:
+
+* Change their password
+* Configure [Google Drive synchronization]
+* Configure [OneDrive synchronization]
+* Configure [multi-factor authentication]
+* Configure [GitHub integration]
+* [Manage API keys]
+* Manage their account
+
+Whether these commands are available depends on the [Configuration].
+The "Manage account" setting allows the user to delete their account.
+To disable this, edit the [`user can delete account`] directive in the
+[Configuration].
+
 ## <a name="sign out"></a>Sign Out
 
 The "Sign Out" menu item logs the user out and expires the user's
@@ -615,3 +643,11 @@ For tips on troubleshooting your **docassemble** system, see the
 [`tags`]: {{ site.baseurl }}/docs/initial.html#tags
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
 [`unlisted`]: {{ site.baseurl }}/docs/initial.html#unlisted
+[multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
+[`user can delete account`]: {{ site.baseurl }}/docs/config.html#user can delete account
+[Manage API keys]: {{ site.baseurl }}/docs/api.html#manage_api
+[GitHub integration]: {{ site.baseurl }}/docs/installation.html#github
+[multi-factor authentication]: {{ site.baseurl }}/docs/config.html#mfa
+[OneDrive synchronization]: {{ site.baseurl }}/docs/installation.html#onedrive
+[Google Drive synchronization]: {{ site.baseurl }}/docs/installation.html#google drive
+[`admin can delete account`]: {{ site.baseurl }}/docs/config.html#admin can delete account

@@ -752,7 +752,9 @@ container for the new configuration to take effect.
 * <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
   like **docassemble** to communicate with the browser using
   encryption.  Read the [HTTPS] section for more information.
-  Defaults to `false`.  See the [`use https`] configuration directive.
+  Defaults to `false`.  See the [`use https`] configuration
+  directive.  Do not set this to `true` if you are using a load
+  balancer that forwards non-encrypted [HTTP] to your server.
 * <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by
   which web browsers can find **docassemble**.  This is necessary for
   [HTTPS] to function. See the [`external hostname`] configuration

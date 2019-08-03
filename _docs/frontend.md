@@ -35,16 +35,20 @@ In general, you can set any variable in the interview by sending a
 POST request with parameters where the keys are [base64]-encoded
 variable names and the values are the values you want to assign to the
 variables.  In [Javascript], you can use the [`atob()`] and [`btoa()`]
-functions to convert between [base64] and text.  In [Python], you can use
-the [`encode_name()`] and [`decode_name()`] functions.
+functions to convert between [base64] and text.  However, when using
+[`btoa()`], you need to alter the results to remove newline and `=`
+characters when working with variable names.  Thus, if your variable
+name is `varName`, call `btoa(varName).replace(/[\\n=]/g, '')`.  In
+[Python], you can use the [`encode_name()`] and [`decode_name()`]
+functions to convert to and from [base64].
 
 For example, if you want to set the variable `favorite_fruit` to
 `'apple'`, you would convert `favorite_fruit` to [base64] using
-`btoa('favorite_fruit')` or `encode_name('favorite_fruit')`, to get
-`'ZmF2b3JpdGVfZnJ1aXQ='`.  Then you would put the following key and
-value in your POST request:
+`btoa('favorite_fruit').replace(/[\\n=]/g, '')` or
+`encode_name('favorite_fruit')`, to get `'ZmF2b3JpdGVfZnJ1aXQ'`.
+Then you would put the following key and value in your POST request:
 
-* `ZmF2b3JpdGVfZnJ1aXQ=`: `apple`
+* `ZmF2b3JpdGVfZnJ1aXQ`: `apple`
 
 The POST request needs to go to the interview URL, which will look like
 `https://docassemble.example.com/interview?i=docassemble.yourpackage:data/questions/yourinterview.yml`.
@@ -71,14 +75,14 @@ following values from the previous [JSON] response you received:
 
 The `_datatypes` field is important if you are setting non-text
 values.  For example, to set the variable `likes_fruit` to `True`,
-a boolean value, you would run `btoa('likes_fruit')` to get the key
-name `bGlrZXNfZnJ1aXQ=`, and then you would run
-`btoa('{"bGlrZXNfZnJ1aXQ=": "boolean"}')` to get
-`eyJiR2xyWlhOZlpuSjFhWFE9IjogImJvb2xlYW4ifQ==`.  Then you would set
+a boolean value, you would run `btoa('likes_fruit').replace(/[\\n=]/g, '')`
+to get the key name `bGlrZXNfZnJ1aXQ`, and then you would run
+`btoa('{"bGlrZXNfZnJ1aXQ": "boolean"}')` to get
+`eyJiR2xyWlhOZlpuSjFhWFEiOiAiYm9vbGVhbiJ9`.  Then you would set
 the following keys and values in your POST request:
 
-* `bGlrZXNfZnJ1aXQ=`: `True`
-* `_datatypes`: `eyJiR2xyWlhOZlpuSjFhWFE9IjogImJvb2xlYW4ifQ==`
+* `bGlrZXNfZnJ1aXQ`: `True`
+* `_datatypes`: `eyJiR2xyWlhOZlpuSjFhWFEiOiAiYm9vbGVhbiJ9`
 
 If you are uploading a file, use the `multipart/form-data` style of
 encoding POST parameters, and include one additional parameter:
@@ -86,12 +90,12 @@ encoding POST parameters, and include one additional parameter:
 * `_files`.  This is a [base64]-encoded [JSON] representation of a
   list where each element is a [base64]-encoded variable name for a
   file being uploaded.
-  
+
 The "name" of an uploaded file should simply be the [base64]-encoded
 variable name.
 
 For example, if you wanted to upload a file into a variable
-`user_picture`, you would run `btoa('user_picture')` to get
+`user_picture`, you would run `btoa('user_picture').replace(/[\\n=]/g, '')` to get
 `'dXNlcl9waWN0dXJl'`, and then you would run
 `btoa('["dXNlcl9waWN0dXJl"]')` to get
 `'WyJkWE5sY2w5d2FXTjBkWEpsIl0='`, and you would set the following in
@@ -109,8 +113,8 @@ which there is a key called `_files_inline`, which is set to
 you want to upload, and some information about them.
 
 For example, suppose you want to upload a file to the variable
-`user_picture`.  You would run `btoa('user_picture')` to get
-`'dXNlcl9waWN0dXJl'`.  Then you would create a [Javascript] object (a
+`user_picture`.  You would run `btoa('user_picture').replace(/[\\n=]/g, '')`
+to get `'dXNlcl9waWN0dXJl'`.  Then you would create a [Javascript] object (a
 [Python dictionary]) with two key-value pairs.  In the first key-value
 pair, the key will be `keys` and the value will be a list containing
 the [base64]-encoded variable names of the variables to which you want

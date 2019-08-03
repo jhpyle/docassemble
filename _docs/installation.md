@@ -1018,6 +1018,19 @@ the [GitHub API], **docassemble** stores the public key in the user's
 the [configuration] as the value of [`appname`] (which defaults to
 `docassemble`).
 
+When users configure their [GitHub] integration, they have two
+checkboxes they can use to configure how the integration works:
+
+* Access shared repositories
+* Access organizational repositories
+
+If "Access shared repositories" is checked, then the [GitHub]
+integration will access repositories that are owned by someone else
+but shared with the user.  If "Access organizational repositories" is
+checked, then [GitHub] integration will access repositories that are
+in the organization of the user.  If many repositories are connected
+with your account, you may need to uncheck these checkboxes.
+
 ## <a name="email"></a>Setting up e-mail sending
 
 If you plan to use the [`send_email()`] function or any other feature

@@ -1130,7 +1130,7 @@ also, of course, need to change the web server configuration file.
 ## <a name="mail"></a>E-mail configuration
 
 **docassemble** needs to send e-mail, for example to reset people's
-passwords, or to let users of a multi-user interview know that it is
+passwords, or to let users of a [multi-user interview] know that it is
 their turn to start answering questions.
 
 By default, **docassemble** assumes that an [SMTP] server is installed
@@ -1474,6 +1474,44 @@ defined here, that script sets up a single account in the
 
 After [`create_tables`] runs for the first time, you can delete the
 `default admin account` information from the configuration file.
+
+## <a name="admin can delete account"></a>Whether the administrator can delete user accounts
+
+By default, administrators can [edit user accounts] and mark them
+inactive.  If an account is inactive, the user cannot log in and the
+user cannot register using the same e-mail address.  Marking an
+account as inactive does not delete the user's data.
+
+When administrators [edit user accounts], they can also delete the
+user's account.  Since the deletion of the information is permanent,
+you might want to turn off this feature for safety reasons.  To do so,
+set `admin can delete account` to `False`:
+
+{% highlight yaml %}
+admin can delete account: False
+{% endhighlight %}
+
+## <a name="user can delete account"></a>Whether users can delete their accounts
+
+By default, users have the power to delete their own accounts and all
+of their data.  To disable this, you can set `user can delete account`
+to `False`:
+
+{% highlight yaml %}
+user can delete account: False
+{% endhighlight %}
+
+<a name="delete account deletes shared"></a>If users have joined
+[multi-user interviews] with other people, it is ambiguous who "owns"
+the data in the interview.  By default, shared interviews are not
+deleted from the server when users delete their data.  However, if you
+want to give users the power to delete any session of a [multi-user
+interview], even if other people used it, you can set `delete account
+deletes shared` to `True`.
+
+{% highlight yaml %}
+delete account deletes shared: True
+{% endhighlight %}
 
 ## <a name="use alembic"></a>Database table upgrades
 
@@ -1860,6 +1898,18 @@ interview delete days: 180
 If `interview delete days` is set to `0`, interviews will never be
 deleted through [scheduled tasks].
 
+## <a name="session lifetime seconds"></a>Flask session lifetime
+
+By default, [Flask] remembers sessions for 31 days.  To set this
+period to a different amount, set `session lifetime seconds` to a
+number of seconds after which the sessions should expire.
+
+For example, to expire a session after 24 hours, include:
+
+{% highlight yaml %}
+session lifetime seconds: 86400
+{% endhighlight %}
+
 ## <a name="checkin interval"></a>Polling frequency
 
 By default, the user interface polls the server every six seconds to
@@ -2233,6 +2283,22 @@ voicerss:
     zh: cn
 {% endhighlight %}
 
+## <a name="babel dates map"></a>Translation of dates
+
+Many of the [date functions] rely on the [`babel.dates`] package.
+This package does not support every language.  For example, if you run
+`set_language('ht')`, functions that use [`babel.dates`] will return
+an error.  You can set a different language to be used by
+[`babel.dates`] as an alternative by setting the `babel dates map`
+directive to a dictionary that translate language codes into
+alternative language codes.  For example:
+
+{% highlight yaml %}
+babel dates map:
+  ht: fr
+{% endhighlight %}
+
+
 ## <a name="ocr languages"></a>OCR language settings
 
 The [`ocr_file()`] function uses the [Tesseract]<span></span> [optical
@@ -2394,7 +2460,7 @@ two factor authentication:
 
 Logged-in users will then see an option on their "Profile" page for
 configuring two-factor authentication.  By default, only
-administrators and developers see an option on their user profile to
+administrators and developers see an option on their [user profile] to
 configure second-factor authentication.  To configure which privileges
 have the option of using second factor authentication, set the `allow
 for` subdirective to the full list of [privileges] for which you want
@@ -3641,3 +3707,9 @@ and Facebook API keys.
 [`docker -t 60 stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
+[date functions]: {{ site.baseurl }}/docs/functions.html#date functions
+[`babel.dates`]: http://babel.pocoo.org/en/latest/api/dates.html
+[edit user accounts]: {{ site.baseurl }}/docs/admin.html#edit user profile
+[user profile]: {{ site.baseurl }}/docs/admin.html#profile
+[multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
+[multi-user interviews]: {{ site.baseurl }}/docs/special.html#multi_user

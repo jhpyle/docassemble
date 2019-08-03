@@ -73,7 +73,10 @@ The language and locale settings have the following effects:
 * Some functions have language-specific responses, such as [`today()`]
   in the [`docassemble.base.util`] module, which returns today's date in
   a readable format such as "October 31, 2015" (for language `en`) or
-  "31 octobre 2015" (for language `fr`).
+  "31 octobre 2015" (for language `fr`).  However, not all languages
+  are supported by the [`babel.dates`] package; you may need to fall
+  back to a different language.  To configure how this works, set the
+  [`babel dates map`] directive in the [Configuration].
 * When **docassemble** highlights [`terms`] in a question (see
   [initial blocks]), it will only highlight words specified in
   [`terms`] blocks for which the `language` of the term matches the
@@ -363,3 +366,5 @@ language.
 [Translate system phrases into another language]: {{ site.baseurl }}/docs/admin.html#translate
 [use code]: {{ site.baseurl }}/docs/documents.html#template file code
 [Morningside Translations]: https://www.morningtrans.com/
+[`babel.dates`]: http://babel.pocoo.org/en/latest/api/dates.html
+[`babel dates map`]: {{ site.baseurl }}/docs/config.html#babel dates map
