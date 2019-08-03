@@ -567,7 +567,7 @@ def custom_login():
 
 def add_secret_to(response):
     if 'newsecret' in session:
-        response.set_cookie('secret', session['newsecret'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         del session['newsecret']
     return response
 
@@ -594,7 +594,7 @@ def logout():
     flash(word('You have signed out successfully.'), 'success')
     response = redirect(next)
     if set_cookie:
-        response.set_cookie('secret', secret)
+        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     else:
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
@@ -3849,7 +3849,7 @@ def auto_login():
     else:
         next_url = url_for('interview_list', from_login='1')
     response = redirect(next_url)
-    response.set_cookie('secret', info['secret'])
+    response.set_cookie('secret', info['secret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     return response
 
 @app.route('/headers', methods=['POST', 'GET'])
@@ -3906,7 +3906,7 @@ def oauth_callback(provider):
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
     response = redirect(url_for('interview_list', from_login='1'))
-    response.set_cookie('secret', secret)
+    response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     return response
 
 @app.route('/phone_login', methods=['POST', 'GET'])
@@ -4009,7 +4009,7 @@ def phone_login_verify():
                 #release_lock(session['uid'], session['i'])
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
             response = redirect(url_for('interview_list', from_login='1'))
-            response.set_cookie('secret', secret)
+            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
             return response
         else:
             logmessage("IP address " + str(request.remote_addr) + " made a failed login attempt using phone number " + str(phone_number) + ".")
@@ -5430,7 +5430,7 @@ def index(action_argument=None):
         else:
             response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if set_cookie:
-            response.set_cookie('secret', secret)
+            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         if expire_visitor_secret:
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
@@ -6787,7 +6787,7 @@ def index(action_argument=None):
                 response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
             response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         if set_cookie:
-            response_to_send.set_cookie('secret', secret)
+            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
@@ -6809,7 +6809,7 @@ def index(action_argument=None):
             response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
-            response_to_send.set_cookie('secret', secret)
+            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
@@ -9930,7 +9930,7 @@ def index(action_argument=None):
         response = make_response(output.encode('utf-8'), '200 OK')
         response.headers['Content-type'] = 'text/html; charset=utf-8'
     if set_cookie:
-        response.set_cookie('secret', secret)
+        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     if expire_visitor_secret:
         response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
@@ -17230,7 +17230,7 @@ def after_reset():
     response = redirect(url_for('user.login'))
     if 'newsecret' in session:
         #logmessage("after_reset: fixing cookie")
-        response.set_cookie('secret', session['newsecret'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         del session['newsecret']
     return response
 
@@ -17964,7 +17964,7 @@ def interview_list():
         if 'resume' in request.args:
             the_args['resume'] = request.args['resume']
         response = redirect(url_for('interview_list', **the_args))
-        response.set_cookie('secret', session['newsecret'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         del session['newsecret']
         return response
     if request.method == 'GET' and needs_to_change_password():
