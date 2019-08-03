@@ -315,7 +315,7 @@ class InterviewSourceFile(InterviewSource):
             if new_source.update():
                 return(new_source)
         return(None)
-    
+
 class InterviewSourceURL(InterviewSource):
     def __init__(self, **kwargs):
         self.set_path(kwargs.get('path', None))
@@ -411,7 +411,9 @@ class InterviewStatus(object):
                         if 'show_if_var' in the_field.extras:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
                         if 'show_if_js' in the_field.extras:
-                            the_field.extras['show_if_js']['expression'] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'])
+                            the_field.extras['show_if_js']['expression'].original_text = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'].original_text)
+                            if the_field.extras['show_if_js']['expression'].uses_mako:
+                                the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
                                 the_field.extras['show_if_js']['vars'][ii] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
                     if list_indexno >= list_len:
@@ -600,7 +602,7 @@ class InterviewStatus(object):
                     the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
                 if 'show_if_js' in self.extras:
-                    the_field['show_if_js'] = field.extras['show_if_js']
+                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
             if hasattr(field, 'datatype'):
                 if 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]
@@ -754,7 +756,7 @@ class InterviewStatus(object):
                 choice_list.append(item)
                 indexno += 1
         return choice_list
-    
+
 # def new_counter(initial_value=0):
 #     d = {'counter': initial_value}
 #     def f():
@@ -778,7 +780,7 @@ class TextObject(object):
             if question is None:
                 names_used = set()
             else:
-                names_used = question.names_used            
+                names_used = question.names_used
             self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
             for x in self.template.names_used:
                 if x not in self.template.names_set:
@@ -813,10 +815,13 @@ class TextObject(object):
             return(self.original_text)
 
 def safeid(text):
-    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode())
 
 def from_safeid(text):
-    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf8'))
+
+def repad(text):
+    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
 
 class Field:
     def __init__(self, data):
@@ -962,7 +967,7 @@ def recursive_eval_data_from_code(target, the_user_dict):
         return eval(target, the_user_dict)
     else:
         return target
-    
+
 def recursive_textobject(target, question):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
@@ -1331,7 +1336,7 @@ class Question:
                 defs.extend(self.interview.defs[usedef])
             definitions = "\n".join(defs) + "\n";
         else:
-            definitions = "";        
+            definitions = "";
         if 'continue button label' in data:
             if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
                 raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
@@ -1585,7 +1590,7 @@ class Question:
                         if key == 'image set':
                             raise DAError("An 'images' definition in an 'image set' item must be a dictionary or a list." + self.idebug(data))
                         else:
-                            raise DAError("An 'images' section must be a dictionary or a list." + self.idebug(data))                            
+                            raise DAError("An 'images' section must be a dictionary or a list." + self.idebug(data))
                     for image in image_list:
                         if not isinstance(image, dict):
                             the_image = {str(image): str(image)}
@@ -1718,7 +1723,7 @@ class Question:
                     # logmessage("setting imports_util to true")
                     self.interview.imports_util = True
                 # else:
-                #     logmessage("not setting imports_util to true")                    
+                #     logmessage("not setting imports_util to true")
                 self.question_type = 'modules'
                 self.module_list = data['modules']
             else:
@@ -2050,7 +2055,7 @@ class Question:
                 if isinstance(list_item, (dict, list, set)):
                     raise DAError("An audio declaration can only contain a text item or a list of text items." + self.idebug(data))
                 if self.audiovideo is None:
-                    self.audiovideo = dict()    
+                    self.audiovideo = dict()
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
                 self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'audio'})
@@ -2063,7 +2068,7 @@ class Question:
                 if isinstance(list_item, (dict, list, set)):
                     raise DAError("A video declaration can only contain a text item or a list of text items." + self.idebug(data))
                 if self.audiovideo is None:
-                    self.audiovideo = dict()    
+                    self.audiovideo = dict()
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
                 self.audiovideo['question'].append({'text': TextObject(definitions + text_type(list_item.strip()), question=self), 'package': self.package, 'type': 'video'})
@@ -2505,18 +2510,18 @@ class Question:
                                     js_info['sign'] = True
                                 else:
                                     js_info['sign'] = False
-                                js_info['expression'] = field[key]
+                                js_info['expression'] = TextObject(definitions + text_type(field[key]).strip(), question=self, translate=False)
                                 js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras']['show_if_js'] = js_info
                             elif key == 'show if' or key == 'hide if':
-                                if 'js show if' in field or 'js hide if' in field:
-                                    raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 if isinstance(field[key], dict):
                                     if 'variable' in field[key] and 'is' in field[key]:
+                                        if 'js show if' in field or 'js hide if' in field:
+                                            raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
                                         field_info['extras']['show_if_val'] = TextObject(definitions + text_type(field[key]['is']).strip(), question=self)
                                     elif 'code' in field[key]:
@@ -2550,7 +2555,7 @@ class Question:
                                         if 'datatype' not in field and 'code' not in field and 'choices' not in field:
                                             auto_determine_type(field_info, the_value=field[key])
                             elif key == 'disable others':
-                                if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide', 
+                                if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide',
                                     raise DAError("A 'disable others' directive cannot be used with this data type." + self.idebug(data))
                                 if not isinstance(field[key], (list, bool)):
                                     raise DAError("A 'disable others' directive must be True, False, or a list of variable names." + self.idebug(data))
@@ -2654,10 +2659,10 @@ class Question:
                                 field[key] = field[key].strip()
                                 if invalid_variable_name(field[key]):
                                     raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
-                                field_info['saveas'] = field[key]                                
+                                field_info['saveas'] = field[key]
                             elif key == 'label':
                                 if 'field' not in field:
-                                    raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
+                                    raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))
                                 field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
                             else:
                                 if 'label' in field_info:
@@ -2879,7 +2884,7 @@ class Question:
                             field_info['action'] = dict(action=field['action'], arguments=dict())
                     elif key == 'label':
                         if 'field' not in field and 'fields' not in field:
-                            raise DAError("If you use 'label' to label a field in a 'review' section, you must also include a 'field' or 'fields.'" + self.idebug(data))                                    
+                            raise DAError("If you use 'label' to label a field in a 'review' section, you must also include a 'field' or 'fields.'" + self.idebug(data))
                         field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
                     else:
                         field_info['label'] = TextObject(definitions + interpret_label(key), question=self)
@@ -3584,7 +3589,7 @@ class Question:
                 else:
                     number = "10"
                 if int(number) < 4:
-                    number = "4"                
+                    number = "4"
                 extras['reload_after'] = number
         if hasattr(self, 'allow_downloading'):
             if isinstance(self.allow_downloading, bool):
@@ -3649,7 +3654,11 @@ class Question:
                     if failed:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'): # 'script', 'css', 
+                    if 'show_if_js' in field.extras:
+                        if 'show_if_js' not in extras:
+                            extras['show_if_js'] = dict()
+                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -4028,7 +4037,7 @@ class Question:
                             for selection in selectcompute[field.number]:
                                 key = selection['key']
                                 #logmessage("key is " + str(key))
-                                real_key = codecs.decode(bytearray(key, encoding='utf-8'), 'base64').decode('utf8')
+                                real_key = from_safeid(key)
                                 string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
                                 #logmessage("Doing " + string)
                                 exec(string, user_dict)
@@ -4066,7 +4075,11 @@ class Question:
                             if 'sub_fields' not in extras:
                                 extras['sub_fields'] = dict()
                             extras['sub_fields'][field.number] = the_question.fields
-                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css', 
+                        if 'show_if_js' in field.extras:
+                            if 'show_if_js' not in extras:
+                                extras['show_if_js'] = dict()
+                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
@@ -4157,7 +4170,7 @@ class Question:
                     break
             if not already_there:
                 user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict()))
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined, 
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined,
     def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)
         if self.compute_attachment is not None:
@@ -4378,7 +4391,7 @@ class Question:
                             the_template_docx = the_template.docx
                             for subdoc in subdocs:
                                 docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
-                            
+
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
                                 the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
@@ -4822,7 +4835,7 @@ def interview_source_from_string(path, **kwargs):
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
                 return(new_source)
-    raise DAError("YAML file " + str(path) + " not found", code=404)
+    raise DAError("Interview " + text_type(path) + " not found")
 
 def is_boolean(field_data):
     if 'choices' not in field_data:
@@ -6276,7 +6289,7 @@ def unpack_list(item, target_list=None):
         for subitem in item:
             unpack_list(subitem, target_list)
     return target_list
-            
+
 def process_selections(data, manual=False, exclude=None):
     if exclude is None:
         to_exclude = list()
@@ -6398,7 +6411,7 @@ def get_mimetype(filename):
     if extension == '3gpp':
         mimetype = 'audio/3gpp'
     if mimetype is None:
-        mimetype = 'text/plain'    
+        mimetype = 'text/plain'
     return mimetype
 
 def interpret_label(text):
@@ -6489,7 +6502,7 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
         for command in commands:
             #logmessage("Doing " + command)
             exec(command, the_user_dict)
-    
+
 def invalid_variable_name(varname):
     if not isinstance(varname, string_types):
         return True
@@ -6497,7 +6510,7 @@ def invalid_variable_name(varname):
         return True
     varname = re.sub(r'[\.\[].*', '', varname)
     if not valid_variable_match.match(varname):
-        return True 
+        return True
     return False
 
 def exec_with_trap(the_question, the_dict):

@@ -3485,10 +3485,16 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
         the_iterable = the_iterable.complete_elements()
     contents = list()
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
-        for key in sorted(the_iterable):
-            user_dict_copy['row_item'] = the_iterable[key]
-            user_dict_copy['row_index'] = key
-            contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
+        if isinstance(the_iterable, (OrderedDict, DAOrderedDict)):
+            for key in the_iterable:
+                user_dict_copy['row_item'] = the_iterable[key]
+                user_dict_copy['row_index'] = key
+                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
+        else:
+            for key in sorted(the_iterable):
+                user_dict_copy['row_item'] = the_iterable[key]
+                user_dict_copy['row_index'] = key
+                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
     else:
         indexno = 0
         for item in the_iterable:

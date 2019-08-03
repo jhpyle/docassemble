@@ -1,8 +1,7 @@
 from six import text_type
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from flask import redirect, render_template, render_template_string, request, flash, current_app
-from flask import url_for
+from flask import redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
 from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
@@ -19,6 +18,7 @@ import pytz
 import datetime
 import re
 import email.utils
+import json
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
@@ -54,7 +54,7 @@ def privilege_list():
 def user_list():
     users = list()
     for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
-        if user.nickname == 'cron':
+        if user.nickname == 'cron' or user.social_id.startswith('disabled$'):
             continue
         role_names = [y.name for y in user.roles]
         if 'admin' in role_names:
@@ -118,7 +118,7 @@ def delete_privilege(id):
 def edit_user_profile_page(id):
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         abort(404)
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
@@ -130,6 +130,23 @@ def edit_user_profile_page(id):
         db.session.commit()
         #docassemble.webapp.daredis.clear_user_cache()
         return redirect(url_for('edit_user_profile_page', id=id))
+    if daconfig.get('admin can delete account', True) and user.id != current_user.id:
+        if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
+            from docassemble.webapp.server import user_interviews, r
+            from docassemble.webapp.backend import delete_user_data
+            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(id, r)
+            db.session.commit()
+            flash(word('The user account was deleted.'), 'success')
+            return redirect(url_for('user_list'))
+        if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
+            from docassemble.webapp.server import user_interviews, r
+            from docassemble.webapp.backend import delete_user_data
+            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(id, r)
+            db.session.commit()
+            flash(word('The user account was deleted.'), 'success')
+            return redirect(url_for('user_list'))
     the_role_id = list()
     for role in user.roles:
         the_role_id.append(text_type(role.id))
@@ -172,7 +189,16 @@ def edit_user_profile_page(id):
         return redirect(url_for('user_list'))
     form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id))
+    script = """
+    <script>
+      $(".dadeleteaccount").click(function(event){
+        if (!confirm(""" + json.dumps(word("Are you sure you want to permanently delete this user's account?")) + """)){
+          event.preventDefault();
+          return false;
+        }
+      });
+    </script>"""
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script))
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required

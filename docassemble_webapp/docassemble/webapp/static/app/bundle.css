@@ -2679,3 +2679,7 @@ tr:first-child .datableup, tr:last-child .databledown {
     right: auto !important;
 }
 
+.dawideimage {
+    width: 100%;
+}
+

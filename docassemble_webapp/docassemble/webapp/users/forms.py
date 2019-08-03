@@ -64,6 +64,8 @@ class MySignInForm(LoginForm):
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
             if user is None:
+                self.email.errors = list(self.email.errors)
+                self.email.errors.append(word("Account did not exist."))
                 return False
             if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
                 self.email.errors = list(self.email.errors)
@@ -276,3 +278,7 @@ class MyResendConfirmEmailForm(FlaskForm):
         validators.Email(word('Invalid e-mail address')),
         ])
     submit = SubmitField(word('Send confirmation email'))
+
+class ManageAccountForm(FlaskForm):
+    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf([word("delete my account")], message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
+    delete = SubmitField(word('Delete Account'))

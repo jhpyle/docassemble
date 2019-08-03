@@ -4,8 +4,9 @@ from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
+from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
 from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage #Attachments
+from docassemble.webapp.packages.models import PackageAuth
 from docassemble.base.generate_key import random_string, random_bytes
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -168,7 +169,7 @@ if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail'
     mail = MailgunMail(app)
 else:
     mail = FlaskMail(app)
-    
+
 def da_send_mail(the_message):
     mail.send(the_message)
 
@@ -575,6 +576,73 @@ def advance_progress(user_dict, interview):
     else:
         user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
     return
+
+def delete_temp_user_data(temp_user_id, r):
+    UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:t' + text_type(temp_user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:t' + text_type(temp_user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
+
+def delete_user_data(user_id, r):
+    UserDict.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(owner_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
+        package_auth.user_id = 1
+    db.session.commit()
+    Shortener.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserRoles.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for user_auth in UserAuthModel.query.filter_by(user_id=user_id):
+        user_auth.password = ''
+        user_auth.reset_password_token = ''
+    db.session.commit()
+    for user_object in UserModel.query.filter_by(id=user_id):
+        user_object.active = False
+        user_object.first_name = ''
+        user_object.last_name = ''
+        user_object.nickname = ''
+        user_object.email = None
+        user_object.country = ''
+        user_object.subdivisionfirst = ''
+        user_object.subdivisionsecond = ''
+        user_object.subdivisionthird = ''
+        user_object.organization = ''
+        user_object.timezone = None
+        user_object.language = None
+        user_object.pypi_username = None
+        user_object.pypi_password = None
+        user_object.otp_secret = None
+        user_object.social_id = 'disabled$' + text_type(user_id)
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:' + text_type(user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:' + text_type(user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
 
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):

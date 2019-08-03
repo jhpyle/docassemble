@@ -590,6 +590,7 @@ def logout():
     #clear_user_cache(user_id=current_user.id)
     logout_user()
     delete_session()
+    session.clear()
     flash(word('You have signed out successfully.'), 'success')
     response = redirect(next)
     if set_cookie:
@@ -709,7 +710,7 @@ import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
 from flask_user import UserManager, SQLAlchemyAdapter
 from flask_cors import cross_origin
@@ -807,7 +808,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -1139,6 +1140,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'dispatch':
         remove_question_package(kwargs)
         return(url_for('interview_start', **kwargs))
+    elif file_reference == 'manage':
+        remove_question_package(kwargs)
+        return(url_for('manage_account', **kwargs))
     elif file_reference == 'interview_list':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -1985,19 +1989,22 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
 
 def process_bracket_expression(match):
     try:
-        inner = codecs.decode(bytearray(match.group(1), encoding='utf-8'), 'base64').decode('utf-8')
+        inner = codecs.decode(repad(bytearray(match.group(1), encoding='utf-8')), 'base64').decode('utf-8')
     except:
         inner = match.group(1)
     return("[" + re.sub(r'^u', r'', repr(inner)) + "]")
 
 def myb64unquote(the_string):
-    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf-8'))
+    return(codecs.decode(repad(bytearray(the_string, encoding='utf-8')), 'base64').decode('utf-8'))
 
 def safeid(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
 
 def from_safeid(text):
-    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf-8'))
+    return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8'))
+
+def repad(text):
+    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
 
 def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
@@ -3825,7 +3832,7 @@ def auto_login():
     except:
         abort(403)
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=info['user_id']).first()
-    if not user:
+    if (not user) or user.social_id.startswith('disabled$'):
         abort(403)
     login_user(user, remember=False)
     if 'i' in info:
@@ -4283,6 +4290,49 @@ def mfa_login():
         description += "  " + word("Please enter the verification code from your authentication app.")
     return render_template('flask_user/mfa_login.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=description)
 
+@app.route('/user/manage', methods=['POST', 'GET'])
+def manage_account():
+    if (current_user.is_authenticated and current_user.has_roles(['admin'])) or not daconfig.get('user can delete account', True):
+        abort(403)
+    secret = request.cookies.get('secret', None)
+    if current_user.is_anonymous:
+        logged_in = False
+        if 'tempuser' not in session:
+            abort(404)
+        temp_user_id = int(session['tempuser'])
+    else:
+        logged_in = True
+    delete_shared = daconfig.get('delete account deletes shared', False)
+    form = ManageAccountForm(request.form)
+    if request.method == 'POST' and form.validate():
+        if current_user.is_authenticated:
+            user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete_all', delete_shared=delete_shared)
+            the_user_id = current_user.id
+            logout_user()
+            delete_user_data(the_user_id, r)
+        else:
+            sessions_to_delete = set()
+            interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.temp_user_id == temp_user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+            for interview_info in interview_query:
+                sessions_to_delete.add((interview_info.key, interview_info.filename))
+            for session_id, yaml_filename in sessions_to_delete:
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
+                reset_user_dict(session_id, yaml_filename, temp_user_id=temp_user_id, force=delete_shared)
+            delete_temp_user_data(temp_user_id, r)
+        manual_checkout()
+        delete_session()
+        session.clear()
+        response = redirect(exit_page)
+        response.set_cookie('visitor_secret', '', expires=0)
+        response.set_cookie('secret', '', expires=0)
+        response.set_cookie('session', '', expires=0)
+        return response
+    if logged_in:
+        description = word("""You can delete your account on this page.  Type "delete my account" (in lowercase, without the quotes) into the box below and then press the "Delete account" button.  This will erase your interview sessions and your user profile.  To go back to your user profile page, press the "Cancel" button.""")
+    else:
+        description = word("""You can delete your account on this page.  Type "delete my account" (in lowercase, without the quotes) into the box below and then press the "Delete account" button.  This will erase your interview sessions.""")
+    return render_template('pages/manage_account.html', form=form, version_warning=None, title=word("Manage account"), tab_title=word("Manage account"), page_title=word("Manage account"), description=description, logged_in=logged_in)
+
 def get_github_flow():
     app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('github', dict())
     client_id = app_credentials.get('id', None)
@@ -4342,9 +4392,23 @@ def github_menu():
             return redirect(url_for('github_unconfigure'))
         elif form.cancel.data:
             return redirect(url_for('user_profile_page'))
+        elif form.save.data:
+            info = dict()
+            info['shared'] = True if form.shared.data else False
+            info['orgs'] = True if form.orgs.data else False
+            r.set('da:using_github:userid:' + str(current_user.id), json.dumps(info))
+            flash(word("Your GitHub settings were saved."), 'info')
     uses_github = r.get('da:using_github:userid:' + str(current_user.id))
-    if uses_github:
-        description = "Your GitHub integration is currently turned on.  You can disconnect GitHub integration if you no longer wish to use it."
+    if uses_github is not None:
+        uses_github = uses_github.decode()
+        if uses_github == '1':
+            form.shared.data = True
+            form.orgs.data = True
+        else:
+            info = json.loads(uses_github)
+            form.shared.data = info['shared']
+            form.orgs.data = info['orgs']
+        description = "Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it."
     else:
         description = "If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground."
     return render_template('pages/github.html', form=form, version_warning=None, title=word("GitHub Integration"), tab_title=word("GitHub"), page_title=word("GitHub"), description=description, uses_github=uses_github, bodyclass='daadminbody')
@@ -4408,8 +4472,8 @@ def github_configure():
             flash(word("GitHub integration was successfully configured."), 'info')
         else:
             raise DAError("github_configure: error setting public key")
-    r.set('da:using_github:userid:' + str(current_user.id), 1)
-    return redirect(url_for('user_profile_page'))
+    r.set('da:using_github:userid:' + str(current_user.id), json.dumps(dict(shared=True, orgs=True)))
+    return redirect(url_for('github_menu'))
 
 @app.route('/github_unconfigure', methods=['POST', 'GET'])
 @login_required
@@ -4579,6 +4643,7 @@ def exit_logout():
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
     delete_session() # used to be indented
+    session.clear()
     response = redirect(the_exit_page)
     response.set_cookie('visitor_secret', '', expires=0)
     response.set_cookie('secret', '', expires=0)
@@ -6659,6 +6724,7 @@ def index(action_argument=None):
             flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
         delete_session()
+        session.clear()
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
@@ -6964,9 +7030,9 @@ def index(action_argument=None):
       }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
-          var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName)] != "undefined"){
-            fieldName = daVarLookup[btoa(fieldName)];
+          var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
+            fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
             fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
           var varList = $("[name='" + fieldNameEscaped + "']");
@@ -7587,6 +7653,21 @@ def index(action_argument=None):
           }
           return handler.call(this, element, event);
         };
+      }
+      function daInvalidHandler(form, validator){
+        var errors = validator.numberOfInvalids();
+        if (errors) {
+          if ($(validator.errorList[0].element).is(":visible")){
+            $("html, body").animate({
+              scrollTop: $(validator.errorList[0].element).offset().top - 60
+            }, 1000);
+          }
+          else{
+            $("html, body").animate({
+              scrollTop: $($(validator.errorList[0].element).parent()).offset().top - 60
+            }, 1000);
+          }
+        }
       }
       function daValidationHandler(form){
         //form.submit();
@@ -8979,8 +9060,8 @@ def index(action_argument=None):
               if (checkboxName != baseName){
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName)] != "undefined")){
-                   transBaseName = atob(daVarLookup[btoa(transBaseName)]);
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
+                   transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
                 }
                 var convertedName;
                 try {
@@ -8989,10 +9070,10 @@ def index(action_argument=None):
                 catch (e) {
                   continue;
                 }
-                daVarLookupRev[btoa(transBaseName + bracketPart)] = btoa(baseName + "['" + convertedName + "']");
-                daVarLookup[btoa(baseName + "['" + convertedName + "']")] = btoa(transBaseName + bracketPart);
-                daVarLookup[btoa(baseName + "[u'" + convertedName + "']")] = btoa(transBaseName + bracketPart);
-                daVarLookup[btoa(baseName + '["' + convertedName + '"]')] = btoa(transBaseName + bracketPart);
+                daVarLookupRev[btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '')] = btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
+                daVarLookup[btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                daVarLookup[btoa(baseName + "[u'" + convertedName + "']").replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                daVarLookup[btoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
               }
             }
           }
@@ -9006,7 +9087,7 @@ def index(action_argument=None):
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
-            var showIfVar = btoa(jsInfo['vars'][i]);
+            var showIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
               showIfVar = daVarLookup[showIfVar];
@@ -10398,9 +10479,9 @@ def observer():
       }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
-          var fieldNameEscaped = btoa(fieldName);//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName)] != "undefined"){
-            fieldName = daVarLookup[btoa(fieldName)];
+          var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
+            fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
             fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           }
           var varList = $("[name='" + fieldNameEscaped + "']");
@@ -10821,7 +10902,7 @@ def observer():
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
-            var showIfVar = btoa(jsInfo['vars'][i]);
+            var showIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
               showIfVar = daVarLookup[showIfVar];
@@ -12707,6 +12788,11 @@ def create_playground_package():
         if not github_auth:
             logmessage('create_playground_package: github button called when github auth not enabled.')
             abort(404)
+        github_auth = github_auth.decode()
+        if github_auth == '1':
+            github_auth_info = dict(shared=True, orgs=True)
+        else:
+            github_auth_info = json.loads(github_auth)
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
         if github_package_name in ('docassemble-base', 'docassemble-webapp', 'docassemble-demo'):
@@ -12737,31 +12823,37 @@ def create_playground_package():
         if github_user_name is None or github_email is None:
             raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
         all_repositories = dict()
-        repositories = get_user_repositories(http)
-        for repository in repositories:
-            if repository['name'] in all_repositories and repository['owner']['login'] == github_user_name:
-                continue
-            all_repositories[repository['name']] = repository
-        org_repositories = []
-        orgs_info = get_orgs_info(http)
-        for org_info in orgs_info:
-            resp, content = http.request("https://api.github.com/orgs/:" + str(org_info['login']) + '/repos', "GET")
-            if int(resp['status']) == 200:
-                org_repositories.extend(json.loads(content.decode()))
-                while True:
-                    next_link = get_next_link(resp)
-                    if next_link:
-                        resp, content = http.request(next_link, "GET")
-                        if int(resp['status']) != 200:
-                            raise DAError("get_user_repositories: could not get information from next URL")
+        resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
+        if int(resp['status']) == 200:
+            repo_info = json.loads(content.decode())
+            all_repositories[repo_info['name']] = repo_info
+        if github_auth_info['shared']:
+            repositories = get_user_repositories(http)
+            for repository in repositories:
+                if repository['name'] in all_repositories and repository['owner']['login'] == github_user_name:
+                    continue
+                all_repositories[repository['name']] = repository
+        if github_auth_info['orgs']:
+            org_repositories = []
+            orgs_info = get_orgs_info(http)
+            for org_info in orgs_info:
+                resp, content = http.request("https://api.github.com/orgs/:" + str(org_info['login']) + '/repos', "GET")
+                if int(resp['status']) == 200:
+                    org_repositories.extend(json.loads(content.decode()))
+                    while True:
+                        next_link = get_next_link(resp)
+                        if next_link:
+                            resp, content = http.request(next_link, "GET")
+                            if int(resp['status']) != 200:
+                                raise DAError("could not get information from next URL")
+                            else:
+                                org_repositories.extend(json.loads(content.decode()))
                         else:
-                            org_repositories.extend(json.loads(content.decode()))
-                    else:
-                        break
-        for repository in org_repositories:
-            if repository['name'] in all_repositories:
-                continue
-            all_repositories[repository['name']] = repository
+                            break
+            for repository in org_repositories:
+                if repository['name'] in all_repositories:
+                    continue
+                all_repositories[repository['name']] = repository
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
@@ -12850,9 +12942,12 @@ def create_playground_package():
                     resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
                     if int(resp['status']) != 201:
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
-                    for repository in get_user_repositories(http):
-                        if repository['name'] == github_package_name:
-                            all_repositories[repository['name']] = repository
+                    resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
+                    if int(resp['status']) == 200:
+                        repo_info = json.loads(content.decode())
+                        all_repositories[repo_info['name']] = json.loads(content.decode())
+                    else:
+                        raise DAError("create_playground_package: GitHub repository could not be found after creating it.")
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -14984,7 +15079,16 @@ def playground_packages():
     else:
         can_publish_to_pypi = False
     if app.config['USE_GITHUB']:
-        can_publish_to_github = r.get('da:using_github:userid:' + str(current_user.id))
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+        if github_auth is not None:
+            github_auth = github_auth.decode()
+            if github_auth == '1':
+                github_auth_info = dict(shared=True, orgs=True)
+            else:
+                github_auth_info = json.loads(github_auth)
+            can_publish_to_github = True
+        else:
+            can_publish_to_github = False
     else:
         can_publish_to_github = None
     show_message = true_or_false(request.args.get('show_message', True))
@@ -15119,7 +15223,7 @@ def playground_packages():
                 on_github = True
                 branch_info = get_branch_info(http, repo_info['full_name'])
                 found = True
-            if found is False:
+            if found is False and github_auth_info['shared']:
                 repositories = get_user_repositories(http)
                 for repo_info in repositories:
                     if repo_info['name'] != github_package_name:
@@ -15133,7 +15237,7 @@ def playground_packages():
                     branch_info = get_branch_info(http, repo_info['full_name'])
                     found = True
                     break
-            if found is False:
+            if found is False and github_auth_info['orgs']:
                 orgs_info = get_orgs_info(http)
                 for org_info in orgs_info:
                     resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
@@ -17634,7 +17738,7 @@ def train():
     </script>"""
         return render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data)
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
     if user_id is None and not in_celery and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
         raise Exception('user_interviews: only administrators and advocates can access information about other users')
@@ -17678,7 +17782,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             for session_id, yaml_filename, the_user_id in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id)
                 #obtain_lock(session_id, yaml_filename)
-                if the_user_id is None:
+                if the_user_id is None or delete_shared:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id, force=True)
                 else:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
@@ -17689,7 +17793,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             raise Exception("user_interviews: filename and session must be provided in order to delete interview")
         manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id)
         #obtain_lock(session, filename)
-        reset_user_dict(session, filename, user_id=user_id)
+        reset_user_dict(session, filename, user_id=user_id, force=delete_shared)
         #release_lock(session, filename)
         return True
     if current_user and current_user.is_authenticated and current_user.timezone:
@@ -19090,7 +19194,7 @@ def api_verify(req, roles=None):
                 logmessage("api_verify: authorization failure referer " + str(the_referer) + " could not be matched")
                 return False
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         logmessage("api_verify: user does not exist")
         return False
     if not user.active:
@@ -19127,6 +19231,8 @@ def get_user_list(include_inactive=False):
         the_users = UserModel.query.options(db.joinedload('roles')).filter_by(active=True).order_by(UserModel.id).all()
     user_list = list()
     for user in the_users:
+        if user.social_id.startswith('disabled$'):
+            continue
         user_info = dict()
         user_info['privileges'] = list()
         for role in user.roles:
@@ -19443,7 +19549,7 @@ def get_user_info(user_id=None, email=None):
         user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
         user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         return None
     for role in user.roles:
         user_info['privileges'].append(role.name)
@@ -19726,7 +19832,7 @@ def add_user_privilege(user_id, privilege):
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         raise Exception("The specified user did not exist")
     for role in user.roles:
         if role.name == privilege:
@@ -19749,7 +19855,7 @@ def remove_user_privilege(user_id, privilege):
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         raise Exception("The specified user did not exist")
     role_to_remove = None
     for role in user.roles:
@@ -19838,7 +19944,7 @@ def set_user_info(**kwargs):
         user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
         user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         raise Exception("User not found")
     for key, val in kwargs.items():
         if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):

@@ -239,6 +239,11 @@ def today(timezone=None, format=None):
     else:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
+def babel_language(language):
+    if 'babel dates map' not in server.daconfig:
+        return language
+    return server.daconfig['babel dates map'].get(language, language)
+
 def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.
     Set as_word to True if you want the month as a word."""
@@ -251,7 +256,7 @@ def month_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='MMMM', locale=language))
+            return(babel.dates.format_date(date, format='MMMM', locale=babel_language(language)))
         return(int(date.strftime('%m')))
     except:
         return word("Bad date")
@@ -279,7 +284,7 @@ def dow_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='EEEE', locale=language))
+            return(babel.dates.format_date(date, format='EEEE', locale=babel_language(language)))
         else:
             return(int(date.strftime('%u')))
     except:
@@ -309,7 +314,7 @@ def format_date(the_date, format='long', language=None):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_date(date, format=format, locale=language)
+        return babel.dates.format_date(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
@@ -325,7 +330,7 @@ def format_datetime(the_date, format='long', language=None):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=language)
+        return babel.dates.format_datetime(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
@@ -341,7 +346,7 @@ def format_time(the_time, format='short', language=None):
             time = the_time
         else:
             time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(time, format=format, locale=language)
+        return babel.dates.format_time(time, format=format, locale=babel_language(language))
     except Exception as errmess:
         return word("Bad date: " + text_type(errmess))
 
@@ -579,7 +584,7 @@ def returning_user(minutes=None, hours=None, days=None):
     return False
 
 def last_access_delta(*pargs, **kwargs):
-    """Returns a datatime.timedelta object expressing the length of
+    """Returns a datetime.timedelta object expressing the length of
     time that has passed since the last time the interview was accessed."""
     last_time = last_access_time(*pargs, **kwargs)
     if last_time is None:
@@ -1980,7 +1985,7 @@ def map_of(*pargs, **kwargs):
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
-        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+        return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
 def ocr_file_in_background(*pargs, **kwargs):

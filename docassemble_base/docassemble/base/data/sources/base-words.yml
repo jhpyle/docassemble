@@ -1,3 +1,4 @@
+"Account did not exist.": Null
 "A chat message has arrived.": Null
 "Action": Null
 "Actions": Null
@@ -30,6 +31,7 @@
 "Are you sure that you want to publish this package to PyPI?": Null
 "Are you sure you want to delete all saved interviews?": Null
 "Are you sure you want to delete this item?": Null
+"Are you sure you want to permanently delete this user's account?": Null
 "At least one e-mail address must be listed": Null
 "attachment_message_plural": Null
 "attachment_message_singular": Null
@@ -91,11 +93,13 @@
 "Decorations": Null
 "Defined in": Null
 "definitions of words": Null
+"Delete Account": Null
 "Deleted file: ": Null
 "Deleted interview": Null
 "Deleted interviews": Null
 "(Deleted)": Null
 "Deleted package": Null
+"delete my account": Null
 "Delete": Null
 "Dependencies": Null
 "Description": Null
@@ -243,6 +247,7 @@
 "Live chat": Null
 "Loading.  Please wait . . . ": Null
 "Logs": Null
+"Manage account": Null
 "Markdown": Null
 "means the name is located in this file": Null
 "means the name may be located in a file included by reference, such as:": Null
@@ -425,6 +430,7 @@
 "Sign Out": Null
 "Sign Your Name": Null
 "Since you changed a Python module, the server needs to restart in order to load your module.": Null
+"Since you did not type \"delete my account\" I did not delete your account.": Null
 "Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
 "skip": Null
 "SMS": Null
@@ -492,6 +498,7 @@
 "The role could not be deleted.": Null
 "The synchronization was not successful.": Null
 "The synchronization was successful.": Null
+"The user account was deleted.": Null
 "The user can call you.  Click to cancel.": Null
 "The user profile was not changed.": Null
 "The version on PyPI is": Null
@@ -533,6 +540,7 @@
 "Type a time, or type skip.": Null
 "Type a value between": Null
 "Type Ctrl-space to autocomplete.": Null
+"Type \"delete my account\" here to confirm that you want to delete your account.": Null
 "Type ? for additional assistance.": Null
 "Type": Null
 "Type ok to continue.": Null

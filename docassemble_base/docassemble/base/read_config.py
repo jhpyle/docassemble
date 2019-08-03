@@ -20,7 +20,7 @@ if __name__ == "__main__":
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')
         indexno = 0
-        for locale in daconfig['other locales']:
+        for locale in daconfig['other os locales']:
             print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
             indexno += 1
     else:

@@ -123,9 +123,12 @@ class OneDriveForm(FlaskForm):
     cancel = SubmitField(word('Cancel'))
 
 class GitHubForm(FlaskForm):
+    shared = BooleanField(word('Access shared repositories'))
+    orgs = BooleanField(word('Access organizational repositories'))
+    save = SubmitField(word('Save changes'))
     configure = SubmitField(word('Configure'))
     unconfigure = SubmitField(word('Disable'))
-    cancel = SubmitField(word('Cancel'))
+    cancel = SubmitField(word('Back to profile'))
 
 class TrainingForm(FlaskForm):
     the_package = HiddenField()

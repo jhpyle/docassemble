@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.4.70] - 2019-08-03
+### Added
+- Account deletion options.
+- Options in the user profile for controlling which repositories will
+  be considered when the Playground packages folder looks for and
+  commits to GitHub repositories.
+- Configuration directives `session lifetime seconds`, `babel dates
+  map`, `admin can delete account`, `user can delete account`, and
+  `delete account deletes shared`.
+### Changed
+- In tables, ordered dictionaries will use their built-in order.
+- Base64 padding removed from field names.
+### Fixed
+- Poppler upgrade interfered with width of images in popups.
+- File upload widget JavaScript bug.
+
 ## [0.4.69] - 2019-07-29
 ### Fixed
 - Unnecessary file cache invalidation affected Playground performance

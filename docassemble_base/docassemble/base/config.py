@@ -90,6 +90,13 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if 'session lifetime seconds' in daconfig:
+        try:
+            daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
+            assert daconfig['session lifetime seconds'] > 0
+        except:
+            sys.stderr.write("Invalid session lifetime seconds.\n")
+            del daconfig['session lifetime seconds']
     if 'page after login' in daconfig:
         if isinstance(daconfig['page after login'], string_types):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]

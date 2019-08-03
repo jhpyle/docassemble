@@ -859,9 +859,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         fieldlist.append('                <div class="dashowif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(text_type(status.extras['show_if_val'][field.number])) + '>\n')
                 if 'show_if_js' in field.extras:
                     if hasattr(field, 'saveas'):
-                        fieldlist.append('                <div class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
+                        fieldlist.append('                <div class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
                     else:
-                        fieldlist.append('                <div class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
+                        fieldlist.append('                <div class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
                 field_class = ' da-field-container da-field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
@@ -1270,7 +1270,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     id_index = 0
                     formatted_key = markdown_to_html(choice['label'], status=status, trim=True, escape=True, do_terms=False)
                     if status.question.question_variety == "radio":
-                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_key + '" alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="da-to-labelauty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
+                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_key + '" alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="da-to-labelauty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                     else:
                         inner_fieldlist.append('<option value="' + str(indexno) + '"' + ischecked + '>' + formatted_key + '</option>')
                     id_index += 1
@@ -1284,14 +1284,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     else:
                         combobox = ' daspaceafter'
                         daspaceafter = ''
-                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
-                validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
+                validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': True}
             output += '                <div id="daerrorcontainer" style="display:none"></div>\n'
             if status.question.question_variety == "radio":
                 output += "                </fieldset>\n"
@@ -1366,7 +1366,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         elif choice['key'].question_type in ("exit", "logout"):
                             btn_class = ' btn-danger'
                     #output += '                  <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n'
-                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
+                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
                     indexno += 1
             output += help_button
             output += '                </div></fieldset>\n'
@@ -1793,6 +1793,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
     extra_scripts.append("""<script>
   var daValidationRules = """ + json.dumps(validation_rules) + """;
   daValidationRules.submitHandler = daValidationHandler;
+  daValidationRules.invalidHandler = daInvalidHandler;
   daValidationRules.onfocusout = daInjectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
     //console.log("Running validator")
@@ -2334,10 +2335,13 @@ def get_ischecked(pair, defaultvalue):
     return ischecked
 
 def myb64doublequote(text):
-    return '"' + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + '"'
+    return '"' + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + '"'
 
 def myb64quote(text):
-    return "'" + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + "'"
+    return "'" + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + "'"
+
+def repad(text):
+    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
 
 def indent_by(text, num):
     if not text:
@@ -2345,10 +2349,10 @@ def indent_by(text, num):
     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
 
 def safeid(text):
-    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode())
 
 def from_safeid(text):
-    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf8'))
 
 def escape_id(text):
     return str(text)
@@ -2361,7 +2365,7 @@ def escape_for_jquery(text):
     return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)
 
 def myb64unquote(the_string):
-    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(repad(bytearray(the_string, encoding='utf-8')), 'base64').decode('utf8'))
 
 def strip_quote(the_string):
     return re.sub(r'"', r'', the_string)
