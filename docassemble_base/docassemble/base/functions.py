@@ -21,10 +21,12 @@ import docassemble.base.astparser
 if PY2:
     from urllib import quote as urllibquote
     FileType = file
+    equals_byte = '='
 else:
     from urllib.parse import quote as urllibquote
     from io import IOBase
     FileType = IOBase
+    equals_byte = bytes('=', 'utf-8')
 import codecs
 import copy
 import base64
@@ -2899,7 +2901,7 @@ def repad(text):
     return text + ('=' * ((4 - len(text) % 4) % 4))
 
 def repad_byte(text):
-    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 class lister(ast.NodeVisitor):
     def __init__(self):

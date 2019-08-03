@@ -21,8 +21,10 @@ import sys
 import types
 if PY2:
     from urllib import urlretrieve
+    equals_byte = '='
 else:
     from urllib.request import urlretrieve
+    equals_byte = bytes('=', 'utf-8')
 import httplib2
 import datetime
 import time
@@ -821,7 +823,7 @@ def from_safeid(text):
     return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf8'))
 
 def repad(text):
-    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 class Field:
     def __init__(self, data):

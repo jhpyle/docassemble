@@ -8,8 +8,10 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 if PY2:
     from urllib import quote as urllibquote
+    equals_byte = '='
 else:
     from urllib.parse import quote as urllibquote
+    equals_byte = bytes('=', 'utf-8')
 import sys
 import os
 import re
@@ -2341,7 +2343,7 @@ def myb64quote(text):
     return "'" + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + "'"
 
 def repad(text):
-    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 def indent_by(text, num):
     if not text:

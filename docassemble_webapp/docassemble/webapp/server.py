@@ -21,12 +21,14 @@ if PY2:
     from urllib import urlencode, urlretrieve
     from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
     the_method_type = types.MethodType
+    equals_byte = '='
 else:
     from urllib.parse import quote as urllibquote
     from urllib.parse import unquote as urllibunquote
     from urllib.parse import urlparse, urlunparse, urlencode, urlsplit, parse_qsl
     from urllib.request import urlretrieve
     the_method_type = types.FunctionType
+    equals_byte = bytes('=', 'utf-8')
 
 TypeType = type(type(None))
 
@@ -2004,7 +2006,7 @@ def from_safeid(text):
     return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8'))
 
 def repad(text):
-    return text + (bytes('=', 'utf-8') * ((4 - len(text) % 4) % 4))
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
