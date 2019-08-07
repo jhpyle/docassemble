@@ -1375,6 +1375,8 @@ class Question:
             else:
                 raise DAError("Invalid data under list collect." + self.idebug(data))
         if 'mandatory' in data:
+            if 'initial' in data:
+                raise DAError("You cannot use the mandatory modifier and the initial modifier at the same time." + self.idebug(data))
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
             if data['mandatory'] is True:
@@ -3131,6 +3133,8 @@ class Question:
     def help(self):
         return word("Help")
     def process_attachment_code(self, sourcecode):
+        if not isinstance(sourcecode, string_types):
+            raise DAError("An attachment code specifier must be plain text")
         try:
             self.compute_attachment = compile(sourcecode, '<expression>', 'eval')
             self.find_fields_in(sourcecode)
@@ -4099,6 +4103,11 @@ class Question:
                     if hasattr(field, 'saveas'):
                         try:
                             if old_user_dict is not None:
+                                for varname in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                                    if varname in user_dict:
+                                        old_user_dict[varname] = user_dict[varname]
+                                    elif varname in old_user_dict:
+                                        del old_user_dict[varname]
                                 try:
                                     defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
                                 except:
@@ -4799,7 +4808,7 @@ class Question:
                         the_item['key'] = TextObject(entry[key], question=self, translate=False)
                         the_item['label'] = TextObject(key, question=self)
                         result.append(the_item)
-                if isinstance(entry, list):
+                if isinstance(entry, (list, tuple)):
                     result.append(dict(key=TextObject(entry[0], question=self), label=TextObject(entry[1], question=self)))
                 elif isinstance(entry, string_types):
                     result.append(dict(key=TextObject(entry, question=self), label=TextObject(entry, question=self)))
@@ -6331,7 +6340,7 @@ def process_selections(data, manual=False, exclude=None):
                             is_not_boolean = True
                     if key not in to_exclude and (is_not_boolean or entry[key] is True):
                         result.append(the_item)
-            if (isinstance(entry, list) or (hasattr(entry, 'elements') and isinstance(entry.elements, list))) and len(entry) > 0:
+            if (isinstance(entry, (list, tuple)) or (hasattr(entry, 'elements') and isinstance(entry.elements, list))) and len(entry) > 0:
                 if entry[0] not in to_exclude:
                     if len(entry) >= 4:
                         result.append(dict(key=entry[0], label=entry[1], default=entry[2], help=entry[3]))

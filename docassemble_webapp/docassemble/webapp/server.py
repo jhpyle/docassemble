@@ -127,6 +127,7 @@ match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
+valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]+')
 
 default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default short title', default_title)
@@ -19698,7 +19699,14 @@ def api_user_by_id(user_id):
     if request.method == 'GET':
         return jsonify(user_info)
     elif request.method == 'DELETE':
-        make_user_inactive(user_id=user_id)
+        if request.args.get('remove', None) == 'account':
+            user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(user_id, r)
+        elif request.args.get('remove', None) == 'account_and_shared':
+            user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(user_id, r)
+        else:
+            make_user_inactive(user_id=user_id)
         return ('', 204)
     elif request.method == 'POST':
         post_data = request.get_json(silent=True)
@@ -20102,10 +20110,25 @@ def transform_json_variables(obj):
     if isinstance(obj, (bool, int, float)):
         return obj
     if isinstance(obj, dict):
-        new_dict = dict()
-        for key, val in obj.items():
-            new_dict[transform_json_variables(key)] = transform_json_variables(val)
-        return new_dict
+        if '_class' in obj and isinstance(obj['_class'], string_types) and 'instanceName' in obj and valid_python_exp.match(obj['_class']) and isinstance(obj['instanceName'], string_types):
+            the_module = re.sub(r'\.[^\.]+$', '', obj['_class'])
+            try:
+                importlib.import_module(the_module)
+                the_class = eval(obj['_class'])
+                new_obj = the_class(obj['instanceName'])
+                for key, val in obj.items():
+                    if key == '_class':
+                        continue
+                    setattr(new_obj, key, transform_json_variables(val))
+                return new_obj
+            except Exception as err:
+                logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + text_type(err))
+                return None
+        else:
+            new_dict = dict()
+            for key, val in obj.items():
+                new_dict[transform_json_variables(key)] = transform_json_variables(val)
+            return new_dict
     if isinstance(obj, list):
         return [transform_json_variables(val) for val in obj]
     if isinstance(obj, set):

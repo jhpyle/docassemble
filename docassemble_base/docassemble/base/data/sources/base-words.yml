@@ -1,3 +1,5 @@
+"Access organizational repositories": Null
+"Access shared repositories": Null
 "Account did not exist.": Null
 "A chat message has arrived.": Null
 "Action": Null
@@ -47,6 +49,7 @@
 "Available": Null
 "back": Null
 "Back": Null
+"Back to profile": Null
 "Back to question": Null
 "Bad date": Null
 "blank message": Null
@@ -58,6 +61,7 @@
 "Change": Null
 "Change Password": Null
 "Chat message you want to send": Null
+"Check at least one option, or check “%s”": Null
 "Checkboxes:": Null
 "Check box": Null
 "Check if applicable": Null
@@ -401,6 +405,7 @@
 "Save and Run": Null
 "save_as_multiple": Null
 "save_as_singular": Null
+"Save changes": Null
 "Saved at": Null
 "Save": Null
 "Scan": Null
@@ -674,6 +679,7 @@
 "Your documents will be e-mailed to": Null
 "Your e-mail address": Null
 "Your GitHub integration has already been configured.": Null
+"Your GitHub settings were saved.": Null
 "Your information was saved.": Null
 "Your IP address is": Null
 "Your new API key, known internally as": Null

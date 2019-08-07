@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.4.71] - 2019-08-06
+### Changed
+- API for making user accounts inactive now supports permanent
+  deletion.
+- API for setting variables now supports initializing `DAObject`s.
+- Multiple choice options specified with code can be specified with
+  lists of tuples.
+### Fixed
+- Missing system phrase used in input validation.
+
 ## [0.4.70] - 2019-08-03
 ### Added
 - Account deletion options.

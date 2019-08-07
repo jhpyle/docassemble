@@ -586,6 +586,14 @@ def delete_temp_user_data(temp_user_id, r):
     db.session.commit()
     GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
     db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(temp_user_id=temp_user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
     Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
     db.session.commit()
     keys_to_delete = set()
@@ -610,6 +618,14 @@ def delete_user_data(user_id, r):
     for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
         package_auth.user_id = 1
     db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(user_id=user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
     Shortener.query.filter_by(user_id=user_id).delete()
     db.session.commit()
     UserRoles.query.filter_by(user_id=user_id).delete()
@@ -618,6 +634,9 @@ def delete_user_data(user_id, r):
         user_auth.password = ''
         user_auth.reset_password_token = ''
     db.session.commit()
+    for section in ('playground', 'playgroundmodules', 'playgroundpackages', 'playgroundsources', 'playgroundstatic', 'playgroundtemplate'):
+        the_section = SavedFile(user_id, section=section)
+        the_section.delete()
     for user_object in UserModel.query.filter_by(id=user_id):
         user_object.active = False
         user_object.first_name = ''
@@ -681,20 +700,27 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
-            old_file = SavedFile(upload.indexno)
-            old_file.delete()
-        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
-        db.session.commit()
-        # Attachments.query.filter_by(key=user_code, filename=filename).delete()
-        # db.session.commit()
+        files_to_delete = list()
+        for speaklist in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+            if speaklist.upload is not None:
+                files_to_delete.append(speaklist.upload)
         SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+            files_to_delete.append(upload.indexno)
+        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
         db.session.commit()
         ChatLog.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
+        for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
+            for email in Email.query.filter_by(short=short_code_item.short).all():
+                for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                    files_to_delete.append(attachment.upload)
         Shortener.query.filter_by(uid=user_code, filename=filename).delete()
         db.session.commit()
-    #logmessage("reset_user_dict: done")
+        for file_number in files_to_delete:
+            the_file = SavedFile(file_number)
+            the_file.delete()
     return
 
 #@elapsed('get_person')

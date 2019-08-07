@@ -1550,9 +1550,9 @@ class DAList(DAObject):
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' btn-' + color + classname + '">' + icon + text_type(message) + '</a>'
     def hook_on_gather(self):
-        logmessage("hook_on_gather on " + self.instanceName)
+        pass
     def hook_after_gather(self):
-        logmessage("hook_after_gather on " + self.instanceName)
+        pass
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -2332,9 +2332,9 @@ class DADict(DAObject):
     def _new_elements(self):
         return dict()
     def hook_on_gather(self):
-        logmessage("hook_on_gather on " + self.instanceName)
+        pass
     def hook_after_gather(self):
-        logmessage("hook_after_gather on " + self.instanceName)
+        pass
 
 class DAOrderedDict(DADict):
     """A base class for objects that behave like Python OrderedDicts."""
@@ -2759,9 +2759,9 @@ class DASet(DAObject):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
     def hook_on_gather(self):
-        logmessage("hook_on_gather on " + self.instanceName)
+        pass
     def hook_after_gather(self):
-        logmessage("hook_after_gather on " + self.instanceName)
+        pass
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
