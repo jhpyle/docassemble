@@ -87,7 +87,7 @@ The interview above effectively tells **docassemble** the following:
    asking the "What is your favorite color?" question.
 3. You must present the "Your favorite color is . . ."  screen to the
    user.
-   
+
 Here is what happens in this interview:
 
 1. The user clicks on a link and goes to the **docassemble** interview.
@@ -188,13 +188,12 @@ One approach to change the order of questions is to use the
 
 {% include side-by-side.html demo="with-mandatory-tweak-a" %}
 
-In this example, the [`need` specifier] effectively tells
-**docassemble** that before **docassemble** tries to present the "Your
-favorite color is . . ." screen to the user, it needs to make sure
-that the variables `how_doing` and `favorite_color` are defined.  It
-also indicates that **docassemble** should seek the definitions of
-these variables in a specific order.  Thus, "How are you doing?" is asked
-first.
+In this example, the [`need` specifier] says that before can present
+the "Your favorite color is . . ."  screen to the user, it needs to
+make sure that the variables `how_doing` and `favorite_color` are
+defined.  It also indicates that **docassemble** should seek the
+definitions of these variables in a specific order.  Thus, "How are
+you doing?" is asked first.
 
 Another approach to tweaking the order of questions is to use a
 [`code`] block as the single `mandatory` block that will control the
@@ -219,19 +218,16 @@ definition of `peaches`, so it will ask a question to gather it.  Then
 it will find that it does not know the definition of `pears`, so it
 will ask a question to gather it.
 
-The following subsections explain in detail the `mandatory` specifier
-and other specifiers that control interview flow.
+There are two important things to know about how **docassemble**
+satisfies prerequisites.
 
-Before you move on, however, there are two important things to know
-about how **docassemble** satisfies prerequisites.
-
-First, remember that **docassemble** asks questions when a variable
-that is _undefined_.  In the above example, if `fruits` had already
-been defined, **docassemble** would not have run the [`code`] block;
-it would have proceeded to display the final screen.  There are some
-exceptions to this.  The [`reconsider`] specifier
-[discussed below](#reconsider) is one such exception; the
-[`force_ask()`] function is another.
+First, remember that **docassemble** asks questions when it encounters
+a variable that is _undefined_.  In the above example, if `fruits` had
+already been defined, **docassemble** would not have run the [`code`]
+block; it would have proceeded to display the final screen.  There are
+some exceptions to this.  The [`reconsider`] specifier [discussed
+below](#reconsider) is one such exception; the [`force_ask()`]
+function is another.
 
 Second, note that the process of satisfying a prerequisite is
 triggered whenever **docassemble** needs to know the value of a variable,
@@ -272,6 +268,69 @@ code: |
 In this case, [Python] will not "need" the value of `apples` unless
 the number of peaches and pears exceeds 113,121, so the mention of
 `apples` does not necessarily trigger the asking of a question.
+
+## <a name="singlecode"></a>Specifying the logic of an interview in one place
+
+A useful technique for managing complex interview logic is to use a
+single [`mandatory`]<span></span> [`code`] block to drive the logic of
+your interview.
+
+{% include demo-side-by-side.html demo="single-code" %}
+
+In this example:
+* When **docassemble** tries to run the [`mandatory`]<span></span>
+  [`code`] block, it encounters an undefined variable `likes_fruit`,
+  so it gets its definition by asking "Do you like fruit?"
+* If the user answers "Yes," `likes_fruit` is set to `True`.  Now,
+  when **docassemble** tries to run the [`mandatory`]<span></span>
+  [`code`] block, it will know that `likes_fruit` is true, so it will
+  evaluate the code underneath the `if` statement.  The first variable
+  it encounters is `favorite_fruit`, which is undefined.  So
+  **docassemble** will stop evaluating the [`code`] block and will ask
+  the question "What is your favorite fruit?" in order to get a
+  definition of `favorite_fruit`.
+* The next time around, **docassemble** will get past `likes_fruit`
+  and `favorite_fruit`, but then it will try to evaluate `if
+  puts_fruit_in_smoothies:` and it will stop because
+  `puts_fruit_in_smoothies` is undefined.  So it will ask the user "Do
+  you like to put fruit in smoothies?"  Suppose the user answers "No."
+  In that case, `puts_fruit_in_smoothies` will be set to `False`.
+* The next time around, **docassemble** will get past `likes_fruit`
+  and `favorite_fruit`, and when it reaches `if
+  puts_fruit_in_smoothies:`, it will know that
+  `puts_fruit_in_smoothies` is false, so it will not try to evaluate
+  the code under the `if` statement.  It will proceed to the end of
+  the `code` block, where there is a reference to the variable
+  `final_screen`.  It will seek a definition of `final_screen` and it
+  will "ask" the `question` that is marked with `event: final_screen`
+  (which results in a screen with no buttons that says "Thanks for
+  that information."  However, this `question` is not actually capable
+  of setting the `final_screen` variable; it is just an endpoint
+  screen.
+* If the user had answered "No" to the original question "Do you like
+  fruit?" then the variable `likes_fruit` would be set to `False`, and
+  **docassemble** would have skipped the whole line of questioning
+  about fruit.  It would have proceeded to evaluate the code under the
+  `else:` line.  It would have encountered the undefined variable
+  `favorite_vegetable`.  Thus it would have asked the question "Well,
+  since you don't like fruit, what is your favorite vegetable?"  Once
+  `favorite_vegetable` gets populated with the user's favorite
+  vegetable, the logic is done except for the reference to
+  `final_screen`, which will never be defined, and the only thing the
+  user can do is look at the screen that says "Thanks for that
+  information."
+
+Trying to specify the complete logic of your interview in a
+[`mandatory`]<span></span> [`code`] block could become tiresome.  On
+the other hand, relying completely on **docassemble**'s automatic
+prerequisite-satisfying mechanism could be confusing because you would
+need to follow a trail of variable references through your whole
+[YAML] file.  Typically it makes sense to use a technique that is
+somewhere between these two extremes; you don't have to specify in
+your [`code`] block every single variable that your interview might
+gather, but you can specify the important ones, and trust the automatic
+prerequisite-satisfying mechanism to trigger the gathering of the rest
+of the variables.
 
 # <a name="specifiers"></a>Specifiers that control interview logic
 
@@ -879,9 +938,9 @@ interview that pursues a different endpoint depending on the value of
 
 The three interview files included are:
 
-* [interview-fruit.yml] 
-* [interview-vegetables.yml] 
-* [interview-flowers.yml] 
+* [interview-fruit.yml]
+* [interview-vegetables.yml]
+* [interview-flowers.yml]
 
 Note that these interview files contain everything needed for the
 interview except for any [`mandatory`] blocks that would define an

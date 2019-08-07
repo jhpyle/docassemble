@@ -531,7 +531,7 @@ the following fields:
 * PyPI Username
 * PyPI Password
 
-From the Other settings menu, the user can:
+From the "Other settings" menu, the user can:
 
 * Change their password
 * Configure [Google Drive synchronization]

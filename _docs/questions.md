@@ -315,7 +315,7 @@ results with different screen sizes.
 * The `subtitle` is not visible on the screen, but can be seen in the
   list of [Available Interviews].
 * The `logo`, if set, will replace the `title` and `short title` with
-  custom content, such as an image.
+  custom HTML content, such as an image.
 * The `pre` area is above the [`question`].
 * The `submit` area is above the buttons, if the screen has buttons.
 * The `under` area is directly below the buttons.

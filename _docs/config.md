@@ -327,6 +327,10 @@ to note about this example:
 You can also call `/list?json=1` to obtain a [JSON] version of the
 available interviews.
 
+By default, the main menu does not contain a link to the `/list` page,
+but you can add it to the main menu using the [`show dispatch link`]
+directive.
+
 ## <a name="customization"></a>Customization of administrative pages
 
 When the user is interacting with an interview, the page can be
@@ -3713,3 +3717,4 @@ and Facebook API keys.
 [user profile]: {{ site.baseurl }}/docs/admin.html#profile
 [multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
 [multi-user interviews]: {{ site.baseurl }}/docs/special.html#multi_user
+[`show dispatch link`]: #show dispatch link

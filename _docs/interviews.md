@@ -517,6 +517,9 @@ mobile users, you can use the [`go full screen`] feature to cause the
 interview to "go full screen" on the user's device once the user
 starts interacting with it.
 
+There is a [Drupal module] and a [WordPress plugin] for embedding
+interviews using an [iframe].
+
 ## <a name="div"></a>Embedding the interview into a web page directly
 
 A **docassemble** interview can be embedded into a `<div>` element in
@@ -526,18 +529,21 @@ than [using an iframe] because you need to reconcile the [CSS] and
 [JavaScript] that **docassemble** needs with the [CSS] and
 [JavaScript] already contained within the host web site.
 
-For example, **docassemble** depends on the [CSS] classes of
-[Bootstrap 4] being defined, but the site into which you are embedding
-might not use [Bootstrap], or may use a different version.  You will
-need to make sure that the [CSS] of your site is loaded after the
-[CSS] needed by **docassemble**.  The [CSS] of your site will affect
-the styling of the **docassemble** interview, which is generally a
-good thing because you will probably want the interview to have the
-same look-and-feel as your site.  However, some of the changes that
-your site's [CSS] will make to the look-and-feel of your interview
-will not be desirable.  For example, you might see excessive padding
-between form fields.  You will likely need to make edits to your
-site's CSS to adjust these parameters.
+The [Drupal module] and [WordPress plugin] both support embedding
+interviews into `<div>` elements.
+
+**docassemble** depends on the [CSS] classes of [Bootstrap 4] being
+defined.  Your site's [CSS] should be loaded after the [CSS] needed by
+**docassemble**, so that it overrides the **docassemble** [CSS] rules.
+(The [Drupal module] and [WordPress plugin] are configured to do
+this.)  The [CSS] of your site will thus affect the styling of the
+**docassemble** interview.  This is generally a good thing because you
+will probably want the interview to have the same look-and-feel as
+your site.  However, some of the changes that your site's [CSS] will
+make to the look-and-feel of your interview will not be desirable.
+For example, you might see excessive padding between form fields.  You
+will likely need to make edits to your site's [CSS] to adjust these
+parameters.
 
 Another complication is that **docassemble** requires [jQuery].  There
 might be problems due to incompatible versions of [jQuery].
@@ -545,12 +551,13 @@ might be problems due to incompatible versions of [jQuery].
 libraries.  These libraries will probably not have an effect on your
 site, but it is possible that they will.
 
-To get started with embedding **docassemble** into a web page, log in
-to your server as an administrator or developer, then navigate to
-`/test_embed`.  You will see your default interview there, inside of a
-box.  Do "View Source" in your browser to see how it works.  Here is
-an example of what the source will look like on a server with the URL
-`https://interview.example.com`:
+To get started with embedding **docassemble** into a web page (if you
+aren't using the [Drupal module] or the [WordPress plugin]), log in to
+your **docassemble** server as an administrator or developer, then
+navigate to `/test_embed`.  You will see your default interview there,
+inside of a box.  Do "View Source" in your browser to see how it
+works.  Here is an example of what the source will look like on a
+server with the URL `https://interview.example.com`:
 
 {% highlight html %}
 <!DOCTYPE html>
@@ -585,7 +592,7 @@ an example of what the source will look like on a server with the URL
       <p>Here is some content after the interview.
     </div>
     
-    <script src="https://interview.example.com/static/app/bundle.js?v=0.4.44"></script>
+    <script src="https://interview.example.com/static/app/bundle.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=egsdSdgER344tuTYUgsdDErEdx34res2e44sdrg&libraries=places"></script>
     <script src="https://interview.example.com/interview?js_target=dablock&i=docassemble.base%3Adata%2Fquestions%2Fdefault-interview.yml"></script>
   </body>
@@ -918,3 +925,5 @@ functions.
 [development overview]: {{ site.baseurl }}/docs/development.html
 [section on YAML]: #yaml
 [how answers are stored]: #howstored
+[Drupal module]: https://github.com/jpylephilalegal/docassemble_embed
+[WordPress plugin]: https://github.com/jpylephilalegal/docassemble-embedder

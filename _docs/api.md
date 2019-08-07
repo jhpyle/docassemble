@@ -412,7 +412,7 @@ the user with a user ID equal to the `user_id`:
 ## <a name="user_user_id_delete"></a>Make a user inactive
 
 Description: Makes a user account inactive, so that the user can no
-longer log in.
+longer log in, or deletes the account entirely.
 
 Path: `/api/user/<user_id>`
 
@@ -424,6 +424,12 @@ Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
+ - `remove` (optional): set this to `'account'` if you want to remove
+   the user's data, but keep [`multi_user`] interview sessions that
+   have been joined by another user.  Set this to
+   `'account_and_shared'` if you want to remove shared interview
+   sessions as well.  The default is only to make the account
+   inactive.
 
 Required privileges: `admin`.
 
@@ -1227,6 +1233,18 @@ If a variable value in the [JSON] is in [ISO 8601] format (e.g.,
 text into a [`DADateTime`] object.  If you do not want dates to be
 converted, set the `raw` parameter to `1`.
 
+If a variable value is a [JSON] object with keys `_class` and
+`instanceName`, then the variable will be converted into a [Python]
+object of the given class, and keys other than `_class` will be used
+to set attributes of the object.  This is the same format by which
+[Python] objects are reduced to [JSON] elsewhere in the API.  Thus,
+you should be able to take [JSON] representations of objects that you
+read from the [GET] action of this endpoint and pass them back to the
+[POST] action of this endpoint.  Note that this is not guaranteed to
+be a 100% reliable method of [Python] object serialization.  It is not
+as robust as [Python]'s [pickle] system, and it may not work for every
+class.
+
 You can also upload files along with a [POST] request to this API.  In
 HTTP, a [POST] request can contain one or more file uploads.  Each
 file upload is associated with a name, just as a data element is
@@ -1958,3 +1976,4 @@ function.
 [`/api/package`]: #package_install
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
+[pickle]: https://docs.python.org/3.5/library/pickle.html

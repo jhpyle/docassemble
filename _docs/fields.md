@@ -999,6 +999,9 @@ question mark button.
 
 {% include side-by-side.html demo="fields-mc-6" %}
 
+If your code is a [list] of [tuples], it will be treated the same as a
+[list] of [list]s.
+
 If your code is a [list] of dictionaries, you can include a
 `'default'` key in the dictionary indicating a true or false value
 that represents whether the choice should be selected by default.
@@ -2295,3 +2298,4 @@ why this needs to be done manually as opposed to automatically:
 [list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
 [`continue button field`]: #continue button field
 [`field`]: #field
+[tuples]: https://docs.python.org/3.5/tutorial/datastructures.html#tuples-and-sequences

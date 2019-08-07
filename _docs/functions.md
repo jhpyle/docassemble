@@ -1169,7 +1169,7 @@ The `url_of()` function also has a few special uses.
   on-going interviews of a signed-in user.
 * `url_of('dispatch')` returns a URL to the page listing the
   interviews defined in the [`dispatch`] directive of the [Configuration].
-* `url_of('manage')` returns a URL to a page where the user can delete
+* `url_of('manage') returns a URL to a page where the user can delete
   his or her account data.
 * `url_of('config')` returns a URL to the [Configuration] page.
 * `url_of('playground')` returns a URL to the [Playground].
