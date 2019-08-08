@@ -517,7 +517,64 @@ Since the task in this case (adding one number to another) is not
 actually long-running, the interview uses `time.sleep()` to make it
 artificially long-running.
 
-[`check in`]: {{ site.baseurl }}/docs/background.html#
+# <a name="python to javascript"></a>Sending information from Python to JavaScript
+
+If you use [JavaScript] in your interviews, and you want your
+[JavaScript] to have knowledge about the interview answers, you can
+use [`get_interview_variables()`], but it is slow because it uses
+[Ajax].  If you only want a few pieces of information to be available
+to your [JavaScript] code, there are a few methods you can use.
+
+One method is to use the [`script` modifier].
+
+{% include demo-side-by-side.html demo="pytojs-script" %}
+
+Note that the variable is only guaranteed to be defined on the screen
+showing the [`question`] that includes the [`script` modifier].  While
+the value will persist from screen to screen, this is only because
+screen loads use [Ajax] and the [JavaScript] variables are not cleared
+out when a new screen loads.  But a browser refresh will clear the
+[JavaScript] variables.
+
+Another method is to use the `"javascript"` form of the [`log()`] function.
+
+{% include demo-side-by-side.html demo="pytojs-log" %}
+
+In this example, the [`log()`] function is called from a [`code`]
+block that has [`initial`] set to `True`.  Thus, you can rely on the
+`myColor` variable being defined on every screen of the interview
+after `favorite_color` gets defined.
+
+Another method is to pass the values of [Python] variables to the
+browser using the [DOM], and then use [JavaScript] to retrieve the values.
+
+{% include demo-side-by-side.html demo="pytojs-dom" %}
+
+All of these methods are read-only.  If you want to be able to change
+variables using [JavaScript], and also have the values saved to the
+interview answers, you can insert `<input type="hidden">` elements
+onto a page that has a "Continue" button.
+
+{% include demo-side-by-side.html demo="pytojs-hidden" %}
+
+This example uses the [`encode_name()`] function to convert the
+variable name to the appropriate field name.  For more information on
+manipulating the **docassemble** front end, see the section on [custom
+front ends].  The example above works for easily for text fields, but
+other data types will require more work.
+
+[custom front ends]: {{ site.baseurl }}/docs/frontend.html
+[DOM]: https://en.wikipedia.org/wiki/Document_Object_Model
+[`encode_name()`]: {{ site.baseurl }}/docs/functions.html#encode_name
+[`log()`]: {{ site.baseurl }}/docs/functions.html#log
+[`code`]: {{ site.baseurl }}/docs/code.html#code
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`script` modifier]: {{ site.baseurl }}/docs/modifiers.html#script
+[Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
+[`get_interview_variables()`]: {{ site.baseurl }}/docs/functions.html#js_get_interview_variables
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
+[`check in`]: {{ site.baseurl }}/docs/background.html#check in
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [Redis]: https://redis.io/
 [Celery]: http://www.celeryproject.org/

@@ -10,9 +10,12 @@ short_title: Security
 
 ## <a name="server_encryption"></a>Server-side information storage
 
-User passwords and interview answers are stored in a SQL database in
-encrypted form, unless the [`multi_user`] variable is set to `True`,
-in which case the answers are not encrypted.
+User passwords are encrypted.  [Flask-Login] is the basis for the
+username/password system.
+
+Interview answers are stored in a SQL database in encrypted form,
+unless the [`multi_user`] variable is set to `True`, in which case the
+answers are not encrypted.
 
 If users log in with [external authentication methods] or the
 [phone login] feature, interview answers are still encrypted (unless
@@ -22,17 +25,22 @@ encryption is important to you, it is recommended that you do not
 enable [external authentication methods] or the [phone login] feature.
 
 Uploaded and assembled documents are stored on the server (and on
-[Amazon S3], if [S3] is being used, or [Microsoft Azure], if
-[Azure blob storage] is being used) without encryption.  These
-documents cannot be accessed from the internet without an appropriate
-access key in the cookie.
+[Amazon S3], if [S3] is being used, or [Microsoft Azure], if [Azure
+blob storage] is being used) without encryption.  These documents
+cannot be accessed from the internet without an appropriate access key
+in the cookie.  In some situations, the user is provided with a
+temporary URL to an [S3] resource that allows anyone who has the URL
+to access the document.  In other situations, the **docassemble**
+server retrieves the file from [S3] and serves it.
 
-When a user clicks an "Exit" button, **docassemble** will delete all of
+When a user clicks an "Exit" button (or the `/exit` path is visited,
+or the `/exit_logout` path is visited, or `command('exit')` is run, or
+`command('exit_logout') is run), **docassemble** will delete all of
 the information related to the interview from the server, including
-the database, uploaded documents, and assembled documents.  However,
-temporary files in /tmp will persist until cleaned out by a cron job.
+the database, uploaded documents, and assembled documents.  See
+[deleting user information] for more information.
 
-## Sign-in security
+## <a name="signin"></a>Sign-in security
 
 **docassemble** blocks brute-force password-guessing attacks.
 
@@ -42,20 +50,20 @@ By default, users do not need to verify their e-mail addresses, but
 you can require them to do so.  See the documentation for the
 [`email confirmation privileges`] configuration directive.
 
-# Importance of using HTTPS
+# <a name="https"></a>Importance of using HTTPS
 
 It is important for security purposes to deploy **docassemble** using
 HTTPS rather than HTTP.  If you use HTTP, passwords and security keys
 will be sent over the network in plain text.
 
-# Separate development and production servers
+# <a name="separateservers"></a>Separate development and production servers
 
 Users with "developer" access can run arbitrary code on the server.
 For this reason, it is recommended that you not allow developer
 accounts on production servers, and that you only install
 **docassemble** add-on packages that you have carefully reviewed.
 
-# Avoiding sharing session keys
+# <a name="sessionkeys"></a>Avoiding sharing session keys
 
 Each session of a **docassemble** interview is uniquely identified by
 a session key, which is a series of randomly-generated characters.  If
@@ -70,7 +78,7 @@ risk somewhat by using the `temporary` keyword argument or the
 link that you share will not contain the actual interview session key,
 and the link will expire after a period of time.
 
-# Security in multi-user interviews
+# <a name="multiuser"></a>Security in multi-user interviews
 
 If you have a [multi-user interview], you will set [`multi_user`] to
 `True` in order to turn off server-side encryption.  Then anyone with
@@ -117,7 +125,22 @@ by two [`Individual`]s in your interview answers called `petitioner`
 and `respondent`, the respondent might try to call
 [`url_action("petitioner.ssn")`] from the [JavaScript] console.
 
-# Deleting user information
+You can provide security over the [actions] mechanism by calling
+[`process_action()`] manually inside of a [`code`] block that has
+[`initial`] set to `True`.  By default, **docassemble** will run
+[`process_action()`] for you, but if it sees that you have a [`code`]
+block that calls [`process_action()`], it will refrain from calling it
+automatically.  You can use the [`action_argument()`] function to
+obtain the action being requested.
+
+{% highlight yaml %}
+initial: True
+code: |
+  if action_argument() in ():
+    process_action()
+{% endhighlight %}
+
+# <a name="deleting"></a>Deleting user information
 
 By default, interview sessions are deleted after 90 days of
 inactivity.  This period can be modified using the [`interview delete
@@ -126,7 +149,9 @@ days`] directive in the [Configuration].
 Users who are logged in can delete their interview sessions by going
 to [My Interviews] and clicking the "Delete All" button or by deleting
 individual interviews.  The interview session can also be deleted
-through the use of an `exit` [button], an `exit_logout`.
+through the use of an `exit` [button], an `exit_logout` [button], a
+call to [`command()`] with `'exit'` or `'exit_logout'` as the
+parameter, or if the user visits `/exit` or `/exit_logout`.
 
 Users who are logged in can delete their entire account by going to
 [Profile], "Other settings," "Manage account."  A URL for the "Manage
@@ -165,6 +190,7 @@ delete:
 * Records created during the session using [`DAStore`], [`DARedis`], or
   [`write_record()`].
 * Records created in the machine learning system from the session.
+* Files with the `persistent` attribute set to true.
 
 When **docassemble** deletes a user account, it deletes:
 
@@ -182,8 +208,16 @@ When **docassemble** deletes a user account, it deletes:
 When **docassemble** deletes a user account, it does not delete:
 * Records created by the user using [`DARedis`] or [`write_record()`].
 * Records created by the user in the machine learning system.
+* Files containing user data that set the `persistent` attribute set
+  to true.
 
-# Issues to look out for
+If you are using a [multi-server arrangement] with cloud storage, then
+when you delete a file, copies of the file in a cache directory on
+/tmp on some servers may persist until cleaned out by a cron job.  The
+[Docker] hourly cron job deletes files from the cache if they have not
+been accessed in the past two hours.
+
+# <a name="issues"></a>Issues to look out for
 
 **docassemble** makes extensive use of [eval] and [exec], including to
 process information supplied by the user.  There are protections in
@@ -249,3 +283,12 @@ this is only used when [Azure blob storage] is enabled.
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [button]: {{ site.baseurl }}/docs/questions.html#special buttons
+[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
+[`command()`]: {{ site.baseurl }}/docs/functions.html#command
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`code`]: {{ site.baseurl }}/docs/code.html#code
+[Flask-Login]: https://flask-login.readthedocs.io/en/latest/
+[multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
+[deleting user information]: #deleting

@@ -1203,6 +1203,15 @@ mail:
   mailgun domain: mg.example.com
 {% endhighlight %}
 
+If necessary, you can also configure the URL used by the [Mailgun]
+API.  The default is `https://api.mailgun.net/v3/%s/messages.mime`.
+
+{% highlight yaml %}
+mailgun api url: https://api.mailgun.net/v3/%s/messages.mime
+{% endhighlight %}
+
+(The `mailgun domain` will be substituted in place of the `%s`.)
+
 ## <a name="default interview"></a>Default interview
 
 If no [interview] is specified in the URL when the web browser first

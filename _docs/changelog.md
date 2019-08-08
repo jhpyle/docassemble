@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.72](https://github.com/jhpyle/docassemble/releases/tag/v0.4.72) - 2019-08-07
+
+### Fixed
+- Translation of metadata titles not compatible with `translations`.
+- JavaScript evaluated in local context rather than global context.
+- Language not set when e-mailing assembled document in the
+  background.
+
 ## [0.4.71](https://github.com/jhpyle/docassemble/releases/tag/v0.4.71) - 2019-08-06
 
 ### Changed

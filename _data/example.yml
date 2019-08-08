@@ -11527,6 +11527,107 @@
   \ |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n  If you have\
   \ a favorite something,\n  that means you like it more than\n  you like other things\
   \ of a similar\n  nature."
+"pytojs-dom": "imports:\n  - json\n---\nquestion: |\n  What are your favorites?\n\
+  fields:\n  - Color: color\n  - Flavor: flavor\n---\nquestion: |\n  What is your\
+  \ favorite fruit?\nsubquestion: |\n  <div id=\"myinfo\"\n       data-color=${ json.dumps(color)\
+  \ } \n       data-flavor=${ json.dumps(flavor) }\n       class=\"d-none\"></div>\n\
+  fields:\n  - Fruit: favorite_fruit\nscript: |\n  <script>\n    var myInfo = $(\"\
+  #myinfo\").data();\n    console.log(\"You like \" + myInfo.color + \" things that\
+  \ taste like \" + myInfo.flavor + \".\"); \n  </script>\n---\nmandatory: True\n\
+  question: |\n  Your favorite fruit is\n  ${ favorite_fruit }."
+"pytojs-hidden": |-
+  imports:
+    - json
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Color: favorite_color
+  ---
+  question: |
+    What is your favorite fruit?
+  subquestion: |
+    <input type="hidden"
+           name="${ encode_name('favorite_color') }"
+           value=${ json.dumps(favorite_color) }>
+  fields:
+    - Fruit: favorite_fruit
+  script: |
+    <script>
+      var myColor = val('favorite_color');
+      console.log("You said you liked " + myColor);
+      setField('favorite_color', 'dark ' + myColor);
+      console.log("But now you like " + val('favorite_color'));
+    </script>
+  ---
+  mandatory: True
+  question: |
+    Your favorites
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+
+    Your favorite color is
+    ${ favorite_color }.
+"pytojs-log": |-
+  imports:
+    - json
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Color: favorite_color
+  ---
+  initial: True
+  code: |
+    log("var myColor = " + json.dumps(favorite_color) + ";", "javascript")
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  script: |
+    <script>
+      console.log("I know that your favorite color is " + myColor);
+    </script>
+  ---
+  mandatory: True
+  question: |
+    Your favorites
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+
+    Your favorite color is
+    ${ favorite_color }.
+"pytojs-script": |-
+  imports:
+    - json
+  ---
+  question: |
+    What is your favorite color?
+  fields:
+    - Color: favorite_color
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  script: |
+    <script>
+      var myColor = ${ json.dumps(favorite_color) };
+      console.log("I know your favorite color is " + myColor);
+    </script>
+  ---
+  mandatory: True
+  question: |
+    Your favorites
+  subquestion: |
+    Your favorite fruit is
+    ${ favorite_fruit }.
+
+    Your favorite color is
+    ${ favorite_color }.
 "questionless": |-
   mandatory: True
   code: |
