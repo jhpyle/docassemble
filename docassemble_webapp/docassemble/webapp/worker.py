@@ -753,12 +753,14 @@ def update_packages():
     return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end")
 
 @workerapp.task
-def email_attachments(user_code, email_address, attachment_info):
+def email_attachments(user_code, email_address, attachment_info, language):
     success = False
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.reset_local_variables()
     worker_controller.functions.set_uid(user_code)
+    if language and language != '*':
+        worker_controller.functions.set_language(language)
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
         doc_names = list()

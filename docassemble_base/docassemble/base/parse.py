@@ -5000,10 +5000,7 @@ class Interview:
                 the_user_dict['_internal'][title_name + ' default'] = title[title_abb]
             elif status is None and (title_name + ' default') in the_user_dict['_internal'] and the_user_dict['_internal'][title_name + ' default'] is not None:
                 title[title_abb] = the_user_dict['_internal'][title_name + ' default']
-        if status is not None:
-            base_lang = status.question.language
-        else:
-            base_lang = get_language()
+        base_lang = get_language()
         if base_lang in self.default_title:
             for key, val in self.default_title[base_lang].items():
                 if key not in title:

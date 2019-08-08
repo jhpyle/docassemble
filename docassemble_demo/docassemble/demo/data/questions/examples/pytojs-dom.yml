@@ -1,0 +1,34 @@
+metadata:
+  title: DOM
+  documentation: "https://docassemble.org/docs/recipes.html#python to javascript"
+  example start: 1
+  example end: 4
+---
+imports:
+  - json
+---
+question: |
+  What are your favorites?
+fields:
+  - Color: color
+  - Flavor: flavor
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  <div id="myinfo"
+       data-color=${ json.dumps(color) } 
+       data-flavor=${ json.dumps(flavor) }
+       class="d-none"></div>
+fields:
+  - Fruit: favorite_fruit
+script: |
+  <script>
+    var myInfo = $("#myinfo").data();
+    console.log("You like " + myInfo.color + " things that taste like " + myInfo.flavor + "."); 
+  </script>
+---
+mandatory: True
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }.

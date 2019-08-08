@@ -5659,7 +5659,7 @@ def index(action_argument=None):
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
                 try:
-                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info)
+                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language())
                     r.rpush(worker_key, result.id)
                     success = True
                 except Exception as errmess:
@@ -7023,6 +7023,7 @@ def index(action_argument=None):
       var daVarLookupRev;
       var daValLookup;
       var daTargetDiv;
+      var globalEval = eval;
       var locationBar = """ + json.dumps(url_for('index', i=yaml_filename)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=yaml_filename, _external=True)) + """;
       if (daJsEmbed){
@@ -8130,7 +8131,7 @@ def index(action_argument=None):
               daAddScriptToHead(scripts[i].src);
             }
             else{
-              eval(scripts[i].innerHTML);
+              globalEval(scripts[i].innerHTML);
             }
           }
           for (var i = 0; i < data.extra_css.length; i++){
@@ -8169,7 +8170,7 @@ def index(action_argument=None):
       function daEmbeddedJs(e){
         //console.log("using embedded js");
         var data = decodeURIComponent($(this).data('js'));
-        eval(data);
+        globalEval(data);
         e.preventDefault();
         return false;
       }
@@ -8367,7 +8368,7 @@ def index(action_argument=None):
               }
               else if (command.extra == 'javascript'){
                 //console.log("I should eval" + command.value);
-                eval(command.value);
+                globalEval(command.value);
               }
               else if (command.extra == 'fields'){
                 for (var key in command.value){
@@ -8583,7 +8584,7 @@ def index(action_argument=None):
             console.log(message.message);
           }
           else if (message.priority == 'javascript'){
-            eval(message.message);
+            globalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             flash(message.message, message.priority);
@@ -10460,6 +10461,7 @@ def observer():
       var daTargetDiv = "#dabody";
       var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
+      var globalEval = eval;
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
           $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
@@ -10701,7 +10703,7 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
         if (embeddedJs != null){
           //console.log("Running the embedded js");
-          eval(decodeURIComponent(embeddedJs));
+          globalEval(decodeURIComponent(embeddedJs));
         }
         if (theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
           event.preventDefault();
@@ -11153,7 +11155,7 @@ def observer():
                     daAddScriptToHead(scripts[i].src);
                   }
                   else{
-                    eval(scripts[i].innerHTML);
+                    globalEval(scripts[i].innerHTML);
                   }
                 }
                 for (var i = 0; i < data.extra_css.length; i++){
@@ -16818,6 +16820,7 @@ def server_error(the_error):
         errmess = '<blockquote class="blockquote">' + errmess + '</blockquote>'
     script = """
     <script>
+      var globalEval = eval;
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function flash(message, priority){
         if (priority == null){
@@ -16843,7 +16846,7 @@ def server_error(the_error):
             console.log(message.message);
           }
           else if (message.priority == 'javascript'){
-            eval(message.message);
+            globalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             flash(message.message, message.priority);

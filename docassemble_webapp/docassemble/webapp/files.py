@@ -118,9 +118,10 @@ class SavedFile(object):
                     key.delete()
                 except:
                     pass
-        the_path = os.path.join(self.directory, filename)
-        if hasattr(self, 'directory') and os.path.isdir(self.directory) and os.path.isfile(the_path):
-            os.remove(the_path)
+        if hasattr(self, 'directory') and os.path.isdir(self.directory):
+            the_path = os.path.join(self.directory, filename)
+            if os.path.isfile(the_path):
+                os.remove(the_path)
     def delete(self):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
