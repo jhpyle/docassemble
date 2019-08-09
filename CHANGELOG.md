@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.74] - 2019-08-09
+### Fixed
+- The `undefine()` function did not always find the interview
+  answers.
+
 ## [0.4.73] - 2019-08-09
 ### Added
 - Support for noun pluralizing and verb conjugation in Spanish,
@@ -983,7 +988,7 @@
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and
   `row_item` to the value, and `DADict`s can be edited using tables.
-- No delete buttons on a `table` when deletion would cause the number 
+- No delete buttons on a `table` when deletion would cause the number
   of items to fall below `minimum_number`.
 - The `edit` option on a `table` can now use reference indices as well
   as attributes.
