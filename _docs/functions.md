@@ -4017,7 +4017,7 @@ static_image('docassemble.demo:crawling.png', width='2in'))
 ## <a name="get_config"></a>get_config()
 
 Returns a value from the **docassemble** configuration file.  If the
-value is defined, returns None.
+value is not defined, returns None.
 
 See the explanation of this function in the
 [configuration section]({{ site.baseurl }}/docs/config.html#get_config")
