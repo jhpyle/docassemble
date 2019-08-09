@@ -21,7 +21,7 @@ class DAOAuth(DAObject):
         self.url_args = kwargs['url_args']
         del kwargs['url_args']
         super(DAOAuth, self).init(*pargs, **kwargs)
-    def get_flow(self):
+    def _get_flow(self):
         app_credentials = get_config('oauth', dict()).get(self.appname, dict())
         client_id = app_credentials.get('id', None)
         client_secret = app_credentials.get('secret', None)
@@ -46,7 +46,7 @@ class DAOAuth(DAObject):
                 r.delete(r_key)
                 if self.url_args['state'] != stored_state.decode():
                     raise Exception("State did not match")
-                flow = self.get_flow()
+                flow = self._get_flow()
                 credentials = flow.step2_exchange(self.url_args['code'])
                 storage = RedisCredStorage(self.appname)
                 storage.put(credentials)
@@ -62,7 +62,7 @@ class DAOAuth(DAObject):
             pipe.set(r_key, state_string)
             pipe.expire(r_key, 60)
             pipe.execute()
-            flow = self.get_flow()
+            flow = self._get_flow()
             uri = flow.step1_get_authorize_url(state=state_string)
             if 'state' in self.url_args:
                 del self.url_args['state']
@@ -70,8 +70,32 @@ class DAOAuth(DAObject):
                 del self.url_args['code']
             response(url=uri)
         return credentials
+    def delete_credentials(self):
+        """Deletes the stored credentials."""
+        r = DARedis()
+        r.delete('da:' + self.appname + ':status:user:' + user_info().email)
+        storage = RedisCredStorage(self.appname)
+        storage.locked_delete()
     def get_http(self):
+        """Returns an http object that can be used to communicate with the OAuth-enabled API."""
         return self.get_credentials().authorize(httplib2.Http())
+    def ensure_authorized(self):
+        """If the credentials are not valid, starts the authorization process."""
+        self.get_http()
+    def active(self):
+        """Returns True if user has stored credentials, whether they are valid or not.  Otherwise returns False."""
+        storage = RedisCredStorage(self.appname)
+        credentials = storage.get()
+        if not credentials:
+            return False
+        return True
+    def is_authorized(self):
+        """Returns True if user has stored credentials and the credentials are valid."""
+        storage = RedisCredStorage(self.appname)
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            return False
+        return True
 
 class RedisCredStorage(oauth2client.client.Storage):
     def __init__(self, app):
@@ -99,5 +123,3 @@ class RedisCredStorage(oauth2client.client.Storage):
         self.r.set(self.key, credentials.to_json())
     def locked_delete(self):
         self.r.delete(self.key)
-
-

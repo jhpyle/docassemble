@@ -132,18 +132,18 @@ def edit_user_profile_page(id):
         return redirect(url_for('edit_user_profile_page', id=id))
     if daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
-            from docassemble.webapp.server import user_interviews, r
+            from docassemble.webapp.server import user_interviews, r, r_user
             from docassemble.webapp.backend import delete_user_data
             user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
-            delete_user_data(id, r)
+            delete_user_data(id, r, r_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
         if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
-            from docassemble.webapp.server import user_interviews, r
+            from docassemble.webapp.server import user_interviews, r, r_user
             from docassemble.webapp.backend import delete_user_data
             user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
-            delete_user_data(id, r)
+            delete_user_data(id, r, r_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))

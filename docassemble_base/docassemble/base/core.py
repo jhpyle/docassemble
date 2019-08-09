@@ -442,16 +442,18 @@ class DAObject(object):
         new_object = copy.deepcopy(self)
         new_object._set_instance_name_recursively(thename)
         return new_object
-    def _set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename, matching=None):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         #logmessage("Change " + str(self.instanceName) + " to " + str(thename))
         #if not self.has_nonrandom_instance_name:
+        if matching is not None and not self.instanceName.startswith(matching):
+            return
         self.instanceName = thename
         self.has_nonrandom_instance_name = True
         for aname in self.__dict__:
             if hasattr(self, aname) and isinstance(getattr(self, aname), DAObject):
                 #logmessage("ASDF Setting " + str(thename) + " for " + str(aname))
-                getattr(self, aname)._set_instance_name_recursively(thename + '.' + aname)
+                getattr(self, aname)._set_instance_name_recursively(thename + '.' + aname, matching=matching)
         return
     def _mark_as_gathered_recursively(self):
         self.gathered = True
@@ -957,14 +959,14 @@ class DAList(DAObject):
             if isinstance(item, DAObject):
                 item.fix_instance_name(old_instance_name, new_instance_name)
         return super(DAList, self).fix_instance_name(old_instance_name, new_instance_name)
-    def _set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename, matching=None):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
         for item in self.elements:
             if isinstance(item, DAObject):
-                item._set_instance_name_recursively(thename + '[' + str(indexno) + ']')
+                item._set_instance_name_recursively(thename + '[' + str(indexno) + ']', matching=matching)
             indexno += 1
-        return super(DAList, self)._set_instance_name_recursively(thename)
+        return super(DAList, self)._set_instance_name_recursively(thename, matching=matching)
     def _mark_as_gathered_recursively(self):
         for item in self.elements:
             if isinstance(item, DAObject):
@@ -980,7 +982,7 @@ class DAList(DAObject):
         indexno = 0
         for item in self.elements:
             if isinstance(item, DAObject) and item.instanceName.startswith(self.instanceName + '['):
-                item._set_instance_name_recursively(self.instanceName + '[' + str(indexno) + ']')
+                item._set_instance_name_recursively(self.instanceName + '[' + str(indexno) + ']', matching=self.instanceName + '[')
             indexno += 1
     def sort(self, *pargs, **kwargs):
         """Reorders the elements of the list and returns the object."""
@@ -1608,15 +1610,12 @@ class DADict(DAObject):
             if isinstance(value, DAObject):
                 value.fix_instance_name(old_instance_name, new_instance_name)
         return super(DADict, self).fix_instance_name(old_instance_name, new_instance_name)
-    def _set_instance_name_recursively(self, thename):
+    def _set_instance_name_recursively(self, thename, matching=None):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
-        #logmessage("DICT instance name recursive for " + str(self.instanceName) + " to " + str(thename))
         for key, value in self.elements.items():
-            #logmessage("QWER Setting " + str(thename) + " for " + str(key))
             if isinstance(value, DAObject):
-                value._set_instance_name_recursively(thename + '[' + repr(key) + ']')
-        #logmessage("Change " + str(self.instanceName) + " to " + str(thename))
-        return super(DADict, self)._set_instance_name_recursively(thename)
+                value._set_instance_name_recursively(thename + '[' + repr(key) + ']', matching=matching)
+        return super(DADict, self)._set_instance_name_recursively(thename, matching=matching)
     def _mark_as_gathered_recursively(self):
         for key, value in self.elements.items():
             if isinstance(value, DAObject):
@@ -3736,7 +3735,7 @@ def selections(*pargs, **kwargs):
     return output
 
 def myb64quote(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode())
 
 def setify(item, output=set()):
     if isinstance(item, DAObject) and hasattr(item, 'elements'):

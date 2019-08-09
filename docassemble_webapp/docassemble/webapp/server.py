@@ -4312,7 +4312,7 @@ def manage_account():
             user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=False, action='delete_all', delete_shared=delete_shared)
             the_user_id = current_user.id
             logout_user()
-            delete_user_data(the_user_id, r)
+            delete_user_data(the_user_id, r, r_user)
         else:
             sessions_to_delete = set()
             interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.temp_user_id == temp_user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
@@ -10144,6 +10144,9 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
                 package = interview.source.get_package()
             titles = interview.get_title(dict(_internal=dict()))
             tags = interview.get_tags(dict(_internal=dict()))
+            metadata = copy.deepcopy(interview.consolidated_metadata)
+            if 'tags' in metadata:
+                del metadata['tags']
             interview_title = titles.get('full', titles.get('short', word('Untitled')))
             subtitle = titles.get('sub', None)
             status_class = None
@@ -10151,6 +10154,7 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
         except:
             interview_title = yaml_filename
             tags = set()
+            metadata = dict()
             package = None
             subtitle = None
             status_class = 'dainterviewhaserror'
@@ -10168,7 +10172,7 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
                 url = url_for('index', i=yaml_filename, reset='1')
             else:
                 url = url_for('index', i=yaml_filename)
-        interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package, tags=sorted(tags)))
+        interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package, tags=sorted(tags), metadata=metadata))
     return interview_info
 
 @app.route('/list', methods=['GET'])
@@ -14414,10 +14418,11 @@ def playground_office_functionfile():
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
-    defaultDaServer = daconfig.get('url root', None)
-    if defaultDaServer is None:
-        defaultDaServer = request.url_root
-    defaultDaServer += daconfig.get('root', '/')
+    #defaultDaServer = daconfig.get('url root', None)
+    #if defaultDaServer is None:
+    #    defaultDaServer = request.url_root
+    #defaultDaServer += daconfig.get('root', '/')
+    defaultDAServer = url_for('rootindex', _external=True)
     return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
 
 @app.route('/officeaddin', methods=['GET', 'POST'])
@@ -19652,8 +19657,8 @@ def api_create_user():
             return jsonify_with_status("List of privileges must be a string or a list.", 400)
         role_list = [role_list]
     valid_role_names = set()
-    for r in Role.query.filter(Role.name != 'cron').order_by('id'):
-        valid_role_names.add(r.name)
+    for rol in Role.query.filter(Role.name != 'cron').order_by('id'):
+        valid_role_names.add(rol.name)
     for role_name in role_list:
         if role_name not in valid_role_names:
             return jsonify_with_status("Invalid privilege name.  " + role_name + " is not an existing privilege.", 400)
@@ -19704,10 +19709,10 @@ def api_user_by_id(user_id):
     elif request.method == 'DELETE':
         if request.args.get('remove', None) == 'account':
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
-            delete_user_data(user_id, r)
+            delete_user_data(user_id, r, r_user)
         elif request.args.get('remove', None) == 'account_and_shared':
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
-            delete_user_data(user_id, r)
+            delete_user_data(user_id, r, r_user)
         else:
             make_user_inactive(user_id=user_id)
         return ('', 204)

@@ -604,7 +604,7 @@ def delete_temp_user_data(temp_user_id, r):
     for key in keys_to_delete:
         r.delete(key)
 
-def delete_user_data(user_id, r):
+def delete_user_data(user_id, r, r_user):
     UserDict.query.filter_by(user_id=user_id).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(user_id=user_id).delete()
@@ -637,7 +637,9 @@ def delete_user_data(user_id, r):
     for section in ('playground', 'playgroundmodules', 'playgroundpackages', 'playgroundsources', 'playgroundstatic', 'playgroundtemplate'):
         the_section = SavedFile(user_id, section=section)
         the_section.delete()
+    old_email = None
     for user_object in UserModel.query.filter_by(id=user_id):
+        old_email = user_object.email
         user_object.active = False
         user_object.first_name = ''
         user_object.last_name = ''
@@ -662,6 +664,11 @@ def delete_user_data(user_id, r):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r.delete(key)
+    keys_to_delete = set()
+    for key in r_user.keys('*:user:' + text_type(old_email)):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r_user.delete(key)
 
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):

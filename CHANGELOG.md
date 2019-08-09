@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.4.73] - 2019-08-09
+### Added
+- Support for noun pluralizing and verb conjugation in Spanish,
+  French, Italian, German, and Dutch.
+- Additional methods for `DAOAuth` objects.
+### Changed
+- The output of the `interview_menu()` function, the `/api/list`
+  endpoint, and the `/list?json=1` endpoint now include interview
+  metadata.
+- The `undefine()` function now accepts multiple variables names.
+### Fixed
+- `DAObject`s that are attributes of `DAList` items had their
+  `instanceName`s rewritten when the parent list was altered.
+- When an object that was already defined was edited using `fields`
+  with `datatype: object` or `datatype: object_radio`, the default
+  value was not showing.
+- The office add-in was not using the best method to determine the
+  full URL of the server.
+
 ## [0.4.72] - 2019-08-07
 ### Fixed
 - Translation of metadata titles not compatible with `translations`.

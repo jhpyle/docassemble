@@ -4,6 +4,11 @@ from six import string_types, text_type, PY2
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
+import pattern.es
+import pattern.de
+import pattern.fr
+import pattern.it
+import pattern.nl
 import re
 #import operator
 import os
@@ -2098,6 +2103,281 @@ def indefinite_article_en(*pargs, **kwargs):
     else:
         return(output)
 
+def verb_present_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.es.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.es.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_es(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.es.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.es.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.es.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.de.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.de.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_de(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.de.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.de.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.de.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.fr.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.fr.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_fr(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.fr.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.fr.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.fr.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.it.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.it.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_it(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.it.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.it.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.it.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.nl.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.nl.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_nl(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.nl.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.nl.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.nl.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
 language_functions = {
     'in_the': {
         'en': prefix_constructor('in the ')
@@ -2166,19 +2446,42 @@ language_functions = {
         'en': prefix_constructor_two_arguments('has ')
     },
     'verb_past': {
-        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: verb_past_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: verb_past_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: verb_past_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: verb_past_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: verb_past_nl(*pargs, **kwargs)
     },
     'verb_present': {
-        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: verb_present_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: verb_present_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: verb_present_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: verb_present_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: verb_present_nl(*pargs, **kwargs)
     },
     'noun_plural': {
-        'en': lambda *pargs, **kwargs: noun_plural_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: noun_plural_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: noun_plural_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: noun_plural_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: noun_plural_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: noun_plural_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: noun_plural_nl(*pargs, **kwargs)
     },
     'noun_singular': {
-        'en': lambda *pargs, **kwargs: noun_singular_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: noun_singular_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: noun_singular_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: noun_singular_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: noun_singular_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: noun_singular_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: noun_singular_nl(*pargs, **kwargs)
     },
     'indefinite_article': {
-        'en': indefinite_article_en
+        'en': indefinite_article_en,
+        'es': indefinite_article_es,
+        'de': indefinite_article_de,
+        'it': indefinite_article_it
     },
     'currency_symbol': {
         '*': currency_symbol_default
@@ -2939,20 +3242,24 @@ def get_user_dict():
             the_user_dict = frame.f_locals
     return the_user_dict
 
-def undefine(var):
-    """Deletes the variable"""
-    text_type(var)
-    if not isinstance(var, string_types):
-        raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
-    try:
-        eval(var, dict())
-        return False
-    except:
-        pass
+def undefine(*pargs):
+    """Deletes the variable or variables if they exist."""
+    vars_to_delete = list()
+    for var in pargs:
+        text_type(var)
+        if not isinstance(var, string_types):
+            raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
+        try:
+            eval(var, dict())
+            continue
+        except:
+            vars_to_delete.append(var)
+        components = components_of(var)
+        if len(components) == 0 or len(components[0]) < 2:
+            raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
+    if len(vars_to_delete) == 0:
+        return
     frame = inspect.stack()[1][0]
-    components = components_of(var)
-    if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
     while variable not in the_user_dict:
@@ -2967,10 +3274,11 @@ def undefine(var):
                 return False
         else:
             the_user_dict = frame.f_locals
-    try:
-        exec('del ' + var, the_user_dict)
-    except:
-        pass
+    for var in vars_to_delete:
+        try:
+            exec('del ' + var, the_user_dict)
+        except:
+            pass
 
 def dispatch(var):
     """Shows a menu screen."""
