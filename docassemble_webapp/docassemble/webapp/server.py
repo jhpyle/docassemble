@@ -2449,7 +2449,8 @@ def reset_session(yaml_filename, secret, retain_code=False, use_existing=False):
         result = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == user_id, UserDictKeys.filename == yaml_filename)).first()
         if result is None:
             return(None, None)
-        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)                                return(session_id, user_dict)
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        return(session_id, user_dict)
     #logmessage("reset_session: retain_code is " + str(retain_code))
     session['i'] = yaml_filename
     if retain_code is False or 'uid' not in session:
