@@ -5010,6 +5010,10 @@ class Interview:
                 if key not in title:
                     title[key] = val
         return title
+    def uses_unique_sessions(self):
+        if self.consolidated_metadata.get('sessions are unique', False):
+            return True
+        return False
     def allowed_to_access(self, is_anonymous=False, has_roles=None):
         roles = set()
         for metadata in self.metadata:

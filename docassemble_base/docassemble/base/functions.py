@@ -3260,15 +3260,14 @@ def undefine(*pargs):
     if len(vars_to_delete) == 0:
         return
     frame = inspect.stack()[1][0]
-    variable = components[0][1]
     the_user_dict = frame.f_locals
-    while variable not in the_user_dict:
+    while '_internal' not in the_user_dict:
         frame = frame.f_back
         if frame is None:
             return False
         if 'user_dict' in frame.f_locals:
             the_user_dict = eval('user_dict', frame.f_locals)
-            if variable in the_user_dict:
+            if '_internal' in the_user_dict:
                 break
             else:
                 return False

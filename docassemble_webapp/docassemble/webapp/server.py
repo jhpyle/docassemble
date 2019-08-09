@@ -2444,7 +2444,12 @@ def restore_session(backup):
         if key in backup:
             session[key] = backup[key]
 
-def reset_session(yaml_filename, secret, retain_code=False):
+def reset_session(yaml_filename, secret, retain_code=False, use_existing=False):
+    if use_existing:
+        result = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == user_id, UserDictKeys.filename == yaml_filename)).first()
+        if result is None:
+            return(None, None)
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)                                return(session_id, user_dict)
     #logmessage("reset_session: retain_code is " + str(retain_code))
     session['i'] = yaml_filename
     if retain_code is False or 'uid' not in session:
@@ -5166,6 +5171,21 @@ def resume():
             return jsonify(action='redirect', url=url_for('index', **post_data), csrf_token=generate_csrf())
     return redirect(url_for('index', **post_data))
 
+def valid_interview(yaml_filename):
+    try:
+        interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        if interview.uses_unique_sessions() and not current_user.is_authenticated:
+            return False
+        if current_user.is_anonymous:
+            if not interview.allowed_to_access(is_anonymous=True):
+                return False
+        else:
+            if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                return False
+        return True
+    except:
+        return False
+
 @app.route("/interview", methods=['POST', 'GET'])
 def index(action_argument=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
@@ -5256,6 +5276,8 @@ def index(action_argument=None):
             show_flash = False
             if not yaml_filename.startswith('docassemble.playground'):
                 yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
+            #if not valid_interview(yaml_filename):
+            #    raise DAError("That interview does not exist.")
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
                 show_flash = True
