@@ -114,6 +114,15 @@ del favorite_fruit
 The difference is that when using `del`, the variable must first
 exist.
 
+The `undefine()` function can be called with multiple variable names.
+
+{% highlight python %}
+undefine('favorite_fruit', 'favorite_vegetable')
+{% endhighlight %}
+
+Calling undefine in this way is faster than calling `undefine()`
+multiple times.
+
 ## <a name="forget_result_of"></a>forget_result_of()
 
 If you want a [`question`] with [embedded blocks] to be asked again,
@@ -3523,11 +3532,14 @@ The keys in each dictionary are:
 * `subtitle`: the [subtitle](#set_parts) of the interview
 * `filename`: e.g., `docassemble.demo:data/questions/questions.yml`
 * `link`: a hyperlink to the interview on your server
+* `metadata`: a dictionary representing the metadata of the interview
+  (minus the `tags`, which are provided separately).
 * `package`: the package in which the interview is located, e.g., `docassemble.demo`
 * `status_class`: this is set to `dainterviewhaserror` if there is a
   problem with the interview.
 * `subtitle_class`: this is set to `invisible` if there is a problem
   with the interview.
+* `tags`: a list of tags specified in the interview metadata.
 
 The `interview_menu()` function takes three optional keyword arguments,
 `absolute_urls`, `start_new`, and `tag`.

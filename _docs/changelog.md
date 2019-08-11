@@ -4,6 +4,34 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.74](https://github.com/jhpyle/docassemble/releases/tag/v0.4.74) - 2019-08-09
+
+### Fixed
+- The `undefine()` function did not always find the interview
+  answers.
+
+## [0.4.73](https://github.com/jhpyle/docassemble/releases/tag/v0.4.73) - 2019-08-09
+
+### Added
+- Support for noun pluralizing and verb conjugation in Spanish,
+  French, Italian, German, and Dutch.
+- Additional methods for `DAOAuth` objects.
+
+### Changed
+- The output of the `interview_menu()` function, the `/api/list`
+  endpoint, and the `/list?json=1` endpoint now include interview
+  metadata.
+- The `undefine()` function now accepts multiple variables names.
+
+### Fixed
+- `DAObject`s that are attributes of `DAList` items had their
+  `instanceName`s rewritten when the parent list was altered.
+- When an object that was already defined was edited using `fields`
+  with `datatype: object` or `datatype: object_radio`, the default
+  value was not showing.
+- The office add-in was not using the best method to determine the
+  full URL of the server.
+
 ## [0.4.72](https://github.com/jhpyle/docassemble/releases/tag/v0.4.72) - 2019-08-07
 
 ### Fixed
@@ -1176,7 +1204,7 @@ short_title: Change Log
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and
   `row_item` to the value, and `DADict`s can be edited using tables.
-- No delete buttons on a `table` when deletion would cause the number 
+- No delete buttons on a `table` when deletion would cause the number
   of items to fall below `minimum_number`.
 - The `edit` option on a `table` can now use reference indices as well
   as attributes.

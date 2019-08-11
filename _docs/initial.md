@@ -94,16 +94,24 @@ filtering purposes.  Note that the `metadata` of an interview are
 static, while the tags of a particular session of an interview are
 dynamic, and can be changed with [`session_tags()`].
 
+<a name="sessions are unique"></a>If you set `sessions are unique` to
+`True`, then **docassemble** will resume an existing session for the
+user, if the user already has an existing session.  This requires that
+the user be logged in, so the user will be redirected to the login
+screen if they try to access an interview for which `sessions are
+unique` is set to `True`.  You can also set `sessions are unique` to a
+list of roles, in which case uniqueness will be enforced only if the
+user has one of the listed roles.
+
 <a name="required privileges"></a>If you set `required privileges` to
-a list of one or more privileges, then the interview will only be
-shown in the list of interviews available at `/list` if the user has
-the required privilege.  If `anonymous` is included as one of the
-required privileges, then users who are not logged in will be able to
-see the interview listed.  However, note that `anonymous` is not
-actually a [privilege] in **docassemble**'s [privilege] management
-system; only logged-in users actually have [privileges].  If no
-`required privileges` are listed, then the default is that the
-interview is always listed.
+a list of one or more privileges, then a user will only be able to use
+the interview if they have one of the given privileges.  If
+`anonymous` is included as one of the required privileges, then users
+who are not logged in will be able to use the interview.  However,
+note that `anonymous` is not actually a [privilege] in
+**docassemble**'s [privilege] management system; only logged-in users
+actually have [privileges].  If no `required privileges` are listed,
+then the default is that the interview can be used by anybody.
 
 {% highlight yaml %}
 metadata:
@@ -111,6 +119,7 @@ metadata:
   short title: Admin
   description: |
     A management dashboard
+  sessions are unique: True
   required privileges:
     - admin
     - developer
@@ -121,12 +130,17 @@ If there are multiple [`metadata`] blocks in the [YAML] of an
 interview that set `required privileges`, the `required privileges`
 settings of later [`metadata`] blocks will override the `required
 privileges` settings of earlier [`metadata`] blocks.  Setting
-`required privileges: []` will ensure that the interview is always
-shown in the list, notwithstanding the `required privileges` settings
-of any earlier [`metadata`] blocks.
+`required privileges: []` will ensure that the interview can be used,
+notwithstanding the `required privileges` settings of any earlier
+[`metadata`] blocks.
 
-For more information about the `/list` page, see the documentation for
-the [`dispatch`] configuration directive.
+<a name="required privileges for listing"></a>The `required privileges
+for listing` metadata specifier is like `required privileges`, except
+it only controls whether the interview will be shown in the list of
+interviews available at `/list`.  The `required privileges` metadata
+specifier also controls whether the interview will be listed.  For
+more information about the `/list` page, see the documentation for the
+[`dispatch`] configuration directive.
 
 <a name="error action"></a>You can set an `error action` if you want
 your interview to do something substantive in the event that your

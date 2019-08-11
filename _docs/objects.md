@@ -2247,7 +2247,24 @@ The methods of `DAOAuth` that are useful are:
   by `oauth2client.client`.
 * `.get_http()` - this returns a `httplib2.Http()` object that has
   been modified so that it contains the necessary [OAuth2]
-  credentials.
+  credentials.  If the user it not authorized, this will cause
+  authorization to be requested.
+* `.ensure_authorized()` - this does not return anything, but it will
+  cause authorization to be requested if there are no stored
+  credentials or if the stored credentials are invalid.
+* `.active()` - this will return `True` if there are stored
+  credentials in the system for the user.  It will not test if the
+  credentials are valid.
+* `.is_authorized()` - this will return `True` if there are stored
+  credentials in the system for the user and the credentials are
+  valid.  It will not cause authorization to be requested.
+* `.delete_credentials()` - this will delete the stored credentials
+  from the system.
+  
+Here is a longer version of the interview above, demonstrating how to
+add a menu item that allows the users to manage their credentials.
+
+{% include demo-side-by-side.html demo="oauth-test-2" %}
 
 ## <a name="DAGoogleAPI"></a>DAGoogleAPI
 

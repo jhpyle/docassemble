@@ -2685,18 +2685,17 @@ system using `docker stop -t60 <container ID>` followed by
 
 ## <a name="cross site domains"></a>Cross-Origin Resource Sharing (CORS)
 
-Set the `cross site domains` directive if you want your [Apache] server
-to be configured to send `Access-Control-Allow-Origin` headers in
-order to permit [Cross-Origin Resource Sharing].
+Set the `cross site domains` directive if you want the web server to
+send `Access-Control-Allow-Origin` headers in order to permit
+[Cross-Origin Resource Sharing].
 
 {% highlight yaml %}
 cross site domains:
-  - example.com
-  - help.example.com
+  - https://example.com
+  - https://help.example.com
 {% endhighlight %}
 
-This variable is only used if **docassemble** is running on
-[Docker].
+It is important to specify the protocol as well as the domain.
 
 ## <a name="incoming mail domain"></a>E-mail domain of the site
 

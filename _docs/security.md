@@ -203,7 +203,8 @@ When **docassemble** deletes a user account, it deletes:
   [Profile].
 * The contents of the user's [Playground].
 * Other information associated with the user, such as authentication
-  tokens for integration with the GitHub API.
+  tokens for integration with the GitHub API and authentication tokens
+  created for the user's e-mail address with [`DAOAuth`].
 
 When **docassemble** deletes a user account, it does not delete:
 * Records created by the user using [`DARedis`] or [`write_record()`].
