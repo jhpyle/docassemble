@@ -1038,7 +1038,11 @@ Required privileges: None.
 
 Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
- - [400] "Parameter i is required" if the `i` parameter is not included.
+ - [400] "Parameter i is required" if the `i` parameter is not
+   included.
+ - [400] "Insufficient permissions to run this interview" if the owner
+   of the API does not have the [`required privileges`] to run the
+   interview.
 
 Response on success: [200]
 
@@ -1983,3 +1987,4 @@ function.
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
 [pickle]: https://docs.python.org/3.5/library/pickle.html
+[`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
