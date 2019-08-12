@@ -1,7 +1,7 @@
 metadata:
   title: Link for sharing
   example start: 1
-  example end: 3
+  example end: 2
   documentation: "https://docassemble.org/docs/functions.html#interview_url"
 ---
 mandatory: True
@@ -13,8 +13,7 @@ question: |
 subquestion: |
   To invite someone else to complete
   this interview, ask them to go to
-  the following URL:
-  ${ interview_url() }
+  [this URL](${ interview_url() }).
 
   To proceed with the interview,
   click "Yes."

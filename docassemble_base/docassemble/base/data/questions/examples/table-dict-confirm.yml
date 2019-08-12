@@ -1,0 +1,57 @@
+metadata:
+  title: Confirm delete
+  short title: Confirm
+  documentation: "https://docassemble.org/docs/groups.html#confirm"
+  example start: 4
+  example end: 4
+---
+objects:
+  - income: DADict.using(object_type=DAObject,
+                         keys=['employment', 'benefits', 'interest'],
+                         complete_attribute='complete',
+                         there_is_another=False)
+---
+code: |
+  if income[i].receives:
+    income[i].amount
+  income[i].complete = True
+---
+question: |
+  Income from ${ i }
+fields:
+  - "Do you get income from ${ i }?": income[i].receives
+    datatype: yesnoradio
+  - "How much do you get from ${ i }?": income[i].amount
+    datatype: currency
+    show if: income[i].receives
+---
+table: income.table
+rows: income
+columns:
+  - Type: |
+      row_index
+  - Receives: |
+      'Yes' if row_item.receives else 'No'
+  - Amount: |
+      currency(row_item.amount) if row_item.receives else ''
+delete buttons: True
+confirm: True
+---
+question: |
+  What new income type would
+  you like to add?
+fields:
+  - Type: income.new_item_name
+---
+question: |
+  Do you want to add any
+  more income items?
+yesno: income.there_is_another
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  ${ income.table }
+
+  ${ income.add_action() }

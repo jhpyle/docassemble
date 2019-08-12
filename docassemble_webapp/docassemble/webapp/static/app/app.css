@@ -679,6 +679,7 @@ img.daimageicon {
     padding-top: 3.6px;
     line-height: normal;
     max-width: 90%;
+    white-space: nowrap;
 }
 
 span.daparenthetical {
@@ -2196,4 +2197,8 @@ tr:first-child .datableup, tr:last-child .databledown {
     bottom: 0.7rem !important;
     top: auto !important;
     right: auto !important;
+}
+
+.dawideimage {
+    width: 100%;
 }

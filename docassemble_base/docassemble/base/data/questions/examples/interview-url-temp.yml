@@ -1,0 +1,39 @@
+metadata:
+  title: Temporary link for sharing
+  short: Link
+  example start: 1
+  example end: 2
+  documentation: "https://docassemble.org/docs/functions.html#interview_url"
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  Ready to proceed?
+subquestion: |
+  To invite someone else to complete
+  this interview, ask them to go to
+  [this URL](${ interview_url(temporary=1) })
+  within the next hour.
+
+  To proceed with the interview,
+  click "Yes."
+yesno: ready_to_proceed
+---
+question: All done
+subquestion: |
+  Now we are done with the interview.
+sets: final_screen
+---
+subquestion: Goodbye
+question: |
+  So long!
+sets: kick_out_screen
+---
+mandatory: True
+code: |
+  if ready_to_proceed:
+    final_screen
+  else:
+    kick_out_screen

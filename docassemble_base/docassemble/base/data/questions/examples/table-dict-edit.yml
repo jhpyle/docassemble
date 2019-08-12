@@ -6,10 +6,12 @@ metadata:
   example end: 4
 ---
 objects:
-  - income: DADict.using(object_type=DAObject,
-                         keys=['employment', 'benefits', 'interest'],
-                         complete_attribute='complete',
-                         there_is_another=False)
+  - income: |
+      DADict.using(
+        object_type=DAObject,
+        keys=['employment', 'benefits', 'interest'],
+        complete_attribute='complete',
+        there_is_another=False)
 ---
 code: |
   if income[i].receives:

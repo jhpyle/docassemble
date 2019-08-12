@@ -4,8 +4,9 @@ from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
+from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
 from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage #Attachments
+from docassemble.webapp.packages.models import PackageAuth
 from docassemble.base.generate_key import random_string, random_bytes
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -168,7 +169,7 @@ if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail'
     mail = MailgunMail(app)
 else:
     mail = FlaskMail(app)
-    
+
 def da_send_mail(the_message):
     mail.send(the_message)
 
@@ -318,7 +319,7 @@ docassemble.base.functions.update_server(cloud=cloud,
                                          cloud_custom=cloud_custom,
                                          google_api=docassemble.webapp.google_api)
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -576,6 +577,99 @@ def advance_progress(user_dict, interview):
         user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
     return
 
+def delete_temp_user_data(temp_user_id, r):
+    UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(temp_user_id=temp_user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
+    Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:t' + text_type(temp_user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:t' + text_type(temp_user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
+
+def delete_user_data(user_id, r, r_user):
+    UserDict.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(owner_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
+        package_auth.user_id = 1
+    db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(user_id=user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
+    Shortener.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserRoles.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for user_auth in UserAuthModel.query.filter_by(user_id=user_id):
+        user_auth.password = ''
+        user_auth.reset_password_token = ''
+    db.session.commit()
+    for section in ('playground', 'playgroundmodules', 'playgroundpackages', 'playgroundsources', 'playgroundstatic', 'playgroundtemplate'):
+        the_section = SavedFile(user_id, section=section)
+        the_section.delete()
+    old_email = None
+    for user_object in UserModel.query.filter_by(id=user_id):
+        old_email = user_object.email
+        user_object.active = False
+        user_object.first_name = ''
+        user_object.last_name = ''
+        user_object.nickname = ''
+        user_object.email = None
+        user_object.country = ''
+        user_object.subdivisionfirst = ''
+        user_object.subdivisionsecond = ''
+        user_object.subdivisionthird = ''
+        user_object.organization = ''
+        user_object.timezone = None
+        user_object.language = None
+        user_object.pypi_username = None
+        user_object.pypi_password = None
+        user_object.otp_secret = None
+        user_object.social_id = 'disabled$' + text_type(user_id)
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:' + text_type(user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:' + text_type(user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
+    keys_to_delete = set()
+    for key in r_user.keys('*:user:' + text_type(old_email)):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r_user.delete(key)
+
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
@@ -613,20 +707,27 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
-            old_file = SavedFile(upload.indexno)
-            old_file.delete()
-        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
-        db.session.commit()
-        # Attachments.query.filter_by(key=user_code, filename=filename).delete()
-        # db.session.commit()
+        files_to_delete = list()
+        for speaklist in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+            if speaklist.upload is not None:
+                files_to_delete.append(speaklist.upload)
         SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+            files_to_delete.append(upload.indexno)
+        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
         db.session.commit()
         ChatLog.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
+        for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
+            for email in Email.query.filter_by(short=short_code_item.short).all():
+                for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                    files_to_delete.append(attachment.upload)
         Shortener.query.filter_by(uid=user_code, filename=filename).delete()
         db.session.commit()
-    #logmessage("reset_user_dict: done")
+        for file_number in files_to_delete:
+            the_file = SavedFile(file_number)
+            the_file.delete()
     return
 
 #@elapsed('get_person')

@@ -20,7 +20,7 @@ if __name__ == "__main__":
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')
         indexno = 0
-        for locale in daconfig['other locales']:
+        for locale in daconfig['other os locales']:
             print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
             indexno += 1
     else:
@@ -162,10 +162,6 @@ if __name__ == "__main__":
         print('export SERVERADMIN="' + str(daconfig['server administrator email']) + '"')
     else:
         print('export SERVERADMIN="webmaster@localhost"')
-    if 'cross site domain' in daconfig and daconfig['cross site domain'] is not None:
-        print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domain']) + '"')
-    elif 'cross site domains' in daconfig and isinstance(daconfig['cross site domains'], list) and len(daconfig['cross site domains']):
-        print('export CROSSSITEDOMAIN="' + str(daconfig['cross site domains'][0]) + '"')
     if 'web server timeout' in daconfig and daconfig['web server timeout'] is not None:
         print('export DATIMEOUT="' + str(daconfig['web server timeout']) + '"')
     sys.exit(0)

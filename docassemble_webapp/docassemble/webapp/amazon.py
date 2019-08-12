@@ -67,12 +67,8 @@ class s3key(object):
     def get_epoch_modtime(self):
         return (self.key_obj.last_modified - epoch).total_seconds()
     def get_contents_to_filename(self, filename):
-        #try:
         self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.name, filename)
-        #except ClientError as e:
-        #    raise
         secs = (self.key_obj.last_modified - epoch).total_seconds()
-        #secs = time.mktime(self.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         if hasattr(self, 'content_type') and self.content_type is not None:

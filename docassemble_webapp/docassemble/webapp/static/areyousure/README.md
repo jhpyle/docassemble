@@ -31,7 +31,7 @@ doing this simple task in the simplest possible way.
  * Graceful degradation on legacy browsers (i.e. if you're running an old 
    browser... remember to save :-)
 
-###Basic Usage
+### Basic Usage
 
 ```javascript
 
@@ -62,7 +62,7 @@ To ignore selected fields from the dirtyness check:
   </form>
 ```
 
-###Advanced Usage
+### Advanced Usage
 
 ```javascript
 
@@ -166,7 +166,7 @@ The [demo page](http://www.papercut.com/products/free_software/are-you-sure/demo
 shows the advanced usage options in more detail.
 
 
-###Install
+### Install
 Are-You-Sure is a light-weight jQuery plugin - it's a single standalone 
 JavaScript file. You can download the 
 [jquery.are-you-sure.js](https://raw.github.com/codedance/jquery.AreYouSure/master/jquery.are-you-sure.js)
@@ -187,11 +187,11 @@ $ bower install jquery.are-you-sure
 If you're using, or like, *Are-you-sure* make sure you **star/watch** this project
 so you can stay up-to-date with updates.
 
-###Demo
+### Demo
 This [demo page](http://www.papercut.com/products/free_software/are-you-sure/demo/are-you-sure-demo.html)
 hosts a number of example forms.
 
-###Supported Browsers
+### Supported Browsers
 *Are-you-sure* has been tested on and fully supports the following browsers:
 
 * IE 9 through 11
@@ -201,33 +201,33 @@ hosts a number of example forms.
 
 Experimental support is available on iOS and Opera via the *beforeunload* shim (see below).
 
-###Known Issues & Limitations
+### Known Issues & Limitations
 
-####Mobile Safari and Opera
+#### Mobile Safari and Opera
 The ```windows.beforeunload``` event is not supported on iOS (iPhone, iPad, and iPod). An
 experimental shim offering partial *beforeunload* emulation is provided to help plug this gap.
 It works by scanning the page for anchor links and augments the default behaviour to first
 check with *Are-you-sure* before navigating away. To use, simply include 
 ```ays-beforeunload-shim.js``` in your page.
 
-####Firefox
+#### Firefox
 The custom message option may not work on Firefox ([Firefox bug 588292](https://bugzilla.mozilla.org/show_bug.cgi?id=588292)).
 
-###Development
+### Development
 The aim is to keep *Are-you-sure* simple and light. If you think you have 
 a good idea which is aligned with this objective, please voice your thoughts 
 in the issues list.
 
-####Pull Requests
+#### Pull Requests
 If possible, please submit your pull request against the most recent ```dev-*``` branch rather than master. This will make it easier to merge your code into the next planned release.
 
-####Running tests
+#### Running tests
 ```bash
 $ npm install
 $ npm test
 ```
 
-###Release History
+### Release History
 
 **2014-08-13** (1.9) - This is a minor bugfix release:
 
@@ -282,11 +282,11 @@ $ npm test
 **2012-10-24** - Initial public release.
 
 
-###Prerequisites
+### Prerequisites
 jQuery version 1.4.2 or higher. 2.0+ or 1.10+ recommended.
 
 
-###License
+### License
 The same as JQuery...
 
     jQuery Plugin: Are-You-Sure (Dirty Form Detection)

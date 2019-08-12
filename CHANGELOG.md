@@ -1,8 +1,161 @@
 # Change Log
 
-## [0.4.58] - 2019-07-03
+## [0.4.74] - 2019-08-09
+### Fixed
+- The `undefine()` function did not always find the interview
+  answers.
+
+## [0.4.73] - 2019-08-09
+### Added
+- Support for noun pluralizing and verb conjugation in Spanish,
+  French, Italian, German, and Dutch.
+- Additional methods for `DAOAuth` objects.
+### Changed
+- The output of the `interview_menu()` function, the `/api/list`
+  endpoint, and the `/list?json=1` endpoint now include interview
+  metadata.
+- The `undefine()` function now accepts multiple variables names.
+### Fixed
+- `DAObject`s that are attributes of `DAList` items had their
+  `instanceName`s rewritten when the parent list was altered.
+- When an object that was already defined was edited using `fields`
+  with `datatype: object` or `datatype: object_radio`, the default
+  value was not showing.
+- The office add-in was not using the best method to determine the
+  full URL of the server.
+
+## [0.4.72] - 2019-08-07
+### Fixed
+- Translation of metadata titles not compatible with `translations`.
+- JavaScript evaluated in local context rather than global context.
+- Language not set when e-mailing assembled document in the
+  background.
+
+## [0.4.71] - 2019-08-06
+### Changed
+- API for making user accounts inactive now supports permanent
+  deletion.
+- API for setting variables now supports initializing `DAObject`s.
+- Multiple choice options specified with code can be specified with
+  lists of tuples.
+### Fixed
+- Missing system phrase used in input validation.
+
+## [0.4.70] - 2019-08-03
+### Added
+- Account deletion options.
+- Options in the user profile for controlling which repositories will
+  be considered when the Playground packages folder looks for and
+  commits to GitHub repositories.
+- Configuration directives `session lifetime seconds`, `babel dates
+  map`, `admin can delete account`, `user can delete account`, and
+  `delete account deletes shared`.
+### Changed
+- In tables, ordered dictionaries will use their built-in order.
+- Base64 padding removed from field names.
+### Fixed
+- Poppler upgrade interfered with width of images in popups.
+- File upload widget JavaScript bug.
+
+## [0.4.69] - 2019-07-29
+### Fixed
+- Unnecessary file cache invalidation affected Playground performance
+  when using cloud storage.
+- Incorrect method of setting Debian timezone.
+
+## [0.4.68] - 2019-07-28
+### Added
+- The `/api/resume_url`, `/api/temp_url`, `/api/config`,
+  `/api/package`, and `/api/package_update_status` API endpoints.
+- The `expire` and `session` parameters of `/api/login_url`.
+- The `hook_on_gather()` and `hook_after_gather()` methods of
+  `DAList`, `DADict`, and `DASet`.
+### Fixed
+- Bug in the `complete_elements()` method of `DADict`.
+- Incomplete support for editing lists that have `auto_gather` turned
+  off.
+
+## [0.4.67] - 2019-07-25
+### Added
+- The `confirm` option for table editing.
+### Changed
+- The "Select..." option on a dropdown is omitted when the field is
+  required and a default value is selected.
+### Fixed
+- The `keys()` method of `DADict` was removed when `keys` included in
+  constructor.
+- The language did not switch unless it did not match the default
+  language.
+- Restart buttons did not work from `event` screens.
+
+## [0.4.66] - 2019-07-23
+### Changed
+- Allow sending multiple invite e-mails at once.
+### Fixed
+- Canceling phone live help availability failed.
+- The 404 error from `/interview` did not use the 404 template.
+
+## [0.4.65] - 2019-07-19
+### Fixed
+- Erasing phone number in Monitor raised an error.
+- OneDrive synchronization error.
+
+## [0.4.64] - 2019-07-17
+### Changed
+- Upgraded CSS and JavaScript dependencies.
+### Fixed
+- JavaScript for file uploads was incompatible with a Firefox add-on.
+- Error during initialize process possibly caused by stderr being made
+  non-blocking.
+- Bug in `indent()` function.
+- File upload previews shown twice under certain circumstances due to
+  `show if` JavaScript.
+
+## [0.4.63] - 2019-07-16
+### Added
+- The `/resume` endpoint.
+### Fixed
+- Unpickleable object added to the document cache in the internal
+  variables.
+
+## [0.4.62] - 2019-07-14
+### Added
+- The `temporary` and `once_temporary` options to the
+  `interview_url()` and related functions.
+### Fixed
+- Too many monitor connections led to SQL error.
+- Some functions did not work in actions.
+
+## [0.4.61] - 2019-07-10
+### Added
+- The `set_status()` and `get_status()` functions.
+### Changed
+- Disabled `pip` cache.
+- Restored pre-0.4.55 behavior allowing Mako in multiple choice
+  values.
+
+## [0.4.60] - 2019-07-09
+### Changed
+- More robust Docker scripts.
+### Fixed
+- Error with cloud cache.
+
+## [0.4.59] - 2019-07-05
+### Changed
+- Changes manually made to `/etc/apache2/sites-available` files while
+  the container is running will now be backed up upon shutdown and
+  restored upon startup.
+### Fixed
+- Fatal error when invalid global javascript file referenced in
+  Configuration.
+
+## [0.4.58] - 2019-07-05
 ### Changed
 - CORS headers now handled by Flask rather than Apache.
+- The `cross site domain` Configuration directive is renamed to `cross
+  site domains` and the value must be a list.
+- Removed the `CROSSSITEDOMAIN` Docker environment variable.
+- More frequent deletion of temporary files.
 
 ## [0.4.57] - 2019-07-01
 ### Added
@@ -835,7 +988,7 @@
 ### Changed
 - Using `table` with a `DADict` now sets `row_index` to the key and
   `row_item` to the value, and `DADict`s can be edited using tables.
-- No delete buttons on a `table` when deletion would cause the number 
+- No delete buttons on a `table` when deletion would cause the number
   of items to fall below `minimum_number`.
 - The `edit` option on a `table` can now use reference indices as well
   as attributes.

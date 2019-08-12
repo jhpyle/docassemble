@@ -8,8 +8,10 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 if PY2:
     from urllib import quote as urllibquote
+    equals_byte = '='
 else:
     from urllib.parse import quote as urllibquote
+    equals_byte = bytes('=', 'utf-8')
 import sys
 import os
 import re
@@ -85,7 +87,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             if filename['width'] and filename['height']:
                 sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
         else:
-            sizing += 'height:auto;'    
+            sizing += 'height:auto;'
     return('<img alt="" class="daicon" src="' + url + '" style="' + str(sizing) + '"/>')
 
 # def signature_html(status, debug, root, validation_rules):
@@ -139,7 +141,7 @@ def get_choices_with_abb(status, field, the_user_dict, terms=None, links=None):
         if success:
             break
     return data, choice_list
-    
+
 sms_bad_words = ['cancel', 'end', 'help', 'info', 'quit', 'stop', 'stopall', 'unsubscribe', 'back', 'question', 'exit']
 
 def try_to_abbreviate(label, flabel, data, length):
@@ -187,7 +189,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
     if links is None:
         links = list()
     if menu_items is None:
-        menu_items = list()    
+        menu_items = list()
     terms = dict()
     #logmessage("length of links is " + str(len(links)))
     links_len = 0
@@ -317,14 +319,14 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
             qoutput += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
         elif hasattr(field, 'datatype') and field.datatype in ['file', 'camera', 'user', 'environment']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
                 if status.extras['required'][field.number]:
                     qoutput += "\n" + word('Please send an image or file.')
                 else:
-                    qoutput += "\n" + word('Please send an image or file, or type skip.')                    
+                    qoutput += "\n" + word('Please send an image or file, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['files']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
                 qoutput += "\n" + word('Please send one or more images.')
             else:
@@ -338,7 +340,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                 qoutput += "\n" + word('Please send a video, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['microphone']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
                 qoutput += "\n" + word('Please send an audio clip.')
             else:
@@ -359,21 +361,21 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                 qoutput += "\n" + word('Type a currency value, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['date']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
                 qoutput += "\n" + word('Type a date.')
             else:
                 qoutput += "\n" + word('Type a date, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['time']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
                 qoutput += "\n" + word('Type a time.')
             else:
                 qoutput += "\n" + word('Type a time, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['datetime']:
             if label:
-                qoutput += "\n" + label + ":" + next_label 
+                qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
                 qoutput += "\n" + word('Type a date and time.')
             else:
@@ -536,7 +538,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if status.continueLabel:
         continue_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False, status=status)
     else:
-        continue_label = word('Continue')        
+        continue_label = word('Continue')
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
     back_button_val = status.extras.get('back_button', None)
@@ -585,7 +587,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         if filename['width'] and filename['height']:
                             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
                     else:
-                        sizing += 'height:auto;'    
+                        sizing += 'height:auto;'
                     if url is not None:
                         #sys.stderr.write("yoo5\n")
                         if the_image.attribution is not None:
@@ -622,7 +624,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="da-page-header d-none d-md-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
         if status.subquestionText:
-            output += '                <div id="dasigmidpart" class="dasigmidpart">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         else:
             output += '\n              <div id="dasigmidpart" class="dasigmidpart"></div>'
         output += '\n              <div id="dasigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
@@ -646,7 +648,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -672,7 +674,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -734,7 +736,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         #fieldlist.append('                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n')
@@ -859,9 +861,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         fieldlist.append('                <div class="dashowif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(text_type(status.extras['show_if_val'][field.number])) + '>\n')
                 if 'show_if_js' in field.extras:
                     if hasattr(field, 'saveas'):
-                        fieldlist.append('                <div class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
+                        fieldlist.append('                <div class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
                     else:
-                        fieldlist.append('                <div class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(field.extras['show_if_js'])) + '>\n')
+                        fieldlist.append('                <div class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
                 field_class = ' da-field-container da-field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
@@ -926,7 +928,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     field_class += ' da-field-container-inputtype-dropdown'
             if field.number in status.helptexts:
-                helptext_start = '<a tabindex="0" class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>' 
+                helptext_start = '<a tabindex="0" class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>'
                 helptext_end = '</a>'
             else:
                 helptext_start = ''
@@ -940,7 +942,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
                     label_saveas = the_saveas
                 else:
-                    label_saveas = field.saveas                        
+                    label_saveas = field.saveas
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
@@ -1108,7 +1110,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + sub_question_text 
+            output += '                <div class="da-subquestion">\n' + sub_question_text
             output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
@@ -1159,7 +1161,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -1178,7 +1180,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         if status.question.fields[0].number in status.defaults and isinstance(status.defaults[status.question.fields[0].number], (string_types, int, float)):
             defaultvalue = text_type(status.defaults[status.question.fields[0].number])
-            #logmessage("Default value is " + str(defaultvalue))
+            #logmessage("Default value is " + text_type(defaultvalue))
         else:
             defaultvalue = None
         if hasattr(status.question.fields[0], 'datatype'):
@@ -1187,7 +1189,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         validation_rules['errorElement'] = "span"
@@ -1207,6 +1209,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 pairlist = list(status.selectcompute[status.question.fields[0].number])
                 if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                     random.shuffle(pairlist)
+                found_default = False
                 for pair in pairlist:
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
@@ -1219,16 +1222,17 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=True, do_terms=False)
                     if defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == text_type(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                        found_default = True
                     if status.question.question_variety == "radio":
                         if True or pair['key'] is not None: #not sure why this was added
                             output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + text_type(pair['key']) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                         else:
                             output += '                <div class="form-group row"><div class="col-md-12">' + help_wrap(markdown_to_html(pair['label'], status=status), helptext, status) + '</div></div>\n'
                     else:
-                        if True or pair['key'] is not None:
-                            inner_fieldlist.append('<option value="' + text_type(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
-
+                        inner_fieldlist.append('<option value="' + text_type(pair['key']) + '"' + ischecked + '>' + formatted_item + '</option>')
                     id_index += 1
+                if status.question.question_variety != "radio" and found_default:
+                    inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
                         combobox = ' combobox'
@@ -1248,8 +1252,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
             else:
                 indexno = 0
+                found_default = False
                 for choice in status.selectcompute[status.question.fields[0].number]:
-                #for choice in status.question.fields[0].choices:
                     if 'image' in choice:
                         the_icon = icon_html(status, choice['image']) + ' '
                     else:
@@ -1261,17 +1265,20 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'default' in choice:
                         is_a_default = choice['default']
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
+                        found_default = True
                     else:
                         is_a_default = False
                         ischecked = ''
                     id_index = 0
                     formatted_key = markdown_to_html(choice['label'], status=status, trim=True, escape=True, do_terms=False)
                     if status.question.question_variety == "radio":
-                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_key + '" alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="da-to-labelauty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
+                        output += '                <div class="row"><div class="col-md-12">' + help_wrap('<input aria-label="' + formatted_key + '" alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="da-to-labelauty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ" type="radio" value="' + str(indexno) + '"' + ischecked + '/>', helptext, status) + '</div></div>\n'
                     else:
                         inner_fieldlist.append('<option value="' + str(indexno) + '"' + ischecked + '>' + formatted_key + '</option>')
                     id_index += 1
                     indexno += 1
+                if status.question.question_variety != "radio" and found_default:
+                    inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
                         combobox = ' combobox'
@@ -1279,14 +1286,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     else:
                         combobox = ' daspaceafter'
                         daspaceafter = ''
-                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ==">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-control ' + combobox + '" name="X211bHRpcGxlX2Nob2ljZQ">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = list()
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
                     validation_rules['ignore'] = None
-                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
-                validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
+                validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': True}
             output += '                <div id="daerrorcontainer" style="display:none"></div>\n'
             if status.question.question_variety == "radio":
                 output += "                </fieldset>\n"
@@ -1361,7 +1368,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         elif choice['key'].question_type in ("exit", "logout"):
                             btn_class = ' btn-danger'
                     #output += '                  <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n'
-                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
+                    output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
                     indexno += 1
             output += help_button
             output += '                </div></fieldset>\n'
@@ -1378,7 +1385,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += status.pre
         output += indent_by(audio_text, 12) + '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if back_button != '' or help_button != '':
@@ -1392,7 +1399,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -1446,7 +1453,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
                 show_download = True
             else:
-                show_download = False                
+                show_download = False
             if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                 show_preview = True
             else:
@@ -1788,6 +1795,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
     extra_scripts.append("""<script>
   var daValidationRules = """ + json.dumps(validation_rules) + """;
   daValidationRules.submitHandler = daValidationHandler;
+  daValidationRules.invalidHandler = daInvalidHandler;
   daValidationRules.onfocusout = daInjectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
     //console.log("Running validator")
@@ -1932,10 +1940,10 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 output += u''.join(inner_fieldlist)
             output += '</fieldset>'
-            if field.datatype in ['object_checkboxes']:                
+            if field.datatype in ['object_checkboxes']:
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
-            if field.datatype == 'object':
+            if field.datatype == 'object_radio':
                 daobject = ' daobject'
             else:
                 daobject = ''
@@ -1955,7 +1963,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_printable and text_type(pair['label']) == defaultvalue_printable):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object_radio' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
                         ischecked = ' checked="checked"'
                         default_selected = True
                     else:
@@ -1988,7 +1996,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object_radio' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
                             ischecked = ' checked="checked"'
                             default_selected = True
                         else:
@@ -2034,16 +2042,17 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" ' + disable_others_data + '>'
+            first_option = ''
             if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and not embedded:
                 if placeholdertext == '':
-                    output += '<option value="">' + word('Select one') + '</option>'
+                    first_option += '<option value="">' + word('Select one') + '</option>'
                 else:
-                    output += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
+                    first_option += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
             else:
                 if placeholdertext == '':
-                    output += '<option value="">' + word('Select...') + '</option>'
+                    first_option += '<option value="">' + word('Select...') + '</option>'
                 else:
-                    output += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
+                    first_option += '<option value="">' + text_type(status.hints[field.number].replace('\n', ' ')) + '</option>'
             try:
                 defaultvalue_printable = text_type(defaultvalue)
                 defaultvalue_is_printable = True
@@ -2053,14 +2062,20 @@ def input_for(status, field, wide=False, embedded=False):
             #logmessage("defaultvalue is " + repr(defaultvalue))
             #logmessage("defaultvalue_printable is " + repr(defaultvalue_printable))
             #logmessage("defaultvalue_is_printable is " + repr(defaultvalue_is_printable))
+            found_default = False
+            other_options = ''
             for pair in pairlist:
                 if True or pair['key'] is not None:
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, do_terms=False)
                     #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
-                    output += '<option value="' + text_type(pair['key']) + '"'
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable):
-                        output += ' selected="selected"'
-                    output += '>' + formatted_item + '</option>'
+                    other_options += '<option value="' + text_type(pair['key']) + '"'
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                        other_options += ' selected="selected"'
+                        found_default = True
+                    other_options += '>' + formatted_item + '</option>'
+            if (not status.extras['required'][field.number]) or (not found_default):
+                output += first_option
+            output += other_options
             if embedded:
                 output += '</select></span> '
             else:
@@ -2320,12 +2335,15 @@ def input_for(status, field, wide=False, embedded=False):
 
 def get_ischecked(pair, defaultvalue):
     return ischecked
-                
+
 def myb64doublequote(text):
-    return '"' + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + '"'
+    return '"' + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + '"'
 
 def myb64quote(text):
-    return "'" + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + "'"
+    return "'" + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + "'"
+
+def repad(text):
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 def indent_by(text, num):
     if not text:
@@ -2333,10 +2351,10 @@ def indent_by(text, num):
     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
 
 def safeid(text):
-    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode())
 
 def from_safeid(text):
-    return(codecs.decode(bytearray(text, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf8'))
 
 def escape_id(text):
     return str(text)
@@ -2349,7 +2367,7 @@ def escape_for_jquery(text):
     return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)
 
 def myb64unquote(the_string):
-    return(codecs.decode(bytearray(the_string, encoding='utf-8'), 'base64').decode('utf8'))
+    return(codecs.decode(repad(bytearray(the_string, encoding='utf-8')), 'base64').decode('utf8'))
 
 def strip_quote(the_string):
     return re.sub(r'"', r'', the_string)

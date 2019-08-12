@@ -4,27 +4,34 @@ from six import string_types, text_type, PY2
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
+import pattern.es
+import pattern.de
+import pattern.fr
+import pattern.it
+import pattern.nl
 import re
 #import operator
 import os
 import shutil
 import inspect
 import mimetypes
-import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
+from docassemble.base.generate_key import random_string
 import locale
 import decimal
 import docassemble.base.astparser
 if PY2:
     from urllib import quote as urllibquote
     FileType = file
+    equals_byte = '='
 else:
     from urllib.parse import quote as urllibquote
     from io import IOBase
     FileType = IOBase
+    equals_byte = bytes('=', 'utf-8')
 import codecs
 import copy
 import base64
@@ -76,7 +83,7 @@ def raw(val):
 
     """
     return RawValue(val)
-        
+
 class ReturnValue(object):
     def __init__(self, **kwargs):
         self.extra = kwargs.get('extra', None)
@@ -151,7 +158,7 @@ def wrap_up(the_user_dict):
     #         shutil.rmtree(the_resource)
     #     elif os.path.isfile(the_resource):
     #         os.remove(the_resource)
-            
+
 def set_gathering_mode(mode, instanceName):
     #logmessage("set_gathering_mode: " + str(instanceName) + " with mode " + str(mode))
     if mode:
@@ -197,7 +204,7 @@ def get_uid():
 def get_chat_log(utc=False, timezone=None):
     """Returns the messages in the chat log of the interview."""
     return server.get_chat_log(this_thread.current_info.get('yaml_filename', None), this_thread.current_info.get('session', None), this_thread.current_info.get('secret', None), utc=utc, timezone=timezone)
-    
+
 def get_url_start():
     if this_thread.current_info.get('url_root', None) is not None:
         url_start = re.sub(r'/$', r'', this_thread.current_info['url_root'])
@@ -346,7 +353,7 @@ def subdivision_type(country_code):
         return counts_ordered[0]
     else:
         return None
-    
+
 def countries_list():
     """Returns a list of countries, suitable for use in a multiple choice field."""
     return [{country.alpha_2: country.name} for country in sorted(pycountry.countries, key=lambda x: x.name)]
@@ -371,7 +378,7 @@ def interface():
     return this_thread.current_info.get('interface', None)
 
 def user_privileges():
-    """Returns a list of the user's privileges.  For users who are not 
+    """Returns a list of the user's privileges.  For users who are not
     logged in, this is always ['user']."""
     if user_logged_in():
         return [role for role in this_thread.current_info['user']['roles']]
@@ -380,7 +387,7 @@ def user_privileges():
     return False
 
 def user_has_privilege(*pargs):
-    """Given a privilege or a list of privileges, returns True if the user 
+    """Given a privilege or a list of privileges, returns True if the user
     has any of the privileges, False otherwise."""
     privileges = list()
     for parg in pargs:
@@ -414,8 +421,8 @@ class TheUser:
         return text_type(self.name())
 
 def user_info():
-    """Returns an object with information from the user profile.  Keys 
-    include first_name, last_name, email, country, subdivision_first, 
+    """Returns an object with information from the user profile.  Keys
+    include first_name, last_name, email, country, subdivision_first,
     subdivision_second, subdivision_third, and organization."""
     user = TheUser()
     if user_logged_in():
@@ -435,27 +442,30 @@ def user_info():
     return user
 
 def action_arguments():
-    """Used when processing an "action."  Returns a dictionary with the 
+    """Used when processing an "action."  Returns a dictionary with the
     arguments passed to url_action() or interview_url_action()."""
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments']
     else:
         return dict()
 
-def action_argument(item):
-    """Used when processing an "action."  Returns the value of the given 
-    argument, which is assumed to have been passed to url_action() or 
-    interview_url_action()."""
+def action_argument(item=None):
+    """Used when processing an "action."  Returns the value of the given
+    argument, which is assumed to have been passed to url_action() or
+    interview_url_action().  If no argument is given, it returns the name
+    of the action itself, or None if no action is active."""
     #logmessage("action_argument: item is " + text_type(item) + " and arguments are " + repr(this_thread.current_info['arguments']))
+    if item is None:
+        return this_thread.current_info.get('action', None)
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments'].get(item, None)
     else:
         return None
 
 def location_returned():
-    """Returns True or False depending on whether an attempt has yet 
-    been made to transmit the user's GPS location from the browser to 
-    docassemble.  Will return true even if the attempt was not successful 
+    """Returns True or False depending on whether an attempt has yet
+    been made to transmit the user's GPS location from the browser to
+    docassemble.  Will return true even if the attempt was not successful
     or the user refused to consent to the transfer."""
     #logmessage("Location returned")
     if 'user' in this_thread.current_info:
@@ -485,7 +495,7 @@ def user_lat_lon():
     return None, None
 
 def chat_partners_available(*pargs, **kwargs):
-    """Given a list of partner roles, returns the number of operators and 
+    """Given a list of partner roles, returns the number of operators and
     peers available to chat with the user."""
     partner_roles = kwargs.get('partner_roles', list())
     mode = kwargs.get('mode', 'peerhelp')
@@ -552,7 +562,37 @@ def interview_url(**kwargs):
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map(lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1])), args.items()))
+    if 'temporary' in args:
+        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
+            expire_seconds = int(args['temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, False)
+    if 'once_temporary' in args:
+        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
+            expire_seconds = int(args['once_temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, True)
     return url
+
+def temp_redirect(url, expire_seconds, do_local, one_time):
+    while True:
+        code = random_string(32)
+        the_key = 'da:temporary_url:' + code
+        if server.server_redis.get(the_key) is None:
+            break
+    pipe = server.server_redis.pipeline()
+    if one_time:
+        pipe.set(the_key, json.dumps(dict(url=url, once=True)))
+    else:
+        pipe.set(the_key, json.dumps(dict(url=url)))
+    pipe.expire(the_key, expire_seconds)
+    pipe.execute()
+    if do_local:
+        return server.url_for('run_temp', c=code)
+    else:
+        return server.url_for('run_temp', c=code, _external=True)
 
 def set_parts(**kwargs):
     """Sets parts of the page, such as words in the navigation bar and
@@ -656,7 +696,7 @@ class DATagsSet():
 
         """
         return this_thread.internal['tags'].issuperset(other_set)
-    
+
 def session_tags():
     """Returns the set of tags with which the interview and session have
     been tagged.
@@ -675,11 +715,11 @@ def interview_path():
         return this_thread.interview.source.path
     except:
         return None
-    
+
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
     The keyword arguments are arguments to the action, except for the keyword
-    arguments local, i, and session, which are used the way they are used in 
+    arguments local, i, and session, which are used the way they are used in
     interview_url"""
     do_local = False
     if 'local' in kwargs:
@@ -713,11 +753,23 @@ def interview_url_action(action, **kwargs):
         url = str(this_thread.internal['url'])
         url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
     url += '?' + '&'.join(map((lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1]))), args.items()))
+    if 'temporary' in args:
+        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
+            expire_seconds = int(args['temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, False)
+    if 'once_temporary' in args:
+        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
+            expire_seconds = int(args['once_temporary'] * 60 * 60)
+        else:
+            expire_seconds = 24 * 60 * 60
+        return temp_redirect(url, expire_seconds, do_local, True)
     return url
 
 def interview_url_as_qr(**kwargs):
     """Inserts into the markup a QR code linking to the interview.
-    This can be used to pass control from a web browser or a paper 
+    This can be used to pass control from a web browser or a paper
     handout to a mobile device."""
     alt_text = None
     width = None
@@ -732,7 +784,7 @@ def interview_url_as_qr(**kwargs):
     return qr_code(interview_url(**the_kwargs), alt_text=alt_text, width=width)
 
 def interview_url_action_as_qr(action, **kwargs):
-    """Like interview_url_as_qr, except it additionally specifies an 
+    """Like interview_url_as_qr, except it additionally specifies an
     action.  The keyword arguments are arguments to the action."""
     alt_text = None
     width = None
@@ -783,7 +835,7 @@ class DANav(object):
 
     def __unicode__(self):
         return self.show_sections()
-    
+
     def __str__(self):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
 
@@ -1276,7 +1328,7 @@ def update_server(*pargs, **kwargs):
 
 # def basic_generate_csrf(*pargs, **kwargs):
 #     return None
-        
+
 # the_generate_csrf = basic_generate_csrf
 
 # def generate_csrf(*pargs, **kwargs):
@@ -1285,7 +1337,7 @@ def update_server(*pargs, **kwargs):
 # def set_generate_csrf(func):
 #     global the_generate_csrf
 #     the_generate_csrf = func
-        
+
 # def null_worker(*pargs, **kwargs):
 #     #sys.stderr.write("Got to null worker\n")
 #     return None
@@ -1536,7 +1588,7 @@ def words():
     return word_collection[this_thread.language]
 
 def word(the_word, **kwargs):
-    """Returns the word translated into the current language.  If a translation 
+    """Returns the word translated into the current language.  If a translation
     is not known, the input is returned."""
     # Currently, no kwargs are used, but in the future, this function could be
     # expanded to use kwargs.  For example, for languages with gendered words,
@@ -1718,7 +1770,7 @@ def update_locale():
     return
 
 def comma_list_en(*pargs, **kwargs):
-    """Returns the arguments separated by commas.  If the first argument is a list, 
+    """Returns the arguments separated by commas.  If the first argument is a list,
     that list is used.  Otherwise, the arguments are treated as individual items.
     See also comma_and_list()."""
     ensure_definition(*pargs, **kwargs)
@@ -1743,7 +1795,7 @@ def comma_and_list_es(*pargs, **kwargs):
     return comma_and_list_en(*pargs, **kwargs)
 
 def comma_and_list_en(*pargs, **kwargs):
-    """Returns an English-language listing of the arguments.  If the first argument is a list, 
+    """Returns an English-language listing of the arguments.  If the first argument is a list,
     that list is used.  Otherwise, the arguments are treated as individual items in the list.
     Use the optional argument oxford=False if you do not want a comma before the "and."
     See also comma_list()."""
@@ -1787,7 +1839,7 @@ def comma_and_list_en(*pargs, **kwargs):
         return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
 
 def need(*pargs):
-    """Given one or more variables, this function instructs docassemble 
+    """Given one or more variables, this function instructs docassemble
     to do what is necessary to define the variables."""
     ensure_definition(*pargs)
     for argument in pargs:
@@ -1862,7 +1914,7 @@ def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
 
 def ordinal_default(j, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
-    be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal 
+    be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
     number function, see ordinal_number()."""
     result = ordinal_number(int(float(j)) + 1)
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2008,7 +2060,7 @@ def verb_present_en(*pargs, **kwargs):
         return(capitalize(output))
     else:
         return(output)
-    
+
 def verb_past_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     new_args = list()
@@ -2046,6 +2098,281 @@ def noun_singular_en(*pargs, **kwargs):
 def indefinite_article_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     output = pattern.en.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.es.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.es.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_es(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.es.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.es.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_es(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.es.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.de.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.de.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_de(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.de.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.de.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_de(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.de.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.fr.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.fr.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_fr(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.fr.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.fr.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_fr(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.fr.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.it.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.it.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_it(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.it.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.it.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_it(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.it.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_present_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(text_type(arg))
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    output = pattern.nl.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def verb_past_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    output = pattern.nl.conjugate(*new_args, **kwargs)
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_plural_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    noun = noun_singular_nl(pargs[0])
+    if len(pargs) >= 2 and pargs[1] == 1:
+        return text_type(noun)
+    output = pattern.nl.pluralize(text_type(noun))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def noun_singular_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    if len(pargs) >= 2 and pargs[1] != 1:
+        return pargs[0]
+    output = pattern.nl.singularize(text_type(pargs[0]))
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return(capitalize(output))
+    else:
+        return(output)
+
+def indefinite_article_nl(*pargs, **kwargs):
+    ensure_definition(*pargs, **kwargs)
+    output = pattern.nl.article(text_type(pargs[0]).lower()) + " " + text_type(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2119,19 +2446,42 @@ language_functions = {
         'en': prefix_constructor_two_arguments('has ')
     },
     'verb_past': {
-        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: verb_past_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: verb_past_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: verb_past_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: verb_past_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: verb_past_nl(*pargs, **kwargs)
     },
     'verb_present': {
-        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: verb_present_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: verb_present_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: verb_present_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: verb_present_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: verb_present_nl(*pargs, **kwargs)
     },
     'noun_plural': {
-        'en': lambda *pargs, **kwargs: noun_plural_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: noun_plural_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: noun_plural_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: noun_plural_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: noun_plural_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: noun_plural_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: noun_plural_nl(*pargs, **kwargs)
     },
     'noun_singular': {
-        'en': lambda *pargs, **kwargs: noun_singular_en(*pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: noun_singular_en(*pargs, **kwargs),
+        'es': lambda *pargs, **kwargs: noun_singular_es(*pargs, **kwargs),
+        'de': lambda *pargs, **kwargs: noun_singular_de(*pargs, **kwargs),
+        'fr': lambda *pargs, **kwargs: noun_singular_fr(*pargs, **kwargs),
+        'it': lambda *pargs, **kwargs: noun_singular_it(*pargs, **kwargs),
+        'nl': lambda *pargs, **kwargs: noun_singular_nl(*pargs, **kwargs)
     },
     'indefinite_article': {
-        'en': indefinite_article_en
+        'en': indefinite_article_en,
+        'es': indefinite_article_es,
+        'de': indefinite_article_de,
+        'it': indefinite_article_it
     },
     'currency_symbol': {
         '*': currency_symbol_default
@@ -2198,7 +2548,7 @@ def language_function_constructor(term):
             return language_functions[term]['en'](*args, **kwargs)
         raise SystemError("term " + text_type(term) + " not defined in language_functions for English or *")
     return func
-    
+
 in_the = language_function_constructor('in_the')
 a_preposition_b = language_function_constructor('a_preposition_b')
 a_in_the_b = language_function_constructor('a_in_the_b')
@@ -2257,7 +2607,7 @@ if indefinite_article.__doc__ is None:
 if capitalize.__doc__ is None:
     capitalize.__doc__ = """Capitalizes the first letter of the word or phrase."""
 if period_list.__doc__ is None:
-    period_list.__doc__ = """Returns an array of arrays where the first element of each array is a number, 
+    period_list.__doc__ = """Returns an array of arrays where the first element of each array is a number,
                           and the second element is a word expressing what that numbers means as a per-year
                           period.  This is meant to be used in code for a multiple-choice field."""
 if name_suffix.__doc__ is None:
@@ -2302,7 +2652,7 @@ def space_to_underscore(a):
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message."""
     raise QuestionError(*pargs, **kwargs)
-    
+
 def response(*pargs, **kwargs):
     """Sends a custom HTTP response."""
     raise ResponseError(*pargs, **kwargs)
@@ -2350,9 +2700,9 @@ def force_ask_nameerror(variable_name):
     raise NameError("name '" + text_type(variable_name) + "' is not defined")
 
 def force_gather(*pargs):
-    """Like force_ask(), except more insistent.  In addition to making a 
-    single attempt to ask a question that offers to define the variable, 
-    it enlists the process_action() function to seek the definition of 
+    """Like force_ask(), except more insistent.  In addition to making a
+    single attempt to ask a question that offers to define the variable,
+    it enlists the process_action() function to seek the definition of
     the variable.  The process_action() function will keep trying to define
     the variable until it is defined."""
     the_user_dict = get_user_dict()
@@ -2410,7 +2760,7 @@ def static_image(filereference, width=None):
 
 def qr_code(string, width=None, alt_text=None):
     """Inserts appropriate markup to include a QR code image.  If you know
-    the string you want to encode, you can just use the "[QR ...]" markup.  
+    the string you want to encode, you can just use the "[QR ...]" markup.
     This function is useful when you want to assemble the string programmatically.
     Takes an optional keyword argument "width"
     (e.g., qr_code('https://google.com', width='2in')).  Also takes an optional
@@ -2664,7 +3014,8 @@ def process_action():
                     this_thread.current_info['action_list'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + text_type(err))
-        raise ForcedReRun()
+        force_ask(dict(action='_da_list_ensure_complete', arguments=dict(group=this_thread.current_info['action_list'].instanceName)))
+        #raise ForcedReRun()
     elif the_action == '_da_dict_remove':
         if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
             try:
@@ -2673,7 +3024,8 @@ def process_action():
                     this_thread.current_info['action_dict'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_dict_remove error: " + text_type(err))
-        raise ForcedReRun()
+        force_ask(dict(action='_da_dict_ensure_complete', arguments=dict(group=this_thread.current_info['action_dict'].instanceName)))
+        #raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
@@ -2703,13 +3055,17 @@ def process_action():
         raise ForcedReRun()
     elif the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         the_list = this_thread.current_info['action_list']
-        #if the_list.ask_object_type:
-        #    the_list.append(None)
-        #else:
-        #    the_list.appendObject()
         if hasattr(the_list, 'gathered') and the_list.gathered:
             the_list.was_gathered = True
             the_list.reset_gathered()
+            if not the_list.auto_gather:
+                if the_list.ask_object_type:
+                    the_list.append(None)
+                else:
+                    if the_list.object_type is None:
+                        the_list.__getitem__(len(the_list.elements))
+                    else:
+                        the_list.appendObject()
         else:
             the_list.was_gathered = False
         if the_list.auto_gather:
@@ -2741,6 +3097,11 @@ def process_action():
         #logmessage("_da_dict_add")
         the_dict = this_thread.current_info['action_dict']
         if hasattr(the_dict, 'gathered') and the_dict.gathered:
+            if not the_dict.auto_gather:
+                if hasattr(the_dict, 'new_item_name') and the_dict.new_item_name in the_dict.elements:
+                    delattr(the_dict, 'new_item_name')
+                else:
+                    the_dict[the_dict.new_item_name]
             the_dict.reset_gathered()
             if the_dict.auto_gather:
                 if the_dict.ask_number:
@@ -2809,7 +3170,7 @@ def url_action(action, **kwargs):
     return '?action=' + urllibquote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
 
 def myb64quote(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
 
 # def set_debug_status(new_value):
 #     global debug
@@ -2833,11 +3194,17 @@ def action_menu_item(label, action, **kwargs):
 
 def from_b64_json(string):
     """Converts the string from base-64, then parses the string as JSON, and returns the object.
-    This is an advanced function that is used by software developers to integrate other systems 
+    This is an advanced function that is used by software developers to integrate other systems
     with docassemble."""
     if string is None:
         return None
-    return json.loads(base64.b64decode(string))
+    return json.loads(base64.b64decode(repad(string)))
+
+def repad(text):
+    return text + ('=' * ((4 - len(text) % 4) % 4))
+
+def repad_byte(text):
+    return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 class lister(ast.NodeVisitor):
     def __init__(self):
@@ -2875,38 +3242,42 @@ def get_user_dict():
             the_user_dict = frame.f_locals
     return the_user_dict
 
-def undefine(var):
-    """Deletes the variable"""
-    text_type(var)
-    if not isinstance(var, string_types):
-        raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
-    try:
-        eval(var, dict())
-        return False
-    except:
-        pass
+def undefine(*pargs):
+    """Deletes the variable or variables if they exist."""
+    vars_to_delete = list()
+    for var in pargs:
+        text_type(var)
+        if not isinstance(var, string_types):
+            raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
+        try:
+            eval(var, dict())
+            continue
+        except:
+            vars_to_delete.append(var)
+        components = components_of(var)
+        if len(components) == 0 or len(components[0]) < 2:
+            raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
+    if len(vars_to_delete) == 0:
+        return
     frame = inspect.stack()[1][0]
-    components = components_of(var)
-    if len(components) == 0 or len(components[0]) < 2:
-        raise Exception("undefine: variable " + repr(var) + " is not a valid variable name")
-    variable = components[0][1]
     the_user_dict = frame.f_locals
-    while variable not in the_user_dict:
+    while '_internal' not in the_user_dict:
         frame = frame.f_back
         if frame is None:
             return False
         if 'user_dict' in frame.f_locals:
             the_user_dict = eval('user_dict', frame.f_locals)
-            if variable in the_user_dict:
+            if '_internal' in the_user_dict:
                 break
             else:
                 return False
         else:
             the_user_dict = frame.f_locals
-    try:
-        exec('del ' + var, the_user_dict)
-    except:
-        pass
+    for var in vars_to_delete:
+        try:
+            exec('del ' + var, the_user_dict)
+        except:
+            pass
 
 def dispatch(var):
     """Shows a menu screen."""
@@ -3123,7 +3494,7 @@ def value(var):
 #     return
 
 def single_paragraph(text):
-    """Reduces the text to a single paragraph.  Useful when using Markdown 
+    """Reduces the text to a single paragraph.  Useful when using Markdown
     to indent user-supplied text."""
     return newlines.sub(' ', text_type(text))
 
@@ -3225,7 +3596,7 @@ def phone_number_in_e164(number, country=None):
     if use_whatsapp:
         return 'whatsapp:' + output
     return output
-        
+
 def phone_number_is_valid(number, country=None):
     """Given a phone number and a country code, returns True if the phone number is valid, otherwise False."""
     ensure_definition(number, country)
@@ -3386,7 +3757,7 @@ def indent(text, by=None):
     ensure_definition(text, by)
     if by is None:
         by = 4
-    text = " " * 4 + text_type(text)
+    text = " " * by + text_type(text)
     text = re.sub(r'\r', '', text)
     text = re.sub(r'\n', '\n' + (" " * by), text)
     return text
@@ -3506,13 +3877,13 @@ def get_message_log():
 
 def encode_name(var):
     """Convert a variable name to base64-encoded form for inclusion in an HTML element."""
-    return codecs.encode(var.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return re.sub(r'[\n=]', '', codecs.encode(var.encode('utf-8'), 'base64').decode())
 
 def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
-    return codecs.decode(bytearray(var, encoding='utf-8'), 'base64').decode('utf-8')
+    return codecs.decode(repad_byte(bytearray(var, encoding='utf-8')), 'base64').decode('utf-8')
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all' or session is not None:
@@ -3525,7 +3896,7 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
             raise DAError("interview_list: invalid action")
         if action == 'delete' and (filename is None or session is None):
             raise DAError("interview_list: a filename and session must be provided when delete is the action.")
-        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict)
+        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared)
     return None
 
 def interview_menu():
@@ -3615,7 +3986,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None):
 
 def turn_to_at_sign(match):
     return '@' * len(match.group(1))
-    
+
 def redact(text):
     """Redact the given text from documents, except when redaction is turned off for the given file."""
     if not this_thread.misc.get('redact', True):

@@ -30,7 +30,7 @@ fi
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data)
 
 set -- $LOCALE
 export LANG=$1
@@ -41,9 +41,9 @@ if [ "${DAHOSTNAME:-none}" == "none" ]; then
 	export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
     else
 	export LOCAL_HOSTNAME=`hostname --fqdn`
-	export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
+	export PUBLIC_HOSTNAME="${LOCAL_HOSTNAME}"
     fi
-    export DAHOSTNAME=$PUBLIC_HOSTNAME
+    export DAHOSTNAME="${PUBLIC_HOSTNAME}"
 fi
 
 if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
@@ -60,12 +60,7 @@ if [ "${DAPYTHONMANUAL:-0}" == "3" ]; then
     echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
 fi
 echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}" >> /etc/apache2/conf-available/docassemble.conf
-if [ -n "${CROSSSITEDOMAIN}" ]; then
-    echo -e "Define DACROSSSITEDOMAIN\nDefine DACROSSSITEDOMAINVALUE ${CROSSSITEDOMAIN}" >> /etc/apache2/conf-available/docassemble.conf
-else
-    echo "Define DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
-fi
+echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
 echo "Listen 80" > /etc/apache2/ports.conf
 if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
     echo "Listen 8081" >> /etc/apache2/ports.conf
@@ -84,8 +79,11 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
 fi
 
 function stopfunc {
+    echo "Sending stop command"
     /usr/sbin/apache2ctl stop
+    echo "Waiting for apache to stop"
     while pgrep apache2 > /dev/null; do sleep 1; done
+    echo "Apache stopped"
     exit 0
 }
 

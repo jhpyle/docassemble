@@ -1,7 +1,7 @@
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
-da_version = '0.4.57'
+da_version = '0.4.74'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -40,7 +40,7 @@ if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
     app.config['USE_MFA'] = False
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800
-app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', (True if daconfig.get('cross site domain', None) is None else False))
+app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', (True if daconfig.get('cross site domains', None) is None else False))
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
 app.config['USER_SEND_REGISTERED_EMAIL'] = False
@@ -85,3 +85,10 @@ app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
 app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', True)
+app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)
+app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', True)
+app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)
+app.config['REMEMBER_COOKIE_SECURE'] = app.config['SESSION_COOKIE_SECURE']
+if 'session lifetime seconds' in daconfig:
+    app.config['PERMANENT_SESSION_LIFETIME'] = daconfig['session lifetime seconds']

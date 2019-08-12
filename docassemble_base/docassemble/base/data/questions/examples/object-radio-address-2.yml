@@ -1,0 +1,53 @@
+metadata:
+  title: Billing and shipping 2
+  example start: 1
+  example end: 5
+---
+objects:
+  - billing: Address.using(name_on_billing_choices_list='Your billing address')
+  - shipping_manual: Address.using(name_on_billing_choices_list='A different address')
+---
+question: |
+  What address should I use as your shipping address?
+fields:
+  - no label: shipping
+    datatype: object_radio
+    choices:
+      - billing
+      - shipping_manual
+    object labeler: |
+      lambda y: y.name_on_billing_choices_list
+---
+question: |
+  What is your shipping address?
+fields:
+  - Address: shipping_manual.address
+  - Unit: shipping_manual.unit
+    required: False
+  - City: shipping_manual.city
+  - State: shipping_manual.state
+    code:
+      states_list()
+  - Zip: shipping_manual.zip
+---
+question: |
+  What is your billing address?
+fields:
+  - Address: billing.address
+  - Unit: billing.unit
+    required: False
+  - City: billing.city
+  - State: billing.state
+    code:
+      states_list()
+  - Zip: billing.zip
+---
+mandatory: True
+question: |
+  Your order
+subquestion: |
+  I will send your bill to
+  ${ billing.on_one_line() }.
+
+  I will ship your order to
+  ${ shipping.on_one_line() }.

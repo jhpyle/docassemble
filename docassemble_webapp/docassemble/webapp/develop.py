@@ -28,7 +28,6 @@ class UpdatePackageForm(FlaskForm):
     gitbranch = SelectField(word('GitHub Branch'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
-    use_cache = BooleanField(word('Use pip cache'), default=True)
     submit = SubmitField(word('Update'))
 
 class ConfigForm(FlaskForm):
@@ -124,9 +123,12 @@ class OneDriveForm(FlaskForm):
     cancel = SubmitField(word('Cancel'))
 
 class GitHubForm(FlaskForm):
+    shared = BooleanField(word('Access shared repositories'))
+    orgs = BooleanField(word('Access organizational repositories'))
+    save = SubmitField(word('Save changes'))
     configure = SubmitField(word('Configure'))
     unconfigure = SubmitField(word('Disable'))
-    cancel = SubmitField(word('Cancel'))
+    cancel = SubmitField(word('Back to profile'))
 
 class TrainingForm(FlaskForm):
     the_package = HiddenField()

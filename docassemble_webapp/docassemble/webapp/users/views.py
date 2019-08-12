@@ -1,8 +1,7 @@
 from six import text_type
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from flask import redirect, render_template, render_template_string, request, flash, current_app
-from flask import url_for
+from flask import redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
 from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
@@ -18,6 +17,8 @@ import string
 import pytz
 import datetime
 import re
+import email.utils
+import json
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
@@ -53,7 +54,7 @@ def privilege_list():
 def user_list():
     users = list()
     for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
-        if user.nickname == 'cron':
+        if user.nickname == 'cron' or user.social_id.startswith('disabled$'):
             continue
         role_names = [y.name for y in user.roles]
         if 'admin' in role_names:
@@ -117,7 +118,7 @@ def delete_privilege(id):
 def edit_user_profile_page(id):
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
-    if user is None:
+    if user is None or user.social_id.startswith('disabled$'):
         abort(404)
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
@@ -129,6 +130,23 @@ def edit_user_profile_page(id):
         db.session.commit()
         #docassemble.webapp.daredis.clear_user_cache()
         return redirect(url_for('edit_user_profile_page', id=id))
+    if daconfig.get('admin can delete account', True) and user.id != current_user.id:
+        if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
+            from docassemble.webapp.server import user_interviews, r, r_user
+            from docassemble.webapp.backend import delete_user_data
+            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(id, r, r_user)
+            db.session.commit()
+            flash(word('The user account was deleted.'), 'success')
+            return redirect(url_for('user_list'))
+        if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
+            from docassemble.webapp.server import user_interviews, r, r_user
+            from docassemble.webapp.backend import delete_user_data
+            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(id, r, r_user)
+            db.session.commit()
+            flash(word('The user account was deleted.'), 'success')
+            return redirect(url_for('user_list'))
     the_role_id = list()
     for role in user.roles:
         the_role_id.append(text_type(role.id))
@@ -171,7 +189,16 @@ def edit_user_profile_page(id):
         return redirect(url_for('user_list'))
     form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id))
+    script = """
+    <script>
+      $(".dadeleteaccount").click(function(event){
+        if (!confirm(""" + json.dumps(word("Are you sure you want to permanently delete this user's account?")) + """)){
+          event.preventDefault();
+          return false;
+        }
+      });
+    </script>"""
+    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script))
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
@@ -235,7 +262,10 @@ def invite():
     if text_type(invite_form.role_id.data) == 'None':
         invite_form.role_id.data = text_type(user_role.id)
     if request.method=='POST' and invite_form.validate():
-        email = invite_form.email.data
+        email_addresses = list()
+        for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
+            (part_one, part_two) = email.utils.parseaddr(email_address)
+            email_addresses.append(part_two)
 
         the_role_id = None
         
@@ -246,33 +276,44 @@ def invite():
         if the_role_id is None:
             the_role_id = user_role.id
 
-        user, user_email = user_manager.find_user_by_email(email)
-        if user:
-            flash(word("A user with that e-mail has already registered"), "error")
-            return redirect(url_for('invite'))
-        else:
-            user_invite = MyUserInvitation(email=email, role_id=the_role_id, invited_by_user_id=current_user.id)
-            db.session.add(user_invite)
-            db.session.commit()
-        token = user_manager.generate_token(user_invite.id)
-        accept_invite_link = url_for('user.register',
-                                     token=token,
-                                     _external=True)
+        has_error = False
+        for email_address in email_addresses:
+            user, user_email = user_manager.find_user_by_email(email_address)
+            if user:
+                flash(word("A user with that e-mail has already registered") + " (" + email_address + ")", "error")
+                has_error = True
+                continue
+            else:
+                user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
+                db.session.add(user_invite)
+                db.session.commit()
+            token = user_manager.generate_token(user_invite.id)
+            accept_invite_link = url_for('user.register',
+                                         token=token,
+                                         _external=True)
 
-        user_invite.token = token
-        db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
-        try:
-            logmessage("Trying to send e-mail to " + text_type(user_invite.email))
-            emails.send_invite_email(user_invite, accept_invite_link)
-        except Exception as e:
-            logmessage("Failed to send e-mail")
-            db.session.delete(user_invite)
+            user_invite.token = token
             db.session.commit()
             #docassemble.webapp.daredis.clear_user_cache()
-            flash(word('Unable to send e-mail.  Error was: ') + text_type(e), 'error')
+            try:
+                logmessage("Trying to send e-mail to " + text_type(user_invite.email))
+                emails.send_invite_email(user_invite, accept_invite_link)
+            except Exception as e:
+                try:
+                    logmessage("Failed to send e-mail: " + text_type(e))
+                except:
+                    logmessage("Failed to send e-mail")
+                db.session.delete(user_invite)
+                db.session.commit()
+                #docassemble.webapp.daredis.clear_user_cache()
+                flash(word('Unable to send e-mail.  Error was: ') + text_type(e), 'error')
+                has_error = True
+        if has_error:
             return redirect(url_for('invite'))
-        flash(word('Invitation has been sent.'), 'success')
+        if len(email_addresses) > 1:
+            flash(word('Invitations have been sent.'), 'success')
+        else:
+            flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
     return render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)

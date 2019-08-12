@@ -10,6 +10,7 @@ import re
 import sys
 import shutil
 import time
+import fcntl
 from io import open
 
 from distutils.version import LooseVersion
@@ -28,6 +29,20 @@ if supervisor_url:
     USING_SUPERVISOR = True
 else:
     USING_SUPERVISOR = False
+
+def fix_fnctl():
+    try:
+        flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stdout\n")
+    except:
+        pass
+    try:
+        flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stderr\n")
+    except:
+        pass
 
 def remove_inactive_hosts():
     from docassemble.base.config import hostname
@@ -53,7 +68,7 @@ class DummyPackage(object):
         self.name = name
         self.type = 'pip'
         self.limitation = None
-            
+
 def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
@@ -169,7 +184,7 @@ def check_for_updates(doing_startup=False):
             changed = True
         if 'pycryptodome' not in here_already:
             sys.stderr.write("check_for_updates: installing pycryptodome\n")
-            install_package(DummyPackage('pycryptodome'))            
+            install_package(DummyPackage('pycryptodome'))
             changed = True
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
@@ -263,6 +278,8 @@ def check_for_updates(doing_startup=False):
             continue
         if package.name not in here_already:
             sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + "\n")
+            returnval = 1
+            newlog = ''
         else:
             returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
@@ -270,6 +287,9 @@ def check_for_updates(doing_startup=False):
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
             results[package.name] = 'pip uninstall command returned success code.  See log for details.'
+        elif returnval == 1:
+            Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            results[package.name] = 'pip uninstall was not run because the package was not installed.'
         else:
             results[package.name] = 'pip uninstall command returned failure code'
             ok = False
@@ -368,6 +388,8 @@ def add_dependencies(user_id):
     for package in installed_packages:
         if package.key in package_by_name:
             continue
+        if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
+            continue
         pip_info = get_pip_info(package.key)
         #sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
         Package.query.filter_by(name=package.key).delete()
@@ -430,13 +452,14 @@ def install_package(package):
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
-    use_pip_cache = r.get('da:updatepackage:use_pip_cache')
-    if use_pip_cache is None:
-        disable_pip_cache = False
-    elif int(use_pip_cache):
-        disable_pip_cache = False
-    else:
-        disable_pip_cache = True
+    #use_pip_cache = r.get('da:updatepackage:use_pip_cache')
+    #if use_pip_cache is None:
+    #    disable_pip_cache = False
+    #elif int(use_pip_cache):
+    #    disable_pip_cache = False
+    #else:
+    #    disable_pip_cache = True
+    disable_pip_cache = True
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
         commands = ['pip', 'install']
@@ -478,6 +501,7 @@ def install_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
@@ -510,6 +534,7 @@ def uninstall_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)

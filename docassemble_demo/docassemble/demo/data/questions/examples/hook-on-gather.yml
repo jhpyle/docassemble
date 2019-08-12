@@ -1,0 +1,71 @@
+metadata:
+  title: Hook on gather
+  short title: Hook
+  documentation: "https://docassemble.org/docs/objects.html#DADict.hook_on_gather"
+  example start: 1
+  example end: 2
+---
+modules:
+  .income
+---
+objects:
+  - income: |
+      IncomeDict.using(
+        object_type=DAObject,
+        keys=['employment', 'benefits', 'interest'],
+        complete_attribute='complete',
+        there_is_another=False)
+---
+code: |
+  if income[i].receives:
+    income[i].amount
+  income[i].complete = True
+---
+question: |
+  Income from ${ i }
+fields:
+  - "Do you get income from ${ i }?": income[i].receives
+    datatype: yesnoradio
+  - "How much do you get from ${ i }?": income[i].amount
+    datatype: currency
+    show if: income[i].receives
+---
+table: income.table
+rows: income
+columns:
+  - Type: |
+      row_index
+  - Receives: |
+      'Yes' if row_item.receives else 'No'
+  - Amount: |
+      currency(row_item.amount) if row_item.receives else ''
+edit:
+  - receives
+---
+question: |
+  What new income type would
+  you like to add?
+fields:
+  - Type: income.new_item_name
+---
+question: |
+  Do you want to add any
+  more income items?
+yesno: income.there_is_another
+---
+question: |
+  Why are you exempt from the
+  benefits ceiling requirement?
+fields:
+  - Reason: income.reason_for_benefits
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  ${ income.table }
+
+  ${ income.add_action() }
+
+  Your total income is
+  ${ currency(income.total_amount) }.

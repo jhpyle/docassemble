@@ -1,0 +1,36 @@
+metadata:
+  title: Single code
+  documentation: "https://docassemble.org/docs/logic.html#singlecode"
+  example start: 1
+  example end: 7
+---
+mandatory: True
+code: |
+  if likes_fruit:
+    favorite_fruit
+    if puts_fruit_in_smoothies:
+      favorite_smoothie_flavor
+  else:
+    favorite_vegetable
+  final_screen
+---
+question: Do you like fruit?
+yesno: likes_fruit
+---
+question: What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: Do you like to put fruit in smoothies?
+yesno: puts_fruit_in_smoothies
+---
+question: What is your favorite flavor of smoothie?
+fields:
+  - Flavor: favorite_smoothie_flavor
+---
+question: Well, since you don't like fruit, what is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+event: final_screen
+question: Thanks for that information.

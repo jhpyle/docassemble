@@ -1,0 +1,93 @@
+metadata:
+  title: Displaying progress
+  short: Progress
+  documentation: "https://docassemble.org/docs/recipes.html#background tail"
+  example start: 1
+  example end: 11
+---
+objects:
+  r: DARedis
+---
+mandatory: True
+code: |
+  log_key = r.key('log:' + user_info().session)
+  messages = list()
+---
+mandatory: True
+code: |
+  if the_task.ready():
+    last_messages_retrieved
+    final_screen
+  else:
+    waiting_screen
+---
+code: |
+  the_task = background_action('bg_task', 'refresh', additional=value_to_add)
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+event: bg_task
+code: |
+  import time
+  r.rpush(log_key, 'Waking up.')
+  time.sleep(10)
+  r.rpush(log_key, 'Ok, I am awake now.')
+  value = 553 + action_argument('additional')
+  time.sleep(17)
+  r.rpush(log_key, 'I did the hard work.')
+  time.sleep(14)
+  r.rpush(log_key, 'Ok, I am done.')
+  background_response_action('bg_resp', ans=value)
+---
+event: bg_resp
+code: |
+  answer = action_argument('ans')
+  background_response()
+---
+event: waiting_screen
+question: |
+  Your process is running.
+subquestion: |
+  #### Message log
+  
+  <ul class="list-group" id="logMessages">
+  </ul>
+check in: get_log
+---
+event: get_log
+code: |
+  import json
+  new_messages = ''
+  while True:
+    message = r.lpop(log_key)
+    if message:
+      messages.append(message.decode())
+      new_messages += '<li class="list-group-item">' + message.decode() + '</li>'
+      continue
+    break
+  background_response('$("#logMessages").append(' + json.dumps(new_messages) + ')', 'javascript')
+---
+code: |
+  while True:
+    message = r.lpop(log_key)
+    if message:
+      messages.append(message.decode())
+      continue
+    break
+  last_messages_retrieved = True
+---
+event: final_screen
+question: |
+  The answer is ${ answer }.
+subquestion: |
+  #### Message log
+  
+  <ul class="list-group" id="logMessages">
+  % for message in messages:
+    <li class="list-group-item">${ message }</li>
+  % endfor
+  </ul>

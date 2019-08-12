@@ -947,8 +947,12 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
         the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'])
         if the_url is None:
             return ('[ERROR: File reference ' + text_type(file_reference) + ' cannot be displayed]')
+        if width_string == 'width:100%':
+            extra_class = ' dawideimage'
+        else:
+            extra_class = ''
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img ' + alt_text + 'class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -970,7 +974,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 the_alt_text = 'alt=' + json.dumps(word("Thumbnail image of document")) + ' '
             else:
                 the_alt_text = alt_text
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + text_type(file_info['pages']) + " " + word('pages') + ")"
             return(output)

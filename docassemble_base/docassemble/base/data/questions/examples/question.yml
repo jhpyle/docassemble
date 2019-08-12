@@ -3,10 +3,11 @@ metadata:
   documentation: "https://docassemble.org/docs/questions.html#question"
 ---
 question: |
-  What is the airspeed velocity of an unladen swallow?
+  What is the airspeed velocity of an
+  unladen swallow?
 fields:
   - Velocity: swallow_velocity
 ---
 question: |
-  The velocity is ${ swallow_velocity }
+  The velocity is ${ swallow_velocity }.
 mandatory: True

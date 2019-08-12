@@ -81,8 +81,17 @@ class SavedFile(object):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
                 server_time = key.get_epoch_modtime()
-                if not (os.path.isfile(fullpath) and os.path.getmtime(fullpath) == server_time):
+                if not os.path.isfile(fullpath):
                     key.get_contents_to_filename(fullpath)
+                else:
+                    local_time = os.path.getmtime(fullpath)
+                    access_time = os.path.getatime(fullpath)
+                    if self.section == 'files':
+                        if not (local_time == server_time and time.time() - access_time < 7000):
+                            key.get_contents_to_filename(fullpath)
+                    else:
+                        if not (local_time == server_time):
+                            key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
@@ -109,9 +118,10 @@ class SavedFile(object):
                     key.delete()
                 except:
                     pass
-        the_path = os.path.join(self.directory, filename)
-        if hasattr(self, 'directory') and os.path.isdir(self.directory) and os.path.isfile(the_path):
-            os.remove(the_path)
+        if hasattr(self, 'directory') and os.path.isdir(self.directory):
+            the_path = os.path.join(self.directory, filename)
+            if os.path.isfile(the_path):
+                os.remove(the_path)
     def delete(self):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
