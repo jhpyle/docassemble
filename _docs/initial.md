@@ -77,6 +77,11 @@ the interview will be exempted from display in the list of interviews
 available at `/list`.  For more information about this, see the
 documentation for the [`dispatch`] configuration directive.
 
+<a name="hidden"></a>If you set `hidden: True`, then interview
+sessions for this interview will be omitted from the "My Interviews"
+listing of sessions.  (They will still be deleted by the "Delete All"
+button, though.)
+
 <a name="tags"></a>You can set `tags` to a list of one or more "tags"
 as a way of categorizing the interview.
 

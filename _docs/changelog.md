@@ -4,6 +4,27 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.75](https://github.com/jhpyle/docassemble/releases/tag/v0.4.75) - 2019-08-12
+
+### Added
+- The `administrative interviews` Configuration directive
+- The `sessions are unique`, `required privileges for listing`, and
+  `hidden` specifiers under `metadata`.
+
+### Changed
+- The `words` system no longer uses code names like `pdf_message` and
+  `save_as_multiple`.
+- The `required privileges` specifier under `metadata` now prevents
+  users without a valid privilege from starting the interview.  The
+  `required privileges for listing` now controls whether the interview
+  is listed under `/list`.
+
+### Fixed
+- Passing an asterisk in a list to Flask-CORS resulted in a regular
+  expression error.
+- Not all Flask packages accept integers as the
+  `PERMANENT_SESSION_LIFETIME`.
+
 ## [0.4.74](https://github.com/jhpyle/docassemble/releases/tag/v0.4.74) - 2019-08-09
 
 ### Fixed

@@ -544,6 +544,101 @@ mimics the style of the standard start page:
 
 {% include side-by-side.html demo="list-interview" %}
 
+## <a name="administrative interviews">Administrative interviews</a>
+
+The `administrative interviews` directive adds hyperlinks to
+interviews to the main menu.
+
+Suppose you have two interviews, `inspect.yml` and `manage.yml`, that
+you use frequently.  You can list them in the [Configuration] as
+follows:
+
+{% highlight yaml %}
+administrative interviews:
+  - docassemble.missouri:data/questions/inspect.yml
+  - docassemble.missouri:data/questions/manage.yml
+{% endhighlight %}
+
+Then, there will be hyperlinks in the menu to:
+
+* `/interview?i=docassemble.missouri:data/questions/inspect.yml&new_session=1`
+* `/interview?i=docassemble.missouri:data/questions/manage.yml&new_session=1`
+
+The labels for these hyperlinks will be taken from the [`metadata`] of
+the interview.  The label will be the [`short title`] as specified in
+the [`metadata`], or if that is not defined the label will be the
+[`title`].
+
+These interview links will always be shown in the main menu; however,
+a link to an interview will not be shown if the user is currently in a
+session of that interview.
+
+If you want the links in the menu to appear only for users in a given
+role, you can set the [`required privileges for listing`] specifier in
+the [`metadata`] to a list of [privileges].  In that case, only users
+who have one of the listed privileges will see the link in the menu.
+If a [`required privileges for listing`] specifier does not exist, the
+[`required privileges`] specifier will be used to determine if the
+link in the menu is shown.
+
+The names and privileges that will be used for purposes of the main
+menu can be overridden by specifying an item in the `administrative
+interviews` list in the form of a [YAML] dictionary instead of the
+name of the interview file.  For example:
+
+{% highlight yaml %}
+administrative interviews:
+  - interview: docassemble.missouri:data/questions/inspect.yml
+    title: Inspect
+    required privileges:
+      - admin
+      - advocate
+  - interview: docassemble.missouri:data/questions/manage.yml
+    title:
+      en: Inspect
+      es: Inspeccionar
+    required privileges:
+      - admin
+{% endhighlight %}
+
+When listing an item in dictionary form, only the `interview` key is
+required.  The `title` key can be set to a single name, or to a [YAML]
+dictionary where the keys are languages and the values are the titles
+to be used for that language.
+
+The hyperlinks from the menu contain the `&new_session=1`, which means
+that a new session will be started every time the user clicks the
+interview.  In many situations, you will not want the clicking of the
+link from the menu to result in a proliferation of interview
+sessions.  You may want to set up the `metadata` of your
+administrative interviews as follows:
+
+{% highlight yaml %}
+metadata:
+  title: Manager
+  required privileges:
+    - admin
+  sessions are unique: True
+  hidden: True
+{% endhighlight %}
+
+The [`sessions are unique`] specifier means that there will only ever
+be one session per user.  This means that if the user already has a
+session in the interview, the `&new_session=1` directive will not
+result in a new session being started; instead, the original session
+will be resumed.
+
+The [`hidden`] specifier means that sessions in this interview will be
+hidden on the "My Interviews" page.
+
+It is a good practice to make your "administrative" interviews simple
+so that they feel more like control panels than interviews.  For
+example, you might want to have a single screen with buttons created
+using [`action_button_html()`].  Or if you need multiple screens, you
+can have a variable to keep track of the current screen, and then use
+[`menu_items`] and [`url_action()`] to provide the user with a menu
+for navigating from screen to screen.
+
 ## <a name="resume interview after login"></a>Always go back to the current interview after logging in
 
 If a user starts an interview as an anonymous user and then registers
@@ -3498,6 +3593,7 @@ and Facebook API keys.
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
+[`required privileges for listing`]: {{ site.baseurl }}/docs/initial.html#required privileges
 [`tags`]: {{ site.baseurl }}/docs/initial.html#tags
 [`error help`]: {{ site.baseurl }}/docs/initial.html#error help
 [`error help` directive]: #error help
@@ -3594,7 +3690,7 @@ and Facebook API keys.
 [`twilio`]: #twilio
 [Google Authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
 [Authy]: https://authy.com/
-[privileges]: {{ site.baseurl }}/docs/roles.html
+[privileges]: {{ site.baseurl }}/docs/users.html
 [bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
@@ -3726,3 +3822,10 @@ and Facebook API keys.
 [multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
 [multi-user interviews]: {{ site.baseurl }}/docs/special.html#multi_user
 [`show dispatch link`]: #show dispatch link
+[`short title`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`title`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`sessions are unique`]: {{ site.baseurl }}/docs/initial.html#sessions are unique
+[`hidden`]: {{ site.baseurl }}/docs/initial.html#hidden
+[`action_button_html()`]: {{ site.baseurl }}/docs/functions.html#action_button_html
+[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
