@@ -5268,10 +5268,7 @@ def index(action_argument=None):
             show_flash = False
             if not yaml_filename.startswith('docassemble.playground'):
                 yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
-            try:
-                interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            except:
-                raise DAError("That interview does not exist.")
+            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
                 show_flash = True

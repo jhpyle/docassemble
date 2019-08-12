@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.4.76] - 2019-08-12
+### Changed
+- The syslog-ng server is now started after the web server.
+### Fixed
+- Unhelpful error message when there was an interview parsing error.
+- `DAStaticFile` objects not being included in DOCX files correctly.
+
 ## [0.4.75] - 2019-08-12
 ### Added
 - The `administrative interviews` Configuration directive
