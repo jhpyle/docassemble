@@ -1,5 +1,6 @@
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
+from datetime import timedelta
 import docassemble.webapp.database
 da_version = '0.4.74'
 app.config['DA_VERSION'] = da_version
@@ -91,4 +92,4 @@ app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', T
 app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)
 app.config['REMEMBER_COOKIE_SECURE'] = app.config['SESSION_COOKIE_SECURE']
 if 'session lifetime seconds' in daconfig:
-    app.config['PERMANENT_SESSION_LIFETIME'] = daconfig['session lifetime seconds']
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])

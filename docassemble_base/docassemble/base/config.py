@@ -90,6 +90,14 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if 'administrative interviews' in daconfig:
+        new_admin_interviews = list()
+        for item in daconfig['administrative interviews']:
+            if isinstance(item, string_types):
+                new_admin_interviews.append(dict(interview=item))
+            else:
+                new_admin_interviews.append(item)
+        daconfig['administrative interviews'] = new_admin_interviews
     if 'session lifetime seconds' in daconfig:
         try:
             daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
@@ -119,7 +127,7 @@ def load(**kwargs):
         daconfig['voicerss']['dialects'] = daconfig['voicerss']['languages']
         del daconfig['voicerss']['languages']
     if 'cross site domain' in daconfig and 'cross site domains' not in daconfig:
-        daconfig['cross site domains'] = [daconfig['cross site domain']]
+        daconfig['cross site domains'] = [daconfig['cross site domain'].strip()]
         del daconfig['cross site domain']
     if 'cross site domains' in daconfig:
         if isinstance(daconfig['cross site domains'], list):
@@ -128,6 +136,8 @@ def load(**kwargs):
                     sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list of strings.\n")
                     del daconfig['cross site domains']
                     break
+            if len(daconfig['cross site domains']) == 1 and daconfig['cross site domains'] == '*':
+                daconfig['cross site domains'] = '*'
         else:
             sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list.\n")
             del daconfig['cross site domains']
