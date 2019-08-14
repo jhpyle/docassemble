@@ -1,6 +1,8 @@
 # Change Log
 
-## [0.4.77] - 2019-08-
+## [0.4.77] - 2019-08-14
+### Added
+- The `enable playground` Configuration directive.
 ### Changed
 - The behavior of the `label` option of `list collect` no longer
   prints text before `1.`, `2.`, etc.  Now the `label` supplies the
@@ -9,6 +11,8 @@
 ### Fixed
 - The `list collect` feature raised an exception when the field
   definition included Mako substitution.
+- Non-required upload fields were creating zero-byte files on some
+  servers.
 
 ## [0.4.76] - 2019-08-12
 ### Changed

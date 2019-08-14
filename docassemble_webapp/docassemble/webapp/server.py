@@ -6496,7 +6496,6 @@ def index(action_argument=None):
             should_assemble_now = False
             empty_file_vars = set()
             for orig_file_field in file_fields:
-                logmessage('A: doing ' + orig_file_field)
                 if orig_file_field in known_varnames:
                     orig_file_field = known_varnames[orig_file_field]
                 if orig_file_field not in visible_fields:
@@ -6504,18 +6503,15 @@ def index(action_argument=None):
                 try:
                     file_field = from_safeid(orig_file_field)
                 except:
-                    logmessage('B: invalid file field')
                     error_messages.append(("error", "Error: Invalid file_field: " + text_type(orig_file_field)))
                     break
                 if illegal_variable_name(file_field):
-                    logmessage('C: illegal variable name')
                     has_invalid_fields = True
                     error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
             if not has_invalid_fields:
-                logmessage('D: does not have invalid fields')
                 initial_string = 'import docassemble.base.core'
                 try:
                     exec(initial_string, user_dict)
@@ -6525,29 +6521,23 @@ def index(action_argument=None):
                     #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
-                    logmessage('E: doing ' + orig_file_field_raw)
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
                     if orig_file_field_raw not in visible_fields:
-                        logmessage('F: not in visible fields')
                         continue
                     if not validated:
-                        logmessage('G: not validated')
                         break
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if (orig_file_field not in request.files or request.files[orig_file_field].filename == "") and len(known_varnames):
-                        logmessage('H: not in request.files')
                         for key, val in known_varnames.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
                                 break
                     if orig_file_field in request.files and request.files[orig_file_field].filename != "":
-                        logmessage('I: in request.files where mimetype is ' + request.files[orig_file_field].mimetype + ' and length is ' + text_type(request.files[orig_file_field].content_length) + ' and filename is ' + repr(request.files[orig_file_field].filename))
                         the_files = request.files.getlist(orig_file_field)
                         if the_files:
-                            logmessage('J: the_files is true')
                             files_to_process = list()
                             for the_file in the_files:
                                 if is_ajax:
@@ -6569,16 +6559,13 @@ def index(action_argument=None):
                             try:
                                 file_field = from_safeid(var_to_store)
                             except:
-                                logmessage('K: from_safeid failed')
                                 error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
                                 break
                             if illegal_variable_name(file_field):
-                                logmessage('L: illegal variable name')
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                                 break
                             file_field_tr = sub_indices(file_field, user_dict)
                             if len(files_to_process) > 0:
-                                logmessage('M: there are files_to_process')
                                 elements = list()
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
@@ -6588,7 +6575,6 @@ def index(action_argument=None):
                                 #logmessage("field_numbers is " + repr(field_numbers))
                                 #logmessage("orig_file_field is " + repr(orig_file_field))
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
-                                    logmessage('N: there is validation function')
                                     #logmessage("field " + orig_file_field + " has validation function")
                                     the_key = orig_file_field
                                     the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
@@ -6606,7 +6592,6 @@ def index(action_argument=None):
                                         break
                                 the_string = file_field + " = " + the_file_list
                             else:
-                                logmessage('O: there are no files_to_process')
                                 the_string = file_field + " = None"
                             #logmessage("6Doing " + the_string)
                             vars_set.add(file_field)
@@ -6615,29 +6600,23 @@ def index(action_argument=None):
                                     exec(the_string, user_dict)
                                     changed = True
                                 except Exception as errMess:
-                                    logmessage('P: there was an error')
                                     sys.stderr.write("Error: " + text_type(errMess) + "\n")
                                     error_messages.append(("error", "Error: " + text_type(errMess)))
                     else:
-                        logmessage('Q: not in request.files')
                         try:
                             file_field = from_safeid(var_to_store)
                         except:
-                            logmessage('R: invalid file field')
                             error_messages.append(("error", "Error: Invalid file_field: " + text_type(var_to_store)))
                             break
                         if illegal_variable_name(file_field):
-                            logmessage('S: invalid character')
                             error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
                             break
-                        logmessage('T: setting none')
                         the_string = file_field + " = None"
                         vars_set.add(file_field)
                         try:
                             exec(the_string, user_dict)
                             changed = True
                         except Exception as errMess:
-                            logmessage('U: failure setting none')
                             sys.stderr.write("Error: " + text_type(errMess) + "\n")
                             error_messages.append(("error", "Error: " + text_type(errMess)))
         if validated:
