@@ -6536,15 +6536,15 @@ def index(action_argument=None):
                         break
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
-                    if orig_file_field not in request.files and len(known_varnames):
+                    if (orig_file_field not in request.files or request.files[orig_file_field].filename == "") and len(known_varnames):
                         logmessage('H: not in request.files')
                         for key, val in known_varnames.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
                                 break
-                    if orig_file_field in request.files:
-                        logmessage('I: in request.files')
+                    if orig_file_field in request.files and request.files[orig_file_field].filename != "":
+                        logmessage('I: in request.files where mimetype is ' + request.files[orig_file_field].mimetype + ' and length is ' + text_type(request.files[orig_file_field].content_length) + ' and filename is ' + repr(request.files[orig_file_field].filename))
                         the_files = request.files.getlist(orig_file_field)
                         if the_files:
                             logmessage('J: the_files is true')
