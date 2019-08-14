@@ -17,6 +17,8 @@ from collections import deque
 import PyPDF2
 import codecs
 from io import open
+import time
+import stat
 
 NoneType = type(None)
 

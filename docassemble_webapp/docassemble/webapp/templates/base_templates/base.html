@@ -44,7 +44,9 @@
                 {%- if current_user.has_roles(['admin', 'developer']) %}
                 <a class="dropdown-item" href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a>
                 <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
+                {%- if config['ENABLE_PLAYGROUND'] %}
                 <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>
+                {%- endif %}
                 <a class="dropdown-item" href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a>
                   {%- if current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>

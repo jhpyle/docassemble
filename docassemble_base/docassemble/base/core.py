@@ -2984,8 +2984,7 @@ class DAFile(DAObject):
         """Returns a path and filename at which a PDF page image can be accessed."""
         if not hasattr(self, 'number'):
             raise Exception("Cannot get path of file without a file number.")
-        if not hasattr(self, 'file_info'):
-            self.retrieve()
+        self.retrieve()
         if 'fullpath' not in self.file_info:
             raise Exception("fullpath not found.")
         if 'pages' not in self.file_info:
@@ -3026,8 +3025,8 @@ class DAFile(DAObject):
         #logmessage("path")
         if not hasattr(self, 'number'):
             raise Exception("Cannot get path of file without a file number.")
-        if not hasattr(self, 'file_info'):
-            self.retrieve()
+        #if not hasattr(self, 'file_info'):
+        self.retrieve()
         if 'fullpath' not in self.file_info:
             raise Exception("fullpath not found.")
         return self.file_info['fullpath']

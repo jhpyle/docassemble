@@ -1,4 +1,6 @@
 debug: True
+enable playground: True
+allow demo: True
 exitpage: https://docassemble.org
 db:
   prefix: {{DBPREFIX}}

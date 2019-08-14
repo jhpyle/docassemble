@@ -4,6 +4,9 @@
 {%- if fields %}
 <h3 class="da-page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
 <p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
+{%- if file_type == 'docx' %}
+<p>{{ word("Note that you can use a DOCX template file directly; 'fields' is only necessary in the rare case when the variable names in your DOCX file do not correspond with the variable names in your interview.") }}</p>
+{%- endif %}
 <pre>
 {{ fields }}
 </pre>

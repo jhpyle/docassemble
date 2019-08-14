@@ -770,6 +770,8 @@ class InterviewStatus(object):
 # increment_question_counter = new_counter()
 
 class TextObject(object):
+    def __deepcopy__(self, memo):
+        return TextObject(self.original_text)
     def __init__(self, x, question=None, translate=True):
         self.original_text = x
         self.other_lang = dict()
@@ -3425,7 +3427,7 @@ class Question:
             else:
                 all_fields.append(field)
         return all_fields
-    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought, process_list_collect=True):
+    def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought, process_list_collect=True, test_for_objects=True):
         #logmessage("ask: orig_sought is " + text_type(orig_sought) + " and q is " + self.name)
         docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
@@ -3749,10 +3751,7 @@ class Question:
                 if not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
                     raise DAError("Cannot use list collect on a variable that is not a DAList.")
                 extras['list_collect'] = the_list
-                if hasattr(self, 'list_collect_label'):
-                    extras['list_message'] = self.list_collect_label.text(user_dict)
-                else:
-                    extras['list_message'] = ''
+                extras['list_message'] = dict()
                 if hasattr(the_list, 'minimum_number') and the_list.minimum_number:
                     extras['list_minimum'] = the_list.minimum_number
                 iterator_index = list_of_indices.index(extras['list_iterator'])
@@ -3763,47 +3762,54 @@ class Question:
                     extra_amount = 0
                 else:
                     extra_amount = get_config('list collect extra count', 15)
-                for list_indexno in range(length_to_use):
+                for list_indexno in range(length_to_use + extra_amount):
                     new_iterators = copy.copy(iterators)
                     new_iterators[iterator_index] = str(list_indexno)
-                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False)
+                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False, test_for_objects=(list_indexno < length_to_use))
+                    if hasattr(self, 'list_collect_label'):
+                        extras['list_message'][list_indexno] = self.list_collect_label.text(user_dict)
+                    else:
+                        extras['list_message'][list_indexno] = ''
                     for key in ('selectcompute', 'defaults', 'hints', 'helptexts', 'labels'):
                         for field_num, val in ask_result[key].items():
                             if key == 'selectcompute':
                                 selectcompute[str(list_indexno) + '_' + str(field_num)] = val
                                 if list_indexno == length_to_use - 1:
                                     selectcompute[str(list_indexno + 1) + '_' + str(field_num)] = val
-                                    for ii in range(1, extra_amount + 1):
-                                        selectcompute[str(list_indexno + ii) + '_' + str(field_num)] = val
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    selectcompute[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'defaults':
                                 defaults[str(list_indexno) + '_' + str(field_num)] = val
-                                if list_indexno == length_to_use - 1:
-                                    for ii in range(1, extra_amount + 1):
-                                        defaults[str(list_indexno + ii) + '_' + str(field_num)] = val
+                                #if list_indexno == length_to_use - 1:
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    defaults[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'hints':
                                 hints[str(list_indexno) + '_' + str(field_num)] = val
-                                if list_indexno == length_to_use - 1:
-                                    for ii in range(1, extra_amount + 1):
-                                        hints[str(list_indexno + ii) + '_' + str(field_num)] = val
+                                #if list_indexno == length_to_use - 1:
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    hints[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'helptexts':
                                 helptexts[str(list_indexno) + '_' + str(field_num)] = val
-                                if list_indexno == length_to_use - 1:
-                                    for ii in range(1, extra_amount + 1):
-                                        helptexts[str(list_indexno + ii) + '_' + str(field_num)] = val
+                                #if list_indexno == length_to_use - 1:
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    helptexts[str(list_indexno + ii) + '_' + str(field_num)] = val
                             elif key == 'labels':
                                 labels[str(list_indexno) + '_' + str(field_num)] = val
-                                if list_indexno == length_to_use - 1:
-                                    for ii in range(1, extra_amount + 1):
-                                        labels[str(list_indexno + ii) + '_' + str(field_num)] = val
+                                #if list_indexno == length_to_use - 1:
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    labels[str(list_indexno + ii) + '_' + str(field_num)] = val
                     for key, possible_dict in ask_result['extras'].items():
                         if isinstance(possible_dict, dict):
                             if key not in extras:
                                 extras[key] = dict()
                             for field_num, val in possible_dict.items():
                                 extras[key][str(list_indexno) + '_' + str(field_num)] = val
-                                if list_indexno == length_to_use - 1:
-                                    for ii in range(1, extra_amount + 1):
-                                        extras[key][str(list_indexno + ii) + '_' + str(field_num)] = val
+                                #if list_indexno == length_to_use - 1:
+                                    #for ii in range(1, extra_amount + 1):
+                                    #    extras[key][str(list_indexno + ii) + '_' + str(field_num)] = val
+                if len(iterators):
+                    for indexno in range(len(iterators)):
+                        exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
             else:
                 only_empty_fields_exist = True
                 commands_to_run = list()
@@ -3954,19 +3960,20 @@ class Question:
                     else:
                         only_empty_fields_exist = False
                 if len(self.fields) > 0 and only_empty_fields_exist:
-                    assumed_objects = set()
-                    for field in self.fields:
-                        if hasattr(field, 'saveas'):
-                            parse_result = parse_var_name(from_safeid(field.saveas))
-                            if not parse_result['valid']:
-                                raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
-                            if len(parse_result['objects']):
-                                assumed_objects.add(parse_result['objects'][-1])
-                            if len(parse_result['bracket_objects']):
-                                assumed_objects.add(parse_result['bracket_objects'][-1])
-                    for var in assumed_objects:
-                        if complications.search(var) or var not in user_dict:
-                            eval(var, user_dict)
+                    if test_for_objects:
+                        assumed_objects = set()
+                        for field in self.fields:
+                            if hasattr(field, 'saveas'):
+                                parse_result = parse_var_name(from_safeid(field.saveas))
+                                if not parse_result['valid']:
+                                    raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                                if len(parse_result['objects']):
+                                    assumed_objects.add(parse_result['objects'][-1])
+                                if len(parse_result['bracket_objects']):
+                                    assumed_objects.add(parse_result['bracket_objects'][-1])
+                        for var in assumed_objects:
+                            if complications.search(var) or var not in user_dict:
+                                eval(var, user_dict)
                     raise CodeExecute(commands_to_run, self)
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
@@ -4102,6 +4109,8 @@ class Question:
                                     extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
                     if hasattr(field, 'saveas'):
                         try:
+                            if not test_for_objects:
+                                raise Exception('not setting defaults now')
                             if old_user_dict is not None:
                                 for varname in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
                                     if varname in user_dict:
@@ -4132,25 +4141,26 @@ class Question:
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
-        assumed_objects = set()
-        for field in self.fields:
-            docassemble.base.functions.this_thread.misc['current_field'] = field.number
-            if hasattr(field, 'saveas'):
-                # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
-                # if m and m.group(1) != 'x':
-                #     assumed_objects.add(m.group(1))
-                parse_result = parse_var_name(from_safeid(field.saveas))
-                if not parse_result['valid']:
-                    raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
-                if len(parse_result['objects']):
-                    assumed_objects.add(parse_result['objects'][-1])
-                if len(parse_result['bracket_objects']):
-                    assumed_objects.add(parse_result['bracket_objects'][-1])
-        if 'current_field' in docassemble.base.functions.this_thread.misc:
-            del docassemble.base.functions.this_thread.misc['current_field']
-        for var in assumed_objects:
-            if complications.search(var) or var not in user_dict:
-                eval(var, user_dict)
+        if test_for_objects:
+            assumed_objects = set()
+            for field in self.fields:
+                docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                if hasattr(field, 'saveas'):
+                    # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
+                    # if m and m.group(1) != 'x':
+                    #     assumed_objects.add(m.group(1))
+                    parse_result = parse_var_name(from_safeid(field.saveas))
+                    if not parse_result['valid']:
+                        raise DAError("Variable name " + from_safeid(field.saveas) + " is invalid: " + parse_result['reason'])
+                    if len(parse_result['objects']):
+                        assumed_objects.add(parse_result['objects'][-1])
+                    if len(parse_result['bracket_objects']):
+                        assumed_objects.add(parse_result['bracket_objects'][-1])
+            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['current_field']
+            for var in assumed_objects:
+                if complications.search(var) or var not in user_dict:
+                    eval(var, user_dict)
         if 'menu_items' in user_dict:
             extras['menu_items'] = user_dict['menu_items']
         if 'track_location' in user_dict:

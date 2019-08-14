@@ -2386,7 +2386,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
                     if current_user.has_role('admin', 'developer'):
                         navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
-                        navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
+                        if app.config['ENABLE_PLAYGROUND']:
+                            navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
                         if current_user.has_role('admin'):
                             navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
@@ -4397,6 +4398,8 @@ def get_next_link(resp):
 @login_required
 @roles_required(['admin', 'developer'])
 def github_menu():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if not app.config['USE_GITHUB']:
         abort(404)
     form = GitHubForm(request.form)
@@ -4432,6 +4435,8 @@ def github_menu():
 @login_required
 @roles_required(['admin', 'developer'])
 def github_configure():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if not app.config['USE_GITHUB']:
         abort(404)
     storage = RedisCredStorage(app='github')
@@ -4494,6 +4499,8 @@ def github_configure():
 @login_required
 @roles_required(['admin', 'developer'])
 def github_unconfigure():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if not app.config['USE_GITHUB']:
         abort(404)
     storage = RedisCredStorage(app='github')
@@ -4541,6 +4548,8 @@ def github_unconfigure():
 @login_required
 @roles_required(['admin', 'developer'])
 def github_oauth_callback():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     failed = False
     if not app.config['USE_GITHUB']:
         logmessage('github_oauth_callback: server does not use github')
@@ -5264,10 +5273,13 @@ def index(action_argument=None):
         if old_yaml_filename != yaml_filename or reset_interview or new_interview:
             #logmessage("index: change in yaml filename detected")
             if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
-                raise DAError("Not authorized")
-            show_flash = False
-            if not yaml_filename.startswith('docassemble.playground'):
+                raise DAError(word("Not authorized"), code=403)
+            if yaml_filename.startswith('docassemble.playground'):
+                if not app.config['ENABLE_PLAYGROUND']:
+                    raise DAError(word("Not authorized"), code=403)
+            else:
                 yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
+            show_flash = False
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
@@ -7812,6 +7824,7 @@ def index(action_argument=None):
           var filesToRead = 0;
           var filesRead = 0;
           var newFileList = Array();
+          var nullFileList = Array();
           var fileArray = {keys: Array(), values: Object()};
           var file_list = JSON.parse(atob($('input[name="_files"]').val()));
           var inline_file_list = Array();
@@ -7837,13 +7850,17 @@ def index(action_argument=None):
             else if (file_input.files.length > 0){
               newFileList.push(file_list[i]);
             }
+            else{
+              nullFileList.push(file_list[i]);
+            }
           }
           if (inline_file_list.length > 0){
-            if (newFileList.length == 0){
+            var originalFileList = atob($('input[name="_files"]').val())
+            if (newFileList.length == 0 && nullFileList.length == 0){
               $('input[name="_files"]').remove();
             }
             else{
-              $('input[name="_files"]').val(btoa(JSON.stringify(newFileList)));
+              $('input[name="_files"]').val(btoa(JSON.stringify(newFileList.concat(nullFileList))));
             }
             for (var i = 0; i < inline_file_list.length; i++){
               fileArray.keys.push(inline_file_list[i])
@@ -12795,6 +12812,8 @@ def update_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_playground_package():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
     do_pypi = request.args.get('pypi', False)
@@ -13134,6 +13153,8 @@ def create_playground_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_package():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
@@ -13443,6 +13464,8 @@ def restart_page():
 @login_required
 @roles_required(['admin', 'developer'])
 def playground_poll():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     script = """
     <script>
       function daPollCallback(data){
@@ -13557,6 +13580,8 @@ class RedisCredStorage(oauth2client.client.Storage):
 @login_required
 @roles_required(['admin', 'developer'])
 def google_drive_callback():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     for key in request.args:
         logmessage("google_drive_callback: argument " + str(key) + ": " + str(request.args[key]))
     if 'code' in request.args:
@@ -13625,6 +13650,8 @@ def trash_gd_file(section, filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     next = request.args.get('next', url_for('playground_page'))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_GOOGLE_DRIVE'] is False:
@@ -13647,6 +13674,8 @@ def sync_with_google_drive():
 @login_required
 @roles_required(['admin', 'developer'])
 def gd_sync_wait():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     next_url = request.args.get('next', url_for('playground_page'))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
@@ -13748,6 +13777,8 @@ def gd_sync_wait():
 @login_required
 @roles_required(['admin', 'developer'])
 def onedrive_callback():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     for key in request.args:
         logmessage("onedrive_callback: argument " + str(key) + ": " + str(request.args[key]))
     if 'code' in request.args:
@@ -13841,6 +13872,8 @@ def trash_od_file(section, filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_onedrive():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     next = request.args.get('next', url_for('playground_page'))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_ONEDRIVE'] is False:
@@ -13863,6 +13896,8 @@ def sync_with_onedrive():
 @login_required
 @roles_required(['admin', 'developer'])
 def od_sync_wait():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     next_url = request.args.get('next', url_for('playground_page'))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
@@ -13982,6 +14017,8 @@ def add_br(text):
 @login_required
 @roles_required(['admin', 'developer'])
 def checkin_sync_with_google_drive():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -14011,6 +14048,8 @@ def checkin_sync_with_google_drive():
 @login_required
 @roles_required(['admin', 'developer'])
 def checkin_sync_with_onedrive():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -14040,6 +14079,8 @@ def checkin_sync_with_onedrive():
 @login_required
 @roles_required(['admin', 'developer'])
 def google_drive_page():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('user.profile'))
@@ -14163,6 +14204,8 @@ def gd_fix_subdirs(service, the_folder):
 @login_required
 @roles_required(['admin', 'developer'])
 def onedrive_page():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
         return redirect(url_for('user.profile'))
@@ -14364,6 +14407,8 @@ def view_source():
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     filename = os.path.join(area.directory, filename)
@@ -14377,6 +14422,8 @@ def playground_static(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_modules(userid, filename):
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundmodules')
     filename = os.path.join(area.directory, filename)
@@ -14390,6 +14437,8 @@ def playground_modules(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_sources(userid, filename):
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, filename)
@@ -14409,6 +14458,8 @@ def playground_sources(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_template(userid, filename):
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     filename = os.path.join(area.directory, filename)
@@ -14423,6 +14474,8 @@ def playground_template(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_download(userid, filename):
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     filename = os.path.join(area.directory, filename)
@@ -14435,10 +14488,14 @@ def playground_download(userid, filename):
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
 def playground_office_functionfile():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', request.base_url))), 200
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     #defaultDaServer = daconfig.get('url root', None)
     #if defaultDaServer is None:
     #    defaultDaServer = request.url_root
@@ -14450,6 +14507,8 @@ def playground_office_taskpane():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if request.args.get('fetchfiles', None):
         playground = SavedFile(current_user.id, fix=True, section='playground')
         files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -14509,6 +14568,8 @@ def playground_office_addin():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
         use_od = False
     else:
@@ -14925,6 +14986,8 @@ def playground_files():
 @login_required
 @roles_required(['developer', 'admin'])
 def pull_playground_package():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     form = PullPlaygroundPackage(request.form)
     if request.method == 'POST':
         if form.pull.data:
@@ -14987,6 +15050,8 @@ def pull_playground_package():
 @login_required
 @roles_required(['developer', 'admin'])
 def get_git_branches():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if 'url' not in request.args:
         abort(404)
     if app.config['USE_GITHUB']:
@@ -15093,6 +15158,8 @@ def get_branch_info(http, full_name):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_packages():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
     the_file = request.args.get('file', '')
@@ -15821,6 +15888,8 @@ def splitall(path):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_redirect_poll():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     key = 'da:runplayground:' + str(current_user.id)
     the_url = r.get(key)
     #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
@@ -15834,6 +15903,8 @@ def playground_redirect_poll():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_redirect():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     key = 'da:runplayground:' + str(current_user.id)
     counter = 0
     while counter < 15:
@@ -16164,6 +16235,8 @@ function variablesReady(){
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_variables():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     playground = SavedFile(current_user.id, fix=True, section='playground')
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     if len(files) == 0:
@@ -16223,6 +16296,8 @@ def assign_opacity(files):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page_run():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     the_file = request.args.get('file')
     if the_file:
         active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
@@ -16240,6 +16315,8 @@ def playground_page_run():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
         use_gd = False
@@ -17078,6 +17155,8 @@ def logs():
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required
 def request_developer():
+    if not app.config['ENABLE_PLAYGROUND']:
+        abort(404)
     from docassemble.webapp.users.forms import RequestDeveloperForm
     form = RequestDeveloperForm(request.form)
     recipients = list()
@@ -22261,6 +22340,7 @@ with app.app_context():
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts
     app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
+    app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
     interviews_to_load = daconfig.get('preloaded interviews', None)
     if isinstance(interviews_to_load, list):
         for yaml_filename in daconfig['preloaded interviews']:
@@ -22268,7 +22348,7 @@ with app.app_context():
                 docassemble.base.interview_cache.get_interview(yaml_filename)
             except:
                 pass
-    if DEBUG:
+    if app.config['ENABLE_PLAYGROUND']:
         obtain_lock('init', 'init')
         copy_playground_modules()
         write_pypirc()
