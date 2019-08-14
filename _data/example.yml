@@ -6547,6 +6547,11 @@
   \  ${ sibling } has hired a ${ company_type }\n  called ${ sibling.company_hired[company_type]\
   \ },\n  which has a principal place of business in\n  ${ sibling.company_hired[company_type].place_of_business\
   \ }.\n \n  % endfor\n \n  % endfor"
+"nested-objects-list": |-
+  objects:
+    - fruit: DAList.using(object_type=Thing, auto_gather=False)
+    - vegetable: DAList.using(object_type=Thing, auto_gather=False)
+    - people: DAList.using(object_type=Individual, there_are_any=True, complete_attribute='complete')
 "nested-veggies": |-
   mandatory: True
   code: |
@@ -11398,6 +11403,58 @@
     Here is some data.
   subquestion: |
     `${ google.test() }`
+"oauth-test-2": |-
+  modules:
+    .oauthsheets
+  ---
+  objects:
+    - google: GoogleAuth.using(url_args=url_args)
+  ---
+  initial: True
+  code: |
+    if not user_logged_in():
+      message("Test Google Sheets Integration", "Sorry, you must be logged in to test this interview.")
+      menu_items = []
+    intro_screen
+  ---
+  question: |
+    You need to connect with Google Sheets.
+  subquestion: |
+    Press Continue to connect.
+  field: intro_screen
+  ---
+  code: |
+    if google.active():
+      intro_screen = True
+  ---
+  initial: True
+  code: |
+    menu_items = [ action_menu_item('Manage Credentials', 'manage_credentials') ]
+  ---
+  mandatory: True
+  question: |
+    Here is some data.
+  subquestion: |
+    `${ google.test() }`
+  ---
+  question: |
+    Manage credentials
+  subquestion: |
+    You do not have any stored credentials.
+  field: manage_credentials
+  continue button label: Resume
+  ---
+  if: google.active()
+  question: |
+    Manage credentials
+  subquestion: |
+    If you want to delete your credentials, you can do so.
+
+    ${ action_button_html(url_action('delete_credentials'), label="Delete credentials", color="danger") }
+
+    Otherwise, you can go back to the interview.
+  continue button label: Resume
+  field: manage_credentials
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
   mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
   \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"

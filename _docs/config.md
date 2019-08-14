@@ -118,6 +118,19 @@ to allow users to run these interviews, you can set `allow demo` to `True`.
 allow demo: True
 {% endhighlight %}
 
+## <a name="enable playground"></a>Enabling the Playground
+
+By default, the [Playground] is available, even when [`debug`] is
+false.  You can disable the [Playground] by setting:
+
+{% highlight yaml %}
+enable playground: False
+{% endhighlight %}
+
+When `enable playground` is false, administrators and developers will
+not be able to access the [Playground] or its associated features, and
+users will not be able to use [Playground] interviews.
+
 ## <a name="package protection"></a>Allowing developers to install the same package
 
 By default, users with `developer` [privileges] have ownership over

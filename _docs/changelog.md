@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.77](https://github.com/jhpyle/docassemble/releases/tag/v0.4.77) - 2019-08-14
+
+### Added
+- The `enable playground` Configuration directive.
+
+### Changed
+- The behavior of the `label` option of `list collect` no longer
+  prints text before `1.`, `2.`, etc.  Now the `label` supplies the
+  whole label for the item, and it can include the number by way of
+  the index variable.
+
+### Fixed
+- The `list collect` feature raised an exception when the field
+  definition included Mako substitution.
+- Non-required upload fields were creating zero-byte files on some
+  servers.
+
 ## [0.4.76](https://github.com/jhpyle/docassemble/releases/tag/v0.4.76) - 2019-08-12
 
 ### Changed

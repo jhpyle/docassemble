@@ -63,6 +63,31 @@ For this reason, it is recommended that you not allow developer
 accounts on production servers, and that you only install
 **docassemble** add-on packages that you have carefully reviewed.
 
+On a production server, you should make sure the [Configuration]
+contains the following:
+
+{% highlight yaml %}
+debug: False
+allow demo: False
+enable playground: False
+{% endhighlight %}
+
+The [`debug`] directive will turn off the "Source" tab, so that users
+cannot see any source code of the interviews.  This will also improve
+site performance.
+
+The [`allow demo`] directive will prevent users from accessing any of
+the sample interviews in the `docassemble.base` and `docassemble.demo`
+packages.  These are helpful on a development server because
+developers can access them from the Examples page of the
+[Playground].  However, on a production server there is no reason why
+users should be able to run such interviews.
+
+The [`enable playground`] directive will make the [Playground]
+inoperable.  Any attempt by a user to use a [Playground] interview
+will fail.  Users with developer and administrator accounts will not
+see the [Playground]-related options in the menus.
+
 # <a name="sessionkeys"></a>Avoiding sharing session keys
 
 Each session of a **docassemble** interview is uniquely identified by
@@ -293,3 +318,6 @@ this is only used when [Azure blob storage] is enabled.
 [Flask-Login]: https://flask-login.readthedocs.io/en/latest/
 [multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
 [deleting user information]: #deleting
+[`debug`]: {{ site.baseurl }}/docs/config.html#debug
+[`allow demo`]: {{ site.baseurl }}/docs/config.html#allow demo
+[`enable playground`]: {{ site.baseurl }}/docs/config.html#enable playground
