@@ -5010,10 +5010,6 @@ class Interview:
                 if key not in title:
                     title[key] = val
         return title
-    def uses_unique_sessions(self):
-        if self.consolidated_metadata.get('sessions are unique', False):
-            return True
-        return False
     def allowed_to_access(self, is_anonymous=False, has_roles=None):
         roles = set()
         for metadata in self.metadata:
@@ -5022,7 +5018,8 @@ class Interview:
                 privs = metadata['required privileges']
                 if isinstance(privs, list) or (hasattr(privs, 'instanceName') and hasattr(privs, 'elements') and isinstance(privs.elements, list)):
                     for priv in privs:
-                        roles.add(priv)
+                        if isinstance(priv, string_types):
+                            roles.add(priv)
                 elif isinstance(privs, string_types):
                     roles.add(privs)
         if len(roles):
@@ -5033,7 +5030,28 @@ class Interview:
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
         return True
-
+    def allowed_to_see_listed(self, is_anonymous=False, has_roles=None):
+        if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
+            return False
+        roles = set()
+        for metadata in self.metadata:
+            if 'required privileges for listing' in metadata:
+                roles = set()
+                privs = metadata['required privileges for listing']
+                if isinstance(privs, list) or (hasattr(privs, 'instanceName') and hasattr(privs, 'elements') and isinstance(privs.elements, list)):
+                    for priv in privs:
+                        if isinstance(priv, string_types):
+                            roles.add(priv)
+                elif isinstance(privs, string_types):
+                    roles.add(privs)
+        if len(roles):
+            if is_anonymous:
+                if 'anonymous' in roles:
+                    return True
+                return False
+            if has_roles is not None:
+                return len(set(roles).intersection(set(has_roles))) > 0
+        return True
     def is_unlisted(self):
         unlisted = False
         for metadata in self.metadata:
@@ -6679,7 +6697,7 @@ class DAEnvironment(Environment):
             return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
-    if value.__class__.__name__ in ('DAFile', 'DALink'):
+    if value.__class__.__name__ in ('DAFile', 'DALink', 'DAStaticFile', 'DAFileCollection', 'DAFileList'):
         return value
     if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate'):
         return text_type(value)

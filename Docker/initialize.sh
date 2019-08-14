@@ -587,19 +587,6 @@ fi
 
 echo "35" >&2
 
-if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
-    if [ -d /etc/syslog-ng ]; then
-        if [ "$OTHERLOGSERVER" = true ]; then
-            cp "${DA_ROOT}/webapp/syslog-ng-docker.conf" /etc/syslog-ng/syslog-ng.conf
-            cp "${DA_ROOT}/webapp/docassemble-syslog-ng.conf" /etc/syslog-ng/conf.d/docassemble.conf
-        else
-            rm -f /etc/syslog-ng/conf.d/docassemble.conf
-            cp "${DA_ROOT}/webapp/syslog-ng.conf" /etc/syslog-ng/syslog-ng.conf
-        fi
-        supervisorctl --serverurl http://localhost:9001 start syslogng
-    fi
-fi
-
 echo "36" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
@@ -704,16 +691,16 @@ function backup_apache {
             done
         fi
     else
-	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-		cd /
-		rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
-		tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
-	    fi
+        if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+            if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+                cd /
+                rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
+                tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
+            fi
             rm -rf "${DA_ROOT}/backup/apache"
             mkdir -p "${DA_ROOT}/backup/apache"
             rsync -auq /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
-	fi
+        fi
     fi
 }
 
@@ -905,6 +892,20 @@ fi
 
 echo "51" >&2
 
+if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
+    if [ -d /etc/syslog-ng ]; then
+        if [ "$OTHERLOGSERVER" = true ]; then
+            cp "${DA_ROOT}/webapp/syslog-ng-docker.conf" /etc/syslog-ng/syslog-ng.conf
+            cp "${DA_ROOT}/webapp/docassemble-syslog-ng.conf" /etc/syslog-ng/conf.d/docassemble.conf
+            sleep 5s
+        else
+            rm -f /etc/syslog-ng/conf.d/docassemble.conf
+            cp "${DA_ROOT}/webapp/syslog-ng.conf" /etc/syslog-ng/syslog-ng.conf
+        fi
+        supervisorctl --serverurl http://localhost:9001 start syslogng
+    fi
+fi
+
 function deregister {
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.deregister \"${DA_CONFIG_FILE}\"" www-data
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -923,7 +924,7 @@ function deregister {
         fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    let LOGDIRECTORYLENGTH=${#LOGDIRECTORY}+2
+            let LOGDIRECTORYLENGTH=${#LOGDIRECTORY}+2
             for the_file in $(find "${LOGDIRECTORY}" -type f | cut -c ${LOGDIRECTORYLENGTH}-); do
                 echo "Saving log file $the_file" >&2
                 blob-cmd -f cp "${LOGDIRECTORY}/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}"
@@ -940,17 +941,17 @@ function deregister {
             rm -rf "${DA_ROOT}/backup/apachelogs"
             mkdir -p "${DA_ROOT}/backup/apachelogs"
             rsync -auq /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
-	fi
+        fi
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
             rm -rf "${DA_ROOT}/backup/log"
             rsync -auq "${LOGDIRECTORY}/" "${DA_ROOT}/backup/log/"
         fi
         if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-	    rm -f "${DA_ROOT}/backup/config.yml"
-	    cp "${DA_CONFIG_FILE}" "${DA_ROOT}/backup/config.yml"
-	    rm -rf "${DA_ROOT}/backup/files"
-	    rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
-	fi
+            rm -f "${DA_ROOT}/backup/config.yml"
+            cp "${DA_CONFIG_FILE}" "${DA_ROOT}/backup/config.yml"
+            rm -rf "${DA_ROOT}/backup/files"
+            rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
+        fi
     fi
     echo "finished shutting down initialize" >&2
     kill %1

@@ -1,5 +1,30 @@
 # Change Log
 
+## [0.4.76] - 2019-08-12
+### Changed
+- The syslog-ng server is now started after the web server.
+### Fixed
+- Unhelpful error message when there was an interview parsing error.
+- `DAStaticFile` objects not being included in DOCX files correctly.
+
+## [0.4.75] - 2019-08-12
+### Added
+- The `administrative interviews` Configuration directive
+- The `sessions are unique`, `required privileges for listing`, and
+  `hidden` specifiers under `metadata`.
+### Changed
+- The `words` system no longer uses code names like `pdf_message` and
+  `save_as_multiple`.
+- The `required privileges` specifier under `metadata` now prevents
+  users without a valid privilege from starting the interview.  The
+  `required privileges for listing` now controls whether the interview
+  is listed under `/list`.
+### Fixed
+- Passing an asterisk in a list to Flask-CORS resulted in a regular
+  expression error.
+- Not all Flask packages accept integers as the
+  `PERMANENT_SESSION_LIFETIME`.
+
 ## [0.4.74] - 2019-08-09
 ### Fixed
 - The `undefine()` function did not always find the interview

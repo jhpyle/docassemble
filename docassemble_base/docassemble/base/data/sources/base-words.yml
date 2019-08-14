@@ -35,8 +35,6 @@
 "Are you sure you want to delete this item?": Null
 "Are you sure you want to permanently delete this user's account?": Null
 "At least one e-mail address must be listed": Null
-"attachment_message_plural": Null
-"attachment_message_singular": Null
 "Attachment": Null
 "Attachments": Null
 "A user with that e-mail has already registered": Null
@@ -89,6 +87,7 @@
 "could not connect to OneDrive": Null
 "Could not create new key": Null
 "Country code": Null
+"Country Code": Null
 "Created new Markdown file called ": Null
 "Create": Null
 "Create Package": Null
@@ -114,7 +113,6 @@
 "Docassemble Playground": Null
 "Documentation": Null
 "Document": Null
-"docx_message": Null
 "Done": Null
 "-- Do not link --": Null
 "Download all documents as a ZIP file": Null
@@ -172,9 +170,14 @@
 "Filter For": Null
 "First name": Null
 "First subdivision": Null
+"First Subdivision": Null
 "Floor": Null
 "f": Null
 "Folder": Null
+"for debugging PDF output": Null
+"for editing; requires Microsoft Word or compatible application": Null
+"for editing; requires Microsoft Word, Wordpad, or similar application": Null
+"for printing; requires Adobe Reader or similar application": Null
 "from": Null
 "Functions": Null
 "Get help through live chat by clicking here.": Null
@@ -331,7 +334,6 @@
 "password": Null
 "Password": Null
 "PDF/DOCX File": Null
-"pdf_message": Null
 "Per Month": Null
 "Per Week": Null
 "Per Year": Null
@@ -400,11 +402,8 @@
 "Resume": Null
 "Role": Null
 "Room": Null
-"rtf_message": Null
 "Running in other tab.": Null
 "Save and Run": Null
-"save_as_multiple": Null
-"save_as_singular": Null
 "Save changes": Null
 "Saved at": Null
 "Save": Null
@@ -412,6 +411,7 @@
 "Scan the barcode with your phone's authenticator app and enter the verification code.": Null
 "Search": Null
 "Second subdivision": Null
+"Second Subdivision": Null
 "Section": Null
 "Security Method": Null
 "Select a value between": Null
@@ -466,12 +466,14 @@
 "Templates": Null
 "Terms used in this question:": Null
 "Terms used:": Null
-"tex_message": Null
 "That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
 "The author is": Null
 "The configuration file was saved.": Null
+"The document is available in the following formats:": Null
 "The file you requested does not exist.": Null
+"The following document has been created for you.": Null
+"The following documents have been created for you.": Null
 "The information was saved.": Null
 "The key no longer exists": Null
 "The key was deleted": Null
@@ -509,6 +511,7 @@
 "The version on PyPI is": Null
 "they": Null
 "Third subdivision": Null
+"Third Subdivision": Null
 "This account uses two-factor authentication.": Null
 "This Email is already in use. Please try another one.": Null
 "This field is required.": Null
@@ -620,6 +623,7 @@
 "yes": Null
 "Yes": Null
 "y": Null
+"You are not allowed to access this interview.": Null
 "You are not authorized to access": Null
 "You are now set up with two factor authentication.": Null
 "You can also follow this link: ": Null
@@ -646,6 +650,7 @@
 "You must select an option.": Null
 "You must sign your name to continue.": Null
 "You must type at least %s characters.": Null
+"You need to be logged in to access this interview.": Null
 "You need to enter a complete e-mail address.": Null
 "You need to enter a date between %s and %s.": Null
 "You need to enter a date on or after %s.": Null

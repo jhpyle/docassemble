@@ -2393,6 +2393,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
                             navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
                     if app.config['SHOW_DISPATCH']:
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
+                    for item in app.config['ADMIN_INTERVIEWS']:
+                        if item.can_use() and session.get('i', '') != item.interview:
+                            navbar += '<a class="dropdown-item" href="' + url_for('index', i=item.interview, new_session='1') + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
                     if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
                     if current_user.has_role('admin', 'developer'):
@@ -2444,23 +2447,26 @@ def restore_session(backup):
         if key in backup:
             session[key] = backup[key]
 
-def reset_session(yaml_filename, secret, retain_code=False, use_existing=False):
-    if use_existing:
-        result = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == user_id, UserDictKeys.filename == yaml_filename)).first()
-        if result is None:
-            return(None, None)
-        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-        return(session_id, user_dict)
-    #logmessage("reset_session: retain_code is " + str(retain_code))
+def get_existing_session(yaml_filename, secret):
+    for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno):
+        try:
+            steps, user_dict, is_encrypted = fetch_user_dict(result.key, yaml_filename, secret=secret)
+        except:
+            logmessage("reset_session: unable to decrypt existing interview session " + result.key)
+            continue
+        session['i'] = yaml_filename
+        session['uid'] = result.key
+        session['key_logged'] = True
+        session['encrypted'] = is_encrypted
+        return result.key
+    return None
+
+def reset_session(yaml_filename, secret):
     session['i'] = yaml_filename
-    if retain_code is False or 'uid' not in session:
-        session['uid'] = get_unique_name(yaml_filename, secret)
+    session['uid'] = get_unique_name(yaml_filename, secret)
     if 'key_logged' in session:
         del session['key_logged']
-    #if 'action' in session:
-    #    del session['action']
     user_code = session['uid']
-    #logmessage("reset_session: user_code is " + str(user_code))
     user_dict = fresh_dictionary()
     return(user_code, user_dict)
 
@@ -5172,21 +5178,6 @@ def resume():
             return jsonify(action='redirect', url=url_for('index', **post_data), csrf_token=generate_csrf())
     return redirect(url_for('index', **post_data))
 
-def valid_interview(yaml_filename):
-    try:
-        interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        if interview.uses_unique_sessions() and not current_user.is_authenticated:
-            return False
-        if current_user.is_anonymous:
-            if not interview.allowed_to_access(is_anonymous=True):
-                return False
-        else:
-            if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
-                return False
-        return True
-    except:
-        return False
-
 @app.route("/interview", methods=['POST', 'GET'])
 def index(action_argument=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
@@ -5277,8 +5268,7 @@ def index(action_argument=None):
             show_flash = False
             if not yaml_filename.startswith('docassemble.playground'):
                 yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
-            #if not valid_interview(yaml_filename):
-            #    raise DAError("That interview does not exist.")
+            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
                 show_flash = True
@@ -5291,25 +5281,34 @@ def index(action_argument=None):
                         message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                     else:
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-                #logmessage("index: calling reset_session with retain_code")
-                # if (('uid' in session and user_dict_exists(session['uid'], yaml_filename)) or old_yaml_filename != yaml_filename):
-                #     retain_code = False
-                # else:
-                #     retain_code = True
                 if reset_interview and 'uid' in session:
                     #obtain_lock(session['uid'], yaml_filename)
                     reset_user_dict(session['uid'], yaml_filename)
                     #release_lock(session['uid'], yaml_filename)
-                user_code, user_dict = reset_session(yaml_filename, secret)
-                add_referer(user_dict)
-                save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-                release_lock(user_code, yaml_filename)
-                session_id = session.get('uid', None)
-                if 'key_logged' in session:
-                    del session['key_logged']
-                #logmessage("Need to reset because session_parameter is none")
-                need_to_resave = True
-                need_to_reset = True
+                if current_user.is_anonymous:
+                    if not interview.allowed_to_access(is_anonymous=True):
+                        flash(word("You need to be logged in to access this interview."), "info")
+                        return redirect('user.login', next=url_for('index', i=yaml_filename))
+                elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                    raise DAError(word('You are not allowed to access this interview.'), code=403)
+                unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
+                if unique_sessions is not False and not current_user.is_authenticated:
+                    flash(word("You need to be logged in to access this interview."), "info")
+                    return redirect('user.login', next=url_for('index', i=yaml_filename))
+                session_id = None
+                if unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions)):
+                    session_id = get_existing_session(yaml_filename, secret)
+                if session_id is None:
+                    user_code, user_dict = reset_session(yaml_filename, secret)
+                    add_referer(user_dict)
+                    save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+                    release_lock(user_code, yaml_filename)
+                    session_id = session.get('uid', None)
+                    if 'key_logged' in session:
+                        del session['key_logged']
+                    #logmessage("Need to reset because session_parameter is none")
+                    need_to_resave = True
+                    need_to_reset = True
             else:
                 #logmessage("index: both i and session provided")
                 if show_flash:
@@ -5325,9 +5324,9 @@ def index(action_argument=None):
                 #obtain_lock(session['uid'], yaml_filename)
                 reset_user_dict(session['uid'], yaml_filename)
                 #release_lock(session['uid'], yaml_filename)
-            user_code, user_dict = reset_session(yaml_filename, secret, retain_code=False)
+            user_code, user_dict = reset_session(yaml_filename, secret)
             add_referer(user_dict)
-            save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+            save_user_dict(user_code, user_dict, yaml_filename, secret)
             release_lock(user_code, yaml_filename)
             session_id = session.get('uid', None)
             if 'key_logged' in session:
@@ -5359,7 +5358,7 @@ def index(action_argument=None):
             except:
                 sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
             release_lock(user_code, yaml_filename)
-            logmessage("index: dictionary fetch failed, resetting without retain_code")
+            logmessage("index: dictionary fetch failed")
             for key in ['encrypted', 'key_logged', 'uid']:
                 if key in session:
                     del session[key]
@@ -5382,7 +5381,6 @@ def index(action_argument=None):
         user_dict
         user_code
     except:
-        #logmessage("index: 02 Calling without retain_code")
         user_code, user_dict = reset_session(yaml_filename, secret)
         add_referer(user_dict)
         encrypted = False
@@ -10156,10 +10154,10 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
             if interview.is_unlisted():
                 continue
             if current_user.is_anonymous:
-                if not interview.allowed_to_access(is_anonymous=True):
+                if not interview.allowed_to_see_listed(is_anonymous=True):
                     continue
             else:
-                if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                if not interview.allowed_to_see_listed(has_roles=[role.name for role in current_user.roles]):
                     continue
             if interview.source is None:
                 package = None
@@ -18085,7 +18083,7 @@ def interview_list():
                 tags_used.add(the_tag)
     #interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     #title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len(interviews), interviews=sorted(interviews, key=valid_date_key), tag=tag) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
+    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len([y for y in interviews if not y['metadata'].get('hidden', False)]), interviews=sorted(interviews, key=valid_date_key), tag=tag) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -20488,12 +20486,14 @@ def api_session_new():
         return jsonify(dict(session=session_id, i=yaml_filename, encrypted=encrypted))
 
 def create_new_interview(yaml_filename, secret, url_args=None, request=None):
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+        raise Exception('Insufficient permissions to run this interview.')
     session_id, user_dict = reset_session(yaml_filename, secret)
     add_referer(user_dict)
     if url_args:
         for key, val in url_args.items():
             exec("url_args['" + key + "'] = " + repr(val.encode('unicode_escape')), user_dict)
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     ci = current_info(yaml=yaml_filename, req=request)
     ci['session'] = session_id
     ci['encrypted'] = True
@@ -22123,6 +22123,105 @@ if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
 else:
     version_warning = None
 
+class AdminInterview(object):
+    def can_use(self):
+        if self.roles is None:
+            return True
+        if current_user.is_anonymous:
+            if 'anonymous' in self.roles:
+                return True
+            return False
+        if current_user.has_roles(self.roles):
+            return True
+        return False
+    def get_title(self, language):
+        if isinstance(self.title, string_types):
+            return word(self.title, language=language)
+        return self.title.get(language, word(self.title, language=language))
+
+def set_admin_interviews():
+    admin_interviews = list()
+    if 'administrative interviews' in daconfig:
+        if isinstance(daconfig['administrative interviews'], list):
+            for item in daconfig['administrative interviews']:
+                if isinstance(item, dict):
+                    if 'interview' in item and isinstance(item['interview'], string_types):
+                        try:
+                            interview = docassemble.base.interview_cache.get_interview(item['interview'])
+                        except:
+                            sys.stderr.write("interview " + item['interview'] + " in administrative interviews did not exist" + "\n")
+                            continue
+                        if 'title' in item:
+                            the_title = item['title']
+                        else:
+                            the_title = interview.consolidated_metadata.get('short title', interview.consolidated_metadata.get('title', None))
+                            if the_title is None:
+                                sys.stderr.write("interview in administrative interviews needs to be given a title" + "\n")
+                                continue
+                        admin_interview = AdminInterview()
+                        admin_interview.interview = item['interview']
+                        if isinstance(the_title, (string_types, dict)):
+                            if isinstance(the_title, dict):
+                                fault = False
+                                for key, val in the_title.items():
+                                    if not (isinstance(key, string_types) and isinstance(val, string_types)):
+                                        fault = True
+                                        break
+                                if fault:
+                                    sys.stderr.write("title of administrative interviews item must be a string or a dictionary with keys and values that are strings" + "\n")
+                                    continue
+                            admin_interview.title = the_title
+                        else:
+                            sys.stderr.write("title of administrative interviews item must be a string or a dictionary" + "\n")
+                            continue
+                        if 'required privileges' not in item:
+                            roles = set()
+                            for metadata in interview.metadata:
+                                if 'required privileges for listing' in metadata:
+                                    roles = set()
+                                    privs = metadata['required privileges for listing']
+                                    if isinstance(privs, list):
+                                        for priv in privs:
+                                            if isinstance(priv, string_types):
+                                                roles.add(priv)
+                                    elif isinstance(privs, string_types):
+                                        roles.add(privs)
+                                elif 'required privileges' in metadata:
+                                    roles = set()
+                                    privs = metadata['required privileges']
+                                    if isinstance(privs, list):
+                                        for priv in privs:
+                                            if isinstance(priv, string_types):
+                                                roles.add(priv)
+                                    elif isinstance(privs, string_types):
+                                        roles.add(privs)
+                            if len(roles):
+                                item['required privileges'] = list(roles)
+                        if 'required privileges' in item:
+                            fault = False
+                            if isinstance(item['required privileges'], list):
+                                for rolename in item['required privileges']:
+                                    if not isinstance(rolename, string_types):
+                                        fault = True
+                                        break
+                            else:
+                                fault = True
+                            if fault:
+                                sys.stderr.write("required privileges in administrative interviews item must be a list of strings" + "\n")
+                                admin_interview.roles = None
+                            else:
+                                admin_interview.roles = item['required privileges']
+                        else:
+                            admin_interview.roles = None
+                        admin_interviews.append(admin_interview)
+                    else:
+                        sys.stderr.write("item in administrative interviews must contain a valid interview name" + "\n")
+                else:
+                    sys.stderr.write("item in administrative interviews is not a dict" + "\n")
+        else:
+            sys.stderr.write("administrative interviews is not a list" + "\n")
+    return admin_interviews
+
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
@@ -22161,6 +22260,7 @@ with app.app_context():
     app.config['GLOBAL_CSS'] = global_css
     app.config['GLOBAL_JS'] = global_js
     app.config['PARTS'] = page_parts
+    app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
     interviews_to_load = daconfig.get('preloaded interviews', None)
     if isinstance(interviews_to_load, list):
         for yaml_filename in daconfig['preloaded interviews']:
@@ -22168,10 +22268,11 @@ with app.app_context():
                 docassemble.base.interview_cache.get_interview(yaml_filename)
             except:
                 pass
-    obtain_lock('init', 'init')
-    copy_playground_modules()
-    write_pypirc()
-    release_lock('init', 'init')
+    if DEBUG:
+        obtain_lock('init', 'init')
+        copy_playground_modules()
+        write_pypirc()
+        release_lock('init', 'init')
 
 if __name__ == "__main__":
     app.run()

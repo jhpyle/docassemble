@@ -982,45 +982,18 @@ class DANav(object):
             a_class = None
         return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
 
+#word('This field is required.')
+#word('Country Code')
+#word('First Subdivision')
+#word('Second Subdivision')
+#word('Third Subdivision')
 word_collection = {
-    'es': {
-        'Continue': u'Continuar',
-        'Help': u'Ayuda',
-        'Sign in': u'Registrarse',
-        'Sign in or sign up to save answers': u'Inicie sesión o regístrese para guardar las respuestas',
-        'Question': u'Interrogación',
-        'save_as_multiple': u'The document is available in the following formats:',
-        'save_as_singular': u'The document is available in the following format:',
-        'pdf_message': u'for printing; requires Adobe Reader or similar application',
-        'rtf_message': u'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': u'for editing; requires Microsoft Word or compatible application',
-        'tex_message': u'for debugging PDF output',
-        'attachment_message_plural': u'The following documents have been created for you.',
-        'attachment_message_singular': u'The following document has been created for you.',
-        'Yes': u'Sí',
-        'No': u'No'
-        },
     'en': {
-        'Open as:': 'Open this document as:',
-        'Open as:': 'Save this documents as:',
-        'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.',
-        'save_as_multiple': 'The document is available in the following formats:',
-        'save_as_singular': 'The document is available in the following format:',
-        'pdf_message': 'for printing; requires Adobe Reader or similar application',
-        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': 'for editing; requires Microsoft Word or compatible application',
-        'tex_message': 'for debugging PDF output',
         'This field is required.': 'You need to fill this in.',
-        "You need to enter a valid date.": "You need to enter a valid date.",
-        "You need to enter a complete e-mail address.": "You need to enter a complete e-mail address.",
-        "You need to enter a number.": "You need to enter a number.",
-        "You need to select one.": "You need to select one.",
         "Country Code": 'Country Code (e.g., "us")',
         "First Subdivision": 'State Abbreviation (e.g., "NY")',
         "Second Subdivision": "County",
         "Third Subdivision": "Municipality",
-        "Organization": "Organization",
     }
 }
 

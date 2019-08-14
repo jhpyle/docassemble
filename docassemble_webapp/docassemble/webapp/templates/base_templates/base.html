@@ -54,6 +54,11 @@
                 {%- if config['SHOW_DISPATCH'] %}
                 <a class="dropdown-item" href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a>
                 {%- endif %}
+                {%- for item in config['ADMIN_INTERVIEWS'] %}
+                  {%- if item.can_use() %}
+                <a class="dropdown-item" href="{{ url_for('index', i=item.interview, new_session='1') }}">{{ item.get_title(current_language) }}</a>
+                  {%- endif %}
+                {%- endfor %}
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
                 {%- endif %}

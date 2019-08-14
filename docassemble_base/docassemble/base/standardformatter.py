@@ -1414,10 +1414,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '            <br/>\n'
         if len(status.attachments) > 1:
             output += '            <h2 class="sr-only">' + word('Attachments') + "</h2>\n"
-            output += '            <div class="alert alert-success" role="alert">' + word('attachment_message_plural') + '</div>\n'
+            output += '            <div class="alert alert-success" role="alert">' + word('The following documents have been created for you.') + '</div>\n'
         else:
             output += '            <h2 class="sr-only">' + word('Attachment') + "</h2>\n"
-            output += '            <div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>\n'
+            output += '            <div class="alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
         attachment_index = 0
         editable_included = False
         if len(status.attachments) > 1:
@@ -1479,19 +1479,17 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             if show_download:
                 output += '                <div class="tab-pane show active" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
                 if multiple_formats:
-                    output += '                  <p>' + word('save_as_multiple') + '</p>\n'
-                #else:
-                    #output += '                  <p>' + word('save_as_singular') + '</p>\n'
+                    output += '                  <p>' + word('The document is available in the following formats:') + '</p>\n'
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
                 if 'docx' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                 if 'rtf to docx' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                 if 'tex' in attachment['valid_formats']:
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
+                    output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
                 output += '                </div>\n'
             if show_preview:
                 output += '                <div class="tab-pane" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
