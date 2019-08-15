@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.4.78](https://github.com/jhpyle/docassemble/releases/tag/v0.4.78) - 2019-08-
+
+### Fixed
+- Error with `sessions are unique`.
+
 ## [0.4.77](https://github.com/jhpyle/docassemble/releases/tag/v0.4.77) - 2019-08-14
 
 ### Added

@@ -1532,6 +1532,17 @@ help tab in the navigation bar always defaults to "Help" or to the
 `label` of the [`interview help`], and it is not highlighted yellow
 when question-specific help is available.
 
+## <a name="labels above fields"></a>Positioning labels above fields
+
+By default, the **docassemble** user interface uses [Bootstrap]'s
+[horizontal form] style.  If you want your interview to use the
+[Bootstrap]'s [standard] style, set `labels above fields` to `True`:
+
+{% highlight yaml %}
+features:
+  labels above fields: True
+{% endhighlight %}
+
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 
 By default, the menu in the corner provides logged-in users with the
@@ -2027,3 +2038,5 @@ features:
 [`session_tags()`]: {{ site.baseurl}}/docs/functions.html#session_tags
 [interview]: {{ site.baseurl }}/docs/interviews.html
 [section on questions]: {{ site.baseurl }}/docs/questions.html
+[standard]: https://getbootstrap.com/docs/4.0/components/forms/#form-groups
+[horizontal form]: https://getbootstrap.com/docs/4.0/components/forms/#horizontal-form
