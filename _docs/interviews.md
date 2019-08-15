@@ -520,6 +520,24 @@ starts interacting with it.
 There is a [Drupal module] and a [WordPress plugin] for embedding
 interviews using an [iframe].
 
+N.B. The Safari browser will not display a cross-domain iframe unless
+it "trusts" the iframe domain. Trust can be established 
+either through CORS ([Cross-Origin Resource Sharing]) or the user 
+has to have visted that domain before. A possible workaround could be 
+that you get the  user to **first** visit the domain where you are 
+going to be serving the docassemble interview from **and then** re-direct 
+to the parent which has an iframe with the interview. So, for instance, 
+if your wrapper around the interview is at `www.example.com` 
+and your actual interview is at `some-other-domain.org` then you might
+want to initially have the user visit 
+`some-other-domain.org/some-page-that-redirects.html` and 
+then that page will redirect to `www.example.com` using JavaScript 
+like so:-
+
+```
+window.location = "https://www.example.com";
+```
+
 ## <a name="div"></a>Embedding the interview into a web page directly
 
 A **docassemble** interview can be embedded into a `<div>` element in
