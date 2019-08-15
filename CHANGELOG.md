@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.4.78] - 2019-08-15
+### Added
+- The `features` option `labels above fields`.
+### Fixed
+- Errors with `sessions are unique` and `required privileges`.
+
 ## [0.4.77] - 2019-08-14
 ### Added
 - The `enable playground` Configuration directive.

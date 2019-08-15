@@ -696,28 +696,34 @@ i.da-chat-inactive:hover {
     left: 0.2rem;
 }
 
-.form-group.darequired .col-form-label:after {
+.form-group.darequired .da-top-label:after {
+    content: '*';
+    color: red;
+    margin-left: 0.2em;
+}
+
+.form-group.darequired .da-form-label:after {
     position: absolute;
     content: '*';
     color: red;
 }
 
 @media (max-width: 767px) {
-    .form-group.darequired .col-form-label:after {
+    .form-group.darequired .da-form-label:after {
 	bottom: 0.7rem;
     }
 }
 @media (min-width: 768px) {
-    .form-group.darequired .col-form-label:after {
+    .form-group.darequired .da-form-label:after {
 	top: 5px;
 	right: 5px;
     }
 }
 
-.form-group.darequired.greyedout .col-form-label:after { 
+.form-group.darequired.greyedout .da-form-label:after {
     display: none;
 }
-.form-group.dagreyedout .col-form-label { 
+.form-group.dagreyedout .da-form-label {
     color: #999999;
 }
 .daselect {
@@ -765,7 +771,7 @@ i.da-chat-inactive:hover {
     margin-left: -5px;
 }
 
-a.dabackbuttoncolor:hover, 
+a.dabackbuttoncolor:hover,
 a.dabackbuttoncolor:focus {
     text-decoration: none;
 }
@@ -862,7 +868,7 @@ table.datable {
 }
 
 .dacenter {
-    text-align: center; 
+    text-align: center;
 }
 
 .dawrappre {
@@ -891,7 +897,7 @@ table.datable {
 .damynavbar-right {
     float: right;
     -webkit-box-orient: horizontal;
-    flex-direction: row;    
+    flex-direction: row;
     /* margin-right: -15px; */
 }
 /* .damynavbar-right ~ .damynavbar-right { */
@@ -1192,7 +1198,7 @@ span.daparenthetical {
     float: right;
     margin-right: 3px;
 }
-    
+
 .dainfosign {
     color: rgb(49, 112, 143);
     vertical-align: middle;
@@ -1340,11 +1346,11 @@ iframe.daobserver {
     width: 600px;
     height: 432px;
     overflow: auto;
-    -moz-transform: scale(0.75, 0.75); 
-    -webkit-transform: scale(0.75, 0.75); 
+    -moz-transform: scale(0.75, 0.75);
+    -webkit-transform: scale(0.75, 0.75);
     -o-transform: scale(0.75, 0.75);
     -ms-transform: scale(0.75, 0.75);
-    transform: scale(0.75, 0.75); 
+    transform: scale(0.75, 0.75);
     -moz-transform-origin: top left;
     -webkit-transform-origin: top left;
     -o-transform-origin: top left;
@@ -1485,7 +1491,7 @@ div.datop-alert {
     .navbar-nav li .dropdown-toggle {
 	display: none;
     }
-}    
+}
 
 /* @include media-breakpoint-down(md) { */
 /* /\* @media (max-width: 767px) { *\/ */
@@ -1721,7 +1727,7 @@ select.dainput-embedded option {
 }
 
 input.dacheckbox-embedded{
-    
+
 }
 
 input.daradio-embedded {
@@ -1834,7 +1840,7 @@ blockquote.dalimheight {
 .daimagepreview {
     max-height: 12em;
     overflow-y: auto;
-}    
+}
 
 .daimagepreview img {
     max-width: 100%;
@@ -2345,10 +2351,10 @@ div.daconstraintlist div + div {
     }
     .dasigfooter {
 	bottom: 0px;
-	left: 0px; 
+	left: 0px;
 	right: 0px;
 	height: 42px;
-	padding: 2px;    
+	padding: 2px;
     }
     .dasigtitle {
 	line-height: 26px;
@@ -2620,7 +2626,7 @@ tr:first-child .datableup, tr:last-child .databledown {
 .daChatButton:disabled {
     cursor: not-allowed !important;
 }
-   
+
 .dawide .col-xl-1,
 .dawide .col-xl-2,
 .dawide .col-xl-3,
@@ -2673,7 +2679,7 @@ tr:first-child .datableup, tr:last-child .databledown {
     text-align: left !important;
 }
 
-.dawide .form-group.darequired .col-form-label:after {
+.dawide .form-group.darequired .da-form-label:after {
     bottom: 0.7rem !important;
     top: auto !important;
     right: auto !important;

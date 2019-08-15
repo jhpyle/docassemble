@@ -5299,14 +5299,16 @@ def index(action_argument=None):
                     #release_lock(session['uid'], yaml_filename)
                 if current_user.is_anonymous:
                     if not interview.allowed_to_access(is_anonymous=True):
+                        delete_session_for_interview()
                         flash(word("You need to be logged in to access this interview."), "info")
-                        return redirect('user.login', next=url_for('index', i=yaml_filename))
+                        return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
                 elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                     raise DAError(word('You are not allowed to access this interview.'), code=403)
                 unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
                 if unique_sessions is not False and not current_user.is_authenticated:
+                    delete_session_for_interview()
                     flash(word("You need to be logged in to access this interview."), "info")
-                    return redirect('user.login', next=url_for('index', i=yaml_filename))
+                    return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
                 session_id = None
                 if unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions)):
                     session_id = get_existing_session(yaml_filename, secret)
