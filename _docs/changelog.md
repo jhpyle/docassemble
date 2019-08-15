@@ -4,10 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.4.78](https://github.com/jhpyle/docassemble/releases/tag/v0.4.78) - 2019-08-
+## [0.4.78](https://github.com/jhpyle/docassemble/releases/tag/v0.4.78) - 2019-08-15
+
+### Added
+- The `features` option `labels above fields`.
 
 ### Fixed
-- Error with `sessions are unique`.
+- Errors with `sessions are unique` and `required privileges`.
 
 ## [0.4.77](https://github.com/jhpyle/docassemble/releases/tag/v0.4.77) - 2019-08-14
 

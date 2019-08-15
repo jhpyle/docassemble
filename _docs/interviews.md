@@ -520,23 +520,85 @@ starts interacting with it.
 There is a [Drupal module] and a [WordPress plugin] for embedding
 interviews using an [iframe].
 
-N.B. The Safari browser will not display a cross-domain iframe unless
-it "trusts" the iframe domain. Trust can be established 
-either through CORS ([Cross-Origin Resource Sharing]) or the user 
-has to have visted that domain before. A possible workaround could be 
-that you get the  user to **first** visit the domain where you are 
-going to be serving the docassemble interview from **and then** re-direct 
-to the parent which has an iframe with the interview. So, for instance, 
-if your wrapper around the interview is at `www.example.com` 
-and your actual interview is at `some-other-domain.org` then you might
-want to initially have the user visit 
-`some-other-domain.org/some-page-that-redirects.html` and 
-then that page will redirect to `www.example.com` using JavaScript 
-like so:-
+Web browsers are generally permissive about allowing [iframe]s even
+when the host domain and [iframe] domain are different.  However, some
+browsers, such as Safari, might block the content because of
+[Cross-Origin Resource Sharing] concerns.
 
-```
-window.location = "https://www.example.com";
-```
+If you encounter this issue, you may want to configure your
+**docassemble** site so that it runs on the same domain as your host
+site.  You can do this if you can configure the host site to use a
+proxy.  For instructions on how to do this, see the subsection on
+[installing on a machine already using a web server].  Unfortunately,
+this is a fairly complex set-up, and it may not be possible to
+configure this set-up on all sites.
+
+It may also help to set [`cross site domains`] in your [Configuration]
+to include the protocol and domain of the host site.  For example:
+
+{% highlight yaml %}
+cross site domains:
+  - https://example.com
+{% endhighlight %}
+
+When this is set, your server will respond to requests with special
+headers that indicate to the browser that your server consents to
+allowing `https://example.com` to embed its content.
+
+Even after you set [`cross site domains`], some browsers may still
+block the [iframe] content if the top-level domain of the host server
+is different from the top-level domain of the **docassemble** server.
+Thus, if your host web site is `example.com`, you could edit your
+[DNS] so that your **docassemble** server runs on a subdomain of
+`example.com`, such as `interviews.example.com`.
+
+Another way that a browser can be persuaded to allow an [iframe] is if
+the browser's history includes a visit to the **docassemble** site.
+This indicates to the browser that the user has consented to receive
+content from the **docassemble** server.  For example, when a host
+site on `example.com` tries to show the user an [iframe] with content
+from `legalinterviewbot.com`, the browser will consult the user's
+browser history, see that the user once visited a page on
+`legalinterviewbot.com`, so it will conclude that it is safe to show
+the content to the user.
+
+One way to establish this browser history is to have a link on your
+host site that points to an HTML file on your **docassemble** site,
+which then redirects the user back to your host site.  This HTML file
+can be hosted from the "static" folder of one of your packages.  For
+example, if your package name is `docassemble.missouri`, and the file
+name is `start.html`, you can point the users to the path
+`/packagestatic/docassemble.missouri/start.html` on your
+**docassemble** server.  The content of the HTML could be something
+like:
+
+{% highlight html %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Redirecting...</title>
+        <meta http-equiv="refresh" content="1; url = https://example.com/custody/interview.html" />
+    </head>
+    <body>
+        <p>Starting your interview on example.com...</p>
+    </body>
+</html>
+{% endhighlight %}
+
+Another way to redirect the user is to run some [JavaScript] like:
+
+{% highlight javascript %}
+window.location = "https://example.com/custody.interview.html";
+{% endhighlight %}
+
+Different browsers protect user privacy in different ways.  Some users
+may have installed plug-ins that interfere with [iframe] embedding.
+The way that browsers behave is usually not well-documented, and it
+can change at any time.  Thus, the most stable solution to any future
+cross-site scripting problems you might encounter is to make the host
+site act as a proxy for the **docassemble** server, following the
+model discussed in the section on [installing on a machine already
+using a web server].
 
 ## <a name="div"></a>Embedding the interview into a web page directly
 
@@ -708,17 +770,29 @@ If you want to load all of the [JavaScript] dependencies except for
 {% endhighlight %}
 
 Another complication of embedding using a `<div>` is avoidance of
-problems with [CORS].  In the [Configuration], set [`cross site
-domains`] to the URL of your site:
+problems with [CORS].  Problems with [CORS] were discussed in the
+previous section on [using an iframe], and these problems are even
+more likely to arise when embedding in a `<div>`.
+
+To get around these problems, set [`cross site domains`] in your
+[Configuration] to the URL of your site:
 
 {% highlight yaml %}
 cross site domains:
   - https://example.com
 {% endhighlight %}
 
-After changing this value, you will need to fully restart your system,
-for example by doing `docker stop -t 60 <container ID>` followed by
-`docker start <container ID>`.
+Even after you set [`cross site domains`], some browsers, such as
+Firefox, may still block the content if the top-level domain of the
+host server is different from the top-level domain of the
+**docassemble** server.  Thus, if your host web site is example.com,
+you should run your **docassemble** server on a subdomain of
+example.com, such as interviews.example.com.
+
+If you still encounter problems on some browsers, consider setting up
+your host server to act as a proxy, following the model discussed in
+the subsection on [installing on a machine already using a web
+server].
 
 ## <a name="reset"></a>Starting an interview from the beginning
 
@@ -945,3 +1019,5 @@ functions.
 [how answers are stored]: #howstored
 [Drupal module]: https://github.com/jpylephilalegal/docassemble_embed
 [WordPress plugin]: https://github.com/jpylephilalegal/docassemble-embedder
+[installing on a machine already using a web server]: {{ site.baseurl }}/docs/docker.html#forwarding
+[DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
