@@ -4554,6 +4554,28 @@ class BankCustomer(DAObject, SQLObject):
             return None
 {% endhighlight %}
 
+This example uses the `alchemy_url()` function to refer to a database
+configuration called `demo db`.  This assumes that there is a
+directive called `demo db` in the [Configuration] that specifies a
+connection to a SQL database, following the same layout of the [`db`]
+directive.
+
+{% highlight yaml %}
+demo db:
+  name: demo
+  user: jsmith
+  password: supersecret
+{% endhighlight %}
+
+While the tables can be created automatically by [SQLAlchemy], the
+database itself (which in this example is named `demo`) will need to
+be created beforehand.
+
+Although you can use any [SQLAlchemy] URL to describe your database,
+using the `alchemy_url()` function from `docassemble.base.sql` is
+recommended because this ensures that passwords are not hard-coded
+into [Python] code.
+
 ## <a name="sqlobject how it works"></a>How it works
 
 The [`SQLObject`] facilitates synchronization of values between
@@ -5386,3 +5408,4 @@ the `_uid` of the table rather than the `id`.
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
 [`SQLObject`]: #SQLObject
+[`db`]: {{ site.baseurl }}/docs/config.html#db
