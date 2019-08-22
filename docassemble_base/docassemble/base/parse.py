@@ -467,6 +467,8 @@ class InterviewStatus(object):
         self.tracker = tracker
     def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
+        if 'progress' in the_user_dict['_internal']:
+            result['progress'] = the_user_dict['_internal']['progress']
         if self.question.language in self.question.interview.default_validation_messages:
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
         else:
