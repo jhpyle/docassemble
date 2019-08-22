@@ -125,7 +125,12 @@
               {%- endif %}
               {%- if can_publish_to_github %}
               <div id="commit_message_div" style="display:none">
-                {{ render_select_field(form.github_branch) }}
+                <div id="github_branch_div">  
+                  {{ render_select_field(form.github_branch) }}
+                  <div id="new_branch_div" style="display:none">  
+                    {{ render_field(form.github_branch_new) }}
+                  </div>
+                </div>
                 {{ render_field(form.commit_message) }}    
               </div>
               {%- endif %}

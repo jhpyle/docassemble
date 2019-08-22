@@ -502,7 +502,7 @@ from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
-standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
@@ -632,7 +632,7 @@ machine learning training files, and other source files.
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-        the_file.write(u'')
+        the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(templatereadme)

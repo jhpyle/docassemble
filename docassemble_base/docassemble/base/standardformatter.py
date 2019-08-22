@@ -494,7 +494,7 @@ def embed_input(status, variable):
     return 'ERROR: field not found'
 
 def is_empty_mc(status, field):
-    if hasattr(field, 'choicetype'):
+    if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
         if field.choicetype in ['compute', 'manual']:
             if field.number not in status.selectcompute:
                 #logmessage("selectcompute had nothing for field " + str(field.number))
@@ -950,6 +950,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
+                    elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
+                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one."))
                     elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('multiple choice required', status, word("You need to select one."))
                     else:
@@ -985,7 +987,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             if hasattr(field, 'inputtype'):
                 if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
                     validation_rules['ignore'] = None
-                elif field.inputtype == 'combobox':
+                elif field.inputtype in ('combobox', 'ajax'):
                     validation_rules['ignore'] = list()
             if hasattr(field, 'datatype'):
                 if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
@@ -2299,6 +2301,24 @@ def input_for(status, field, wide=False, embedded=False):
             output += '</textarea>'
             if embedded:
                 output += '</span>'
+        elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
+            if defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)):
+                defaultstring = ' value="' + defaultvalue + '"'
+                default_val = defaultvalue
+            elif isinstance(defaultvalue, datetime.datetime):
+                defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
+                default_val = format_date(defaultvalue, format='yyyy-MM-dd')
+            else:
+                defaultstring = ''
+                default_val = ''
+            if embedded:
+                output += '<span class="da-inline-error-wrapper">'
+            output += '<select data-action=' + json.dumps(field.combobox_action['action']) + ' data-trig="' + text_type(field.combobox_action['trig']) + '" alt="' + word("Input box") + '" class="form-control da-ajax-combobox' + extra_class + '"' + extra_style + title_text + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"><option' + defaultstring + ' selected="selected">' + default_val + '</option></select>'
+            if embedded:
+                if field.datatype == 'currency':
+                    output += '</span></span>'
+                else:
+                    output += '</span>'
         else:
             if defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)):
                 defaultstring = ' value="' + defaultvalue + '"'

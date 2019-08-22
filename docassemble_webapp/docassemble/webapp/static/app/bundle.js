@@ -8632,6 +8632,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     this.matcher = this.options.matcher || this.matcher;
     this.sorter = this.options.sorter || this.sorter;
     this.highlighter = this.options.highlighter || this.highlighter;
+    this.clearIfNoMatch = this.options.clearIfNoMatch;
     this.shown = false;
     this.selected = false;
     this.refresh();
@@ -8696,6 +8697,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     this.options.placeholder = this.$source.attr('data-placeholder') || this.options.placeholder
     if(this.options.appendId !== "undefined") {
     	this.$element.attr('id', this.$source.attr('id') + this.options.appendId);
+        daComboBoxes[this.$element.attr('id')] = this;
     }
     this.$element.attr('placeholder', this.options.placeholder)
     this.$target.prop('name', this.$source.prop('name'))
@@ -8713,6 +8715,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
 
   , select: function () {
       var val = this.$menu.find('.active').attr('data-value');
+      this.$container.parent().find('.da-has-error').remove();
       this.$element.val(this.updater(val)).trigger('change');
       this.$target.val(this.map[val]).trigger('change');
       this.$source.val(this.map[val]).trigger('change');
@@ -9012,7 +9015,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
       var that = this;
       this.focused = false;
       var val = this.$element.val();
-      if (false && !this.selected && val !== '' ) {
+      if (this.clearIfNoMatch && !this.selected && val !== '' ) {
         this.$element.val('');
         this.$source.val('').trigger('change');
         this.$target.val('').trigger('change');
@@ -9058,6 +9061,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     , menu: '<div class="typeahead typeahead-long dropdown-menu"></div>'
     , item: '<a href="#" class="dropdown-item"></a>'
     , appendId: 'combobox'
+    , clearIfNoMatch: false
   };
 
   $.fn.combobox.Constructor = Combobox;

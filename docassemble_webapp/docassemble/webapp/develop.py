@@ -103,6 +103,7 @@ class PlaygroundPackagesForm(FlaskForm):
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
     github_branch = SelectField(word('Branch'))
+    github_branch_new = StringField(word('Name of new branch'))
     commit_message = StringField(word('Commit message'), default="")
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))

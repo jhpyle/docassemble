@@ -1,5 +1,27 @@
 # Change Log
 
+## [0.4.79] - 2019-08-21
+### Added
+- The `SQLObject` class.
+- The `input type` called `ajax`.
+- The `paragraphs` Jinja2 filter.
+### Changed
+- The `__version__` variable is now defined in packages generated from
+  the Playground packages folder.
+- UTM parameters are retained if an `analytics id` is defined under
+  `google` in the Configuration, or a `segment id` directive is
+  defined in the Configuration.
+- The Playground packages folder GitHub commit process now uses `git
+  merge` to merge changes, which means it might fail if a commit would
+  overwrite changes.
+- The Playground packages folder now allows for committing to a new
+  remote branch.
+### Fixed
+- Incorrect behavior during initial visit to `/interview` when
+  interview uses unique sessions.
+- Interview advanced a step despite `validation code` raising an
+  exception.
+
 ## [0.4.78] - 2019-08-15
 ### Added
 - The `features` option `labels above fields`.

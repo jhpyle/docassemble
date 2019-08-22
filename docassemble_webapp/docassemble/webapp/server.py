@@ -974,6 +974,18 @@ for key in ('main page pre', 'main page submit', 'main page post', 'main page un
         main_page_parts[DEFAULT_LANGUAGE][key] = main_page_parts['*'][key]
 del lang_list
 
+if google_config.get('analytics id', None) is not None:
+    ga_configured = True
+else:
+    ga_configured = False
+
+if google_config.get('analytics id', None) is not None or daconfig.get('segment id', None) is not None:
+    analytics_configured = True
+    reserved_argnames = ('i', 'json', 'js_target', 'from_list', 'session', 'cache', 'reset', 'new_session', 'action', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content')
+else:
+    analytics_configured = False
+    reserved_argnames = ('i', 'json', 'js_target', 'from_list', 'session', 'cache', 'reset', 'new_session', 'action')
+
 def get_sms_session(phone_number, config='default'):
     sess_info = None
     if twilio_config is None:
@@ -1736,7 +1748,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
         api_key = google_config.get('api key')
     else:
         api_key = None
-    if 'analytics id' in google_config:
+    if ga_configured:
         ga_id = google_config.get('analytics id')
     else:
         ga_id = None
@@ -2407,7 +2419,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
                         else:
                             navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
                     navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
-            #navbar += '</div></li>'
+                navbar += '</div></li>'
     else:
         if custom_menu:
             navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
@@ -4531,13 +4543,13 @@ def github_unconfigure():
                         found = True
                         id_to_remove = key['id']
             else:
-                raise DAError("github_configure: could not get additional information about ssh keys")
+                raise DAError("github_unconfigure: could not get additional information about ssh keys")
         else:
             break
     if found:
         resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
         if int(resp['status']) != 204:
-            raise DAError("github_configure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())
+            raise DAError("github_unconfigure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())
     delete_ssh_keys()
     r.delete('da:github:userid:' + str(current_user.id))
     r.delete('da:using_github:userid:' + str(current_user.id))
@@ -5293,7 +5305,7 @@ def index(action_argument=None):
                         message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                     else:
                         message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-                if reset_interview and 'uid' in session:
+                if reset_interview and ('uid' in session and old_yaml_filename == yaml_filename):
                     #obtain_lock(session['uid'], yaml_filename)
                     reset_user_dict(session['uid'], yaml_filename)
                     #release_lock(session['uid'], yaml_filename)
@@ -5310,7 +5322,7 @@ def index(action_argument=None):
                     flash(word("You need to be logged in to access this interview."), "info")
                     return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
                 session_id = None
-                if unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions)):
+                if (not reset_interview) and (unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions))):
                     session_id = get_existing_session(yaml_filename, secret)
                 if session_id is None:
                     user_code, user_dict = reset_session(yaml_filename, secret)
@@ -5325,6 +5337,18 @@ def index(action_argument=None):
                     need_to_reset = True
             else:
                 #logmessage("index: both i and session provided")
+                if reset_interview:
+                    reset_user_dict(session_parameter, yaml_filename)
+                    user_code, user_dict = reset_session(yaml_filename, secret)
+                    add_referer(user_dict)
+                    save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+                    release_lock(user_code, yaml_filename)
+                    session_id = session.get('uid', None)
+                    if 'key_logged' in session:
+                        del session['key_logged']
+                    #logmessage("Need to reset because session_parameter is none")
+                    need_to_resave = True
+                    need_to_reset = True
                 if show_flash:
                     if current_user.is_authenticated:
                         message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
@@ -5447,14 +5471,18 @@ def index(action_argument=None):
         #     #logmessage("index: returning action response")
         #     return response
         for argname in request.args:
-            if argname in ('i', 'json', 'js_target', 'from_list', 'session', 'cache', 'reset', 'new_session', 'action'):
-                # 'filename', 'question', 'format', 'index'
+            if argname in reserved_argnames:
                 continue
             exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
                 #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
             #need_to_resave = True
             #need_to_reset = True
             url_args_changed = True
+    index_params = dict(i=yaml_filename)
+    if analytics_configured:
+        for argname in request.args:
+            if argname in ('utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'):
+                index_params[argname] = request.args[argname]
     if need_to_reset:
         #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
@@ -5464,9 +5492,8 @@ def index(action_argument=None):
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         if action:
-            response = do_redirect(url_for('index', i=yaml_filename, action=safeid(json.dumps(action))), is_ajax, is_json, js_target)
-        else:
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+            index_params['action'] = safeid(json.dumps(action))
+        response = do_redirect(url_for('index', **index_params), is_ajax, is_json, js_target)
         if set_cookie:
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         if expire_visitor_secret:
@@ -6865,7 +6892,9 @@ def index(action_argument=None):
     # Not sure we need this anymore
     # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
     #     del user_dict['_internal']['answers'][interview_status.question.name]
-    if changed:
+    if not validated:
+        changed = False
+    if changed and validated:
         if save_status == 'new':
             steps += 1
             user_dict['_internal']['steps'] = steps
@@ -7010,7 +7039,7 @@ def index(action_argument=None):
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
 #      //var daNextAction = """ + json.dumps(next_action_review) + """;
-        if 'analytics id' in google_config:
+        if ga_configured:
             ga_id = google_config.get('analytics id')
         else:
             ga_id = None
@@ -7018,6 +7047,8 @@ def index(action_argument=None):
             segment_id = daconfig['segment id']
         else:
             segment_id = None
+        index_params_external = copy.copy(index_params)
+        index_params_external['_external'] = True
         the_js = """\
       if (typeof($) == 'undefined'){
         var $ = jQuery.noConflict();
@@ -7058,9 +7089,11 @@ def index(action_argument=None):
       var daVarLookupRev;
       var daValLookup;
       var daTargetDiv;
+      var daComboBoxes = Object();
       var globalEval = eval;
-      var locationBar = """ + json.dumps(url_for('index', i=yaml_filename)) + """;
-      var daPostURL = """ + json.dumps(url_for('index', i=yaml_filename, _external=True)) + """;
+      var locationBar = """ + json.dumps(url_for('index', **index_params)) + """;
+      var daPostURL = """ + json.dumps(url_for('index', **index_params_external)) + """;
+      var daFetchAjaxTimeout = null;
       if (daJsEmbed){
         daTargetDiv = '#' + daJsEmbed;
       }
@@ -7715,7 +7748,7 @@ def index(action_argument=None):
         var seen = Object();
         $(form).find("input, select, textarea").filter(":not(:disabled)").each(function(){
           //console.log("Considering an element");
-          if ($(this).attr('name') && $(this).attr('type') != "hidden" && (($(this).hasClass('labelauty') && $(this).parent().is(":visible")) || $(this).is(":visible"))){
+          if ($(this).attr('name') && $(this).attr('type') != "hidden" && (($(this).hasClass('da-active-invisible') && $(this).parent().is(":visible")) || $(this).is(":visible"))){
             var theName = $(this).attr('name');
             //console.log("Including an element " + theName);
             if (!seen.hasOwnProperty(theName)){
@@ -8698,8 +8731,127 @@ def index(action_argument=None):
           }
         }
       }
+      function daFetchAjax(elem, cb, doShow){
+        var wordStart = $(elem).val();
+        if (wordStart.length < parseInt(cb.$source.data('trig'))){
+          return;
+        }
+        if (daFetchAjaxTimeout != null && daFetchAjaxTimeout.running){
+          daFetchAjaxTimeout.fetchAfter = true;
+          return;
+        }
+        if (doShow){
+          daFetchAjaxTimeout = setTimeout(function(){
+            if (daFetchAjaxTimeout.fetchAfter){
+              daFetchAjax(elem, cb, doShow);
+              daFetchAjaxTimeout.running = false;
+              daFetchAjaxTimeout.fetchAfter = false;
+            }
+          }, 2000);
+          daFetchAjaxTimeout.running = true;
+          daFetchAjaxTimeout.fetchAfter = false;
+        }
+        url_action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
+          if (typeof data == "object"){
+            var upperWordStart = wordStart.toUpperCase()
+            cb.$source.empty();
+            var emptyItem = $("<option>");
+            emptyItem.val("");
+            emptyItem.text("");
+            cb.$source.append(emptyItem);
+            var notYetSelected = true;
+            var selectedValue = null;
+            if (Array.isArray(data)){
+              for (var i = 0; i < data.length; ++i){
+                if (Array.isArray(data[i])){
+                  if (data[i].length >= 2){
+                    var item = $("<option>");
+                    if (notYetSelected && ((doShow && data[i][1].toString().toUpperCase() == upperWordStart) || data[i][0].toString() == wordStart)){
+                      item.prop('selected', true);
+                      notYetSelected = false;
+                      selectedValue = data[i][1]
+                    }
+                    item.text(data[i][1]);
+                    item.val(data[i][0]);
+                    cb.$source.append(item);
+                  }
+                  else if (data[i].length == 1){
+                    var item = $("<option>");
+                    if (notYetSelected && ((doShow && data[i][0].toString().toUpperCase() == upperWordStart) || data[i][0].toString() == wordStart)){
+                      item.prop('selected', true);
+                      notYetSelected = false;
+                      selectedValue = data[i][0]
+                    }
+                    item.text(data[i][0]);
+                    item.val(data[i][0]);
+                    cb.$source.append(item);
+                  }
+                }
+                else if (typeof data[i] == "object"){
+                  for (var key in data[i]){
+                    if (data[i].hasOwnProperty(key)){
+                      var item = $("<option>");
+                      if (notYetSelected && ((doShow && key.toString().toUpperCase() == upperWordStart) || key.toString() == wordStart)){
+                        item.prop('selected', true);
+                        notYetSelected = false;
+                        selectedValue = data[i][key];
+                      }
+                      item.text(data[i][key]);
+                      item.val(key);
+                      cb.$source.append(item);
+                    }
+                  }
+                }
+                else{
+                  var item = $("<option>");
+                  if (notYetSelected && ((doShow && data[i].toString().toUpperCase() == upperWordStart) || data[i].toString() == wordStart)){
+                    item.prop('selected', true);
+                    notYetSelected = false;
+                    selectedValue = data[i];
+                  }
+                  item.text(data[i]);
+                  item.val(data[i]);
+                  cb.$source.append(item);
+                }
+              }
+            }
+            else if (typeof data == "object"){
+              var keyList = Array();
+              for (var key in data){
+                if (data.hasOwnProperty(key)){
+                  keyList.push(key);
+                }
+              }
+              keyList = keyList.sort();
+              for (var i = 0; i < keyList.length; ++i){
+                var item = $("<option>");
+                if (notYetSelected && ((doShow && keyList[i].toString().toUpperCase() == upperWordStart) || keyList[i].toString() == wordStart)){
+                  item.prop('selected', true);
+                  notYetSelected = false;
+                  selectedValue = data[keyList[i]];
+                }
+                item.text(data[keyList[i]]);
+                item.val(keyList[i]);
+                cb.$source.append(item);
+              }
+            }
+            if (doShow){
+              cb.refresh();
+              cb.clearTarget();
+              cb.$target.val(cb.$element.val());
+              cb.lookup();
+            }
+            else{
+              if (!notYetSelected){
+                cb.$element.val(selectedValue);
+              }
+            }
+          }
+        });
+      }
       function daInitialize(doScroll){
         daResetCheckinCode();
+        daComboBoxes = Object();
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
           daSpinnerTimeout = null;
@@ -8822,7 +8974,7 @@ def index(action_argument=None):
             selects[i].appendChild(document.createElement("optgroup"));
           }
         }
-        $(".da-to-labelauty").labelauty({ class: "labelauty dafullwidth" });
+        $(".da-to-labelauty").labelauty({ class: "labelauty da-active-invisible dafullwidth" });
         $(".da-to-labelauty-icon").labelauty({ label: false });
         $("button").on('click', function(){
           daWhichButton = this;
@@ -8873,7 +9025,32 @@ def index(action_argument=None):
           });
         });
         $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang});
-        $('.combobox').combobox();
+        $('select.combobox').combobox();
+        $('select.da-ajax-combobox').combobox({clearIfNoMatch: true});
+        $('input.da-ajax-combobox').each(function(){
+          var cb = daComboBoxes[$(this).attr("id")];
+          daFetchAjax(this, cb, false);
+          $(this).on('keyup', function(e){
+            switch(e.keyCode){
+              case 40:
+              case 39: // right arrow
+              case 38: // up arrow
+              case 37: // left arrow
+              case 36: // home
+              case 35: // end
+              case 16: // shift
+              case 17: // ctrl
+              case 9: // tab
+              case 13: // enter
+              case 27: // escape
+              case 18: // alt
+                return;
+            }
+            daFetchAjax(this, cb, true);
+            e.preventDefault();
+            return false;
+          });
+        });
         $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
@@ -8949,10 +9126,12 @@ def index(action_argument=None):
         });
         $('#daform button[type="submit"]').click(function(){
           daSubmitter = this;
+          document.activeElement.blur();
           return true;
         });
         $('#daform input[type="submit"]').click(function(){
           daSubmitter = this;
+          document.activeElement.blur();
           return true;
         });
         $('#daemailform button[type="submit"]').click(function(){
@@ -9517,7 +9696,7 @@ def index(action_argument=None):
             else if (element.parent('.input-group').length) {
               error.insertAfter(element.parent());
             }
-            else if (element.hasClass('labelauty')){
+            else if (element.hasClass('da-active-invisible')){
               var choice_with_help = $(element).parents(".dachoicewithhelp").first();
               if (choice_with_help.length > 0){
                 $(choice_with_help).parent().append(error);
@@ -9736,7 +9915,7 @@ def index(action_argument=None):
     else:
         the_nav_bar = ''
         interview_status.using_navigation = False
-    content = as_html(interview_status, url_for, debug_mode, url_for('index', i=yaml_filename), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
+    content = as_html(interview_status, url_for, debug_mode, url_for('index', **index_params), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
     if debug_mode:
         readability = dict()
         for question_type in ('question', 'help'):
@@ -10888,7 +11067,7 @@ def observer():
           daHideSpinner();
         }
         $('button[type="submit"], input[type="submit"], a.da-review-action, #dabackToQuestion, #daquestionlabel, #dapagetitle, #dahelptoggle, a[data-linknum], a[data-embaction], #dabackbutton').click(daSubmitter);
-        $(".da-to-labelauty").labelauty({ class: "labelauty dafullwidth" });
+        $(".da-to-labelauty").labelauty({ class: "labelauty da-active-invisible dafullwidth" });
         //$(".da-to-labelauty-icon").labelauty({ label: false });
         var navMain = $("#danavbar-collapse");
         navMain.on("click", "a", null, function () {
@@ -12826,6 +13005,12 @@ def create_playground_package():
         branch = branch.strip()
     if branch in ('', 'None'):
         branch = None
+    new_branch = request.args.get('new_branch', None)
+    if new_branch is not None and new_branch not in ('', 'None'):
+        branch = new_branch
+        branch_is_new = True
+    else:
+        branch_is_new = False
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -12876,7 +13061,7 @@ def create_playground_package():
         all_repositories = dict()
         resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
         if int(resp['status']) == 200:
-            repo_info = json.loads(content.decode())
+            repo_info = json.loads(content.decode('utf-8', 'ignore'))
             all_repositories[repo_info['name']] = repo_info
         if github_auth_info['shared']:
             repositories = get_user_repositories(http)
@@ -12995,10 +13180,20 @@ def create_playground_package():
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
                     resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
                     if int(resp['status']) == 200:
-                        repo_info = json.loads(content.decode())
-                        all_repositories[repo_info['name']] = json.loads(content.decode())
+                        repo_info = json.loads(content.decode('utf-8', 'ignore'))
+                        all_repositories[repo_info['name']] = repo_info
                     else:
                         raise DAError("create_playground_package: GitHub repository could not be found after creating it.")
+                if first_time:
+                    pulled_already = False
+                else:
+                    current_commit_file = os.path.join(area['playgroundpackages'].directory, '.' + github_package_name)
+                    if os.path.isfile(current_commit_file):
+                        pulled_already = True
+                        with open(current_commit_file, 'rU', encoding='utf-8') as fp:
+                            commit_code = fp.read()
+                    else:
+                        pulled_already = False
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -13022,22 +13217,30 @@ def create_playground_package():
                 if branch:
                     branch_option = '-b ' + str(branch) + ' '
                 else:
-                    branch_option = ''
-                output += "Doing " + git_prefix + "git clone " + branch_option + ssh_url + "\n"
+                    branch_option = '-b master '
+                tempbranch = 'playground' + random_string(5)
+                output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git clone.  " + output)
+                packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+                if not os.path.isdir(packagedir):
+                    raise DAError("create_playground_package: package directory did not exist")
+                if pulled_already:
+                    output += "Doing git checkout " + commit_code + "\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git checkout " + commit_code, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        #raise DAError("create_playground_package: error running git checkout.  " + output)
                 if current_user.timezone:
                     the_timezone = current_user.timezone
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'])
                 docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory)
-                packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
-                if not os.path.isdir(packagedir):
-                    raise DAError("create_playground_package: package directory did not exist")
                 # try:
                 #     output += subprocess.check_output(["git", "init"], cwd=packagedir, stderr=subprocess.STDOUT)
                 # except subprocess.CalledProcessError as err:
@@ -13055,6 +13258,12 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
+                output += "Doing git checkout -b " + tempbranch + "\n"
+                try:
+                    output += subprocess.check_output(git_prefix + "git checkout -b " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                except subprocess.CalledProcessError as err:
+                    output += err.output.decode()
+                    raise DAError("create_playground_package: error running git checkout.  " + output)
                 output += "Doing git add .\n"
                 try:
                     output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -13067,22 +13276,42 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git status.  " + output)
-                output += "Doing git commit -m " + repr(str(commit_message)) + "\n"
+                output += "Doing git commit -m " + json.dumps(str(commit_message)) + "\n"
                 try:
                     output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git commit.  " + output)
+                if branch:
+                    the_branch = branch
+                else:
+                    the_branch = 'master'
+                if branch_is_new and the_branch != 'master':
+                    output += "Doing git checkout -b" + the_branch + "\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git checkout -b " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git checkout.  " + output)
+                else:
+                    output += "Doing git checkout " + the_branch + "\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git checkout " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git checkout.  " + output)
+                output += "Doing git merge -m " + json.dumps(word("merge from Playground")) + " --no-ff " + tempbranch + "\n"
+                try:
+                    output += subprocess.check_output(git_prefix + "git merge -m " + json.dumps(word("merge from Playground")) + " --no-ff " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                except subprocess.CalledProcessError as err:
+                    output += err.output.decode()
+                    raise DAError("create_playground_package: error running git merge.  " + output)
                 if False:
                     try:
                         output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
-                    if branch:
-                        the_branch = branch
-                    else:
-                        the_branch = 'master'
                     output += "Doing " + git_prefix + "git push -u origin " + the_branch + "\n"
                     try:
                         output += subprocess.check_output(git_prefix + "git push -u origin " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
@@ -13105,7 +13334,7 @@ def create_playground_package():
                             output += err.output.decode()
                             raise DAError("create_playground_package: error running git push.  " + output)
                 logmessage(output)
-                flash(word("Pushed commit to GitHub.") + "  " + output, 'info')
+                flash(word("Pushed commit to GitHub.") + "<br>" + re.sub(r'[\n\r]+', '<br>', output), 'info')
                 time.sleep(3.0)
                 shutil.rmtree(directory)
                 if branch:
@@ -13211,7 +13440,7 @@ from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
 from distutils2.util import convert_path
 
-standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
@@ -15312,7 +15541,7 @@ def playground_packages():
             found = False
             resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
             if int(resp['status']) == 200:
-                repo_info = json.loads(content.decode())
+                repo_info = json.loads(content.decode('utf-8', 'ignore'))
                 github_http = repo_info['html_url']
                 github_ssh = repo_info['ssh_url']
                 if repo_info['private']:
@@ -15342,7 +15571,7 @@ def playground_packages():
                 for org_info in orgs_info:
                     resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
                     if int(resp['status']) == 200:
-                        repo_info = json.loads(content.decode())
+                        repo_info = json.loads(content.decode('utf-8', 'ignore'))
                         github_http = repo_info['html_url']
                         github_ssh = repo_info['ssh_url']
                         if repo_info['private']:
@@ -15427,12 +15656,12 @@ def playground_packages():
                                     os.utime(target_filename, (the_time, the_time))
                             if filename == 'README.md' and len(levels) == 0:
                                 with zf.open(zinfo) as f:
-                                    the_file = TextIOWrapper(f, encoding='utf8')
-                                    readme_text = the_file.read()
+                                    the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                    readme_text = the_file_obj.read()
                             if filename == 'setup.py' and len(levels) == 0:
                                 with zf.open(zinfo) as f:
-                                    the_file = TextIOWrapper(f, encoding='utf8')
-                                    setup_py = the_file.read()
+                                    the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                    setup_py = the_file_obj.read()
                             elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
@@ -15532,6 +15761,19 @@ def playground_packages():
                     output += err.output.decode()
                     raise DAError("playground_packages: error running git clone.  " + output)
             logmessage(output)
+            dirs_inside = [f for f in os.listdir(directory) if os.path.isdir(os.path.join(directory, f)) and re.search(r'^[A-Za-z0-9]', f)]
+            if len(dirs_inside) == 1:
+                commit_file = os.path.join(area['playgroundpackages'].directory, '.' + dirs_inside[0])
+                packagedir = os.path.join(directory, dirs_inside[0])
+                try:
+                    current_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                except subprocess.CalledProcessError as err:
+                    output = err.output.decode()
+                    raise DAError("playground_packages: error running git rev-parse.  " + output)
+                with open(commit_file, 'w', encoding='utf-8') as fp:
+                    fp.write(current_commit.strip())
+            else:
+                logmessage("Did not find a single directory inside repo")
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
@@ -15695,7 +15937,12 @@ def playground_packages():
                 if form.pypi.data:
                     return redirect(url_for('create_playground_package', package=the_file, pypi='1'))
                 if form.github.data:
-                    return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=form.github_branch.data))
+                    the_branch = form.github_branch.data
+                    if the_branch == "<new>":
+                        the_branch = re.sub(r'[^A-Za-z0-9\_\-]', r'', text_type(form.github_branch_new.data))
+                        return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch)))
+                    else:
+                        return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch)))
                 the_time = formatted_current_time()
                 # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
                 # if existing_package is None:
@@ -15739,6 +15986,17 @@ def playground_packages():
           $(this).hide();
           event.preventDefault();
           return false;
+        });
+        if ($("#github_branch option").length == 0){
+          $("#github_branch_div").hide();
+        }
+        $("#github_branch").on('change', function(event){
+          if ($(this).val() == '<new>'){
+            $("#new_branch_div").show();
+          }
+          else{
+            $("#new_branch_div").hide();
+          }
         });
         $("#daGitHub").click(function(event){
           var daWhichButton = this;
@@ -15846,6 +16104,8 @@ def playground_packages():
     if branch is not None:
         branch = branch.strip()
     branch_choices = list()
+    if len(branch_info) > 0:
+        branch_choices.append(("<new>", word("(New branch)")))
     branch_names = set()
     for br in branch_info:
         branch_names.add(br['name'])

@@ -262,6 +262,7 @@
 "menu": Null
 "Menu": Null
 "Menu:": Null
+"merge from Playground": Null
 "Methods": Null
 "Modules available in Playground": Null
 "Modules defined": Null
@@ -274,10 +275,12 @@
 "My Interviews": Null
 "My Playground": Null
 "Name": Null
+"Name of new branch": Null
 "Name of new privilege is required": Null
 "Name of new privilege": Null
 "Names defined": Null
 "New API Key": Null
+"(New branch)": Null
 "New chat connection from": Null
 "New chat message": Null
 "New conversation above": Null

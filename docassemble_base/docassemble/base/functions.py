@@ -4063,4 +4063,4 @@ def reconsider(*pargs):
 
 def single_to_double_newlines(text):
     """Converts single newlines to double newlines."""
-    return re.sub(r'[\n\r]+', r'\n\n', text)
+    return re.sub(r'[\n\r]+', r'\n\n', text_type(text))

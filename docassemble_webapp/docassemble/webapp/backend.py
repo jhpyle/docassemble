@@ -175,6 +175,7 @@ def da_send_mail(the_message):
 
 import docassemble.webapp.machinelearning
 import docassemble.base.functions
+import docassemble.webapp.user_database
 from docassemble.base.functions import dict_as_json
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
@@ -262,7 +263,8 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          server_sql_get=sql_get,
                                          server_sql_defined=sql_defined,
                                          server_sql_set=sql_set,
-                                         server_sql_delete=sql_delete)
+                                         server_sql_delete=sql_delete,
+                                         alchemy_url=docassemble.webapp.user_database.alchemy_url)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()

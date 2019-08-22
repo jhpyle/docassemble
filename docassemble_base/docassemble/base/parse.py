@@ -853,6 +853,8 @@ class Field:
             self.uncheckothers = data['uncheck others']
         if 'default' in data:
             self.default = data['default']
+        if 'combobox action' in data:
+            self.combobox_action = data['combobox action']
         if 'hint' in data:
             self.hint = data['hint']
         if 'data' in data:
@@ -2443,16 +2445,23 @@ class Question:
                     if isinstance(field, dict):
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
-                        if 'datatype' in field and field['datatype'] in ('radio', 'combobox', 'pulldown'):
+                        if 'datatype' in field and field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
                             field['input type'] = field['datatype']
                             field['datatype'] = 'text'
+                        if 'input type' in field and field['input type'] == 'ajax':
+                            if 'action' not in field:
+                                raise DAError("An ajax field must have an associated action." + self.idebug(data))
+                            if 'choices' in field or 'code' in field:
+                                raise DAError("An ajax field cannot contain a list of choices except through an action." + self.idebug(data))
                         if len(field) == 1 and 'code' in field:
                             field_info['type'] = 'fields_code'
                             self.find_fields_in(field['code'])
                             field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
                             self.fields.append(Field(field_info))
                             continue
-                        if 'datatype' in field and field['datatype'] in ('radio', 'object', 'object_radio', 'combobox', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
+                        if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
+                            raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
+                        if 'input type' in field and field['input type'] in ('radio', 'combobox', 'pulldown') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                         if 'object labeler' in field and ('datatype' not in field or not field['datatype'].startswith('object')):
                             raise DAError("An object labeler can only be used with an object data type")
@@ -2608,6 +2617,18 @@ class Question:
                                             self.find_fields_in(x)
                             elif key == 'address autocomplete':
                                 field_info['address_autocomplete'] = True
+                            elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
+                                if not isinstance(field[key], string_types):
+                                    raise DAError("An action must be plain text" + self.idebug(data))
+                                if 'combobox action' not in field_info:
+                                    field_info['combobox action'] = dict(trig=4)
+                                field_info['combobox action']['action'] = field[key]
+                            elif key == 'trigger at' and 'action' in field and 'input type' in field and field['input type'] == 'ajax':
+                                if (not isinstance(field[key], int)) or field[key] < 2:
+                                    raise DAError("A trigger at must an integer greater than one" + self.idebug(data))
+                                if 'combobox action' not in field_info:
+                                    field_info['combobox action'] = dict()
+                                field_info['combobox action']['trig'] = field[key]
                             elif key == 'exclude':
                                 pass
                             elif key == 'choices':
@@ -3816,6 +3837,8 @@ class Question:
                 only_empty_fields_exist = True
                 commands_to_run = list()
                 for field in self.fields:
+                    if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
+                        only_empty_fields_exist = False
                     docassemble.base.functions.this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'has_code') and field.has_code:
                         # standalone multiple-choice questions
@@ -3844,7 +3867,8 @@ class Question:
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
                             else:
-                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                                if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                    commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
                         # multiple choice field in choices
                         if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
@@ -3886,7 +3910,8 @@ class Question:
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
                             else:
-                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                                if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                    commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
                         if 'exclude' in field.selections:
                             to_exclude = list()
@@ -3924,7 +3949,8 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                            if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
                         selectcompute[field.number] = list()
                         for item in field.choices:
@@ -3944,7 +3970,8 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
-                            commands_to_run.append(from_safeid(field.saveas) + ' = None')
+                            if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif self.question_type == "multiple_choice":
                         selectcompute[field.number] = list()
                         for item in field.choices:
@@ -4028,7 +4055,7 @@ class Question:
                             if hasattr(field, 'datatype'):
                                 if field.datatype in ('number', 'integer', 'currency', 'range'):
                                     the_func(0)
-                                elif field.datatype in ('text', 'area', 'password', 'email', 'radio'):
+                                elif field.datatype in ('text', 'area', 'password', 'email'):
                                     the_func('')
                                 elif field.datatype == 'date':
                                     the_func('01/01/1970')
@@ -6780,6 +6807,7 @@ def custom_jinja_env():
     env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
+    env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
     env.filters['RichText'] = docassemble.base.file_docx.RichText
     return env
 
