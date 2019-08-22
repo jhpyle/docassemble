@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.81] - 2019-08-
+### Added
+- The `advance_progress_meter` option for the `/api/session` POST
+  API endpoint.
+
 ## [0.4.80] - 2019-08-22
 ### Fixed
 - Setting of `__version__` in Python 2.7 raised Unicode error.

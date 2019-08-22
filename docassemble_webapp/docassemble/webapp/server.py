@@ -20559,6 +20559,7 @@ def api_session():
         secret = str(post_data.get('secret', None))
         question_name = post_data.get('question_name', None)
         treat_as_raw = true_or_false(post_data.get('raw', False))
+        advance_progress_meter = true_or_false(post_data.get('advance_progress_meter', False))
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
@@ -20631,7 +20632,7 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list, advance_progress_meter=advance_progress_meter)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)
         if data is None:
@@ -20660,6 +20661,8 @@ def api_file(file_number):
             privileged = True
         else:
             privileged = False
+            session['i'] = yaml_filename
+            session['uid'] = session_id
         try:
             file_info = get_info_from_file_number(number, privileged=privileged)
         except:
@@ -20733,7 +20736,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     #release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False):
     #obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -20800,7 +20803,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     steps += 1
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=True)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=True, advance_progress_meter=advance_progress_meter)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
@@ -20900,7 +20903,7 @@ def api_session_question():
         return data['response']
     return jsonify(**data)
 
-def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False):
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False, advance_progress_meter=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     if user_dict is None:
@@ -20941,8 +20944,14 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Failure to assemble interview: " + text_type(e))
+    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
+    if advance_progress_meter:
+        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
+            advance_progress(user_dict, interview)
+        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
+            user_dict['_internal']['progress'] = interview_status.question.progress
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
         if user_dict.get('multi_user', False) is True and is_encrypted is True:
