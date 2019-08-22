@@ -756,26 +756,17 @@ different developer to produce a new version of the application.
 This mindset can be present even when you are a computer programmer
 yourself.  After you have "finished" the application, you want to be
 able to move on and do other things.  Making changes to an application
-is something you don't feel like you have time to do.  Even if you
+is something you feel like you don't have time to do.  Even if you
 budgeted time for "maintenance," because you expected there was a
 finite probability that something would need to be fixed, you would
 still like to minimize the time you spend fixing bugs.
 
 Another aspect of the common mindset is to think of web applications
-as falling into the "information technology" bucket.  If there are
-quality problems, people think "that's an IT issue" that needs to be
+as falling under the "information technology" umbrella.  If there are
+quality problems, people think it's an "IT issue" that needs to be
 delegated to a person with computer skills, even when the quality
-issues are actually related to poor communication or poor design,
-neither of which are information technology problems.
-
-People who are involved in the development of a web application but
-lack technology skills often feel a lack of agency over the way the
-application operates.  Sometimes this is because the engineers do not
-allow them to have such agency.  Other times, the non-technical people
-do have agency, but do not exercise it because of "learned
-helplessness"; they know that problem-solving is difficult, and they
-can avoid it by telling themselves that the task of problem-solving is
-someone else's responsibility, namely, the "IT people."
+issues are actually related to poor communication or poor substantive
+design, neither of which are information technology problems.
 
 These ways of thinking are bound to result in low-quality web
 applications.
@@ -791,7 +782,20 @@ be developed by individuals who have subject matter expertise as well
 as technical skills?  Or can subject matter experts without technical
 skills work together with people who have technical skills?  Should
 someone take on a managerial role to coordinate developers and subject
-matter experts?
+matter experts?  If subject matter experts work on the project, should
+their role be to "look things over" and be available for questions,
+or should they play an active role in the design?
+
+Which subject matter experts should be involved?  Even if a subject
+matter expert knows the subject matter very well, that doesn't mean
+they are good at communicating about that subject matter through the
+medium of an app.  In litigation, by analogy, lawyer A who has written
+briefs for 20 years may understand the law as well as lawyer B who has
+tried cases in court for 20 years, but that doesn't mean that lawyer A
+is capable of standing up in court and persuading the jury to favor
+his or her client.  One lawyer may be very good at litigating contract
+disputes, but not good at drafting contracts so that they are concise,
+and anticipate every possible scenario that may develop.
 
 What **processes** should be used to ensure that an interview is
 high-quality?  Should the development work be seen as part of a
@@ -882,6 +886,182 @@ amount of money?  Third, if you truly lack the resources to produce a
 quality software application, that's fine; in that case, instead of
 putting a low-quality product on-line, maybe you should allocate
 resources to something more worthwhile.
+
+People who are involved in the development of a web application but
+lack technology skills often feel a lack of agency over the way the
+application operates.  Sometimes this is because the engineers do not
+allow them to have such agency.  Other times, the non-technical people
+do have agency, but do not exercise it because of "learned
+helplessness"; they know that problem-solving is difficult, and they
+can avoid it by telling themselves that the task of problem-solving is
+someone else's responsibility, namely, the "IT people."
+
+How should subject matter experts be involved, and what can be
+expected of them?
+
+There are different levels of subject matter expert engagement in a
+guided interview project.  Many experts may view working on a guided
+interview project as an "extra credit" responsibility, which they can
+take on when they already have a day job without decreasing their
+existing work load.  They may see their role as reviewing the work of
+others, spotting substantive mistakes, and suggesting improvements.
+
+At the other end of the spectrum, the subject matter expert could see
+their role as that of a tech startup founder, who wants to build a
+great guided interview that thoroughly implements their subject matter
+expertise.  They see their role as ensuring excellence, and will give
+the development process their full attention.
+
+Since an expertise automation "industry" does not really exist yet,
+there is no clearly defined role for the expert.  How much should the
+expert be expected to understand the technology?  How much should the
+technologists be expected to understand the subject matter?
+
+For purposes of comparison, consider the film industry.  Is the role
+of the subject matter expert like that of the screenwriter, who has a
+clear vision for the end result and does much of the creative work?
+Or is it like that of a film critic, who critiques the film
+after-the-fact and suggests ways that it could have been better?
+
+Or consider the construction industry.  Is the role of the subject
+matter expert like that of the architect, who creates the blueprints,
+or like that of a municipal agency that approves building permits?
+
+Because there is no existing expertise automation "industry," there
+are no existing expectations of what roles are necessary to create a
+high-quality guided interview.  In the film industry, there are
+producers, screenwriters, directors, cinematographers, lighting
+directors, and more, who are acknowledged to be practitioners of a
+craft.  In the construction industry, there is an understanding that
+architects, structural engineers, and builders work together to get
+buildings constructed and make sure they don't fall down.  Each of
+these roles is acknowledged to be a special skill, the development of
+which depends on talent, education, and experience.
+
+In the guided interview industry, by contrast, there is a popular
+belief that expertise automation is inherently "easy," and that a
+subject matter expert from any background just needs to sit down in
+front of a computer, use some user-friendly software, and produce a
+high-quality app by themselves in a short period of time.  Others
+assume that guided interviews are an "IT thing," and some "smart
+techie" can do all the work if there is a subject matter expert who
+makes themselves available to answer questions.  Others assume that a
+guided interview project simply needs a project manager who
+communicates specifications to contracted developers who work offsite.
+
+Whether expertise automation is inherently "easy" depends on the
+complexity of the expertise automation process being attempted.  At
+one end of the spectrum there are "form-filling" projects that simply
+involve asking a question for each field in a PDF form, with a little
+bit of logic, and delivering a PDF form.  At the other end of the
+spectrum there are guided interviews that ask the same question
+multiple times from different angles, reconcile API-gathered
+information with user-gathered information, allow the user to
+spot-edit information while ensuring logical correctness, allow
+administrators to have special back-door access to investigate and
+resolve problems, and contain safeguards to allow incorrect
+information to be identified and corrected.  Whether the development
+of complex guided interview systems can be made "easy" with technology
+is doubtful.  When it is difficult to even figure out what you want
+the system to do, the computer is not going to be able to read your
+mind.
+
+While a typical subject-matter expert may be able to figure out how to
+use TypeForm and WebMerge, they may not be able to envision the most
+elegant data structure for collecting nested information, or envision
+what to do in every circumstance where a call to an API might fail.
+Nor may they know the right way to communicate effectively with a user
+through the medium of a guided interview.
+
+Is "guided interview developer" a profession?  The problem with
+professions is that it is very difficult to determine in advance
+whether a professional would add value over what you could do yourself
+with the right tools, or just extract a fee.  However, just because
+you can go to Ikea and get a nice piece of furniture that you can
+assemble yourself with a screwdriver does not mean that there is never
+a good reason to hire an experienced cabinet maker.  If you have a
+firm belief that building beautiful, functional, and durable custom
+furniture should be as easy and quick as assembling Ikea furniture,
+and you think tech companies just need to hurry up and build DIY tools
+for this, you're probably going to be waiting a long time.  Although
+the profession of "guided interview developer" does not really exist
+yet, it is likely that over time, it will be acknowledged to be a
+skilled profession that is necessary in situations of greater
+complexity.
+
+If the complexity of a project exceeds what is possible for a subject
+matter expert to accomplish with DIY tools, who should be part of the
+team?  Some assume that a "guided interview developer" is synonymous
+with "someone good with computers."  However, IT professionals who
+understand network administration may not have sufficient facility
+with algorithms, data structures, and debugging to implement complex
+guided interview processes.  Someone who has too much expertise in
+certain areas of software development may not not be ideal for the
+"guided interview developer" role.  As the saying goes, "if the only
+tool you have is a hammer, everything looks like a nail."  Front-end
+developers tend want to write complicated CSS and JavaScript.
+Developers with experience on other platforms will tend to spend time
+thinking about integrating the guided interview platform with their
+favorite platform, rather than working within the guided interview
+platform they are using.
+
+A good developer does not just deliver the deliverable, but will
+figure out a way to do so in the simplest way possible.  Simplicity
+means maintainability; it means that the code base will not need to be
+scrapped just because the person who created it gets a job elsewhere.
+If the project is implemented in the simplest way possible, another
+developer will be able to step in and build on the work of the prior
+developer.  However, if that prior work is inscrutable, the new
+developer will have not choice but to redo it.
+
+Maintaining simplicity sometimes means pushing back against feature
+requests.  Even if the developer could implement a feature, if there
+is a high maintainability cost to adding the feature (a cost which is
+usually invisible to everyone except the developer), it may make sense
+to modify the feature or not implement it at all.  In many cases, if
+the feature that someone wants cannot be implemented without harming
+maintainability, it might be a bad feature anyway.  When a feature
+cannot be implemented elegantly, this is often because it diverges
+from standards.  Features that adhere to standards tend to be easier
+to implement and often result in a better product for the end user
+because they are similar to features the user has seen in other
+products.  Often, the only person who knows enough to advocate for
+standards is the developer who is asked to implement a feature, since
+the non-developers who request features may not be aware of what the
+standards are.
+
+Other skills sets that are necessary for a guided interview project
+are user experience design.  User experience is more than a matter of
+[CSS]; it's about making sure the flow through the interview is
+intuitive.
+
+A related skill set is plain language communication.  How do you ask a
+question in a way that is concise and readable and yet conveys the
+correct meaning?
+
+There is no reason to expect that any given subject matter expert or a
+software developer will have all of these skills.  Subject matter
+experts whose professional life involves communicating with other
+experts in the same subject matter typically have a difficult time
+writing in plain language.  Maybe subject matter experts and
+developers could acquire these skills over time, but if you want your
+guided interview to be good, these skills need to be on the team.
+Someone needs to be able to look at the product objectively, with
+empathy for the wide variety of users who might use the guided
+interview, and envision ways that it can be better.  The designer does
+not need to be able to write code to indicate how they think an
+interview could be re-designed; they could convey it on paper.  The
+coder then needs to be able to figure out ways to implement what the
+designer suggests without breaking with standards or making the
+interview unmaintainable.
+
+All of the people contributing to the project are "guided interview
+developers," just like producers, screenwriters, directors,
+cinematographers, lighting directors are all "movie developers."  All
+the people involved in guided interview developed should think of
+themselves as artists producing a masterpiece; none of them should
+think that "development" is something someone else is doing; they are
+all "developing."
 
 ## <a name="bdd"></a>Behavior-driven development
 

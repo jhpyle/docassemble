@@ -1162,6 +1162,8 @@ The `url_of()` function also has a few special uses.
 * `url_of('exit')` returns a URL that deletes the interview session
   and redirects to the URL at the `next` parameter, or to the
   [`exitpage`] if there is no `next` parameter.
+* `url_of('interview')` returns a URL to the interview page.  (See
+  also [`interview_url()`].)
 * `url_of('logout')` returns a URL that logs the user out.
 * `url_of('exit_logout')` returns a URL that deletes the interview session,
   logs the user out (if the user is logged in), and redirects to the
@@ -1194,6 +1196,10 @@ The `url_of()` function also has a few special uses.
   of the [Playground].
 * `url_of('configuration')` returns a URL to the [Configuration] page.
 * `url_of('root')` returns the root URL of your server.
+
+By default, `url_of()` returns relative URLs, which begin with `/`.
+However, if you want a full URL, you can call, e.g., `url_of('root',
+_external=True)`.
 
 ## <a name="url_ask"></a>url_ask()
 
@@ -2871,45 +2877,58 @@ returned.
 
 `word()` is a general-purpose translation function that is used in the
 code of the web application to ensure that the text the user sees is
-translated into the user's language.
+translated into the user's language.  It is also available for use
+inside interviews.  It is not the only mechanism for [translating]
+your interviews into different languages, but it is one of the
+essential components of [language support] in **docassemble**.
 
-`word("fish")` will return `fish` unless
-`docassemble.base.util.update_word_collection()` has been used to
-define a different translation for the current language.
+Suppose the following [`words`] directive appears in the
+[Configuration].
 
-The following [Python interpreter] session demonstrates how it works:
-
-{% highlight python %}
->>> from docassemble.base.util import *
->>> set_language('es')
->>> word("fish")
-u'fish'
->>> import docassemble.base.util
->>> docassemble.base.util.update_word_collection('es', {'fish': 'pescado'})
->>> word("fish")
-u'pescado'
->>> set_language('en')
->>> word("fish")
-u'fish'
+{% highlight yaml %}
+words:
+  - docassemble.missouri:data/sources/words.yml
 {% endhighlight %}
 
-In your own [Python] code you may wish to use `word()` to help make
-your code multi-lingual.
+Suppose that the `words.yml` file contains the following:
 
-It is not a good idea to call
-`docassemble.base.util.update_word_collection()` from your interview.
-You can use it in [Python] modules, but keep in mind that the changes
-you make will have global effect within the [WSGI] process.  If other
-interviews on the server define the same word translations for the
-same language using `docassemble.base.util.update_word_collection()`,
-the module that happened to load last will win, and the results could
-be unpredictable.
+{% highlight yaml %}
+es:
+  "fish": "pez"
+  "cow": "vaca"
+{% endhighlight %}
 
-The best practice is to load translations at the server level by using
-the [`words`]<span></span> [configuration] directive to load translations from one or
-more [YAML] files.  This causes **docassemble** to call
-`docassemble.base.util.update_word_collection()` at the time the
-server is initialized.
+Suppose further that your interview has an
+[`initial`]<span></span>[`code`] block that sets the language to
+`'en'` or `'es'`:
+
+{% highlight yaml %}
+initial: True
+code: |
+  set_language(user_language)
+---
+question: |
+  Please select your language.
+field: user_language
+choices:
+  - English: en
+  - Español: es
+{% endhighlight %}
+
+Finally, suppose that the user selected "Español" as their language.
+
+Thereafter, if code in your interview runs `word("fish")`, the
+returned value will be `'vaca'`.  However, if the user had selected
+"English" as their language, the returned value would have been
+`'fish'`.
+
+When you call `word("fish")`, the `word()` function looks through all
+the data in the [YAML] files listed under `words` and checks to see if
+there is an entry for the phrase `fish` under the current language
+(which is controlled by [`set_language()`] and [`get_language()`]).
+If, among the key/value pairs listed under the language in question,
+there is a key matching the word `'fish'`, the corresponding value is
+returned.
 
 # <a name="linguistic"></a>Language-specific functions
 
@@ -4949,7 +4968,7 @@ encoding.
 
 {% highlight python %}
 >>> encode_name('favorite_fruit')
-u'ZmF2b3JpdGVfZnJ1aXQ='
+'ZmF2b3JpdGVfZnJ1aXQ'
 {% endhighlight %}
 
 For more information about the relationship between [HTML] and the
@@ -4962,8 +4981,8 @@ The `decode_name()` function does the opposite of [`encode_name()`]:
 it converts a variable name from base64 encoding to plain text.
 
 {% highlight python %}
->>> decode_name('ZmF2b3JpdGVfZnJ1aXQ=')
-u'favorite_fruit'
+>>> decode_name('ZmF2b3JpdGVfZnJ1aXQ')
+'favorite_fruit'
 {% endhighlight %}
 
 ## <a name="mmdc"></a>mmdc()
@@ -6672,3 +6691,4 @@ $(document).on('daPageLoad', function(){
 [`get_interview_variables()`]: #js_get_interview_variables
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug
 [`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
+[translating]: {{ site.baseurl }}/docs/initial.html#translations

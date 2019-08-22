@@ -158,8 +158,8 @@ under a directory called `docassemble`.
 [Python] code.  Files in this directory correspond with files in the
 ["Modules" folder] of the [Playground].  The `__init.py__` file is
 necessary for declaring `baseball` to be a package; you never have to
-edit that file.  The `__init.py__` file is empty but its presence is
-still important.
+edit that file.  The `__init.py__` file is mostly empty except for a
+`__version__` definiton, but its presence is still important.
 5. There is also a `data` directory with subdirectories `questions`,
 `static`, `sources`, and `templates`.  These are for [interviews],
 [static files], [data files], and [document templates].  The

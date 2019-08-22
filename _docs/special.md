@@ -119,6 +119,13 @@ you to use and to retrieve with [`url_args`].
 * `js_target`: indicates that [JavaScript] should be returned that
   places the interview into the element on the screen with an `id`
   matching the given value.
+* `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, and
+  `utm_content`: if you have enabled an [`analytics id`] in your
+  [`google`] configuration, these [UTM parameters], which are used by
+  [Google Analytics] and other analytics sites, will not be processed
+  as [`url_args`].  Instead, they will be retained in the location bar
+  so that they can be accessed by the [JavaScript] of [Google
+  Analytics] or other tracking code.
 
 ## <a name="role_needed"></a>role_needed
 
@@ -1118,3 +1125,7 @@ internal names include:
 [sections]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [security]: {{ site.baseurl }}/docs/security.html
 [tables]: {{ site.baseurl }}/docs/initial.html#table
+[UTM parameters]: https://en.wikipedia.org/wiki/UTM_parameters
+[Google Analytics]: https://analytics.google.com
+[`analytics id`]: {{ site.baseurl }}/docs/config.html#google analytics
+[`google`]: {{ site.baseurl }}/docs/config.html#google

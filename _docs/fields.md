@@ -374,6 +374,7 @@ to use. The possible values of [`input type`] are:
 * [`dropdown`](#select) (the default)
 * [`radio`](#radio)
 * [`combobox`](#combobox)
+* [`ajax`](#ajax)
 
 The following subsections describe the available [`datatype`]s and
 [`input type`]s that you can assign to a field within [`fields`].
@@ -760,6 +761,53 @@ of choices.
 
 The "combobox" selector allows users to choose a selection from a list
 or enter a value of their own.
+
+## <a name="ajax"></a>Combobox that fetches choices from the server
+
+`input type: ajax` looks like a [`combobox`], but retrieves its
+choices from the server using [Ajax], based on what the user types.
+It is useful when the number of possible values is too large to send
+to the browser all at once.
+
+To use `input type: ajax`, you also need to supply an `action`
+specifier.  The browser will use the [JavaScript] function
+[`url_action_call()`] to call the given action.  In return, it expects
+a [JSON] list of items.
+
+{% include side-by-side.html demo="fields-ajax" %}
+
+The [`code`] block that carries out the `action` should always begin
+with `set_save_status('ignore')`.  If you leave this out, then a step
+will be added to the interview each time the results are fetched.  The
+[`code`] block should always end with a call [`json_response()`].
+
+The data that you pass to [`json_response()`] can be in one of three
+forms:
+
+1. A list of pieces of text;
+2. A dictionary in which the keys are the underlying values (what the
+   variable will be set to) and the values are labels (what the user
+   sees and types); or
+3. A list of lists, where the first item in each sub-list is the
+   underlying value and the second item is the label.
+
+In order to avoid sending too many requests to the
+system, the requests are throttled so that they happen no more than
+once every two seconds.
+
+The list will not start showing results until the user types at least
+four characters.  If you want to use a different number of characters
+as the minimum, set `trigger at`.  For example:
+
+{% highlight yaml %}
+question: |
+  What is your favorite word?
+fields:
+  - Word: favorite_word
+    input type: ajax
+    action: wordlist
+    trigger at: 3
+{% endhighlight %}
 
 ## <a name="radio"></a>Radio buttons
 
@@ -2299,3 +2347,7 @@ why this needs to be done manually as opposed to automatically:
 [`continue button field`]: #continue button field
 [`field`]: #field
 [tuples]: https://docs.python.org/3.5/tutorial/datastructures.html#tuples-and-sequences
+[Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
+[`url_action_call()`]: {{ site.baseurl }}/docs/functions.html#js_url_action_call
+[JSON]: https://en.wikipedia.org/wiki/JSON
+[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response

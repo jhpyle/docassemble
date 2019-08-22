@@ -2455,8 +2455,9 @@ For more information, see the documentation of the [`ocr_file()`] function.
 
 ### <a name="s3"></a>s3
 
-If you are using [Amazon S3] to store shared files, enter your access
-keys, [bucket] name, and [region name] as follows:
+If you are using [Amazon S3] to store shared files, your access keys,
+[bucket] name, and [region name] are in stored in the Configuration
+as follows:
 
 {% highlight yaml %}
 s3:
@@ -2469,6 +2470,13 @@ s3:
 
 You will need to create the [bucket] before using it; **docassemble**
 will not create it for you.
+
+If you are using [Docker], you should not define an `s3` directive in
+the Configuration using the web application when you already have a
+server running.  The [S3] configuration is used throughout the boot
+process and the shutdown process.  If you want to start using [S3],
+you should start a new container using [`docker run`] with the
+[`S3BUCKET`], [`S3REGION`], and other environment variables set.
 
 ### <a name="azure"></a>azure
 
@@ -2748,7 +2756,7 @@ external hostname: docassemble.example.com
 
 This variable is only effective if **docassemble** is running on
 [Docker].  It is typically set by the [`DAHOSTNAME`] environment
-variable when the `docker run` command is run for the first time.
+variable when the [`docker run`] command is run for the first time.
 
 If you change `external hostname`, you need to do a complete restart
 of the system for the change to take effect.  (That is, `docker
@@ -2785,7 +2793,7 @@ lets encrypt email: jsmith@example.com
 
 These variables are typically set through the environment variables
 [`DAHOSTNAME`], [`USEHTTPS`], [`USELETSENCRYPT`], and [`LETSENCRYPTEMAIL`] when the
-`docker run` command is run for the first time.  You can change the
+[`docker run`] command is run for the first time.  You can change the
 `use https`, `use lets encrypt`, and `lets encrypt email` variables on
 a running server, but they will only be effective if you restart the
 system using `docker stop -t60 <container ID>` followed by 
@@ -3842,3 +3850,5 @@ and Facebook API keys.
 [`action_button_html()`]: {{ site.baseurl }}/docs/functions.html#action_button_html
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
+[`S3BUCKET`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET
+[`S3REGION`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET

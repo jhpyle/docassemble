@@ -21,11 +21,6 @@ session.  If the user's browser is logged into a session, and the user
 clicks on a hyperlink to the same interview with URL parameters set,
 the [`url_args`] will be updated.
 
-[`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
-[`url_args` special variable]: {{ site.baseurl }}/docs/special.html#url_args
-[reserved URL parameters]: {{ site.baseurl }}/docs/special.html#reserved url parameters
-[invocation]: {{ site.baseurl }}/docs/interviews.html#invocation
-
 # <a name="actions"></a>Using the "actions" system
 
 The normal flow of an interview in **docassemble** is as follows:
@@ -78,12 +73,6 @@ want the user to have to wait for the result, or there is a danger
 that the user's browser will time out if the server does not respond
 quickly enough.
 
-[background action]: {{ site.baseurl }}/docs/background.html#background
-[`url_ask()`]: {{ site.baseurl }}/docs/functions.html#url_ask
-[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
-[interview logic]: {{ site.baseurl }}/docs/logic.html
-[`question`]: {{ site.baseurl }}/docs/questions.html#question
-
 ## <a name="push"></a>Pushing information into a session
 
 Typically, users launch actions by clicking hyperlinks within the
@@ -94,8 +83,6 @@ session.
 For more information about this feature, see the
 [`interview_url_action()`] function.  This function creates a URL that
 embeds the session ID.
-
-[`interview_url_action()`]: {{ site.baseurl }}/docs/functions.html#interview_url_action
 
 ## <a name="pull"></a>Pulling information out of a session
 
@@ -113,14 +100,9 @@ loading it in a different browser to verify that another application
 (not having the same browser cookies) can access the information in
 [JSON] format.
 
-[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
-[`event`]: {{ site.baseurl }}/docs/fields.html#event
-
 # <a name="api"></a>Using the API
 
 You can also manipulate interview sessions using the **docassemble** [API].
-
-[API]: {{ site.baseurl }}/docs/api.html
 
 # <a name="email from"></a>E-mail
 
@@ -131,22 +113,16 @@ interview session to the outside world.  You will first need to
 [configure your server]({{ site.baseurl }}/docs/config.html#mail) to
 send e-mail.
 
-[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
-
 ## <a name="email to"></a>Sending e-mail to a session
 
 If you are using [Docker] to deploy your server, and you have
-[configured your server to receive e-mail]({{ site.baseurl }}/docs/config.html#setup_email), 
+[configured your server to receive e-mail]({{ site.baseurl }}/docs/config.html#setup_email),
 you can use **docassemble**'s e-mail-to-session feature.
 
 This involves generating a special e-mail address using
 [`interview_email()`].  Any e-mails sent to that address and received
 by the server will be processed and made available in the interview
 session for retrieval using [`get_emails()`].
-
-[Docker]: {{ site.baseurl }}/docs/docker.html
-[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
-[`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
 
 # <a name="sms"></a>Sending text messages from a session
 
@@ -155,10 +131,6 @@ interview session to the outside world.  You will first need to
 [configure your server]({{ site.baseurl }}/docs/config.html#twilio) to
 send text messages.  Despite the function name ("SMS"), this function
 can be used to send messages through [Twilio]'s [WhatsApp API].
-
-[`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
-[Twilio]: https://twilio.com
-[WhatsApp API]: https://www.twilio.com/whatsapp
 
 # <a name="persist data"></a>Persisting data
 
@@ -184,9 +156,6 @@ By default, interview sessions are deleted after 90 days of
 inactivity.  This feature can be modified or turned off using the
 [`interview delete days`] configuration directive.
 
-[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
-[`interview delete days`]: {{ site.baseurl }}/docs/config.html#interview delete days
-
 ## <a name="persist files"></a>Persistent files
 
 When an interview session is deleted, the files associated with the
@@ -196,9 +165,6 @@ If you want a file to continue exist after its associated interview
 session has been deleted, you can use the [`.set_attributes()`] method
 of the [`DAFile`] object in order to indicate that the file should not
 be deleted when the interview session is deleted.
-
-[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
-[`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 
 ## <a name="sql"></a>Saving to SQL
 
@@ -214,17 +180,18 @@ indefinitely and that will not be encrypted, you can use the
 [`write_record()`], [`delete_record()`] and [`read_records()`]
 functions to store data (including Python objects) in SQL records.
 
-[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
-[`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
-[`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
+You can save information in encrypted form using a [Redis]-like system
+using a [`DAStore`] object.
+
+It is also possible for [`DAObject`]s to "mirror" rows in a SQL
+database.  To do this, you need to write custom classes that are
+subclasses of [`DAObject`] and the special object [`SQLObject`].  For
+more information, see the documentation for [`SQLObject`].
 
 ## <a name="redis"></a>Saving to Redis
 
 Instead of saving to the SQL database, you can write persistent data
 to [Redis] using an instance of the [`DARedis`] object.
-
-[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
-[Redis]: https://redis.io/
 
 # <a name="third party api"></a>Using third-party APIs
 
@@ -279,3 +246,34 @@ a [Google Sheet].
 [sample interviews in the documentation]: {{ site.baseurl }}/docs/functions.html#google sheets example
 [Google Sheets]: https://sheets.google.com
 [Google Sheet]: https://sheets.google.com
+[`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
+[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
+[`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
+[`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
+[`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
+[`url_args` special variable]: {{ site.baseurl }}/docs/special.html#url_args
+[reserved URL parameters]: {{ site.baseurl }}/docs/special.html#reserved url parameters
+[invocation]: {{ site.baseurl }}/docs/interviews.html#invocation
+[background action]: {{ site.baseurl }}/docs/background.html#background
+[`url_ask()`]: {{ site.baseurl }}/docs/functions.html#url_ask
+[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[interview logic]: {{ site.baseurl }}/docs/logic.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`interview_url_action()`]: {{ site.baseurl }}/docs/functions.html#interview_url_action
+[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
+[`event`]: {{ site.baseurl }}/docs/fields.html#event
+[API]: {{ site.baseurl }}/docs/api.html
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[Docker]: {{ site.baseurl }}/docs/docker.html
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
+[`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[Twilio]: https://twilio.com
+[WhatsApp API]: https://www.twilio.com/whatsapp
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[`interview delete days`]: {{ site.baseurl }}/docs/config.html#interview delete days
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[Redis]: https://redis.io/
+[`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject

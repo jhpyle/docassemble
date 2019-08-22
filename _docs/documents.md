@@ -923,7 +923,8 @@ paragraph spacing, you can change the default style.
 If you want single newlines in your text to break paragraphs, you can
 use the function [`single_to_double_newlines()`].  (Under the rules of
 [Markdown], single newlines act as spaces, while double spaces act as
-paragraph breaks.)
+paragraph breaks.)  This function is available as the [Jinja2] filter
+called `paragraphs`.
 
 Another way to insert [Markdown] text is to use the `markdown`
 [Jinja2] filter.
@@ -936,6 +937,9 @@ Or, if using [`new markdown to docx`]:
 
 If the variable `the_text` contains [Markdown] formatting, the
 [Markdown] formatting will be converted into DOCX formatting.
+
+If you want to convert single newlines into paragraphs breaks, use
+`the_text | paragraphs | markdown` instead of `the_text | markdown`.
 
 ## <a name="update references"></a>Using tables of contents and other references in DOCX files
 
