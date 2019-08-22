@@ -173,7 +173,8 @@ ghostscript \
 ttf-liberation \
 fonts-liberation \
 cm-super \
-qpdf; \
+qpdf \
+wamerican; \
 do sleep 5; \
 done; \
 apt-get -q -y install -t stretch-backports libreoffice &> /dev/null"

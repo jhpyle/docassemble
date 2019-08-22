@@ -17,7 +17,8 @@ code: |
   set_save_status('ignore')
   wordstart = action_argument('wordstart').lower()
   results = list()
-  with open('/usr/share/dict/words', 'rU', encoding='utf-8') as words_file:
+  import codecs
+  with codecs.open('/usr/share/dict/words', mode='rU', encoding='utf-8') as words_file:
     for line in words_file:
       lower_line = line.lower()
       if lower_line.startswith(wordstart):
