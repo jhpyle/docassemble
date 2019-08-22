@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.80] - 2019-08-22
+### Fixed
+- Setting of `__version__` in Python 2.7 raised Unicode error.
+- Back button after action in URL repeated the action.
+
 ## [0.4.79] - 2019-08-21
 ### Added
 - The `SQLObject` class.

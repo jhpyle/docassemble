@@ -5543,6 +5543,7 @@ def index(action_argument=None):
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
+        action = None
     else:
         old_user_dict = None
     # elif 'filename' in request.args:
@@ -7261,7 +7262,14 @@ def index(action_argument=None):
               args = {};
           }
           data = {action: action, arguments: args};
-          return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
+          var url;
+          if (daJsEmbed){
+            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          else{
+            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          return url;
       }
       function url_action_call(action, args, callback){
           if (args == null){
@@ -7273,10 +7281,10 @@ def index(action_argument=None):
           var data = {action: action, arguments: args};
           var url;
           if (daJsEmbed){
-            url = daPostURL + "?action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
           }
           else{
-            url = "?action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
           }
           $.ajax({
             type: "GET",
@@ -10972,7 +10980,14 @@ def observer():
               args = {};
           }
           data = {action: action, arguments: args};
-          return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
+          var url;
+          if (daJsEmbed){
+            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          else{
+            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          return url;
       }
       function url_action_call(action, args, callback){
           //redo?
@@ -10983,9 +10998,16 @@ def observer():
               callback = function(){};
           }
           var data = {action: action, arguments: args};
+          var url;
+          if (daJsEmbed){
+            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
+          else{
+            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          }
           $.ajax({
             type: "GET",
-            url: "?action=" + encodeURIComponent(btoa(JSON.stringify(data))),
+            url: url,
             success: callback,
             error: function(xhr, status, error){
               setTimeout(function(){
@@ -13609,7 +13631,7 @@ class Fruit(DAObject):
             with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(initpy)
             with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write(u'')
+                the_file.write(u'__version__ = "0.0.1"')
             with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
                 the_file.write(objectfile)
             with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:

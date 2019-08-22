@@ -632,7 +632,7 @@ machine learning training files, and other source files.
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-        the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
+        the_file.write(u"__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(templatereadme)
