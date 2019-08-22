@@ -774,6 +774,9 @@ specifier.  The browser will use the [JavaScript] function
 [`url_action_call()`] to call the given action.  In return, it expects
 a [JSON] list of items.
 
+The following example uses the [words file] (from the [wamerican]
+package) as a data source for the combobox options.
+
 {% include side-by-side.html demo="fields-ajax" %}
 
 The [`code`] block that carries out the `action` should always begin
@@ -2351,3 +2354,5 @@ why this needs to be done manually as opposed to automatically:
 [`url_action_call()`]: {{ site.baseurl }}/docs/functions.html#js_url_action_call
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
+[words file]: https://en.wikipedia.org/wiki/Words_(Unix)
+[wamerican]: https://packages.debian.org/buster/wamerican
