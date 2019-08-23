@@ -1,10 +1,10 @@
-FROM debian:stretch
+FROM debian:buster
 RUN DEBIAN_FRONTEND=noninteractive \
 bash -c \
-'echo -e "deb http://deb.debian.org/debian stretch main contrib\n\
-deb http://deb.debian.org/debian stretch-updates main\n\
-deb http://security.debian.org/debian-security stretch/updates main\n\
-deb http://ftp.debian.org/debian stretch-backports main" > /etc/apt/sources.list\
+'echo -e "deb http://deb.debian.org/debian buster main contrib\n\
+deb http://deb.debian.org/debian buster-updates main\n\
+deb http://security.debian.org/debian-security buster/updates main\n\
+deb http://ftp.debian.org/debian buster-backports main" > /etc/apt/sources.list\
 && apt-get -y update'
 RUN DEBIAN_FRONTEND=noninteractive \
 bash -c \
@@ -21,10 +21,9 @@ apache2 \
 postgresql \
 libapache2-mod-xsendfile \
 libffi-dev \
-libffi6 \
 gcc \
 supervisor \
-s3cmd \
+s4cmd \
 make \
 perl \
 libinline-perl \
@@ -36,6 +35,7 @@ zlib1g-dev \
 libpq-dev \
 logrotate \
 nodejs \
+npm \
 cron \
 libxml2 \
 libxslt1.1 \
@@ -50,7 +50,6 @@ libtool-bin \
 syslog-ng \
 rsync \
 curl \
-mktemp \
 dnsutils \
 build-essential \
 libsvm3 \
@@ -97,88 +96,19 @@ libcddb-get-perl \
 libmp3-tag-perl \
 libaudio-scan-perl \
 libaudio-flac-header-perl \
-libav-tools \
-tesseract-ocr \
-tesseract-ocr-dev \
-tesseract-ocr-afr \
-tesseract-ocr-ara \
-tesseract-ocr-aze \
-tesseract-ocr-bel \
-tesseract-ocr-ben \
-tesseract-ocr-bul \
-tesseract-ocr-cat \
-tesseract-ocr-ces \
-tesseract-ocr-chi-sim \
-tesseract-ocr-chi-tra \
-tesseract-ocr-chr \
-tesseract-ocr-dan \
-tesseract-ocr-deu \
-tesseract-ocr-deu-frak \
-tesseract-ocr-ell \
-tesseract-ocr-eng \
-tesseract-ocr-enm \
-tesseract-ocr-epo \
-tesseract-ocr-equ \
-tesseract-ocr-est \
-tesseract-ocr-eus \
-tesseract-ocr-fin \
-tesseract-ocr-fra \
-tesseract-ocr-frk \
-tesseract-ocr-frm \
-tesseract-ocr-glg \
-tesseract-ocr-grc \
-tesseract-ocr-heb \
-tesseract-ocr-hin \
-tesseract-ocr-hrv \
-tesseract-ocr-hun \
-tesseract-ocr-ind \
-tesseract-ocr-isl \
-tesseract-ocr-ita \
-tesseract-ocr-ita-old \
-tesseract-ocr-jpn \
-tesseract-ocr-kan \
-tesseract-ocr-kor \
-tesseract-ocr-lav \
-tesseract-ocr-lit \
-tesseract-ocr-mal \
-tesseract-ocr-mkd \
-tesseract-ocr-mlt \
-tesseract-ocr-msa \
-tesseract-ocr-nld \
-tesseract-ocr-nor \
-tesseract-ocr-osd \
-tesseract-ocr-pol \
-tesseract-ocr-por \
-tesseract-ocr-ron \
-tesseract-ocr-rus \
-tesseract-ocr-slk \
-tesseract-ocr-slk-frak \
-tesseract-ocr-slv \
-tesseract-ocr-spa \
-tesseract-ocr-spa-old \
-tesseract-ocr-sqi \
-tesseract-ocr-srp \
-tesseract-ocr-swa \
-tesseract-ocr-swe \
-tesseract-ocr-tam \
-tesseract-ocr-tel \
-tesseract-ocr-tgl \
-tesseract-ocr-tha \
-tesseract-ocr-tur \
-tesseract-ocr-ukr \
-tesseract-ocr-vie \
+ffmpeg \
+tesseract-ocr-all \
+libtesseract-dev \
 ttf-mscorefonts-installer \
 fonts-ebgaramond-extra \
 ghostscript \
-ttf-liberation \
 fonts-liberation \
 cm-super \
 qpdf \
 wamerican; \
-do sleep 5; \
-done; \
-apt-get -q -y install -t stretch-backports libreoffice &> /dev/null"
-RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
+do sleep 10; \
+done;"
+RUN DEBIAN_FRONTEND=noninteractive TERM=xterm PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 cd /tmp \
 && mkdir -p /etc/ssl/docassemble \
    /usr/share/docassemble/local \
@@ -206,8 +136,8 @@ cd /usr/share/docassemble \
 && git clone https://github.com/letsencrypt/letsencrypt \
 && cd letsencrypt \
 && ./letsencrypt-auto --help \
-&& echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/9.6/main/pg_hba.conf \
-&& echo "listen_addresses = '*'" >> /etc/postgresql/9.6/main/postgresql.conf
+&& echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/11/main/pg_hba.conf \
+&& echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 ln -s /var/mail/mail /var/mail/root \

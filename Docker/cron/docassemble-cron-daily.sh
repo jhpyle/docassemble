@@ -46,9 +46,9 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			s3cmd -q put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+			s4cmd -q put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
 		    fi
-		    s3cmd -q sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+		    s4cmd -q sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
 		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
@@ -109,7 +109,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
 	rsync -au "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
 	if [ "${S3ENABLE:-false}" == "true" ]; then
-	    s3cmd sync "$PGBACKUPDIR/" "s3://${S3BUCKET}/postgres/"
+	    s4cmd sync "$PGBACKUPDIR/" "s3://${S3BUCKET}/postgres/"
 	fi
 	if [ "${AZUREENABLE:-false}" == "true" ]; then
 	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
@@ -128,7 +128,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	else
 	    export LOCAL_HOSTNAME=`hostname --fqdn`
 	fi
-	s3cmd --delete-removed sync "${DA_ROOT}/backup/" "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}/"
+	s4cmd --delete-removed sync "${DA_ROOT}/backup/" "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}/"
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
 	if [ "${EC2:-false}" == "true" ]; then
