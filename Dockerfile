@@ -137,7 +137,8 @@ cd /usr/share/docassemble \
 && echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
-ln -s /var/mail/mail /var/mail/root \
+bash -c \
+"ln -s /var/mail/mail /var/mail/root \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \
@@ -183,15 +184,15 @@ ln -s /var/mail/mail /var/mail/root \
 && python get-pip.py \
 && rm -f get-pip.py \
 && pip install --upgrade virtualenv \
-&& echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+&& echo \"en_US.UTF-8 UTF-8\" >> /etc/locale.gen \
 && locale-gen \
-&& update-locale
+&& update-locale"
 
 USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cd /tmp \
-&& echo '{ \"args\": [\"--no-sandbox\"] }' > ~/puppeteer-config.json
+&& echo '{ \"args\": [\"--no-sandbox\"] }' > ~/puppeteer-config.json \
 && touch ~/.profile \
 && curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash \
 && source ~/.profile \
