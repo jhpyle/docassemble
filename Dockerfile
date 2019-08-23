@@ -108,7 +108,7 @@ qpdf \
 wamerican; \
 do sleep 10; \
 done;"
-RUN DEBIAN_FRONTEND=noninteractive TERM=xterm PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 cd /tmp \
 && mkdir -p /etc/ssl/docassemble \
    /usr/share/docassemble/local \
@@ -123,14 +123,11 @@ cd /tmp \
    /usr/share/docassemble/log \
    /tmp/docassemble \
    /var/www/html/log \
-&& echo '{ "args": ["--no-sandbox"] }' > /var/www/puppeteer-config.json \
+   /var/www/node_modules/.bin \
 && chown -R www-data.www-data /var/www \
 && chsh -s /bin/bash www-data \
-&& update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10 \
-&& wget -qO- https://deb.nodesource.com/setup_6.x | bash - \
-&& apt-get -y install nodejs \
-&& npm install -g azure-storage-cmd \
-&& npm install -g mermaid.cli
+&& ln -s /var/www/node_modules/.bin/mmdc /usr/local/bin/mmdc \
+&& npm install -g azure-storage-cmd
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 cd /usr/share/docassemble \
 && git clone https://github.com/letsencrypt/letsencrypt \
@@ -169,8 +166,7 @@ ln -s /var/mail/mail /var/mail/root \
 && cp /tmp/docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf \
 && update-exim4.conf \
-&& bash -c \
-"chown www-data.www-data /usr/share/docassemble/config \
+&& chown www-data.www-data /usr/share/docassemble/config \
 && chown www-data.www-data \
    /usr/share/docassemble/config/config.yml.dist \
    /usr/share/docassemble/webapp/docassemble.wsgi \
@@ -186,7 +182,7 @@ ln -s /var/mail/mail /var/mail/root \
 && wget https://bootstrap.pypa.io/get-pip.py \
 && python get-pip.py \
 && rm -f get-pip.py \
-&& pip install --upgrade virtualenv" \
+&& pip install --upgrade virtualenv \
 && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 && locale-gen \
 && update-locale
@@ -195,6 +191,13 @@ USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cd /tmp \
+&& echo '{ \"args\": [\"--no-sandbox\"] }' > ~/puppeteer-config.json
+&& touch ~/.profile \
+&& curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash \
+&& source ~/.profile \
+&& nvm install 12.6.0 \
+&& npm install mermaid.cli \
+&& rm ~/.profile \
 && virtualenv /usr/share/docassemble/local \
 && source /usr/share/docassemble/local/bin/activate \
 && pip install --upgrade pip \
