@@ -7871,31 +7871,34 @@ def index(action_argument=None):
           var fileArray = {keys: Array(), values: Object()};
           var file_list = JSON.parse(atob($('input[name="_files"]').val()));
           var inline_file_list = Array();
+          var namesWithImages = Object();
           for (var i = 0; i < file_list.length; i++){
-            var file_input = $('#' + file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
-            var max_size = $(file_input).data('maximagesize');
+            var the_file_input = $('#' + file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
+            var the_max_size = $(the_file_input).data('maximagesize');
+            var the_image_type = $(the_file_input).data('imagetype');
             var hasImages = false;
-            if (typeof max_size != 'undefined'){
-              for (var j = 0; j < file_input.files.length; j++){
-                var the_file = file_input.files[j];
+            if (typeof the_max_size != 'undefined' || typeof the_image_type != 'undefined'){
+              for (var j = 0; j < the_file_input.files.length; j++){
+                var the_file = the_file_input.files[j];
                 if (the_file.type.match(/image.*/)){
                   hasImages = true;
                 }
               }
             }
             if (hasImages || daJsEmbed){
-              for (var j = 0; j < file_input.files.length; j++){
-                var the_file = file_input.files[j];
+              for (var j = 0; j < the_file_input.files.length; j++){
+                var the_file = the_file_input.files[j];
                 filesToRead++;
               }
               inline_file_list.push(file_list[i]);
             }
-            else if (file_input.files.length > 0){
+            else if (the_file_input.files.length > 0){
               newFileList.push(file_list[i]);
             }
             else{
               nullFileList.push(file_list[i]);
             }
+            namesWithImages[file_list[i]] = hasImages;
           }
           if (inline_file_list.length > 0){
             var originalFileList = atob($('input[name="_files"]').val())
@@ -7913,7 +7916,9 @@ def index(action_argument=None):
               var max_size;
               var image_type;
               var image_mime_type;
-              if (hasImages){
+              var this_has_images = false;
+              if (namesWithImages[inline_file_list[i]]){
+                this_has_images = true;
                 max_size = parseInt($(file_input).data('maximagesize'));
                 image_type = $(file_input).data('imagetype');
                 image_mime_type = null;
@@ -7931,13 +7936,13 @@ def index(action_argument=None):
                 }
               }
               for (var j = 0; j < file_input.files.length; j++){
-                var the_file = file_input.files[j];
-                var tempFunc = function(the_file, max_size){
+                var a_file = file_input.files[j];
+                var tempFunc = function(the_file, max_size, has_images){
                   var reader = new FileReader();
                   var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
                   fileInfoList.push(thisFileInfo);
                   reader.onload = function(readerEvent){
-                    if (hasImages && the_file.type.match(/image.*/) && !(the_file.type.indexOf('image/svg') == 0)){
+                    if (has_images && the_file.type.match(/image.*/) && !(the_file.type.indexOf('image/svg') == 0)){
                       var convertedName = the_file.name;
                       var convertedType = the_file.type;
                       if (image_type){
@@ -7985,7 +7990,7 @@ def index(action_argument=None):
                   };
                   reader.readAsDataURL(the_file);
                 };
-                tempFunc(the_file, max_size);
+                tempFunc(a_file, max_size, this_has_images);
               }
             }
             return;
