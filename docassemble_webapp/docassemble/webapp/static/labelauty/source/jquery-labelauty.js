@@ -180,7 +180,7 @@
 		  }
                   var the_name = $object.attr('name');
 		  if (type == 'radio'){
-		    $object.on('change', function(){
+                    $object.on('change', function(){
 		      $('input.labelauty[type="radio"]').each(function(){
 			if ($(this).attr('name') == the_name){
 			  if ($(this).is(':checked')){
