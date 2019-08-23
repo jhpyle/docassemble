@@ -123,7 +123,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
             possible_mimetype = 'text/plain'
         result = dict()
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + possible_ext, delete=False)
-        req = Request(file_reference, headers={'User-Agent' : docassemble.base.config.daconfig.get('user agent', 'Python-urllib/2.7')})
+        req = Request(file_reference, headers={'User-Agent' : docassemble.base.config.daconfig.get('user agent', 'curl/7.64.0')})
         response = urlopen(req)
         temp_file.write(response.read())
         #(local_filename, headers) = urllib.urlretrieve(file_reference)

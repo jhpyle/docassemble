@@ -188,8 +188,8 @@ if PY2:
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
 else:
-    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
-    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python3.5', 'site-packages')
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
+    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor), 'site-packages')
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 #PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 

@@ -15,7 +15,7 @@ if [ "${DAPYTHONVERSION}" == "2" ]; then
 	apt-get remove -y libapache2-mod-wsgi &> /dev/null
     fi
 else
-    export DA_DEFAULT_LOCAL="local3.5"
+    export DA_DEFAULT_LOCAL="local3.6"
 
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`

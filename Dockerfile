@@ -1,140 +1,4 @@
-FROM debian:buster
-RUN DEBIAN_FRONTEND=noninteractive \
-bash -c \
-'echo -e "deb http://deb.debian.org/debian buster main contrib\n\
-deb http://deb.debian.org/debian buster-updates main\n\
-deb http://security.debian.org/debian-security buster/updates main\n\
-deb http://ftp.debian.org/debian buster-backports main" > /etc/apt/sources.list\
-&& apt-get -y update'
-RUN DEBIAN_FRONTEND=noninteractive \
-bash -c \
-"until apt-get -q -y install \
-apt-utils \
-tzdata \
-python \
-python-dev \
-wget \
-unzip \
-git \
-locales \
-apache2 \
-postgresql \
-libapache2-mod-xsendfile \
-libffi-dev \
-gcc \
-supervisor \
-s4cmd \
-make \
-perl \
-libinline-perl \
-libparallel-forkmanager-perl \
-autoconf \
-automake \
-libjpeg-dev \
-zlib1g-dev \
-libpq-dev \
-logrotate \
-nodejs \
-npm \
-cron \
-libxml2 \
-libxslt1.1 \
-libxml2-dev \
-libxslt1-dev \
-libcurl4-openssl-dev \
-libssl-dev \
-redis-server \
-rabbitmq-server \
-libtool \
-libtool-bin \
-syslog-ng \
-rsync \
-curl \
-dnsutils \
-build-essential \
-libsvm3 \
-libsvm-dev \
-liblinear3 \
-liblinear-dev \
-libzbar-dev \
-libzbar0 \
-libgs-dev \
-default-libmysqlclient-dev \
-libgmp-dev \
-python-passlib \
-libsasl2-dev \
-libldap2-dev \
-python3 \
-exim4-daemon-heavy \
-python3-venv \
-python3-dev \
-imagemagick \
-pdftk \
-pacpl \
-pandoc \
-texlive \
-texlive-luatex \
-texlive-latex-recommended \
-texlive-latex-extra \
-texlive-font-utils \
-texlive-lang-cyrillic \
-texlive-lang-french \
-texlive-lang-italian \
-texlive-lang-portuguese \
-texlive-lang-german \
-texlive-lang-european \
-texlive-lang-spanish \
-texlive-extra-utils \
-poppler-utils \
-libaudio-flac-header-perl \
-libaudio-musepack-perl \
-libmp3-tag-perl \
-libogg-vorbis-header-pureperl-perl \
-libvorbis-dev \
-libcddb-perl \
-libcddb-get-perl \
-libmp3-tag-perl \
-libaudio-scan-perl \
-libaudio-flac-header-perl \
-ffmpeg \
-tesseract-ocr-all \
-libtesseract-dev \
-ttf-mscorefonts-installer \
-fonts-ebgaramond-extra \
-ghostscript \
-fonts-liberation \
-cm-super \
-qpdf \
-wamerican; \
-do sleep 10; \
-done;"
-RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
-cd /tmp \
-&& mkdir -p /etc/ssl/docassemble \
-   /usr/share/docassemble/local \
-   /usr/share/docassemble/local3.5 \
-   /usr/share/docassemble/certs \
-   /usr/share/docassemble/backup \
-   /usr/share/docassemble/config \
-   /usr/share/docassemble/webapp \
-   /usr/share/docassemble/files \
-   /var/www/.pip \
-   /var/www/.cache \
-   /usr/share/docassemble/log \
-   /tmp/docassemble \
-   /var/www/html/log \
-   /var/www/node_modules/.bin \
-&& chown -R www-data.www-data /var/www \
-&& chsh -s /bin/bash www-data \
-&& ln -s /var/www/node_modules/.bin/mmdc /usr/local/bin/mmdc \
-&& npm install -g azure-storage-cmd
-RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
-cd /usr/share/docassemble \
-&& git clone https://github.com/letsencrypt/letsencrypt \
-&& cd letsencrypt \
-&& ./letsencrypt-auto --help \
-&& echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/11/main/pg_hba.conf \
-&& echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
+FROM jhpyle/docassemble-os
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 bash -c \
@@ -143,7 +7,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local/ \
-&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.5/ \
+&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.6/ \
 && cp /tmp/docassemble/Docker/config/* /usr/share/docassemble/config/ \
 && cp /tmp/docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/ \
 && cp /tmp/docassemble/Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf \
@@ -174,7 +38,7 @@ bash -c \
 && chown -R www-data.www-data \
    /tmp/docassemble \
    /usr/share/docassemble/local \
-   /usr/share/docassemble/local3.5 \
+   /usr/share/docassemble/local3.6 \
    /usr/share/docassemble/log \
    /usr/share/docassemble/files \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
@@ -192,13 +56,6 @@ USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cd /tmp \
-&& echo '{ \"args\": [\"--no-sandbox\"] }' > ~/puppeteer-config.json \
-&& touch ~/.profile \
-&& curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash \
-&& source ~/.profile \
-&& nvm install 12.6.0 \
-&& npm install mermaid.cli \
-&& rm ~/.profile \
 && virtualenv /usr/share/docassemble/local \
 && source /usr/share/docassemble/local/bin/activate \
 && pip install --upgrade pip \
@@ -227,9 +84,10 @@ USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cd /tmp \
-&& python3 -m venv --copies /usr/share/docassemble/local3.5 \
-&& source /usr/share/docassemble/local3.5/bin/activate \
+&& python3.6 -m venv --copies /usr/share/docassemble/local3.6 \
+&& source /usr/share/docassemble/local3.6/bin/activate \
 && pip3 install --upgrade pip \
+&& pip3 install --upgrade mod_wsgi \
 && pip3 install --upgrade \
    3to2 \
    bcrypt \
@@ -244,7 +102,6 @@ bash -c \
    six \
    setuptools \
 && pip3 install --upgrade \
-   simplekv==0.10.0 \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
@@ -252,7 +109,10 @@ bash -c \
 && pip3 uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER root
-RUN rm -rf /tmp/docassemble \
+RUN \
+cp /usr/share/docassemble/local3.6/lib/python3.6/site-packages/mod_wsgi/server/mod_wsgi-py36.cpython-36m-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.6 \
+&& ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so \
+&& rm -rf /tmp/docassemble \
 && rm -f /etc/cron.daily/apt-compat \
 && sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf \
 && sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars \
