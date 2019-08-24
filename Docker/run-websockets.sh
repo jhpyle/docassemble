@@ -17,4 +17,4 @@ export LANG=$1
 
 export HOME=/var/www
 
-exec python -m docassemble.webapp.socketserver
+exec python3.6 -u -m docassemble.webapp.socketserver

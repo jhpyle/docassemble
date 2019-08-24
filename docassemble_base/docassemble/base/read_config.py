@@ -125,6 +125,8 @@ if __name__ == "__main__":
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
+        if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
+            print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
             print('export AZUREENABLE=true')

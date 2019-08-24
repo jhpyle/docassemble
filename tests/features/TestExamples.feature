@@ -7626,11 +7626,6 @@ Feature: Example interviews
     And I should see the phrase "So, you idolize worms now, but plan to stop on April 1, 2024."
     And I should see the phrase "Interesting."
 
-  Scenario: Test the interview "Action button"
-    Given I start the interview "docassemble.base:data/questions/examples/action-button-html.yml"
-    Then I should see the phrase "Need more information?"
-    And I click the final link "Visit our web site"
-
   Scenario: Test the interview "Buttons that run code"
     Given I start the interview "docassemble.base:data/questions/examples/buttons-code-color-iterator.yml"
     Then I should see the phrase "What is the name of the first person?"

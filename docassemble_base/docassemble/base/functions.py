@@ -1359,7 +1359,30 @@ class ThreadVariables(threading.local):
         self.initialized = True
         self.__dict__.update(kw)
 
-this_thread = ThreadVariables()
+this_thread = threading.local()
+this_thread.language = server.default_language
+this_thread.dialect = server.default_dialect
+this_thread.country = server.default_country
+this_thread.locale = server.default_locale
+this_thread.current_info = dict()
+this_thread.internal = dict()
+this_thread.initialized = False
+this_thread.session_id = None
+this_thread.current_package = None
+this_thread.interview = None
+this_thread.interview_status = None
+this_thread.evaluation_context = None
+this_thread.docx_template = None
+this_thread.gathering_mode = dict()
+this_thread.global_vars = GenericObject()
+this_thread.current_variable = list()
+this_thread.open_files = set()
+this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+this_thread.saved_files = dict()
+this_thread.message_log = list()
+this_thread.misc = dict()
+this_thread.prevent_going_back = False
+this_thread.current_question = None
 
 def backup_thread_variables():
     backup = dict()
@@ -4064,3 +4087,9 @@ def reconsider(*pargs):
 def single_to_double_newlines(text):
     """Converts single newlines to double newlines."""
     return re.sub(r'[\n\r]+', r'\n\n', text_type(text))
+
+class ServerContext(object):
+    pass
+
+server_context = ServerContext()
+server_context.context = 'web'

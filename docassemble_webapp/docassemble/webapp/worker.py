@@ -62,6 +62,7 @@ def initialize_db():
     from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
+    docassemble.base.functions.server_context.context = 'celery'
     import docassemble.base.interview_cache
     import docassemble.base.parse
     import docassemble.base.ocr

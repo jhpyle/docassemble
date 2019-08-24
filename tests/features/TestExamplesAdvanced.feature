@@ -196,3 +196,8 @@ Feature: Example interviews
     And I select "New Jersey" as the "State"
     And I set "Zip" to "08012"
     And I click the button "Continue"
+
+  Scenario: Test the interview "Action button"
+    Given I start the interview "docassemble.base:data/questions/examples/action-button-html.yml"
+    Then I should see the phrase "Need more information?"
+    And I click the final link "Visit our web site"

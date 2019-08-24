@@ -106,6 +106,9 @@ echo "8" >&2
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
     export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
+    if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+	export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
+    fi
 fi
 
 echo "9" >&2
@@ -712,8 +715,9 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
             fi
         else
             WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
-            if [ "${WSGI_VERSION}" != '4.5.11-1' ]; then
+            if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
                 apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+                ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
             fi
         fi
     fi

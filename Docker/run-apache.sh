@@ -19,8 +19,9 @@ else
 
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
-	if [ "${WSGI_VERSION}" != '4.5.11-1' ]; then
+	if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
 	    apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+	    ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
 	fi
     else
 	apt-get remove -y libapache2-mod-wsgi-py3 &> /dev/null
