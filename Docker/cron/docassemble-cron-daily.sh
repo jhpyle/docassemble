@@ -46,9 +46,9 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			s4cmd -q put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+			s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
 		    fi
-		    s4cmd -q sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+		    s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
 		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"

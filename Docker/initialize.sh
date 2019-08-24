@@ -119,9 +119,9 @@ echo "10" >&2
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(s4cmd ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(s4cmd ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
-    s4cmd -q -f get s3://${S3BUCKET}/hostname-rabbitmq $TEMPKEYFILE
+    s4cmd -f get s3://${S3BUCKET}/hostname-rabbitmq $TEMPKEYFILE
     HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
-    s4cmd -q -f get s3://${S3BUCKET}/ip-rabbitmq $TEMPKEYFILE
+    s4cmd -f get s3://${S3BUCKET}/ip-rabbitmq $TEMPKEYFILE
     IPRABBITMQ=$(<$TEMPKEYFILE)
     rm -f $TEMPKEYFILE
     if [ -n "$(grep $HOSTNAMERABBITMQ /etc/hosts)" ]; then
@@ -159,30 +159,30 @@ echo "13" >&2
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/letsencrypt.tar.gz") ]]; then
         rm -f /tmp/letsencrypt.tar.gz
-        s4cmd -q get "s3://${S3BUCKET}/letsencrypt.tar.gz" /tmp/letsencrypt.tar.gz
+        s4cmd get "s3://${S3BUCKET}/letsencrypt.tar.gz" /tmp/letsencrypt.tar.gz
         cd /
         tar -xf /tmp/letsencrypt.tar.gz
         rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then
-        s4cmd -q sync "s3://${S3BUCKET}/apache/" /etc/apache2/sites-available/
+        s4cmd sync "s3://${S3BUCKET}/apache/" /etc/apache2/sites-available/
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
-        s4cmd -q sync "s3://${S3BUCKET}/apachelogs/" /var/log/apache2/
+        s4cmd sync "s3://${S3BUCKET}/apachelogs/" /var/log/apache2/
         chown root.adm /var/log/apache2/*
         chmod 640 /var/log/apache2/*
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/log") ]]; then
-        s4cmd -q sync "s3://${S3BUCKET}/log/" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
+        s4cmd sync "s3://${S3BUCKET}/log/" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
         chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
     fi
     if [[ $(s4cmd ls "s3://${S3BUCKET}/config.yml") ]]; then
         rm -f "$DA_CONFIG_FILE"
-        s4cmd -q get "s3://${S3BUCKET}/config.yml" "$DA_CONFIG_FILE"
+        s4cmd get "s3://${S3BUCKET}/config.yml" "$DA_CONFIG_FILE"
         chown www-data.www-data "$DA_CONFIG_FILE"
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/redis.rdb") ]] && [ "$REDISRUNNING" = false ]; then
-        s4cmd -q -f get "s3://${S3BUCKET}/redis.rdb" "/var/lib/redis/dump.rdb"
+        s4cmd -f get "s3://${S3BUCKET}/redis.rdb" "/var/lib/redis/dump.rdb"
         chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 elif [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -331,7 +331,7 @@ export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
 echo "17" >&2
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s4cmd ls "s3://${S3BUCKET}/config.yml") ]]; then
-    s4cmd -q put "${DA_CONFIG_FILE}" "s3://${S3BUCKET}/config.yml"
+    s4cmd put "${DA_CONFIG_FILE}" "s3://${S3BUCKET}/config.yml"
 fi
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s4cmd ls "s3://${S3BUCKET}/files") ]]; then
@@ -345,10 +345,10 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s4cmd ls "s3://${S3BUCKET}/files
                     target_file="${sub_file#${file_directory}}"
                     file_number="${file_number//\//}"
                     file_number=$((16#$file_number))
-                    s4cmd -q put "${sub_file}" "s3://${S3BUCKET}/files/${file_number}/${target_file}"
+                    s4cmd put "${sub_file}" "s3://${S3BUCKET}/files/${file_number}/${target_file}"
                 done
             else
-               s4cmd -q sync "${DA_ROOT}/files/${the_file}/" "s3://${S3BUCKET}/${the_file}/"
+               s4cmd sync "${DA_ROOT}/files/${the_file}/" "s3://${S3BUCKET}/${the_file}/"
             fi
         done
     fi
@@ -512,7 +512,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     fi
     if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s4cmd ls s3://${S3BUCKET}/postgres) ]]; then
         PGBACKUPDIR=`mktemp -d`
-        s4cmd -q sync "s3://${S3BUCKET}/postgres/" "$PGBACKUPDIR/"
+        s4cmd sync "s3://${S3BUCKET}/postgres/" "$PGBACKUPDIR/"
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
         echo "There are postgres files on Azure" >&2
         PGBACKUPDIR=`mktemp -d`
@@ -661,12 +661,12 @@ function backup_apache {
             rm -f /tmp/letsencrypt.tar.gz
             if [ -d etc/letsencrypt ]; then
                 tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-                s4cmd -q put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+                s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
                 rm -f /tmp/letsencrypt.tar.gz
             fi
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
-            s4cmd -q sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+            s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
         fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
         if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -913,10 +913,10 @@ function deregister {
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-            s4cmd -q sync "${DA_ROOT}/log/" "s3://${S3BUCKET}/log/"
+            s4cmd sync "${DA_ROOT}/log/" "s3://${S3BUCKET}/log/"
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-            s4cmd -q sync /var/log/apache2/ "s3://${S3BUCKET}/apachelogs/"
+            s4cmd sync /var/log/apache2/ "s3://${S3BUCKET}/apachelogs/"
         fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
