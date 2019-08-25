@@ -469,6 +469,59 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
     fi
 fi
 
+if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+    if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	DAREALIP="include ${DA_ROOT}/config/nginx-realip;"
+	ln -sf /etc/nginx/sites-available/docassembleredirect /etc/nginx/sites-enabled/docassembleredirect
+    else
+	DAREALIP=""
+	rm -f /etc/nginx/sites-enabled/docassembleredirect
+    fi
+
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+	rm -f /etc/nginx/sites-available/default
+	rm -f /etc/nginx/sites-enabled/default
+	if [ "${DAHOSTNAME:-none}" != "none" ]; then
+	    if [ ! -f /etc/nginx/sites-available/docassemblessl ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+		    -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+		    -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+		    "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	    if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+		    -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+		    -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+		    "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	    if [ ! -f /etc/nginx/sites-available/docassemblelog ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    "${DA_ROOT}/config/nginx-log.dist" > "/etc/nginx/sites-available/docassemblelog"
+	    fi
+	    if [ ! -f /etc/nginx/sites-available/docassembleredirect ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    "${DA_ROOT}/config/nginx-redirect.dist" > "/etc/nginx/sites-available/docassembleredirect"
+	    fi
+	    if [ ! -f /etc/nginx/sites-available/docassemblesslredirect ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    "${DA_ROOT}/config/nginx-ssl-redirect.dist" > "/etc/nginx/sites-available/docassemblesslredirect"
+	    fi
+	else
+	    if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
+		sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+		    -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+		    -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+		    -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+		    "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
+	    fi
+	fi
+    fi
+fi
+
 echo "23" >&2
 
 if [ "${LOCALE:-undefined}" == "undefined" ]; then
@@ -689,10 +742,6 @@ fi
 python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
 
 if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-
-    rm -f /etc/nginx/sites-available/default
-    rm -f /etc/nginx/sites-enabled/default
-
     function backup_nginx {
 	if [ "${S3ENABLE:-false}" == "true" ]; then
 	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -765,10 +814,11 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 		if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
 		    ./letsencrypt-auto renew
 		else
-		    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+		    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
 		fi
 		cd ~-
 		/etc/init.d/nginx stop
+		touch /etc/letsencrypt/da_using_lets_encrypt
 	    else
 		rm -f /etc/letsencrypt/da_using_lets_encrypt
 	    fi
@@ -922,6 +972,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 		fi
 		cd ~-
 		/etc/init.d/apache2 stop
+		touch /etc/letsencrypt/da_using_lets_encrypt
 	    else
 		rm -f /etc/letsencrypt/da_using_lets_encrypt
 	    fi
