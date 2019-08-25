@@ -1,0 +1,16 @@
+server {
+    listen 8080;
+    server_tokens off;
+    server_name {{DAHOSTNAME}};
+
+    location / {
+        root /var/www/html/log;
+	index /listlog;
+    }
+
+    location /listlog {
+        include uwsgi_params;
+        uwsgi_pass unix:/var/run/uwsgi/docassemblelog.sock;    
+    }
+
+}

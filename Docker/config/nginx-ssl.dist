@@ -1,0 +1,27 @@
+server {
+    listen 443;
+    server_tokens off;
+    server_name {{DAHOSTNAME}};
+    ssl on;
+    ssl_certificate /etc/ssl/docassemble/nginx.crt;
+    ssl_certificate_key /etc/ssl/docassemble/nginx.key;
+    {{DAREALIP}}
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/var/run/uwsgi/docassemble.sock;
+    }
+
+    location /ws {
+        include proxy_params;
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};    
+    }
+
+    location /ws/socket.io {
+        include proxy_params;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}}/socket.io;
+    }
+}

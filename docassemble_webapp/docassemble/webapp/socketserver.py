@@ -57,6 +57,7 @@ from contextlib import contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
     dbsession = Session()
+    db.session = dbsession
     try:
         yield dbsession
         dbsession.commit()
@@ -270,11 +271,11 @@ def chat_message(data):
             person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=user_id).first()
         else:
             person = None
-    modtime = nice_utc_date(nowtime)
-    if person is None:
-        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id='t' + str(temp_user_id), message=dict(id=record.id, temp_user_id=record.temp_user_id, modtime=modtime, message=data['data'], roles=['user'], mode=chat_mode))))
-    else:
-        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
+        modtime = nice_utc_date(nowtime)
+        if person is None:
+            rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id='t' + str(temp_user_id), message=dict(id=record.id, temp_user_id=record.temp_user_id, modtime=modtime, message=data['data'], roles=['user'], mode=chat_mode))))
+        else:
+            rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
     #sys.stderr.write('received chat message from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
 
 def wait_for_channel(rr, channel):
@@ -838,8 +839,8 @@ def monitor_chat_message(data):
         record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, user_id=user_id, temp_owner_id=temp_owner_id, owner_id=owner_id, open_to_peer=open_to_peer)
         dbsession.add(record)
         dbsession.commit()
-    modtime = nice_utc_date(nowtime)
-    rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
+        modtime = nice_utc_date(nowtime)
+        rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
     #sys.stderr.write('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
 
 @socketio.on('chat_log', namespace='/monitor')

@@ -1,0 +1,96 @@
+#!/bin/bash
+
+export CONTAINERROLE=":${CONTAINERROLE:-all}:"
+export DEBIAN_FRONTEND=noninteractive
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+if [ "${DAPYTHONVERSION}" == "2" ]; then
+    export DA_DEFAULT_LOCAL="local"
+else
+    export DA_DEFAULT_LOCAL="local3.6"
+fi
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
+export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
+source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data)
+
+set -- $LOCALE
+export LANG=$1
+
+if [ "${DAHOSTNAME:-none}" == "none" ]; then
+    if [ "${EC2:-false}" == "true" ]; then
+	export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+	export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
+    else
+	export LOCAL_HOSTNAME=`hostname --fqdn`
+	export PUBLIC_HOSTNAME="${LOCAL_HOSTNAME}"
+    fi
+    export DAHOSTNAME="${PUBLIC_HOSTNAME}"
+fi
+
+if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+    DAREALIP="include ${DA_ROOT}/config/nginx-realip;"
+    ln -sf /etc/nginx/sites-available/docassembleredirect /etc/nginx/sites-enabled/docassembleredirect
+else
+    DAREALIP=""
+    rm -f /etc/nginx/sites-enabled/docassembleredirect
+fi
+
+sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+-e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+-e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+"${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
+
+sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+-e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+-e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+"${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
+
+sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+-e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+"${DA_ROOT}/config/nginx-log.dist" > "/etc/nginx/sites-available/docassemblelog"
+
+sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
+-e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+"${DA_ROOT}/config/nginx-redirect.dist" > "/etc/nginx/sites-available/docassembleredirect"
+
+if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
+    ln -sf /etc/nginx/sites-available/docassemblelog /etc/nginx/sites-enabled/docassemblelog
+    su -c "source \"$DA_ACTIVATE\" && uwsgi --ini \"${DA_ROOT}/config/docassemblelog.ini\"" www-data &
+else
+    rm -f /etc/nginx/sites-enabled/docassemblelog
+fi
+
+if [ "${USEHTTPS:-false}" == "true" ]; then
+    rm -f /etc/nginx/sites-enabled/docassemblehttp
+    ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
+else
+    rm -f /etc/nginx/sites-enabled/docassemblessl
+    ln -sf /etc/nginx/sites-available/docassemblehttp /etc/nginx/sites-enabled/docassemblehttp
+    rm -f /etc/letsencrypt/da_using_lets_encrypt
+fi
+
+function stopfunc {
+    if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
+	UWSGILOG_PID=$(</var/run/uwsgi/uwsgilog.pid) || exit 0
+	echo "Sending stop command to uwsgi log"
+	kill -INT $UWSGILOG_PID
+	echo "Waiting for uwsgi log to stop"
+	wait $UWSGILOG_PID
+	echo "uwsgi log stopped"
+	exit 0
+    fi
+    NGINX_PID=$(</var/run/nginx.pid)
+    echo "Sending stop command"
+    kill -QUIT $NGINX_PID
+    echo "Waiting for nginx to stop"
+    wait $NGINX_PID
+    echo "nginx stopped"
+    exit 0
+}
+
+trap stopfunc SIGINT SIGTERM
+
+/usr/sbin/nginx -g "daemon off;"

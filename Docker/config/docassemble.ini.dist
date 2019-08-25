@@ -1,0 +1,12 @@
+[uwsgi]
+master = true
+enable-threads = true
+processes = 1
+threads = 6
+vhost = true
+socket = /var/run/uwsgi/docassemble.sock
+venv = {{DA_PYTHON}}
+module = docassemble.webapp.run
+pidfile = /var/run/uwsgi/uwsgi.pid
+callable = application
+touch-reload={{DA_ROOT}}/webapp/docassemble.wsgi

@@ -1324,40 +1324,40 @@ class GenericObject(object):
         self.user = None
         self.role = 'user'
 
-class ThreadVariables(threading.local):
-    language = server.default_language
-    dialect = server.default_dialect
-    country = server.default_country
-    locale = server.default_locale
-    current_info = dict()
-    internal = dict()
-    #user_dict = None
-    initialized = False
-    #redis = None
-    session_id = None
-    current_package = None
-    interview = None
-    interview_status = None
-    evaluation_context = None
-    docx_template = None
-    gathering_mode = dict()
-    global_vars = GenericObject()
-    current_variable = list()
-    #template_vars = list()
-    open_files = set()
-    #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
-    markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
-    #temporary_resources = set()
-    saved_files = dict()
-    message_log = list()
-    misc = dict()
-    prevent_going_back = False
-    current_question = None
-    def __init__(self, **kw):
-        if self.initialized:
-            raise SystemError('__init__ called too many times')
-        self.initialized = True
-        self.__dict__.update(kw)
+# class ThreadVariables(threading.local):
+#     language = server.default_language
+#     dialect = server.default_dialect
+#     country = server.default_country
+#     locale = server.default_locale
+#     current_info = dict()
+#     internal = dict()
+#     #user_dict = None
+#     initialized = False
+#     #redis = None
+#     session_id = None
+#     current_package = None
+#     interview = None
+#     interview_status = None
+#     evaluation_context = None
+#     docx_template = None
+#     gathering_mode = dict()
+#     global_vars = GenericObject()
+#     current_variable = list()
+#     #template_vars = list()
+#     open_files = set()
+#     #markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+#     markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+#     #temporary_resources = set()
+#     saved_files = dict()
+#     message_log = list()
+#     misc = dict()
+#     prevent_going_back = False
+#     current_question = None
+#     def __init__(self, **kw):
+#         if self.initialized:
+#             raise SystemError('__init__ called too many times')
+#         self.initialized = True
+#         self.__dict__.update(kw)
 
 this_thread = threading.local()
 this_thread.language = server.default_language

@@ -52,6 +52,18 @@ else
     APACHERUNNING=false
 fi
 
+if [ -f /var/run/nginx.pid ]; then
+    NGINX_PID=$(</var/run/nginx.pid)
+    if kill -0 $NGINX_PID &> /dev/null; then
+        NGINXRUNNING=true
+    else
+        rm -f /var/run/nginx.pid
+        NGINXRUNNING=false
+    fi
+else
+    NGINXRUNNING=false
+fi
+
 echo "3" >&2
 
 if redis-cli ping &> /dev/null; then
@@ -322,6 +334,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAWEBSOCKETSIP}}/'"${DAWEBSOCKETSIP:-null}"'/' \
         -e 's/{{DAWEBSOCKETSPORT}}/'"${DAWEBSOCKETSPORT:-null}"'/' \
         -e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
+        -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 chown www-data.www-data "$DA_CONFIG_FILE"
@@ -330,6 +343,19 @@ echo "16" >&2
 
 source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
+
+echo "16.5" >&2
+
+if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+    sed -e 's@{{DA_PYTHON}}@'"${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}"'@' \
+	-e 's@{{DA_ROOT}}@'"${DA_ROOT}"'@' \
+	"${DA_ROOT}/config/docassemble.ini.dist" > "${DA_ROOT}/config/docassemble.ini"
+    sed -e 's@{{DA_PYTHON}}@'"${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}"'@' \
+	-e 's@{{DA_ROOT}}@'"${DA_ROOT}"'@' \
+	"${DA_ROOT}/config/docassemblelog.ini.dist" > "${DA_ROOT}/config/docassemblelog.ini"
+    mkdir -p /var/run/uwsgi
+    chown www-data.www-data /var/run/uwsgi
+fi
 
 echo "17" >&2
 
@@ -413,32 +439,34 @@ fi
 
 echo "22" >&2
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
-    a2dissite -q 000-default &> /dev/null
-    a2dissite -q default-ssl &> /dev/null
-    rm -f /etc/apache2/sites-available/000-default.conf
-    rm -f /etc/apache2/sites-available/default-ssl.conf
-    if [ "${DAHOSTNAME:-none}" != "none" ]; then
-        if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
-            cp "${DA_ROOT}/config/docassemble-ssl.conf.dist" /etc/apache2/sites-available/docassemble-ssl.conf
-            rm -f /etc/letsencrypt/da_using_lets_encrypt
-        fi
-        if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
-            cp "${DA_ROOT}/config/docassemble-http.conf.dist" /etc/apache2/sites-available/docassemble-http.conf
-            rm -f /etc/letsencrypt/da_using_lets_encrypt
-        fi
-        if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
-            cp "${DA_ROOT}/config/docassemble-log.conf.dist" /etc/apache2/sites-available/docassemble-log.conf
-        fi
-        if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
-            cp "${DA_ROOT}/config/docassemble-redirect.conf.dist" /etc/apache2/sites-available/docassemble-redirect.conf
-        fi
-    else
-        if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
-            cp "${DA_ROOT}/config/docassemble-http.conf.dist" /etc/apache2/sites-available/docassemble-http.conf || exit 1
-        fi
+if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+	a2dissite -q 000-default &> /dev/null
+	a2dissite -q default-ssl &> /dev/null
+	rm -f /etc/apache2/sites-available/000-default.conf
+	rm -f /etc/apache2/sites-available/default-ssl.conf
+	if [ "${DAHOSTNAME:-none}" != "none" ]; then
+	    if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
+		cp "${DA_ROOT}/config/docassemble-ssl.conf.dist" /etc/apache2/sites-available/docassemble-ssl.conf
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
+		cp "${DA_ROOT}/config/docassemble-http.conf.dist" /etc/apache2/sites-available/docassemble-http.conf
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	    if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
+		cp "${DA_ROOT}/config/docassemble-log.conf.dist" /etc/apache2/sites-available/docassemble-log.conf
+	    fi
+	    if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
+		cp "${DA_ROOT}/config/docassemble-redirect.conf.dist" /etc/apache2/sites-available/docassemble-redirect.conf
+	    fi
+	else
+	    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
+		cp "${DA_ROOT}/config/docassemble-http.conf.dist" /etc/apache2/sites-available/docassemble-http.conf || exit 1
+	    fi
+	fi
+	a2ensite docassemble-http
     fi
-    a2ensite docassemble-http
 fi
 
 echo "23" >&2
@@ -634,12 +662,6 @@ fi
 
 echo "41" >&2
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
-    rm -f /etc/apache2/ports.conf
-fi
-
-echo "42" >&2
-
 if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/certs/apache.key.orig" ]; then
     mv "${DA_ROOT}/certs/apache.key.orig" "${DA_ROOT}/certs/apache.key"
 fi
@@ -649,6 +671,15 @@ fi
 if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/certs/apache.ca.pem.orig" ]; then
     mv "${DA_ROOT}/certs/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
 fi
+if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/certs/nginx.key.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/certs/nginx.crt.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/certs/nginx.ca.pem.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
+fi
 if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/certs/exim.key.orig" ]; then
     mv "${DA_ROOT}/certs/exim.key.orig" "${DA_ROOT}/certs/exim.key"
 fi
@@ -657,154 +688,271 @@ if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/certs/exim.crt.orig"
 fi
 python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
 
-function backup_apache {
-    if [ "${S3ENABLE:-false}" == "true" ]; then
-        if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-            cd /
-            rm -f /tmp/letsencrypt.tar.gz
-            if [ -d etc/letsencrypt ]; then
-                tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-                s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
-                rm -f /tmp/letsencrypt.tar.gz
-            fi
-        fi
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
-            s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
-        fi
-    elif [ "${AZUREENABLE:-false}" == "true" ]; then
-        if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-            cd /
-            rm -f /tmp/letsencrypt.tar.gz
-            if [ -d etc/letsencrypt ]; then
-                tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-                echo "Saving lets encrypt" >&2
-                blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
-                rm -f /tmp/letsencrypt.tar.gz
-            fi
-        fi
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
-            for the_file in $(find /etc/apache2/sites-available/ -type f); do
-                target_file=`basename "${the_file}"`
-                echo "Saving apache" >&2
-                blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
-            done
-        fi
-    else
-        if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-            if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-                cd /
-                rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
-                tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
-            fi
-            rm -rf "${DA_ROOT}/backup/apache"
-            mkdir -p "${DA_ROOT}/backup/apache"
-            rsync -auq /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
-        fi
-    fi
-}
+if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 
-echo "43" >&2
+    rm -f /etc/nginx/sites-available/default
+    rm -f /etc/nginx/sites-enabled/default
 
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
-    echo "Listen 80" > /etc/apache2/ports.conf
-    if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
-        if [ "${DAPYTHONVERSION}" == "2" ]; then
-            WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
-            if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
-                cd /tmp && wget -q http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
-            fi
-        else
-            WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
-            if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
-                apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
-                ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
-            fi
-        fi
+    function backup_nginx {
+	if [ "${S3ENABLE:-false}" == "true" ]; then
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd /
+		rm -f /tmp/letsencrypt.tar.gz
+		if [ -d etc/letsencrypt ]; then
+		    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		    s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+		    rm -f /tmp/letsencrypt.tar.gz
+		fi
+	    fi
+	    if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud nginx) ]]; then
+		s4cmd sync /etc/nginx/sites-available/ "s3://${S3BUCKET}/nginx/"
+	    fi
+	elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd /
+		rm -f /tmp/letsencrypt.tar.gz
+		if [ -d etc/letsencrypt ]; then
+		    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		    echo "Saving lets encrypt" >&2
+		    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+		    rm -f /tmp/letsencrypt.tar.gz
+		fi
+	    fi
+	    if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud nginx) ]]; then
+		for the_file in $(find /etc/nginx/sites-available/ -type f); do
+		    target_file=`basename "${the_file}"`
+		    echo "Saving nginx" >&2
+		    blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginx/${target_file}"
+		done
+	    fi
+	else
+	    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+		if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		    cd /
+		    rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
+		    tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
+		fi
+		rm -rf "${DA_ROOT}/backup/nginx"
+		mkdir -p "${DA_ROOT}/backup/nginx"
+		rsync -auq /etc/nginx/sites-available/ "${DA_ROOT}/backup/nginx/"
+	    fi
+	fi
+    }
+
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$NGINXRUNNING" = false ]; then
+	if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
+	    OLDUID=`id -u www-data`
+	    OLDGID=`id -g www-data`
+
+	    usermod -o -u $WWWUID www-data
+	    groupmod -o -g $WWWGID www-data
+	    find / -user $OLDUID -exec chown -h www-data {} \;
+	    find / -group $OLDGID -exec chgrp -h www-data {} \;
+	    if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+		supervisorctl --serverurl http://localhost:9001 stop celery
+	    fi
+	    supervisorctl --serverurl http://localhost:9001 reread
+	    supervisorctl --serverurl http://localhost:9001 update
+	    if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+		supervisorctl --serverurl http://localhost:9001 start celery
+	    fi
+	fi
+	if [ "${USEHTTPS:-false}" == "true" ]; then
+	    rm -f /etc/nginx/sites-enabled/docassemblehttp
+	    ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd "${DA_ROOT}/letsencrypt"
+		if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
+		    ./letsencrypt-auto renew
+		else
+		    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+		fi
+		cd ~-
+		/etc/init.d/nginx stop
+	    else
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	else
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    rm -f /etc/nginx/sites-enabled/docassemblessl
+	    ln -sf /etc/nginx/sites-available/docassemblehttp /etc/nginx/sites-enabled/docassemblehttp
+	fi
+    fi
+    #backup_nginx
+
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+	supervisorctl --serverurl http://localhost:9001 start websockets
     fi
 
-    if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
-        a2enmod wsgi &> /dev/null
-    else
-        a2dismod wsgi &> /dev/null
+    echo "46" >&2
+
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+	supervisorctl --serverurl http://localhost:9001 start uwsgi
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+	if [ "$NGINXRUNNING" = false ]; then
+	    supervisorctl --serverurl http://localhost:9001 start nginx
+	fi
     fi
 
-    if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
-        OLDUID=`id -u www-data`
-        OLDGID=`id -g www-data`
-
-        usermod -o -u $WWWUID www-data
-        groupmod -o -g $WWWGID www-data
-        find / -user $OLDUID -exec chown -h www-data {} \;
-        find / -group $OLDGID -exec chgrp -h www-data {} \;
-        if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
-            supervisorctl --serverurl http://localhost:9001 stop celery
-        fi
-        supervisorctl --serverurl http://localhost:9001 reread
-        supervisorctl --serverurl http://localhost:9001 update
-        if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
-            supervisorctl --serverurl http://localhost:9001 start celery
-        fi
-    fi
-
-    if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
-        a2enmod remoteip
-        a2enconf docassemble-behindlb
-    else
-        a2dismod remoteip
-        a2disconf docassemble-behindlb
-    fi
-    echo -e "# This file is automatically generated" > /etc/apache2/conf-available/docassemble.conf
-    if [ "${DAPYTHONMANUAL:-0}" == "3" ]; then
-        echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
-    fi
-    echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-    echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
-    if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
-        echo "Listen 8081" >> /etc/apache2/ports.conf
-        a2ensite docassemble-redirect
-    fi
-    if [ "${USEHTTPS:-false}" == "true" ]; then
-        echo "Listen 443" >> /etc/apache2/ports.conf
-        a2enmod ssl
-        a2ensite docassemble-ssl
-        if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-            cd "${DA_ROOT}/letsencrypt"
-            if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                ./letsencrypt-auto renew
-            else
-                ./letsencrypt-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
-            fi
-            cd ~-
-            /etc/init.d/apache2 stop
-        else
-            rm -f /etc/letsencrypt/da_using_lets_encrypt
-        fi
-    else
-        rm -f /etc/letsencrypt/da_using_lets_encrypt
-        a2dismod ssl
-        a2dissite -q docassemble-ssl &> /dev/null
-    fi
-    backup_apache
 fi
 
-echo "44" >&2
+if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 
-if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
-    echo "Listen 8080" >> /etc/apache2/ports.conf
-    a2enmod cgid
-    a2ensite docassemble-log
-fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
+	rm -f /etc/apache2/ports.conf
+    fi
 
-echo "45" >&2
+    function backup_apache {
+	if [ "${S3ENABLE:-false}" == "true" ]; then
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd /
+		rm -f /tmp/letsencrypt.tar.gz
+		if [ -d etc/letsencrypt ]; then
+		    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		    s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+		    rm -f /tmp/letsencrypt.tar.gz
+		fi
+	    fi
+	    if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
+		s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+	    fi
+	elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd /
+		rm -f /tmp/letsencrypt.tar.gz
+		if [ -d etc/letsencrypt ]; then
+		    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+		    echo "Saving lets encrypt" >&2
+		    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+		    rm -f /tmp/letsencrypt.tar.gz
+		fi
+	    fi
+	    if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
+		for the_file in $(find /etc/apache2/sites-available/ -type f); do
+		    target_file=`basename "${the_file}"`
+		    echo "Saving apache" >&2
+		    blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
+		done
+	    fi
+	else
+	    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+		if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		    cd /
+		    rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
+		    tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
+		fi
+		rm -rf "${DA_ROOT}/backup/apache"
+		mkdir -p "${DA_ROOT}/backup/apache"
+		rsync -auq /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
+	    fi
+	fi
+    }
 
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start websockets
-fi
+    echo "43" >&2
 
-echo "46" >&2
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
+	echo "Listen 80" > /etc/apache2/ports.conf
+	if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
+	    if [ "${DAPYTHONVERSION}" == "2" ]; then
+		WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
+		if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
+		    cd /tmp && wget -q http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
+		fi
+	    else
+		WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
+		if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
+		    apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+		    ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
+		fi
+	    fi
+	fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
-    supervisorctl --serverurl http://localhost:9001 start apache2
+	if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
+	    a2enmod wsgi &> /dev/null
+	else
+	    a2dismod wsgi &> /dev/null
+	fi
+
+	if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
+	    OLDUID=`id -u www-data`
+	    OLDGID=`id -g www-data`
+
+	    usermod -o -u $WWWUID www-data
+	    groupmod -o -g $WWWGID www-data
+	    find / -user $OLDUID -exec chown -h www-data {} \;
+	    find / -group $OLDGID -exec chgrp -h www-data {} \;
+	    if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+		supervisorctl --serverurl http://localhost:9001 stop celery
+	    fi
+	    supervisorctl --serverurl http://localhost:9001 reread
+	    supervisorctl --serverurl http://localhost:9001 update
+	    if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
+		supervisorctl --serverurl http://localhost:9001 start celery
+	    fi
+	fi
+
+	if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	    a2enmod remoteip
+	    a2enconf docassemble-behindlb
+	else
+	    a2dismod remoteip
+	    a2disconf docassemble-behindlb
+	fi
+	echo -e "# This file is automatically generated" > /etc/apache2/conf-available/docassemble.conf
+	if [ "${DAPYTHONMANUAL:-0}" == "3" ]; then
+	    echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
+	fi
+	echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
+	echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
+	if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	    echo "Listen 8081" >> /etc/apache2/ports.conf
+	    a2ensite docassemble-redirect
+	fi
+	if [ "${USEHTTPS:-false}" == "true" ]; then
+	    echo "Listen 443" >> /etc/apache2/ports.conf
+	    a2enmod ssl
+	    a2ensite docassemble-ssl
+	    if [ "${USELETSENCRYPT:-false}" == "true" ]; then
+		cd "${DA_ROOT}/letsencrypt"
+		if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
+		    ./letsencrypt-auto renew
+		else
+		    ./letsencrypt-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+		fi
+		cd ~-
+		/etc/init.d/apache2 stop
+	    else
+		rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	else
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	    a2dismod ssl
+	    a2dissite -q docassemble-ssl &> /dev/null
+	fi
+	backup_apache
+    fi
+
+    echo "44" >&2
+
+    if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
+	echo "Listen 8080" >> /etc/apache2/ports.conf
+	a2enmod cgid
+	a2ensite docassemble-log
+    fi
+
+    echo "45" >&2
+
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+	supervisorctl --serverurl http://localhost:9001 start websockets
+    fi
+
+    echo "46" >&2
+
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
+	supervisorctl --serverurl http://localhost:9001 start apache2
+    fi
+
 fi
 
 echo "47" >&2
@@ -815,9 +963,11 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     else
         curl -s -k https://localhost/ > /dev/null
     fi
-    if [ "$APACHERUNNING" = false ]; then
-        supervisorctl --serverurl http://localhost:9001 stop apache2
-        supervisorctl --serverurl http://localhost:9001 start apache2
+    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+	if [ "$APACHERUNNING" = false ]; then
+            supervisorctl --serverurl http://localhost:9001 stop apache2
+            supervisorctl --serverurl http://localhost:9001 start apache2
+	fi
     fi
 fi
 

@@ -20698,6 +20698,8 @@ def api_file(file_number):
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     #obtain_lock(session_id, yaml_filename)
     #sys.stderr.write("get_session_variables: fetch_user_dict\n")
+    if secret is None:
+        secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
     except Exception as the_err:

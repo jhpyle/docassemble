@@ -4,6 +4,17 @@
 ### Added
 - The `advance_progress_meter` option for the `/api/session` POST
   API endpoint.
+- The `DAWEBSERVER` Docker environment variable and the `web server`
+  Configuration directive.
+- The `S3ENDPOINTURL` Docker environment variable and the `endpoint url`
+  Configuration directive under `s3`.
+### Changed
+- Upgrade Docker OS to Debian buster.
+- Upgrade Python from 3.5 to 3.6.
+- Docker image builds in two parts.  The jhpyle/docassemble-os image
+  is the base image for jhpyle/docassemble.
+- The default web browser under Docker is now NGINX, the use of which
+  should alleviate problems with Live Help not connecting.
 
 ## [0.4.80] - 2019-08-22
 ### Fixed

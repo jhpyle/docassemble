@@ -1,0 +1,11 @@
+[uwsgi]
+master = true
+enable-threads = true
+processes = 1
+threads = 6
+vhost = true
+socket = /var/run/uwsgi/docassemblelog.sock
+venv = {{DA_PYTHON}}
+module = docassemble.webapp.listlog
+pidfile = /var/run/uwsgi/uwsgilog.pid
+callable = app

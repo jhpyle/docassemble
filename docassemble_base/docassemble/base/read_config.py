@@ -16,6 +16,10 @@ if __name__ == "__main__":
         print('export DAPYTHONVERSION="2"')
     else:
         print('export DAPYTHONVERSION="3"')
+    if 'web server' in daconfig and isinstance(daconfig['web server'], string_types):
+        print('export DAWEBSERVER="' + daconfig['web server'] + '"')
+    else:
+        print('export DAWEBSERVER="nginx"')
     if 'other os locales' in daconfig and type(daconfig['other os locales']) is list:
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')

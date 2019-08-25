@@ -14,6 +14,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/syslog-ng-docker.conf /usr/share/docassemble/webapp/syslog-ng-docker.conf \
 && cp /tmp/docassemble/Docker/docassemble-syslog-ng.conf /usr/share/docassemble/webapp/docassemble-syslog-ng.conf \
 && cp /tmp/docassemble/Docker/apache.logrotate /etc/logrotate.d/apache2 \
+&& cp /tmp/docassemble/Docker/nginx.logrotate /etc/logrotate.d/nginx \
 && cp /tmp/docassemble/Docker/docassemble.logrotate /etc/logrotate.d/docassemble \
 && cp /tmp/docassemble/Docker/cron/docassemble-cron-monthly.sh /etc/cron.monthly/docassemble \
 && cp /tmp/docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble \
@@ -67,6 +68,7 @@ bash -c \
    flask-mail \
    flask-sqlalchemy \
    flask-wtf \
+   uwsgi \
    distutils2 \
    passlib \
    pycrypto \
@@ -96,6 +98,7 @@ bash -c \
    flask-mail \
    flask-sqlalchemy \
    flask-wtf \
+   uwsgi \
    passlib \
    pycryptodome \
    pycryptodomex \
