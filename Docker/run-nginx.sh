@@ -34,8 +34,18 @@ else
     rm -f /etc/nginx/sites-enabled/docassembleredirect
 fi
 
+if [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" ]; then
+    DASSLCERTIFICATE="/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem; # managed by Certbot"
+    DASSLCERTIFICATEKEY="/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem; # managed by Certbot"
+else
+    DASSLCERTIFICATE="/etc/ssl/docassemble/nginx.crt;"
+    DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
+fi
+
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+-e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
+-e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
 -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
 -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
 "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"

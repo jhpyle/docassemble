@@ -3,8 +3,8 @@ server {
     server_tokens off;
     server_name {{DAHOSTNAME}};
     ssl on;
-    ssl_certificate /etc/ssl/docassemble/nginx.crt;
-    ssl_certificate_key /etc/ssl/docassemble/nginx.key;
+    ssl_certificate {{DASSLCERTIFICATE}};
+    ssl_certificate_key {{DASSLCERTIFICATEKEY}};
     {{DAREALIP}}
     location / {
         include uwsgi_params;
