@@ -3,8 +3,8 @@ server {
     server_tokens off;
     server_name {{DAHOSTNAME}};
     ssl on;
-    ssl_certificate {{DASSLCERTIFICATE}};
-    ssl_certificate_key {{DASSLCERTIFICATEKEY}};
+    ssl_certificate {{DASSLCERTIFICATE}}
+    ssl_certificate_key {{DASSLCERTIFICATEKEY}}
     {{DAREALIP}}
     location / {
         include uwsgi_params;

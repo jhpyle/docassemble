@@ -20745,6 +20745,8 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False):
     #obtain_lock(session_id, yaml_filename)
+    if secret is None:
+        secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:

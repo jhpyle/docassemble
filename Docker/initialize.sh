@@ -183,16 +183,16 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
         s4cmd dsync "s3://${S3BUCKET}/apache" /etc/apache2/sites-available
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-	if [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
+        if [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
             s4cmd dsync "s3://${S3BUCKET}/apachelogs" /var/log/apache2
             chown root.adm /var/log/apache2/*
             chmod 640 /var/log/apache2/*
-	fi
-	if [[ $(s4cmd ls "s3://${S3BUCKET}/nginxlogs") ]]; then
+        fi
+        if [[ $(s4cmd ls "s3://${S3BUCKET}/nginxlogs") ]]; then
             s4cmd dsync "s3://${S3BUCKET}/nginxlogs" /var/log/nginx
             chown www-data.adm /var/log/nginx/*
             chmod 640 /var/log/nginx/*
-	fi
+        fi
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/log") ]]; then
         s4cmd dsync "s3://${S3BUCKET}/log" "${LOGDIRECTORY:-${DA_ROOT}/log}"
@@ -219,38 +219,38 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache/) ]]; then
         echo "There are apache files on Azure" >&2
         for the_file in $(python -m docassemble.webapp.list-cloud apache/ | cut -c 8-); do
-	    echo "Found $the_file on Azure" >&2
-	    if ! [[ $the_file =~ /$ ]]; then
+            echo "Found $the_file on Azure" >&2
+            if ! [[ $the_file =~ /$ ]]; then
                 echo "Copying apache file" $the_file >&2
                 blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
-	    fi
+            fi
         done
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-	if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
+        if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
             echo "There are apache log files on Azure" >&2
             for the_file in $(python -m docassemble.webapp.list-cloud apachelogs/ | cut -c 12-); do
-		echo "Found $the_file on Azure" >&2
-		if ! [[ $the_file =~ /$ ]]; then
+                echo "Found $the_file on Azure" >&2
+                if ! [[ $the_file =~ /$ ]]; then
                     echo "Copying log file $the_file" >&2
                     blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}" "/var/log/apache2/${the_file}"
-		fi
+                fi
             done
             chown root.adm /var/log/apache2/*
             chmod 640 /var/log/apache2/*
-	fi
-	if [[ $(python -m docassemble.webapp.list-cloud nginxlogs/) ]]; then
+        fi
+        if [[ $(python -m docassemble.webapp.list-cloud nginxlogs/) ]]; then
             echo "There are nginx log files on Azure" >&2
             for the_file in $(python -m docassemble.webapp.list-cloud nginxlogs/ | cut -c 11-); do
-		echo "Found $the_file on Azure" >&2
-		if ! [[ $the_file =~ /$ ]]; then
+                echo "Found $the_file on Azure" >&2
+                if ! [[ $the_file =~ /$ ]]; then
                     echo "Copying log file $the_file" >&2
                     blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}" "/var/log/nginx/${the_file}"
-		fi
+                fi
             done
             chown www-data.adm /var/log/nginx/*
             chmod 640 /var/log/nginx/*
-	fi
+        fi
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
         echo "There are log files on Azure" >&2
@@ -1148,26 +1148,26 @@ function deregister {
         su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.cloud_deregister" www-data
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-	if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+        if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             backup_apache
             rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
-	fi
-	if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+        fi
+        if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             backup_nginx
             rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
-	fi
+        fi
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
             s4cmd dsync "${DA_ROOT}/log" "s3://${S3BUCKET}/log"
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-		s4cmd dsync "/var/log/apache2" "s3://${S3BUCKET}/apachelogs"
-	    fi
-	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-		s4cmd dsync "/var/log/nginx" "s3://${S3BUCKET}/nginxlogs"
-	    fi
+            if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+                s4cmd dsync "/var/log/apache2" "s3://${S3BUCKET}/apachelogs"
+            fi
+            if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+                s4cmd dsync "/var/log/nginx" "s3://${S3BUCKET}/nginxlogs"
+            fi
         fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
@@ -1178,32 +1178,32 @@ function deregister {
             done
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-		for the_file in $(find /var/log/apache2 -type f | cut -c 18-); do
+            if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+                for the_file in $(find /var/log/apache2 -type f | cut -c 18-); do
                     echo "Saving log file $the_file" >&2
                     blob-cmd -f cp "/var/log/apache2/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}"
-		done
+                done
             fi
-	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-		for the_file in $(find /var/log/nginx -type f | cut -c 16-); do
+            if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+                for the_file in $(find /var/log/nginx -type f | cut -c 16-); do
                     echo "Saving log file $the_file" >&2
                     blob-cmd -f cp "/var/log/nginx/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}"
-		done
+                done
             fi
-	fi
+        fi
     else
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-		rm -rf "${DA_ROOT}/backup/apachelogs"
-		mkdir -p "${DA_ROOT}/backup/apachelogs"
-		rsync -auq /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
+            if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+                rm -rf "${DA_ROOT}/backup/apachelogs"
+                mkdir -p "${DA_ROOT}/backup/apachelogs"
+                rsync -auq /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
             fi
-	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-		rm -rf "${DA_ROOT}/backup/nginxlogs"
-		mkdir -p "${DA_ROOT}/backup/nginxlogs"
-		rsync -auq /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
+            if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+                rm -rf "${DA_ROOT}/backup/nginxlogs"
+                mkdir -p "${DA_ROOT}/backup/nginxlogs"
+                rsync -auq /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
             fi
-	fi
+        fi
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
             rm -rf "${DA_ROOT}/backup/log"
             rsync -auq "${LOGDIRECTORY}/" "${DA_ROOT}/backup/log/"
