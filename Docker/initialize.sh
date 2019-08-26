@@ -826,7 +826,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
-                nginx -s stop
+                nginx -s stop &> /dev/null
                 touch /etc/letsencrypt/da_using_lets_encrypt
             else
                 rm -f /etc/letsencrypt/da_using_lets_encrypt

@@ -17,4 +17,15 @@ export LANG=$1
 
 export HOME=/var/www
 
-exec python -u -m docassemble.webapp.socketserver
+python -u -m docassemble.webapp.socketserver &
+
+WEBSOCKETSPID=%1
+
+function stopfunc {
+    kill -SIGTERM $WEBSOCKETSPID
+    exit 0
+}
+
+trap stopfunc SIGINT SIGTERM
+
+wait $WEBSOCKETSPID

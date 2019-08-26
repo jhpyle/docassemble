@@ -86,22 +86,23 @@ fi
 function stopfunc {
     if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
 	UWSGILOG_PID=$(</var/run/uwsgi/uwsgilog.pid) || exit 0
-	echo "Sending stop command to uwsgi log"
+	echo "Sending stop command to uwsgi log" >&2
 	kill -INT $UWSGILOG_PID
-	echo "Waiting for uwsgi log to stop"
+	echo "Waiting for uwsgi log to stop" >&2
 	wait $UWSGILOG_PID
-	echo "uwsgi log stopped"
+	echo "uwsgi log stopped" >&2
 	exit 0
     fi
     NGINX_PID=$(</var/run/nginx.pid)
-    echo "Sending stop command"
+    echo "Sending stop command" >&2
     kill -QUIT $NGINX_PID
-    echo "Waiting for nginx to stop"
+    echo "Waiting for nginx to stop" >&2
     wait $NGINX_PID
-    echo "nginx stopped"
+    echo "nginx stopped" >&2
     exit 0
 }
 
 trap stopfunc SIGINT SIGTERM
 
-/usr/sbin/nginx -g "daemon off;"
+/usr/sbin/nginx -g "daemon off;" &
+wait %1
