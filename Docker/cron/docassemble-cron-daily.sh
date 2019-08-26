@@ -51,7 +51,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 			s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
 		    fi
-		    s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+		    s4cmd sync "/etc/apache2/sites-available/*" "s3://${S3BUCKET}/apache/"
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
 		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
@@ -112,7 +112,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
 	rsync -au "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
 	if [ "${S3ENABLE:-false}" == "true" ]; then
-	    s4cmd sync "$PGBACKUPDIR/" "s3://${S3BUCKET}/postgres/"
+	    s4cmd sync "$PGBACKUPDIR/*" "s3://${S3BUCKET}/postgres/"
 	fi
 	if [ "${AZUREENABLE:-false}" == "true" ]; then
 	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do

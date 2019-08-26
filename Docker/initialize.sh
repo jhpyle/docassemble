@@ -180,15 +180,15 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
         rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then
-        s4cmd sync "s3://${S3BUCKET}/apache/" /etc/apache2/sites-available/
+        s4cmd sync "s3://${S3BUCKET}/apache/*" /etc/apache2/sites-available/
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
-        s4cmd sync "s3://${S3BUCKET}/apachelogs/" /var/log/apache2/
+        s4cmd sync "s3://${S3BUCKET}/apachelogs/*" /var/log/apache2/
         chown root.adm /var/log/apache2/*
         chmod 640 /var/log/apache2/*
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/log") ]]; then
-        s4cmd sync "s3://${S3BUCKET}/log/" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
+        s4cmd sync "s3://${S3BUCKET}/log/*" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
         chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
     fi
     if [[ $(s4cmd ls "s3://${S3BUCKET}/config.yml") ]]; then
@@ -377,7 +377,7 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s4cmd ls "s3://${S3BUCKET}/files
                     s4cmd put "${sub_file}" "s3://${S3BUCKET}/files/${file_number}/${target_file}"
                 done
             else
-               s4cmd sync "${DA_ROOT}/files/${the_file}/" "s3://${S3BUCKET}/${the_file}/"
+               s4cmd sync "${DA_ROOT}/files/${the_file}/*" "s3://${S3BUCKET}/${the_file}/"
             fi
         done
     fi
@@ -605,7 +605,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     fi
     if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s4cmd ls s3://${S3BUCKET}/postgres) ]]; then
         PGBACKUPDIR=`mktemp -d`
-        s4cmd sync "s3://${S3BUCKET}/postgres/" "$PGBACKUPDIR/"
+        s4cmd sync "s3://${S3BUCKET}/postgres/*" "$PGBACKUPDIR/"
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
         echo "There are postgres files on Azure" >&2
         PGBACKUPDIR=`mktemp -d`
@@ -763,7 +763,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 fi
             fi
             if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud nginx) ]]; then
-                s4cmd sync /etc/nginx/sites-available/ "s3://${S3BUCKET}/nginx/"
+                s4cmd sync "/etc/nginx/sites-available/*" "s3://${S3BUCKET}/nginx/"
             fi
         elif [ "${AZUREENABLE:-false}" == "true" ]; then
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -874,7 +874,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 fi
             fi
             if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
-                s4cmd sync /etc/apache2/sites-available/ "s3://${S3BUCKET}/apache/"
+                s4cmd sync "/etc/apache2/sites-available/*" "s3://${S3BUCKET}/apache/"
             fi
         elif [ "${AZUREENABLE:-false}" == "true" ]; then
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -1127,10 +1127,10 @@ function deregister {
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-            s4cmd sync "${DA_ROOT}/log/" "s3://${S3BUCKET}/log/"
+            s4cmd sync "${DA_ROOT}/log/*" "s3://${S3BUCKET}/log/"
         fi
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-            s4cmd sync /var/log/apache2/ "s3://${S3BUCKET}/apachelogs/"
+        if [ "${DAWEBSERVER:-nginx}" = "apache" ] && [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+            s4cmd sync "/var/log/apache2/*" "s3://${S3BUCKET}/apachelogs/"
         fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
         if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
@@ -1140,14 +1140,14 @@ function deregister {
                 blob-cmd -f cp "${LOGDIRECTORY}/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}"
             done
         fi
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+        if [ "${DAWEBSERVER:-nginx}" = "apache" ] && [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
             for the_file in $(find /var/log/apache2 -type f | cut -c 18-); do
                 echo "Saving log file $the_file" >&2
                 blob-cmd -f cp "/var/log/apache2/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}"
             done
         fi
     else
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+        if [ "${DAWEBSERVER:-nginx}" = "apache" ] && [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
             rm -rf "${DA_ROOT}/backup/apachelogs"
             mkdir -p "${DA_ROOT}/backup/apachelogs"
             rsync -auq /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
