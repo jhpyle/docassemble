@@ -39,19 +39,30 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "true" ]; then
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-		supervisorctl --serverurl http://localhost:9001 stop apache2
-		cd "${DA_ROOT}/letsencrypt"
-		./letsencrypt-auto renew
-		/etc/init.d/apache2 stop
-		supervisorctl --serverurl http://localhost:9001 start apache2
+		if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+		    supervisorctl --serverurl http://localhost:9001 stop apache2
+		    cd "${DA_ROOT}/letsencrypt"
+		    ./letsencrypt-auto renew
+		    /etc/init.d/apache2 stop
+		    supervisorctl --serverurl http://localhost:9001 start apache2
+		fi
+		if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+		    supervisorctl --serverurl http://localhost:9001 stop nginx
+		    cd "${DA_ROOT}/letsencrypt"
+		    ./letsencrypt-auto renew
+		    nginx -s stop &> /dev/null
+		    supervisorctl --serverurl http://localhost:9001 start nginx
+		fi
 		if [ "${S3ENABLE:-false}" == "true" ]; then
 		    cd /
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			s4cmd put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
+			s4cmd -f put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
 		    fi
-		    s4cmd sync "/etc/apache2/sites-available/*" "s3://${S3BUCKET}/apache/"
+		    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+			s4cmd dsync "/etc/apache2/sites-available" "s3://${S3BUCKET}/apache"
+		    fi
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
 		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
@@ -61,10 +72,12 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 			blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
 		    fi
-		    for the_file in $( find /etc/apache2/sites-available/ -type f ); do
-			target_file=`basename ${the_file}`
-			blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
-		    done
+		    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+			for the_file in $( find /etc/apache2/sites-available/ -type f ); do
+			    target_file=`basename ${the_file}`
+			    blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
+			done
+		    fi
 		fi
 		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
 		    cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
@@ -95,7 +108,12 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"
 	#rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
         if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-	    rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]
+	       rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+	    fi
+	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]
+	       rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+	    fi
 	fi
 	rsync -auq "${LOGDIRECTORY}" "${BACKUPDIR}/"
     fi
@@ -112,7 +130,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
 	rsync -au "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
 	if [ "${S3ENABLE:-false}" == "true" ]; then
-	    s4cmd sync "$PGBACKUPDIR/*" "s3://${S3BUCKET}/postgres/"
+	    s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
 	fi
 	if [ "${AZUREENABLE:-false}" == "true" ]; then
 	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
@@ -131,7 +149,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	else
 	    export LOCAL_HOSTNAME=`hostname --fqdn`
 	fi
-	s4cmd --delete-removed sync "${DA_ROOT}/backup/" "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}/"
+	s4cmd --delete-removed dsync "${DA_ROOT}/backup" "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}"
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
 	if [ "${EC2:-false}" == "true" ]; then

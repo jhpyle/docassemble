@@ -63,7 +63,7 @@ function stopfunc {
     chown postgres.postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s4cmd sync "$PGBACKUPDIR/*" "s3://${S3BUCKET}/postgres/"
+	s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
 	rm -rf "$PGBACKUPDIR"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(find "$PGBACKUPDIR" -type f); do
