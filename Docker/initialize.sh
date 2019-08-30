@@ -849,7 +849,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
                     ./letsencrypt-auto renew
                 else
-                    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+                    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
                 nginx -s stop &> /dev/null

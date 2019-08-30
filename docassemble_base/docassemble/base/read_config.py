@@ -150,10 +150,16 @@ if __name__ == "__main__":
         print('export LOGDIRECTORY="' + str(daconfig['log']) + '"')
     if 'use https' in daconfig and daconfig['use https']:
         print('export USEHTTPS=true')
+    else:
+        print('export USEHTTPS=false')
     if 'use lets encrypt' in daconfig and daconfig['use lets encrypt']:
         print('export USELETSENCRYPT=true')
+    else:
+        print('export USELETSENCRYPT=false')
     if 'behind https load balancer' in daconfig and daconfig['behind https load balancer']:
         print('export BEHINDHTTPSLOADBALANCER=true')
+    else:
+        print('export BEHINDHTTPSLOADBALANCER=false')
     if 'lets encrypt email' in daconfig and daconfig['lets encrypt email'] is not None:
         print('export LETSENCRYPTEMAIL="' + str(daconfig['lets encrypt email']) + '"')
     if 'external hostname' in daconfig and daconfig['external hostname'] is not None:

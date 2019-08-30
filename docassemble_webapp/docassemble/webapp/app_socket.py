@@ -38,7 +38,7 @@ def create_app():
     docassemble.webapp.db_object.db = db
     #import flask_login
     docassemble.webapp.db_object.UserMixin = object
-    socketio = SocketIO(app, async_mode='eventlet', verify=False)
+    socketio = SocketIO(app, async_mode='eventlet', verify=False, cors_allowed_origins=[daconfig.get('url root', '*')])
     return app, db, socketio
 
 app, db, socketio = create_app()

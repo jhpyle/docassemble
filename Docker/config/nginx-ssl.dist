@@ -13,7 +13,7 @@ server {
 
     location /ws {
         include proxy_params;
-        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};    
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};
     }
 
     location /ws/socket.io {

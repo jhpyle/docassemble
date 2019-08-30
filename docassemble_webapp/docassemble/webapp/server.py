@@ -5684,7 +5684,7 @@ def index(action_argument=None):
         #logmessage("index: assemble 1")
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
-            logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
+            logmessage("index: not the same question name: " + text_type(post_data['_question_name']) + " versus " + text_type(interview_status.question.name))
             if not daconfig.get('allow non-idempotent questions', True):
                 raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
