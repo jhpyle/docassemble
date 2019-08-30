@@ -108,10 +108,10 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"
 	#rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
         if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]
+	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 	       rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
 	    fi
-	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]
+	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 	       rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
 	    fi
 	fi
