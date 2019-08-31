@@ -68,6 +68,7 @@ bash -c \
    flask-mail \
    flask-sqlalchemy \
    flask-wtf \
+   s4cmd \
    uwsgi \
    distutils2 \
    passlib \
@@ -98,6 +99,7 @@ bash -c \
    flask-mail \
    flask-sqlalchemy \
    flask-wtf \
+   s4cmd \
    uwsgi \
    passlib \
    pycryptodome \

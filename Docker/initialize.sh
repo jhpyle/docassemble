@@ -31,7 +31,7 @@ pandoc --help &> /dev/null || apt-get -q -y install pandoc
 
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.7" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ]; then
    cd /tmp \
    && wget -q https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb \
    && dpkg -i pandoc-2.7.3-1-amd64.deb \
@@ -116,11 +116,12 @@ fi
 echo "8" >&2
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
-    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
-    if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
-        export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
-    fi
+    export S3_ACCESS_KEY="$S3ACCESSKEY"
+    export S3_SECRET_KEY="$S3SECRETACCESSKEY"
+fi
+
+if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+    export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
 fi
 
 echo "9" >&2

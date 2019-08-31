@@ -21,11 +21,12 @@ if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
 fi
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export AWS_ACCESS_KEY_ID="${S3ACCESSKEY}"
-    export AWS_SECRET_ACCESS_KEY="${S3SECRETACCESSKEY}"
-    if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
-	export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
-    fi
+    export S3_ACCESS_KEY="${S3ACCESSKEY}"
+    export S3_SECRET_KEY="${S3SECRETACCESSKEY}"
+fi
+
+if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+    export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
 fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then

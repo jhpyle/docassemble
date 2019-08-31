@@ -122,9 +122,11 @@ if __name__ == "__main__":
         if 'access key id' in daconfig['s3'] and daconfig['s3']['access key id'] is not None:
             print('export S3ACCESSKEY="' + str(daconfig['s3']['access key id']) + '"')
             print('export AWS_ACCESS_KEY_ID="' + str(daconfig['s3']['access key id']) + '"')
+            print('export S3_ACCESS_KEY="' + str(daconfig['s3']['access key id']) + '"')
         if 'secret access key' in daconfig['s3'] and daconfig['s3']['secret access key'] is not None:
             print('export S3SECRETACCESSKEY="' + str(daconfig['s3']['secret access key']) + '"')
             print('export AWS_SECRET_ACCESS_KEY="' + str(daconfig['s3']['secret access key']) + '"')
+            print('export S3_SECRET_KEY="' + str(daconfig['s3']['access key id']) + '"')
         if 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None:
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
