@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.4.81] - 2019-08-
+## [0.5.0] - 2019-09-02
 ### Added
 - The `advance_progress_meter` option for the `/api/session` POST API
   endpoint.
@@ -11,10 +11,9 @@
 ### Changed
 - Upgrade Docker OS to Debian buster.
 - Upgrade Python from 3.5 to 3.6.
-- Docker image builds in two parts.  The jhpyle/docassemble-os image
-  is the base image for jhpyle/docassemble.
-- The default web browser under Docker is now NGINX, which should
-  alleviate problems with Live Help not connecting.
+- The default web browser under Docker is now NGINX.
+- The Docker image now builds in two parts.  The jhpyle/docassemble-os
+  image is the base image for jhpyle/docassemble.
 - The `get_session_variables()` and `set_session_variables()`
   functions use the current user's decryption key by default.
 
