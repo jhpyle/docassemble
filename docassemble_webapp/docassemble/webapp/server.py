@@ -188,8 +188,8 @@ if PY2:
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
 else:
-    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
-    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python3.5', 'site-packages')
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
+    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor), 'site-packages')
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 #PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 
@@ -5684,7 +5684,7 @@ def index(action_argument=None):
         #logmessage("index: assemble 1")
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
-            logmessage("index: not the same question name: " + post_data['_question_name'] + " versus " + interview_status.question.name)
+            logmessage("index: not the same question name: " + text_type(post_data['_question_name']) + " versus " + text_type(interview_status.question.name))
             if not daconfig.get('allow non-idempotent questions', True):
                 raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
@@ -20698,6 +20698,8 @@ def api_file(file_number):
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     #obtain_lock(session_id, yaml_filename)
     #sys.stderr.write("get_session_variables: fetch_user_dict\n")
+    if secret is None:
+        secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
     except Exception as the_err:
@@ -20743,6 +20745,8 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False):
     #obtain_lock(session_id, yaml_filename)
+    if secret is None:
+        secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:

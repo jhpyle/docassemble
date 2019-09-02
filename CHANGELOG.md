@@ -1,9 +1,21 @@
 # Change Log
 
-## [0.4.81] - 2019-08-
+## [0.5.0] - 2019-09-02
 ### Added
-- The `advance_progress_meter` option for the `/api/session` POST
-  API endpoint.
+- The `advance_progress_meter` option for the `/api/session` POST API
+  endpoint.
+- The `DAWEBSERVER` Docker environment variable and the `web server`
+  Configuration directive.
+- The `S3ENDPOINTURL` Docker environment variable and the `endpoint
+  url` Configuration directive under `s3`.
+### Changed
+- Upgrade Docker OS to Debian buster.
+- Upgrade Python from 3.5 to 3.6.
+- The default web browser under Docker is now NGINX.
+- The Docker image now builds in two parts.  The jhpyle/docassemble-os
+  image is the base image for jhpyle/docassemble.
+- The `get_session_variables()` and `set_session_variables()`
+  functions use the current user's decryption key by default.
 
 ## [0.4.80] - 2019-08-22
 ### Fixed

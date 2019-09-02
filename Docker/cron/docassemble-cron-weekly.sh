@@ -5,7 +5,7 @@ export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
 if [ "${DAPYTHONVERSION}" == "2" ]; then
     export DA_DEFAULT_LOCAL="local"
 else
-    export DA_DEFAULT_LOCAL="local3.5"
+    export DA_DEFAULT_LOCAL="local3.6"
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
@@ -20,8 +20,12 @@ if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
 fi
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
-    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
+    export S3_ACCESS_KEY="$S3ACCESSKEY"
+    export S3_SECRET_KEY="$S3SECRETACCESSKEY"
+fi
+
+if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+    export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
 fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then

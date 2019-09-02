@@ -75,7 +75,7 @@ app.config['FAVICON_THEME_COLOR'] = daconfig.get('favicon theme color', '#83b3dd
 if not daconfig.get('allow registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = daconfig.get('maximum content length', 16 * 1024 * 1024)
-app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
+app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True) if daconfig.get('web server', 'nginx') == 'apache' else False
 #if daconfig.get('behind https load balancer', False):
 #    app.config['PREFERRED_URL_SCHEME'] = 'https'
 #app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0

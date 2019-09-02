@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export DEBIAN_FRONTEND=noninteractive
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
 export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
@@ -15,12 +16,13 @@ if [ "${DAPYTHONVERSION}" == "2" ]; then
 	apt-get remove -y libapache2-mod-wsgi &> /dev/null
     fi
 else
-    export DA_DEFAULT_LOCAL="local3.5"
+    export DA_DEFAULT_LOCAL="local3.6"
 
     if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
 	WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
-	if [ "${WSGI_VERSION}" != '4.5.11-1' ]; then
+	if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
 	    apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+	    ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
 	fi
     else
 	apt-get remove -y libapache2-mod-wsgi-py3 &> /dev/null

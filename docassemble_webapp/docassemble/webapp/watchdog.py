@@ -12,7 +12,7 @@ while True:
     for pid in psutil.pids():
         try:
             p = psutil.Process(pid)
-            if p.name() == 'apache2' and p.cpu_percent(interval=30.0) > 90.0:
+            if p.name() in ('apache2', 'uwsgi') and p.cpu_percent(interval=30.0) > 90.0:
                 busy_now.add(pid)
         except:
             continue

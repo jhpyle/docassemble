@@ -76,7 +76,7 @@ def load(**kwargs):
         if PY2:
             daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local')
         else:
-            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local3.5')
+            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
     daconfig['python version'] = text_type(pkg_resources.get_distribution("docassemble.base").version)
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):

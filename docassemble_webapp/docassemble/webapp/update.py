@@ -448,7 +448,7 @@ def install_package(package):
     if PY2:
         PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     else:
-        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
+        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
