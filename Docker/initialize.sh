@@ -173,12 +173,22 @@ fi
 echo "13" >&2
 
 if [ "${S3ENABLE:-false}" == "true" ]; then
+    if [ "${EC2:-false}" == "true" ]; then
+        export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+    else
+        export LOCAL_HOSTNAME=`hostname --fqdn`
+    fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/letsencrypt.tar.gz") ]]; then
         rm -f /tmp/letsencrypt.tar.gz
         s4cmd get "s3://${S3BUCKET}/letsencrypt.tar.gz" /tmp/letsencrypt.tar.gz
         cd /
         tar -xf /tmp/letsencrypt.tar.gz
         rm -f /tmp/letsencrypt.tar.gz
+    else
+        rm -f /etc/letsencrypt/da_using_lets_encrypt
+    fi
+    if [ "${DABACKUPDAYS}" != "0" ] && [[ $(s4cmd ls "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}") ]]; then
+        s4cmd dsync "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}" "${DA_ROOT}/backup"
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then
         s4cmd dsync "s3://${S3BUCKET}/apache" /etc/apache2/sites-available
@@ -209,6 +219,11 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
         chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 elif [ "${AZUREENABLE:-false}" == "true" ]; then
+    if [ "${EC2:-false}" == "true" ]; then
+        export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+    else
+        export LOCAL_HOSTNAME=`hostname --fqdn`
+    fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
         rm -f /tmp/letsencrypt.tar.gz
         echo "Copying let's encrypt" >&2
@@ -216,6 +231,21 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
         cd /
         tar -xf /tmp/letsencrypt.tar.gz
         rm -f /tmp/letsencrypt.tar.gz
+    else
+        rm -r /etc/letsencrypt/da_using_lets_encrypt
+    fi
+    if [ "${DABACKUPDAYS}" != "0" ] && [[ $(python -m docassemble.webapp.list-cloud backup/${LOCAL_HOSTNAME}/) ]]; then
+        BACKUPDIR="backup/${LOCAL_HOSTNAME}/"
+        let BACKUPDIRLENGTH=${#BACKUPDIR}+1
+        for the_file in $(python -m docassemble.webapp.list-cloud $BACKUPDIR | cut -c ${BACKUPDIRLENGTH}-); do
+            echo "Found $the_file on Azure" >&2
+            if ! [[ $the_file =~ /$ ]]; then
+                if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
+                   echo "Copying backup file" $the_file >&2
+                   blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}" "${DA_ROOT}/backup/${the_file}"
+                fi
+            fi
+        done
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache/) ]]; then
         echo "There are apache files on Azure" >&2
@@ -226,6 +256,8 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
                 blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
             fi
         done
+    else
+        rm -r /etc/letsencrypt/da_using_lets_encrypt
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
         if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
@@ -473,6 +505,9 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
         rm -f /etc/apache2/sites-available/000-default.conf
         rm -f /etc/apache2/sites-available/default-ssl.conf
         if [ "${DAHOSTNAME:-none}" != "none" ]; then
+            if [ ! -f "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" ]; then
+                rm -f /etc/letsencrypt/da_using_lets_encrypt
+            fi
             if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
                 cp "${DA_ROOT}/config/docassemble-ssl.conf.dist" /etc/apache2/sites-available/docassemble-ssl.conf
                 rm -f /etc/letsencrypt/da_using_lets_encrypt
@@ -504,6 +539,10 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         DASSLCERTIFICATE="/etc/ssl/docassemble/nginx.crt;"
         DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
     fi
+    if [ ! -f "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" ]; then
+        rm -f /etc/letsencrypt/da_using_lets_encrypt
+    fi
+
     if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
         DAREALIP="include ${DA_ROOT}/config/nginx-realip;"
         ln -sf /etc/nginx/sites-available/docassembleredirect /etc/nginx/sites-enabled/docassembleredirect

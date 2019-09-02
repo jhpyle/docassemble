@@ -107,7 +107,6 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
 	rsync -auq "${DA_ROOT}/files" "${BACKUPDIR}/"
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"
-	#rsync -au --exclude '*/worker.log*' ${DA_ROOT}/log $BACKUPDIR/
         if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 	       rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
@@ -129,7 +128,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	PGBACKUPDIR=`mktemp -d`
 	chown postgres.postgres "${PGBACKUPDIR}"
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
-	rsync -au "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
+	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
 	if [ "${S3ENABLE:-false}" == "true" ]; then
 	    s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
 	fi

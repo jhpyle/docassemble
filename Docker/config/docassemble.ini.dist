@@ -9,4 +9,5 @@ venv = {{DA_PYTHON}}
 module = docassemble.webapp.run
 pidfile = /var/run/uwsgi/uwsgi.pid
 callable = application
-touch-reload={{DA_ROOT}}/webapp/docassemble.wsgi
+buffer-size = 32768
+touch-reload = {{DA_ROOT}}/webapp/docassemble.wsgi
