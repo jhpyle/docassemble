@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.1](https://github.com/jhpyle/docassemble/releases/tag/v0.5.1) - 2019-09-02
+
+### Fixed
+- `get_question_data()` and related functions raised exception.
+- Let's Encrypt renewal error.
+
 ## [0.5.0](https://github.com/jhpyle/docassemble/releases/tag/v0.5.0) - 2019-09-02
 
 ### Added
