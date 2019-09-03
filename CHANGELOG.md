@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.2] - 2019-09-02
+### Fixed
+- S3 error.
+
 ## [0.5.1] - 2019-09-02
 ### Fixed
 - `get_question_data()` and related functions raised exception.

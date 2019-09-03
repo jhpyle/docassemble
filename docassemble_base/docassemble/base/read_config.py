@@ -126,13 +126,13 @@ if __name__ == "__main__":
         if 'secret access key' in daconfig['s3'] and daconfig['s3']['secret access key'] is not None:
             print('export S3SECRETACCESSKEY="' + str(daconfig['s3']['secret access key']) + '"')
             print('export AWS_SECRET_ACCESS_KEY="' + str(daconfig['s3']['secret access key']) + '"')
-            print('export S3_SECRET_KEY="' + str(daconfig['s3']['access key id']) + '"')
+            print('export S3_SECRET_KEY="' + str(daconfig['s3']['secret access key']) + '"')
         if 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None:
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
-            print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
+            print('export S4CMD_OPTS="--endpoint_url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
             print('export AZUREENABLE=true')

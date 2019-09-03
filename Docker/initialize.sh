@@ -366,6 +366,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{S3ENABLE}}/'"${S3ENABLE:-false}"'/' \
         -e 's#{{S3ACCESSKEY}}#'"${S3ACCESSKEY:-null}"'#' \
         -e 's#{{S3SECRETACCESSKEY}}#'"${S3SECRETACCESSKEY:-null}"'#' \
+        -e 's@{{S3ENDPOINTURL}}@'"${S3ENDPOINTURL:-null}"'@' \
         -e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
         -e 's/{{S3REGION}}/'"${S3REGION:-null}"'/' \
         -e 's/{{AZUREENABLE}}/'"${AZUREENABLE:-false}"'/' \
