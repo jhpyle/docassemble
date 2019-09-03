@@ -43,14 +43,14 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 		    supervisorctl --serverurl http://localhost:9001 stop apache2
 		    cd "${DA_ROOT}/letsencrypt"
-		    ./letsencrypt-auto renew
+		    ./letsencrypt-auto --apache renew
 		    /etc/init.d/apache2 stop
 		    supervisorctl --serverurl http://localhost:9001 start apache2
 		fi
 		if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 		    supervisorctl --serverurl http://localhost:9001 stop nginx
 		    cd "${DA_ROOT}/letsencrypt"
-		    ./letsencrypt-auto renew
+		    ./letsencrypt-auto --nginx renew
 		    nginx -s stop &> /dev/null
 		    supervisorctl --serverurl http://localhost:9001 start nginx
 		fi

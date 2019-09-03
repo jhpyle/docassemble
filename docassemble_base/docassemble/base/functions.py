@@ -1372,7 +1372,6 @@ this_thread.current_package = None
 this_thread.interview = None
 this_thread.interview_status = None
 this_thread.evaluation_context = None
-this_thread.docx_template = None
 this_thread.gathering_mode = dict()
 this_thread.global_vars = GenericObject()
 this_thread.current_variable = list()
@@ -1386,10 +1385,12 @@ this_thread.current_question = None
 
 def backup_thread_variables():
     backup = dict()
-    for key in ('interview', 'interview_status', 'open_files', 'docx_template', 'current_question', 'internal', 'global_vars'):
-        backup[key] = getattr(this_thread, key)
+    for key in ('interview', 'interview_status', 'open_files', 'current_question'):
+        if hasattr(this_thread, key):
+            backup[key] = getattr(this_thread, key)
     for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars', 'current_package', 'initialized', 'session_id', 'evaluation_context', 'misc', 'prevent_going_back']:
-        backup[key] = copy.deepcopy(getattr(this_thread, key))
+        if hasattr(this_thread, key):
+            backup[key] = copy.deepcopy(getattr(this_thread, key))
     return backup
 
 def restore_thread_variables(backup):

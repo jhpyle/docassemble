@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.1] - 2019-09-02
+### Fixed
+- `get_question_data()` and related functions raised exception.
+- Let's Encrypt renewal error.
+
 ## [0.5.0] - 2019-09-02
 ### Added
 - The `advance_progress_meter` option for the `/api/session` POST API
