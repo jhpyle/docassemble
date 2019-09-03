@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.2](https://github.com/jhpyle/docassemble/releases/tag/v0.5.2) - 2019-09-02
+
+### Fixed
+- S3 error.
+
 ## [0.5.1](https://github.com/jhpyle/docassemble/releases/tag/v0.5.1) - 2019-09-02
 
 ### Fixed
