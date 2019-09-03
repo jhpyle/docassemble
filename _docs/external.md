@@ -240,7 +240,7 @@ a [Google Sheet].
 [`requests`]: http://docs.python-requests.org/en/master/
 [`gettime.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/gettime.py
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
-[Python module]: https://docs.python.org/2/tutorial/modules.html
+[Python module]: https://docs.python.org/3/tutorial/modules.html
 [World Clock API]: http://worldclockapi.com/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [sample interviews in the documentation]: {{ site.baseurl }}/docs/functions.html#google sheets example

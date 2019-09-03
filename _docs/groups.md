@@ -1631,13 +1631,13 @@ after it is defined.
 [`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`.number()`]: {{ site.baseurl }}/docs/objects.html#DAList.number
-[Python interpreter]: https://docs.python.org/2.7/tutorial/interpreter.html
-[Python list]: https://docs.python.org/2.7/tutorial/datastructures.html
-[Python lists]: https://docs.python.org/2.7/tutorial/datastructures.html
-[Python dict]: https://docs.python.org/2/library/stdtypes.html#dict
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
-[`sorted()` function]: https://docs.python.org/2/library/functions.html#sorted
-[`range()` function]: https://docs.python.org/2/library/functions.html#sorted
+[Python interpreter]: https://docs.python.org/3.6/tutorial/interpreter.html
+[Python list]: https://docs.python.org/3.6/tutorial/datastructures.html
+[Python lists]: https://docs.python.org/3.6/tutorial/datastructures.html
+[Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[Python set]: https://docs.python.org/3/library/stdtypes.html#set
+[`sorted()` function]: https://docs.python.org/3/library/functions.html#sorted
+[`range()` function]: https://docs.python.org/3/library/functions.html#sorted
 [`for` loop]: {{ site.baseurl }}/docs/markup.html#for
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
@@ -1645,9 +1645,9 @@ after it is defined.
 [`code` blocks]: {{ site.baseurl }}/docs/code.html#code
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
-[list]: https://docs.python.org/2.7/tutorial/datastructures.html
-[dict]: https://docs.python.org/2/library/stdtypes.html#dict
-[set]: https://docs.python.org/2/library/stdtypes.html#set
+[list]: https://docs.python.org/3.6/tutorial/datastructures.html
+[dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[set]: https://docs.python.org/3/library/stdtypes.html#set
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
@@ -1663,7 +1663,7 @@ after it is defined.
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
-[`del`]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
+[`del`]: https://docs.python.org/3/tutorial/datastructures.html#the-del-statement
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
@@ -1680,7 +1680,7 @@ after it is defined.
 [index variables]: {{ site.baseurl }}/docs/fields.html#index variables
 [index variable]: {{ site.baseurl }}/docs/fields.html#index variables
 [`using()` method]: {{ site.baseurl }}/docs/objects.html#DAObject.using
-[Python class]: https://docs.python.org/2/tutorial/classes.html
+[Python class]: https://docs.python.org/3/tutorial/classes.html
 [`hook_on_gather()`]: {{ site.baseurl }}/docs/objects.html#DAList.hook_on_gather
 [`hook_after_gather()`]: {{ site.baseurl }}/docs/objects.html#DAList.hook_after_gather
 [edits]: #editing

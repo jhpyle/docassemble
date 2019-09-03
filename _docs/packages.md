@@ -525,8 +525,8 @@ interviews that might have a very different purpose.
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
-[Python package]: https://docs.python.org/2/tutorial/modules.html#packages
+[Python packages]: https://docs.python.org/3/tutorial/modules.html#packages
+[Python package]: https://docs.python.org/3/tutorial/modules.html#packages
 [installation]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [user login system]: {{ site.baseurl }}/docs/users.html
@@ -541,9 +541,9 @@ interviews that might have a very different purpose.
 [GitHub]: https://github.com/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Windows application]: https://desktop.github.com/
-[Python module]: https://docs.python.org/2/tutorial/modules.html
-[Python modules]: https://docs.python.org/2/tutorial/modules.html
-[classes]: https://docs.python.org/2/tutorial/classes.html
+[Python module]: https://docs.python.org/3/tutorial/modules.html
+[Python modules]: https://docs.python.org/3/tutorial/modules.html
+[classes]: https://docs.python.org/3/tutorial/classes.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [PyPI]: https://pypi.python.org/pypi

@@ -1384,11 +1384,11 @@ privileges and user identity of the [cron user].
 [`check in`]: #check in
 [processes interim user input]: #check in
 [processing interim user input]: #check in
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
+[Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[list]: https://docs.python.org/2.7/tutorial/datastructures.html
-[dict]: https://docs.python.org/2/library/stdtypes.html#dict
+[list]: https://docs.python.org/3.6/tutorial/datastructures.html
+[dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [evaluates the interview]: {{ site.baseurl }}/docs/logic.html
 [`reload` modifier]: {{ site.baseurl }}/docs/modifiers.html#reload
 [evaluate]: {{ site.baseurl }}/docs/logic.html
@@ -1398,12 +1398,12 @@ privileges and user identity of the [cron user].
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
 [`last_access_days()`]: {{ site.baseurl }}/docs/functions.html#last_access_days
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
-[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [`flash()`]: {{ site.baseurl }}/docs/functions.html#flash
 [document]: {{ site.baseurl }}/docs/documents.html
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
-[traceback]: https://docs.python.org/2/library/traceback.html
-[`try`/`except`]: https://docs.python.org/2/tutorial/errors.html#handling-exceptions
+[traceback]: https://docs.python.org/3/library/traceback.html
+[`try`/`except`]: https://docs.python.org/3/tutorial/errors.html#handling-exceptions
 [`background_error_action()`]: #background_error_action
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname

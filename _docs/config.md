@@ -1178,12 +1178,11 @@ For example, you might keep your certificates on a network drive:
 certs: /netmount/files/docassemble/certs
 {% endhighlight %}
 
-By default, the [Apache] HTTPS configuration contains:
+By default, the [NGINX] HTTPS configuration contains:
 
 {% highlight text %}
-SSLCertificateFile /etc/ssl/docassemble/apache.crt
-SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
-SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
+ssl_certificate /etc/ssl/docassemble/nginx.crt;
+ssl_certificate_key /etc/ssl/docassemble/nginx.key;
 {% endhighlight %}
 
 When using a [multi-server arrangement] or [Docker], the [supervisor]
@@ -1212,18 +1211,17 @@ If [`azure`] is enabled, it will look for [Azure blob storage] objects
 with the prefix `certs/` in the `container` defined in the [`azure`]
 configuration.
 
-Here is an example.  Install [`s3cmd`] if you have not done so already:
+Here is an example.  Install [`s4cmd`] if you have not done so already:
 
 {% highlight bash %}
-apt-get install s3cmd
+apt-get install s4cmd
 {% endhighlight %}
 
 Then do:
 
 {% highlight bash %}
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/apache.crt
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/apache.key
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.ca.pem s3://yourbucket/certs/apache.ca.pem
+s4cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/nginx.crt
+s4cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/nginx.key
 {% endhighlight %}
 
 If your [`s3`] configuration has `bucket: yourbucket`, then you do not
@@ -1436,16 +1434,13 @@ other os locales:
 
 ## <a name="server administrator email"></a>E-mail address of server administrator
    
-On [Docker], you can provide an e-mail address to the [Apache] web
+On [Docker], you can provide an e-mail address to the [NGINX] web
 server, so that if your server has an error, users are told an
 appropriate e-mail address to contact.
 
 {% highlight yaml %}
 server administrator email: support@example.com
 {% endhighlight %}
-
-This e-mail address will be used to set the [`ServerAdmin`] directive
-in the [Apache] configuration.
 
 ## <a name="error notification email"></a>E-mail address to which error messages shall be sent
 
@@ -2468,6 +2463,11 @@ s3:
   region: us-west-1
 {% endhighlight %}
 
+There is also an option under `s3` called `endpoint url` that you can
+set if you are using an [S3]-compatible object storage service. (e.g.,
+`endpoint url: https://mys3service.com`).  By default, [Amazon S3] is
+used.
+
 You will need to create the [bucket] before using it; **docassemble**
 will not create it for you.
 
@@ -2476,7 +2476,7 @@ the Configuration using the web application when you already have a
 server running.  The [S3] configuration is used throughout the boot
 process and the shutdown process.  If you want to start using [S3],
 you should start a new container using [`docker run`] with the
-[`S3BUCKET`], [`S3REGION`], and other environment variables set.
+[`S3BUCKET`], [`S3REGION`], and other `S3` environment variables set.
 
 ### <a name="azure"></a>azure
 
@@ -2852,13 +2852,14 @@ initialization process is the updating of Python packages.
 
 This process is necessary in order to install any custom Python
 packages you have, such as interviews you have created.  If you
-replace a container with [`docker -t 60 stop`], [`docker rm`], and [`docker
-run`], you will want the new container to have the appropriate software
-on it.  When you use [Package Management] or the [packages folder] of
-the [Playground] to install a package on your system, the packages
-that get installed are tracked in the SQL database.  When you start up
-a new [Docker] container that uses that SQL database, the
-update process will install the packages listed in the database.
+replace a container with [`docker stop -t 600`], [`docker rm`], and
+[`docker run`], you will want the new container to have the
+appropriate software on it.  When you use [Package Management] or the
+[packages folder] of the [Playground] to install a package on your
+system, the packages that get installed are tracked in the SQL
+database.  When you start up a new [Docker] container that uses that
+SQL database, the update process will install the packages listed in
+the database.
 
 This is the main reason why launching a [Docker] container can take a
 long time.
@@ -3403,7 +3404,7 @@ default configuration.
 
 Functions such as [`path_and_mimetype()`] will download files from the
 internet.  When the server downloads the file, it reports its [user
-agent] as `Python-urllib/2.7` by default.  This might cause problems
+agent] as `curl/7.64.0` by default.  This might cause problems
 for your interviews because some web sites may not want to serve files
 to a user that identifies itself as a "robot."
 
@@ -3519,6 +3520,21 @@ new markdown to docx: True
 The new system will become the default at some point in the future, so
 when you have time, you should adapt your DOCX files if you are using
 `{% raw %}{{r ... }}{% endraw %}` to insert [`template`]s.
+
+## <a name="web server"></a>Choosing Apache instead of NGINX
+
+By default, the web server used with [Docker] is [NGINX].  You can
+change this to [Apache] by adding the following to your Configuration:
+
+{% highlight yaml %}
+web server: apache
+{% endhighlight %}
+
+The default is `nginx`.  After changing this, you will need to do a
+[`docker stop -t 600`] followed by a [`docker start`].  This feature
+requires system version 0.5.0 or later.
+
+See also the [`DAWEBSERVER`] environment variable.
 
 # <a name="get_config"></a>Adding your own configuration variables
 
@@ -3654,7 +3670,7 @@ and Facebook API keys.
 [`docassemble.webapp.install_certs`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/install_certs.py
 [`brandname`]: #brandname
 [`appname`]: #appname
-[PYTHONUSERBASE]: https://docs.python.org/2.7/using/cmdline.html#envvar-PYTHONUSERBASE
+[PYTHONUSERBASE]: https://docs.python.org/3.6/using/cmdline.html#envvar-PYTHONUSERBASE
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [`cert install directory`]: #cert install directory
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
@@ -3662,11 +3678,11 @@ and Facebook API keys.
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 [`azure`]: #azure
 [`s3`]: #s3
-[`s3cmd`]: http://s3tools.org/s3cmd
+[`s4cmd`]: https://github.com/bloomreach/s4cmd
 [Facebook, Twitter, Google, or Azure]: #oauth
 [`certs`]: #certs
 [`log`]: #log
-[locale]: https://docs.python.org/2/library/locale.html
+[locale]: https://docs.python.org/3/library/locale.html
 [phonenumbers]: https://github.com/daviddrysdale/python-phonenumbers
 [`secretkey`]: #secretkey
 [`default sender`]: #default sender
@@ -3781,6 +3797,7 @@ and Facebook API keys.
 [`show interviews link`]: #show interviews link
 [`BEHINDHTTPSLOADBALANCER`]: {{ site.baseurl }}/docs/docker.html#BEHINDHTTPSLOADBALANCER
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
+[`DAWEBSERVER`]: {{ site.baseurl }}/docs/docker.html#DAWEBSERVER
 [Let's Encrypt]: https://letsencrypt.org/
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`USEHTTPS`]: {{ site.baseurl }}/docs/docker.html#USEHTTPS
@@ -3833,7 +3850,7 @@ and Facebook API keys.
 [`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
-[`docker -t 60 stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[`docker stop -t 600`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
@@ -3852,3 +3869,5 @@ and Facebook API keys.
 [`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
 [`S3BUCKET`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET
 [`S3REGION`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET
+[NGINX]: https://www.nginx.com/
+[uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/

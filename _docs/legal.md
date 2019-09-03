@@ -237,35 +237,35 @@ work on the "core," while a large number of developers work on
 "modules."  Modules depend on other modules.
 
 [**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
-[Python list]: https://docs.python.org/2/tutorial/datastructures.html
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python list]: https://docs.python.org/3/tutorial/datastructures.html
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
-[Python module]: https://docs.python.org/2/tutorial/modules.html
-[classes]: https://docs.python.org/2/tutorial/classes.html
-[function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
-[methods]: https://docs.python.org/2/tutorial/classes.html
+[Python module]: https://docs.python.org/3/tutorial/modules.html
+[classes]: https://docs.python.org/3/tutorial/classes.html
+[function]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[methods]: https://docs.python.org/3/tutorial/classes.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [user login system]: {{ site.baseurl }}/docs/users.html
 [configuration]: {{ site.baseurl }}/docs/config.html
-[keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
-[keyword argument]: https://docs.python.org/2/glossary.html#term-argument
+[keyword arguments]: https://docs.python.org/3/glossary.html#term-argument
+[keyword argument]: https://docs.python.org/3/glossary.html#term-argument
 [html2text]: https://pypi.python.org/pypi/html2text
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [fields]: {{ site.baseurl }}/docs/fields.html
-[list]: https://docs.python.org/2/tutorial/datastructures.html
+[list]: https://docs.python.org/3/tutorial/datastructures.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [Markdown]: https://daringfireball.net/projects/markdown/
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [special variable]: {{ site.baseurl }}/docs/special.html
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
+[Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [`object_possessive`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_possessive
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html

@@ -1618,8 +1618,8 @@ interview, see the [`cache documents` feature].
 [Jinja2]: http://jinja.pocoo.org/docs/2.9/
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [insert an image]: {{ site.baseurl }}/docs/markup.html#inserting images
-[updated]: https://docs.python.org/2/library/stdtypes.html#dict.update
-[Python dict]: https://docs.python.org/2/library/stdtypes.html#dict
+[updated]: https://docs.python.org/3/library/stdtypes.html#dict.update
+[Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [Adobe Acrobat Pro]: https://en.wikipedia.org/wiki/Adobe_Acrobat
 [WYSIWYG]: https://en.wikipedia.org/wiki/WYSIWYG
 [LibreOffice]: https://www.libreoffice.org/

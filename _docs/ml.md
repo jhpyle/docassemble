@@ -1359,10 +1359,10 @@ object.)
 [`.save()`]: #MachineLearningEntry.classify
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
-[`datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
-[list]: https://docs.python.org/2/tutorial/datastructures.html
+[`datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
+[list]: https://docs.python.org/3/tutorial/datastructures.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[Python dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
+[Python dictionary]: https://docs.python.org/3/library/stdtypes.html#dict
 [confusion matrix]: https://en.wikipedia.org/wiki/Confusion_matrix
 [confusion matrices]: https://en.wikipedia.org/wiki/Confusion_matrix
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
@@ -1370,8 +1370,8 @@ object.)
 [object]: {{ site.baseurl }}/docs/objects.html#DAModel
 [`DAModel`]: {{ site.baseurl }}/docs/objects.html#DAModel
 [Mako]: {{ site.baseurl }}/docs/markup.html#mako
-[2-tuples]: https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences
-[tuple]: https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences
+[2-tuples]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
+[tuple]: https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences
 [privileges]: {{ site.baseurl }}/docs/users.html
 [package]: {{ site.baseurl }}/docs/packages.html
 [Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
@@ -1380,13 +1380,13 @@ object.)
 [`datatype`]: {{ site.baseurl }}/docs/fields.html#datatype
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [sklearn]: http://scikit-learn.org/stable/
-[Python dictionaries]: https://docs.python.org/2/library/stdtypes.html#dict
+[Python dictionaries]: https://docs.python.org/3/library/stdtypes.html#dict
 [Train]: #train
-[`.format()` method]: https://docs.python.org/2/library/stdtypes.html#str.format
+[`.format()` method]: https://docs.python.org/3/library/stdtypes.html#str.format
 [floating point]: https://en.wikipedia.org/wiki/Floating-point_arithmetic
 [lower-level way]: #lowerlevel
 [random forest]: https://en.wikipedia.org/wiki/Random_forest
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
-[built-in method `.lower()`]: https://docs.python.org/2/library/stdtypes.html#str.lower
+[built-in method `.lower()`]: https://docs.python.org/3/library/stdtypes.html#str.lower
 [`noun_singular()`]: {{ site.baseurl }}/docs/functions.html#noun_singular
 [gathering]: {{ site.baseurl }}/docs/groups.html#gathering

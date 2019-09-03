@@ -887,11 +887,8 @@ http://log.example.local:8080/docassemble.log.
 
 The following files make this possible:
 
-* [`Docker/cgi-bin/index.sh`] - CGI script that should be copied to
-  `/usr/lib/cgi-bin/`.
-* [`Docker/config/docassemble-log.conf.dist`] - template for an
-  [Apache] site configuration file that connects port 8080 to the
-  `index.sh` CGI script above.
+* [`Docker/config/nginx-log.dist`] - template for an [NGINX] site
+  configuration file that listens to port 8080.
 * [`Docker/docassemble-syslog-ng.conf`] - on application servers, this
   is copied into `/etc/syslog-ng/conf.d/docassemble`.  It depends on
   an environment variable `LOGSERVER` which should be set to the
@@ -977,8 +974,8 @@ variable [`packages`]).
 The web server will restart, and re-read its Python source code, if
 the modification time on the WSGI file,
 `/usr/share/docassemble/webapp/docassemble.wsgi`, is changed.  The
-path of the WSGI file is defined in the [Apache configuration] and in
-the **docassemble** configuration file:
+path of the WSGI file is defined in the **docassemble** configuration
+file:
 
 {% highlight yaml %}
 webapp: /usr/share/docassemble/docassemble.wsgi
@@ -1193,7 +1190,7 @@ number of PostgreSQL connections will be 12.
 [GitHub repository]: {{ site.github.repository_url }}
 [boto3]: https://boto3.readthedocs.io/en/latest/
 [`da-cli`]: {{ site.github.repository_url }}/blob/master/da-cli
-[`socket.gethostname()`]: https://docs.python.org/2/library/socket.html#socket.gethostname
+[`socket.gethostname()`]: https://docs.python.org/3/library/socket.html#socket.gethostname
 [Syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
 [`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
 [`redis`]: {{ site.baseurl }}/docs/config.html#redis

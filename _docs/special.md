@@ -819,8 +819,8 @@ internal names include:
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Mako]: http://www.makotemplates.org/
 [Profile]: {{ site.baseurl }}/docs/users.html#profile
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Python list]: https://docs.python.org/2/tutorial/datastructures.html
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[Python list]: https://docs.python.org/3/tutorial/datastructures.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [User List]: {{ site.baseurl }}/docs/users.html#user_list
@@ -1038,7 +1038,7 @@ internal names include:
 [`row_item`]: {{ site.baseurl }}/docs/initial.html#table
 [`run_python_module`]: {{ site.baseurl }}/docs/functions.html#run_python_module
 [`selections`]: {{ site.baseurl }}/docs/functions.html#selections
-[`self`]: https://docs.python.org/2.7/tutorial/classes.html
+[`self`]: https://docs.python.org/3.6/tutorial/classes.html
 [`send_email`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`send_fax`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [`send_sms`]: {{ site.baseurl }}/docs/functions.html#send_sms
@@ -1115,7 +1115,7 @@ internal names include:
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [generic objects]: {{ site.baseurl }}/docs/modifiers.html#generic object
-[get]: https://docs.python.org/2/library/stdtypes.html#dict.get
+[get]: https://docs.python.org/3/library/stdtypes.html#dict.get
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [multi-user interview feature]: {{ site.baseurl }}/docs/roles.html

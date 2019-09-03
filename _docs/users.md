@@ -266,7 +266,7 @@ will run after [`imports`] and [`modules`] blocks, but before
 [special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp

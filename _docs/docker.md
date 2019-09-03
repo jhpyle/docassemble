@@ -227,17 +227,19 @@ minor version of **docassemble** increases.
 You can shut down the container by running:
 
 {% highlight bash %}
-docker stop -t 60 <containerid>
+docker stop -t 600 <containerid>
 {% endhighlight %}
 
 By default, [Docker] gives containers ten seconds to shut down before
 forcibly shutting them down.  Usually, ten seconds is plenty of time,
 but if the server is slow, **docassemble** might take a little longer
 than ten seconds to shut down.  To be on the safe side, give the
-container plenty of time to shut down gracefully.  The `-t 60` means
-that [Docker] will wait up to 60 seconds before forcibly shutting down
-the container.  It will probably take no more than 15 seconds for the
-[`docker stop`] command to complete.
+container plenty of time to shut down gracefully.  The `-t 600` means
+that [Docker] will wait up to ten minutes before forcibly shutting
+down the container.  It will probably take no more than 15 seconds for
+the [`docker stop`] command to complete, although it can take as long
+as a minute to stop a container if you are using [Azure Blob
+Storage](#persistent azure).
 
 It is very important to avoid a forced shutdown of **docassemble**.
 The container runs a [PostgreSQL] server, and the data files of the
@@ -254,14 +256,12 @@ container, run `docker rm <containerid>`.
 
 ## <a name="starting after shutdown"></a>Restarting the container after a shutdown
 
-If you have shut down a [Docker] container using [`docker stop`], you
-can start the container again 
+If you have shut down a [Docker] container using [`docker stop -t 600`],
+you can start the container again:
 
 {% highlight bash %}
 docker start <containerid>
 {% endhighlight %}
-
-
 
 # <a name="overview"></a>Overview of the Docker container
 
@@ -293,14 +293,15 @@ This command starts an application called [Supervisor].  [Supervisor]
 is a "process control system" that starts up the various applications
 that **docassemble** uses, including:
 
-* A web server, Apache, which is called `apache2` within the
-  Supervisor configuration.
-* A background task system, Celery, called `celery`.
+* A web server, [NGINX], which is called `nginx` within the Supervisor
+  configuration.
+* A application server, [uWSGI], called `uwsgi`.
+* A background task system, [Celery], called `celery`.
 * A scheduled task runner, called `cron`.
-* A SQL server, PostgreSQL, called `postgres`.
-* A distributed task queue system, RabbitMQ, called `rabbitmq`.
-* An in-memory data structure store, Redis, called `redis`.
-* A watchdog daemon that looks for out-of-control Apache processes and
+* A SQL server, [PostgreSQL], called `postgres`.
+* A distributed task queue system, [RabbitMQ], called `rabbitmq`.
+* An in-memory data structure store, [Redis], called `redis`.
+* A watchdog daemon that looks for out-of-control processes and
   kills them, called `watchdog`.
 * A [WebSocket] server that supports the [live help] functionality,
   called `websockets`.
@@ -310,6 +311,7 @@ running of ad-hoc tasks, including:
 
 * A script called `sync` that consolidates log files in one place,
   to support the [Logs] interface.
+* A script called `reset` that restarts the server.
 * A script called `update` that installs and upgrades the [Python]
   packages on the system.
 
@@ -356,10 +358,11 @@ supervisorctl status
 The output should be something like:
 
 {% highlight text %}
-apache2                          RUNNING   pid 1088, uptime 0:14:15
+apache2                          STOPPED   Not started
 celery                           RUNNING   pid 1865, uptime 0:14:45
 cron                             STOPPED   Not started
 initialize                       RUNNING   pid 1014, uptime 0:14:53
+nginx                            RUNNING   pid 1088, uptime 0:14:16
 postgres                         RUNNING   pid 1020, uptime 0:14:42
 rabbitmq                         RUNNING   pid 1045, uptime 0:14:38
 redis                            RUNNING   pid 1067, uptime 0:14:35
@@ -367,25 +370,29 @@ reset                            STOPPED   Not started
 sync                             EXITED    Dec 22 07:22 AM
 syslogng                         STOPPED   Not started
 update                           STOPPED   Not started
+uwsgi                            RUNNING   pid 1070, uptime 0:14:15
 watchdog                         RUNNING   pid 1013, uptime 0:14:53
 websockets                       RUNNING   pid 1904, uptime 0:14:40
 {% endhighlight %}
 
 If you are running **docassemble** in a single-server arrangement, the
-processes that should be "RUNNING" include `apache2`, `celery`,
-`initialize`, `postgres`, `rabbitmq`, `redis`, `watchdog`, and
+processes that should be "RUNNING" include `celery`, `initialize`,
+`nginx`, `postgres`, `rabbitmq`, `redis`, `uwsgi`, `watchdog`, and
 `websockets`.
 
 Log files on the container that you might wish to check include:
 
+* `/usr/share/docassemble/log/docassemble.log` (log for the web application)
+* `/usr/share/docassemble/log/worker.log` (log for [background processes])
+* `/usr/share/docassemble/log/uwsgi.log` (log for the core of the web application)
+* `/var/log/nginx/error.log` (log for the web server)
 * `/var/log/supervisor/initialize-stderr---supervisor-*.log` (log for
   the startup process)
 * `/var/log/supervisor/postgres-stderr---supervisor-*.log` (log for
   the SQL server)
 * Other files in `/var/log/supervisor/` (logs for other services)
-* `/var/log/apache2/error.log` (log for the web server)
-* `/usr/share/docassemble/log/docassemble.log` (log for the web application)
-* `/usr/share/docassemble/log/worker.log` (log for [background processes])
+* `/usr/share/docassemble/log/websockets.log` (log for parts of the
+  [live help] feature)
 * `/var/mail/mail` (log for [scheduled tasks], generated by `cron`)
 * `/tmp/flask.log` (log used by [Flask] in rare situations)
 
@@ -410,17 +417,17 @@ the file `/var/log/supervisor/initialize-stderr---supervisor-*.log`
 indicating what went wrong that prevented **docassemble** from
 initializing.  You will need to fix that problem, then type `exit` to
 leave the container, and then restart your container by doing `docker
-stop -t 60 <containerid>` followed by `docker start <containerid>`.
+stop -t 600 <containerid>` followed by `docker start <containerid>`.
 
 If you are get a "server error" in your web browser when trying to
 access **docassemble**, there should be an error message in
-`/var/log/apache2/error.log`.  If you see a message about a
+`/usr/share/docassemble/log/uwsgi.log`.  If you see a message about a
 "blueprint's name collision," this is almost always not the real
-error; you need to scroll up through several error messages to find the
-actual error.  When [Apache] crashes, the error that initiated the
-crash causes other errors inside of the code of the [Flask] framework,
-and a "blueprint's name collision" error is typically the last error
-to be recorded in the error log.
+error; you need to scroll up through several error messages to find
+the actual error.  When the web application crashes, the error that
+initiated the crash causes other errors inside of the code of the
+[Flask] framework, and a "blueprint's name collision" error is
+typically the last error to be recorded in the error log.
 
 If you encounter a problem with upgrading or installing packages,
 check `/usr/share/docassemble/log/worker.log`.  This is the error log
@@ -430,9 +437,9 @@ get an error during upgrading or installation of packages, make sure
 to check here first.
 
 If you need to change the [Configuration] but you cannot use the [web
-interface] to do so because your container failed to start, or
-[Apache] has failed, you can edit the [Configuration] manually.  The
-main configuration file is located at
+interface] to do so because your container failed to start, or the web
+application does not work, you can edit the [Configuration] manually.
+The main configuration file is located at
 `/usr/share/docassemble/config/config.yml`.
 
 Because of the way that [data storage] works, however, you need to be
@@ -450,7 +457,7 @@ storage] feature; it makes it possible for you to remove a container
 and `docker run` a new one while retaining all of your data.
 
 If you are using [S3](#persistent S3) or [Azure Blob
-Storage](#persistent azure), then you should `docker stop -t 60` the
+Storage](#persistent azure), then you should [`docker stop -t 600`] the
 container, then edit the `config.yml` file through the cloud service
 web interface (usually by downloading, editing, and uploading), and
 then `docker start` the container again.
@@ -469,7 +476,7 @@ that will persist even if you `docker rm` the container.  If the
 status of `initialize` is `FAILED` or `EXITED`, then this backup
 process will not take place; in that case, you should make your
 changes to `/usr/share/docassemble/backup/config.yml`, and then
-restart your container by doing `docker stop -t 60` followed by
+restart your container by doing [`docker stop -t 600`] followed by
 `docker start`.
 
 If you need to make manual changes to the installation of [Python]
@@ -477,12 +484,12 @@ packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
 and writable by the `www-data` user.  If you are using Python 2.7, the
 virtual environment is located at `/usr/share/docassemble/local/`, and
-if you are using Python 3.5, it is located at
-`/usr/share/docassemble/local3.5/`.  Thus, installing [Python] packages
-through Debian's `apt-get` utility will not actually make that [Python]
-code available to **docassemble**.  Before using [pip], you need to
-first change the user to `www-data`, and then switch into the
-appropriate [Python virtual environment].
+if you are using Python 3.6, it is located at
+`/usr/share/docassemble/local3.6/`.  Thus, installing [Python]
+packages through Debian's `apt-get` utility will not actually make
+that [Python] code available to **docassemble**.  Before using [pip],
+you need to first change the user to `www-data`, and then switch into
+the appropriate [Python virtual environment].
 
 If using Python 2.7, do:
 
@@ -491,11 +498,11 @@ su www-data
 source /usr/share/docassemble/local/bin/activate
 {% endhighlight %}
 
-If using Python 3.5, do:
+If using Python 3.6, do:
 
 {% highlight bash %}
 su www-data
-source /usr/share/docassemble/local3.5/bin/activate
+source /usr/share/docassemble/local3.6/bin/activate
 {% endhighlight %}
 
 Note that if you want to install a new version of a [Python] package
@@ -510,33 +517,31 @@ To stop using the [Python virtual environment], type the command
 `deactivate`.  To stop being the `www-data` user, type the command
 `exit`.
 
-Services other than the [Apache] web server are an important part of
+Services other than [NGINX] and [uWSGI] are an important part of
 **docassemble**'s operations.  For example, the upgrading and
 installation of [Python] packages takes place in a background process
 operated by the `celery` service.  In addition, the [live help]
-feature uses a service called `websockets`.  The `apache2`, `celery`,
-and `websockets` services all need to be restarted every time there is
-a change to the [Configuration] or a change to [Python] code.  To
-restart all of the services at once, you can do:
+feature uses a service called `websockets`.  The `nginx`, `uwsgi`,
+`celery`, and `websockets` services all need to be restarted every
+time there is a change to the [Configuration] or a change to [Python]
+code.  To restart all of the services at once, you can do:
 
 {% highlight bash %}
 supervisorctl start reset
 {% endhighlight %}
 
-However, if the `apache2` process has crashed, then you need to do:
+However, if the `uwsgi` process has crashed, then you need to do:
 
 {% highlight bash %}
-supervisorctl restart apache2
+supervisorctl restart uwsgi
 supervisorctl start reset
 {% endhighlight %}
 
-You need to manually restart the `apache2` process here because the
-`reset` process uses an optimized method of refreshing the [Apache]
-web server; it doesn't restart the server itself (which takes a long
-time) but only refreshes the [Python] ([WSGI]) part of the server.  This
-usually works well when you make [Configuration] and [Python] code
-changes, but if [Apache] has crashed, `supervisorctl start reset` will
-not bring it back to life.
+You need to manually restart the `uwsgi` process here because the
+`reset` process uses an optimized method of refreshing the application
+server.  This usually works well when you make [Configuration] and
+[Python] code changes, but if [uWSGI] has crashed, `supervisorctl
+start reset` will not bring it back to life.
 
 If you want to access the [Redis] data, do [`docker exec`] to get
 inside the container and then run `redis-cli` (assuming that your
@@ -588,10 +593,10 @@ the [`docker run`] command:
 docker run --env-file=env.list -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
-These configuration options will cause the [Apache] configuration file
-to use docassemble.example.com as the `ServerName` and use [HTTPS]
-with certificates hosted on [Let's Encrypt].  (The flag `-p
-443:443` is included so that the [HTTPS] port is exposed.)
+These configuration options will cause [NGINX] to use
+docassemble.example.com as the server name and use [HTTPS] with
+certificates hosted on [Let's Encrypt].  (The flag `-p 443:443` is
+included so that the [HTTPS] port is exposed.)
 
 If you want your server to be able to accept incoming [e-mails], you
 will need to add `-p 25:25` in order to open port 25.  See the
@@ -684,6 +689,9 @@ indicated location, **docassemble** will create an initial
 * <a name="S3REGION"></a>`S3REGION`: If you are using [S3], set this
   to the [region] you are using (e.g., `us-west-1`, `us-west-2`,
   `ca-central-1`).
+* <a name="S3ENDPOINTURL"></a>`S3ENDPOINTURL`: If you are using an
+  [S3]-compatible data storage service, set `S3ENDPOINTURL` to the URL
+  of the service (e.g., `https://mys3service.com`).
 * <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `true` if you
   are using [Azure blob storage](#persistent azure) as a repository
   for uploaded files, [Playground] files, the [configuration] file,
@@ -715,14 +723,14 @@ and a [configuration] file exists in your cloud storage, the values
 in that [configuration] file will take precedence over any values you 
 specify in `env.list`.
 
-Moreover, some of the values listed below are only used when
-generating the initial [Apache] configuration files.  To make changes
-to [Apache] configuration files after they have been created, edit the
-files directly.  If you are using [S3](#persistent
-s3)/[Azure blob storage](#persistent azure), you can edit these
-configuration files in the cloud and then stop and start your
-container for the new configuration to take effect.
+If you are using [S3](#persistent s3)/[Azure blob storage](#persistent
+azure), you can edit these configuration files in the cloud and then
+stop and start your container for the new configuration to take
+effect.
 
+* <a name="DAWEBSERVER"></a>`DAWEBSERVER`: This can be set either to
+  `nginx` (the default) or `apache`.  See the [`web server`]
+  configuration directive.
 * <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
   server.  Keep undefined or set to `null` in order to use the
   [PostgreSQL] server on the same host.  This environment variable,
@@ -856,12 +864,12 @@ container for the new configuration to take effect.
   if you need to manually specify the port on which the `websockets`
   service runs.  See the [`websockets port`] configuration directive.
 * <a name="DAPYTHONVERSION"></a>`DAPYTHONVERSION`: Set this to `3` in
-  order to run **docassemble** using Python 3.5.  If `DAPYTHONVERSION`
+  order to run **docassemble** using Python 3.6.  If `DAPYTHONVERSION`
   is not set, **docassemble** will be run using Python 2.7.  If you
   have an existing **docassemble** instance that uses Python 2.7
   (which is the default unless `DAPYTHONVERSION` is set to `3`), you
   will not want to change this until you have done testing.  See
-  [migration from Python 2.7 to Python 3.5] for more information.
+  [migration from Python 2.7 to Python 3.6] for more information.
 
 ## <a name="configuration"></a>Changing the configuration
 
@@ -886,36 +894,32 @@ When **docassemble** starts up on a [Docker] container, it:
   variables for initial values, if a [configuration] file does not
   already exist.
 * Initializes a PostgreSQL database, if one is not already initialized.
-* Configures the [Apache] configuration, if one is not already
+* Configures the [NGINX] configuration, if one is not already
   configured.
 * Runs [Let's Encrypt] if the configuration indicates that
   [Let's Encrypt] should be used, and [Let's Encrypt] has not yet been
   configured.
   
 When **docassemble** stops, it saves the [configuration] file, a
-backup of the PostgreSQL database, and backups of the [Apache] and
-[Let's Encrypt] configuration.  If you are using [persistent volumes],
-the information will be stored there.  If you are using
-[S3](#persistent s3) or [Azure blob storage](#persistent azure), the
-information will be stored in the cloud.
+backup of the PostgreSQL database, and backups of the [Let's Encrypt]
+configuration.  If you are using [persistent volumes], the information
+will be stored there.  If you are using [S3](#persistent s3) or [Azure
+blob storage](#persistent azure), the information will be stored in
+the cloud.
 
 When **docassemble** starts again, it will retrieve the
 [configuration] file, the backup of the PostgreSQL database, and
-backups of the [Apache] and [Let's Encrypt] configuration from storage
-and use them for the container.
+backups of the [Let's Encrypt] configuration from storage and use them
+for the container.
 
-Suppose you have an existing installation that uses HTTPS and
-[Let's Encrypt], but you want to change the [`DAHOSTNAME`].  The
-[Apache] configuration files will not be overwritten if they already
-exist when a new container starts up.  So if you had been using
-[Let's Encrypt], but then you decide to change the [`DAHOSTNAME`], you
-will need to delete the saved configuration before running a new
-container.  If you are using [S3](#persistent s3), you can go to the
-[S3 Console] and delete the "Apache" folder and the
-"letsencrypt.tar.gz" file.  If you are using
-[Azure blob storage](#persistent azure), you can go to the
-[Azure Portal] and delete the "Apache" folder and the
-"letsencrypt.tar.gz" file.
+Suppose you have an existing installation that uses HTTPS and [Let's
+Encrypt], but you want to change the [`DAHOSTNAME`].  You will need to
+delete the saved configuration before running a new container.  First,
+shut down the machine with [`docker stop -t 600`].  Then, if you are using
+[S3](#persistent s3), you can go to the [S3 Console] and delete the
+"letsencrypt.tar.gz" file.  If you are using [Azure blob
+storage](#persistent azure), you can go to the [Azure Portal] and
+delete the "letsencrypt.tar.gz" file.
   
 Also, if a configuration file exists on [S3](#persistent
 s3)/[Azure blob storage](#persistent azure) (`config.yml`) or in a
@@ -957,7 +961,7 @@ and a [blob storage container] within it, and then when you launch
 your container, set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and
 [`AZURECONTAINER`]<span></span> [environment variables].
 
-When [`docker stop`] is run, **docassemble** will backup the SQL
+When [`docker stop -t 600`] is run, **docassemble** will backup the SQL
 database, the [Redis] database, the [configuration], and your uploaded
 files to your [S3 bucket] or [blob storage container].  Then, when you
 issue a [`docker run`] command with [environment variables] pointing
@@ -1132,7 +1136,7 @@ you need to update the certificates your server should use, you can
 find the path where the `dacerts` volume lives (`docker volume inspect
 dacerts`), copy your certificates to that path (`cp mycertificate.key
 /var/lib/docker/volumes/dacerts/data/docassemble.key`), and then stop
-the container (`docker stop -t 60 <containerid>`) and start it again
+the container (`docker stop -t 600 <containerid>`) and start it again
 (`docker start <containerid>`).
 
 To delete all of the volumes, do:
@@ -1361,7 +1365,7 @@ TIMEZONE=America/New_York
 {% endhighlight %}
 
 The first time the server is started, the `letsencrypt` utility will
-be run, which will change the [Apache] configuration in order to use the
+be run, which will change the [NGINX] configuration in order to use the
 appropriate SSL certificates.  When the server is later restarted,
 the `letsencrypt renew` command will be run, which will refresh the
 certificates if they are within 30 days of expiring.
@@ -1384,43 +1388,39 @@ accomplish this:
 * Use [S3](#persistent s3) or [Azure blob storage](#persistent azure)
   and upload the certificates to your bucket/container.
 * [Build your own private image] in which your SSL certificates are
-  placed in `Docker/apache.key`, `Docker/apache.crt`, and
-  `Docker/apache.ca.pem`.  During the build process, these files
+  placed in `Docker/ssl/nginx.key`, `Docker/ssl/nginx.crt`, and
+  `Docker/ssl/nginx.ca.pem`.  During the build process, these files
   will be copied into `/usr/share/docassemble/certs`.
 * Use [persistent volumes] and copy the SSL certificate files
-  (`apache.key`, `apache.crt`, and `apache.ca.pem`)
+  (`nginx.key`, `nginx.crt`, and `nginx.ca.pem`)
   into the volume for `/usr/share/docassemble/certs` before starting
   the container.
 
-The default Apache configuration file expects SSL certificates to be
+The default [NGINX] configuration file expects SSL certificates to be
 located in the following files:
 
 {% highlight text %}
-SSLCertificateFile /etc/ssl/docassemble/apache.crt
-SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
-SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
+ssl_certificate /etc/ssl/docassemble/nginx.crt;
+ssl_certificate_key /etc/ssl/docassemble/nginx.key;
 {% endhighlight %}
 
 The meaning of these files is as follows:
 
-* `apache.crt`: this file is generated by your certificate
+* `nginx.crt`: this file is generated by your certificate
   authority when you submit a certificate signing request.
-* `apache.key`: this file is generated at the time you create
+* `nginx.key`: this file is generated at the time you create
   your certificate signing request.
-* `apache.ca.pem`: this file is generated by your certificate
-  authority.  It is variously known as the "chain file"
-  or the "root bundle."
 
 In order to make sure that these files are replicated on every web
 server, the [supervisor] will run the
 `docassemble.webapp.install_certs` module before starting the web
 server.
 
-If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure), this module will copy
-the files from the `certs/` prefix in your bucket/container to
-`/etc/ssl/docassemble`.  You can use the [S3 Console] or the
-[Azure Portal] to create a folder called `certs` and upload your
-certificate files into that folder.
+If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure), 
+this module will copy the files from the `certs/` prefix in your
+bucket/container to `/etc/ssl/docassemble`.  You can use the [S3
+Console] or the [Azure Portal] to create a folder called `certs` and
+upload your certificate files into that folder.
 
 If you are not using [S3](#persistent s3) or [Azure blob storage](#persistent azure), the
 `docassemble.webapp.install_certs` module will copy the files from
@@ -1440,9 +1440,8 @@ inspect certs` to get the directory on the [Docker] host corresponding
 to this directory, and you can copy the SSL certificate files into
 that directory before starting the container.
 
-Note that the files need to be called `apache.crt`,
-`apache.key`, and `apache.ca.pem`, because this is what the
-standard web server configuration expects.
+Note that the files need to be called `nginx.crt` and `nginx.key`,
+because this is what the standard web server configuration expects.
 
 If you want to use different filesystem or cloud locations, the
 `docassemble.webapp.install_certs` can be configured to use different
@@ -1487,179 +1486,6 @@ On startup, `docassemble.webapp.install_certs` will copy these files
 into the appropriate location (`/etc/exim4`) with the appropriate
 ownership and permissions.
 
-# <a name="forwarding"></a>Installing on a machine already using a web server
-
-The simplest way to run **docassemble** is to give it a dedicated
-machine and run [Docker] on ports 80 and 443.  However, if you have an
-existing machine that is already running a web server, it is possible
-to run **docassemble** on that machine using [Docker].  You can
-configure the web server on that machine to forward traffic to the
-[Docker] container.
-
-The following example illustrates how to do this.  Your situation will
-probably be different, but this example will still help you figure out
-how to configure your system.
-
-In this example, you will see how to run **docassemble** using
-[Docker] on an Ubuntu 16.04 server.  The machine will run a web server
-using encryption.  The web server will be accessible at
-`https://justice.example.com` and will serve resources other than
-**docassemble**.  The **docassemble** resources will be accessible at
-`https://justice.example.com/da`.  [Docker] will run on the machine
-and will listen on port 8000.  The web server will accept HTTPS
-requests at `/da` and forward them HTTP requests to port 8000.  The
-SSL certificate will be installed on the Ubuntu server, and the
-[Docker] container will run an HTTP server.  [Docker] will be
-controlled by the user account `ubuntu`, which is assumed to have
-[sudo] privileges.
-
-First, let's install [Apache], [Let's Encrypt] (the [certbot]
-utility), and [Docker].  You log in to the server as `ubuntu` and do:
-
-{% highlight bash %}
-sudo add-apt-repository ppa:certbot/certbot
-sudo apt-get -y update
-sudo apt-get -y install apache2 python-certbot-apache docker.io 
-sudo usermod -a -G docker ubuntu
-{% endhighlight %}
-
-The last command changes the user privileges of the `ubuntu` user.
-For these changes to take effect, you need to log out and log in again.
-(E.g., exit the [ssh] session and start a new one.)
-
-Before you run [certbot], add some basic information to the
-[Apache] configuration.  Edit the standard HTTP configuration:
-
-{% highlight bash %}
-sudo vi /etc/apache2/sites-available/000-default.conf
-{% endhighlight %}
-
-and add the following lines, replacing any other lines that
-begin with `ServerName` or `ServerAdmin`.
-
-{% highlight text %}
-ServerName justice.example.com
-ServerAdmin admin@example.com
-{% endhighlight %}
-
-You then do the same with the HTTPS configuration.
-
-{% highlight bash %}
-sudo vi /etc/apache2/sites-available/default-ssl.conf
-{% endhighlight %}
-
-Now, let's enable some necessary components of [Apache]:
-
-{% highlight bash %}
-sudo a2ensite default-ssl
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo a2enmod proxy_wstunnel
-sudo a2enmod headers
-sudo service apache2 reload
-{% endhighlight %}
-
-Then, you need to make sure that `justice.example.com` is directed to
-this server.  This may require going to your DNS provider and adding a
-[CNAME record] or an [A record].
-
-You can test whether everything is working by going to
-`http://justice.example.com` in a web browser.  You should see the
-default [Apache] page.
-
-Once that is done, you are ready to run [certbot].
-
-{% highlight bash %}
-sudo certbot --apache
-{% endhighlight %}
-
-When [certbot] asks "Please choose whether HTTPS access is required or
-optional," you will select "Secure - Make all requests redirect to
-secure HTTPS access."  This will cause all HTTP traffic to be
-forwarded to HTTPS.
-
-The [certbot] command will obtain certificates and modify the [Apache]
-configuration.  A [cron] job will be installed that takes care of
-renewing the certificates.
-
-You can test whether the SSL certificates work by going to
-`https://justice.example.com`.  You should see the default [Apache] page
-again, but with encryption this time.
-
-Now you are ready to run **docassemble**.  First you need to create a
-short text file called `env.list` that contains some configuration
-options for **docassemble**.
-
-{% highlight bash %}
-vi env.list
-{% endhighlight %}
-
-Set the contents of `env.list` to:
-
-{% highlight text %}
-BEHINDHTTPSLOADBALANCER=true
-DAHOSTNAME=justice.example.com
-POSTURLROOT=/da/
-DAEXPOSEWEBSOCKETS=true
-DAPYTHONVERSION=3
-{% endhighlight %}
-
-The `POSTURLROOT` variable, which is set to `/da/`, indicates the
-path after the domain at which **docassemble** can be accessed.  The
-[Apache] web server will be able to provide other resources at other
-paths, but `/da/` will be reserved for the exclusive use of
-**docassemble**.  The beginning slash and the trailing slash are both
-necessary.
-
-Setting [`DAEXPOSEWEBSOCKETS`] to `true` means that the [WebSocket]
-server running inside the container (the [supervisor] process called
-`websockets`) will expose port 5000 to the external IP address rather
-than port 5000 of 127.0.0.1, so that the web server on the host can
-act as a proxy server for it.
-
-Now, let's download, install, and run **docassemble**.
-
-{% highlight bash %}
-docker run --env-file=env.list -d -p 8000:80 -p 5000:5000 jhpyle/docassemble
-{% endhighlight %}
-
-The option `-p 8000:80` means that port 8000 on the Ubuntu machine
-will be mapped to port 80 within the [Docker] container.  The option
-`-p 5000:5000` means that the web sockets port of the container should
-be accessible from the host, so that the web server on the host can
-tunnel traffic to it directly.
-
-Now that **docassemble** is running, let's configure [Apache] on the
-Ubuntu machine to forward requests to **docassemble**.  Edit the HTTPS
-configuration file:
-
-{% highlight bash %}
-sudo vi /etc/apache2/sites-available/default-ssl.conf
-{% endhighlight %}
-
-Add the following lines within the `<VirtualHost>` area:
-
-{% highlight text %}
-RewriteEngine On
-RewriteCond %{REQUEST_URI}     ^/da/ws/socket.io      [NC]
-RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-RewriteRule /da/ws/(.*)        ws://localhost:5000/$1 [P,L]
-ProxyPass /da/ws/ http://localhost:5000/
-ProxyPassReverse /da/ws/ http://localhost:5000/
-ProxyPass "/da"  "http://localhost:8000/da"
-ProxyPassReverse "/da"  "http://localhost:8000/da"
-RequestHeader set X-Forwarded-Proto "https"
-{% endhighlight %}
-
-Then restart the web server:
-
-{% highlight bash %}
-sudo service apache2 restart
-{% endhighlight %}
-
-Now, when you go to `https://justice.example.com/da`, you will see the
-**docassemble** demo interview.
-
 # <a name="build"></a>Creating your own Docker image
 
 To create your own [Docker] image, first make sure [git] is installed:
@@ -1701,26 +1527,20 @@ files:
   exist; creates the tables in the database if they do not already
   exist; copies SSL certificates from [S3]/[Azure blob storage] or
   `/usr/share/docassemble/certs` if [S3]/[Azure blob storage] is not
-  enabled; enables the [Apache] `mod_ssl` if `USEHTTPS` is `true` and
-  otherwise disables it; runs the [Let's Encrypt] utility if
-  `USELETSENCRYPT` is `true` and the utility has not been run yet; and
-  starts [Apache] and other background tasks.
-* <span></span>[`docassemble/Docker/config/docassemble-http.conf.dist`]:
-  [Apache] configuration file for handling HTTP requests.
-  Note that if `mod_ssl` is enabled, HTTP will merely redirect to
-  HTTPS.
-* <span></span>[`docassemble/Docker/config/docassemble-ssl.conf.dist`]:
-  [Apache] configuration file for handling HTTPS requests.
-* <span></span>[`docassemble/Docker/config/docassemble-log.conf.dist`]:
-  [Apache] configuration file for handling requests on port 8080.
+  enabled; runs the [Let's Encrypt] utility if `USELETSENCRYPT` is
+  `true` and the utility has not been run yet; and starts [NGINX] and
+  other background tasks.
+* <span></span>[`docassemble/Docker/config/nginx-http.dist`]:
+  [NGINX] configuration file for handling HTTP requests.
+* <span></span>[`docassemble/Docker/config/nginx-ssl.dist`]:
+  [NGINX] configuration file for handling HTTPS requests.
+* <span></span>[`docassemble/Docker/config/nginx-log.dist`]:
+  [NGINX] configuration file for handling requests on port 8080.
   This is enabled if the [`CONTAINERROLE`] includes `log`.
-* <span></span>[`docassemble/Docker/ssl/apache.crt.orig`]: default SSL certificate for [Apache].
-* <span></span>[`docassemble/Docker/ssl/apache.key.orig`]: default SSL certificate for [Apache].
-* <span></span>[`docassemble/Docker/ssl/apache.ca.pem.orig`]: default SSL certificate for [Apache].
+* <span></span>[`docassemble/Docker/ssl/nginx.crt.orig`]: default SSL certificate for [NGINX].
+* <span></span>[`docassemble/Docker/ssl/nginx.key.orig`]: default SSL certificate for [NGINX].
 * <span></span>[`docassemble/Docker/ssl/exim.crt.orig`]: default SSL certificate for [Exim].
 * <span></span>[`docassemble/Docker/ssl/exim.key.orig`]: default SSL certificate for [Exim].
-* <span></span>[`docassemble/Docker/docassemble.conf`]: [Apache] configuration file
-  that causes [Apache] to use the [Python virtualenv].
 * <span></span>[`docassemble/Docker/docassemble-supervisor.conf`]: [supervisor]
   configuration file.
 * <span></span>[`docassemble/Docker/docassemble-syslog-ng.conf`]: [Syslog-ng]
@@ -1732,14 +1552,16 @@ files:
 * <span></span>[`docassemble/Docker/docassemble.logrotate`]: This file will be copied
   into `/etc/logrotate.d` and will control the rotation of the
   **docassemble** log file in `/usr/share/docassemble/log`.
-* <span></span>[`docassemble/Docker/apache.logrotate`]: This replaces the standard
-  apache logrotate configuration.  It does not compress old log files,
+* <span></span>[`docassemble/Docker/nginx.logrotate`]: This replaces the standard
+  nginx logrotate configuration.  It does not compress old log files,
   so that it is easier to view them in the web application.
 * <span></span>[`docassemble/Docker/process-email.sh`]: This is a
   script that is run when an e-mail is received, if the
   [e-mail receiving] feature is configured.
-* <span></span>[`docassemble/Docker/run-apache.sh`]: This is a script
-  that is run by [supervisor] to start the [Apache] server.
+* <span></span>[`docassemble/Docker/run-nginx.sh`]: This is a script
+  that is run by [supervisor] to start the [NGINX] server.
+* <span></span>[`docassemble/Docker/run-uwsgi.sh`]: This is a script
+  that is run by [supervisor] to start the [uWSGI] server.
 * <span></span>[`docassemble/Docker/run-celery.sh`]: This is a script
   that is run by [supervisor] to start the [Celery] server.
 * <span></span>[`docassemble/Docker/run-cron.sh`]: This is a script
@@ -1808,16 +1630,18 @@ You can download the latest version of **docassemble** to your system
 by running:
 
 {% highlight bash %}
+docker pull jhpyle/docassemble-os
 docker pull jhpyle/docassemble
 {% endhighlight %}
 
 Then, subsequent [`docker run`] commands will use the latest
 **docassemble** image.  This means that when you are using [Docker],
 you can upgrade **docassemble** to the newest version by running
-[`docker stop`] and [`docker rm`] on your existing **docassemble**
-container, followed by `docker pull jhpyle/docassemble`, and then
-running whatever [`docker run`] command you use to start a new
-container.
+[`docker stop -t 600`] on your existing **docassemble** container,
+followed by [`docker rm`], followed by `docker pull
+jhpyle/docassemble-os`, followed by `docker pull jhpyle/docassemble`,
+and then running whatever [`docker run`] command you use to start a
+new container.
 
 Note, however, that [`docker rm`] will delete all of the data on the
 server.  This is not a problem if your [`docker run`] command
@@ -1829,7 +1653,7 @@ Note also that [`docker pull`] may use up a lot of disk space.  This
 is because [Docker] does not automatically delete old versions of
 images, and **docassemble** images are very large.  So if your disk
 space is limited, you probably don't want to run [`docker pull`] until
-you get rid of the old image.  (See the [next section](#cleanup).)
+you get rid of the old images.  (See the [next section](#cleanup).)
 
 Thus, so long as you are using [data storage], and you aren't running
 any applications other than **docassemble** using Docker, it is
@@ -1838,6 +1662,7 @@ recommended that you perform a system upgrade by running:
 {% highlight bash %}
 docker stop -t60 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
+docker pull jhpyle/docassemble-os
 docker pull jhpyle/docassemble
 docker rmi $(docker images -f "dangling=true" -q)
 {% endhighlight %}
@@ -1847,13 +1672,13 @@ Then, run whatever `docker run` command you use to launch
 
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 
-When you do `docker run` or `docker pull` with the
-`jhpyle/docassemble` image, the only image available is the "latest"
-image.  To install an earlier version, you can make your own image
-using [git].
+When you do `docker run` or `docker pull`, the only image available on
+[Docker Hub] is the "latest" image.  To install a version based on an
+earlier version of **docassemble**, you can make your own image using
+[git].
 
 {% highlight bash %}
-git clone jhpyle/docassemble
+git clone {{ site.github.repository_url }}
 cd docassemble
 git checkout v0.3.21
 docker build -t yourname/mydocassemble .
@@ -1865,6 +1690,42 @@ The [`docker run`] command that you use may have other options; this
 is simply an illustration of creating an image called
 `yourname/mydocassemble` and then creating a container from it using
 [`docker run`].
+
+Starting with version 0.5, the **docassemble** image is split into two
+parts.  The `jhpyle/docassemble` image uses `jhpyle/docassemble-os` as
+a base image.  The `jhpyle/docassemble-os` image consists of the
+underlying [Debian] operating system with required [Debian] packages
+installed.  The `jhpyle/docassemble-os` image is updated much less
+frequently than the `jhpyle/docassemble` image.  If you want to build
+your own version of `jhpyle/docassemble-os`, you can do so by running:
+
+{% highlight bash %}
+git clone https://github.com/jhpyle/docassemble-os
+cd docassemble-os
+docker build -t jhpyle/docassemble-os .
+cd ..
+{% endhighlight %}
+
+The [docassemble-os repository] consists of a [Dockerfile] only.  Note
+that the first line of the [Dockerfile] in the [docassemble
+repository] is:
+
+{% highlight text %}
+FROM jhpyle/docassemble-os
+{% endhighlight %}
+
+Thus, the `jhpyle/docassemble` image incorporates by reference the
+`jhpyle/docassemble-os` base image.  The [`docker build`] command
+above overwrites the `jhpyle/docassemble-os` image that is stored on
+your local machine.  If you want, you can edit the [Dockerfile] before
+building your custom `jhpyle/docassemble` version so that it
+references a different base image.
+
+The versioning of the [docassemble-os repository] on [GitHub] follows
+that of the [docassemble repository].  The two repositories are
+maintained together.  However, the latest version of the
+[docassemble-os repository] is usually several versions behind that of
+the [docassemble repository].
 
 # <a name="cleanup"></a>Cleaning up after Docker
 
@@ -1914,9 +1775,14 @@ line), as the containers depend on the images.
 [`docassemble/Docker/config/docassemble-http.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-http.conf.dist
 [`docassemble/Docker/config/docassemble-ssl.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-ssl.conf.dist
 [`docassemble/Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
+[`docassemble/Docker/config/nginx-http.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/nginx-http.dist
+[`docassemble/Docker/config/nginx-ssl.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/nginx-ssl.dist
+[`docassemble/Docker/config/nginx-log.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/nginx-log.dist
 [`docassemble/Docker/ssl/apache.crt.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.crt.orig
 [`docassemble/Docker/ssl/apache.key.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.key.orig
 [`docassemble/Docker/ssl/apache.ca.pem.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.ca.pem.orig
+[`docassemble/Docker/ssl/nginx.crt.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/nginx.crt.orig
+[`docassemble/Docker/ssl/nginx.key.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/nginx.key.orig
 [`docassemble/Docker/ssl/exim.crt.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/exim.crt.orig
 [`docassemble/Docker/ssl/exim.key.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/exim.key.orig
 [`docassemble/Docker/docassemble.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.conf
@@ -1924,10 +1790,13 @@ line), as the containers depend on the images.
 [`docassemble/Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
 [`docassemble/Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
 [`docassemble/Docker/rabbitmq.config`]: {{ site.github.repository_url }}/blob/master/Docker/rabbitmq.config
+[`docassemble/Docker/nginx.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/nginx.logrotate
 [`docassemble/Docker/docassemble.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.logrotate
 [`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
 [`docassemble/Docker/process-email.sh`]: {{ site.github.repository_url }}/blob/master/Docker/process-email.sh
 [`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh
+[`docassemble/Docker/run-nginx.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-nginx.sh
+[`docassemble/Docker/run-uwsgi.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-uwsgi.sh
 [`docassemble/Docker/run-apache.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-apache.sh
 [`docassemble/Docker/run-celery.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-celery.sh
 [`docassemble/Docker/run-cron.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-cron.sh
@@ -2078,7 +1947,7 @@ line), as the containers depend on the images.
 [Traefik]: https://traefik.io/
 [Flask]: http://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
-[migration from Python 2.7 to Python 3.5]: {{ site.baseurl }}/docs/twotothree.html
+[migration from Python 2.7 to Python 3.6]: {{ site.baseurl }}/docs/twotothree.html
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
 [`python packages`]: {{ site.baseurl }}/docs/config.html#python packages
@@ -2099,3 +1968,9 @@ line), as the containers depend on the images.
 [behind a reverse proxy]: #forwarding
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[NGINX]: https://www.nginx.com/
+[uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
+[docassemble-os repository]: https://github.com/jhpyle/docassemble-os
+[Dockerfile]: https://docs.docker.com/engine/reference/builder/
+[`web server`]: {{ site.baseurl }}/docs/config.html#web server
+[`docker stop -t 600`]: https://docs.docker.com/engine/reference/commandline/stop/

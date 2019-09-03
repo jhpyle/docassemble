@@ -177,10 +177,10 @@ out the problem.
 [Flask]: http://flask.pocoo.org/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Mako]: http://www.makotemplates.org/
-[exec]: https://docs.python.org/2.0/ref/exec.html
-[pickle]: https://docs.python.org/2/library/pickle.html
-[pickleable]: https://docs.python.org/2/library/pickle.html#what-can-be-pickled-and-unpickled
-[import]: https://docs.python.org/2/tutorial/modules.html
+[exec]: https://docs.python.org/3.6/library/functions.html#exec
+[pickle]: https://docs.python.org/3/library/pickle.html
+[pickleable]: https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled
+[import]: https://docs.python.org/3/tutorial/modules.html
 [`code`]: {{ site.baseurl }}/docs/code.html
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug

@@ -280,8 +280,8 @@ this is only used when [Azure blob storage] is enabled.
 [login/password system]: {{ site.baseurl }}/docs/users.html
 [fail2ban]: https://en.wikipedia.org/wiki/Fail2ban
 [Docker]: {{ site.baseurl }}/docs/docker.html
-[eval]: https://docs.python.org/2/library/functions.html#eval
-[exec]: https://docs.python.org/2/reference/simple_stmts.html#exec
+[eval]: https://docs.python.org/3/library/functions.html#eval
+[exec]: https://docs.python.org/3/reference/simple_stmts.html#exec
 [Amazon S3]: https://aws.amazon.com/s3/
 [S3]: https://aws.amazon.com/s3/
 [Microsoft Azure]: https://azure.microsoft.com/

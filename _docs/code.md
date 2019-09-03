@@ -340,7 +340,7 @@ more non-programmers will be intimidated by the interview file and be
 unwilling to work with it.  If you can hide complexity behind a simple
 functional interface, you should do so.
 
-[pickle]: https://docs.python.org/2/library/pickle.html
+[pickle]: https://docs.python.org/3/library/pickle.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`imports`]: {{ site.baseurl }}/docs/initial.html#imports

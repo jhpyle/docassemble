@@ -66,9 +66,9 @@ so this danger will only arise if you install additional modules.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [requirements]: {{ site.baseurl }}/docs/installation.html
 [MIT License]: https://en.wikipedia.org/wiki/MIT_License
-[subprocess]: https://docs.python.org/2/library/subprocess.html
-[`eval()`]: https://docs.python.org/2/library/functions.html#eval
-[`exec()`]: https://docs.python.org/2/reference/simple_stmts.html#exec
+[subprocess]: https://docs.python.org/3/library/subprocess.html
+[`eval()`]: https://docs.python.org/3/library/functions.html#eval
+[`exec()`]: https://docs.python.org/3/reference/simple_stmts.html#exec
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [mere aggregation]: https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation

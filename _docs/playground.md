@@ -721,7 +721,7 @@ Restarting the web server will terminate the process.
 
 If you are running the [Docker] implementation of **docassemble**, a
 watchdog runs in the background ([`docassemble.webapp.watchdog`]),
-looks for [Apache] processes that appear to be stuck, and terminates
+looks for [uWSGI] processes that appear to be stuck, and terminates
 them after 60-90 seconds.
 
 If the interview with the infinite loop is in the Playground, and the
@@ -745,12 +745,11 @@ https://dev.example.com/playground?file=myinterview.yml&debug=1
 
 Then the editing screen will load.
 
-[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
 [Python package]: {{ site.baseurl }}/docs/packages.html
 [Python packages]: {{ site.baseurl }}/docs/packages.html
-[Python modules]: https://docs.python.org/2/tutorial/modules.html
+[Python modules]: https://docs.python.org/3/tutorial/modules.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [interview]: {{ site.baseurl }}/docs/interviews.html
@@ -817,3 +816,4 @@ Then the editing screen will load.
 [Variables, etc.]: #variables
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [`office addin url`]: {{ site.baseurl }}/docs/config.html#office addin url
+[uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/

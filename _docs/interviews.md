@@ -965,7 +965,7 @@ functions.
 [Roles]: {{ site.baseurl }}/docs/roles.html
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [username and password system]: {{ site.baseurl }}/docs/users.html
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [JSON]: https://en.wikipedia.org/wiki/JSON
@@ -1008,9 +1008,9 @@ functions.
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
-[pickle]: https://docs.python.org/3.5/library/pickle.html
+[pickle]: https://docs.python.org/3.6/library/pickle.html
 [review screens]: {{ site.baseurl }}/docs/fields.html#review
-[Python objects]: https://docs.python.org/2/tutorial/classes.html
+[Python objects]: https://docs.python.org/3/tutorial/classes.html
 [Google Form]: https://www.google.com/forms/about/
 [`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record

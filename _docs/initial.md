@@ -2021,9 +2021,9 @@ features:
 [`table width`]: {{ site.baseurl }}/docs/initial.html#table width
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [document]: {{ site.baseurl }}/docs/documents.html
-[list]: https://docs.python.org/2.7/tutorial/datastructures.html
-[dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
-[set]: https://docs.python.org/2/library/stdtypes.html#set
+[list]: https://docs.python.org/3.6/tutorial/datastructures.html
+[dictionary]: https://docs.python.org/3/library/stdtypes.html#dict
+[set]: https://docs.python.org/3/library/stdtypes.html#set
 [group]: {{ site.baseurl }}/docs/groups.html
 [`label` and `field`]: {{ site.baseurl }}/docs/fields.html#label
 [question]: {{ site.baseurl }}/docs/questions.html

@@ -420,7 +420,7 @@ Using the [API] avoids issues with [CORS].
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [base64]: https://en.wikipedia.org/wiki/Base64
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [data URL]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
@@ -431,7 +431,7 @@ Using the [API] avoids issues with [CORS].
 [CSRF protection]: http://flask-wtf.readthedocs.io/en/stable/csrf.html
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`get_interview_variables()`]: {{ site.baseurl }}/docs/functions.html#get_interview_variables
-[cPickle]: https://docs.python.org/2/library/pickle.html#module-cPickle
+[cPickle]: https://docs.python.org/3/library/pickle.html#module-cPickle
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch

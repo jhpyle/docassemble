@@ -678,7 +678,7 @@ user will not longer see the calling instructions or the phone icon.
 [chat mode]: #mode
 [`mode`]: #mode
 [availability]: #availability
-[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
+[`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [Coordinated Universal Time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: {{ site.baseurl }}/docs/functions.html#timezone_list
 [`pytz`]: http://pytz.sourceforge.net/

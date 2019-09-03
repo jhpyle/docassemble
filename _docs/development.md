@@ -650,17 +650,17 @@ packages in the right place, using the right file permissions.  On
 your server, your **docassemble** server will be running in a [Python
 virtual environment] located in `/usr/share/docassemble/local` (unless
 you significantly deviated from the standard installation procedures).
-The files in this folder will all be owned by `www-data`.  The
-[Apache] web server process that runs the **docassemble** code runs as
-this user.  The files in the virtual environment are owned by
-`www-data` so that you can use the web application to install and
-upgrade [Python] packages.  If you change the ownership of any of the
-files in `/usr/share/docassemble/local` to `root` or another user, you
-may get errors in the web application.  When using `pip` from the
-command line to install your own version of the **docassemble**
-packages, you need to first become `www-data` by running `su www-data`
-as root.  Then you need to tell `pip` that you are using a specific
-[Python virtual environment] by running `source
+The files in this folder will all be owned by `www-data`.  The [uWSGI]
+web server process that runs the **docassemble** code runs as this
+user.  The files in the virtual environment are owned by `www-data` so
+that you can use the web application to install and upgrade [Python]
+packages.  If you change the ownership of any of the files in
+`/usr/share/docassemble/local` to `root` or another user, you may get
+errors in the web application.  When using `pip` from the command line
+to install your own version of the **docassemble** packages, you need
+to first become `www-data` by running `su www-data` as root.  Then you
+need to tell `pip` that you are using a specific [Python virtual
+environment] by running `source
 /usr/share/docassemble/local/bin/activate`.  Then, you can run `pip`
 to install your altered version of the **docassemble** code.  This
 line will install all the packages:
@@ -679,7 +679,7 @@ server, and you aren't going to use background tasks, it is enough to
 run `touch /usr/share/docassemble/webapp/docassemble.wsgi` as the
 `www-data` user.  This updates the timestamp on the root file of the
 web application.  Updating the timestamp causes the web server to
-recompile the [Python] code from scratch.  Restarting the [Apache]
+recompile the [Python] code from scratch.  Restarting the [uWSGI]
 service also does that, but it is slower.
 
 If you want to ensure that all the code on your server uses the new
@@ -1683,15 +1683,14 @@ staff member who knows a lot about the subject matter.
 [git]: https://git-scm.com
 [pull request]: https://help.github.com/articles/about-pull-requests/
 [merge]: https://help.github.com/articles/merging-a-pull-request/
-[`import`]: https://docs.python.org/2/tutorial/modules.html
-[Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
+[`import`]: https://docs.python.org/3/tutorial/modules.html
+[Python packages]: https://docs.python.org/3/tutorial/modules.html#packages
 [sshfs]: https://en.wikipedia.org/wiki/SSHFS
 [installation]: https://docassemble.org/docs/installation.html
 [GitHub repository]: {{ site.github.repository_url }}
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
 [Celery]: http://www.celeryproject.org/
-[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [Gherkin]: https://en.wikipedia.org/wiki/Cucumber_(software)#Gherkin_language
 [`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
@@ -1702,7 +1701,7 @@ staff member who knows a lot about the subject matter.
 [Agile]: https://en.wikipedia.org/wiki/Agile_software_development
 [software testing]: https://en.wikipedia.org/wiki/Software_testing
 [software development]: https://en.wikipedia.org/wiki/Software_development
-[`unittest` framework]: https://docs.python.org/2/library/unittest.html
+[`unittest` framework]: https://docs.python.org/3/library/unittest.html
 [`run_python_module()`]: {{ site.baseurl }}/docs/functions.html#run_python_module
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [API]: {{ site.baseurl }}/docs/api.html
@@ -1711,3 +1710,4 @@ staff member who knows a lot about the subject matter.
 [acceptance tests]: https://en.wikipedia.org/wiki/Acceptance_testing
 [`value()`]: {{ site.baseurl }}/docs/functions.html#value
 [DevOps]: https://en.wikipedia.org/wiki/DevOps
+[uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/

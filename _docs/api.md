@@ -1155,6 +1155,10 @@ Form data:
    wish to set `question` to `0` if you want to change the interview
    dictionary, but you do not want to trigger any side effects by
    causing the interview to be evaluated.
+ - `advance_progress_meter` (optional): if set to `1`, then the
+   progress meter will be advanced.  The default is not to advance the
+   progress meter.  The `advance_progress_meter` parameter is not
+   effective if `question` is `0`.
  - `delete_variables` (optional): a [JSON] array in which the items
    are names of variables to be deleted with [`del`].  The deletion of
    these variables happens after the `variables` are assigned.  (If
@@ -1954,8 +1958,8 @@ function.
 [`/api/session`]: #session_post
 [`/api/session/new`]: #session_new
 [`/api/session/question`]: #session_question
-[Python dict]: https://docs.python.org/2.7/tutorial/datastructures.html#dictionaries
-[Python objects]: https://docs.python.org/2.7/tutorial/classes.html
+[Python dict]: https://docs.python.org/3.6/tutorial/datastructures.html#dictionaries
+[Python objects]: https://docs.python.org/3.6/tutorial/classes.html
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
@@ -1971,7 +1975,7 @@ function.
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
 [`log()`]: {{ site.baseurl }}/docs/functions.html#log
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
-[`del`]: https://docs.python.org/2.0/ref/del.html
+[`del`]: https://docs.python.org/3/tutorial/datastructures.html#the-del-statement
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
@@ -1986,5 +1990,5 @@ function.
 [`/api/package`]: #package_install
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
-[pickle]: https://docs.python.org/3.5/library/pickle.html
+[pickle]: https://docs.python.org/3.6/library/pickle.html
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges

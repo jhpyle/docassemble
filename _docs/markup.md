@@ -448,8 +448,8 @@ information about this feature, see the section on
 [`video`]: {{ site.baseurl }}/docs/modifiers.html#video
 [`qr_code()`]: {{ site.baseurl }}/docs/functions.html#qr_code
 [code block]: https://daringfireball.net/projects/markdown/syntax#precode
-[Python's `if` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#if-statements
-[Python's `for` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#for-statements
+[Python's `if` statement]: https://docs.python.org/3.6/tutorial/controlflow.html#if-statements
+[Python's `for` statement]: https://docs.python.org/3.6/tutorial/controlflow.html#for-statements
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [groups]: {{ site.baseurl }}/docs/groups.html

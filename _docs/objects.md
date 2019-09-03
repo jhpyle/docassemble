@@ -4894,7 +4894,7 @@ def init(self, *pargs, **kwargs):
     self.sql_init()
 {% endhighlight %}
 
-In Python 3.5, you can do this:
+In Python 3.6, you can do this:
 
 {% highlight python %}
 def init(self, *pargs, **kwargs):
@@ -5126,13 +5126,13 @@ method is similar to the `delete_by_id()` class method, except it uses
 the `_uid` of the table rather than the `id`.
 
 [SQL]: https://en.wikipedia.org/wiki/SQL
-[multiple inheritance]: https://docs.python.org/3.5/tutorial/classes.html#multiple-inheritance
+[multiple inheritance]: https://docs.python.org/3.6/tutorial/classes.html#multiple-inheritance
 [Alembic]: https://alembic.sqlalchemy.org/en/latest/front.html
 [custom classes]: #writing
 [SQLAlchemy]: https://www.sqlalchemy.org/
-[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
-[`datetime.datetime.time()`]: https://docs.python.org/2/library/datetime.html#datetime.datetime.time
-[`datetime.datetime.replace()`]: https://docs.python.org/2/library/datetime.html#datetime.datetime.replace
+[`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
+[`datetime.datetime.time()`]: https://docs.python.org/3/library/datetime.html#datetime.datetime.time
+[`datetime.datetime.replace()`]: https://docs.python.org/3/library/datetime.html#datetime.datetime.replace
 [`date_interval()`]: {{ site.baseurl }}/docs/functions.html#date_interval
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
 [`dateutil.relativedelta.relativedelta`]: http://dateutil.readthedocs.io/en/stable/relativedelta.html
@@ -5140,23 +5140,23 @@ the `_uid` of the table rather than the `id`.
 [`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
 [`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
-[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
+[`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
 [`DADateTime`]: #DADateTime
 [`datatype: date`]: {{ site.baseurl }}/docs/fields.html#date
 [`datatype: time`]: {{ site.baseurl }}/docs/fields.html#time
-[AttributeError]: https://docs.python.org/2/library/exceptions.html#exceptions.AttributeError
+[AttributeError]: https://docs.python.org/3/library/exceptions.html#exceptions.AttributeError
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[Python dict]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Python list]: https://docs.python.org/2/tutorial/datastructures.html
-[Python module]: https://docs.python.org/2/tutorial/modules.html
-[Python object]: https://docs.python.org/2/tutorial/classes.html
-[Python objects]: https://docs.python.org/2/tutorial/classes.html
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
+[Python dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[Python list]: https://docs.python.org/3/tutorial/datastructures.html
+[Python module]: https://docs.python.org/3/tutorial/modules.html
+[Python object]: https://docs.python.org/3/tutorial/classes.html
+[Python objects]: https://docs.python.org/3/tutorial/classes.html
+[Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [Python]: https://www.python.org/
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`Address`]: #Address
@@ -5214,19 +5214,19 @@ the `_uid` of the table rather than the `id`.
 [`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
-[classes]: https://docs.python.org/2/tutorial/classes.html
-[Python class]: https://docs.python.org/2/tutorial/classes.html
+[classes]: https://docs.python.org/3/tutorial/classes.html
+[Python class]: https://docs.python.org/3/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [fields]: {{ site.baseurl }}/docs/fields.html
-[Python function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
-[inheritance]: https://docs.python.org/2/tutorial/classes.html#inheritance
+[Python function]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[inheritance]: https://docs.python.org/3/tutorial/classes.html#inheritance
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
-[keyword argument]: https://docs.python.org/2/glossary.html#term-argument
-[keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
-[list]: https://docs.python.org/2/tutorial/datastructures.html
+[keyword argument]: https://docs.python.org/3/glossary.html#term-argument
+[keyword arguments]: https://docs.python.org/3/glossary.html#term-argument
+[list]: https://docs.python.org/3/tutorial/datastructures.html
 [markup]: {{ site.baseurl }}/docs/markup.html
-[methods]: https://docs.python.org/2/tutorial/classes.html
+[methods]: https://docs.python.org/3/tutorial/classes.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
@@ -5236,9 +5236,9 @@ the `_uid` of the table rather than the `id`.
 [roles]: {{ site.baseurl }}/docs/roles.html
 [source code]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [special variable]: {{ site.baseurl }}/docs/special.html
-[str() function]: https://docs.python.org/2/library/functions.html#str
+[str() function]: https://docs.python.org/3/library/functions.html#str
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
-[threading module]: https://docs.python.org/2/library/threading.html
+[threading module]: https://docs.python.org/3/library/threading.html
 [user login system]: {{ site.baseurl }}/docs/users.html
 [`nice_number()`]: {{ site.baseurl }}/docs/functions.html#nice_number
 [`comma_and_list()`]: {{ site.baseurl }}/docs/functions.html#comma_and_list
@@ -5254,14 +5254,14 @@ the `_uid` of the table rather than the `id`.
 [groups]: {{ site.baseurl }}/docs/groups.html
 [question]: {{ site.baseurl }}/docs/questions.html#question
 [code block]: {{ site.baseurl }}/docs/code.html#code
-[dict]: https://docs.python.org/2/library/stdtypes.html#dict
-[set]: https://docs.python.org/2/library/stdtypes.html#set
-[magic]: https://docs.python.org/2/library/inspect.html
+[dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[set]: https://docs.python.org/3/library/stdtypes.html#set
+[magic]: https://docs.python.org/3/library/inspect.html
 [Amazon S3]: https://aws.amazon.com/s3/
 [Python Imaging Library]: https://en.wikipedia.org/wiki/Python_Imaging_Library
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
-[`datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
+[`datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [Return-path]: https://en.wikipedia.org/wiki/Bounce_address
 [Reply-to]: https://www.ietf.org/rfc/rfc2822.txt
 [JSON]: https://en.wikipedia.org/wiki/JSON
@@ -5290,15 +5290,15 @@ the `_uid` of the table rather than the `id`.
 [`appendObject()`]: #DAList.appendObject
 [`gather()`]: #DAList.gather
 [`object_name()`]: #DAObject.object_name
-[`getattr()`]: https://docs.python.org/2/library/functions.html#getattr
+[`getattr()`]: https://docs.python.org/3/library/functions.html#getattr
 [`Thing`]: #Thing
 [`using()`]: #DAObject.using
 [Redis]: https://redis.io/
 [in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
 [`redis`]: https://github.com/andymccurdy/redis-py
-[pickling]: https://docs.python.org/3.5/library/pickle.html
-[pickled]: https://docs.python.org/3.5/library/pickle.html
-[pickles]: https://docs.python.org/3.5/library/pickle.html
+[pickling]: https://docs.python.org/3.6/library/pickle.html
+[pickled]: https://docs.python.org/3.6/library/pickle.html
+[pickles]: https://docs.python.org/3.6/library/pickle.html
 [date field]: {{ site.baseurl }}/docs/fields.html#date
 [`pronoun()`]: #Individual.pronoun
 [`birthdate`]: #Individual.birthdate
@@ -5360,10 +5360,10 @@ the `_uid` of the table rather than the `id`.
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
 [Python book]: http://shop.oreilly.com/product/0636920028154.do
-[list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
+[list comprehension]: https://docs.python.org/3.6/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [interview logic]: {{ site.baseurl }}/docs/logic.html
-[namespace]: https://docs.python.org/2.7/tutorial/classes.html#python-scopes-and-namespaces
+[namespace]: https://docs.python.org/3.6/tutorial/classes.html#python-scopes-and-namespaces
 [write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown
 [`set_alt_text()`]: #DAFile.set_alt_text
 [`get_alt_text()`]: #DAFile.get_alt_text

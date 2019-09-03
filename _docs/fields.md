@@ -1457,7 +1457,8 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 ## <a name="continue button field"></a>Setting a variable with the Continue button
 
 When the user presses the Continue button on a `question` containing
-[`fields`], all of the variables listed under [`fields`] are set.
+[`fields`], all of the variables listed under [`fields`] are set
+(unless they are hidden by a `show if` or similar feature).
 Sometimes, it is useful for the `question` to also set a single
 variable to `True`, much like the [simple "continue" button that sets
 a variable](#field) question does.
@@ -2208,7 +2209,7 @@ why this needs to be done manually as opposed to automatically:
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
-[Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
+[Python identifiers]: https://docs.python.org/3/reference/lexical_analysis.html#identifiers
 [reserved variable names]: {{ site.baseurl }}/docs/special.html#reserved
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
@@ -2238,10 +2239,10 @@ why this needs to be done manually as opposed to automatically:
 [group]: {{ site.baseurl }}/docs/groups.html
 [groups]: {{ site.baseurl }}/docs/groups.html
 [groups section]: {{ site.baseurl }}/docs/groups.html
-[Python constant]: https://docs.python.org/2/library/constants.html
+[Python constant]: https://docs.python.org/3/library/constants.html
 [inserting images]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
 [`fields`]: #fields
-[Python dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionaries]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [HTML5]: https://en.wikipedia.org/wiki/HTML5
 [`selections()` function]: {{ site.baseurl }}/docs/functions.html#selections
 [`exclude`]: #exclude
@@ -2255,9 +2256,9 @@ why this needs to be done manually as opposed to automatically:
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
 [tooltip]: http://www.w3schools.com/tags/att_title.asp
-[list]: https://docs.python.org/2/tutorial/datastructures.html
-[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[list]: https://docs.python.org/3/tutorial/datastructures.html
+[dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[dictionaries]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [DOCX fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature docx
 [PDF fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature
 [documents]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
@@ -2270,7 +2271,7 @@ why this needs to be done manually as opposed to automatically:
 [machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse
 [raise an exception]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
 [exception is raised]: https://en.wikibooks.org/wiki/Python_Programming/Exceptions
-[`Exception`]: https://docs.python.org/2/library/exceptions.html#exceptions.Exception
+[`Exception`]: https://docs.python.org/3/library/exceptions.html#exceptions.Exception
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -2293,8 +2294,8 @@ why this needs to be done manually as opposed to automatically:
 [BMP]: https://en.wikipedia.org/wiki/BMP_file_format
 [embeds]: #embed
 [`label` and `field`]: #label
-[`str()`]: https://docs.python.org/2/library/functions.html#str
-[`repr()`]: https://docs.python.org/2/library/functions.html#repr
+[`str()`]: https://docs.python.org/3/library/functions.html#str
+[`repr()`]: https://docs.python.org/3/library/functions.html#repr
 [`all_true()`]: {{ site.baseurl }}/docs/objects.html#DADict.all_true
 [`all_false()`]: {{ site.baseurl }}/docs/objects.html#DADict.all_false
 [`any_true()`]: {{ site.baseurl }}/docs/objects.html#DADict.any_true
@@ -2303,8 +2304,8 @@ why this needs to be done manually as opposed to automatically:
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
 [Google Places API]: https://developers.google.com/places/
-[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
-[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
+[`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
+[`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`dateutil.parser.parse`]: http://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse
@@ -2316,10 +2317,10 @@ why this needs to be done manually as opposed to automatically:
 [`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
 [`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
 [`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
-[`.strftime()`]: https://docs.python.org/2/library/datetime.html#datetime.time.strftime
+[`.strftime()`]: https://docs.python.org/3/library/datetime.html#datetime.time.strftime
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
 [`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
-[`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
+[`raise`]: https://docs.python.org/3.6/tutorial/errors.html#raising-exceptions
 [`date`]: #date
 [`number`]: #number
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
@@ -2339,17 +2340,17 @@ why this needs to be done manually as opposed to automatically:
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
 [`data`]: {{ site.baseurl }}/docs/initial.html#data
 [`data from code`]: {{ site.baseurl }}/docs/initial.html#data from code
-[lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
+[lambda function]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
-[list comprehension]: https://docs.python.org/2.7/tutorial/datastructures.html#list-comprehensions
+[list comprehension]: https://docs.python.org/3.6/tutorial/datastructures.html#list-comprehensions
 [`continue button field`]: #continue button field
 [`field`]: #field
-[tuples]: https://docs.python.org/3.5/tutorial/datastructures.html#tuples-and-sequences
+[tuples]: https://docs.python.org/3.6/tutorial/datastructures.html#tuples-and-sequences
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [`url_action_call()`]: {{ site.baseurl }}/docs/functions.html#js_url_action_call
 [JSON]: https://en.wikipedia.org/wiki/JSON

@@ -427,10 +427,10 @@ interview where two users each sign a document:
 [Mako]: http://www.makotemplates.org/
 [generic object]: {{ site.baseurl }}/docs/objects.html
 [generic objects]: {{ site.baseurl }}/docs/objects.html
-[attributes]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
-[attribute]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
-[built-in Python function]: https://docs.python.org/2/library/functions.html#hasattr
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[attributes]: https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces
+[attribute]: https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces
+[built-in Python function]: https://docs.python.org/3/library/functions.html#hasattr
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [user login]: {{ site.baseurl }}/docs/users.html
 [`event` variables]: {{ site.baseurl }}/docs/fields.html#event

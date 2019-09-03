@@ -3778,8 +3778,13 @@ an interview session.  It has two required arguments: an interview
 filename (e.g., `'docassemble.demo:data/questions/questions.yml'`), a
 session ID (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition,
 it can take a third argument, an encryption key for decrypting the
-interview answers.  If the interview is encrypted, the third argument
-is required.
+interview answers.  If the interview answers are encrypted, the third
+argument is required.
+
+If the third argument is omitted, but the interview answers are
+encrypted, the current user's decryption key will be tried.  To obtain
+an encryption key for a different user, you can use
+[`get_user_secret()`].
 
 To get the interview filename for the current interview, and the
 session ID for the current interview session, you can use the
@@ -3788,8 +3793,6 @@ session ID for the current interview session, you can use the
 However, note that if you want to get the dictionary for the current
 interview session, you can simply use the [`all_variables()`]
 function.
-
-To obtain an encryption key, you can use [`get_user_secret()`].
 
 Like the [`all_variables()`] function, [`get_session_variables()`]
 simplifies the dictionary (converting objects to dictionaries, for
@@ -6274,16 +6277,16 @@ $(document).on('daPageLoad', function(){
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Markdown]: https://daringfireball.net/projects/markdown/
-[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Python dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Python function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
-[Python functions]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
-[Python interpreter]: https://docs.python.org/2/tutorial/interpreter.html
-[Python list]: https://docs.python.org/2/tutorial/datastructures.html
-[Python locale]: https://docs.python.org/2/library/locale.html
-[Python module]: https://docs.python.org/2/tutorial/modules.html
-[Python modules]: https://docs.python.org/2/tutorial/modules.html
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
+[Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[Python dictionaries]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
+[Python function]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[Python functions]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[Python interpreter]: https://docs.python.org/3/tutorial/interpreter.html
+[Python list]: https://docs.python.org/3/tutorial/datastructures.html
+[Python locale]: https://docs.python.org/3/library/locale.html
+[Python module]: https://docs.python.org/3/tutorial/modules.html
+[Python modules]: https://docs.python.org/3/tutorial/modules.html
+[Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
@@ -6349,11 +6352,11 @@ $(document).on('daPageLoad', function(){
 [`attachment`]: {{ site.baseurl }}/docs/documents.html
 [`attachments`]: {{ site.baseurl }}/docs/documents.html
 [attachments]: {{ site.baseurl }}/docs/documents.html
-[classes]: https://docs.python.org/2/tutorial/classes.html
+[classes]: https://docs.python.org/3/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
-[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [fields]: {{ site.baseurl }}/docs/fields.html
-[function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
+[function]: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
 [functions]: #functions
 [how **docassemble** runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks
 [html2text]: https://pypi.python.org/pypi/html2text
@@ -6361,12 +6364,12 @@ $(document).on('daPageLoad', function(){
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
-[keyword argument]: https://docs.python.org/2/glossary.html#term-argument
-[keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
+[keyword argument]: https://docs.python.org/3/glossary.html#term-argument
+[keyword arguments]: https://docs.python.org/3/glossary.html#term-argument
 [language support]: {{ site.baseurl }}/docs/language.html
 [language]: {{ site.baseurl }}/docs/language.html
-[list]: https://docs.python.org/2/tutorial/datastructures.html
-[locale module]: https://docs.python.org/2/library/locale.html
+[list]: https://docs.python.org/3/tutorial/datastructures.html
+[locale module]: https://docs.python.org/3/library/locale.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [document markup]: {{ site.baseurl }}/docs/documents.html#markup
 [methods]: {{ site.baseurl }}/docs/objects.html#person classes
@@ -6393,9 +6396,9 @@ $(document).on('daPageLoad', function(){
 [`timezone_list()`]: #timezone_list
 [`pytz`]: http://pytz.sourceforge.net/
 [`timezone` configuration]: {{ site.baseurl }}/docs/config.html#timezone
-[`datetime.timedelta`]: https://docs.python.org/2/library/datetime.html#datetime.timedelta
+[`datetime.timedelta`]: https://docs.python.org/3/library/datetime.html#datetime.timedelta
 [`dateutil.relativedelta.relativedelta`]: http://dateutil.readthedocs.io/en/stable/relativedelta.html
-[`datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
+[`datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [`action_argument()`]: #action_argument
 [`action_arguments()`]: #action_arguments
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
@@ -6500,13 +6503,13 @@ $(document).on('daPageLoad', function(){
 [associative array]: https://en.wikipedia.org/wiki/Associative_array
 [`fish.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/fish.py
 [`fishes.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/fishes.yml
-[standard Python notation]: https://docs.python.org/2/tutorial/modules.html#intra-package-references
+[standard Python notation]: https://docs.python.org/3/tutorial/modules.html#intra-package-references
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
 [`docassemble.demo` package on GitHub]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
 [GitHub]: https://github.com/
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
-[`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
-[`__init__()`]: https://docs.python.org/2/reference/datamodel.html#object.__init__
+[`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
+[`__init__()`]: https://docs.python.org/3/reference/datamodel.html#object.__init__
 [document]: http://yaml.org/spec/1.2/spec.html#id2760395
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
@@ -6529,8 +6532,8 @@ $(document).on('daPageLoad', function(){
 [`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
 [navigation bar]: {{ site.baseurl }}/docs/initial.html#navigation bar
 [API]: https://en.wikipedia.org/wiki/Application_programming_interface
-[Python object]: https://docs.python.org/2/tutorial/classes.html
-[methods]: https://docs.python.org/2/tutorial/classes.html
+[Python object]: https://docs.python.org/3/tutorial/classes.html
+[methods]: https://docs.python.org/3/tutorial/classes.html
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [`nav.set_sections()`]: #DANav.set_sections
 [`DANav`]: #DANav.set_sections
@@ -6540,11 +6543,11 @@ $(document).on('daPageLoad', function(){
 [JSON interface]: {{ site.baseurl }}/docs/frontend.html
 [`hello.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/hello.py
 [relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
-[`unittest` framework]: https://docs.python.org/2/library/unittest.html
+[`unittest` framework]: https://docs.python.org/3/library/unittest.html
 [`tests.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/tests.py
 [`my_name_suffix`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/my_name_suffix.py
 [`indent()`]: #indent
-[del statement]: https://docs.python.org/2/tutorial/datastructures.html#the-del-statement
+[del statement]: https://docs.python.org/3/tutorial/datastructures.html#the-del-statement
 [multiple-choice question]: {{ site.baseurl }}/docs/fields.html#field with buttons
 [`need` specifier]: {{ site.baseurl }}/docs/logic.html#need
 [PDF templates]: {{ site.baseurl }}/docs/documents.html#pdf template file
@@ -6620,7 +6623,7 @@ $(document).on('daPageLoad', function(){
 [`/api/privileges`]: {{ site.baseurl }}/docs/api.html#privileges
 [`/api/session/question`]: {{ site.baseurl }}/docs/api.html#session_question
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
-[`datetime.time`]: https://docs.python.org/2/library/datetime.html#datetime.time
+[`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
 [gspread]: https://gspread.readthedocs.io/en/latest/
 [Google Developers Console]: https://console.developers.google.com/
@@ -6634,7 +6637,7 @@ $(document).on('daPageLoad', function(){
 [`sub_document.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_document.docx
 [`main_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/main_doc_params.docx
 [`sub_doc_params.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/sub_doc_params.docx
-[`repr()`]: https://docs.python.org/2/library/functions.html#repr
+[`repr()`]: https://docs.python.org/3/library/functions.html#repr
 [`pdf_concatenate()`]: #pdf_concatenate
 [ZIP file]: https://en.wikipedia.org/wiki/Zip_(file_format)
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
@@ -6648,17 +6651,17 @@ $(document).on('daPageLoad', function(){
 [`validate`]: {{ site.baseurl }}/docs/fields.html#validate
 [`wc_side_of_bed.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_side_of_bed.yml
 [`wc_common.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_common.yml
-[lambda function]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
-[lambda functions]: https://docs.python.org/2.7/tutorial/controlflow.html#lambda-expressions
-[`raise`]: https://docs.python.org/2.7/tutorial/errors.html#raising-exceptions
+[lambda function]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
+[lambda functions]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
+[`raise`]: https://docs.python.org/3.6/tutorial/errors.html#raising-exceptions
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [Google Sheets API]: https://developers.google.com/sheets/api/
 [`js show if`]: {{ site.baseurl }}/docs/fields.html#js show if
 [redact_demo.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.docx
 [redact_demo.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.pdf
 [`somefuncs.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/somefuncs.py
-[`NameError`]: https://docs.python.org/2/library/exceptions.html#exceptions.NameError
-[`try`/`except`]: https://docs.python.org/2.7/tutorial/errors.html#handling-exceptions
+[`NameError`]: https://docs.python.org/3/library/exceptions.html#exceptions.NameError
+[`try`/`except`]: https://docs.python.org/3.6/tutorial/errors.html#handling-exceptions
 [`redact: False`]: {{ site.baseurl }}/docs/documents.html#redact
 [`forget_result_of()`]: #forget_result_of
 [`re_run_logic()`]: #re_run_logic

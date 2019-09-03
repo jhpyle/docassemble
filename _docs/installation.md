@@ -85,7 +85,9 @@ other applications need to run concurrently on the same server.  These
 applications include:
 
 * A web server (using ports 80 and/or 443);
-* A [web sockets] background process (using port 5000);
+* A [WSGI] server connected with the web server;
+* A [web sockets] background process (using port 5000, proxied by the
+  web server);
 * A [cron] background process that invokes **docassemble** scripts at
 hourly, daily, weekly, and monthly intervals;
 * A watchdog background process that terminates any web application
@@ -130,7 +132,7 @@ services:
 * [VoiceRSS] for converting text to an audio file;
 * [Google APIs] for autocompleting addresses, normalizing addresses,
   drawing maps, translating text;
-* [Google APIs] or [OneDrive APIs] for [synchronizing files between the
+* [Google APIs] or [OneDrive APIs] for synchronizing files between the
   [Playground] and a [Google Drive]/[OneDrive] folder.
 
 The authentication keys for these services can be set up in the
@@ -148,54 +150,108 @@ The following dependencies can be installed from [Debian] or
 [Ubuntu] packages:
 
 {% highlight bash %}
-sudo apt-get install apt-utils tzdata python python-dev wget unzip \
-  git locales pandoc texlive texlive-latex-extra apache2 postgresql \
-  libapache2-mod-wsgi-py3 libapache2-mod-xsendfile poppler-utils \
-  libffi-dev libffi6 imagemagick gcc supervisor \
-  libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl \
-  libogg-vorbis-header-pureperl-perl make perl libvorbis-dev \
-  libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
-  libaudio-scan-perl libaudio-flac-header-perl \
-  libparallel-forkmanager-perl libav-tools autoconf automake \
-  libjpeg-dev zlib1g-dev libpq-dev logrotate cron pdftk \
-  fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev \
-  libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
-  libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
-  curl mktemp dnsutils tesseract-ocr tesseract-ocr-dev \
-  tesseract-ocr-afr tesseract-ocr-ara tesseract-ocr-aze \
-  tesseract-ocr-bel tesseract-ocr-ben tesseract-ocr-bul \
-  tesseract-ocr-cat tesseract-ocr-ces tesseract-ocr-chi-sim \
-  tesseract-ocr-chi-tra tesseract-ocr-chr tesseract-ocr-dan \
-  tesseract-ocr-deu tesseract-ocr-deu-frak tesseract-ocr-ell \
-  tesseract-ocr-eng tesseract-ocr-enm tesseract-ocr-epo \
-  tesseract-ocr-equ tesseract-ocr-est tesseract-ocr-eus \
-  tesseract-ocr-fin tesseract-ocr-fra tesseract-ocr-frk \
-  tesseract-ocr-frm tesseract-ocr-glg tesseract-ocr-grc \
-  tesseract-ocr-heb tesseract-ocr-hin tesseract-ocr-hrv \
-  tesseract-ocr-hun tesseract-ocr-ind tesseract-ocr-isl \
-  tesseract-ocr-ita tesseract-ocr-ita-old tesseract-ocr-jpn \
-  tesseract-ocr-kan tesseract-ocr-kor tesseract-ocr-lav \
-  tesseract-ocr-lit tesseract-ocr-mal tesseract-ocr-mkd \
-  tesseract-ocr-mlt tesseract-ocr-msa tesseract-ocr-nld \
-  tesseract-ocr-nor tesseract-ocr-osd tesseract-ocr-pol \
-  tesseract-ocr-por tesseract-ocr-ron tesseract-ocr-rus \
-  tesseract-ocr-slk tesseract-ocr-slk-frak tesseract-ocr-slv \
-  tesseract-ocr-spa tesseract-ocr-spa-old tesseract-ocr-sqi \
-  tesseract-ocr-srp tesseract-ocr-swa tesseract-ocr-swe \
-  tesseract-ocr-tam tesseract-ocr-tel tesseract-ocr-tgl \
-  tesseract-ocr-tha tesseract-ocr-tur tesseract-ocr-ukr \
-  tesseract-ocr-vie build-essential nodejs exim4-daemon-heavy \
-  libsvm3 libsvm-dev liblinear3 liblinear-dev libzbar-dev \
-  cm-super libgs-dev ghostscript texlive-extra-utils \
-  default-libmysqlclient-dev python-passlib libsasl2-dev \
-  libldap2-dev ttf-mscorefonts-installer \
-  fonts-ebgaramond-extra ttf-liberation fonts-liberation \
-  qpdf python3 python3-venv python3-dev
+sudo apt-get install \
+apt-utils \
+tzdata \
+python \
+python-dev \
+wget \
+unzip \
+git \
+locales \
+nginx \
+postgresql \
+gcc \
+supervisor \
+s4cmd \
+make \
+perl \
+libinline-perl \
+libparallel-forkmanager-perl \
+autoconf \
+automake \
+libjpeg-dev \
+libpq-dev \
+logrotate \
+nodejs \
+npm \
+cron \
+libxml2 \
+libxslt1.1 \
+libxml2-dev \
+libxslt1-dev \
+libcurl4-openssl-dev \
+libssl-dev \
+redis-server \
+rabbitmq-server \
+libtool \
+libtool-bin \
+syslog-ng \
+rsync \
+curl \
+dnsutils \
+build-essential \
+libsvm3 \
+libsvm-dev \
+liblinear3 \
+liblinear-dev \
+libzbar-dev \
+libzbar0 \
+libgs-dev \
+default-libmysqlclient-dev \
+libgmp-dev \
+python-passlib \
+libsasl2-dev \
+libldap2-dev \
+python3 \
+exim4-daemon-heavy \
+python3-venv \
+python3-dev \
+imagemagick \
+pdftk \
+pacpl \
+pandoc \
+texlive \
+texlive-luatex \
+texlive-latex-recommended \
+texlive-latex-extra \
+texlive-font-utils \
+texlive-lang-cyrillic \
+texlive-lang-french \
+texlive-lang-italian \
+texlive-lang-portuguese \
+texlive-lang-german \
+texlive-lang-european \
+texlive-lang-spanish \
+texlive-extra-utils \
+poppler-utils \
+libaudio-flac-header-perl \
+libaudio-musepack-perl \
+libmp3-tag-perl \
+libogg-vorbis-header-pureperl-perl \
+libvorbis-dev \
+libcddb-perl \
+libcddb-get-perl \
+libmp3-tag-perl \
+libaudio-scan-perl \
+libaudio-flac-header-perl \
+ffmpeg \
+tesseract-ocr-all \
+libtesseract-dev \
+ttf-mscorefonts-installer \
+fonts-ebgaramond-extra \
+ghostscript \
+fonts-liberation \
+cm-super \
+qpdf \
+wamerican \
+libreoffice \
+zlib1g-dev \
+libncurses5-dev \
+libncursesw5-dev \
+libreadline-dev \
+libsqlite3-dev
 {% endhighlight %}
-
-The libraries `libcurl4-openssl-dev` and `libssl-dev` are particularly
-important; **docassemble**'s [Python] dependencies will not install
-unless these libraries are present.
 
 You may need to make slight changes to to the package list above,
 depending on which distribution and version you are using.
@@ -203,21 +259,10 @@ depending on which distribution and version you are using.
 The latest version of [Pandoc] can be installed by doing:
 
 {% highlight bash %}
-wget https://github.com/jgm/pandoc/releases/download/2.5/pandoc-2.5-1-amd64.deb
-sudo dpkg -i pandoc-2.5-1-amd64.deb
-{% endhighlight %}
-
-For best results, install an up-to-date version of [LibreOffice].  On
-Debian stretch, you can add the following to `/etc/apt/sources.list`:
-
-{% highlight text %}
-deb http://ftp.debian.org/debian stretch-backports main
-{% endhighlight %}
-
-and then upgrade [LibreOffice] by running:
-
-{% highlight text %}
-apt-get -q -y install -t stretch-backports libreoffice
+cd /tmp \
+&& wget -q https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb \
+&& sudo dpkg -i pandoc-2.7.3-1-amd64.deb \
+&& rm pandoc-2.7.3-1-amd64.deb
 {% endhighlight %}
 
 On some systems, you may run into a situation where [LibreOffice]
@@ -228,21 +273,50 @@ avoid this, run:
 sudo chmod -R 777 /var/spool/libreoffice
 {% endhighlight %}
 
-To enable the use of [Azure blob storage] as a means of
-[data storage], you will need to run the following:
+The installation process will require you to be able to run commands
+as `www-data`.  By default, your system may prevent the `www-data`
+user from using a shell.  Get around this limitation by running the
+following:
 
 {% highlight bash %}
-sudo update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
-wget -qO- https://deb.nodesource.com/setup_6.x | sudo bash -
-sudo apt-get -y install nodejs
-sudo npm install -g azure-storage-cmd
-sudo npm install -g mermaid.cli
+sudo chsh -s /bin/bash www-data
+sudo chown -R www-data.www-data /var/www
 {% endhighlight %}
 
-([npm] is absent from [Debian stretch] due to security issues, so it
-needs to be installed from another source.  If [npm] is available on
-your Linux distribution, it is probably sufficient just to run `sudo npm
-install -g azure-storage-cmd` and `sudo npm install -g mermaid.cli`.)
+To enable the generation of [mermaid] diagrams, you will need to
+switch to being the `www-data` user:
+
+{% highlight bash %}
+sudo su www-data
+{% endhighlight %}
+
+Then run the following commands to install the `mmdc` application:
+
+{% highlight bash %}
+mkdir -p /var/www/node_modules/.bin
+cd /tmp
+echo '{ \"args\": [\"--no-sandbox\"] }' > ~/puppeteer-config.json
+touch ~/.profile
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+source ~/.profile
+nvm install 12.6.0
+npm install mermaid.cli
+rm ~/.profile
+{% endhighlight %}
+
+Then, run `exit` to stop acting as `www-data`, and run the following
+to make the `mmdc` command available at a standard path:
+
+{% highlight bash %}
+sudo ln -s /var/www/node_modules/.bin/mmdc /usr/local/bin/mmdc
+{% endhighlight %}
+
+To enable the use of [Azure blob storage] as a means of [data
+storage], run:
+
+{% highlight bash %}
+sudo npm install -g azure-storage-cmd
+{% endhighlight %}
 
 **docassemble** uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
@@ -258,19 +332,45 @@ The [Docker] setup process does the following, which works unattended:
 {% highlight bash %}
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
-update-locale LANG=en_US.UTF-8
+update-locale
 {% endhighlight %}
 
 On [Ubuntu], you may need to do `sudo apt-get install
 language-pack-en` (or other package appropriate for your locale).
 
+Install the latest version of [Let's Encrypt]:
+
+{% highlight yaml %}
+cd /usr/share/docassemble
+git clone https://github.com/letsencrypt/letsencrypt
+{% endhighlight %}
+
+# <a name="python"></a>Installing Python 3.6
+
+The most recent version of [Python] compatible with **docassemble** is
+Python 3.6.  If your operating system does not have Python 3.6, you
+can install it as follows by running the following commands as `root`
+(i.e., first run `sudo su root`):
+
+{% highlight bash %}
+cd /opt \
+&& wget -O Python-3.6.9.tgz https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz \
+&& tar -zxf Python-3.6.9.tgz \
+&& rm Python-3.6.9.tgz \
+&& cd Python-3.6.9 \
+&& ./configure --enable-shared --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb:gdbm --with-computed-gotos --without-ensurepip --with-system-expat --with-system-libmpdec --with-system-ffi --prefix=/usr \
+&& make \
+&& make altinstall \
+&& cd /tmp
+{% endhighlight %}
+
 # <a name="docassemble"></a>Installing **docassemble** itself
 
-The recommended way to install **docassemble** is to create a
-[Python virtual environment] with ownership permissions set to the web
-server user (`www-data` on [Debian]/[Ubuntu]), and to install
-**docassemble** and its [Python] dependencies into this virtual
-environment using [pip].
+The recommended way to install **docassemble** is to create a [Python
+virtual environment] with ownership permissions set to the web server
+user (`www-data` on [Debian]/[Ubuntu]), and to install **docassemble**
+and its [Python] dependencies into this virtual environment using
+[pip].
 
 There are two reasons for this.  First, if the ownership of the
 directories and files is set to `www-data`, developers will be able to
@@ -280,34 +380,31 @@ they will not need to use the command line.  Second, installing with
 packages are the latest version; the versions that are packaged with
 Linux distributions are not always current.
 
-The installation process will require you to be able to run commands
-as `www-data`.  By default, your system may prevent the `www-data`
-user from using a shell.  Get around this limitation by running the
-following:
-
-{% highlight bash %}
-sudo chsh -s /bin/bash www-data
-sudo chown -R www-data.www-data /var/www
-{% endhighlight %}
-
 Before setting up the [Python virtual environment], you need to create
 directories needed by [pip] for temporary files and the directories in
 which **docassemble** and the [Python virtual environment] will live:
 
 {% highlight bash %}
-sudo mkdir -p \
-  /var/www/.pip \
-  /var/www/.cache \
-  /usr/share/docassemble/local \
-  /usr/share/docassemble/certs \
-  /usr/share/docassemble/backup \
-  /usr/share/docassemble/config \
-  /usr/share/docassemble/webapp \
-  /usr/share/docassemble/files \
-  /usr/share/docassemble/log \
-  /etc/ssl/docassemble
-sudo echo '{ "args": ["--no-sandbox"] }' > /var/www/puppeteer-config.json
-sudo chown -R www-data.www-data /var/www /usr/share/docassemble
+sudo mkdir -p /etc/ssl/docassemble \
+   /usr/share/docassemble/local3.6 \
+   /usr/share/docassemble/certs \
+   /usr/share/docassemble/backup \
+   /usr/share/docassemble/config \
+   /usr/share/docassemble/webapp \
+   /usr/share/docassemble/files \
+   /var/www/.pip \
+   /var/www/.cache \
+   /var/run/uwsgi \
+   /usr/share/docassemble/log \
+   /tmp/docassemble \
+   /var/www/html/log \
+sudo chown -R www-data.www-data /var/www
+sudo chown www-data.www-data /var/run/uwsgi
+sudo chown -R www-data.www-data \
+   /tmp/docassemble \
+   /usr/share/docassemble/local3.6 \
+   /usr/share/docassemble/log \
+   /usr/share/docassemble/files
 {% endhighlight %}
 
 The **docassemble** application itself is [on GitHub].  Clone the
@@ -333,8 +430,8 @@ The core functionality of parsing interviews is in the
 `docassemble.base` package.  With these two packages only, you can use
 **docassemble** through its [Python] API.  The `docassemble.webapp`
 package contains the standard **docassemble** web application (which
-includes the [SMS] interface), and the
-`docassemble.demo` package contains a [demonstration] interview.
+includes the [SMS] interface), and the `docassemble.demo` package
+contains a [demonstration] interview.
 
 <a name="virtualenv"></a>To install **docassemble** and its [Python]
 dependencies into the [Python virtual environment], first install the
@@ -353,56 +450,47 @@ Then, become the user `www-data`:
 sudo su www-data
 {% endhighlight %}
 
-and run the following as `www-data`:
+and run the following as `www-data` (i.e., first do `sudo su www-data`):
 
 {% highlight bash %}
-python3 -m venv --copies /usr/share/docassemble/local
-cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local/
-source /usr/share/docassemble/local/bin/activate
-export LC_CTYPE=C.UTF-8
-export LANG=C.UTF-8
-pip install --upgrade ndg-httpsclient \
-./docassemble/docassemble \
-./docassemble/docassemble_base \
-./docassemble/docassemble_demo \
-./docassemble/docassemble_webapp
+cd /tmp
+python3.6 -m venv --copies /usr/share/docassemble/local3.6
+source /usr/share/docassemble/local3.6/bin/activate
+pip3 install --upgrade pip
+pip3 install --upgrade \
+  3to2 \
+  bcrypt \
+  flask \
+  flask-login \
+  flask-mail \
+  flask-sqlalchemy \
+  flask-wtf \
+  s4cmd \
+  uwsgi \
+  passlib \
+  pycryptodome \
+  pycryptodomex \
+  six \
+  setuptools
+pip3 install --upgrade \
+  ./docassemble/docassemble \
+  ./docassemble/docassemble_base \
+  ./docassemble/docassemble_demo \
+  ./docassemble/docassemble_webapp
+cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local3.6/
 {% endhighlight %}
 
-This will install a Python 3 virtual environment.  If you want to use
-Python 2.7, then instead of the first line, run:
+This will install a Python 3.6 virtual environment at
+`/usr/share/docassemble/local3.6` and install **docassemble** into it.
 
-{% highlight bash %}
-pip install --upgrade virtualenv
-virtualenv /usr/share/docassemble/local
-{% endhighlight %}
-
-Also, if you want to use Python 2.7, you will need to run the
-following as root:
-
-{% highlight bash %}
-apt-get -y remove libapache2-mod-wsgi-py3
-apt-get -y install libapache2-mod-wsgi
-{% endhighlight %}
-
-This will uninstall the Python 3 version of [mod_wsgi] and install the
-Python 2.7 version.  Keep in mind, however, that Python 2.7 [will not
-be maintained] after January 1, 2020.
-
-Note that [mod_wsgi] and [mod_php] can conflict with one another.  If
-[mod_php] is enabled, [mod_wsgi] may terminate with a segmentation
-fault.  Thus it may not be possible for [mod_wsgi] to share a server
-with PHP applications.  This does not always happen, however; the
-cause may not be PHP itself but rather a library loaded by PHP.
 
 The `pip.conf` file is necessary because it enables the use of
 [GitHub] package references in the `setup.py` files of **docassemble**
-extension packages.  The [ndg-httpsclient] module, which is a
-dependency, is installed by itself because errors might occur during
-installation if this package does not already exist on the system.
+extension packages.
+
 The **docassemble** packages are installed from the cloned [GitHub]
 repository.  These packages are also available on [PyPI], and could be
-installed with `pip install docassemble.webapp`, but it is just as
-easy to install them from the local copy.
+installed with `pip install docassemble.webapp`.
 
 Then, you need to move certain files into place for the web
 application.  Still acting as `www-data`, do:
@@ -414,11 +502,8 @@ cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
 cp ./docassemble/Docker/VERSION /usr/share/docassemble/webapp/
 {% endhighlight %}
 
-The `docassemble.wsgi` file is the primary "executable" for the web
-application.  The web server configuration will point to this file.
-
 The files copied to `/usr/share/docassemble/config/` include configuration
-file templates for **docassemble** and [Apache].
+file templates for **docassemble** and [NGINX].
 
 The `.sh` files are scripts for running background processes.
 
@@ -436,37 +521,12 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-monthly.sh /etc/cron.monthly/
 sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
-sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/docassemble.conf
-sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf
-sudo cp ./docassemble/Docker/config/docassemble-ssl.conf.dist /etc/apache2/sites-available/docassemble-ssl.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 sudo cp ./docassemble/Docker/ssl/* /usr/share/docassemble/certs/
 sudo cp ./docassemble/Docker/rabbitmq.config /etc/rabbitmq/
 {% endhighlight %}
 
-The `/etc/apache2/conf-available/docassemble.conf` file contains
-instructions for [Apache] to use the virtual environment to run the
-**docassemble** web application.  It also contains some configuration
-variables.  The `/etc/apache2/sites-available/docassemble-http.conf`
-and `/etc/apache2/sites-available/docassemble-ssl.conf` files contain
-[Apache] site configuration directives for the **docassemble** web
-application.
-
 # <a name="webapp"></a>Setting up the web application
-
-Enable the [Apache]<span></span> [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
-[headers], and [proxy_wstunnel] modules, if they are not already enabled, by
-running the following:
-
-{% highlight bash %}
-sudo a2enmod wsgi
-sudo a2enmod xsendfile
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo a2enmod proxy_wstunnel
-{% endhighlight %}
 
 Set up and edit the **docassemble** [configuration] file, the standard location of
 which is `/usr/share/docassemble/config/config.yml`:
@@ -493,102 +553,66 @@ will need to change the [`root`] directive to `/docassemble/` and the
 Note that it is important to include `/` marks at both the beginning
 and end of [`root`].
 
-You should set the [`server administrator email`] to an e-mail address
-that users should contact if [Apache] generates an error.
-
 Make sure that files in the **docassemble** directory can be read
 and written by the web server:
 
 {% highlight bash %}
-sudo chown www-data.www-data /usr/share/docassemble/config/config.yml.dist \
+sudo chown www-data.www-data /usr/share/docassemble/config/config.yml \
   /usr/share/docassemble/webapp/docassemble.wsgi
-sudo chown -R www-data.www-data /usr/share/docassemble/local \
+sudo chown -R www-data.www-data /usr/share/docassemble/local3.6 \
   /usr/share/docassemble/log /usr/share/docassemble/files
-sudo chmod ogu+r /usr/share/docassemble/config/config.yml.dist
+sudo chmod ogu+r /usr/share/docassemble/config/config.yml
 {% endhighlight %}
 
-If **docassemble** needs to coexist with your other web applications,
-you can edit the [Apache] configuration files in `/etc/apache2/sites-available`.
+If you want to use HTTPS with your own certificates, set the following
+in your Configuration:
 
-If your **docassemble** interviews are not thread-safe, for example
-because different interviews on your server use different locales,
-change `threads=5` to `processes=5 threads=1`.  This will cause
-[Apache] to run [WSGI] in a "prefork" configuration.  This is slower
-than the multi-thread configuration.  See [`update_locale()`] for more
-information about **docassemble** and thread safety.
-
-Finally, enable the [Apache] configuration files that you installed
-earlier.
-
-{% highlight bash %}
-sudo a2enconf docassemble
-sudo a2ensite docassemble-http
-sudo a2ensite docassemble-ssl
+{% highlight yaml %}
+use https: True
 {% endhighlight %}
 
-If you did not change the [`root`] directive in the [configuration],
-you should make sure the default [Apache] site configuration is
-disabled, or else it will conflict with the **docassemble** site
-configuration:
+Copy your SSL certificates to the following locations:
 
-{% highlight bash %}
-sudo a2dissite 000-default
-{% endhighlight %}
-
-If you have your own SSL certificates, you can enable SSL by running:
-
-{% highlight text %}
-sudo a2enmod ssl
-{% endhighlight %}
-
-You will then need to edit
-`/etc/apache2/sites-available/docassemble-ssl.conf` and make the same
-changes that you made to
-`/etc/apache2/sites-available/docassemble-http.conf`.
-
-Note that the [Apache] configuration file will forward HTTP to HTTPS
-if the `ssl` [Apache] module is installed, but will run
-**docassemble** solely on HTTP otherwise.
-
-The [Apache] configuration file looks for SSL certificates in
-`/etc/ssl/docassemble`.  The best practice is not to edit these file
-locations.  Instead, copy your SSL certificates to the following
-locations:
-
-* `/usr/share/docassemble/certs/apache.crt` (certificate)
-* `/usr/share/docassemble/certs/apache.key` (private key)
-* `/usr/share/docassemble/certs/apache.ca.pem` (chain file)
+* `/usr/share/docassemble/certs/nginx.crt` (certificate)
+* `/usr/share/docassemble/certs/nginx.key` (private key)
 
 On startup, the [initialization script] will copy these files into
 `/etc/ssl/docassemble` with the appropriate ownership and permissions.
 
-If you ran `sudo a2enmod ssl` but wish to go back to using plain HTTP,
-run:
+If you do not have your own SSL certificates, set the following on
+your `config.yml` file, in additional to `external hostname`:
 
-{% highlight text %}
-sudo a2dismod ssl
+{% highlight yaml %}
+use https: True
+use lets encrypt: True
+lets encrypt email: admin@example.com
 {% endhighlight %}
 
-If you do not have your own SSL certificates, it is easy to set up
-HTTPS using [Let's Encrypt].  Once you get your site working on HTTP,
-you can run a single command line that enables HTTPS on your system.
-This is explained [below](#certbot).
-
-# <a name="pythonversion"></a>Choosing a Python version
-
-Currently, the default Python version in [Debian] is Python 2.7.
-However, Python 2.7 [will not be maintained] after January 1, 2020.  
+Make sure that you have edited your [DNS] so that the hostname
+identified in `external hostname` maps to the machine running
+**docassemble**.  During the boot process, [Let's Encrypt] will be
+used to obtain certificates.
 
 # <a name="setup"></a>Setting up the SQL server
 
 `docassemble` uses a SQL database.  This database can be located on
 the same server or a different server, but these instructions assume
-you are using [PostgreSQL] locally.  Set up the database by running
-the following commands.
+you are using [PostgreSQL] locally.  Your operating system may be
+using a different version of [PostgreSQL], so you may need to adjust
+some of the commands in these instructions.
+
+First, allow [PostgreSQL] connections over TCP/IP:
+
+{% highlight yaml %}
+echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/11/main/pg_hba.conf
+echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
+{% endhighlight %}
+
+Then set up the database by running the following commands.
 
 {% highlight bash %}
 echo "create role docassemble with login password 'abc123'; create database docassemble owner docassemble;" | sudo -u postgres psql
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.6/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
 Note that these commands create a "role" in the [PostgreSQL] server
@@ -619,11 +643,7 @@ cp ./docassemble/Docker/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 cp ./docassemble/Docker/docassemble-log.conf.dist /etc/sites-available/docassemble-log.conf
 cp ./docassemble/Docker/syslog-ng-docker.conf /etc/syslog-ng/syslog-ng.conf
 cp ./docassemble/Docker/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble
-cp ./docassemble/Docker/apache.logrotate /etc/logrotate.d/apache2
-cp ./docassemble/Docker/config/docassemble-log.conf.dist /etc/apache2/sites-available/docassemble-log.conf
-echo "Listen 8080" >> /etc/apache2/ports.conf
-a2enmod cgid
-a2ensite docassemble-log
+cp ./docassemble/Docker/nginx.logrotate /etc/logrotate.d/nginx
 {% endhighlight %}
 
 Then, edit /etc/syslog-ng/conf.d/docassemble to replace `` `LOGSERVER`
@@ -885,7 +905,7 @@ OAuth 2.0 client ID and secret from Google.
   [`oauth`] configuration, under [`googledrive`].
 * Note also the "Client secret."  You need to set this as the `secret`
   in the [`oauth`] configuration.
-  
+
 When you have your "Client ID" and "Client secret," go to the
 [configuration] and create a [`googledrive`] directive.
 
@@ -896,10 +916,10 @@ After the configuration is changed and the system restarts, users with
 ## <a name="onedrive"></a>Setting up OneDrive integration
 
 To enable the [OneDrive synchronization] feature, you need to sign in
-to the [Azure Portal] and register an App.  Give it a name
-(e.g. "Docassemble OneDrive") and set the Redirect URI to
-`https://example.com/onedrive_callback`, substituting your own server
-URL for `https://example.com`.
+to the [Azure Portal], go to "App registrations," and register an App.
+Give it a name (e.g. "Docassemble OneDrive") and set the Redirect URI
+to `https://example.com/onedrive_callback`, substituting your own
+server URL for `https://example.com`.
 
 Make a note of your "Application (client) ID."
 
@@ -1083,12 +1103,12 @@ like.
 # <a name="start"></a>Start the server and background processes
 
 First, we need to disable the automatic starting and stopping of
-[Apache] on your server.  Your server will still run [Apache], but we
+[NGINX] on your server.  Your server will still run [NGINX], but we
 need it to be controlled by [supervisor] rather than [systemd]:
 
 {% highlight bash %}
-sudo systemctl stop apache2.service
-sudo systemctl disable apache2.service
+sudo systemctl stop nginx.service
+sudo systemctl disable nginx.service
 {% endhighlight %}
 
 Do the same with [RabbitMQ]:
@@ -1152,48 +1172,53 @@ Then tell [systemd] to notice your changes:
 systemctl daemon-reload
 {% endhighlight %}
 
-Finally, restart the [supervisor] service:
+Before starting [supervisor], you need to edit
+`/etc/supervisor/supervisord.conf`:
+
+{% highlight bash %}
+sudo vi /etc/supervisor/supervisord.conf
+{% endhighlight %}
+
+Add the following line immediately after the
+`{% raw %}[supervisord]{% endraw %}` line:
+
+{% highlight text %}
+environment=DAPYTHONVERSION="3"
+{% endhighlight %}
+
+This indicates that you will use Python 3 rather than Python 2 (which
+is a default only for backwards-compatibility reasons).
+
+To start **docassemble**, start the [supervisor] service (which may
+require stopping it first):
 
 {% highlight bash %}
 sudo systemctl stop supervisor.service
 sudo systemctl start supervisor.service
 {% endhighlight %}
 
-You should find **docassemble** running at the URL for your site.
-
-<a name="certbot"></a>If you did not enable HTTPS in your [Apache]
-configuration, an easy way to encrypt your site is through
-[Let's Encrypt], also known as [certbot].  To install the software,
-follow the [certbot instructions] for your operating system.  For
-example, on Ubuntu 16.04, you can add the latest [certbot] to your
-software repository by doing:
+The startup process can take a lot of time.  You can monitor the
+progress by running:
 
 {% highlight bash %}
-sudo apt-get install software-properties-common
-sudo add-apt-repository ppa:certbot/certbot
+sudo supervisorctl status
 {% endhighlight %}
 
-Then, to install [certbot], run:
+If `initialize` has `EXITED`, there was a problem during startup.  If
+`initialize` is `RUNNING`, but `nginx` hasn't started yet, the system
+is still starting.
 
-{% highlight bash %}
-sudo apt-get -y update
-sudo apt-get -y install python-certbot-apache 
-{% endhighlight %}
+Log files for each service are written to files in
+`/var/log/supervisor`.  The `initialize` process takes time because it
+does a software update using [pip].  Another thing that takes a long
+time is the creation of the database tables in [PostgreSQL].
 
-Once [certbot] is installed, you can change your site from HTTP to
-HTTPS by running:
+After 15 minutes or so, you should find **docassemble** running at the
+URL for your site.
 
-{% highlight bash %}
-sudo certbot --apache
-{% endhighlight %}
-
-When it asks you to "choose whether HTTPS access is required or
-optional," select option 2, "Secure - Make all requests redirect to
-secure HTTPS access."
-
-Once your site is using HTTPS, you should change the password for the
-default admin user.  Click "Sign in or sign up to save
-answers" or navigate to `/user/sign-in`.  Log in with:
+You should change the password for the default admin user.  Click
+"Sign in or sign up to save answers" or navigate to `/user/sign-in`.
+Log in with:
 
 * Email: admin@admin.com
 * Password: password
@@ -1206,25 +1231,27 @@ Run `sudo supervisorctl status` to see the status of the processes `supervisor` 
 controlling.  A healthy output would look like this:
 
 {% highlight text %}
-apache2                          RUNNING   pid 1894, uptime 0:08:49
-celery                           RUNNING   pid 2592, uptime 0:00:11
-cron                             STOPPED   Not started
-exim4                            RUNNING   pid 2198, uptime 0:04:07
-initialize                       RUNNING   pid 1111, uptime 0:09:17
-postgres                         STOPPED   Not started
-rabbitmq                         STOPPED   Not started
-redis                            STOPPED   Not started
+apache2                          STOPPED   Not started
+celery                           RUNNING   pid 1288, uptime 2:52:43
+cron                             RUNNING   pid 1494, uptime 2:51:53
+exim4                            RUNNING   pid 1504, uptime 2:51:52
+initialize                       RUNNING   pid 9, uptime 2:53:55
+nginx                            RUNNING   pid 1452, uptime 2:52:14
+postgres                         RUNNING   pid 720, uptime 2:53:27
+rabbitmq                         RUNNING   pid 1012, uptime 2:52:53
+redis                            RUNNING   pid 855, uptime 2:53:04
 reset                            STOPPED   Not started
-sync                             EXITED    May 28 07:52 PM
+sync                             STOPPED   Not started
 syslogng                         STOPPED   Not started
 update                           STOPPED   Not started
-watchdog                         RUNNING   pid 1110, uptime 0:09:17
-websockets                       RUNNING   pid 1589, uptime 0:09:05
+uwsgi                            RUNNING   pid 1395, uptime 2:52:30
+watchdog                         RUNNING   pid 10, uptime 2:53:55
+websockets                       RUNNING   pid 1384, uptime 2:52:32
 {% endhighlight %}
 
-The `postgres`, `rabbitmq`, and `redis` services are not being
-controlled by [supervisor] in this example, but they should be
-running.
+In this setup, the `postgres`, `rabbitmq`, and `redis` services are
+being controlled by [supervisor].  If they are controlled by [systemd]
+on your server, they may show as `STOPPED`.
 
 * If [PostgreSQL] is running, `pg_isready` should return "accepting
 connections."
@@ -1239,8 +1266,9 @@ Log files to check include:
 * `/var/log/supervisor/initialize-stderr*` (filename is different
 every time)
 * Files in `/var/log/supervisor` for other background processes
-* `/var/log/apache2/error.log`
+* `/var/log/nginx/error.log`
 * `/usr/share/docassemble/log/docassemble.log`
+* `/usr/share/docassemble/log/uwsgi.log`
 * `/tmp/flask.log`
 
 If the `celery` process failed to start, or you are debugging
@@ -1253,14 +1281,19 @@ If you are debugging [e-mail receiving], check:
 * `/tmp/mail.log`
 * `/var/log/exim4/mainlog`
 
-If you get an error in the browser that looks like a standard [Apache]
-error message, look in `/var/log/apache2/error.log`.  If you get an
-abbreviated message, the error message could be in `/tmp/flask.log`.
-If there is a problem with the coding of an interview, the error
-message will typically appear in the web browser.  To get the context
-of an error, log in to **docassemble** as a developer and check the
-Logs from the main menu.  The main **docassemble** log file is in
+If you get an error in the browser that looks like a standard [NGINX]
+error message, look in `/usr/share/docassemble/log/uwsgi.log` and
+`/var/log/nginx/error.log`.  If you get an abbreviated message, the
+error message could be in `/tmp/flask.log`.  If there is a problem
+with the coding of an interview, the error message will typically
+appear in the web browser.  To get the context of an error, log in to
+**docassemble** as a developer and check the Logs from the main menu.
+The main **docassemble** log file is in
 `/usr/share/docassemble/log/docassemble.log`.
+
+Keep in mind that because of log rotation, you might find that a log
+file like `/usr/share/docassemble/log/uwsgi.log` is empty, and that
+the real log file is `/usr/share/docassemble/log/uwsgi.log.1`.
 
 The primary [supervisor] process is the one called `initialize`.  It
 runs the script `/usr/share/docassemble/webapp/initialize.sh`, which
@@ -1269,7 +1302,7 @@ script is designed to be used on systems where [supervisor] serves as
 a substitute for [SysV], [systemd], or other "init" system, but it is
 also designed to be work correctly on systems where the "init" system
 has already started some of the necessary background processes, such
-as [Apache], and [PostgreSQL], [redis], and [RabbitMQ].
+as [NGINX], and [PostgreSQL], [redis], and [RabbitMQ].
 
 When **docassemble** is working, you should see processes like the
 following in the output of `ps ax`.
@@ -1277,7 +1310,7 @@ following in the output of `ps ax`.
 [supervisor] looks like this:
 
 {% highlight text %}
- 2121 ?        Ss     0:00 /usr/bin/python /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+ 2121 ?        Ss     0:00 /usr/bin/python2 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
  2131 ?        S      0:00 bash /usr/share/docassemble/webapp/initialize.sh
 {% endhighlight %}
 
@@ -1290,56 +1323,52 @@ following in the output of `ps ax`.
 [redis] looks like this:
 
 {% highlight text %}
-  722 ?        Ssl    0:01 /usr/bin/redis-server 127.0.0.1:6379
+  855 ?        S      0:00 bash /usr/share/docassemble/webapp/run-redis.sh
+  863 ?        Sl     0:13 redis-server 0.0.0.0:6379
 {% endhighlight %}
 
 [RabbitMQ] looks like this:
 
 {% highlight text %}
   573 ?        S      0:00 /bin/sh -e /usr/lib/rabbitmq/bin/rabbitmq-server
-  808 ?        Sl     0:06 /usr/lib/erlang/erts-7.3.1.2/bin/beam.smp -W w -A 64 -P 1048576 -K true -B i -- -root /usr/lib/erlang -progname erl -- -home /var/lib/rabbitmq -- etc. etc.
+  808 ?        Sl     0:06 /usr/lib/erlang/erts-10.2.4/bin/beam.smp -W w -A 64 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 128000 -K true -B i -- -root /usr/lib/erlang -progname erl -- -home /var/lib/rabbitmq -- etc. etc.
 {% endhighlight %}
 
 [PostgreSQL] looks like this:
 
 {% highlight text %}
-  778 ?        S      0:00 /usr/lib/postgresql/9.6/bin/postgres -D /var/lib/postgresql/9.6/main -c config_file=/etc/postgresql/9.6/main/postgresql.conf
-  787 ?        Ss     0:00 postgres: checkpointer process
-  788 ?        Ss     0:00 postgres: writer process
-  789 ?        Ss     0:00 postgres: wal writer process
-  790 ?        Ss     0:00 postgres: autovacuum launcher process
-  791 ?        Ss     0:00 postgres: stats collector process
+  741 ?        S      0:00 su postgres -c /usr/lib/postgresql/11/bin/postgres -D /var/lib/postgresql/11/main -c config_file=/etc/postgresql/11/main/postgresql.conf
+  742 ?        Ss     0:00 /usr/lib/postgresql/11/bin/postgres -D /var/lib/postgresql/11/main -c config_file=/etc/postgresql/11/main/postgresql.conf
+  745 ?        Ss     0:00 postgres: 11/main: checkpointer
+  746 ?        Ss     0:00 postgres: 11/main: background writer
+  747 ?        Ss     0:00 postgres: 11/main: walwriter
+  748 ?        Ss     0:00 postgres: 11/main: autovacuum launcher
+  749 ?        Ss     0:00 postgres: 11/main: stats collector
+  750 ?        Ss     0:00 postgres: 11/main: logical replication launcher
+ 1444 ?        Ss     0:00 postgres: 11/main: docassemble docassemble 127.0.0.1(37314) idle
 {% endhighlight %}
 
-[Apache] looks like this:
+[NGINX] looks like this:
 
 {% highlight text %}
- 2394 ?        S      0:00 /bin/sh /usr/sbin/apache2ctl -DFOREGROUND
- 2396 ?        S      0:00 /usr/sbin/apache2 -DFOREGROUND
- 2397 ?        S      0:00 /usr/sbin/apache2 -DFOREGROUND
- 2398 ?        Sl     0:00 /usr/sbin/apache2 -DFOREGROUND
- 2399 ?        Sl     0:00 /usr/sbin/apache2 -DFOREGROUND
- 2400 ?        Sl     0:00 /usr/sbin/apache2 -DFOREGROUND
+ 1452 ?        S      0:00 bash /usr/share/docassemble/webapp/run-nginx.sh
+ 1470 ?        S      0:00 nginx: master process /usr/sbin/nginx -g daemon off;
+ 1471 ?        S      0:00 nginx: worker process
 {% endhighlight %}
 
 The [Celery] background process looks like this:
 
 {% highlight text %}
- 2343 ?        S      0:00 bash /usr/share/docassemble/webapp/run-celery.sh
- 2348 ?        S      0:01 /usr/share/docassemble/local/bin/python /usr/share/docassemble/local/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
- 2355 ?        S      0:00 /usr/share/docassemble/local/bin/python /usr/share/docassemble/local/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
- 2356 ?        S      0:00 /usr/share/docassemble/local/bin/python /usr/share/docassemble/local/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
- 2357 ?        S      0:00 /usr/share/docassemble/local/bin/python /usr/share/docassemble/local/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
- 2358 ?        S      0:00 /usr/share/docassemble/local/bin/python /usr/share/docassemble/local/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
+ 1288 ?        S      0:00 bash /usr/share/docassemble/webapp/run-celery.sh
+ 1295 ?        S      0:11 /usr/share/docassemble/local3.6/bin/python3.6 /usr/share/docassemble/local3.6/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
+ 1349 ?        S      0:00 /usr/share/docassemble/local3.6/bin/python3.6 /usr/share/docassemble/local3.6/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
 {% endhighlight %}
 
 The [web sockets] background process looks like this:
 
 {% highlight text %}
- 2377 ?        S      0:00 bash /usr/share/docassemble/webapp/run-websockets.sh
- 2378 ?        S      0:00 su -c source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.socketserver www-data
- 2382 ?        Ss     0:00 bash -c source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.socketserver
- 2387 ?        S      0:00 python -m docassemble.webapp.socketserver
+ 1384 ?        S      0:00 bash /usr/share/docassemble/webapp/run-websockets.sh
+ 1391 ?        S      0:06 python -u -m docassemble.webapp.socketserver
 {% endhighlight %}
 
 Note that the **docassemble** web application may appear to be
@@ -1353,18 +1382,12 @@ of these services are running.
 
 If you need to run [Python] commands like [pip] in order to fix
 problems, you need to run `su www-data` so that you are running as the
-same user as [Apache].  In addition, you need to let the shell know
+same user as [NGINX].  In addition, you need to let the shell know
 about the virtual environment.  You can do this by running the
 following before you run any [Python] commands:
 
 {% highlight bash %}
-source /usr/share/docassemble/local/bin/activate
-{% endhighlight %}
-
-Or, if you are using [Python] 3.5, the command is:
-
-{% highlight bash %}
-source /usr/share/docassemble/local3.5/bin/activate
+source /usr/share/docassemble/local3.6/bin/activate
 {% endhighlight %}
 
 If you encounter any errors, please register an "issue" on the
@@ -1385,10 +1408,9 @@ appears to be harmless and may be fixed soon.
 # <a name="backends"></a>Using different web servers and/or SQL database backends
 
 **docassemble** needs a web server and a SQL server, but it is not
-  dependent on [Apache] or [PostgreSQL].
-
-Other web servers that can host Python [WSGI] applications (e.g.,
-[nginx] with [uWSGI]) could be used.
+dependent on [NGINX] or [PostgreSQL].  If you would rather use
+[Apache], you can install Apache and edit your
+`/etc/supervisor/supervisord.conf` file to add `DAWEBSERVER="apache"`.
 
 **docassemble** uses [SQLAlchemy] to communicate with the SQL back
 end, so you can edit the [configuration] to point to another type of
@@ -1396,12 +1418,6 @@ database system, if supported by [SQLAlchemy].  **docassemble** does
 not do fancy things with SQL, so most backends should work without a
 problem.  Any backend that you use must support column definitions
 with `server_default=db.func.now()`.
-
-One reason you might want to stay with [PostgreSQL], however, is that
-**docassemble** has utilities for automatically updating database
-columns if a new version of **docassemble** requires changes to
-columns in existing database tables.  If you use a non-[PostgreSQL]
-database, you will need to make these changes manually.
 
 # <a name="othermachines"></a>Running services on different machines
 
@@ -1438,7 +1454,7 @@ directory.)
 cd docassemble
 git pull
 sudo su www-data
-source /usr/share/docassemble/local/bin/activate
+source /usr/share/docassemble/local3.6/bin/activate
 pip install --upgrade \
 ./docassemble \
 ./docassemble_base \
@@ -1448,7 +1464,6 @@ cp ./docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 cp ./Docker/config/* /usr/share/docassemble/config/
 cp ./Docker/*.sh /usr/share/docassemble/webapp/
 cp ./Docker/VERSION /usr/share/docassemble/webapp/
-python -m docassemble.webapp.fix_postgresql_tables
 python -m docassemble.webapp.create_tables
 exit
 {% endhighlight %}
@@ -1458,7 +1473,7 @@ following first:
 
 {% highlight bash %}
 sudo su www-data
-source /usr/share/docassemble/local/bin/activate
+source /usr/share/docassemble/local3.6/bin/activate
 pip uninstall docassemble
 pip uninstall docassemble.base
 pip uninstall docassemble.demo
@@ -1471,7 +1486,7 @@ tables or additional columns in tables.  The
 necessary modifications to the tables.
 
 {% highlight bash %}
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.6/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
 If you get an error in your logs about a missing column and running
@@ -1483,7 +1498,7 @@ You can delete and recreate your database by running the following commands as r
 
 {% highlight bash %}
 echo "drop database docassemble; create database docassemble owner docassemble;" | sudo -u postgres psql
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.6/bin/activate && python -m docassemble.webapp.create_tables"
 rm -rf /usr/share/docassemble/files/0*
 {% endhighlight %}
 
@@ -1543,7 +1558,6 @@ All of these system administration headaches can be avoided by
 [headers]: http://httpd.apache.org/docs/current/mod/mod_headers.html
 [proxy_wstunnel]: https://httpd.apache.org/docs/current/mod/mod_proxy_wstunnel.html
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
-[nginx]: https://www.nginx.com/
 [uWSGI]: http://uwsgi-docs.readthedocs.org/en/latest/index.html
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [PostgreSQL]: http://www.postgresql.org/
@@ -1652,3 +1666,6 @@ All of these system administration headaches can be avoided by
 [will not be maintained]: https://www.python.org/dev/peps/pep-0373/
 [mod_wsgi]: https://modwsgi.readthedocs.io/en/develop/
 [mod_php]: https://wiki.apache.org/httpd/php
+[mermaid]: https://github.com/mermaidjs/mermaid.cli
+[NGINX]: https://www.nginx.com/
+[Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
