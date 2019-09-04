@@ -662,7 +662,7 @@ Feature: Example interviews
   Scenario: Test the interview "Difference between dates"
     Given I start the interview "docassemble.base:data/questions/examples/date-difference.yml"
     Then I should see the phrase "The length of time between my birthday and Christmas can be described several ways."
-    And I should see the phrase "222.0 days"
+    And I should see the phrase "222"
 
   Scenario: Test the interview "Date"
     Given I start the interview "docassemble.base:data/questions/examples/date-field.yml"

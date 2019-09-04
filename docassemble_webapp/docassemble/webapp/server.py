@@ -961,7 +961,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit label', 'main page exit link', 'main page resume button label'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -1564,7 +1564,10 @@ def proc_example_list(example_list, package, directory, examples):
                             the_block = ruamel.yaml.safe_load(block)
                             if type(the_block) is dict and 'metadata' in the_block:
                                 the_metadata = the_block['metadata']
-                                result['title'] = the_metadata.get('title', the_metadata.get('short title', word('Untitled'))).rstrip()
+                                result['title'] = the_metadata.get('title', the_metadata.get('short title', word('Untitled')))
+                                if isinstance(result['title'], dict):
+                                    result['title'] = result['title'].get('en', word('Untitled'))
+                                result['title'] = result['title'].rstrip()
                                 result['documentation'] = the_metadata.get('documentation', None)
                                 start_block = int(the_metadata.get('example start', 1))
                                 end_block = int(the_metadata.get('example end', start_block)) + 1
@@ -2424,10 +2427,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
         if custom_menu:
             navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide standard menu', False):
-                navbar += '<a class="dropdown-item" href="' + url_for(status.exit_link) + '">' + status.exit_label + '</a>'
+                navbar += '<a class="dropdown-item" href="' + exit_href(status) + '">' + status.exit_label + '</a>'
             navbar += '</div></li>'
         else:
-            navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for(status.exit_link) + '">' + status.exit_label + '</a></li>'
+            navbar += '            <li class="nav-item"><a class="nav-link" href="' + exit_href(status) + '">' + status.exit_label + '</a></li>'
     navbar += """
           </ul>
         </div>
@@ -2435,6 +2438,17 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     </div>
 """
     return(navbar)
+
+def exit_href(status):
+    exit_link = status.exit_link
+    if exit_link == 'logout':
+        if docassemble.base.functions.this_thread.current_info['user']['is_authenticated']:
+            exit_link = 'user.logout'
+        else:
+            exit_link = 'leave'
+    if status.exit_url:
+        return url_for(exit_link, next=status.exit_url)
+    return url_for(exit_link)
 
 def delete_session_for_interview():
     for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
@@ -5134,7 +5148,7 @@ def rootindex():
     return redirect(url_for('index', **the_args))
 
 def title_converter(content, part, status):
-    if part == 'exit link':
+    if part in ('exit link', 'exit url'):
         return content
     if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo'):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
@@ -6745,6 +6759,7 @@ def index(action_argument=None):
     #    next_action_review = None
     if not changed and url_args_changed:
         changed = True
+    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "restart":
         manual_checkout()
@@ -6772,7 +6787,7 @@ def index(action_argument=None):
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json, js_target)
+            response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout()
@@ -6785,7 +6800,7 @@ def index(action_argument=None):
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            response = do_redirect(exit_page, is_ajax, is_json, js_target)
+            response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if current_user.is_authenticated:
             flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
@@ -6829,7 +6844,7 @@ def index(action_argument=None):
         if interview_status.questionText != '':
             return do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            return do_redirect(exit_page, is_ajax, is_json, js_target)
+            return do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
@@ -9821,6 +9836,7 @@ def index(action_argument=None):
     else:
         interview_language = DEFAULT_LANGUAGE
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
+    interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))
     interview_status.title = title_info.get('full', default_title)
@@ -20999,6 +21015,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     else:
         interview_language = DEFAULT_LANGUAGE
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', 'Exit')
     interview_status.title = title_info.get('full', default_title)
@@ -21017,7 +21034,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         allow_going_back = True
     else:
         allow_going_back = False
-    data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
+    data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_url=interview_status.exit_url, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
     data.update(interview_status.as_data(user_dict, encode=False))
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
