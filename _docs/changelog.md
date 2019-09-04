@@ -4,7 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.5.2](https://github.com/jhpyle/docassemble/releases/tag/v0.5.2) - 2019-09-02
+## [0.5.3](https://github.com/jhpyle/docassemble/releases/tag/v0.5.3) - 2019-09-04
+
+### Added
+- The `exit url` specifier under `metadata`.
+
+## [0.5.2](https://github.com/jhpyle/docassemble/releases/tag/v0.5.2) - 2019-09-03
 
 ### Fixed
 - S3 error.

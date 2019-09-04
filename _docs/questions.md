@@ -172,10 +172,12 @@ The original URL parameters are not used.
 
 <a name="exit"></a>`exit` means that the user's variable store will be
 erased and the user will be redirected either to the URL given by the
-associated `url` text, or if no `url` is defined, to the `exit` page
-defined in the [configuration].  If the user tries to come back to the
-interview again, he will start the interview again, as though it had
-never been started.  Original URL parameters will be lost.
+associated `url` text, or if no `url` is defined, to the [`exit url`]
+defined in the [`metadata`], or if that does not defined, then to the
+[`exitpage`] defined in the [configuration].  If the user tries to
+come back to the interview again, he will start the interview again,
+as though it had never been started.  Original URL parameters will be
+lost.
 
 For example:
 
@@ -185,8 +187,8 @@ For example:
 
 <a name="logout"></a>`logout` logs the user out, if the user is logged in.
 
-<a name="exit_logout"></a>`exit_logout` does the same thing as `exit`, except
-that it also logs the user out, if the user is logged in.
+<a name="exit_logout"></a>`exit_logout` does the same thing as `exit`,
+except that it also logs the user out, if the user is logged in.
 
 <a name="leave"></a>`leave` works like `exit` except that the user's
 variable store will be left intact.  This means that if the user comes
@@ -205,8 +207,8 @@ screen does not set any variable, but the user can click the button to
 
 While using `continue` can be useful sometimes, it is generally not a
 good idea to structure interviews around `question`s that use
-`continue`.  These `question`s cannot use the [`generic object` modifier] or
-[index variables].
+`continue`.  These `question`s cannot use the [`generic object`
+modifier] or [index variables].
 
 <a name="refresh"></a>`refresh` re-runs the [interview logic].  It has
 much the same effect as refreshing the page in the browser.  It is
@@ -455,3 +457,5 @@ For more information about each method, see its documentation.
 [checkboxes]: {{ site.baseurl }}/docs/fields.html#fields checkboxes
 [`generic object` modifier]: {{ site.baseurl }}/docs/fields.html#generic
 [index variables]: {{ site.baseurl }}/docs/fields.html#index variables
+[`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
+[`exit url`]: {{ site.baseurl }}/docs/initial.html#exit url
