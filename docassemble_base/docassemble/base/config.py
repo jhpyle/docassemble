@@ -90,6 +90,13 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if 'maximum content length' in daconfig:
+        if isinstance(daconfig['maximum content length'], (int, type(None))):
+            if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
+                daconfig['maximum content length'] = None
+        else:
+            sys.stderr.write("The maximum content length must be an integer number of bytes, or null.\n")
+            del daconfig['maximum content length']
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
         for item in daconfig['administrative interviews']:

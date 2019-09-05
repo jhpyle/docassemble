@@ -14774,7 +14774,7 @@ def playground_office_taskpane():
     #if defaultDaServer is None:
     #    defaultDaServer = request.url_root
     #defaultDaServer += daconfig.get('root', '/')
-    defaultDAServer = url_for('rootindex', _external=True)
+    defaultDaServer = url_for('rootindex', _external=True)
     return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
 
 @app.route('/officeaddin', methods=['GET', 'POST'])

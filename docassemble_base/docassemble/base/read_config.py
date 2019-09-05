@@ -36,6 +36,14 @@ if __name__ == "__main__":
             for locale in map(lambda x: x.strip(), separator.split(other_locales_variable)):
                 print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
                 indexno += 1
+    max_content_length = daconfig.get('maximum content length', 16 * 1024 * 1024)
+    if isinstance(max_content_length, (int, type(None))):
+        if max_content_length is None or max_content_length <= 0:
+            print('DAMAXCONTENTLENGTH=0')
+        else:
+            print('DAMAXCONTENTLENGTH=' + text_type(max_content_length))
+    else:
+        print('DAMAXCONTENTLENGTH=' + text_type(16 * 1024 * 1024))
     if 'debian packages' in daconfig and type(daconfig['debian packages']) is list:
         print('declare -a PACKAGES')
         print('export PACKAGES')

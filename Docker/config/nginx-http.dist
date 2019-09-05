@@ -2,6 +2,7 @@ server {
     listen 80;
     server_tokens off;
     server_name {{DAHOSTNAME}};
+    client_max_body_size {{DAMAXCONTENTLENGTH}};
     {{DAREALIP}}
     location / {
         include uwsgi_params;

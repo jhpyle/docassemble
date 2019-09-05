@@ -559,6 +559,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             if [ ! -f /etc/nginx/sites-available/docassemblessl ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+                    -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
                     -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
@@ -569,6 +570,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+                    -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
                     "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
@@ -576,6 +578,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             fi
             if [ ! -f /etc/nginx/sites-available/docassemblelog ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     "${DA_ROOT}/config/nginx-log.dist" > "/etc/nginx/sites-available/docassemblelog"
             fi
             if [ ! -f /etc/nginx/sites-available/docassembleredirect ]; then
@@ -590,6 +593,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
+                    -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
                     "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"

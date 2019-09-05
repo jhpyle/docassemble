@@ -2,6 +2,7 @@ server {
     listen 8080;
     server_tokens off;
     server_name {{DAHOSTNAME}};
+    client_max_body_size {{DAMAXCONTENTLENGTH}};
 
     location / {
         root /var/www/html/log;
