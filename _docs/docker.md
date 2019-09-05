@@ -628,7 +628,8 @@ to server).
   * `web`: The [Docker] container will serve as a web server.
   * `celery`: The [Docker] container will serve as a [Celery] node.
   * `sql`: The [Docker] container will run the central [PostgreSQL] service.
-  * `cron`: The [Docker] container will run [scheduled tasks]. 
+  * `cron`: The [Docker] container will run [scheduled tasks] and
+    other necessary tasks, such as updating SQL tables. 
   * `redis`: The [Docker] container will run the central [Redis] service.
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
@@ -1660,7 +1661,7 @@ any applications other than **docassemble** using Docker, it is
 recommended that you perform a system upgrade by running:
 
 {% highlight bash %}
-docker stop -t60 $(docker ps -a -q)
+docker stop -t 600 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
 docker pull jhpyle/docassemble-os
 docker pull jhpyle/docassemble
@@ -1740,7 +1741,7 @@ containers, and then remove all of the images that [Docker] created
 during the build process.
 
 {% highlight bash %}
-docker stop -t60 $(docker ps -a -q)
+docker stop -t 600 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
 docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 {% endhighlight %}

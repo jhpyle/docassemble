@@ -1695,8 +1695,17 @@ HTTP request larger than 16 megabytes.  This limit can be extended by
 setting `maximum content length` to a different number of bytes.
 
 {% highlight yaml %}
-maximum content length: 25165824
+maximum content length: 26214400
 {% endhighlight %}
+
+This sets the limit to 25 megabytes.
+
+To have no limit, set `maximum content length` to `None`.
+
+If you are using [Docker] and [NGINX], then after changing this value,
+you will need to do a complete restart of the system for the change to
+take effect.  (That is, `docker stop -t 600 <container ID>` followed
+by `docker start <container ID>`.)
 
 ## <a name="png resolution"></a><a name="png screen resolution"></a>Image conversion resolution
 
@@ -2760,7 +2769,7 @@ variable when the [`docker run`] command is run for the first time.
 
 If you change `external hostname`, you need to do a complete restart
 of the system for the change to take effect.  (That is, `docker
-stop -t60 <container ID>` followed by `docker start <container ID>`.)
+stop -t 600 <container ID>` followed by `docker start <container ID>`.)
 
 ## <a name="behind https load balancer"></a>When behind a proxy
 
@@ -2776,7 +2785,7 @@ This variable is typically set using the [Docker] environment variable
 
 If you change this variable, you need to do a complete restart of the
 system for the change to take effect.  (That is, 
-`docker stop -t60 <container ID>` followed by `docker start <container ID>`.)
+`docker stop -t 600 <container ID>` followed by `docker start <container ID>`.)
 
 ## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
 
@@ -2796,7 +2805,7 @@ These variables are typically set through the environment variables
 [`docker run`] command is run for the first time.  You can change the
 `use https`, `use lets encrypt`, and `lets encrypt email` variables on
 a running server, but they will only be effective if you restart the
-system using `docker stop -t60 <container ID>` followed by 
+system using `docker stop -t 600 <container ID>` followed by 
 `docker start <container ID>`.
 
 ## <a name="cross site domains"></a>Cross-Origin Resource Sharing (CORS)

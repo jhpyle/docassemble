@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.4](https://github.com/jhpyle/docassemble/releases/tag/v0.5.4) - 2019-09-05
+
+### Fixed
+- The `maximum content length` was being superseded by a NGINX content
+  length limiter.
+- Word add-in bug.
+
 ## [0.5.3](https://github.com/jhpyle/docassemble/releases/tag/v0.5.3) - 2019-09-04
 
 ### Added
