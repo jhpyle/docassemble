@@ -2254,7 +2254,11 @@ class Question:
             column = list()
             read_only = dict(edit=True, delete=True)
             is_editable = False
-            is_reorderable = False
+            require_gathered = True
+            if 'require gathered' in data and data['require gathered'] is False:
+                require_gathered = False
+            else:
+                require_gathered = True
             for col in data['columns']:
                 if not isinstance(col, dict):
                     raise DAError("The column items in a table definition must be dictionaries." + self.idebug(data))
@@ -2337,7 +2341,7 @@ class Question:
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
                 empty_message = TextObject(definitions + text_type(empty_message), question=self)
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, is_reorderable=is_reorderable)}
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, require_gathered=require_gathered)}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -5995,7 +5999,7 @@ class Interview:
                         table_info = TableInfo()
                         table_info.header = question.fields[0].extras['header']
                         table_info.is_editable = question.fields[0].extras['is_editable']
-                        table_info.is_reorderable = question.fields[0].extras['is_reorderable']
+                        table_info.require_gathered = question.fields[0].extras['require_gathered']
                         table_info.row = question.fields[0].extras['row']
                         table_info.column = question.fields[0].extras['column']
                         table_info.indent = " " * (4 * int(question.fields[0].extras['indent']))

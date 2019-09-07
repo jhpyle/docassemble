@@ -350,7 +350,7 @@ input.labelauty[disabled] + label
   pointer-events: none;
 }
 .slider .tooltip.top {
-  margin-top: -36px;
+  margin-top: -28px;
 }
 .slider .tooltip-inner {
   white-space: nowrap;

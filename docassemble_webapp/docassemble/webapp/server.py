@@ -831,11 +831,42 @@ import pandas
 import importlib
 modules_to_import = daconfig.get('preloaded modules', None)
 if isinstance(modules_to_import, list):
-    for module_name in daconfig['preloaded modules'] + ['docassemble.base.legal']:
+    for module_name in daconfig['preloaded modules']:
         try:
             importlib.import_module(module_name)
         except:
             pass
+
+def import_necessary():
+    start_dir = len(FULL_PACKAGE_DIRECTORY.split(os.sep))
+    avoid_dirs = [os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'base'),
+                  os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'demo'),
+                  os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'webapp')]
+    modules = ['docassemble.base.legal']
+    for root, dirs, files in os.walk(os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble')):
+        ok = True
+        for avoid in avoid_dirs:
+            if root.startswith(avoid):
+                ok = False
+                break
+        if not ok:
+            continue
+        for the_file in files:
+            if not the_file.endswith('.py'):
+                continue
+            thefilename = os.path.join(root, the_file)
+            with open(thefilename, 'r', encoding='utf-8') as fp:
+                for cnt, line in enumerate(fp):
+                    if line.startswith('class'):
+                        parts = thefilename.split(os.sep)[start_dir:]
+                        parts[-1] = parts[-1][0:-3]
+                        modules.append(('.'.join(parts)))
+                        break
+    for module_name in modules:
+        try:
+            importlib.import_module(module_name)
+        except Exception as err:
+            sys.stderr.write("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + text_type(err) + "\n")
 
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
@@ -869,7 +900,7 @@ if 'twilio' in daconfig:
             if 'name' in tconfig:
                 twilio_config['name'][tconfig['name']] = tconfig
         else:
-            logmessage("improper setup in twilio configuration")
+            sys.stderr.write("improper setup in twilio configuration\n")
     if 'default' not in twilio_config['name']:
         twilio_config = None
 else:
@@ -5145,6 +5176,8 @@ def rootindex():
         the_args[key] = val
     if yaml_parameter is None and yaml_filename is not None:
         the_args['i'] = yaml_filename
+    if yaml_parameter is not None:
+        the_args['i'] = yaml_parameter
     return redirect(url_for('index', **the_args))
 
 def title_converter(content, part, status):
@@ -5308,7 +5341,7 @@ def index(action_argument=None):
             show_flash = False
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             session['i'] = yaml_filename
-            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
+            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview and old_yaml_filename != yaml_filename:
                 show_flash = True
             if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
                 show_flash = False
@@ -6688,14 +6721,20 @@ def index(action_argument=None):
                                     if 'arguments' in interview_status.current_info:
                                         del interview_status.current_info['arguments']
                                 break
+            for var_name in list(vars_set):
+                vars_set.add(sub_indices(var_name, user_dict))
             #logmessage("vars_set was " + repr(vars_set))
             if len(vars_set) and 'event_stack' in user_dict['_internal']:
                 session_uid = interview_status.current_info['user']['session_uid']
-                if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
-                    for var_name in vars_set:
-                        if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
-                            #logmessage("popped based on vars_set!")
-                            user_dict['_internal']['event_stack'][session_uid].pop(0)
+                popped = True
+                while popped:
+                    popped = False
+                    if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+                        for var_name in vars_set:
+                            if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
+                                #logmessage("popped " + var_name)
+                                popped = True
+                                user_dict['_internal']['event_stack'][session_uid].pop(0)
             #logmessage("finish: event_stack is " + repr(user_dict['_internal']['event_stack']))
         else:
             #sys.stderr.write("index: calling fetch_user_dict3\n")
@@ -22672,6 +22711,7 @@ with app.app_context():
         copy_playground_modules()
         write_pypirc()
         release_lock('init', 'init')
+    import_necessary()
 
 if __name__ == "__main__":
     app.run()

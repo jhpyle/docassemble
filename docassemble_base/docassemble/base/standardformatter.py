@@ -927,7 +927,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             elif hasattr(field, 'choicetype'):
                 if field.datatype in ['checkboxes', 'object_checkboxes']:
                     field_class += ' da-field-container-inputtype-checkboxes'
-                elif field.datatype == 'object_radio':
+                elif field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                     field_class += ' da-field-container-inputtype-radio'
                 else:
                     field_class += ' da-field-container-inputtype-dropdown'
@@ -1030,7 +1030,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                                 formatted_item = markdown_to_html(text_type(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
                         validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word(u"Check at least one option, or check “%s”"), parameters=tuple([formatted_item])))
                     validation_rules['ignore'] = None
-                if field.datatype == 'object_radio':
+                if field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                     validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
@@ -1955,7 +1955,7 @@ def input_for(status, field, wide=False, embedded=False):
             if field.datatype in ['object_checkboxes']:
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
-            if field.datatype == 'object_radio':
+            if field.datatype in ('object_radio', 'object'):
                 daobject = ' daobject'
             else:
                 daobject = ''
@@ -1975,7 +1975,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object_radio' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
                         ischecked = ' checked="checked"'
                         default_selected = True
                     else:
@@ -2008,7 +2008,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object_radio' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (string_types, int, bool, float)) and defaultvalue_is_printable and text_type(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
                             ischecked = ' checked="checked"'
                             default_selected = True
                         else:

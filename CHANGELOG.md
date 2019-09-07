@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.5.5] - 2019-09-07
+### Added
+- The `require gathered` specifier for tables.
+### Changed
+- Running `.pop()` on a `DAList` no longer triggers list gathering.
+- Every module file installed in the `docassemble` namespace that
+  contains a class definition will be loaded when the server starts or
+  restarts.
+### Fixed
+- Erroneous message about starting new interview was appearing on
+  restart.
+- Default values not appearing for some `datatype: object` fields.
+- Unpickle errors when modules that contain classes are not loaded.
+- Tooltips not showing up on sliders.
+
 ## [0.5.4] - 2019-09-05
 ### Fixed
 - The `maximum content length` was being superseded by a NGINX content

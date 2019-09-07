@@ -913,7 +913,7 @@ class DAList(DAObject):
         return False
     def pop(self, *pargs):
         """Remove an item the list and return it."""
-        self._trigger_gather()
+        #self._trigger_gather()
         result = self.elements.pop(*pargs)
         self._reset_instance_names()
         return result
@@ -3480,8 +3480,11 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     the_iterable = eval(table_info.row, user_dict_copy)
     if not isinstance(the_iterable, (list, dict, DAList, DADict)):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
-    if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
-        the_iterable = the_iterable.complete_elements()
+    if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
+        if not table_info.require_gathered:
+            the_iterable = the_iterable.elements
+        elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+            the_iterable = the_iterable.complete_elements()
     contents = list()
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
         if isinstance(the_iterable, (OrderedDict, DAOrderedDict)):
@@ -3678,8 +3681,11 @@ class DALazyTableTemplate(DALazyTemplate):
         the_iterable = eval(self.table_info.row, user_dict_copy)
         if not isinstance(the_iterable, (list, dict, DAList, DADict)):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
-        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)) and docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
-            the_iterable = the_iterable.complete_elements()
+        if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
+            if not self.table_info.require_gathered:
+                the_iterable = the_iterable.elements
+            elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+                the_iterable = the_iterable.complete_elements()
         contents = list()
         if hasattr(the_iterable, 'items') and callable(the_iterable.items):
             for key in sorted(the_iterable):
