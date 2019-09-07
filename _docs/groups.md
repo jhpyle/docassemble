@@ -1369,6 +1369,13 @@ the "Edit" button will not be shown.  If the value of the key
 
 {% include side-by-side.html demo="table-read-only-2" %}
 
+<a name="require gathered"></a>Typically, the creation of a table
+requires the gathering process to be completed.  However, if the
+gathering process is already ongoing, then the table will still be
+created, and it will only contain items that are "complete."  If you
+do not want the table to trigger the gathering process, set `require
+gathered: False`.
+
 <a name="editable"></a>If you have a `table` definition that includes
 editable elements (i.e. `edit`, `delete buttons`), but you want to
 present the table with the editing features in some contexts, but
