@@ -1612,6 +1612,8 @@ class Value(DAObject):
         return self.value == (other.value if isinstance(other, Value) else other)
     def __ne__(self, other):
         return self.value != (other.value if isinstance(other, Value) else other)
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
