@@ -89,8 +89,8 @@ and will set `over_eighteen` to `True` if "Yes" is pressed, and
 {% include side-by-side.html demo="noyes" %}
 
 Note that yes/no fields can also be gathered on a screen along with
-other fields; to make screens like that, use [`fields`](#fields
-yesnoradio) below.
+other fields; to make screens like that, use
+[`fields`](#fields yesnoradio) below.
 
 ### <a name="yesnomaybe"></a><a name="noyesmaybe"></a>`yesnomaybe` or `noyesmaybe`
 
@@ -235,9 +235,10 @@ images.
 In these examples, `calendar` and `map` are the names of decorations
 that are defined in an [`images`] or [`image sets`] block.
 
-If you create the list of choices with [`code`](#code generated
-buttons), you can specify an image by including an additional
-key/value pair within an item, where the key is `image`.
+If you create the list of choices with
+[`code`](#code generated buttons), you can specify an image by
+including an additional key/value pair within an item, where the key
+is `image`.
 
 {% include side-by-side.html demo="buttons-icons-code" %}
 
@@ -565,9 +566,9 @@ custom [accept] attribute.
 <a name="maximum image size"></a>If your users upload digital photos
 into your interviews, the uploads may take a long time.  You can
 configure an upload field so that images are reduced in size before
-they are uploaded by modifying your field definition with a 
-`maximum image size`.  The image will be reduced in size so that is 
-no taller than or wider than the number of pixels designated by 
+they are uploaded by modifying your field definition with a
+`maximum image size`.  The image will be reduced in size so that is
+no taller than or wider than the number of pixels designated by
 `maximum image size`.
 
 In this example, images will be reduced in size to no more than 100
@@ -579,7 +580,7 @@ Note that the image file type of the uploaded file may be changed to
 [PNG] during the conversion process.  Different browsers behave
 differently.
 
-If you have a lot of document upload fields, you can set a default 
+If you have a lot of document upload fields, you can set a default
 `maximum image size` on an interview-wide basis with the
 [`maximum image size` interview feature] and on a site-wide basis with
 the [`maximum image size` configuration directive].  If you have a
@@ -912,8 +913,8 @@ item under [`fields`].
 ## <a name="datatype"></a>`datatype`
 
 `datatype` affects how the data will be collected, validated and
-stored.  For a full explanation of how this is used, see [above](#data
-types).
+stored.  For a full explanation of how this is used, see
+[above](#data types).
 
 ## <a name="inputtype"></a>`input type`
 
@@ -1083,7 +1084,7 @@ default a "None of the above" choice is added.
 
 {% include side-by-side.html demo="fields-checkboxes-nota" %}
 
-You can turn off the "None of the above" choice by setting the 
+You can turn off the "None of the above" choice by setting the
 `none of the above` option to `False`.
 
 {% include side-by-side.html demo="fields-checkboxes-nota-false" %}
@@ -1707,7 +1708,7 @@ fields:
 code: |
   field_list = list()
   for key in fruit:
-    field_list.append({"label": "Seeds of a " + key, 
+    field_list.append({"label": "Seeds of a " + key,
                        "field": "fruit[" + repr(key) + "].seeds"})
 {% endhighlight %}
 
@@ -1857,7 +1858,7 @@ For more information about populating groups of things, see the
 [groups section].
 
 For more information about how **docassemble** identifies what
-question to ask in order to define a given variable, see the 
+question to ask in order to define a given variable, see the
 [interview logic]({{ site.baseurl }}/docs/logic.html#variablesearching)
 section.
 

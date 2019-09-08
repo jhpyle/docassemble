@@ -6117,8 +6117,10 @@ screen, using the standard [Bootstrap] notification style.
 
 {% include side-by-side.html demo="flash" %}
 
-The first parameter is the message itself, and the second parameter is
-the optional priority.
+The first parameter is the message itself, the second parameter is the
+optional priority, and the third parameter is an optional true/false
+value indicating whether the existing messages should be removed
+before the new message is displayed.
 
 The available priorities are:
 
@@ -6136,6 +6138,12 @@ The available priorities are:
 </div>
 
 If no priority is supplied, `'info'` is used.
+
+The `success` message is special because it automatically disappears
+after three seconds.
+
+If you only want to clear the messages, you can run
+`flash(null, null, true)`.
 
 ## <a name="js_val"></a>val() JavaScript function
 

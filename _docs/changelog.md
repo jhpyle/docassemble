@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.6](https://github.com/jhpyle/docassemble/releases/tag/v0.5.6) - 2019-09-08
+
+### Added
+- Option in the JavaScript `flash()` function to clear existing
+  messages.
+
+### Fixed
+- Error when displaying the JSON form of certain `question`s.
+- Error when using `Value` objects in the `choices` of a `datatype:
+  object` field.
+
 ## [0.5.5](https://github.com/jhpyle/docassemble/releases/tag/v0.5.5) - 2019-09-07
 
 ### Added
