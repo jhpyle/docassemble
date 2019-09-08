@@ -1254,6 +1254,8 @@ It accepts the following optional keyword arguments:
 * `label` - this is the text on the button.  It passes through the
   [`word()`]  function, so you can use the translation system to
   handle different languages.
+* `classname` - set this to one or more class names (separated by a
+  space) if you want to add additional [CSS] classes to the button. 
 * `new_window` - set this to `False` if you don't want the button to
   open a new tab.  The default value is `True`, which means external
   links will open in a new tab.  If you use a value other than `True`
