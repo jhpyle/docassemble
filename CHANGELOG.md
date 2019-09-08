@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.6] - 2019-09-07
+### Fixed
+- Error when displaying the JSON form of certain `question`s.
+- Error when using `Value` objects in the `choices` of a `datatype:
+  object` field.
+
 ## [0.5.5] - 2019-09-07
 ### Added
 - The `require gathered` specifier for tables.

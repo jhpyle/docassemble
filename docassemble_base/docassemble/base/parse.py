@@ -589,7 +589,7 @@ class InterviewStatus(object):
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
             if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
-                the_field['validation_messages'].update(self.extras['validation messages'][field.number])
+                the_field['validation_messages'] = self.extras['validation messages'][field.number]
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'image_type' in self.extras and self.extras['image_type']:
@@ -725,7 +725,7 @@ class InterviewStatus(object):
                     for pair in pairlist:
                         item = dict(label=pair['label'], variable_name=saveas + "[" + repr(pair['key']) + "]", value=True)
                         if encode:
-                            item[variable_name_encoded] = safeid(saveas + "[" + repr(pair['key']) + "]")
+                            item['variable_name_encoded'] = safeid(saveas + "[" + repr(pair['key']) + "]")
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and text_type(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and text_type(pair['key']) in defaultvalue and defaultvalue[text_type(pair['key'])]) or (isinstance(defaultvalue, (string_types, int, bool, float)) and text_type(pair['key']) == text_type(defaultvalue)):
                             item['selected'] = True
                         if 'help' in pair:
