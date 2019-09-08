@@ -7295,20 +7295,25 @@ def index(action_argument=None):
           xhr.setRequestHeader("X-CSRFToken", daCsrf);
         }
       }
-      function flash(message, priority){
+      function flash(message, priority, clear){
         if (priority == null){
           priority = 'info'
         }
         if (!$("#daflash").length){
           $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
         }
-        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
-        if (priority == 'success'){
-          setTimeout(function(){
-            $("#daflash .alert-success").hide(300, function(){
-              $(this).remove();
-            });
-          }, 3000);
+        if (clear){
+          $("#daflash").empty();
+        }
+        if (message != null){
+          $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+          if (priority == 'success'){
+            setTimeout(function(){
+              $("#daflash .alert-success").hide(300, function(){
+                $(this).remove();
+              });
+            }, 3000);
+          }
         }
       }
       function url_action(action, args){
@@ -11018,20 +11023,25 @@ def observer():
       function daShowHelpTab(){
           $('#dahelptoggle').tab('show');
       }
-      function flash(message, priority){
+      function flash(message, priority, clear){
         if (priority == null){
           priority = 'info'
         }
         if (!$("#daflash").length){
           $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
         }
-        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
-        if (priority == 'success'){
-          setTimeout(function(){
-            $("#daflash .alert-success").hide(300, function(){
-              $(self).remove();
-            });
-          }, 3000);
+        if (clear){
+          $("#daflash").empty();
+        }
+        if (message != null){
+          $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+          if (priority == 'success'){
+            setTimeout(function(){
+              $("#daflash .alert-success").hide(300, function(){
+                $(this).remove();
+              });
+            }, 3000);
+          }
         }
       }
       function url_action(action, args){
