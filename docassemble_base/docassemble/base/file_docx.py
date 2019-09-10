@@ -4,7 +4,7 @@ import os
 from copy import deepcopy
 from six import string_types, text_type, PY2
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
-from docx.shared import Mm, Inches, Pt
+from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
 from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
 from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
@@ -42,6 +42,10 @@ def image_for_docx(fileref, question, tpl, width=None):
                 the_width = Pt(amount)
             elif units in ['mm', 'millimeter', 'millimeters']:
                 the_width = Mm(amount)
+            elif units in ['cm', 'centimeter', 'centimeters']:
+                the_width = Cm(amount)
+            elif units in ['twp', 'twip', 'twips']:
+                the_width = Twips(amount)
             else:
                 the_width = Pt(amount)
         else:
@@ -64,6 +68,10 @@ def transform_for_docx(text, question, tpl, width=None):
             the_width = Pt(amount)
         elif units in ['mm', 'millimeter', 'millimeters']:
             the_width = Mm(amount)
+        elif units in ['cm', 'centimeter', 'centimeters']:
+            the_width = Cm(amount)
+        elif units in ['twp', 'twip', 'twips']:
+            the_width = Twips(amount)
         else:
             the_width = Pt(amount)
         file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)

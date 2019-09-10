@@ -7317,104 +7317,107 @@ def index(action_argument=None):
         }
       }
       function url_action(action, args){
-          if (args == null){
-              args = {};
-          }
-          data = {action: action, arguments: args};
-          var url;
-          if (daJsEmbed){
-            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          else{
-            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          return url;
+        if (args == null){
+          args = {};
+        }
+        data = {action: action, arguments: args};
+        var url;
+        if (daJsEmbed){
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        else{
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        return url;
       }
-      function url_action_call(action, args, callback){
-          if (args == null){
-              args = {};
+      function action_call(action, args, callback){
+        if (args == null){
+            args = {};
+        }
+        if (callback == null){
+            callback = function(){};
+        }
+        var data = {action: action, arguments: args};
+        var url;
+        if (daJsEmbed){
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        else{
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        $.ajax({
+          type: "GET",
+          url: url,
+          success: callback,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
           }
-          if (callback == null){
-              callback = function(){};
-          }
-          var data = {action: action, arguments: args};
-          var url;
-          if (daJsEmbed){
-            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          else{
-            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          $.ajax({
-            type: "GET",
-            url: url,
-            success: callback,
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
+        });
       }
-      function url_action_perform(action, args){
-          if (args == null){
-              args = {};
-          }
-          var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-          $.ajax({
-            type: "POST",
-            url: """ + '"' + url_for('index') + '"' + """,
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, $("#daform"), 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            },
-            dataType: 'json'
-          });
+      var url_action_call = action_call;
+      function action_perform(action, args){
+        if (args == null){
+            args = {};
+        }
+        var data = {action: action, arguments: args};
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        $.ajax({
+          type: "POST",
+          url: """ + '"' + url_for('index') + '"' + """,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
+          data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"), 1);
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          },
+          dataType: 'json'
+        });
       }
-      function url_action_perform_with_next(action, args, next_data){
-          //console.log("url_action_perform_with_next: " + action + " | " + next_data)
-          if (args == null){
-              args = {};
-          }
-          var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-          $.ajax({
-            type: "POST",
-            url: """ + '"' + url_for('index') + '"' + """,
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, $("#daform"), 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            },
-            dataType: 'json'
-          });
+      var url_action_perform = action_perform;
+      function action_perform_with_next(action, args, next_data){
+        //console.log("action_perform_with_next: " + action + " | " + next_data)
+        if (args == null){
+            args = {};
+        }
+        var data = {action: action, arguments: args};
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        $.ajax({
+          type: "POST",
+          url: """ + '"' + url_for('index') + '"' + """,
+          beforeSend: addCsrfHeader,
+          xhrFields: {
+            withCredentials: true
+          },
+          data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"), 1);
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          },
+          dataType: 'json'
+        });
       }
+      var url_action_perform_with_next = action_perform_with_next;
       function get_interview_variables(callback){
         if (callback == null){
           callback = function(){};
@@ -8354,9 +8357,9 @@ def index(action_argument=None):
         return false;
       }
       function daReviewAction(e){
-        //url_action_perform_with_next($(this).data('action'), null, daNextAction);
+        //action_perform_with_next($(this).data('action'), null, daNextAction);
         var info = $.parseJSON(atob($(this).data('action')));
-        url_action_perform(info['action'], info['arguments']);
+        action_perform(info['action'], info['arguments']);
         e.preventDefault();
         return false;
       }
@@ -8823,7 +8826,7 @@ def index(action_argument=None):
           daFetchAjaxTimeout.running = true;
           daFetchAjaxTimeout.fetchAfter = false;
         }
-        url_action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
+        action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
           if (typeof data == "object"){
             var upperWordStart = wordStart.toUpperCase()
             cb.$source.empty();
@@ -9216,7 +9219,7 @@ def index(action_argument=None):
         });
         $(".danavlinks a.daclickable").click(function(e){
           var the_key = $(this).data('key');
-          url_action_perform("_da_priority_action", {action: the_key});
+          action_perform("_da_priority_action", {action: the_key});
           e.preventDefault();
           return false;
         });
@@ -11045,96 +11048,99 @@ def observer():
         }
       }
       function url_action(action, args){
-          //redo?
-          if (args == null){
-              args = {};
-          }
-          data = {action: action, arguments: args};
-          var url;
-          if (daJsEmbed){
-            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          else{
-            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          return url;
+        //redo?
+        if (args == null){
+            args = {};
+        }
+        data = {action: action, arguments: args};
+        var url;
+        if (daJsEmbed){
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        else{
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        return url;
       }
-      function url_action_call(action, args, callback){
-          //redo?
-          if (args == null){
-              args = {};
+      function action_call(action, args, callback){
+        //redo?
+        if (args == null){
+            args = {};
+        }
+        if (callback == null){
+            callback = function(){};
+        }
+        var data = {action: action, arguments: args};
+        var url;
+        if (daJsEmbed){
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        else{
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+        }
+        $.ajax({
+          type: "GET",
+          url: url,
+          success: callback,
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
           }
-          if (callback == null){
-              callback = function(){};
-          }
-          var data = {action: action, arguments: args};
-          var url;
-          if (daJsEmbed){
-            url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          else{
-            url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
-          }
-          $.ajax({
-            type: "GET",
-            url: url,
-            success: callback,
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
+        });
       }
-      function url_action_perform(action, args){
-          //redo
-          if (args == null){
-              args = {};
-          }
-          var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-          $.ajax({
-            type: "POST",
-            url: """ + '"' + url_for('index') + '"' + """,
-            data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, $("#daform"), 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            },
-            dataType: 'json'
-          });
+      var url_action_call = action_call;
+      function action_perform(action, args){
+        //redo
+        if (args == null){
+            args = {};
+        }
+        var data = {action: action, arguments: args};
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        $.ajax({
+          type: "POST",
+          url: """ + '"' + url_for('index') + '"' + """,
+          data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"), 1);
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          },
+          dataType: 'json'
+        });
       }
-      function url_action_perform_with_next(action, args, next_data){
-          //redo
-          //console.log("url_action_perform_with_next: " + action + " | " + next_data)
-          if (args == null){
-              args = {};
-          }
-          var data = {action: action, arguments: args};
-          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-          $.ajax({
-            type: "POST",
-            url: """ + '"' + url_for('index') + '"' + """,
-            data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, $("#daform"), 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            },
-            dataType: 'json'
-          });
+      var url_action_perform = action_perform;
+      function action_perform_with_next(action, args, next_data){
+        //redo
+        //console.log("action_perform_with_next: " + action + " | " + next_data)
+        if (args == null){
+            args = {};
+        }
+        var data = {action: action, arguments: args};
+        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        $.ajax({
+          type: "POST",
+          url: """ + '"' + url_for('index') + '"' + """,
+          data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"), 1);
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          },
+          dataType: 'json'
+        });
       }
+      var url_action_perform_with_next = action_perform_with_next;
       function get_interview_variables(callback){
         if (callback == null){
           callback = function(){};
@@ -13344,9 +13350,12 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
-                output += "Doing git config user.name " + json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name)) + "\n"
+                the_user_name = text_type(current_user.first_name) + " " + text_type(current_user.last_name)
+                if the_user_name == ' ':
+                    the_user_name = 'Anonymous User'
+                output += "Doing git config user.name " + json.dumps(the_user_name) + "\n"
                 try:
-                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(text_type(current_user.first_name) + " " + text_type(current_user.last_name))], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(the_user_name)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git config user.email.  " + output)
@@ -15210,6 +15219,9 @@ def playground_files():
         }, "slow");
       }
       $( document ).ready(function() {
+        setInterval(function(){
+          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
         $("#file_name").on('change', function(){
           var newFileName = $(this).val();
           if ((!daIsNew) && newFileName == currentFile){
@@ -16139,6 +16151,9 @@ def playground_packages():
         $("html, body").animate({ scrollTop: $(document).height() }, "slow");
       }
       $( document ).ready(function() {
+        setInterval(function(){
+          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
         $("#file_name").on('change', function(){
           var newFileName = $(this).val();
           if ((!isNew) && newFileName == currentFile){
@@ -17015,6 +17030,9 @@ function saveCallback(data){
 $( document ).ready(function() {
   variablesReady();
   searchReady();
+  setInterval(function(){
+    alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+  }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
   $("#playground_name").on('change', function(){
     var newFileName = $(this).val();
     if ((!isNew) && newFileName == currentFile){
@@ -18349,7 +18367,19 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     dictionary['_internal']['modtime'] = None
                     is_valid = False
             else:
-                dictionary = unpack_dictionary(interview_info.dictionary)
+                try:
+                    dictionary = unpack_dictionary(interview_info.dictionary)
+                except:
+                    if exclude_invalid:
+                        continue
+                    try:
+                        logmessage("user_interviews: unable to unpack dictionary.  " + str(the_err.__class__.__name__) + ": " + text_type(the_err))
+                    except:
+                        logmessage("user_interviews: unable to unpack dictionary.  " + str(the_err.__class__.__name__))
+                    dictionary = fresh_dictionary()
+                    dictionary['_internal']['starttime'] = None
+                    dictionary['_internal']['modtime'] = None
+                    is_valid = False
             if not isinstance(dictionary, dict):
                 logmessage("user_interviews: found a dictionary that was not a dictionary")
                 continue

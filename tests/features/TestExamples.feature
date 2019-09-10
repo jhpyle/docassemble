@@ -2643,7 +2643,7 @@ Feature: Example interviews
   #   Given I start the interview "docassemble.base:data/questions/examples/join.yml"
 
   Scenario: Test the interview "Calling actions"
-    Given I start the interview "docassemble.base:data/questions/examples/js_url_action_call.yml"
+    Given I start the interview "docassemble.base:data/questions/examples/js_action_call.yml"
     Then I should see the phrase "The pie"
     And I should not see the phrase "The pie is called apple pie."
     And I click the button "Run"

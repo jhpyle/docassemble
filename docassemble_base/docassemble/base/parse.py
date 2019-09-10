@@ -2432,14 +2432,17 @@ class Question:
                     raise DAError("A undefine directive must refer to variable names expressed as text." + self.idebug(data))
                 self.find_fields_in(the_field)
                 self.undefine.append(the_field)
-        if 'fields' in data:
-            self.question_type = 'fields'
-            if 'continue button field' in data:
+        if 'continue button field' in data:
+            if 'question' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data):
                 if not isinstance(data['continue button field'], string_types):
                     raise DAError("A continue button field must be plain text." + self.idebug(data))
                 if self.scan_for_variables:
                     self.fields_used.add(data['continue button field'])
                 self.fields_saveas = data['continue button field']
+            else:
+                raise DAError("A continue button field directive can only be used with a question that sets one or more variables." + self.idebug(data))
+        if 'fields' in data:
+            self.question_type = 'fields'
             if isinstance(data['fields'], dict):
                 data['fields'] = [data['fields']]
             if not isinstance(data['fields'], list):
@@ -2796,9 +2799,6 @@ class Question:
                     field_number += 1
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
-        else:
-            if 'continue button field' in data:
-                raise DAError("A continue button field can only be used with a fields directive." + self.idebug(data))
         if 'review' in data:
             self.question_type = 'review'
             if isinstance(data['review'], dict):

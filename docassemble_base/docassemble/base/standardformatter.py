@@ -47,6 +47,8 @@ def tracker_tag(status):
     output += '                <input type="hidden" name="_tracker" value=' + json.dumps(str(status.tracker)) + '/>\n'
     if 'track_location' in status.extras and status.extras['track_location']:
         output += '                <input type="hidden" id="da_track_location" name="_track_location" value=""/>\n'
+    if hasattr(status.question, 'fields_saveas') and not (status.question.question_type == 'fields'):
+        output += '                <input type="hidden" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">\n'
     return output
 
 def datatype_tag(datatypes):
@@ -542,6 +544,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         continue_label = word('Continue')
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
+    if hasattr(status.question, 'fields_saveas'):
+        datatypes[safeid(status.question.fields_saveas)] = "boolean"
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
         back_button = '\n                  <button type="button" class="btn btn-link ' + BUTTON_CLASS + ' daquestionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '

@@ -117,6 +117,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
             possible_filename = 'index.html'
         if re.search(r'\.', possible_filename):
             (possible_ext, possible_mimetype) = get_ext_and_mimetype(possible_filename)
+            possible_ext = re.sub(r'[^A-Za-z0-9\.].*', '', possible_ext)
             #logmessage("get_info_from_file_reference: starting with " + str(possible_ext) + " and " + str(possible_mimetype))
         else:
             possible_ext = 'txt'
