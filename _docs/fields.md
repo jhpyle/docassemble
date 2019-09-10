@@ -1457,16 +1457,13 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 ## <a name="continue button field"></a>Setting a variable with the Continue button
 
-When the user presses the Continue button on a `question` containing
-[`fields`], all of the variables listed under [`fields`] are set
-(unless they are hidden by a `show if` or similar feature).
-Sometimes, it is useful for the `question` to also set a single
-variable to `True`, much like the [simple "continue" button that sets
-a variable](#field) question does.
+Sometimes, it is useful for a `question` to set a single variable to
+`True`, along with the other variables it sets, much like the [simple
+"continue" button that sets a variable](#field) question does.
 
-If you want your [`fields`] question to set a variable to `True` when
-the user presses "Continue," add a `continue button field` line to
-the `question` indicating the variable that should be set to True.
+If you want your `question` to set a variable to `True` when the user
+presses "Continue," add a `continue button field` line to the
+`question` indicating the variable that should be set to `True`.
 
 {% include side-by-side.html demo="continue-button-field" %}
 

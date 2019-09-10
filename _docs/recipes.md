@@ -563,6 +563,36 @@ manipulating the **docassemble** front end, see the section on [custom
 front ends].  The example above works for easily for text fields, but
 other data types will require more work.
 
+# <a name="ajax"></a>Running actions with Ajax
+
+Here is an example of using [JavaScript] to run an action using [Ajax].
+
+{% include demo-side-by-side.html demo="ajax" %}
+
+The features used in this example include:
+
+* [`action_button_html()`] to insert the HTML of a button.
+* [Running Javascript at page load time] using the `daPageLoad` event.
+* Setting an [`id`] and using the [CSS custom class] that results.
+* [`flash()`] to flash a message at the top of the screen.
+* [`action_call()`] to call an action using [Ajax].
+* [`val()`] to obtain the value of a field on the screen using [JavaScript].
+* [`set_save_status()`] to prevent the interview answers from being
+  saved after an action completes.
+* [`action_argument()`] to obtain the argument that was passed to [`action_call()`].
+* [`json_response()`] to return [JSON] back to the web browser.
+
+[JSON]: https://en.wikipedia.org/wiki/JSON
+[`action_button_html()`]: {{ site.baseurl }}/docs/functions.html#action_button_html
+[`flash()`]: {{ site.baseurl }}/docs/functions.html#flash
+[`action_call()`]: {{ site.baseurl }}/docs/functions.html#js_action_call
+[`val()`]: {{ site.baseurl }}/docs/functions.html#js_val
+[`set_save_status()`]: {{ site.baseurl }}/docs/functions.html#set_save_status
+[`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
+[`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[CSS custom class]: {{ site.baseurl}}/docs/initial.html#css customization
+[Running Javascript at page load time]: {{ site.baseurl }}/docs/functions.html#js_daPageLoad
 [custom front ends]: {{ site.baseurl }}/docs/frontend.html
 [DOM]: https://en.wikipedia.org/wiki/Document_Object_Model
 [`encode_name()`]: {{ site.baseurl }}/docs/functions.html#encode_name

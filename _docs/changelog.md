@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.7](https://github.com/jhpyle/docassemble/releases/tag/v0.5.7) - 2019-09-10
+
+### Changed
+- The `url_action_perform()` and `url_action_call()` JavaScript
+  functions are renamed to `action_perform()` and `action_call()`.
+  Aliases are in place for backwards-compatibility.
+- Widths of images inserted into DOCX files now support centimeters
+  and twips as units.
+- The `continue button field` can now be used with other types of
+  `question`s that set variables, rather than just `fields`.
+
+### Fixed
+- Unpickling errors in `user_interviews()` not trapped.
+
 ## [0.5.6](https://github.com/jhpyle/docassemble/releases/tag/v0.5.6) - 2019-09-08
 
 ### Added

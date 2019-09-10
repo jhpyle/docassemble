@@ -6184,9 +6184,9 @@ action (to be read with [`action_argument()`]).
 
 {% include side-by-side.html demo="js_url_action" %}
 
-## <a name="js_url_action_perform"></a>url_action_perform() JavaScript function
+## <a name="js_url_action_perform"></a><a name="js_action_perform"></a>action_perform() JavaScript function
 
-The `url_action_perform()` function is like
+The `action_perform()` function is like
 [`url_action()`](#js_url_action), except that instead of returning a
 URL that would run the action if accessed, it actually causes the
 user's web browser to run the action.
@@ -6199,9 +6199,9 @@ The [JavaScript] function takes two arguments:
    interview, you can use the [`action_argument()`] function to read
    these values.
 
-## <a name="js_url_action_call"></a>url_action_call() JavaScript function
+## <a name="js_url_action_call"></a><a name="js_action_call"></a>action_call() JavaScript function
 
-The `url_action_call()` function is like
+The `action_call()` function is like
 [`url_action()`](#js_url_action), except it makes an [Ajax] call to
 the URL and runs a callback function when the server responds to the
 request.  In combination with [`json_response()`], this can allow you
@@ -6218,7 +6218,7 @@ The [JavaScript] function takes three arguments:
    This function takes a single argument (`data` in this example),
    which is the return value of `json_response()`.
 
-{% include side-by-side.html demo="js_url_action_call" %}
+{% include side-by-side.html demo="js_action_call" %}
 
 This example takes advantage of the [CSS] classes `btn` and
 `btn-primary` that are available in [Bootstrap].  See the
