@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.9](https://github.com/jhpyle/docassemble/releases/tag/v0.5.9) - 2019-09-12
+
+### Fixed
+- `NoneType` error when using `data` with `use objects`.
+- Error when non-base64 dictionary keys happened to be valid base64.
+
 ## [0.5.8](https://github.com/jhpyle/docassemble/releases/tag/v0.5.8) - 2019-09-11
 
 ### Added
