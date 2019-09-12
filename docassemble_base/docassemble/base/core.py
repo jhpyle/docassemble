@@ -249,6 +249,11 @@ class DAObject(object):
         self.instanceName = get_unique_name()
         self.has_nonrandom_instance_name = False
         return self
+    def delattr(self, *pargs):
+        """Deletes attributes."""
+        for attr in pargs:
+            if hasattr(self, attr):
+                delattr(self, attr)
     def is_peer_relation(self, target, relationship_type, tree):
         for item in tree.query_peer(tree._and(involves=[self, target], relationship_type=relationship_type)):
             return True

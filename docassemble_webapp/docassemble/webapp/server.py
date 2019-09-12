@@ -5727,15 +5727,17 @@ def index(action_argument=None):
     vars_set = set()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
+    error_messages = list()
     if should_assemble or something_changed:
         #logmessage("index: assemble 1")
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + text_type(post_data['_question_name']) + " versus " + text_type(interview_status.question.name))
             if not daconfig.get('allow non-idempotent questions', True):
-                raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
+                error_messages.append(("success", word("Input not processed because the question changed.  Please continue.")))
+                post_data = dict()
+                #raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
-    error_messages = list()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False
         attachment_email_address = post_data['_attachment_email_address']
@@ -5927,6 +5929,7 @@ def index(action_argument=None):
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     special_question = None
+    delete_objselections = False
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
@@ -6188,6 +6191,7 @@ def index(action_argument=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+                delete_objselections = True
             elif known_datatypes[real_key] == 'object_checkboxes' and bracket_expression is not None:
                 if data not in ('True', 'False', 'None') or set_to_empty:
                     continue
@@ -6195,6 +6199,7 @@ def index(action_argument=None):
                 if data == 'False':
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
+                delete_objselections = True
             elif set_to_empty == 'object_checkboxes':
                 continue
             elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -6288,6 +6293,7 @@ def index(action_argument=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+                delete_objselections = True
             elif set_to_empty == 'object_checkboxes':
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -6772,6 +6778,8 @@ def index(action_argument=None):
                 error_messages.append(("error", the_error_message))
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+    if delete_objselections:
+        user_dict['_internal']['objselections'] = dict()
     # restore this, maybe
     #if next_action:
     #    the_next_action = next_action.pop(0)
@@ -18369,7 +18377,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             else:
                 try:
                     dictionary = unpack_dictionary(interview_info.dictionary)
-                except:
+                except Exception as the_err:
                     if exclude_invalid:
                         continue
                     try:
