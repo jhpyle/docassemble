@@ -1541,15 +1541,41 @@ development server:
 allow non-idempotent questions: False
 {% endhighlight %}
 
-Then test your interviews to see if you get this error message:
+Then test your interviews to see if this message is shown in the
+screen at any point:
 
-> Error: interview logic was not idempotent, but must be if a generic
-> object, index variable, or multiple choice question is used."
+> Input not processed because the question changed.  Please continue.
 
-If you get this error, take a close look at the logic of your
-interview.  You probably have some logic that changes a variable in
-such a way that if the user refreshed the screen, they would not see
-the same question.
+A message will also be written to the logs beginning with `index: not
+the same question name`.
+
+If these messages appear, take a close look at the logic of your
+interview.
+
+Users may see this message if:
+
+* The interview logic is non-idempotent, meaning that the user sees
+  one `question`, but if they immediately refresh the screen, they see
+  a different question.
+* They have the interview open in more than one device, browser, or
+  browser tab, and they proceed with the interview in one tab and then
+  try to proceed with the interview in the other;
+* You have a multi-user interview and two users have the interview
+  open at the same time, and the actions of one user change the
+  interview logic for the other user.
+
+If your interviews work with `allow non-idempotent questions` set to
+`False`, ist is recommended that you set `allow non-idempotent
+questions` to `False` on your production server.
+
+If a user sees this message, they can usually proceed with the
+interview normally.  The input they submitted before seeing the
+message is discarded, but the problem should not be a permanent
+problem.  However, if the user continues to see the message, and it
+prevents the user from proceeding, there is a flaw in the interview
+logic that needs to be fixed; an immediate solution would be to set
+`allow non-idempotent questions` to `True`, but the long-term solution
+is to fix the logic in the interview.
 
 ## <a name="python packages"></a>Python packages to install
 

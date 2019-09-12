@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.8](https://github.com/jhpyle/docassemble/releases/tag/v0.5.8) - 2019-09-11
+
+### Added
+- The `delattr` method of the `DAObject` class.
+
+### Changed
+- Different behavior when `allow non-idempotent questions` is set to
+  `False`.
+
+### Fixed
+- Unpickling errors in `user_interviews()` not trapped appropriately.
+
 ## [0.5.7](https://github.com/jhpyle/docassemble/releases/tag/v0.5.7) - 2019-09-10
 
 ### Changed

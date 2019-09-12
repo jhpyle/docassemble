@@ -236,11 +236,18 @@ This may be useful in particular circumstances.  However,
 `force_ask()` cannot be used with all types of questions.  For
 example, it cannot be relied upon to re-ask questions that:
 
-* Use the [`generic object`] modifier or iterators (`i`, `j`, etc.);
+* Use the [`generic object`] modifier (and the special variable `x`)
+  or iterators (`i`, `j`, etc.);
 * Contain [embedded blocks].
 
-Because of these complications, the use of `force_ask()` is
-discouraged, unless you are an expert and you know what you are doing.
+The use of `force_ask()` is discouraged, unless you are an expert and
+you know what you are doing.  Usually, there is a more elegant way to
+craft your interview logic than by using `force_ask()`.  If the
+`question` you want to ask is a single-variable question (`field` with
+`choices`, `field` with `buttons`, `yesno`, `noyes`), you can use
+[`reconsider()`].  If the `question` has `fields`, you can set a
+[`continue button field`].  You might also find it useful to use the
+[`undefine()`] and [`re_run_logic()`] functions.
 
 Note that variable names given to force_ask must be in quotes.  If
 your variable is `favorite_fruit`, you need to write
@@ -252,7 +259,7 @@ Note also that no code that comes after `force_ask()` will ever be
 executed.  Once the `force_ask()` function is called, the code stops
 running, and the question indicated by the variable name will be
 shown.  That is why, in the example above, we set
-`user_reconsidering_communism` to False before calling `force_ask`.
+`user_reconsidering_communism` to False _before_ calling `force_ask`.
 The variable `user_reconsidering_communism`, which had been set to
 `True` by the "I suggest you reconsider your answer" question, is set
 to `False` before the call to `force_ask` so that the [`mandatory`]
@@ -6705,3 +6712,5 @@ $(document).on('daPageLoad', function(){
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug
 [`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
 [translating]: {{ site.baseurl }}/docs/initial.html#translations
+[`continue button field`]: {{ site.baseurl }}/docs/fields.html#continue button field
+[`undefine()`]: #undefine

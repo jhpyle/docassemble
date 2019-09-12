@@ -463,6 +463,20 @@ As discussed below, the [`Individual`] object has interesting methods
 related to pronouns.  These methods are universal, so you can use them
 on any [`DAObject`].
 
+<a name="DAObject.delattr"></a>If you want to delete attributes of a
+[`DAObject`], where the attributes may or may not be defined, you can
+use the `delattr()` method.
+
+{% highlight yaml %}
+client.delattr('birthdate')
+{% endhighlight %}
+
+You can also give it multiple attribute names.
+
+{% highlight yaml %}
+client.delattr('birthdate', 'sibling_count')
+{% endhighlight %}
+
 <a name="DAObject.pronoun"></a><a
 name="DAObject.pronoun_objective"></a><a
 name="DAObject.pronoun_subjective"></a><a
