@@ -34,6 +34,7 @@ import copy
 import random
 #import tablib
 import pandas
+NoneType = type(None)
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree', 'DAContext']
 

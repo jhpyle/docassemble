@@ -123,9 +123,9 @@ extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 #match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 #match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile('\[\'.*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[u?\'[^\]]+\'\])$')
-match_inside_brackets = re.compile('\[u?\'([^\]]+)\'\]')
+match_brackets = re.compile('\[B?\'.*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[u?B?\'[^\]]+\'\])$')
+match_inside_brackets = re.compile('\[u?(B?)\'([^\]]+)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
 valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]+')
 
@@ -2037,10 +2037,13 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
     return
 
 def process_bracket_expression(match):
-    try:
-        inner = codecs.decode(repad(bytearray(match.group(1), encoding='utf-8')), 'base64').decode('utf-8')
-    except:
-        inner = match.group(1)
+    if match.group(1) == 'B':
+        try:
+            inner = codecs.decode(repad(bytearray(match.group(2), encoding='utf-8')), 'base64').decode('utf-8')
+        except:
+            inner = match.group(2)
+    else:
+        inner = match.group(2)
     return("[" + re.sub(r'^u', r'', repr(inner)) + "]")
 
 def myb64unquote(the_string):
@@ -5962,10 +5965,13 @@ def index(action_argument=None):
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
-                try:
-                    bracket_expression = from_safeid(b_match.group(1))
-                except:
-                    bracket_expression = b_match.group(1)
+                if b_match.group(1) == 'B':
+                    try:
+                        bracket_expression = from_safeid(b_match.group(2))
+                    except:
+                        bracket_expression = b_match.group(2)
+                else:
+                    bracket_expression = b_match.group(2)
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
             parse_result = docassemble.base.parse.parse_var_name(key)
             if not parse_result['valid']:
@@ -5987,8 +5993,6 @@ def index(action_argument=None):
                     it_exists = True
                 except:
                     it_exists = False
-            # if it_exists:
-            #     logmessage(whole_key + "exists and is a " + the_object.__class__.__name__)
             if not it_exists:
                 # logmessage("It does not exist")
                 method = None
@@ -9356,14 +9360,15 @@ def index(action_argument=None):
           }
         }
         if ($("input[name='_checkboxes']").length){
+          var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
           the_hash = $.parseJSON(atob($("input[name='_checkboxes']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               var checkboxName = atob(key);
               var baseName = checkboxName;
-              bracketPart = checkboxName.replace(/^.*(\[['"][^\]]*['"]\])$/, "$1");
-              checkboxName = checkboxName.replace(/^.*\[['"]([^\]]*)['"]\]$/, "$1");
-              if (checkboxName != baseName){
+              if (patt.test(baseName)){
+                bracketPart = checkboxName.replace(/^.*(\[B?['"][^\]]*['"]\])$/, "$1");
+                checkboxName = checkboxName.replace(/^.*\[B?['"]([^\]]*)['"]\]$/, "$1");
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
                 if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){

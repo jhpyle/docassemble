@@ -1097,7 +1097,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair['key'] is not None:
-                            checkboxes[safeid(from_safeid(field.saveas) + "[" + myb64quote(pair['key']) + "]")] = 'False'
+                            checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
                 elif not status.extras['required'][field.number]:
                     if hasattr(field, 'saveas'):
                         checkboxes[field.saveas] = 'None'
@@ -1910,7 +1910,7 @@ def input_for(status, field, wide=False, embedded=False):
                     the_icon = ''
                 helptext = pair.get('help', None)
                 if True or pair['key'] is not None:
-                    inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair['key']) + "]")
+                    inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                     #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
                     formatted_item = markdown_to_html(text_type(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if 'default' in pair and pair['default']:
