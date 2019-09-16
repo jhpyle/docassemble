@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.11](https://github.com/jhpyle/docassemble/releases/tag/v0.5.11) - 2019-09-16
+
+### Fixed
+- Problem with checkbox object initialization inside of `DADict`.
+- Error when trying to inspect functions to get usage information for
+  the Playground sidebar.
+- Renewal of Let's Encrypt included obsolete domains.
+
 ## [0.5.10](https://github.com/jhpyle/docassemble/releases/tag/v0.5.10) - 2019-09-15
 
 ### Added
