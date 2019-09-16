@@ -42,6 +42,8 @@ elif daconfig.get('allow demo', False):
 else:
     PREVENT_DEMO = True
 
+REQUIRE_IDEMPOTENT = not daconfig.get('allow non-idempotent questions', True)
+
 PACKAGE_PROTECTION = daconfig.get('package protection', True)
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
@@ -1990,10 +1992,11 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
-    if not daconfig.get('allow non-idempotent questions', True):
+    if REQUIRE_IDEMPOTENT:
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in user_dict:
                 del user_dict[var_name]
+        user_dict['_internal']['objselections'] = dict()
     nowtime = datetime.datetime.utcnow()
     if steps is not None:
         user_dict['_internal']['steps'] = steps
@@ -2307,6 +2310,29 @@ def obtain_lock(user_code, filename):
         if record:
             sys.stderr.write("obtain_lock: waiting for " + key + "\n")
             time.sleep(1.0)
+        else:
+            found = False
+            break
+        found = True
+        count -= 1
+    if found:
+        sys.stderr.write("Request for " + key + " deadlocked\n")
+        release_lock(user_code, filename)
+    pipe = r.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 4)
+    pipe.execute()
+
+def obtain_lock_patiently(user_code, filename):
+    key = 'da:lock:' + user_code + ':' + filename
+    #sys.stderr.write("obtain_lock: getting " + key + "\n")
+    found = False
+    count = 20
+    while count > 0:
+        record = r.get(key)
+        if record:
+            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
+            time.sleep(3.0)
         else:
             found = False
             break
@@ -5659,7 +5685,7 @@ def index(action_argument=None):
     #logmessage("Numbered fields is " + repr(numbered_fields))
     list_collect_list = None
     if '_list_collect_list' in post_data:
-        logmessage("list is " + post_data['_list_collect_list'])
+        #logmessage("list is " + post_data['_list_collect_list'])
         the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
         if not illegal_variable_name(the_list):
             list_collect_list = the_list
@@ -5691,34 +5717,51 @@ def index(action_argument=None):
         something_changed = True
         user_dict['_internal']['tracker'] = max(int(post_data['_tracker']), user_dict['_internal']['tracker'])
     if '_track_location' in post_data and post_data['_track_location']:
-        logmessage("index: found track location of " + post_data['_track_location'])
+        #logmessage("index: found track location of " + post_data['_track_location'])
         the_location = json.loads(post_data['_track_location'])
     else:
         the_location = None
     should_assemble = False
+    known_datatypes = dict()
+    if '_datatypes' in post_data:
+        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
+        for data_type in known_datatypes.values():
+            if data_type.startswith('object'):
+                should_assemble = True
     #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     #g.after_interview = time.time()
     #g.interview = interview
-    for key in post_data:
-        if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
-            continue
-        try:
-            the_key = from_safeid(key)
-            if key_requires_preassembly.search(the_key):
-                if the_key == '_multiple_choice' and '_question_name' in post_data:
-                    question_name = post_data.get('_question_name', -100)
-                    if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
-                        continue
-                should_assemble = True
-                #logmessage("index: pre-assembly necessary for " + the_key)
-                break
-        except Exception as the_err:
-            logmessage("index: bad key was " + text_type(key) + " and error was " + the_err.__class__.__name__)
+    if not should_assemble:
+        for key in post_data:
+            if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
+                continue
             try:
-                logmessage("index: bad key error message was " + text_type(the_err))
-            except:
-                pass
+                the_key = from_safeid(key)
+                if the_key.startswith('_field_'):
+                    if key in known_varnames:
+                        if not (known_varnames[key] in post_data and post_data[known_varnames[key]] != '' and post_data[key] == ''):
+                            the_key = from_safeid(known_varnames[key])
+                    else:
+                        m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
+                        if m:
+                            base_orig_key = safeid(m.group(1))
+                            if base_orig_key in known_varnames:
+                                the_key = myb64unquote(known_varnames[base_orig_key]) + m.group(2)
+                if key_requires_preassembly.search(the_key):
+                    if the_key == '_multiple_choice' and '_question_name' in post_data:
+                        question_name = post_data.get('_question_name', -100)
+                        if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
+                            continue
+                    should_assemble = True
+                    #logmessage("index: pre-assembly necessary for " + the_key)
+                    break
+            except Exception as the_err:
+                logmessage("index: bad key was " + text_type(key) + " and error was " + the_err.__class__.__name__)
+                try:
+                    logmessage("index: bad key error message was " + text_type(the_err))
+                except:
+                    pass
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = interview.debug
@@ -5736,7 +5779,7 @@ def index(action_argument=None):
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + text_type(post_data['_question_name']) + " versus " + text_type(interview_status.question.name))
-            if not daconfig.get('allow non-idempotent questions', True):
+            if REQUIRE_IDEMPOTENT:
                 error_messages.append(("success", word("Input not processed because the question changed.  Please continue.")))
                 post_data = dict()
                 #raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
@@ -5859,7 +5902,6 @@ def index(action_argument=None):
                     changed = True
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + text_type(errMess)))
-    known_datatypes = dict()
     if '_next_action_to_set' in post_data:
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
         #logmessage("next_action_to_set is " + str(next_action_to_set))
@@ -5871,8 +5913,6 @@ def index(action_argument=None):
         #logmessage("next_action is " + str(next_action))
     else:
         next_action = None
-    if '_datatypes' in post_data:
-        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     #logmessage("field_numbers is " + str(field_numbers))
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
@@ -5932,7 +5972,6 @@ def index(action_argument=None):
     #blank_fields = set(known_datatypes.keys())
     #logmessage("blank_fields is " + repr(blank_fields))
     special_question = None
-    delete_objselections = False
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
@@ -6195,7 +6234,6 @@ def index(action_argument=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
-                delete_objselections = True
             elif known_datatypes[real_key] == 'object_checkboxes' and bracket_expression is not None:
                 if data not in ('True', 'False', 'None') or set_to_empty:
                     continue
@@ -6203,7 +6241,6 @@ def index(action_argument=None):
                 if data == 'False':
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
-                delete_objselections = True
             elif set_to_empty == 'object_checkboxes':
                 continue
             elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -6297,7 +6334,6 @@ def index(action_argument=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
-                delete_objselections = True
             elif set_to_empty == 'object_checkboxes':
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -6782,8 +6818,6 @@ def index(action_argument=None):
                 error_messages.append(("error", the_error_message))
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-    if delete_objselections:
-        user_dict['_internal']['objselections'] = dict()
     # restore this, maybe
     #if next_action:
     #    the_next_action = next_action.pop(0)
@@ -6839,6 +6873,8 @@ def index(action_argument=None):
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
+        if return_fake_html:
+            fake_up(response)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout()
@@ -6860,6 +6896,8 @@ def index(action_argument=None):
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
+        if return_fake_html:
+            fake_up(response)
         return response
     if interview_status.question.question_type == "new_session":
         manual_checkout()
@@ -6880,22 +6918,34 @@ def index(action_argument=None):
     if interview_status.question.question_type == "refresh":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_refresh(is_ajax, yaml_filename)
+        response = do_refresh(is_ajax, yaml_filename)
+        if return_fake_html:
+            fake_up(response)
+        return response
     if interview_status.question.question_type == "signin":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+        response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+        if return_fake_html:
+            fake_up(response)
+        return response
     if interview_status.question.question_type == "register":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+        response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
+        if return_fake_html:
+            fake_up(response)
+        return response
     if interview_status.question.question_type == "leave":
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
+            response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
-            return do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
+            response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
+        if return_fake_html:
+            fake_up(response)
+        return response
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
@@ -6905,7 +6955,10 @@ def index(action_argument=None):
             # Duplicative to save here?
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
-            return jsonify(action='resubmit', csrf_token=generate_csrf())
+            response = jsonify(action='resubmit', csrf_token=generate_csrf())
+            if return_fake_html:
+                fake_up(response)
+            return response
         else:
             if hasattr(interview_status.question, 'all_variables'):
                 if hasattr(interview_status.question, 'include_internal'):
@@ -6926,7 +6979,10 @@ def index(action_argument=None):
         if is_ajax:
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
-            return jsonify(action='resubmit', csrf_token=generate_csrf())
+            response = jsonify(action='resubmit', csrf_token=generate_csrf())
+            if return_fake_html:
+                fake_up(response)
+            return response
         else:
             # Duplicative to save here?  Just for the 404?
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
@@ -6993,6 +7049,8 @@ def index(action_argument=None):
         #     logmessage("index: post interview, no detection of encryption should be True")
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
+        if return_fake_html:
+            fake_up(response_to_send)
         return response_to_send
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -10206,8 +10264,7 @@ def index(action_argument=None):
         response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         if return_fake_html:
-            response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
-            response.headers['Content-type'] = 'text/html; charset=utf-8'
+            fake_up(response)
     elif is_js:
         output = the_js + "\n" + append_javascript
         if 'global css' in daconfig:
@@ -10251,6 +10308,10 @@ def index(action_argument=None):
     #logmessage("Request time final: " + str(g.request_time()))
     #sys.stderr.write("11\n")
     return response
+
+def fake_up(response):
+    response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
+    response.headers['Content-type'] = 'text/html; charset=utf-8'
 
 def add_action_to_stack(interview_status, user_dict, action, arguments):
     unique_id = interview_status.current_info['user']['session_uid']

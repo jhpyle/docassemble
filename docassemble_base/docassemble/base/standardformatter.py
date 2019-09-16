@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from six import string_types, text_type, PY2
-from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
+from docassemble.base.functions import word, get_currency_symbol, url_action, comma_and_list, server
 from docassemble.base.util import format_date
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
@@ -2344,13 +2344,13 @@ def input_for(status, field, wide=False, embedded=False):
                     if field.datatype == 'float' or field.datatype == 'number':
                         step_string = ''
                     if field.datatype == 'currency':
-                        step_string = ' step="0.01"'
+                        step_string = ' step="' + text_type(1.0/pow(10, daconfig.get('currency decimal places', 2))) + '"'
                 if field.datatype == 'currency':
                     extra_class += ' dacurrency'
                     if embedded:
-                        output += '<span class="da-embed-currency-wrapper"><span class="da-embed-currency-symbol">' + currency_symbol() + '</span>'
+                        output += '<span class="da-embed-currency-wrapper"><span class="da-embed-currency-symbol">' + the_currency_symbol(status, field) + '</span>'
                     else:
-                        output += '<div class="input-group mb-2"><div class="input-group-prepend" id="addon-' + do_escape_id(saveas_string) + '"><div class="input-group-text">' + currency_symbol() + '</div></div>'
+                        output += '<div class="input-group mb-2"><div class="input-group-prepend" id="addon-' + do_escape_id(saveas_string) + '"><div class="input-group-text">' + the_currency_symbol(status, field) + '</div></div>'
             if field.datatype == 'ml':
                 input_type = 'text'
             if embedded:
@@ -2411,3 +2411,8 @@ def safe_html(the_string):
     the_string = re.sub(r'\<', '&lt;', the_string)
     the_string = re.sub(r'\>', '&gt;', the_string)
     return the_string
+
+def the_currency_symbol(status, field):
+    if hasattr(field, 'extras') and 'currency symbol' in field.extras and 'currency symbol' in status.extras and field.number in status.extras['currency symbol']:
+        return status.extras['currency symbol'][field.number]
+    return get_currency_symbol()

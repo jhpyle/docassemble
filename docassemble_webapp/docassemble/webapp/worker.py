@@ -59,7 +59,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     docassemble.base.functions.server_context.context = 'celery'
@@ -71,6 +71,7 @@ def initialize_db():
     worker_controller.fetch_user_dict = fetch_user_dict
     worker_controller.save_user_dict = save_user_dict
     worker_controller.obtain_lock = obtain_lock
+    worker_controller.obtain_lock_patiently = obtain_lock_patiently
     worker_controller.release_lock = release_lock
     worker_controller.Message = Message
     worker_controller.reset_user_dict = reset_user_dict
@@ -866,6 +867,7 @@ def email_attachments(user_code, email_address, attachment_info, language):
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
+    time.sleep(1.0)
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.reset_local_variables()
@@ -880,7 +882,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 if 'id' in action['arguments']:
                     action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
             interview = worker_controller.interview_cache.get_interview(yaml_filename)
-            worker_controller.obtain_lock(session_code, yaml_filename)
+            worker_controller.obtain_lock_patiently(session_code, yaml_filename)
             try:
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             except Exception as the_err:
@@ -938,7 +940,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 return(worker_controller.functions.ReturnValue(extra=extra))
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                 #sys.stderr.write("background_action: status was restart or exit\n")
-                worker_controller.obtain_lock(session_code, yaml_filename)
+                worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                 if str(user_info.get('the_user_id', None)).startswith('t'):
                     worker_controller.reset_user_dict(session_code, yaml_filename, temp_user_id=user_info.get('theid', None))
                 else:
@@ -962,7 +964,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 start_time = time.time()
                 new_action = interview_status.question.action
                 #sys.stderr.write("new action is " + repr(new_action) + "\n")
-                worker_controller.obtain_lock(session_code, yaml_filename)
+                worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
                 interview_status = worker_controller.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
                 old_language = worker_controller.functions.get_language()

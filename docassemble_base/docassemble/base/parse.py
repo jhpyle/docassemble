@@ -568,7 +568,7 @@ class InterviewStatus(object):
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol'):
                 if key in self.extras and field.number in self.extras[key]:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
@@ -2672,7 +2672,7 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
-                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'):
+                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + text_type(field[key]), question=self)
@@ -3695,7 +3695,7 @@ class Question:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = dict()
                         extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width'): # 'script', 'css',
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -4090,7 +4090,7 @@ class Question:
                                 #logmessage("Doing " + string)
                                 exec(string, user_dict)
                         except Exception as err:
-                            raise DAError("Failure while processing field with datatype of object: " + str(err))
+                            raise DAError("Failure while processing field with datatype of object: " + err.__class__.__name__ + " " + str(err))
                     if hasattr(field, 'label'):
                         labels[field.number] = field.label.text(user_dict)
                     if hasattr(field, 'extras'):
@@ -4127,7 +4127,7 @@ class Question:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = dict()
                             extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
-                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group'): # , 'textresponse', 'content_type' #'script', 'css',
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
@@ -5310,6 +5310,7 @@ class Interview:
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         #docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
+        docassemble.base.functions.this_thread.misc['reconsidered'] = set()
         docassemble.base.functions.this_thread.current_package = self.source.package
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
         docassemble.base.functions.this_thread.interview = self
@@ -6746,9 +6747,11 @@ def ampersand_filter(value):
         return value
     if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate'):
         return text_type(value)
-    if isinstance(value, string_types) and ('<w:r>' in value or '</w:t>' in value):
-        return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(value))
-    return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(value))))
+    if not isinstance(value, string_types):
+        value = text_type(value)
+    if '<w:r>' in value or '</w:t>' in value:
+        return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)
+    return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)))
 
 class DAStrictUndefined(StrictUndefined):
     __slots__ = ('_undefined_type')

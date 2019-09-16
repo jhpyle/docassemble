@@ -21,6 +21,7 @@ import pycurl
 import json
 import types
 import mimetypes
+import datetime
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
 import docassemble.base.functions
 import docassemble.base.filter
@@ -3473,6 +3474,8 @@ def export_safe(text):
         text = text_type(text)
     if isinstance(text, DAEmpty):
         text = None
+    if isinstance(text, datetime.datetime):
+        text = text.replace(tzinfo=None)
     return text
 
 def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):

@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.5.10] - 2019-09-15
+### Added
+- The `symbol` keyword parameter of `currency()`.
+- The `currency_symbol` keyword parameter of `set_locale()`.
+### Fixed
+- Problem with `disable others` when `allow non-idempotent questions`
+  was `False`.
+- Problem with `reconsider` under certain circumstances.
+- Error when `command()` used immediately after a file upload.
+- Error when exporting dates in a table to Excel.
+
 ## [0.5.9] - 2019-09-12
 ### Fixed
 - `NoneType` error when using `data` with `use objects`.

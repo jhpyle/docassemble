@@ -1746,16 +1746,32 @@ def get_dialect():
 def set_default_locale(loc):
     global default_locale
     default_locale = loc
-    return
 
-def set_locale(loc):
+def set_locale(*pargs, **kwargs):
     """Sets the current locale.  See also update_locale()."""
-    this_thread.locale = loc
-    return
+    if len(pargs) == 1:
+        this_thread.locale = pargs[0]
+    if 'currency_symbol' in kwargs:
+        this_thread.misc['currency symbol'] = kwargs['currency_symbol']
 
-def get_locale():
-    """Returns the current locale setting."""
+def get_locale(*pargs):
+    """Returns the current locale setting, or the current currency symbol
+    if the argument is 'currency_symbol'.
+
+    """
+    if len(pargs) == 1 and pargs[0] == 'currency_symbol':
+        return this_thread.misc.get('currency symbol', None)
     return this_thread.locale
+
+def get_currency_symbol():
+    """Returns the current setting for the currency symbol if there is
+    one, and otherwise returns the default currency symbol.
+
+    """
+    symbol = this_thread.misc.get('currency symbol', None)
+    if symbol is not None:
+        return symbol
+    return currency_symbol()
 
 def update_locale():
     """Updates the system locale based on the value set by set_locale()."""
@@ -1938,9 +1954,9 @@ def nice_number_default(num, capitalize=False, language=None):
         else:
             return the_word
     elif type(num) is int:
-        return text_type(locale.format("%d", num, grouping=True))
+        return text_type(locale.format_string("%d", num, grouping=True))
     else:
-        return text_type(locale.format("%.2f", float(num), grouping=True)).rstrip('0')
+        return text_type(locale.format_string("%.2f", float(num), grouping=True)).rstrip('0')
 
 def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
     ensure_definition(num, noun, as_integer, capitalize, language)
@@ -1965,11 +1981,15 @@ def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
     return text_type(locale.localeconv()['currency_symbol'])
 
-def currency_default(value, decimals=True, **kwargs):
-    """Returns the value as a currency, according to the conventions of the current locale.
-    Use the optional keyword argument decimals=False if you do not want to see decimal places
-    in the number."""
-    ensure_definition(value, decimals)
+def currency_default(value, decimals=True, symbol=None):
+    """Returns the value as a currency, according to the conventions of
+    the current locale.  Use the optional keyword argument
+    decimals=False if you do not want to see decimal places in the
+    number, and the optional currency_symbol for a different symbol
+    than the default.
+
+    """
+    ensure_definition(value, decimals, symbol)
     obj_type = type(value).__name__
     if obj_type in ['FinancialList', 'PeriodicFinancialList']:
         value = value.total()
@@ -1982,10 +2002,22 @@ def currency_default(value, decimals=True, **kwargs):
         float(value)
     except:
         return ''
+    the_symbol = None
+    if symbol is not None:
+        the_symbol = symbol
+    elif this_thread.misc.get('currency symbol', None) not in (None, ''):
+        the_symbol = this_thread.misc['currency symbol']
+    elif language_functions['currency_symbol']['*'] is not currency_symbol_default:
+        the_symbol = currency_symbol()
+    if the_symbol is None:
+        if decimals:
+            return text_type(locale.currency(float(value), symbol=True, grouping=True))
+        else:
+            return currency_symbol() + locale.format_string("%d", int(float(value)), grouping=True)
     if decimals:
-        return text_type(locale.currency(float(value), symbol=True, grouping=True))
+        return the_symbol + locale.format_string('%.' + text_type(server.daconfig.get('currency decimal places', 2)) + 'f', float(value), grouping=True)
     else:
-        return currency_symbol() + locale.format("%d", int(float(value)), grouping=True)
+        return the_symbol + locale.format_string("%d", int(float(value)), grouping=True)
 
 def prefix_constructor(prefix):
     def func(word, **kwargs):
