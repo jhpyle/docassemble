@@ -341,6 +341,9 @@ results with different screen sizes.
   `resume button label`.
 * The `back button label` is the label for the back button that
   appears within the question itself (not the upper-left corner).
+* The `currency symbol` is the default currency symbol to be used when
+  using fields with `datatype: currency` and when calling the
+  `currency()` function.
 
 There are a variety of ways that you can specify what content should
 appear in these areas.  These ways range from question-specific

@@ -5580,6 +5580,28 @@
       button: |
         The favorite fungus was ${ fungi }.
   resume button label: Refresh
+"js_action_call": |-
+  mandatory: True
+  question: |
+    The pie
+  subquestion: |
+    <button id="run" class="btn btn-primary">Run</button>
+
+    <span id="resultsArea"></span>
+  script: |
+    <script>
+      $("#run").click(function(){
+        action_call('myaction', {fruit: 'apple'}, function(data){
+          $("#resultsArea").html("The pie is called " + data.pie + ".")
+        });
+      });
+    </script>
+  ---
+  event: myaction
+  code: |
+    fruit = action_argument('fruit')
+    dessert = fruit + " pie"
+    json_response(dict(pie=dessert))
 "js_url_action": |-
   mandatory: True
   code: |
@@ -5600,28 +5622,6 @@
   code: |
     fruit = action_argument('fruit')
     dessert = fruit + " pie"
-"js_url_action_call": |-
-  mandatory: True
-  question: |
-    The pie
-  subquestion: |
-    <button id="run" class="btn btn-primary">Run</button>
-
-    <span id="resultsArea"></span>
-  script: |
-    <script>
-      $("#run").click(function(){
-        url_action_call('myaction', {fruit: 'apple'}, function(data){
-          $("#resultsArea").html("The pie is called " + data.pie + ".")
-        });
-      });
-    </script>
-  ---
-  event: myaction
-  code: |
-    fruit = action_argument('fruit')
-    dessert = fruit + " pie"
-    json_response(dict(pie=dessert))
 "js_variables": |-
   mandatory: True
   code: |
@@ -5869,6 +5869,9 @@
   code: |
     lucky_number = 2
 "madlibs": |-
+  features:
+    progress bar: True
+  ---
   objects:
     - adjective: DAList
     - noun: DAList
@@ -5893,17 +5896,6 @@
     saving the day.
   buttons:
     - Do it again: restart
-  ---
-  generic object: DAList
-  question: |
-    % if i == 0:
-    Give me
-    ${ indefinite_article(x.object_name()) }.
-    % else:
-    Give me another ${ x.object_name() }.
-    % endif
-  fields:
-    - no label: x[i]
 "main-page": |-
   metadata:
     pre: |
@@ -6421,6 +6413,10 @@
     - Value: target_variable
       datatype: currency
       min: 0
+"money-field-euro": "question: |\n  How much is your house worth?\nfields:\n  - Value:\
+  \ house_value\n    datatype: currency\n    min: 0\n    currency symbol: \u20AC\n\
+  ---\nquestion: Your home value\nsubquestion: |\n  Your house is worth\n  ${ currency(house_value,\
+  \ symbol=u'\u20AC') }.\nmandatory: True"
 "name": |-
   question: |
     What are you fighting?
@@ -10773,6 +10769,27 @@
 "advocate": |-
   objects:
     - child: Individual
+"ajax": "code: |\n  favorite_fruit = \"apples\"\n---\nid: guess favorite fruit\nmandatory:\
+  \ True\nquestion: |\n  Guess my favorite fruit.\nfields:\n  - Your guess: guess\n\
+  \  - note: |\n      ${ action_button_html(\"#\", id_tag=\"getFavoriteFruit\", label=\"\
+  Verify\", size=\"md\", color=\"primary\") }\nscript: |\n  <script>\n    $(document).on('daPageLoad',\
+  \ function(){\n      // hide the Continue button\n      // and disable the form\
+  \ for\n      // this question\n      if ($(\".question-guess-favorite-fruit\").length\
+  \ > 0){\n        $(\".da-field-buttons\").remove();\n        $(\"#daform\").off().on('submit',\
+  \ function(event){\n          event.preventDefault();\n          return false;\n\
+  \        });\n      };\n    });\n    $(\"#getFavoriteFruit\").click(function(event){\n\
+  \      event.preventDefault();\n      if (!/\\S/.test(val(\"guess\"))){\n      \
+  \  flash(\"You need to guess something!\", \"danger\", true);\n        return false;\n\
+  \      }\n      flash(\"Verifying . . .\", \"info\", true);\n      action_call(\"\
+  verify_favorite_fruit\", {\"fruit\": val(\"guess\")}, function(data){\n        if\
+  \ (data.success){\n          flash(\"You're right!\", \"info\", true);\n       \
+  \ }\n        else {\n          flash(\"You're totally wrong.  I actually like \"\
+  \ + data.fruit + \".\", \"danger\", true);\n        }\n      });\n      return false;\n\
+  \    });\n  </script>\n---\nevent: verify_favorite_fruit\ncode: |\n  # No need to\
+  \ save the interview\n  # answers after this action.\n  set_save_status('ignore')\n\
+  \  \n  # Pretend we have to think\n  # about the answer.\n  import time\n  time.sleep(1)\n\
+  \  \n  if favorite_fruit.lower() == action_argument('fruit').lower():\n    success\
+  \ = True\n  else:\n    success = False\n  json_response(dict(success=success, fruit=favorite_fruit))"
 "background-tail": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  log_key\
   \ = r.key('log:' + user_info().session)\n  messages = list()\n---\nmandatory: True\n\
   code: |\n  if the_task.ready():\n    last_messages_retrieved\n    final_screen\n\

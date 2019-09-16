@@ -10,7 +10,7 @@ also allows [Unicode] to be used in user-facing text, user input, and
 documents.  With these features, **docassemble** should be fully
 usable in languages other than English.
 
-# Configuration
+# <a name="configuration"></a>Configuration
 
 By default, the active language and locale are determined by the
 [`language`] and [`locale`] settings in the **docassemble**
@@ -94,7 +94,7 @@ The language and locale settings have the following effects:
   you defined values for multiple languages, **docassemble** will use
   the value for the current language.
 
-# Best practices for single-language interviews
+# <a name="bpsingle"></a>Best practices for single-language interviews
 
 If your interview only works in one language, do not set the
 [`language` modifier] for any blocks, do not use [`default language`],
@@ -102,7 +102,7 @@ and do not call [`set_language()`] or [`set_locale()`].  Instead,
 simply make sure that the default [`language`] and [`locale`] in the
 [configuration] are set to the correct values.
 
-# Best practices for multi-language interviews
+# <a name="bpmulti"></a>Best practices for multi-language interviews
 
 If you have an interview that needs to function in multiple languages,
 you will need to have [`initial`] code that calls [`set_language()`].
@@ -239,7 +239,7 @@ include:
 
 ([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
 
-# Working with third-party translators
+# <a name="translators"></a>Working with third-party translators
 
 While it is generally a good thing that **docassemble** allows you to
 write complicated [`question`]s that make heavy use of [Mako]
@@ -275,7 +275,7 @@ provide quality control to ensure that the translators do not disturb
 embedded Python.  Shop around before concluding that you have to "dumb
 down" your interview to make it translatable.
 
-# Creating documents in languages other than English
+# <a name="documents"></a>Creating documents in languages other than English
 
 If your interview uses the [`docx template file`] feature, you can
 prepare separate DOCX files for each language and then [use code] to
@@ -310,6 +310,91 @@ set using the `metadata` entries `lang` and `mainlang` in the
 your own templates in order to enable fonts that support your
 language.
 
+# <a name="customizing"></a>Customizing based on language and locale
+
+The [`language-specific functions`], many of which are used internally
+by **docassemble** object methods, can all be overridden with your own
+versions.  You can write special functions that should be used
+depending on which language is the active language (as set by
+[`set_language()`]).  For example, there is an internal function
+`your()` that when called as `your('apple')` returns `'your apple`'.
+The default language is English, and there are no definitions for any
+other languages, so if you want to use a language other than English,
+you will need to write alternatives.  For more information about how
+to do this, see the sections on [language-specific functions] and
+[simple language functions].
+
+While many functions depend on the current language, there are a few
+that depend on the locale.  One is [`nice_number()`] (one of the
+[language-specific functions] that can be overridden).  When the given
+number is not among the numbers that should be converted to a word
+(see [`update_nice_numbers()`]), it is formatted according to the
+locale.  For example, in locale `en_US` (English, United States),
+`nice_number(6242235.4)` becomes `'6,242,235.4'`, but in locale
+`es_ES` (Spanish, Spain), it becomes `'6.242.235,4'`.
+
+Other locale-dependent functions are [`currency()`] and
+[`currency_symbol()`].  In locale `en_US` (English, United States),
+`currency(101.34)` becomes `'$101.34'`, but in locale `es_ES`
+(Spanish, Spain), it becomes `'101,34 EUR'`.  In locale `en_US`
+(English, United States), [`currency_symbol()`] becomes `$`, but
+in locale `es_ES` (Spanish, Spain), it becomes `'EUR'`.
+
+The **docassemble** features that work with currencies are complicated
+because the way that currency is represented depends on locale, and
+you might want to support more than one locale, but Python's [`locale`
+module] assumes that the locale setting is server-wide.
+
+The [`currency()`] function and the [`currency_symbol()`] functions
+are both [language-specific function]s, which means that you can
+substitute your own functions in their place in order to have full
+control over currency formatting.  For example, if you include the
+following in a Python module, then whenever the active language is
+French, the currency symbol will be € by default and the `currency()`
+function will return the number followed by €, instead of the currency
+symbol followed by the number.
+
+{% highlight python %}
+import locale
+import docassemble.base.functions
+docassemble.base.functions.update_language_function('fr', 'currency_symbol', lambda: u'€')
+def fr_currency(value, decimals=True, symbol=None):
+    docassemble.base.functions.ensure_definition(value, decimals, symbol)
+    if symbol is None:
+        symbol = u'€'
+    if decimals:
+        return locale.format_string('%.2f', value, grouping=True) + ' ' + symbol
+    else:
+        return locale.format_string('%.0f', value, grouping=True) + ' ' + symbol
+docassemble.base.functions.update_language_function('fr', 'currency', fr_currency)
+{% endhighlight %}
+
+You can also override the default [`currency()`] and
+[`currency_symbol()`] functions using the catch-all language `'*'`
+instead of `'fr'`.  You could use [`set_locale()`] (without
+[`update_locale()`]) in an [`initial`] block and use [`get_locale()`] in
+your `currency()` and `currency_symbol()` functions to do different
+things depending on the locale.
+
+If you have a specific currency symbol that you want to use on your
+server, you can set the [`currency symbol`] directive in the
+[configuration].  This will have a global effect.  Suppose you set
+this in the [configuration]:
+
+{% highlight yaml %}
+currency symbol: €
+{% endhighlight %}
+
+This is equivalent to doing:
+
+{% highlight python %}
+import docassemble.base.functions
+docassemble.base.functions.update_language_function('fr', 'currency_symbol', lambda: u'€')
+{% endhighlight %}
+
+[`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
+[`locale` module]: https://docs.python.org/3.6/library/locale.htmle
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
@@ -334,6 +419,7 @@ language.
 [`locale`]: {{ site.baseurl }}/docs/config.html#locale
 [`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language
 [`set_locale()`]: {{ site.baseurl }}/docs/functions.html#set_locale
+[`update_locale()`]: {{ site.baseurl }}/docs/functions.html#update_locale
 [`get_language()`]: {{ site.baseurl }}/docs/functions.html#get_language
 [`get_dialect()`]: {{ site.baseurl }}/docs/functions.html#get_dialect
 [`get_locale()`]: {{ site.baseurl }}/docs/functions.html#get_locale
@@ -368,3 +454,9 @@ language.
 [Morningside Translations]: https://www.morningtrans.com/
 [`babel.dates`]: http://babel.pocoo.org/en/latest/api/dates.html
 [`babel dates map`]: {{ site.baseurl }}/docs/config.html#babel dates map
+[language-specific functions]: {{ site.baseurl }}/docs/functions.html#linguistic
+[simple language functions]: {{ site.baseurl }}/docs/functions.html#simplelang
+[`nice_number()`]: {{ site.baseurl }}/docs/functions.html#nice_number
+[`update_nice_numbers()`]: {{ site.baseurl }}/docs/functions.html#update_nice_numbers
+[`currency_symbol()`]: {{ site.baseurl }}/docs/functions.html#currency_symbol
+[`currency()`]: {{ site.baseurl }}/docs/functions.html#currency

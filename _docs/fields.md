@@ -518,13 +518,32 @@ widget controls work:
 
 `datatype: currency` indicates that the input should be a valid
 numeric value.  In addition, the input box shows a currency symbol
-based on locale defined in the [configuration].
+based the [`locale`] defined in the [configuration].
 
 {% include side-by-side.html demo="money-field" %}
 
 The variable will be set to a number, just as if `datatype: number`
 was used.  For information about how to display currency values, see
 the [`currency()`] function.
+
+If the currency symbol defined by the locale is not the currency you
+want to use, you can include an [`initial`] block that calls
+[`set_locale()`] with the `currency_symbol` keyword parameter set to
+the symbol you want to use.  This will set a default value for 
+`datatype: currency` fields and for the [`currency()`] function.
+
+Keep in mind that the variable stored by a `datatype: currency` field
+is just a number, so it is not aware of the currency denomination that
+was presented to the user when the information was collected.
+
+You can also override the currency symbol on a field-by-field basis by
+setting the `currency symbol` field modifier.
+
+{% include side-by-side.html demo="money-field-euro" %}
+
+As this interview demonstrates, the [`currency()`] function accepts an
+optional keyword parameter `symbol` that allows you to override the
+symbol that is displayed.
 
 ## <a name="range"></a>Sliders
 
@@ -1905,14 +1924,14 @@ used to make sure that the dialog box only appears once.
 {% include side-by-side.html demo="dialog-box" %}
 
 The `event` specifier is important if you use the [roles] feature to
-conduct multi-user interviews.
+conduct [multi-user interviews].
 
 {% include side-by-side.html demo="event-role-event" %}
 
 In the example above, the `event` line tells **docassemble** that this
 [`question`] should be displayed to the user if **docassemble**
 encounters the `role_event`, which is a special "event" that can
-happen in multi-user interviews.  The event is triggered when the
+happen in [multi-user interviews].  The event is triggered when the
 interview reaches a point when a person other than the current user
 needs to answer a question.  For example, while a client is filling
 out an interview, the [interview logic] might call for a variable that
@@ -2264,6 +2283,7 @@ why this needs to be done manually as opposed to automatically:
 [section on question modifiers]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [objects section]: {{ site.baseurl }}/docs/objects.html
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
+[`currency_symbol()`]: {{ site.baseurl }}/docs/functions.html#currency_symbol
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
 [machine learning section]: {{ site.baseurl }}/docs/ml.html#howtouse
@@ -2355,3 +2375,8 @@ why this needs to be done manually as opposed to automatically:
 [`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
 [words file]: https://en.wikipedia.org/wiki/Words_(Unix)
 [wamerican]: https://packages.debian.org/buster/wamerican
+[`locale`]: {{ site.baseurl }}/docs/config.html#locale
+[`set_locale()`]: {{ site.baseurl }}/docs/functions.html#set_locale
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[multi-user interview]: {{ site.baseurl }}/docs/roles.html
+[multi-user interviews]: {{ site.baseurl }}/docs/roles.html
