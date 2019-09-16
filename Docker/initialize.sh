@@ -892,7 +892,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
                 cd "${DA_ROOT}/letsencrypt"
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./letsencrypt-auto --nginx renew
+                    ./letsencrypt-auto renew --nginx -d "${DAHOSTNAME}"
                 else
                     ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
@@ -1046,7 +1046,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
                 cd "${DA_ROOT}/letsencrypt"
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./letsencrypt-auto --apache renew
+                    ./letsencrypt-auto renew --apache -d "${DAHOSTNAME}"
                 else
                     ./letsencrypt-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi

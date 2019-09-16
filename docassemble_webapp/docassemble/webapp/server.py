@@ -3007,13 +3007,19 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             if val not in pg_code_cache:
-                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
+                try:
+                    pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
+                except:
+                    pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + '()', 'git': source_code_url(user_dict[val])}
             name_info[val] = copy.copy(pg_code_cache[val])
             if 'tag' in name_info[val]:
                 functions.add(val)
         elif type(user_dict[val]) is types.ModuleType:
             if val not in pg_code_cache:
-                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
+                try:
+                    pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
+                except:
+                    pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
             name_info[val] = copy.copy(pg_code_cache[val])
             if 'git' in name_info[val]:
                 modules.add(val)
@@ -3023,11 +3029,20 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 for x in list(user_dict[val].__bases__):
                     if x.__name__ != 'DAObject':
                         bases.append(x.__name__)
-                methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
+                try:
+                    methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
+                except:
+                    methods = list()
                 method_list = list()
                 for name, value in methods:
-                    method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
-                pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
+                    try:
+                        method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
+                    except:
+                        method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': '', 'tag': '.' + str(name) + '()', 'git': source_code_url(value)})
+                try:
+                    pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
+                except:
+                    pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list, 'git': source_code_url(user_dict[val], datatype='class')}
             name_info[val] = copy.copy(pg_code_cache[val])
             if 'methods' in name_info[val]:
                 classes.add(val)
@@ -6067,16 +6082,18 @@ def index(action_argument=None):
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
-                    vars_set.add(core_key_name)
+                    vars_set.add(core_key_name + '.' + attribute_name)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
+                    orig_index_name = index_name
+                    #logmessage("Checkbox index is " + index_name + " and core key name is " + core_key_name)
                     if index_name in ('i', 'j', 'k', 'l', 'm', 'n'):
-                        index_name = user_dict.get(index_name, index_name)
+                        index_name = repr(user_dict.get(index_name, index_name))
                     if datatype == 'checkboxes':
-                        commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
+                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
-                        commands.append(core_key_name + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
-                    vars_set.add(core_key_name)
+                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                    vars_set.add(core_key_name + '[' + orig_index_name + ']')
                 else:
                     #logmessage("Checkbox object is " + whole_key)
                     whole_key_tr = sub_indices(whole_key, user_dict)
