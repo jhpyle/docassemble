@@ -175,7 +175,7 @@ and definitions.  More generally, it associates "keys" with "values."
 [YAML] interprets lines of text and figures out whether you are
 talking about a list or a dictionary depending on what punctuation you
 use.  If it sees a hyphen, it thinks you are talking about a list.  If
-it sees a color, it thinks you are talking about a dictionary.
+it sees a colon, it thinks you are talking about a dictionary.
 
 Lists and dictionaries can be combined.  You can have a dictionary of
 lists and a list of dictionaries.  If I wanted to express the to-do
