@@ -1761,7 +1761,7 @@ Keyword parameters populate items in the dictionary directly
 If you use a [`data`] block with [`use objects`] enabled, `DAContext`
 objects will be created instead of [`DADict`] objects when the [YAML]
 includes a dictionary where the keys are a non-empty subset of
-`question`, `document`, `'pdf'`, `'docx'`, and `'pandoc'`.
+`question`, `document`, `pdf`, `docx`, and `pandoc`.
 
 {% include demo-side-by-side.html demo="context" %}
 
