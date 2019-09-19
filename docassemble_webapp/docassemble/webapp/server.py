@@ -815,7 +815,6 @@ from docassemble.base.functions import pickleable_objects, word, comma_and_list,
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data
 from docassemble.webapp.fixpickle import fix_pickle_obj
-from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
@@ -4683,7 +4682,6 @@ def google_page():
 
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
-    session_id = session.get('uid', None)
     return redirect(url_for('interview_list', from_login='1'))
 
 @app.route("/leave", methods=['GET'])
@@ -22635,9 +22633,15 @@ if LOGSERVER is None:
     docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
     sys_logger.addHandler(docassemble_log_handler)
 else:
-    import logging.handlers
-    handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
-    sys_logger.addHandler(handler)
+    try:
+        import logging.handlers
+        handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
+        sys_logger.addHandler(handler)
+    except:
+        sys.stderr.write("Error connecting to syslog server\n")
+        docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
+        sys_logger.addHandler(docassemble_log_handler)
+        LOGSERVER = None
 
 if not in_celery:
     if LOGSERVER is None:
@@ -22797,6 +22801,7 @@ docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machi
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
+from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
 
 def random_social():
     while True:

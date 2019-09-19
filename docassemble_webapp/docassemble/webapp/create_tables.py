@@ -10,9 +10,9 @@ from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.update import get_installed_distributions, add_dependencies
 from sqlalchemy import create_engine, MetaData
 #import random
@@ -134,7 +134,16 @@ def main():
             if db.engine.has_table(dbtableprefix + 'user'):
                 command.upgrade(alembic_cfg, "head")
         #db.drop_all()
-        db.create_all()
+        try:
+            sys.stderr.write("Trying to create tables\n")
+            db.create_all()
+        except:
+            sys.stderr.write("Error trying to create tables; trying a second time.\n")
+            try:
+                db.create_all()
+            except:
+                sys.stderr.write("Error trying to create tables; trying a third time.\n")
+                db.create_all()
         populate_tables()
         db.engine.dispose()
 

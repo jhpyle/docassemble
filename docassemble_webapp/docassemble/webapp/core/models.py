@@ -1,6 +1,7 @@
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, dbtableprefix
 from sqlalchemy import true, false
+import docassemble.webapp.users.models
 
 class Attachments(db.Model):
     __tablename__ = dbtableprefix + "attachments"

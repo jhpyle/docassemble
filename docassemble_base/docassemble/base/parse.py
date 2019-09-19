@@ -5540,7 +5540,8 @@ class Interview:
                 except UndefinedError as the_exception:
                     #logmessage("UndefinedError")
                     if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
-                        logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n" + traceback.format_exc())
+                        #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n" + traceback.format_exc())
+                        logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n")
                     docassemble.base.functions.reset_context()
                     missingVariable = extract_missing_name(the_exception)
                     #logmessage("extracted " + missingVariable)
@@ -6161,7 +6162,7 @@ class Interview:
                 #logmessage("UndefinedError")
                 if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
                     #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n" + traceback.format_exc())
-                    logmessage(the_exception.__class__.__name__ + " exception during document assembly")
+                    logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + text_type(the_exception) + "\n")
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:
