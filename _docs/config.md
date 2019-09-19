@@ -1606,6 +1606,13 @@ python packages:
 
 These packages will be installed when the [Docker] container starts.
 
+The `python packages` directive should not be used to control the
+installation of packages on a machine that is part of an existing
+setup (i.e., it is connecting to a populated SQL database).  If you
+have an existing system, the way to control package installation is
+through the [Package Management] interface or the
+[API](https://docassemble.org/docs/api.html#package_install).
+
 ## <a name="default admin account"></a>Default administrator account credentials
 
 When a **docassemble** SQL database is first initialized, an
