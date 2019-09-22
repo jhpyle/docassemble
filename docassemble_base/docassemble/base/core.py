@@ -171,6 +171,20 @@ class DAEmpty(object):
         return hex(0)
     def __index__(self):
         return int(0)
+    def __le__(self, other):
+        return True
+    def __ge__(self, other):
+        return self is other or False
+    def __gt__(self, other):
+        return False
+    def __lt__(self, other):
+        return True
+    def __eq__(self, other):
+        return self is other
+    def __ne__(self, other):
+        return self is not other
+    def __hash__(self):
+        return hash(('',))
 
 class DAObjectPlusParameters(object):
     pass
@@ -2869,6 +2883,8 @@ class DAFile(DAObject):
             self.file_info = server.file_number_finder(self.number, filename=self.filename)
         else:
             self.file_info = server.file_number_finder(self.number)
+        if 'path' not in self.file_info:
+            raise Exception("Could not retrieve file")
         self.extension = self.file_info.get('extension', None)
         self.mimetype = self.file_info.get('mimetype', None)
         self.persistent = self.file_info['persistent']

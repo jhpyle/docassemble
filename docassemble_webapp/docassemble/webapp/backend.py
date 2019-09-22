@@ -86,10 +86,10 @@ def delete_record(key, id):
 #@elapsed('save_numbered_file')
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
-        if has_request_context() and 'uid' in session:
-            uid = session.get('uid', None)
-        else:
-            uid = docassemble.base.functions.get_uid()
+        try:
+            uid = docassemble.base.functions.this_thread.current_info['session']
+        except:
+            pass
     if uid is None:
         raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
@@ -339,18 +339,20 @@ from docassemble.base.functions import pickleable_objects
 #logmessage("Server started")
 
 #@elapsed('can_access_file_number')
-def can_access_file_number(file_number, uid=None):
+def can_access_file_number(file_number, uids=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         return True
-    if uid is None:
-        if has_request_context() and 'uid' in session:
-            uid = session.get('uid', None)
-        else:
-            uid = docassemble.base.functions.get_uid()
-    if uid is None:
-        raise Exception("can_access_file_number: uid not defined")
-    upload = Uploads.query.filter(and_(Uploads.indexno == file_number, or_(Uploads.key == uid, Uploads.private == False))).first()
-    if upload:
+    upload = Uploads.query.filter(Uploads.indexno == file_number).first()
+    if upload is None:
+        return False
+    if not upload.private:
+        return True
+    if uids is None:
+        try:
+            uids = [docassemble.base.functions.this_thread.current_info['session']]
+        except:
+            uids = []
+    if upload.key in uids:
         return True
     return False
 
@@ -849,3 +851,67 @@ def file_set_attributes(file_number, **kwargs):
     if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
         upload.filename = kwargs['filename']
     db.session.commit()
+
+def clear_session(i):
+    if 'sessions' in session and i in session['sessions']:
+        del session['sessions'][i]
+
+def guess_yaml_filename():
+    yaml_filename = None
+    if 'i' in session and 'uid' in session: #TEMPORARY
+        yaml_filename = session['i']
+    if 'sessions' in session:
+        for item in session['sessions']:
+            yaml_filename = item
+            break
+    return yaml_filename
+
+def get_session(i):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i in session['sessions']:
+        return session['sessions'][i]
+    if 'i' in session and 'uid' in session: #TEMPORARY
+        session['sessions'][session['i']] = dict(uid=session['uid'], encrypted=session.get('encrypted', True), key_logged=session.get('key_logged', False), chatstatus=session.get('chatstatus', 'off'))
+        delete_obsolete()
+        return session['sessions'][i]
+    return None
+
+def get_uid_for_filename(i):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i not in session['sessions']:
+        return None
+    return session['sessions'][i]['uid']
+
+def update_session(i, uid=None, encrypted=None, key_logged=None, chatstatus=None):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i not in session['sessions'] or uid is not None:
+        if uid is None:
+            raise Exception("update_session: cannot create new session without a uid")
+        if encrypted is None:
+            encrypted = True
+        if key_logged is None:
+            key_logged = False
+        if chatstatus is None:
+            chatstatus = 'off'
+        session['sessions'][i] = dict(uid=uid, encrypted=encrypted, key_logged=key_logged, chatstatus=chatstatus)
+    else:
+        if uid is not None:
+            session['sessions'][i]['uid'] = uid
+        if encrypted is not None:
+            session['sessions'][i]['encrypted'] = encrypted
+        if key_logged is not None:
+            session['sessions'][i]['key_logged'] = key_logged
+        if chatstatus is not None:
+            session['sessions'][i]['chatstatus'] = chatstatus
+    session.modified = True
+    return session['sessions'][i]
+
+def get_session_uids():
+    if 'i' in session: #TEMPORARY
+        get_session(session['i'])
+    if 'sessions' in session:
+        return [item['uid'] for item in session['sessions'].values()]
+    return []

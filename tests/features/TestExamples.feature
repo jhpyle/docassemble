@@ -8007,11 +8007,11 @@ Feature: Example interviews
     And I click the button "Continue"
     And I wait 7 seconds
     Then I should see the phrase "Waking up"
-    And I wait 10 seconds
+    And I wait 12 seconds
     Then I should see the phrase "Ok, I am awake now."
-    And I wait 17 seconds
+    And I wait 18 seconds
     Then I should see the phrase "I did the hard work."
-    And I wait 14 seconds
+    And I wait 15 seconds
     Then I should see the phrase "Ok, I am done"
     And I should see the phrase "The answer is 555."
 

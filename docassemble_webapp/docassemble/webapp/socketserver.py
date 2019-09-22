@@ -30,7 +30,7 @@ else:
 import re
 import time
 import random
-from docassemble.webapp.backend import initial_dict, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj
+from docassemble.webapp.backend import initial_dict, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session
 from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import session, request, current_app
@@ -180,51 +180,53 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             sys.stderr.write('  exiting interview thread for sid ' + str(sid) + '\n')
 
 @socketio.on('start_being_controlled', namespace='/wsinterview')
-def interview_start_being_controlled(message):
+def interview_start_being_controlled(data):
     #sys.stderr.write("received start_being_controlled\n")
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
-    the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
-    key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
+    yaml_filename = data['i']
+    session_info = get_session(yaml_filename)
+    if session_info is not None:
+        session_id = session_info['uid']
+        the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
+        key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
 
 @socketio.on('message', namespace='/wsinterview')
 def handle_message(message):
     socketio.emit('mymessage', {'data': "Hello"}, namespace='/wsinterview', room=request.sid)
-    #sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
 
 @socketio.on('chat_log', namespace='/wsinterview')
-def chat_log(message):
+def chat_log(data):
     with session_scope() as dbsession:
-        user_dict = get_dict()
+        yaml_filename = data['i']
+        user_dict = get_dict(yaml_filename)
         if user_dict is None:
             return
         chat_mode = user_dict['_internal']['livehelp']['mode']
-        yaml_filename = session.get('i', None)
-        session_id = session.get('uid', None)
-        user_id = session.get('user_id', None)
-        if user_id is None:
-            temp_user_id = session.get('tempuser', None)
-        else:
-            temp_user_id = None
-        if user_id is not None:
-            user_id = int(user_id)
-        if temp_user_id is not None:
-            temp_user_id = int(temp_user_id)
-        secret = request.cookies.get('secret', None)
-        if secret is not None:
-            secret = str(secret)
-        #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
-        messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
-        socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
+        session_info = get_session(yaml_filename)
+        if session_info is not None:
+            session_id = session_info['uid']
+            user_id = session.get('user_id', None)
+            if user_id is None:
+                temp_user_id = session.get('tempuser', None)
+            else:
+                temp_user_id = None
+            if user_id is not None:
+                user_id = int(user_id)
+            if temp_user_id is not None:
+                temp_user_id = int(temp_user_id)
+            secret = request.cookies.get('secret', None)
+            if secret is not None:
+                secret = str(secret)
+            #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
+            messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
+            socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
     #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages\n")
 
 @socketio.on('transmit', namespace='/wsinterview')
 def handle_message(message):
-    #sys.stderr.write('received transmission from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
-    session_id = session.get('uid', None)
-    if session_id is not None:
-        rr.publish(session_id, json.dumps(dict(origin='client', room=request.sid, message=message['data'])))
+    session_info = get_session(message['i'])
+    if session_info is not None:
+        rr.publish(session_info['uid'], json.dumps(dict(origin='client', room=request.sid, message=message['data'])))
 
 @socketio.on('terminate', namespace='/wsinterview')
 def terminate_interview_connection():
@@ -238,9 +240,14 @@ def terminate_interview_connection():
 @socketio.on('chatmessage', namespace='/wsinterview')
 def chat_message(data):
     nowtime = datetime.datetime.utcnow()
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
-    encrypted = session.get('encrypted', True)
+    yaml_filename = data['i']
+    session_info = get_session(yaml_filename)
+    if session_info is not None:
+        session_id = session_info['uid']
+        encrypted = session_info['encrypted']
+    else:
+        session_id = None
+        encrypted = True
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
@@ -258,7 +265,7 @@ def chat_message(data):
     if temp_user_id is not None:
         temp_user_id = int(temp_user_id)
     with session_scope() as dbsession:
-        user_dict = get_dict()
+        user_dict = get_dict(yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
         if chat_mode in ['peer', 'peerhelp']:
             open_to_peer = True
@@ -293,21 +300,22 @@ def on_interview_connect():
     with session_scope() as dbsession:
         sys.stderr.write("Client connected on interview\n")
         join_room(request.sid)
-        interview_connect()
+        interview_connect(request.args['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
 
 @socketio.on('connectagain', namespace='/wsinterview')
 def on_interview_reconnect(data):
     with session_scope() as dbsession:
         sys.stderr.write("Client reconnected on interview\n")
-        interview_connect()
+        interview_connect(data['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
         socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
 
-def interview_connect():
-    session_id = session.get('uid', None)
-    if session_id is not None:
-        user_dict, is_encrypted = get_dict_encrypt()
+def interview_connect(yaml_filename):
+    session_info = get_session(yaml_filename)
+    if session_info is not None:
+        session_id = session_info['uid']
+        user_dict, is_encrypted = get_dict_encrypt(yaml_filename)
         if is_encrypted:
             secret = request.cookies.get('secret', None)
         else:
@@ -330,7 +338,6 @@ def interview_connect():
         else:
             peer_ok = False
 
-        yaml_filename = session.get('i', None)
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
 
         if request.sid not in threads:
@@ -391,23 +398,31 @@ def interview_connect():
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
 
-@socketio.on('disconnect', namespace='/wsinterview')
-def on_interview_disconnect():
-    sys.stderr.write('Client disconnected from interview\n')
-    yaml_filename = session.get('i', None)
-    session_id = session.get('uid', None)
+@socketio.on('manual_disconnect', namespace='/wsinterview')
+def on_interview_manual_disconnect(data):
+    sys.stderr.write("Client manual disconnect\n")
+    yaml_filename = data['i']
+    session_info = get_session(yaml_filename)
+    session_id = session_info['uid']
     the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
     if request.sid in secrets:
         del secrets[request.sid]
     if session_id is not None:
-        rr.delete('da:interviewsession:uid:' + str(session.get('uid', None)) + ':i:' + str(session.get('i', None)) + ':userid:' + str(the_user_id))
-        key = 'da:session:uid:' + str(session.get('uid', None)) + ':i:' + str(session.get('i', None)) + ':userid:' + str(the_user_id)
+        rr.delete('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
+        key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.expire(key, 10)
         rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
 
-def get_dict():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
+@socketio.on('disconnect', namespace='/wsinterview')
+def on_interview_disconnect():
+    sys.stderr.write('Client disconnected from interview\n')
+
+def get_dict(yaml_filename):
+    session_info = get_session(yaml_filename)
+    if session_info is not None:
+        session_id = session_info['uid']
+    else:
+        session_id = None
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
@@ -424,9 +439,12 @@ def get_dict():
     #release_lock(session_id, yaml_filename)
     return user_dict
 
-def get_dict_encrypt():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
+def get_dict_encrypt(yaml_filename):
+    session_info = get_session(yaml_filename)
+    if session_info is not None:
+        session_id = session_info['uid']
+    else:
+        session_id = None
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)

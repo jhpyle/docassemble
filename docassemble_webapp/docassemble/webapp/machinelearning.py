@@ -426,7 +426,7 @@ class SVMMachineLearner(SimpleTextMachineLearner):
 
 class RandomForestMachineLearner(MachineLearner):
     def _learner(self):
-        return RandomForestClassifier(n_jobs=2)
+        return RandomForestClassifier()
     def feature_importances(self):
         """Returns the importances of each of the features"""
         if not self._train_from_db():

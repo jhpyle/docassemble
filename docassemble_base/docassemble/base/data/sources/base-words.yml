@@ -279,7 +279,6 @@
 "Name of new branch": Null
 "Name of new privilege is required": Null
 "Name of new privilege": Null
-"Names defined": Null
 "New API Key": Null
 "(New branch)": Null
 "New chat connection from": Null
@@ -389,8 +388,6 @@
 "PyPI package": Null
 "PyPI Password": Null
 "PyPI Username": Null
-"Question IDs": Null
-"Question names": Null
 "question": Null
 "Question": Null
 "quit": Null
@@ -444,7 +441,6 @@
 "Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
 "skip": Null
 "SMS": Null
-"SMS version": Null
 "Social ID": Null
 "something": Null
 "Sorry, no help is available for this question.": Null
@@ -567,13 +563,14 @@
 "Type your selection, or type skip to move on without selecting.": Null
 "Type your selection(s), separated by commas.": Null
 "Type your selection(s), separated by commas, or type none.": Null
-"Unable to decrypt interview.  Starting a new session instead.": Null
+"Unable to decrypt interview session.  Starting a new session instead.": Null
 "Unable to determine if the package is published on PyPI.": Null
 "Unable to determine if the package is published on your GitHub account.": Null
 "(Unable to display map)": Null
 "Unable to e-mail your documents to": Null
 "(Unable to extract images from PDF file)": Null
 "Unable to find documents to e-mail.": Null
+"Unable to locate interview session.  Starting a new session instead.": Null
 "Unable to send e-mail.  Error was: ": Null
 "Unable to send e-mail to": Null
 "Unable to send verification code.": Null
@@ -605,8 +602,6 @@
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
-"Variables and values": Null
-"Variables as JSON": Null
 "Variables": Null
 "Verification code": Null
 "Verify": Null
@@ -619,7 +614,6 @@
 "Warning: a file by that name already exists.  If you save, you will overwrite it.": Null
 "Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
 "was saved at": Null
-"WebRTC": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
 "We were unable to submit your request.": Null
 "Would you like to reconfigure two-factor authentication?": Null
@@ -645,7 +639,6 @@
 "You can upload a file here": Null
 "You do not have permission to install this package.": Null
 "You have made too many login attempts.": Null
-"You have registered successfully.": Null
 "You have signed in successfully.": Null
 "You have signed out successfully.": Null
 "You must attach a file.": Null

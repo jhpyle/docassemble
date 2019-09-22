@@ -4,9 +4,6 @@ metadata:
   example end: 3
   documentation: "https://docassemble.org/docs/groups.html"
 ---
-features:
-  progress bar: True
----
 objects:
   - adjective: DAList
   - noun: DAList
@@ -42,7 +39,3 @@ question: |
   % endif
 fields:
   - no label: x[i]
----
-event: set_noun
-code: |
-  noun[0] = action_argument('noun')

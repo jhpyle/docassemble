@@ -221,6 +221,11 @@ else:
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
+def delete_obsolete():
+    for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
+        if name in session:
+            del session['name']
+
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
 
@@ -592,7 +597,6 @@ def logout():
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
     set_cookie = False
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
-    #clear_user_cache(user_id=current_user.id)
     logout_user()
     delete_session()
     session.clear()
@@ -813,7 +817,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -1127,7 +1131,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return file_reference.url_for(**kwargs)
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
-        if privileged or can_access_file_number(file_number):
+        if privileged or can_access_file_number(file_number, uids=get_session_uids()):
             url_properties = dict()
             if hasattr(file_reference, 'filename') and len(file_reference.filename) and not kwargs.get('inline', False):
                 url_properties['display_filename'] = file_reference.filename
@@ -1143,6 +1147,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
     file_reference = str(file_reference)
     if re.search(r'^https?://', file_reference) or file_reference.startswith('/') or file_reference.startswith('?'):
         return(file_reference)
+    kwargs_with_i = copy.copy(kwargs)
+    if 'i' not in kwargs_with_i:
+        yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
+        if yaml_filename is not None:
+            kwargs_with_i['i'] = yaml_filename
     if file_reference in ('login', 'signin'):
         remove_question_package(kwargs)
         return(url_for('user.login', **kwargs))
@@ -1165,11 +1174,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         remove_question_package(kwargs)
         return(url_for('user.logout', **kwargs))
     elif file_reference == 'restart':
-        remove_question_package(kwargs)
-        return(url_for('restart_session', **kwargs))
+        remove_question_package(kwargs_with_i)
+        return(url_for('restart_session', **kwargs_with_i))
     elif file_reference == 'new_session':
-        remove_question_package(kwargs)
-        return(url_for('new_session', **kwargs))
+        remove_question_package(kwargs_with_i)
+        return(url_for('new_session', **kwargs_with_i))
     elif file_reference == 'help':
         return('javascript:daShowHelpTab()');
     elif file_reference == 'interview':
@@ -1179,11 +1188,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
     elif file_reference == 'exit':
-        remove_question_package(kwargs)
-        return(url_for('exit', **kwargs))
+        remove_question_package(kwargs_with_i)
+        return(url_for('exit', **kwargs_with_i))
     elif file_reference == 'exit_logout':
-        remove_question_package(kwargs)
-        return(url_for('exit_logout', **kwargs))
+        remove_question_package(kwargs_with_i)
+        return(url_for('exit_logout', **kwargs_with_i))
     elif file_reference == 'dispatch':
         remove_question_package(kwargs)
         return(url_for('interview_start', **kwargs))
@@ -1224,7 +1233,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         file_number = file_reference
         if kwargs.get('temporary', False):
             url = SavedFile(file_number).temp_url_for(**kwargs)
-        elif can_access_file_number(file_number):
+        elif can_access_file_number(file_number, uids=get_session_uids()):
             url = SavedFile(file_number).url_for(**kwargs)
         else:
             logmessage("Problem accessing " + str(file_number))
@@ -1403,11 +1412,13 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             updated = True
     if updated:
         db.session.commit()
-    user_code = session.get('uid', None)
     if to_convert is None:
         to_do = set()
-        if 'i' in session and user_code is not None:
-            to_do.add((session['i'], user_code))
+        if 'i' in session and 'uid' in session: #TEMPORARY
+            get_session(session['i'])
+        if 'sessions' in session:
+            for filename, info in session['sessions'].items():
+                to_do.add((filename, info['uid']))
         for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id, encrypted=True).group_by(UserDict.filename, UserDict.key).all():
             to_do.add((the_record.filename, the_record.key))
         for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id, UserDict.encrypted == True)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
@@ -1466,55 +1477,6 @@ def MD5Hash(data=None):
     h.update(bytearray(data, encoding='utf-8'))
     return h
 
-# def _do_login_user(user, password, secret, next, remember_me=False):
-#     logmessage("_do_login_user")
-#     if not user:
-#         return unauthenticated()
-
-#     if not _call_or_get(user.is_active):
-#         flash(word('Your account has not been enabled.'), 'error')
-#         return redirect(url_for('user.login'))
-
-#     user_manager = current_app.user_manager
-#     if user_manager.enable_email and user_manager.enable_confirm_email \
-#             and not current_app.user_manager.enable_login_without_confirm_email \
-#             and not user.has_confirmed_email():
-#         url = url_for('user.resend_confirm_email')
-#         flash('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="' + str(url) + '">Re-send confirmation email</a>.', 'error')
-#         return redirect(url_for('user.login'))
-
-#     login_user(user, remember=remember_me)
-
-#     if 'i' in session and 'uid' in session:
-#         save_user_dict_key(session['uid'], session['i'])
-#         session['key_logged'] = True
-
-#     signals.user_logged_in.send(current_app._get_current_object(), user=user)
-
-#     if 'tempuser' in session:
-#         changed = False
-#         for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
-#             chat_entry.user_id = user.id
-#             chat_entry.temp_user_id = None
-#             changed = True
-#         if changed:
-#             db.session.commit()
-#         changed = False
-#         for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
-#             chat_entry.owner_id = user.id
-#             chat_entry.temp_owner_id = None
-#             changed = True
-#         if changed:
-#             db.session.commit()
-#         del session['tempuser']
-#     session['user_id'] = user.id
-#     flash(word('You have signed in successfully.'), 'success')
-
-#     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
-#     response = redirect(next)
-#     response.set_cookie('secret', newsecret)
-#     return response
-
 def set_request_active(value):
     global request_active
     request_active = value
@@ -1526,7 +1488,7 @@ def syslog_message(message):
     else:
         the_user = "anonymous"
     if request_active:
-        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session.get('i', 'na'), 'user': the_user, 'session': session.get('uid', 'na')})
+        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
     else:
         sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
 
@@ -1681,15 +1643,21 @@ def fresh_dictionary():
     return the_dict
 
 def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None):
-    if manual_session_id is not None:
-        session_id = manual_session_id
-    else:
-        session_id = session.get('uid', None)
     if manual_filename is not None:
         yaml_filename = manual_filename
     else:
-        yaml_filename = session.get('i', None)
-    if session_id is None or yaml_filename is None:
+        yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
+    if yaml_filename is None:
+        return
+    if manual_session_id is not None:
+        session_id = manual_session_id
+    else:
+        session_info = get_session(yaml_filename)
+        if session_info is not None:
+            session_id = session_info['uid']
+        else:
+            session_id = None
+    if session_id is None:
         return
     if user_id is None:
         if current_user.is_anonymous:
@@ -2439,10 +2407,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
         sign_in_text = word('Sign in or sign up to save answers')
     else:
         sign_in_text = word('Sign in to save answers')
+    if daconfig.get('resume interview after login', False):
+        login_url = url_for('user.login', next=url_for('index', i=docassemble.base.functions.this_thread.current_info['yaml_filename']))
+    else:
+        login_url = url_for('user.login')
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + url_for('user.login') + '">' + sign_in_text + '</a></div></li>'
+                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
                 navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
         else:
@@ -2469,7 +2441,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
                     if app.config['SHOW_DISPATCH']:
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
                     for item in app.config['ADMIN_INTERVIEWS']:
-                        if item.can_use() and session.get('i', '') != item.interview:
+                        if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
                             navbar += '<a class="dropdown-item" href="' + url_for('index', i=item.interview, new_session='1') + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
                     if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
@@ -2509,27 +2481,33 @@ def exit_href(status):
         return url_for(exit_link, next=status.exit_url)
     return url_for(exit_link)
 
-def delete_session_for_interview():
+def delete_session_for_interview(i=None):
+    if i is not None:
+        clear_session(i)
     for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
         if key in session:
             del session[key]
     return
 
+def delete_session_sessions():
+    if 'sessions' in session:
+        del session['sessions']
+
 def delete_session():
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in backup:
             session[key] = backup[key]
 
@@ -2540,20 +2518,14 @@ def get_existing_session(yaml_filename, secret):
         except:
             logmessage("reset_session: unable to decrypt existing interview session " + result.key)
             continue
-        session['i'] = yaml_filename
-        session['uid'] = result.key
-        session['key_logged'] = True
-        session['encrypted'] = is_encrypted
-        return result.key
-    return None
+        update_session(yaml_filename, uid=result.key, key_logged=True, encrypted=is_encrypted)
+        return result.key, is_encrypted
+    return None, True
 
 def reset_session(yaml_filename, secret):
-    session['i'] = yaml_filename
-    session['uid'] = get_unique_name(yaml_filename, secret)
-    if 'key_logged' in session:
-        del session['key_logged']
-    user_code = session['uid']
     user_dict = fresh_dictionary()
+    user_code = get_unique_name(yaml_filename, secret)
+    update_session(yaml_filename, uid=user_code)
     return(user_code, user_dict)
 
 def _endpoint_url(endpoint):
@@ -2932,8 +2904,8 @@ def source_code_url(the_name, datatype=None):
 def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
-    if 'uid' not in session:
-        session['uid'] = random_alphanumeric(32)
+    #if 'uid' not in session:
+    #    session['uid'] = random_alphanumeric(32)
     if debug_mode:
         has_error = True
         error_message = "Not checking variables because in debug mode."
@@ -3405,7 +3377,8 @@ def make_png_for_pdf(doc, prefix, page=None):
         resolution = PNG_RESOLUTION
     else:
         resolution = PNG_SCREEN_RESOLUTION
-    task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session['uid'], PDFTOPPM_COMMAND, page=page)
+    session_id = docassemble.base.functions.this_thread.current_info['session']
+    task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session_id, PDFTOPPM_COMMAND, page=page)
     return task.id
 
 def fg_make_png_for_pdf(doc, prefix, page=None):
@@ -3533,7 +3506,7 @@ def restart_others():
             #    logmessage("restart_others: unable to get host url")
     return
 
-def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
+def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
@@ -3567,7 +3540,15 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         #logmessage("unique id is " + unique_id)
     if secret is not None:
         secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
+    if session_info is None and yaml is not None:
+        session_info = get_session(yaml)
+    if session_info is not None:
+        user_code = session_info['uid']
+        encrypted = session_info['encrypted']
+    else:
+        user_code = None
+        encrypted = True
+    return_val = {'session': user_code, 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': encrypted, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
         #logmessage("current_info: setting an action " + repr(action))
         return_val.update(action)
@@ -3957,8 +3938,7 @@ def auto_login():
             url_info.update(info['url_args'])
         next_url = url_for('index', **url_info)
         if 'session' in info:
-            session['uid'] = info['session']
-            session['i'] = info['i']
+            update_session(info['i'], uid=info['session'], encrypted=info['encrypted'])
     elif 'next' in info:
         url_info = info.get('url_args', dict())
         next_url = get_url_from_file_reference(info['next'], **url_info)
@@ -4010,15 +3990,17 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
+    if 'i' in session: #TEMPORARY
+        get_session(session['i'])
     to_convert = list()
-    if 'i' in session and 'uid' in session:
-        #obtain_lock(session['uid'], session['i'])
-        if 'tempuser' in session:
-            to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
-        to_convert.append((session['i'], session['uid']))
-        save_user_dict_key(session['uid'], session['i'], priors=True)
-        session['key_logged'] = True
-        #release_lock(session['uid'], session['i'])
+    if 'tempuser' in session:
+        to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+    if 'sessions' in session:
+        for filename, info in session['sessions'].items():
+            if (filename, info['uid']) not in to_convert:
+                to_convert.append((filename, info['uid']))
+                save_user_dict_key(info['uid'], filename, priors=True, user=user)
+                update_session(filename, key_logged=True)
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
     response = redirect(url_for('interview_list', from_login='1'))
@@ -4115,14 +4097,16 @@ def phone_login_verify():
             login_user(user, remember=False)
             r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
             to_convert = list()
-            if 'i' in session and 'uid' in session:
-                #obtain_lock(session['uid'], session['i'])
-                if 'tempuser' in session:
-                    to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
-                to_convert.append((session['i'], session['uid']))
-                save_user_dict_key(session['uid'], session['i'], priors=True)
-                session['key_logged'] = True
-                #release_lock(session['uid'], session['i'])
+            if 'i' in session: #TEMPORARY
+                get_session(session['i'])
+            if 'tempuser' in session:
+                to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+            if 'sessions' in session:
+                for filename, info in session['sessions'].items():
+                    if (filename, info['uid']) not in to_convert:
+                        to_convert.append((filename, info['uid']))
+                        save_user_dict_key(info['uid'], filename, priors=True, user=user)
+                        update_session(filename, key_logged=True)
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
             response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
@@ -4435,7 +4419,6 @@ def manage_account():
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
                 reset_user_dict(session_id, yaml_filename, temp_user_id=temp_user_id, force=delete_shared)
             delete_temp_user_data(temp_user_id, r)
-        manual_checkout()
         delete_session()
         session.clear()
         response = redirect(exit_page)
@@ -4687,10 +4670,10 @@ def post_sign_in():
 @app.route("/leave", methods=['GET'])
 def leave():
     the_exit_page = request.args.get('next', exit_page)
-    if current_user.is_authenticated:
-        flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
-        logout_user()
-    delete_session_for_interview()
+    # if current_user.is_authenticated:
+    #     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+    #     logout_user()
+    #delete_session_for_interview(i=request.args.get('i', None))
     #delete_session()
     #response = redirect(exit_page)
     #response.set_cookie('visitor_secret', '', expires=0)
@@ -4701,11 +4684,14 @@ def leave():
 
 @app.route("/restart_session", methods=['GET'])
 def restart_session():
-    manual_checkout()
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
-    if session_id is None or yaml_filename is None:
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is None:
         return redirect(url_for('index'))
+    session_info = get_session(yaml_filename)
+    if session_info is None:
+        return redirect(url_for('index'))
+    session_id = session_info['uid']
+    manual_checkout(manual_filename=yaml_filename)
     if 'visitor_secret' in request.cookies:
         secret = request.cookies['visitor_secret']
     else:
@@ -4715,57 +4701,45 @@ def restart_session():
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', i=yaml_filename))
     url_args = user_dict['url_args']
     url_args['reset'] = '1'
+    url_args['i'] = yaml_filename
     return redirect(url_for('index', **url_args))
 
 @app.route("/new_session", methods=['GET'])
 def new_session():
-    manual_checkout()
-    yaml_filename = session.get('i', None)
+    yaml_filename = request.args.get('i', None)
     if yaml_filename is None:
         return redirect(url_for('index'))
+    manual_checkout(manual_filename=yaml_filename)
     url_args = dict(i=yaml_filename, new_session='1')
     return redirect(url_for('index', **url_args))
 
 @app.route("/exit", methods=['GET'])
 def exit():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
     the_exit_page = request.args.get('next', exit_page)
-    if 'key_logged' in session:
-        del session['key_logged']
-    if session_id is not None and yaml_filename is not None:
-        manual_checkout()
-        #obtain_lock(session_id, yaml_filename)
-        reset_user_dict(session_id, yaml_filename)
-        #release_lock(session_id, yaml_filename)
-    delete_session_for_interview()
-    #delete_session()
-    #response = redirect(the_exit_page)
-    #response.set_cookie('visitor_secret', '', expires=0)
-    #response.set_cookie('secret', '', expires=0)
-    #response.set_cookie('session', '', expires=0)
-    #return response
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is not None:
+        session_info = get_session(yaml_filename)
+        if session_info is not None:
+            manual_checkout(manual_filename=yaml_filename)
+            reset_user_dict(session_info['uid'], yaml_filename)
+    delete_session_for_interview(i=yaml_filename)
     return redirect(the_exit_page)
 
 @app.route("/exit_logout", methods=['GET'])
 def exit_logout():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
     the_exit_page = request.args.get('next', exit_page)
-    if 'key_logged' in session:
-        del session['key_logged']
-    if session_id is not None and yaml_filename is not None:
-        manual_checkout()
-        #obtain_lock(session_id, yaml_filename)
-        reset_user_dict(session_id, yaml_filename)
-        #release_lock(session_id, yaml_filename)
+    yaml_filename = request.args.get('i', guess_yaml_filename())
+    if yaml_filename is not None:
+        session_info = get_session(yaml_filename)
+        if session_info is not None:
+            manual_checkout(manual_filename=yaml_filename)
+            reset_user_dict(session_info['uid'], yaml_filename)
     if current_user.is_authenticated:
         flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
-    delete_session() # used to be indented
     session.clear()
     response = redirect(the_exit_page)
     response.set_cookie('visitor_secret', '', expires=0)
@@ -4785,7 +4759,7 @@ def health_check():
 @app.route("/checkout", methods=['POST', 'GET'])
 def checkout():
     try:
-        manual_checkout()
+        manual_checkout(manual_filename=request.args['i'])
     except:
         return jsonify(success=False)
     return jsonify(success=True)
@@ -4861,17 +4835,19 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
 
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is None:
+        return jsonify(success=False)
+    session_info = get_session(yaml_filename)
+    if session_info is None:
+        return jsonify(success=False)
+    session_id = session_info['uid']
     if 'visitor_secret' in request.cookies:
         secret = request.cookies['visitor_secret']
     else:
         secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    #session_cookie_id = request.cookies.get('session', None)
-    if session_id is None or yaml_filename is None:
-        return jsonify(success=False)
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
         auth_user_id = None
@@ -4902,7 +4878,7 @@ def checkin():
             #sys.stderr.write("checkin: fetch_user_dict2\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters), session_info=session_info))
             interview_status.checkin = True
             interview.assemble(user_dict, interview_status=interview_status)
             if interview_status.question.question_type == "backgroundresponse":
@@ -4923,10 +4899,11 @@ def checkin():
         help_ok = False
         num_peers = 0
         help_available = 0
-        old_chatstatus = session.get('chatstatus', None)
+        session_info = get_session(yaml_filename)
+        old_chatstatus = session_info['chatstatus']
         chatstatus = request.form.get('chatstatus', 'off')
         if old_chatstatus != chatstatus:
-            session['chatstatus'] = chatstatus
+            update_session(yaml_filename, chatstatus=chatstatus)
         obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
         key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         call_forwarding_on = False
@@ -5013,13 +4990,13 @@ def checkin():
                             chatstatus = 'ready'
                         else:
                             chatstatus = 'waiting'
-                        session['chatstatus'] = chatstatus
+                        update_session(yaml_filename, chatstatus=chatstatus)
                         obj['chatstatus'] = chatstatus
                     else:
                         pipe.expire(lkey, 60)
                         pipe.execute()
                         chatstatus = 'ready'
-                        session['chatstatus'] = chatstatus
+                        update_session(yaml_filename, chatstatus=chatstatus)
                         obj['chatstatus'] = chatstatus
                 elif chatstatus == 'on':
                     if len(potential_partners) > 0:
@@ -5045,7 +5022,7 @@ def checkin():
                                 break
                 if chatstatus in ('waiting', 'hangup'):
                     chatstatus = 'standby'
-                    session['chatstatus'] = chatstatus
+                    update_session(yaml_filename, chatstatus=chatstatus)
                     obj['chatstatus'] = chatstatus
             else:
                 if peer_ok:
@@ -5062,16 +5039,16 @@ def checkin():
                             pipe.expire(lkey, 6000)
                             pipe.execute()
                         chatstatus = 'ready'
-                        session['chatstatus'] = chatstatus
+                        update_session(yaml_filename, chatstatus=chatstatus)
                         obj['chatstatus'] = chatstatus
                     elif chatstatus in ('waiting', 'hangup'):
                         chatstatus = 'standby'
-                        session['chatstatus'] = chatstatus
+                        update_session(yaml_filename, chatstatus=chatstatus)
                         obj['chatstatus'] = chatstatus
                 else:
                     if chatstatus in ('standby', 'ready', 'ringing', 'hangup'):
                         chatstatus = 'waiting'
-                        session['chatstatus'] = chatstatus
+                        update_session(yaml_filename, chatstatus=chatstatus)
                         obj['chatstatus'] = chatstatus
             if peer_ok:
                 for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
@@ -5106,7 +5083,6 @@ def checkin():
         parameters = request.form.get('raw_parameters', None)
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-            #logmessage("checkin: published parameters to " + key)
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
@@ -5180,8 +5156,13 @@ def setup_variables():
 
 @app.route("/vars", methods=['POST', 'GET'])
 def get_variables():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is None:
+        abort(400)
+    session_info = get_session(yaml_filename)
+    if session_info is None:
+        abort(400)
+    session_id = session_info['uid']
     if 'visitor_secret' in request.cookies:
         secret = request.cookies['visitor_secret']
     else:
@@ -5207,19 +5188,15 @@ def rootindex():
     url = daconfig.get('root redirect url', None)
     if url is not None:
         return redirect(url)
-    yaml_filename = session.get('i', default_yaml_filename)
-    yaml_parameter = request.args.get('i', None)
-    if yaml_filename is None and yaml_parameter is None:
+    yaml_filename = request.args.get('i', None)
+    if yaml_filename is None:
         if len(daconfig['dispatch']):
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
     the_args = dict()
     for key, val in request.args.items():
         the_args[key] = val
-    if yaml_parameter is None and yaml_filename is not None:
-        the_args['i'] = yaml_filename
-    if yaml_parameter is not None:
-        the_args['i'] = yaml_parameter
+    the_args['i'] = yaml_filename
     return redirect(url_for('index', **the_args))
 
 def title_converter(content, part, status):
@@ -5264,8 +5241,7 @@ def launch():
             args[key] = val
     args['i'] = data['i']
     if 'session' in data:
-        session['i'] = data['i']
-        session['uid'] = data['session']
+        update_session(data['i'], uid=data['session'])
     else:
         args['new_session'] = '1'
     return redirect(url_for('index', **args))
@@ -5273,13 +5249,12 @@ def launch():
 @app.route("/resume", methods=['POST'])
 @csrf.exempt
 def resume():
-    post_data = request.get_json(silent=True)
+    post_data = request.args.get_json(silent=True)
     if post_data is None:
         post_data = request.form.copy()
     if 'session' not in post_data or 'i' not in post_data:
         abort(403)
-    session['uid'] = post_data['session']
-    session['i'] = post_data['i']
+    update_session(post_data['i'], uid=post_data['session'])
     del post_data['session']
     if 'ajax' in post_data:
         ajax_value = int(post_data['ajax'])
@@ -5314,23 +5289,17 @@ def index(action_argument=None):
         is_json = False
         is_js = False
         js_target = False
-    chatstatus = session.get('chatstatus', 'off')
-    session_id = session.get('uid', None)
-    #logmessage("index: session uid is " + str(session_id))
     if current_user.is_anonymous:
-        #logmessage("index: is anonymous")
         if 'tempuser' not in session:
             new_temp_user = TempUser()
             db.session.add(new_temp_user)
             db.session.commit()
             session['tempuser'] = new_temp_user.id
     else:
-        #logmessage("index: is not anonymous")
         if 'user_id' not in session:
             session['user_id'] = current_user.id
     expire_visitor_secret = False
     if 'visitor_secret' in request.cookies:
-        #logmessage("index: there is a visitor secret")
         if 'session' in request.args:
             secret = request.cookies.get('secret', None)
             expire_visitor_secret = True
@@ -5338,234 +5307,147 @@ def index(action_argument=None):
             secret = request.cookies['visitor_secret']
     else:
         secret = request.cookies.get('secret', None)
-    #logmessage("index: secret is " + repr(secret))
     use_cache = int(request.args.get('cache', 1))
     reset_interview = int(request.args.get('reset', 0))
     new_interview = int(request.args.get('new_session', 0))
-    encrypted = session.get('encrypted', True)
-    #logmessage("index: session says encrypted is " + str(encrypted))
     if secret is None:
-        #logmessage("index: setting set_cookie to True")
         secret = random_string(16)
         set_cookie = True
     else:
-        #logmessage("index: setting set_cookie to False")
         secret = str(secret)
         set_cookie = False
-    yaml_filename = session.get('i', default_yaml_filename)
-    #logmessage("index: yaml_filename from session/default is " + str(yaml_filename))
     steps = 1
     need_to_reset = False
     need_to_resave = False
-    yaml_parameter = request.args.get('i', None)
-    if yaml_filename is None and yaml_parameter is None:
+    yaml_filename = request.args.get('i', guess_yaml_filename())
+    if yaml_filename is None:
         if len(daconfig['dispatch']):
             return redirect(url_for('interview_start'))
         else:
             yaml_filename = final_default_yaml_filename
+    session_info = get_session(yaml_filename)
     session_parameter = request.args.get('session', None)
-    #logmessage("index: session_parameter is " + str(session_parameter))
-    #g.start_index = time.time()
-    if yaml_parameter is not None:
-        #logmessage("index: yaml_parameter is not None: " + str(yaml_parameter))
-        yaml_filename = yaml_parameter
-        old_yaml_filename = session.get('i', None)
-        #logmessage("index: old_yaml_filename is " + str(old_yaml_filename))
-        if old_yaml_filename != yaml_filename or reset_interview or new_interview:
-            #logmessage("index: change in yaml filename detected")
-            if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+    if session_info is None or reset_interview or new_interview:
+        if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+            raise DAError(word("Not authorized"), code=403)
+        if yaml_filename.startswith('docassemble.playground'):
+            if not app.config['ENABLE_PLAYGROUND']:
                 raise DAError(word("Not authorized"), code=403)
-            if yaml_filename.startswith('docassemble.playground'):
-                if not app.config['ENABLE_PLAYGROUND']:
-                    raise DAError(word("Not authorized"), code=403)
-            else:
-                yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
+        else:
+            yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
+        show_flash = False
+        interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        if session_info is None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
+            show_flash = True
+        if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
             show_flash = False
-            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            session['i'] = yaml_filename
-            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview and old_yaml_filename != yaml_filename:
-                show_flash = True
-            if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
-                show_flash = False
-            if session_parameter is None:
-                #logmessage("index: change in yaml filename detected and session_parameter is None")
-                if show_flash:
-                    if current_user.is_authenticated:
-                        message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
-                    else:
-                        message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-                if reset_interview and ('uid' in session and old_yaml_filename == yaml_filename):
-                    #obtain_lock(session['uid'], yaml_filename)
-                    reset_user_dict(session['uid'], yaml_filename)
-                    #release_lock(session['uid'], yaml_filename)
-                if current_user.is_anonymous:
-                    if not interview.allowed_to_access(is_anonymous=True):
-                        delete_session_for_interview()
-                        flash(word("You need to be logged in to access this interview."), "info")
-                        return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
-                elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
-                    raise DAError(word('You are not allowed to access this interview.'), code=403)
-                unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
-                if unique_sessions is not False and not current_user.is_authenticated:
-                    delete_session_for_interview()
+        if session_parameter is None:
+            if show_flash:
+                if current_user.is_authenticated:
+                    message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
+                else:
+                    message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
+            if reset_interview and session_info is not None:
+                reset_user_dict(session_info['uid'], yaml_filename)
+            if current_user.is_anonymous:
+                if not interview.allowed_to_access(is_anonymous=True):
+                    delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
                     return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
-                session_id = None
-                if (not reset_interview) and (unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions))):
-                    session_id = get_existing_session(yaml_filename, secret)
-                if session_id is None:
-                    user_code, user_dict = reset_session(yaml_filename, secret)
-                    add_referer(user_dict)
-                    save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-                    release_lock(user_code, yaml_filename)
-                    session_id = session.get('uid', None)
-                    if 'key_logged' in session:
-                        del session['key_logged']
-                    #logmessage("Need to reset because session_parameter is none")
-                    need_to_resave = True
-                    need_to_reset = True
-            else:
-                #logmessage("index: both i and session provided")
-                if reset_interview:
-                    reset_user_dict(session_parameter, yaml_filename)
-                    user_code, user_dict = reset_session(yaml_filename, secret)
-                    add_referer(user_dict)
-                    save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-                    release_lock(user_code, yaml_filename)
-                    session_id = session.get('uid', None)
-                    if 'key_logged' in session:
-                        del session['key_logged']
-                    #logmessage("Need to reset because session_parameter is none")
-                    need_to_resave = True
-                    need_to_reset = True
-                if show_flash:
-                    if current_user.is_authenticated:
-                        message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
-                    else:
-                        message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
-            if show_flash:
-                flash(word(message), 'info')
-    else:
-        if session_parameter is None and (reset_interview or new_interview):
-            if 'uid' in session and reset_interview:
-                #obtain_lock(session['uid'], yaml_filename)
-                reset_user_dict(session['uid'], yaml_filename)
-                #release_lock(session['uid'], yaml_filename)
-            user_code, user_dict = reset_session(yaml_filename, secret)
-            add_referer(user_dict)
-            save_user_dict(user_code, user_dict, yaml_filename, secret)
-            release_lock(user_code, yaml_filename)
-            session_id = session.get('uid', None)
-            if 'key_logged' in session:
-                del session['key_logged']
-            need_to_resave = True
-            need_to_reset = True
-        elif session_id is None and not (is_ajax or is_json or is_js):
-            #logmessage("index: need_to_reset is True because not ajax/json and yaml_parameter is None")
-            need_to_reset = True
-    if session_parameter is not None:
-        #logmessage("index: session parameter is not None: " + str(session_parameter))
-        session_id = session_parameter
-        session['uid'] = session_id
-        if yaml_parameter is not None:
-            #logmessage("index: yaml_parameter is not None: " + str(yaml_filename))
-            session['i'] = yaml_filename
-        if 'key_logged' in session:
-            del session['key_logged']
-        #logmessage("index: resetting because session_parameter not none")
-        need_to_reset = True
-    if session_id:
-        user_code = session_id
-        obtain_lock(user_code, yaml_filename)
-        try:
-            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        except Exception as the_err:
-            try:
-                sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + ": " + text_type(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
-            except:
-                sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
-            release_lock(user_code, yaml_filename)
-            logmessage("index: dictionary fetch failed")
-            for key in ['encrypted', 'key_logged', 'uid']:
-                if key in session:
-                    del session[key]
-            response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
-            flash(word("Unable to decrypt interview.  Starting a new session instead."), "error")
-            return response
-        if encrypted != is_encrypted:
-            #logmessage("index: change in encryption; encrypted is " + str(encrypted) + " but is_encrypted is " + str(is_encrypted))
-            encrypted = is_encrypted
-            session['encrypted'] = encrypted
-        if user_dict is None:
-            #logmessage("index: user_dict is None")
-            try:
+            elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                raise DAError(word('You are not allowed to access this interview.'), code=403)
+            unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
+            if unique_sessions is not False and not current_user.is_authenticated:
+                delete_session_for_interview(yaml_filename)
+                flash(word("You need to be logged in to access this interview."), "info")
+                return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
+            session_id = None
+            if reset_interview == 2:
+                delete_session_sessions()
+            if (not reset_interview) and (unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions))):
+                session_id, encrypted = get_existing_session(yaml_filename, secret)
+            if session_id is None:
+                user_code, user_dict = reset_session(yaml_filename, secret)
+                add_referer(user_dict)
+                save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
-            except:
-                pass
-            del user_code
-            del user_dict
+                need_to_resave = True
+                need_to_reset = True
+            session_info = get_session(yaml_filename)
+        else:
+            if reset_interview:
+                reset_user_dict(session_parameter, yaml_filename)
+                if reset_interview == 2:
+                    delete_session_sessions()
+                user_code, user_dict = reset_session(yaml_filename, secret)
+                add_referer(user_dict)
+                save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
+                release_lock(user_code, yaml_filename)
+                session_info = get_session(yaml_filename)
+                need_to_resave = True
+                need_to_reset = True
+            if show_flash:
+                if current_user.is_authenticated:
+                    message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
+                else:
+                    message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
+        if show_flash:
+            flash(word(message), 'info')
+    else:
+        if session_parameter is not None and not need_to_reset:
+            session_info = update_session(yaml_filename, uid=session_parameter)
+            need_to_reset = True
+    user_code = session_info['uid']
+    encrypted = session_info['encrypted']
+    obtain_lock(user_code, yaml_filename)
     try:
-        user_dict
-        user_code
-    except:
-        user_code, user_dict = reset_session(yaml_filename, secret)
-        add_referer(user_dict)
-        encrypted = False
-        session['encrypted'] = encrypted
-        steps = 1
-    #g.got_dict = time.time()
+        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+    except Exception as the_err:
+        try:
+            sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + ": " + text_type(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+        except:
+            sys.stderr.write("index: there was an exception " + text_type(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+        release_lock(user_code, yaml_filename)
+        logmessage("index: dictionary fetch failed")
+        clear_session(yaml_filename)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+        flash(word("Unable to decrypt interview session.  Starting a new session instead."), "error")
+        return response
+    if user_dict is None:
+        sys.stderr.write("index: no user_dict found after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+        release_lock(user_code, yaml_filename)
+        logmessage("index: dictionary fetch returned no results")
+        clear_session(yaml_filename)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
+        flash(word("Unable to locate interview session.  Starting a new session instead."), "error")
+        return response
+    if encrypted != is_encrypted:
+        update_session(yaml_filename, encrypted=is_encrypted)
+        encrypted = is_encrypted
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
-        #logmessage("index: encryption mismatch, should be False")
         encrypted = False
-        session['encrypted'] = encrypted
-        decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
-    # else:
-    #     logmessage("index: no encryption mismatch for should be False")
+        update_session(yaml_filename, encrypted=encrypted)
+        decrypt_session(secret, user_code=user_code, filename=yaml_filename)
     if user_dict.get('multi_user', False) is False and encrypted is False:
-        #logmessage("index: encryption mismatch, should be True")
-        encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+        encrypt_session(secret, user_code=user_code, filename=yaml_filename)
         encrypted = True
-        session['encrypted'] = encrypted
-    # else:
-    #     logmessage("index: no encryption mismatch for should be True")
-    # if current_user.is_authenticated and 'key_logged' not in session:
-    if 'key_logged' not in session:
-        #logmessage("index: need to save user dict key")
+        update_session(yaml_filename, encrypted=encrypted)
+    if not session_info['key_logged']:
         save_user_dict_key(user_code, yaml_filename)
-        session['key_logged'] = True
-    #if 'action' in session:
-    #    #logmessage("index: action in session")
-    #    action = json.loads(myb64unquote(session['action']))
-    #    del session['action']
+        update_session(yaml_filename, key_logged=True)
     if '_action' in request.form and 'in error' not in session:
         action = json.loads(myb64unquote(request.form['_action']))
-        #logmessage("index: action from _action is " + str(action))
     elif 'action' in request.args and 'in error' not in session:
-        #logmessage("index: action in session")
         action = json.loads(myb64unquote(request.args['action']))
     elif action_argument:
         action = action_argument
     url_args_changed = False
     if len(request.args):
-        #logmessage("index: there were args")
-        # if 'action' in request.args and 'in error' not in session:
-        #     session['action'] = request.args['action']
-        #     response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
-        #     if set_cookie:
-        #         response.set_cookie('secret', secret)
-        #     if expire_visitor_secret:
-        #         response.set_cookie('visitor_secret', '', expires=0)
-        #     release_lock(user_code, yaml_filename)
-        #     #logmessage("index: returning action response")
-        #     return response
         for argname in request.args:
             if argname in reserved_argnames:
                 continue
             exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
-                #logmessage("index: there was an argname " + str(argname) + " and we need to reset")
-            #need_to_resave = True
-            #need_to_reset = True
             url_args_changed = True
     index_params = dict(i=yaml_filename)
     if analytics_configured:
@@ -5573,10 +5455,7 @@ def index(action_argument=None):
             if argname in ('utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'):
                 index_params[argname] = request.args[argname]
     if need_to_reset:
-        #logmessage("index: needed to reset, so redirecting; encrypted is " + str(encrypted))
         if use_cache == 0:
-            # docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
-            #sys.stderr.write("Updating index because of cache being 0\n")
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
         if need_to_resave:
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
@@ -5589,74 +5468,20 @@ def index(action_argument=None):
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
         return response
-    #logmessage("index: made it through")
     post_data = request.form.copy()
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
     else:
         the_user_id = current_user.id
-    # if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
-    #     success = False
-    #     question_number = post_data['_question_number']
-    #     attachment_email_address = post_data['_attachment_email_address']
-    #     if '_attachment_include_editable' in post_data:
-    #         if post_data['_attachment_include_editable'] == 'True':
-    #             include_editable = True
-    #         else:
-    #             include_editable = False
-    #         del post_data['_attachment_include_editable']
-    #     else:
-    #         include_editable = False
-    #     del post_data['_question_number']
-    #     del post_data['_email_attachments']
-    #     del post_data['_attachment_email_address']
-    #     ci = current_info(yaml=yaml_filename, req=request)
-    #     worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    #     for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
-    #         try:
-    #             result = docassemble.webapp.worker.email_attachments.delay(yaml_filename, ci['user'], user_code, secret, ci['url'], ci['url_root'], email_address, question_number, include_editable)
-    #             r.rpush(worker_key, result.id)
-    #             success = True
-    #         except Exception as errmess:
-    #             success = False
-    #             logmessage("index: failed with " + str(errmess))
-    #             break
-    #     if success:
-    #         flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
-    #     else:
-    #         flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
         old_user_dict = user_dict
-        #sys.stderr.write("index: calling fetch_user_dict2\n")
         steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
         if encrypted != is_encrypted:
             encrypted = is_encrypted
-            session['encrypted'] = encrypted
+            update_session(yaml_filename, encrypted=encrypted)
         action = None
     else:
         old_user_dict = None
-    # elif 'filename' in request.args:
-    #     the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('i'), secret)
-    #     if the_user_dict is not None:
-    #         interview = docassemble.base.interview_cache.get_interview(request.args.get('i'))
-    #         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=request.args.get('i'), req=request, action=action))
-    #         interview.assemble(the_user_dict, interview_status)
-    #         if len(interview_status.attachments) > 0:
-    #             the_attachment = interview_status.attachments[int(request.args.get('index'))]
-    #             the_file_number = the_attachment['file'][request.args.get('format')]
-    #             the_format = request.args.get('format')
-    #             if the_format == "pdf":
-    #                 mime_type = 'application/pdf'
-    #             elif the_format == "tex":
-    #                 mime_type = 'application/x-latex'
-    #             elif the_format == "rtf":
-    #                 mime_type = 'application/rtf'
-    #             elif the_format == "docx":
-    #                 mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    #             response = send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format))
-    #             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    #             release_lock(user_code, yaml_filename)
-    #             return(response)
     known_varnames = dict()
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
@@ -5664,7 +5489,6 @@ def index(action_argument=None):
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
         visible_field_names = list()
-    #logmessage("Visible field names is " + repr(visible_field_names))
     field_numbers = dict()
     numbered_fields = dict()
     for kv_key, kv_var in known_varnames.items():
@@ -5681,34 +5505,24 @@ def index(action_argument=None):
         try:
             m = re.search(r'(.*)(\[[^\]]+\])$', from_safeid(field_name))
             if m:
-                #logmessage("Found a checkbox var " + m.group(1))
-                #logmessage("Found a checkbox index " + m.group(2))
                 if safeid(m.group(1)) in known_varnames:
-                    #logmessage("Adding " + from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2) + " to visible_fields")
                     visible_fields.add(safeid(from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2)))
         except Exception as the_err:
-            #logmessage("Failure to unpack " + field_name + " because of " + text_type(the_err))
             pass
         if field_name in known_varnames:
             visible_fields.add(known_varnames[field_name])
         else:
             visible_fields.add(field_name)
-    #logmessage("known_varnames is " + repr(known_varnames))
-    #logmessage("Visible fields is " + repr(visible_fields))
-    #logmessage("Numbered fields is " + repr(numbered_fields))
     list_collect_list = None
     if '_list_collect_list' in post_data:
-        #logmessage("list is " + post_data['_list_collect_list'])
         the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
         if not illegal_variable_name(the_list):
             list_collect_list = the_list
             exec(list_collect_list + '._allow_appending()' , user_dict)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
-        #logmessage("checkbox_fields is " + repr(checkbox_fields))
         for checkbox_field, checkbox_value in checkbox_fields.items():
             if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
-                #logmessage("Checkbox: adding " + checkbox_field + " set to " + checkbox_value)
                 post_data.add(checkbox_field, checkbox_value)
     if '_empties' in post_data:
         empty_fields = json.loads(myb64unquote(post_data['_empties']))
@@ -5730,7 +5544,6 @@ def index(action_argument=None):
         something_changed = True
         user_dict['_internal']['tracker'] = max(int(post_data['_tracker']), user_dict['_internal']['tracker'])
     if '_track_location' in post_data and post_data['_track_location']:
-        #logmessage("index: found track location of " + post_data['_track_location'])
         the_location = json.loads(post_data['_track_location'])
     else:
         the_location = None
@@ -5741,10 +5554,7 @@ def index(action_argument=None):
         for data_type in known_datatypes.values():
             if data_type.startswith('object'):
                 should_assemble = True
-    #g.before_interview = time.time()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    #g.after_interview = time.time()
-    #g.interview = interview
     if not should_assemble:
         for key in post_data:
             if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
@@ -5767,7 +5577,6 @@ def index(action_argument=None):
                         if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
                             continue
                     should_assemble = True
-                    #logmessage("index: pre-assembly necessary for " + the_key)
                     break
             except Exception as the_err:
                 logmessage("index: bad key was " + text_type(key) + " and error was " + the_err.__class__.__name__)
@@ -5778,24 +5587,18 @@ def index(action_argument=None):
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = interview.debug
-    # if should_assemble and '_action_context' in post_data:
-    #     action = json.loads(myb64unquote(post_data['_action_context']))
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface), tracker=user_dict['_internal']['tracker'])
-    #g.interview_status = interview_status
-    #g.status_created = time.time()
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
     vars_set = set()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     error_messages = list()
     if should_assemble or something_changed:
-        #logmessage("index: assemble 1")
         interview.assemble(user_dict, interview_status=interview_status)
         if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + text_type(post_data['_question_name']) + " versus " + text_type(interview_status.question.name))
             if REQUIRE_IDEMPOTENT:
                 error_messages.append(("success", word("Input not processed because the question changed.  Please continue.")))
                 post_data = dict()
-                #raise Exception("Error: interview logic was not idempotent, but must be if a generic object, index variable, or multiple choice question is used.")
     changed = False
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False
@@ -5885,11 +5688,9 @@ def index(action_argument=None):
             error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
         else:
             if (not something_changed) and (not should_assemble) and key_requires_preassembly.search(file_field):
-                #logmessage("index: assemble 2")
                 interview.assemble(user_dict, interview_status)
             initial_string = 'import docassemble.base.core'
             try:
-                #logmessage("index: doing " + initial_string)
                 exec(initial_string, user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + text_type(errMess)))
@@ -5897,7 +5698,7 @@ def index(action_argument=None):
             if '_success' in post_data and post_data['_success']:
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 filename = secure_filename('canvas.png')
-                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage, binary=True)
@@ -5905,7 +5706,6 @@ def index(action_argument=None):
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ")"
-            #logmessage("0Doing " + the_string)
             vars_set.add(file_field)
             try:
                 exec(the_string, user_dict)
@@ -5917,31 +5717,25 @@ def index(action_argument=None):
                 error_messages.append(("error", "Error: " + text_type(errMess)))
     if '_next_action_to_set' in post_data:
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
-        #logmessage("next_action_to_set is " + str(next_action_to_set))
     else:
         next_action_to_set = None
     # restore this, maybe
     if False and '_next_action' in post_data:
         next_action = json.loads(myb64unquote(post_data['_next_action']))
-        #logmessage("next_action is " + str(next_action))
     else:
         next_action = None
-    #logmessage("field_numbers is " + str(field_numbers))
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
         if not (should_assemble or something_changed):
             if the_question.validation_code is not None:
-                #logmessage("index: assemble 3")
                 interview.assemble(user_dict, interview_status)
             else:
                 for the_field in the_question.fields:
                     if hasattr(the_field, 'validate'):
-                        #logmessage("index: assemble 4")
                         interview.assemble(user_dict, interview_status)
                         break
     else:
         the_question = None
-    #known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
@@ -5954,22 +5748,14 @@ def index(action_argument=None):
                 if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                     post_data[known_varnames[orig_key]] = post_data[orig_key]
             else:
-                #logmessage("orig_key " + orig_key + " is not in known_varnames")
                 m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
                 if m:
-                    #logmessage("got a match")
                     base_orig_key = safeid(m.group(1))
                     if base_orig_key in known_varnames:
                         full_key = safeid(myb64unquote(known_varnames[base_orig_key]) + m.group(2))
-                        #logmessage("Adding " + full_key + " to post_data")
                         post_data[full_key] = post_data[orig_key]
-                    #else:
-                    #    logmessage("foo 1")
-                #else:
-                #    logmessage("foo 2")
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
-            #logmessage("Considering gathered key: " + str(key))
             try:
                 eval(objname, user_dict)
             except:
@@ -5982,32 +5768,22 @@ def index(action_argument=None):
     field_error = dict()
     validated = True
     imported_core = False
-    #blank_fields = set(known_datatypes.keys())
-    #logmessage("blank_fields is " + repr(blank_fields))
     special_question = None
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
-        #logmessage("The data type is " + text_type(type(data)))
         try:
             key = myb64unquote(orig_key)
         except:
             raise DAError("index: invalid name " + text_type(orig_key))
-        #logmessage("Processing a key: " + key)
-        #if orig_key in blank_fields:
-            #logmessage(key + " is not a blank field")
-            #blank_fields.discard(orig_key)
         if key.startswith('_field_'):
             continue
         bracket_expression = None
         if orig_key in empty_fields:
-            #logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
             set_to_empty = empty_fields[orig_key]
         else:
-            #logmessage("orig_key " + str(orig_key) + " is not set to empty")
-            set_to_empty = None #used to be False
-        #logmessage("Searching key " + str(key))
+            set_to_empty = None
         if match_brackets.search(key):
             match = match_inside_and_outside_brackets.search(key)
             try:
@@ -6036,7 +5812,6 @@ def index(action_argument=None):
             if illegal_variable_name(whole_key):
                 error_messages.append(("error", "Error: Invalid key " + whole_key))
                 break
-            # logmessage("core key name is " + str(core_key_name) + " whole key is " + str(whole_key) + " Checking for existence of " + str(whole_key))
             if whole_key in user_dict:
                 it_exists = True
             else:
@@ -6046,14 +5821,11 @@ def index(action_argument=None):
                 except:
                     it_exists = False
             if not it_exists:
-                # logmessage("It does not exist")
                 method = None
                 commands = list()
-                # logmessage(repr(parse_result['final_parts']))
                 if parse_result['final_parts'][1] != '':
                     if parse_result['final_parts'][1][0] == '.':
                         try:
-                            #logmessage("Evaling " + core_key_name)
                             core_key = eval(core_key_name, user_dict)
                             if hasattr(core_key, 'instanceName'):
                                 method = 'attribute'
@@ -6061,21 +5833,17 @@ def index(action_argument=None):
                             pass
                     elif parse_result['final_parts'][1][0] == '[':
                         try:
-                            #logmessage("Evaling " + core_key_name)
                             core_key = eval(core_key_name, user_dict)
                             if hasattr(core_key, 'instanceName'):
                                 method = 'index'
                         except:
                             pass
                 datatype = known_datatypes.get(real_key, None)
-                #logmessage("datatype is " + str(datatype))
-                #logmessage("method is " + str(method))
                 if not imported_core:
                     commands.append("import docassemble.base.core")
                     imported_core = True
                 if method == 'attribute':
                     attribute_name = parse_result['final_parts'][1][1:]
-                    #logmessage("Checkbox object is " + attribute_name)
                     if datatype == 'checkboxes':
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
@@ -6084,7 +5852,6 @@ def index(action_argument=None):
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
                     orig_index_name = index_name
-                    #logmessage("Checkbox index is " + index_name + " and core key name is " + core_key_name)
                     if index_name in ('i', 'j', 'k', 'l', 'm', 'n'):
                         index_name = repr(user_dict.get(index_name, index_name))
                     if datatype == 'checkboxes':
@@ -6093,7 +5860,6 @@ def index(action_argument=None):
                         commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
                     vars_set.add(core_key_name + '[' + orig_index_name + ']')
                 else:
-                    #logmessage("Checkbox object is " + whole_key)
                     whole_key_tr = sub_indices(whole_key, user_dict)
                     if datatype == 'checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
@@ -6101,60 +5867,7 @@ def index(action_argument=None):
                         commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     vars_set.add(whole_key)
                 for command in commands:
-                    #logmessage("1Doing " + command)
                     exec(command, user_dict)
-            #logmessage("key is now " + key)
-            # match = match_inside_and_outside_brackets.search(key)
-            # try:
-            #     key = match.group(1)
-            # except:
-            #     raise DAError("index: invalid bracket name " + str(match.group(1)))
-            # real_key = safeid(key)
-            # if match_invalid_key.search(key):
-            #     error_messages.append(("error", "Error: Invalid character in key: " + key))
-            #     break
-            # b_match = match_inside_brackets.search(match.group(2))
-            # if b_match:
-            #     try:
-            #         bracket_expression = from_safeid(b_match.group(1))
-            #     except:
-            #         bracket_expression = b_match.group(1)
-            # bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
-            # #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
-            # if key in user_dict:
-            #     known_variables[key] = True
-            # if key not in known_variables:
-            #     try:
-            #         eval(key, user_dict)
-            #     except:
-            #         #logmessage("setting key " + str(key) + " to empty dict")
-            #         #m = re.search(r'(.*)\.([^.]+)', key)
-            #         use_initialize = False
-            #         if re.search(r'\.', key):
-            #             core_key_name = re.sub(r'^(.*)\..*', r'\1', key)
-            #             attribute_name = re.sub(r'.*\.', '', key)
-            #             #logmessage("Core key is " + str(core_key_name))
-            #             try:
-            #                 core_key = eval(core_key, user_dict)
-            #                 if isinstance(core_key, DAObject):
-            #                     use_initialize = True
-            #             except:
-            #                 pass
-            #         objtype = 'DADict'
-            #         if orig_key in known_datatypes:
-            #             #logmessage("key " + key + " is a " + known_datatypes[orig_key])
-            #             if known_datatypes[orig_key] == 'object_checkboxes':
-            #                 objtype = 'DAList'
-            #         if use_initialize:
-            #             the_string = "import docassemble.base.core\n" + core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base." + objtype + ", auto_gather=False, gathered=True)"
-            #         else:
-            #             the_string = "import docassemble.base.core\n" + key + ' = docassemble.base.core.' + objtype + '(' + repr(key) + ', auto_gather=False, gathered=True)'
-            #         try:
-            #             exec(the_string, user_dict)
-            #             known_variables[key] = True
-            #         except:
-            #             raise DAError("cannot initialize " + key)
-            # key = key + bracket
         else:
             real_key = orig_key
             parse_result = docassemble.base.parse.parse_var_name(key)
@@ -6164,16 +5877,13 @@ def index(action_argument=None):
         if illegal_variable_name(key):
             error_messages.append(("error", "Error: Invalid key " + key))
             break
-        #logmessage("Real key is " + real_key + " and key is " + key)
         do_append = False
         do_opposite = False
         is_ml = False
         is_date = False
         test_data = data
         if real_key in known_datatypes:
-            #logmessage("real key " + real_key + " is in datatypes: " + known_datatypes[real_key])
             if known_datatypes[real_key] in ('boolean', 'checkboxes'):
-                #logmessage("Processing boolean")
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -6242,10 +5952,6 @@ def index(action_argument=None):
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
-                #logmessage("We have an object type and objselections is " + str(user_dict['_internal']['objselections']))
-                #logmessage("We have an object type and key is " + str(key))
-                #logmessage("We have an object type and data is " + str(data))
-                #logmessage("We have an object type and set_to_empty is " + str(set_to_empty))
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
@@ -6262,11 +5968,8 @@ def index(action_argument=None):
                 continue
             else:
                 if isinstance(data, string_types):
-                    #data = fixtext_type(data)
                     data = data.strip()
-                    #logmessage("data is " + data)
                 if data == "None" and set_to_empty is not None:
-                    #logmessage("setting None; set_to_empty is " + text_type(set_to_empty))
                     test_data = None
                     data = "None"
                 else:
@@ -6275,9 +5978,7 @@ def index(action_argument=None):
             if known_datatypes[real_key] == 'object_checkboxes':
                 do_append = True
         elif orig_key in known_datatypes:
-            #logmessage("key " + key + " is in datatypes: " + known_datatypes[orig_key])
             if known_datatypes[orig_key] in ('boolean', 'checkboxes'):
-                #logmessage("Processing boolean")
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -6355,16 +6056,12 @@ def index(action_argument=None):
                 continue
             else:
                 if isinstance(data, string_types):
-                    #data = fixtext_type(data)
                     data = data.strip()
-                    #logmessage("data is " + data)
                 test_data = data
                 data = repr(data)
         elif key == "_multiple_choice":
-            #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
         else:
-            #logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
             data = repr(data)
         if key == "_multiple_choice":
             if '_question_name' in post_data:
@@ -6378,14 +6075,12 @@ def index(action_argument=None):
                         if len(interview.questions_by_name[question_name].fields[0].choices) > the_choice and 'key' in interview.questions_by_name[question_name].fields[0].choices[the_choice] and hasattr(interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'].question_type in ('restart', 'exit', 'logout', 'exit_logout', 'leave'):
                             special_question = interview.questions_by_name[question_name].fields[0].choices[the_choice]['key']
         if is_date:
-            #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + text_type(errMess)))
         key_tr = sub_indices(key, user_dict)
         if is_ml:
-            #logmessage("index: doing import docassemble.base.util")
             try:
                 exec("import docassemble.base.util", user_dict)
             except Exception as errMess:
@@ -6417,11 +6112,9 @@ def index(action_argument=None):
             else:
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
-            #logmessage("data is " + data)
             vars_set.add(key)
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
-                #logmessage("field " + orig_key + " has validation function")
                 field_name = safeid('_field_' + str(field_numbers[orig_key]))
                 if field_name in post_data:
                     the_key = field_name
@@ -6430,17 +6123,14 @@ def index(action_argument=None):
                 the_func = eval(the_question.fields[field_numbers[orig_key]].validate['compute'], user_dict)
                 try:
                     the_result = the_func(test_data)
-                    #logmessage("the result was " + str(the_result))
                     if not the_result:
                         field_error[the_key] = word("Please enter a valid value.")
                         validated = False
                         continue
                 except Exception as errstr:
-                    #logmessage("the result was an exception")
                     field_error[the_key] = text_type(errstr)
                     validated = False
                     continue
-        #logmessage("2Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
@@ -6451,12 +6141,8 @@ def index(action_argument=None):
             except:
                 pass
     if validated and special_question is None:
-        #for orig_key in blank_fields:
-            #key = myb64unquote(orig_key)
-            #logmessage("Found a blank field " + key + " of type " + known_datatypes[orig_key])
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
-            #logmessage("3Doing empty key " + str(key))
             vars_set.add(key + '.gathered')
             if illegal_variable_name(key):
                 logmessage("Received illegal variable name " + text_type(key))
@@ -6509,14 +6195,12 @@ def index(action_argument=None):
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
             if not has_invalid_fields:
-                #logmessage("4Doing import docassemble.base.core")
                 initial_string = 'import docassemble.base.core'
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
                 if (not something_changed) and (not should_assemble) and should_assemble_now:
-                    #logmessage("index: assemble 5")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
@@ -6562,7 +6246,7 @@ def index(action_argument=None):
                                 if the_format != extension:
                                     filename = re.sub(r'\.[^\.]+$', '', filename) + '.' + the_format
                                     extension, mimetype = get_ext_and_mimetype(filename)
-                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                                file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
                                 saved_file = SavedFile(file_number, extension=extension, fix=True)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
                                 files_to_process.append((filename, file_number, mimetype, extension))
@@ -6582,28 +6266,22 @@ def index(action_argument=None):
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                #logmessage("field_numbers is " + repr(field_numbers))
-                                #logmessage("orig_file_field is " + repr(orig_file_field))
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
-                                    #logmessage("field " + orig_file_field + " has validation function")
                                     the_key = orig_file_field
                                     the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
                                     try:
                                         the_result = the_func(eval(the_file_list))
-                                        #logmessage("the result was " + str(the_result))
                                         if not the_result:
                                             field_error[the_key] = word("Please enter a valid value.")
                                             validated = False
                                             break
                                     except Exception as errstr:
-                                        #logmessage("the result was an exception")
                                         field_error[the_key] = text_type(errstr)
                                         validated = False
                                         break
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("5Doing " + the_string)
                             vars_set.add(file_field)
                             try:
                                 exec(the_string, user_dict)
@@ -6629,7 +6307,7 @@ def index(action_argument=None):
                             sys.stderr.write("Error: " + text_type(errMess) + "\n")
                             error_messages.append(("error", "Error: " + text_type(errMess)))
         if '_files' in post_data:
-            file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
+            file_fields = json.loads(myb64unquote(post_data['_files']))
             has_invalid_fields = False
             should_assemble_now = False
             empty_file_vars = set()
@@ -6656,7 +6334,6 @@ def index(action_argument=None):
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
                 if (not something_changed) and (not should_assemble) and should_assemble_now:
-                    #logmessage("index: assemble 6")
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
@@ -6681,18 +6358,12 @@ def index(action_argument=None):
                                 if is_ajax:
                                     return_fake_html = True
                                 filename = secure_filename(the_file.filename)
-                                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
+                                file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
                                 extension, mimetype = get_ext_and_mimetype(filename)
-                                # original_extension = extension
-                                # if extension == 'gif':
-                                #     extension == 'png'
-                                #     mimetype = 'image/png'
-                                #     filename = re.sub(r'\.gif$', '.png', filename, re.IGNORECASE)
                                 saved_file = SavedFile(file_number, extension=extension, fix=True)
                                 temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
                                 the_file.save(temp_file.name)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
-                                #sys.stderr.write("Upload was processed\n")
                                 files_to_process.append((filename, file_number, mimetype, extension))
                             try:
                                 file_field = from_safeid(var_to_store)
@@ -6710,28 +6381,22 @@ def index(action_argument=None):
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                #logmessage("field_numbers is " + repr(field_numbers))
-                                #logmessage("orig_file_field is " + repr(orig_file_field))
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
-                                    #logmessage("field " + orig_file_field + " has validation function")
                                     the_key = orig_file_field
                                     the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
                                     try:
                                         the_result = the_func(eval(the_file_list))
-                                        #logmessage("the result was " + str(the_result))
                                         if not the_result:
                                             field_error[the_key] = word("Please enter a valid value.")
                                             validated = False
                                             break
                                     except Exception as errstr:
-                                        #logmessage("the result was an exception")
                                         field_error[the_key] = text_type(errstr)
                                         validated = False
                                         break
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
-                            #logmessage("6Doing " + the_string)
                             vars_set.add(file_field)
                             if validated:
                                 try:
@@ -6767,10 +6432,8 @@ def index(action_argument=None):
                     interview.questions_by_name[post_data['_question_name']].mark_as_answered(user_dict)
                 except:
                     logmessage("index: question name could not be found")
-            #logmessage("start: event_stack is " + repr(user_dict['_internal']['event_stack']))
             if '_event' in post_data and 'event_stack' in user_dict['_internal']:
                 events_list = json.loads(myb64unquote(post_data['_event']))
-                #logmessage("events_list was " + repr(events_list))
                 if len(events_list):
                     session_uid = interview_status.current_info['user']['session_uid']
                     if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
@@ -6782,9 +6445,10 @@ def index(action_argument=None):
                                     if 'arguments' in interview_status.current_info:
                                         del interview_status.current_info['arguments']
                                 break
+                            if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
+                                break
             for var_name in list(vars_set):
                 vars_set.add(sub_indices(var_name, user_dict))
-            #logmessage("vars_set was " + repr(vars_set))
             if len(vars_set) and 'event_stack' in user_dict['_internal']:
                 session_uid = interview_status.current_info['user']['session_uid']
                 popped = True
@@ -6793,15 +6457,13 @@ def index(action_argument=None):
                     if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
                         for var_name in vars_set:
                             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
-                                #logmessage("popped " + var_name)
                                 popped = True
                                 user_dict['_internal']['event_stack'][session_uid].pop(0)
-            #logmessage("finish: event_stack is " + repr(user_dict['_internal']['event_stack']))
+                            if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
+                                break
         else:
-            #sys.stderr.write("index: calling fetch_user_dict3\n")
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     else:
-        #sys.stderr.write("index: calling fetch_user_dict4\n")
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated and special_question is None:
         if '_collect_delete' in post_data and '_list_collect_list' in post_data:
@@ -6833,54 +6495,33 @@ def index(action_argument=None):
                 error_messages.append(("error", the_error_message))
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-    # restore this, maybe
-    #if next_action:
-    #    the_next_action = next_action.pop(0)
-    #    interview_status.next_action = next_action
-    #    interview_status.current_info.update(the_next_action)
-    #startTime = int(round(time.time() * 1000))
-    #g.assembly_start = time.time()
-    #logmessage("index: assemble 7")
     interview.assemble(user_dict, interview_status, old_user_dict, force_question=special_question)
-    #g.assembly_end = time.time()
-    #endTime = int(round(time.time() * 1000))
-    #logmessage(str(endTime - startTime))
     current_language = docassemble.base.functions.get_language()
     session['language'] = current_language
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
-    # if len(interview_status.attachments) > 0:
-    #     #logmessage("Updating attachment info")
-    #     update_attachment_info(user_code, user_dict, interview_status, secret)
-    # restore this, maybe
-    #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
-    #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
-    #else:
-    #    next_action_review = None
     if not changed and url_args_changed:
         changed = True
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "restart":
-        manual_checkout()
+        manual_checkout(manual_filename=yaml_filename)
         url_args = user_dict['url_args']
         referer = user_dict['_internal'].get('referer', None)
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        #if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
-            session['key_logged'] = True
+            update_session(yaml_filename, key_logged=True)
         steps = 1
         changed = False
-        #logmessage("index: assemble 8")
         interview.assemble(user_dict, interview_status)
     if interview_status.question.question_type == "exit":
-        manual_checkout()
+        manual_checkout(manual_filename=yaml_filename)
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview()
         release_lock(user_code, yaml_filename)
@@ -6892,11 +6533,9 @@ def index(action_argument=None):
             fake_up(response)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
-        manual_checkout()
+        manual_checkout(manual_filename=yaml_filename)
         if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
-        #else:
-        #    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         delete_session()
         if interview_status.questionText != '':
@@ -6915,44 +6554,39 @@ def index(action_argument=None):
             fake_up(response)
         return response
     if interview_status.question.question_type == "new_session":
-        manual_checkout()
+        manual_checkout(manual_filename=yaml_filename)
         referer = user_dict['_internal'].get('referer', None)
         user_dict = fresh_dictionary()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
         release_lock(user_code, yaml_filename)
         user_code, user_dict = reset_session(yaml_filename, secret)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
-            session['key_logged'] = True
+            update_session(yaml_filename, key_logged=True)
         steps = 1
         changed = False
-        #logmessage("index: assemble 7.9")
         interview.assemble(user_dict, interview_status)
     will_save = True
     if interview_status.question.question_type == "refresh":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         response = do_refresh(is_ajax, yaml_filename)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "signin":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "register":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "leave":
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -6967,8 +6601,6 @@ def index(action_argument=None):
         user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "response":
         if is_ajax:
-            # Duplicative to save here?
-            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
@@ -6992,15 +6624,12 @@ def index(action_argument=None):
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
-            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
                 fake_up(response)
             return response
         else:
-            # Duplicative to save here?  Just for the 404?
-            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             if interview_status.question.response_file is not None:
                 the_path = interview_status.question.response_file.path()
             else:
@@ -7016,20 +6645,11 @@ def index(action_argument=None):
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
-        # Duplicative to save here?
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
-    # Why do this?  To prevent loops of redirects?
-    # Commenting this line out is necessary for force-gather.yml to work.
-    # user_dict['_internal']['answers'] = dict()
-    # Why is this necessary?
     if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
         user_dict['_internal']['answers'].clear()
-    # Not sure we need this anymore
-    # if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
-    #     del user_dict['_internal']['answers'][interview_status.question.name]
     if not validated:
         changed = False
     if changed and validated:
@@ -7041,27 +6661,19 @@ def index(action_argument=None):
         if save_status == 'new':
             steps += 1
             user_dict['_internal']['steps'] = steps
-        #logmessage("Incrementing steps because action")
     if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
         advance_progress(user_dict, interview)
-    #logmessage("index: saving user dict where encrypted is " + str(encrypted))
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     if save_status != 'ignore':
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
         if user_dict.get('multi_user', False) is True and encrypted is True:
-            #logmessage("index: post interview, encryption should be False")
             encrypted = False
-            session['encrypted'] = encrypted
-            decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
-        # else:
-        #     logmessage("index: post interview, no detection of encryption should be False")
+            update_session(yaml_filename, encrypted=encrypted)
+            decrypt_session(secret, user_code=user_code, filename=yaml_filename)
         if user_dict.get('multi_user', False) is False and encrypted is False:
-            #logmessage("index: post interview, encryption should be True")
-            encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
+            encrypt_session(secret, user_code=user_code, filename=yaml_filename)
             encrypted = True
-            session['encrypted'] = encrypted
-        # else:
-        #     logmessage("index: post interview, no detection of encryption should be True")
+            update_session(yaml_filename, encrypted=encrypted)
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
         if return_fake_html:
@@ -7114,18 +6726,17 @@ def index(action_argument=None):
             do_action = 'null'
         chat_available = user_dict['_internal']['livehelp']['availability']
         chat_mode = user_dict['_internal']['livehelp']['mode']
-        #logmessage("index: chat_available is " + str(chat_available))
         if chat_available == 'unavailable':
             chat_status = 'off'
-            session['chatstatus'] = 'off'
+            update_session(yaml_filename, chatstatus='off')
         elif chat_available == 'observeonly':
             chat_status = 'observeonly'
-            session['chatstatus'] = 'observeonly'
+            update_session(yaml_filename, chatstatus='observeonly')
         else:
-            chat_status = chatstatus
+            chat_status = session_info['chatstatus']
         if chat_status in ('ready', 'on'):
             chat_status = 'ringing'
-            session['chatstatus'] = 'ringing'
+            update_session(yaml_filename, chatstatus='ringing')
         if chat_status != 'off':
             send_changes = 'true'
         else:
@@ -7142,11 +6753,8 @@ def index(action_argument=None):
         else:
             user_id_string = 't' + str(session['tempuser'])
             is_user = 'true'
-        if 'uid' in session and 'i' in session:
-            if r.get('da:control:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)) is not None:
-                being_controlled = 'true'
-            else:
-                being_controlled = 'false'
+        if r.get('da:control:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)) is not None:
+            being_controlled = 'true'
         else:
             being_controlled = 'false'
         if debug_mode:
@@ -7158,13 +6766,6 @@ def index(action_argument=None):
             $("#dareadability-help").hide();
             $("#dareadability-question").show();
 """
-        #     debug_init = """
-        # $("#showvariables").on('click', function(e){
-        #   $(this).parent().parent().append($("<h4>").html(""" + json.dumps(word("Variables and values")) + """));
-        #   $(this).parent().parent().append($('<iframe class="jsonvars" src=""" + '"' + url_for('get_variables') + '"' + """>'));
-        #   $(this).remove();
-        #   e.preventDefault();
-        # });"""
         else:
             debug_readability_help = ''
             debug_readability_question = ''
@@ -7178,7 +6779,6 @@ def index(action_argument=None):
         else:
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
-#      //var daNextAction = """ + json.dumps(next_action_review) + """;
         if ga_configured:
             ga_id = google_config.get('analytics id')
         else:
@@ -7233,6 +6833,7 @@ def index(action_argument=None):
       var globalEval = eval;
       var locationBar = """ + json.dumps(url_for('index', **index_params)) + """;
       var daPostURL = """ + json.dumps(url_for('index', **index_params_external)) + """;
+      var daYamlFilename = """ + json.dumps(yaml_filename) + """;
       var daFetchAjaxTimeout = null;
       if (daJsEmbed){
         daTargetDiv = '#' + daJsEmbed;
@@ -7454,7 +7055,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index') + '"' + """,
+          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -7483,7 +7084,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index') + '"' + """,
+          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -7509,7 +7110,7 @@ def index(action_argument=None):
         }
         $.ajax({
           type: "GET",
-          url: """ + '"' + url_for('get_variables') + '"' + """,
+          url: """ + '"' + url_for('get_variables', i=yaml_filename) + '"' + """,
           success: callback,
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -7626,7 +7227,7 @@ def index(action_argument=None):
       function daSender(){
         //console.log("daSender");
         if ($("#daMessage").val().length){
-          daSocket.emit('chatmessage', {data: $("#daMessage").val()});
+          daSocket.emit('chatmessage', {data: $("#daMessage").val(), i: daYamlFilename});
           $("#daMessage").val("");
           $("#daMessage").focus();
         }
@@ -7671,11 +7272,11 @@ def index(action_argument=None):
             if (daSocket.connected){
                 //console.log("Calling connectagain");
                 if (daChatStatus == 'ready'){
-                  daSocket.emit('connectagain', {data: 1});
+                  daSocket.emit('connectagain', {i: daYamlFilename});
                 }
                 if (daBeingControlled){
                     daShowControl('animated');
-                    daSocket.emit('start_being_controlled', {data: 1});
+                    daSocket.emit('start_being_controlled', {i: daYamlFilename});
                 }
             }
             else{
@@ -7685,10 +7286,10 @@ def index(action_argument=None):
             return;
         }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect('http://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('http://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect('https://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('https://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
         }
         //console.log("daInitializeSocket: socket is " + daSocket);
         if (daSocket != null){
@@ -7704,11 +7305,11 @@ def index(action_argument=None):
                     daPushChanges();
                     //daTurnOnChat();
                     //console.log("Emitting chat_log from on connect");
-                    daSocket.emit('chat_log', {data: 1});
+                    daSocket.emit('chat_log', {i: daYamlFilename});
                 }
                 if (daBeingControlled){
                     daShowControl('animated')
-                    daSocket.emit('start_being_controlled', {data: 1});
+                    daSocket.emit('start_being_controlled', {i: daYamlFilename});
                 }
             });
             daSocket.on('chat_log', function(arg) {
@@ -7746,6 +7347,8 @@ def index(action_argument=None):
               }
             });
             daSocket.on('disconnect', function() {
+                //console.log("Manual disconnect");
+                //daSocket.emit('manual_disconnect', {i: daYamlFilename});
                 //console.log("Disconnected socket");
                 //daSocket = null;
             });
@@ -7756,7 +7359,7 @@ def index(action_argument=None):
                 daPushChanges();
                 daTurnOnChat();
                 //console.log("Emitting chat_log from reconnected");
-                daSocket.emit('chat_log', {data: 1});
+                daSocket.emit('chat_log', {i: daYamlFilename});
             });
             daSocket.on('mymessage', function(arg) {
                 //console.log("Received " + arg.data);
@@ -8419,7 +8022,7 @@ def index(action_argument=None):
         var data = decodeURIComponent($(this).data('embaction'));
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index') + '"' + """,
+          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
           data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8744,7 +8347,7 @@ def index(action_argument=None):
         //console.log("Doing checkin with " + daChatStatus);
         $.ajax({
           type: 'POST',
-          url: """ + "'" + url_for('checkin') + "'" + """,
+          url: """ + "'" + url_for('checkin', i=yaml_filename) + "'" + """,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -8758,7 +8361,7 @@ def index(action_argument=None):
       function daCheckout(){
         $.ajax({
           type: 'POST',
-          url: """ + "'" + url_for('checkout') + "'" + """,
+          url: """ + "'" + url_for('checkout', i=yaml_filename) + "'" + """,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -9677,7 +9280,7 @@ def index(action_argument=None):
             //console.log("daInitialize call to chat_log in checkin");
             $.ajax({
               type: 'POST',
-              url: """ + "'" + url_for('checkin') + "'" + """,
+              url: """ + "'" + url_for('checkin', i=yaml_filename) + "'" + """,
               beforeSend: addCsrfHeader,
               xhrFields: {
                 withCredentials: true
@@ -9997,12 +9600,6 @@ def index(action_argument=None):
             bodyclass="dabody da-pad-for-navbar"
     if hasattr(interview_status.question, 'id'):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
-        # if not is_ajax:
-        #     start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        # output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp'], debug_mode)
-        # output += signature_html(interview_status, debug_mode, url_for('index', i=yaml_filename), validation_rules)
-        # if not is_ajax:
-        #     end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     if debug_mode:
         interview_status.screen_reader_text = dict()
     if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
@@ -10030,7 +9627,7 @@ def index(action_argument=None):
             the_dialect = DEFAULT_DIALECT
         for question_type in ('question', 'help'):
             for audio_format in ('mp3', 'ogg'):
-                interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
+                interview_status.screen_reader_links[question_type].append([url_for('speak_file', i=yaml_filename, question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
         for def_key, def_val in post_data.items():
             if def_key in field_numbers:
@@ -10063,7 +9660,6 @@ def index(action_argument=None):
         if interview_status.question.interview.use_navigation == 'horizontal':
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
-                #offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12
                 the_nav_bar = '        <div class="col d-none d-md-block">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
         else:
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
@@ -10106,11 +9702,9 @@ def index(action_argument=None):
                 readability_report += '          </table>' + "\n"
     if interview_status.using_screen_reader:
         for question_type in ('question', 'help'):
-            #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
             if question_type not in interview_status.screen_reader_text:
                 continue
             phrase = to_text(interview_status.screen_reader_text[question_type])
-            #logmessage("Phrase is " + repr(phrase))
             if encrypted:
                 the_phrase = encrypt_phrase(phrase, secret)
             else:
@@ -10123,7 +9717,6 @@ def index(action_argument=None):
                     existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
                 else:
                     existing_phrase = unpack_phrase(existing_entry.phrase)
-                #logmessage("phrase is " + phrase.__class__.__name__ + " and existing phrase is " + existing_phrase.__class__.__name__)
                 if phrase != existing_phrase:
                     logmessage("index: the phrase changed; updating it")
                     existing_entry.phrase = the_phrase
@@ -10168,7 +9761,6 @@ def index(action_argument=None):
                 output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
         output += '          </section>\n'
-    #output += "        </div>\n      </div>\n"
     output += "      </div>\n"
     if interview_status.question.question_type != "signature" and interview_status.post:
         output += '      <div class="row">' + "\n"
@@ -10209,8 +9801,7 @@ def index(action_argument=None):
         output += '      </div>' + "\n"
         output += '      <div class="row">' + "\n"
         output += '        <div id="dasource" class="col-md-12 collapse">' + "\n"
-        #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
-        #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
+        output += '          <p><a target="_blank" href="' + url_for('get_variables', i=yaml_filename) + '">' + word('Show variables and values') + '</a></p>' + "\n"
         if interview_status.using_screen_reader:
             output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
             for question_type in ('question', 'help'):
@@ -10221,50 +9812,26 @@ def index(action_argument=None):
             output += word('unavailable')
         else:
             output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
-        # if len(interview_status.question.fields_used):
-        #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
-        # if len(interview_status.question.names_used):
-        #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
-        # if len(interview_status.question.mako_names):
-        #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
         if len(interview_status.seeking) > 1:
             output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
-            # output += '<ul>\n'
-            # for foo in user_dict['_internal']['answered']:
-            #     output += "<li>" + str(foo) + "</li>"
-            # output += '</ul>\n'
             output += get_history(interview, interview_status)
-        #output += '          <h4>' + word('Names defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
-        #output += '          <h4>' + word('Question names') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_name.keys())]) + '</p>' + "\n"
-        #if len(interview.questions_by_id):
-        #    output += '          <h4>' + word('Question IDs') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview.questions_by_id.keys())]) + '</p>' + "\n"
-        output += '          <p><a target="_blank" href="' + url_for('get_variables') + '">' + word('Show variables and values') + '</a></p>' + "\n"
-            # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
         output += '        </div>' + "\n"
         output += '      </div>' + "\n"
     output += '    </div>'
     if not is_ajax:
         end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>" + "\n  </body>\n</html>"
-    #logmessage(output.encode('utf-8'))
-    #logmessage("Request time interim: " + str(g.request_time()))
-    if 'uid' in session and 'i' in session:
-        key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
-        #logmessage("Setting html key " + key)
+    if True:
+        key = 'da:html:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         pipe = r.pipeline()
         pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
         pipe.expire(key, 60)
         pipe.execute()
-        #sys.stderr.write("10\n")
-        #logmessage("Done setting html key " + key)
-        #if session.get('chatstatus', 'off') in ('waiting', 'standby', 'ringing', 'ready', 'on'):
         if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
-            inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
+            inputkey = 'da:input:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
         data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         data.update(interview_status.as_data(user_dict))
-        #if next_action_review:
-        #    data['next_action'] = next_action_review
         if reload_after and reload_after > 0:
             data['reload_after'] = reload_after
         if 'action' in data and data['action'] == 'redirect' and 'url' in data:
@@ -10277,7 +9844,6 @@ def index(action_argument=None):
         else:
             do_action = None
         response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
-        #response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, next_action=next_action_review, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         if return_fake_html:
             fake_up(response)
     elif is_js:
@@ -10320,8 +9886,6 @@ def index(action_argument=None):
     release_lock(user_code, yaml_filename)
     if 'in error' in session:
         del session['in error']
-    #logmessage("Request time final: " + str(g.request_time()))
-    #sys.stderr.write("11\n")
     return response
 
 def fake_up(response):
@@ -10446,9 +10010,14 @@ def utility_processor():
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
     audio_file = None
-    filename = session.get('i', None)
-    key = session.get('uid', None)
-    encrypted = session.get('encrypted', False)
+    filename = request.args.get('i', None)
+    if filename is None:
+        abort(400)
+    session_info = get_session(filename)
+    if session_info is None:
+        abort(400)
+    key = session_info['uid']
+    encrypted = session_info['encrypted']
     question = request.args.get('question', None)
     question_type = request.args.get('type', None)
     file_format = request.args.get('format', None)
@@ -10550,18 +10119,17 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
             if start_new:
                 url = url_for('index', i=yaml_filename, _external=True, reset='1')
             else:
-                url = url_for('index', i=yaml_filename, _external=True)
+                url = url_for('index', i=yaml_filename, new_session='1', _external=True)
         else:
             if start_new:
                 url = url_for('index', i=yaml_filename, reset='1')
             else:
-                url = url_for('index', i=yaml_filename)
+                url = url_for('index', i=yaml_filename, new_session='1')
         interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package, tags=sorted(tags), metadata=metadata))
     return interview_info
 
 @app.route('/list', methods=['GET'])
 def interview_start():
-    delete_session_for_interview()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
@@ -10621,7 +10189,7 @@ def redirect_to_interview(dispatch):
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
 def serve_stored_file(uid, number, filename, extension):
     number = re.sub(r'[^0-9]', '', str(number))
-    if not can_access_file_number(number, uid=uid):
+    if not can_access_file_number(number, uids=[uid]):
         abort(404)
     try:
         file_info = get_info_from_file_number(number, privileged=True)
@@ -10638,7 +10206,7 @@ def serve_stored_file(uid, number, filename, extension):
 def serve_temporary_file(code, filename, extension):
     file_info = r.get('da:tempfile:' + str(code))
     if file_info is None:
-        logmessage("file_info was none")
+        logmessage("serve_temporary_file: file_info was none")
         abort(404)
     (section, file_number) = file_info.decode().split('^')
     the_file = SavedFile(file_number, fix=True, section=section)
@@ -10654,12 +10222,12 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None:
-        if not can_access_file_number(number):
+        if not can_access_file_number(number, uids=get_session_uids()):
             abort(404)
         the_file = SavedFile(number)
     else:
         try:
-            file_info = get_info_from_file_number(number, privileged=privileged)
+            file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
             abort(404)
         if 'path' not in file_info:
@@ -10689,12 +10257,12 @@ def serve_uploaded_file_with_extension(number, extension):
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None:
-        if not can_access_file_number(number):
+        if not can_access_file_number(number, uids=get_session_uids()):
             abort(404)
         the_file = SavedFile(number)
     else:
         try:
-            file_info = get_info_from_file_number(number, privileged=privileged)
+            file_info = get_info_from_file_number(number, privileged=privileged, uids=uids)
         except:
             abort(404)
         if 'path' not in file_info:
@@ -10805,12 +10373,9 @@ def visit_interview():
         abort(404)
     if 'secret' not in obj or 'encrypted' not in obj:
         abort(404)
-    session['i'] = i
-    session['uid'] = uid
-    session['encrypted'] = obj['encrypted']
+    session_info = update_session(i, uid=uid, encrypted=obj['encrypted'])
     if 'user_id' not in session:
         session['user_id'] = current_user.id
-    session['key_logged'] = True
     if 'tempuser' in session:
         del session['tempuser']
     response = redirect(url_for('index', i=i))
@@ -10849,6 +10414,7 @@ def observer():
       var daTargetDiv = "#dabody";
       var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
+      var daYamlFilename = """ + json.dumps(i) + """;
       var globalEval = eval;
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
@@ -11005,6 +10571,21 @@ def observer():
           }
           return handler.call(this, element, event);
         };
+      }
+      function daInvalidHandler(form, validator){
+        var errors = validator.numberOfInvalids();
+        if (errors) {
+          if ($(validator.errorList[0].element).is(":visible")){
+            $("html, body").animate({
+              scrollTop: $(validator.errorList[0].element).offset().top - 60
+            }, 1000);
+          }
+          else{
+            $("html, body").animate({
+              scrollTop: $($(validator.errorList[0].element).parent()).offset().top - 60
+            }, 1000);
+          }
+        }
       }
       function daValidationHandler(form){
         //console.log("observer: daValidationHandler");
@@ -11188,7 +10769,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index') + '"' + """,
+          url: """ + '"' + url_for('index', i=i) + '"' + """,
           data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -11214,7 +10795,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index') + '"' + """,
+          url: """ + '"' + url_for('index', i=i) + '"' + """,
           data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -11236,7 +10817,7 @@ def observer():
         }
         $.ajax({
           type: "GET",
-          url: """ + '"' + url_for('get_variables') + '"' + """,
+          url: """ + '"' + url_for('get_variables', i=i) + '"' + """,
           success: callback,
           error: function(xhr, status, error){
             setTimeout(function(){
@@ -11507,15 +11088,15 @@ def observer():
           }
         });
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect('http://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('http://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect('https://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io'});
+            daSocket = io.connect('https://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
         }
         if (typeof daSocket !== 'undefined') {
             daSocket.on('connect', function() {
                 //console.log("Connected!");
-                daSocket.emit('observe', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
+                daSocket.emit('observe', {uid: """ + json.dumps(uid) + """, i: daYamlFilename, userid: """ + json.dumps(str(userid)) + """});
                 daConnected = true;
             });
             daSocket.on('terminate', function() {
@@ -13037,7 +12618,7 @@ def update_package():
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
-                file_number = get_new_file_number(session.get('uid', None), filename)
+                file_number = get_new_file_number(None, filename)
                 saved_file = SavedFile(file_number, extension='zip', fix=True)
                 file_set_attributes(file_number, private=False, persistent=True)
                 zippath = saved_file.path
@@ -13533,7 +13114,7 @@ def create_playground_package():
                     return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, show_message='0'))
                 #return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
-            file_number = get_new_file_number(session.get('uid', None), nice_name)
+            file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             if current_user.timezone:
@@ -13811,7 +13392,7 @@ class Fruit(DAObject):
             with open(os.path.join(questionsdir, 'questions.yml'), 'w', encoding='utf-8') as the_file:
                 the_file.write(questionfiletext)
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
-            file_number = get_new_file_number(session.get('uid', None), nice_name)
+            file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             zf = zipfile.ZipFile(saved_file.path, mode='w')
@@ -18575,11 +18156,11 @@ def interview_list():
             return redirect(url_for('interview_list', json='1'))
         else:
             return redirect(url_for('interview_list'))
-    if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
-        if is_json:
-            return redirect(url_for('index', i=session['i'], json='1'))
-        else:
-            return redirect(url_for('index', i=session['i']))
+    #if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
+    #    if is_json:
+    #        return redirect(url_for('index', i=session['i'], json='1'))
+    #    else:
+    #        return redirect(url_for('index', i=session['i']))
     if request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer)):
         next_page = request.args.get('next', None)
         next_page = request.args.get('next', page_after_login())
@@ -18670,15 +18251,17 @@ def fix_secret(user=None, to_convert=None):
 
 def login_or_register(sender, user, **extra):
     #logmessage("login or register!")
+    if 'i' in session: #TEMPORARY
+        get_session(session['i'])
     to_convert = list()
-    if 'i' in session and 'uid' in session:
-        #obtain_lock(session['uid'], session['i'])
-        if 'tempuser' in session:
-            to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
-        to_convert.append((session['i'], session['uid']))
-        save_user_dict_key(session['uid'], session['i'], priors=True, user=user)
-        session['key_logged'] = True
-        #release_lock(session['uid'], session['i'])
+    if 'tempuser' in session:
+        to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
+    if 'sessions' in session:
+        for filename, info in session['sessions'].items():
+            if (filename, info['uid']) not in to_convert:
+                to_convert.append((filename, info['uid']))
+                save_user_dict_key(info['uid'], filename, priors=True, user=user)
+                update_session(filename, key_logged=True)
     fix_secret(user=user, to_convert=to_convert)
     if 'tempuser' in session:
         for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
@@ -18708,7 +18291,7 @@ def login_or_register(sender, user, **extra):
                 try:
                     object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
                 except Exception as err:
-                    logmessage("Failure to change encryption of object " + object_entry.key + text_type(err))
+                    logmessage("Failure to change encryption of object " + object_entry.key + ": " + text_type(err))
         for the_id in ids_to_delete:
             GlobalObjectStorage.query.filter_by(id=the_id).delete()
         db.session.commit()
@@ -18750,50 +18333,7 @@ def on_register_hook(sender, user, **extra):
         user.roles.remove(role)
     user.roles.append(this_user_role)
     db.session.commit()
-    #clear_user_cache()
     login_or_register(sender, user, **extra)
-    #flash(word('You have registered successfully.'), 'success')
-
-# @user_logged_in.connect_via(app)
-# def _after_login_hook(sender, user, **extra):
-#     if 'i' in session and 'uid' in session:
-#         save_user_dict_key(session['uid'], session['i'])
-#         session['key_logged'] = True
-#     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
-#     # Redirect to 'next' URL
-#     response = redirect(next)
-#     response.set_cookie('secret', newsecret)
-#     return response
-
-# @app.teardown_appcontext
-# def close_db(error):
-#     if hasattr(db, 'engine'):
-#         db.engine.dispose()
-
-# @app.route('/webrtc')
-# def webrtc():
-#     return render_template('pages/webrtc.html', tab_title=word("WebRTC"), page_title=word("WebRTC"))
-
-# @app.route('/webrtc_token', methods=['GET'])
-# @csrf.exempt
-# def webrtc_token():
-#     if twilio_config is None:
-#         logmessage("webrtc_token: could not get twilio configuration")
-#         return
-#     account_sid = twilio_config['name']['default'].get('account sid', None)
-#     auth_token = twilio_config['name']['default'].get('auth token', None)
-#     application_sid = twilio_config['name']['default'].get('app sid', None)
-
-#     logmessage("webrtc_token: account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
-
-#     identity = 'testuser2'
-
-#     capability = TwilioCapability(account_sid, auth_token)
-#     capability.allow_client_outgoing(application_sid)
-#     capability.allow_client_incoming(identity)
-#     token = capability.generate()
-
-#     return jsonify(identity=identity, token=token)
 
 @app.route("/fax_callback", methods=['POST'])
 @csrf.exempt
@@ -18998,7 +18538,6 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     inp = form['Body'].strip()
     #logmessage("do_sms: received >" + inp + "<")
     key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
-    #logmessage("Searching for " + key)
     for try_num in (0, 1):
         sess_contents = r.get(key)
         if sess_contents is None:
@@ -19033,12 +18572,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if inp.lower() in (word('exit'), word('quit')):
             logmessage("do_sms: exiting")
             if save:
-                #obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
                 reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
-                #release_lock(sess_info['uid'], sess_info['yaml_filename'])
             r.delete(key)
             return resp
-        session['uid'] = sess_info['uid']
         obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
         steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
         if user_dict is None:
@@ -19051,14 +18587,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     while True:
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
-            sess_info['encrypted'] = encrypted
+            update_session(sess_info['yaml_filename'], encrypted=encrypted)
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
                 decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
-            sess_info['encrypted'] = encrypted
+            update_session(sess_info['yaml_filename'], encrypted=encrypted)
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
@@ -19173,8 +18709,6 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             message += "\n" + word("To read the question again, type question.")
             resp.message(message)
             release_lock(sess_info['uid'], sess_info['yaml_filename'])
-            if 'uid' in session:
-                del session['uid']
             return resp
         if inp_lower == word('question'):
             accepting_input = False
@@ -19630,8 +19164,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 logmessage("do_sms: failure to set variable with " + the_string)
                 logmessage("do_sms: error was " + str(the_err))
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
-                if 'uid' in session:
-                    del session['uid']
+                #if 'uid' in session:
+                #    del session['uid']
                 return resp
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             logmessage("do_sms: setting internal answers for " + str(question.name))
@@ -19683,14 +19217,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', '', qoutput)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
-            sess_info['encrypted'] = encrypted
+            update_session(sess_info['yaml_filename'], encrypted=encrypted)
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
                 decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
-            sess_info['encrypted'] = encrypted
+            update_session(sess_info['yaml_filename'], encrypted=encrypted)
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
@@ -19716,8 +19250,6 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
     #logmessage(str(form))
-    if 'uid' in session:
-        del session['uid']
     return resp
 
 def api_verify(req, roles=None):
@@ -20156,7 +19688,6 @@ def make_user_inactive(user_id=None, email=None):
         raise Exception("User not found")
     user.active = False
     db.session.commit()
-    #clear_user_cache()
 
 @app.route('/api/user', methods=['GET', 'POST'])
 @csrf.exempt
@@ -20376,7 +19907,6 @@ def remove_privilege(privilege):
     db.session.commit()
     db.session.delete(role)
     db.session.commit()
-    #clear_user_cache()
 
 @app.route('/api/user/<int:user_id>/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt
@@ -20436,7 +19966,6 @@ def add_user_privilege(user_id, privilege):
         raise Exception("The specified privilege did not exist.")
     user.roles.append(role_to_add)
     db.session.commit()
-    #clear_user_cache()
 
 def remove_user_privilege(user_id, privilege):
     if not (current_user.has_role('admin')):
@@ -20456,7 +19985,6 @@ def remove_user_privilege(user_id, privilege):
         raise Exception("The user did not already have that privilege.")
     user.roles.remove(role_to_remove)
     db.session.commit()
-    #clear_user_cache()
 
 def create_user(email, password, privileges=None, info=None):
     if current_user.is_anonymous:
@@ -20567,7 +20095,6 @@ def set_user_info(**kwargs):
             remove_user_privilege(user.id, role)
         for role in roles_to_add:
             add_user_privilege(user.id, role)
-    #clear_user_cache()
 
 @app.route('/api/secret', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
@@ -20726,8 +20253,6 @@ def api_session():
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
         secret = request.args.get('secret', None)
-        session['i'] = yaml_filename
-        session['uid'] = session_id
         if secret is not None:
             secret = str(secret)
         if yaml_filename is None or session_id is None:
@@ -20743,8 +20268,6 @@ def api_session():
             post_data = request.form.copy()
         yaml_filename = post_data.get('i', None)
         session_id = post_data.get('session', None)
-        session['i'] = yaml_filename
-        session['uid'] = session_id
         secret = str(post_data.get('secret', None))
         question_name = post_data.get('question_name', None)
         treat_as_raw = true_or_false(post_data.get('raw', False))
@@ -20850,8 +20373,6 @@ def api_file(file_number):
             privileged = True
         else:
             privileged = False
-            session['i'] = yaml_filename
-            session['uid'] = session_id
         try:
             file_info = get_info_from_file_number(number, privileged=privileged)
         except:
@@ -20986,11 +20507,15 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
                 #logmessage("Popped " + text_type(event_name))
+            if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
+                break
     if len(vars_set) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
         for var_name in vars_set:
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
                 #logmessage("Popped " + text_type(var_name))
+            if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
+                break
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
     steps += 1
@@ -21355,6 +20880,12 @@ def api_login_url():
             info[key] = post_data[key]
     if len(url_args):
         info['url_args'] = url_args
+    if 'i' in info and 'session' in info:
+        try:
+            steps, user_dict, is_encrypted = fetch_user_dict(info['session'], info['i'], secret=secret)
+            info['encrypted'] = is_encrypted
+        except:
+            return jsonify_with_status("Could not decrypt dictionary", 400)
     encryption_key = random_string(16)
     encrypted_text = encrypt_dictionary(info, encryption_key)
     while True:
@@ -21562,7 +21093,7 @@ def api_package():
             try:
                 the_file = request.files['zip']
                 filename = secure_filename(the_file.filename)
-                file_number = get_new_file_number(session.get('uid', None), filename)
+                file_number = get_new_file_number(docassemble.base.functions.this_thread.current_info.get('session', None), filename)
                 saved_file = SavedFile(file_number, extension='zip', fix=True)
                 file_set_attributes(file_number, private=False, persistent=True)
                 zippath = saved_file.path
@@ -22026,11 +21557,11 @@ def retrieve_emails(**pargs):
     if 'i' in pargs:
         yaml_filename = pargs['i']
     else:
-        yaml_filename = session.get('i', None)
+        yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = session.get('uid', None)
+        uid = docassemble.base.functions.this_thread.current_info.get('session', None)
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None
@@ -22211,11 +21742,11 @@ def get_short_code(**pargs):
     if 'i' in pargs:
         yaml_filename = pargs['i']
     else:
-        yaml_filename = session.get('i', None)
+        yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = session.get('uid', None)
+        uid = docassemble.base.functions.this_thread.current_info.get('session', None)
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None

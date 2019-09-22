@@ -79,13 +79,13 @@ def wait_forever(step):
 
 @step('I launch the interview "([^"]+)"')
 def launch_interview(step, interview_name):
-    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=2')
     time.sleep(1)
 
 @step('I start the interview "([^"]+)"')
 def start_interview(step, interview_name):
     do_wait()
-    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=2')
     world.browser.wait_for_it()
     elems = world.browser.find_elements_by_xpath('//h1[text()="Error"]')
     assert len(elems) == 0
@@ -93,7 +93,7 @@ def start_interview(step, interview_name):
 @step('I start the possibly error-producing interview "([^"]+)"')
 def start_error_interview(step, interview_name):
     do_wait()
-    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=1')
+    world.browser.get(world.da_path + "/?i=" + interview_name + '&reset=2')
     world.browser.wait_for_it()
 
 @step('I click the back button')

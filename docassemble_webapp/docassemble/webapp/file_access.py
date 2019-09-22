@@ -15,7 +15,6 @@ import xml.etree.ElementTree as ET
 import docassemble.base.functions
 from docassemble.webapp.core.models import Uploads
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
-from flask import session, has_request_context
 from flask_login import current_user
 from sqlalchemy import or_, and_
 import docassemble.base.config
@@ -240,20 +239,18 @@ def add_info_about_file(filename, basename, result):
             logmessage('add_info_about_file: could not read ' + str(filename))
     return
 
-def get_info_from_file_number(file_number, privileged=False, filename=None):
+def get_info_from_file_number(file_number, privileged=False, filename=None, uids=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         privileged = True
-    else:
-        if has_request_context() and 'uid' in session:
-            uid = session['uid']
-        else:
-            uid = docassemble.base.functions.get_uid()
-    #logmessage("get_info_from_file_number: privileged is " + str(privileged) + " and uid is " + str(uid))
+    elif uids is None:
+        try:
+            uids = [docassemble.base.functions.this_thread.current_info['session']]
+        except:
+            uids = []
     result = dict()
-    if privileged:
-        upload = Uploads.query.filter_by(indexno=file_number).first()
-    else:
-        upload = Uploads.query.filter(and_(Uploads.indexno == file_number, or_(Uploads.key == uid, Uploads.private == False))).first()
+    upload = Uploads.query.filter_by(indexno=file_number).first()
+    if not privileged and upload is not None and upload.private and upload.key not in uids:
+        upload = None
     if upload:
         if filename is None:
             result['filename'] = upload.filename
