@@ -5224,7 +5224,7 @@ the `_uid` of the table rather than the `id`.
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
-[`template`]: {{ site.baseurl }}/docs/initial.html
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
 [`table`]: {{ site.baseurl }}/docs/initial.html#table
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
@@ -5423,3 +5423,4 @@ the `_uid` of the table rather than the `id`.
 [`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
 [`SQLObject`]: #SQLObject
 [`db`]: {{ site.baseurl }}/docs/config.html#db
+[`DALazyTemplate`]: #DALazyTemplate

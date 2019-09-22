@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.12](https://github.com/jhpyle/docassemble/releases/tag/v0.5.12) - 2019-09-21
+
+### Changed
+- Users can run multiple sessions in different browser tabs.
+- The `i` URL parameter is required for any endpoint that uses the
+  current sesion.
+- The `DAEmpty` class now supports comparison operators.
+
+### Fixed
+- IndexErrors appeared under some circumstances when using actions.
+- Live Help bug.
+
 ## [0.5.11](https://github.com/jhpyle/docassemble/releases/tag/v0.5.11) - 2019-09-16
 
 ### Fixed

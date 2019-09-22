@@ -5869,9 +5869,6 @@
   code: |
     lucky_number = 2
 "madlibs": |-
-  features:
-    progress bar: True
-  ---
   objects:
     - adjective: DAList
     - noun: DAList
@@ -5896,6 +5893,17 @@
     saving the day.
   buttons:
     - Do it again: restart
+  ---
+  generic object: DAList
+  question: |
+    % if i == 0:
+    Give me
+    ${ indefinite_article(x.object_name()) }.
+    % else:
+    Give me another ${ x.object_name() }.
+    % endif
+  fields:
+    - no label: x[i]
 "main-page": |-
   metadata:
     pre: |
@@ -9992,7 +10000,7 @@
     - Fruit Name: row_item.name
     - Seeds: row_item.seeds
   edit:
-    - name
+    - name.text
   allow reordering: True
 "table-width": |-
   features:
