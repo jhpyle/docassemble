@@ -866,6 +866,11 @@ def guess_yaml_filename():
             break
     return yaml_filename
 
+def delete_obsolete():
+    for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
+        if name in session:
+            del session['name']
+
 def get_session(i):
     if 'sessions' not in session:
         session['sessions'] = dict()

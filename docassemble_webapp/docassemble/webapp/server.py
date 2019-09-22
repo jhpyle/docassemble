@@ -221,11 +221,6 @@ else:
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
-def delete_obsolete():
-    for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
-        if name in session:
-            del session['name']
-
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
 
