@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.14] - 2019-09-23
+### Fixed
+- Markdown of single-column `table`s not recognized.
+
 ## [0.5.13] - 2019-09-22
 ### Added
 - The `use_objects` option for `objects_from_file()`

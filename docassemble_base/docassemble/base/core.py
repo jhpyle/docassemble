@@ -3565,10 +3565,10 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
         new_sum = sum(max_chars_to_use)
         if new_sum == old_sum:
             override_mode = True
-    table_content += table_info.indent + "|".join(header_output) + "\n"
-    table_content += table_info.indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
+    table_content += table_info.indent + '|' + "|".join(header_output) + "|\n"
+    table_content += table_info.indent + '|' + "|".join(['-' * x for x in max_chars_to_use]) + "|\n"
     for content_line in contents:
-        table_content += table_info.indent + "|".join(content_line) + "\n"
+        table_content += table_info.indent + '|' + "|".join(content_line) + "|\n"
     if len(contents) == 0 and table_info.empty_message is not True:
         if table_info.empty_message in (False, None):
             table_content = "\n"
