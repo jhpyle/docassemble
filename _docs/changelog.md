@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.14](https://github.com/jhpyle/docassemble/releases/tag/v0.5.14) - 2019-09-23
+
+### Fixed
+- Markdown of single-column `table`s not recognized.
+
 ## [0.5.13](https://github.com/jhpyle/docassemble/releases/tag/v0.5.13) - 2019-09-22
 
 ### Added
