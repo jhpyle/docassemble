@@ -1,12 +1,12 @@
 metadata:
-  title: Objects from file
+  title: Objects from JSON
   short title: Import
   documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
   example start: 1
   example end: 2
 ---
 code: |
-  people = objects_from_file("contacts.yml", use_objects=True)
+  people = objects_from_file("contacts.json")
 ---
 mandatory: true
 question: |

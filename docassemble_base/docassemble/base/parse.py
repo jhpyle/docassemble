@@ -1480,7 +1480,10 @@ class Question:
         if 'objects from file' in data:
             if not isinstance(data['objects from file'], list):
                 data['objects from file'] = [data['objects from file']]
-            self.question_type = 'objects_from_file'
+            if 'use objects' in data and data['use objects']:
+                self.question_type = 'objects_from_file_da'
+            else:
+                self.question_type = 'objects_from_file'
             self.objects_from_file = data['objects from file']
             for item in data['objects from file']:
                 if isinstance(item, dict):
@@ -5402,11 +5405,15 @@ class Interview:
                         if question.name and question.name in user_dict['_internal']['answered']:
                             #logmessage("Skipping " + question.name + " because answered")
                             continue
-                        if question.question_type == "objects_from_file":
+                        if question.question_type in ("objects_from_file", "objects_from_file_da"):
+                            if question.question_type == "objects_from_file_da":
+                                use_objects = True
+                            else:
+                                use_objects = False
                             for keyvalue in question.objects_from_file:
                                 for variable, the_file in keyvalue.items():
                                     exec(import_core, user_dict)
-                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ')'
+                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ')'
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)

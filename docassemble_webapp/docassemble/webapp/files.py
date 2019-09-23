@@ -261,10 +261,7 @@ class SavedFile(object):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             key = cloud.get_key(keyname)
             if key.does_exist:
-                if 'display_filename' in kwargs:
-                    return key.generate_url(seconds, display_filename=kwargs['display_filename'])
-                else:
-                    return key.generate_url(seconds)
+                return key.generate_url(seconds, display_filename=kwargs.get('display_filename', None), inline=kwargs.get('inline', None), content_type=kwargs.get('content_type', None))
             else:
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
@@ -304,10 +301,7 @@ class SavedFile(object):
                 keyname += '.' + extn
             key = cloud.get_key(keyname)
             if key.does_exist:
-                if 'display_filename' in kwargs:
-                    return key.generate_url(3600, display_filename=kwargs['display_filename'])
-                else:
-                    return key.generate_url(3600)
+                return key.generate_url(3600, display_filename=kwargs.get('display_filename', None), inline=kwargs.get('inline', None), content_type=kwargs.get('content_type', None))
             else:
                 #logmessage("Key " + str(keyname) + " did not exist")
                 #why not serve right from uploadedpage in this case?

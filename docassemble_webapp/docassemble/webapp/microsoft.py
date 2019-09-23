@@ -77,11 +77,13 @@ class azurekey(object):
         if not hasattr(self, 'last_modified'):
             self.get_properties()
         return (self.last_modified - epoch).total_seconds()
-    def generate_url(self, seconds, display_filename=None, content_type=None):
+    def generate_url(self, seconds, display_filename=None, content_type=None, inline=False):
         if content_type is None:
             content_type = self.content_type
         params = dict(permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds), content_type=content_type)
         if display_filename is not None:
             params['content_disposition'] = "attachment; filename=" + display_filename
+        elif inline:
+            params['content_disposition'] = "inline"
         sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, **params)
         return self.azure_object.conn.make_blob_url(self.azure_object.container, self.name, sas_token=sas_token)

@@ -878,8 +878,10 @@ def get_session(i):
         return session['sessions'][i]
     if 'i' in session and 'uid' in session: #TEMPORARY
         session['sessions'][session['i']] = dict(uid=session['uid'], encrypted=session.get('encrypted', True), key_logged=session.get('key_logged', False), chatstatus=session.get('chatstatus', 'off'))
+        if i == session['i']:
+            delete_obsolete()
+            return session['sessions'][i]
         delete_obsolete()
-        return session['sessions'][i]
     return None
 
 def get_uid_for_filename(i):

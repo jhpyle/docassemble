@@ -3778,7 +3778,7 @@ def setify(item, output=set()):
         output.add(item)
     return output
 
-def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
+def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_objects=False):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
     #from docassemble.base.core import DAObject, DAList, DADict, DASet
     if name is None:
@@ -3804,14 +3804,24 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
     objects.revisit = True
     is_singular = True
     with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
-        for document in yaml.load_all(fp, Loader=yaml.FullLoader):
-            new_objects = recurse_obj(document, recursive=recursive)
+        if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
+            document = json.load(fp)
+            new_objects = recurse_obj(document, recursive=recursive, use_objects=use_objects)
             if type(new_objects) is list:
                 is_singular = False
                 for obj in new_objects:
                     objects.append(obj)
             else:
                 objects.append(new_objects)
+        else:
+            for document in yaml.load_all(fp, Loader=yaml.FullLoader):
+                new_objects = recurse_obj(document, recursive=recursive, use_objects=use_objects)
+                if type(new_objects) is list:
+                    is_singular = False
+                    for obj in new_objects:
+                        objects.append(obj)
+                else:
+                    objects.append(new_objects)
     if is_singular and len(objects.elements) == 1:
         objects = objects.elements[0]
     #logmessage("Returning for a " + str(thename))
@@ -3822,21 +3832,33 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None):
     #logmessage("Returning a " + str(objects.instanceName))
     return objects
 
-def recurse_obj(the_object, recursive=True):
+def recurse_obj(the_object, recursive=True, use_objects=False):
     constructor = None
     if isinstance(the_object, (string_types, bool, int, float)):
         return the_object
     if isinstance(the_object, list):
         if recursive:
-            return [recurse_obj(x) for x in the_object]
+            if use_objects:
+                return_object = DAList('return_object', elements=[recurse_obj(x, use_objects=use_objects) for x in the_object])
+                return_object.set_random_instance_name()
+                return return_object
+            return [recurse_obj(x, use_objects=use_objects) for x in the_object]
         else:
+            if use_objects:
+                return_object = DAList('return_object', elements=the_object)
+                return_object.set_random_instance_name()
+                return return_object
             return the_object
     if type(the_object) is set:
         if recursive:
             new_set = set()
             for sub_object in the_object:
-                new_set.add(recurse_obj(sub_object, recursive=recursive))
-            return new_list
+                new_set.add(recurse_obj(sub_object, recursive=recursive, use_objects=use_objects))
+            if use_objects:
+                return_object = DASet('return_object', elements=new_set)
+                return_object.set_random_instance_name()
+                return return_object
+            return new_set
         else:
             return the_object
     if type(the_object) is dict:
@@ -3864,7 +3886,7 @@ def recurse_obj(the_object, recursive=True):
                     if type(item) is not dict:
                         raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
                     if recursive:
-                        transformed_item = recurse_obj(item)
+                        transformed_item = recurse_obj(item, recursive=True, use_objects=use_objects)
                     else:
                         transformed_item = item
                     #new_obj = constructor(**transformed_item)
@@ -3877,7 +3899,7 @@ def recurse_obj(the_object, recursive=True):
                 if type(item) is not dict:
                     raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
                 if recursive:
-                    transformed_item = recurse_obj(item)
+                    transformed_item = recurse_obj(item, recursive=True, use_objects=use_objects)
                 else:
                     transformed_item = item
                 #new_obj = constructor(**transformed_item)
@@ -3888,9 +3910,17 @@ def recurse_obj(the_object, recursive=True):
             if recursive:
                 new_dict = dict()
                 for key, value in the_object.items():
-                    new_dict[key] = recurse_obj(value)
+                    new_dict[key] = recurse_obj(value, recursive=True, use_objects=use_objects)
+                if use_objects:
+                    return_object = DADict('return_object', elements=new_dict)
+                    return_object.set_random_instance_name()
+                    return return_object
                 return new_dict
             else:
+                if use_objects:
+                    return_object = DADict('return_object', elements=the_object)
+                    return_object.set_random_instance_name()
+                    return return_object
                 return the_object
     return the_object
 

@@ -94,12 +94,14 @@ class s3key(object):
                 self.key_obj.put(Body=bytes(text))
             else:
                 self.key_obj.put(Body=bytes(text, encoding='utf-8'))
-    def generate_url(self, expires, content_type=None, display_filename=None):
+    def generate_url(self, expires, content_type=None, display_filename=None, inline=False):
         params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         if content_type is not None:
             params['ResponseContentType'] = content_type
         if display_filename is not None:
             params['ResponseContentDisposition'] = "attachment; filename=" + display_filename
+        if inline:
+            params['ResponseContentDisposition'] = "inline"
         return self.s3_object.client.generate_presigned_url(
             ClientMethod='get_object',
             Params=params,
