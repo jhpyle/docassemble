@@ -4146,8 +4146,8 @@ its elements are added to the list of selections.
 
 ## <a name="objects_from_file"></a>objects_from_file()
 
-`objects_from_file()` imports data from a [YAML] file, including
-objects.
+`objects_from_file()` imports data from a [YAML] or [JSON] file,
+including objects.
 
 The import acts like a standard [YAML] import, except that when an
 [associative array] (dictionary) is encountered that has the keys
@@ -4188,6 +4188,51 @@ items:
 This example uses two standard **docassemble** [objects],
 [`Individual`] and [`IndividualName`].
 
+A [JSON] file can also be used.
+
+{% include demo-side-by-side.html demo="objects-from-file-json" %}
+
+In the above example, the file [`contacts.json`] file has the following contents:
+
+{% highlight yaml %}
+{
+    "object": "Individual",
+    "module": "docassemble.base.util",
+    "items": [
+        {
+            "name": {
+                "object": "IndividualName",
+                "module": "docassemble.base.util",
+                "item": {
+                    "first": "Fred",
+                    "last": "Smith"
+                }
+            },
+            "email": "fred@example.com",
+            "allergies": [
+                "peanuts",
+                "subway tokens"
+            ]
+        },
+        {
+            "name": {
+                "object": "IndividualName",
+                "module": "docassemble.base.util",
+                "item": {
+                    "first": "Larry",
+                    "last": "Jönes"
+                }
+            },
+            "email": "larry@example.com",
+            "skills": [
+                "stapling",
+                "making coffee"
+            ]
+        }
+    ]
+}
+{% endhighlight %}
+
 ### What gets returned
 
 The `objects_from_file()` function will return a [`DAList`] object if:
@@ -4209,6 +4254,10 @@ the [`.instanceName`] attribute of the resulting object.  If you do
 not pass a `name` parameter, the object/data structure returned by
 `objects_from_file()` will still be readable, but it will not be
 writable by **docassemble** questions.
+
+There is also an optional keyword argument `use_objects`, which, if
+`True`, will cause lists to become gathered [`DAList`]s, and
+dictionaries to become gathered [`DADict`]s.
 
 Note that there is an [initial block] called [`objects from file`]
 that can be used as a shorthand way of calling `objects_from_file()`.
@@ -6574,6 +6623,7 @@ $(document).on('daPageLoad', function(){
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [interaction of user roles and actions]: {{ site.baseurl }}/docs/users.html#users and actions
 [`contacts.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/contacts.yml
+[`contacts.json`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/contacts.json
 [associative array]: https://en.wikipedia.org/wiki/Associative_array
 [`fish.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/fish.py
 [`fishes.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/sources/fishes.yml

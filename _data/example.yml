@@ -11500,9 +11500,10 @@
     Otherwise, you can go back to the interview.
   continue button label: Resume
   field: manage_credentials
-"objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\")\n---\n\
-  mandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for person\
-  \ in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n  % endfor"
+"objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
+  ---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
+  \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\
+  \  % endfor"
 "objects-from-file-dadict": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\"\
   )\n---\nmandatory: True\nquestion: |\n  Summary of\n  ${ fruitseeds.number_as_word()\
   \ }\n  fruit\nsubquestion: |\n  % for fruit in fruitseeds:\n  The seeds of ${ fruit\
@@ -11515,6 +11516,10 @@
   \ of\n  ${ fruitseeds.number_as_word() }\n  fruit\nsubquestion: |\n  % for fruit\
   \ in fruitseeds:\n  The seeds of ${ fruit } are\n  ${ fruitseeds[fruit] }\n  in\
   \ number.\n  \n  % endfor"
+"objects-from-file-json": "code: |\n  people = objects_from_file(\"contacts.json\"\
+  )\n---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
+  \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\
+  \  % endfor"
 "objects-from-file-template": |-
   objects:
     client: Individual

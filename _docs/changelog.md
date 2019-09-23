@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.13](https://github.com/jhpyle/docassemble/releases/tag/v0.5.13) - 2019-09-22
+
+### Added
+- The `use_objects` option for `objects_from_file()`
+- The `use objects` option for `objects from file`.
+
+### Changed
+- The `objects_from_file()` function and the `objects from file` block
+  now support JSON files as well as YAML files.
+
+### Fixed
+- Transitional error related to session upgrade.
+
 ## [0.5.12](https://github.com/jhpyle/docassemble/releases/tag/v0.5.12) - 2019-09-21
 
 ### Changed

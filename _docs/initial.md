@@ -314,8 +314,8 @@ objects from file:
 {% endhighlight %}
 
 An `objects from file` block imports objects or other data elements
-that you define in a separate [YAML] data file located in the
-[sources folder] of the current package.  If the interview file
+that you define in a separate [YAML] or [JSON] data file located in
+the [sources folder] of the current package.  If the interview file
 containing the `objects from file` block is
 `data/questions/manage_claims.yml`, **docassemble** will expect the
 data file to be located at `data/sources/claim_list.yml`.
@@ -324,6 +324,20 @@ For more information about how this works, and about how to format the
 data file, see the documentation for the
 [`objects_from_file()` function].  The example above is equivalent to
 running `claims = objects_from_file('claim_list.yml', name='claims')`.
+
+If you set `use objects` to `True`, then the `use_objects` keyword
+parameter of the [`objects_from_file()` function] will be used.
+
+{% highlight yaml %}
+---
+use objects: True
+objects from file:
+  - claims: claim_list.yml
+---
+{% endhighlight %}
+
+This is equivalent to running 
+`claims = objects_from_file('claim_list.yml', name='claims', use_objects=True)`.
 
 # <a name="include"></a>Incorporation by reference: `include`
 
@@ -2056,3 +2070,4 @@ features:
 [`exitpage`]: {{ site.baseurl}}/docs/config.html#exitpage
 [special pages]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`command()`]: {{ site.baseurl}}/docs/functions.html#command
+[JSON]: https://en.wikipedia.org/wiki/JSON
