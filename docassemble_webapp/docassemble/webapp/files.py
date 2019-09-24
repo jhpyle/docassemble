@@ -343,9 +343,7 @@ class SavedFile(object):
             return
         if not self.fixed:
             raise DAError("SavedFile: finalize called before fix")
-        existing_files = list()
         for filename in os.listdir(self.directory):
-            existing_files.append(filename)
             fullpath = os.path.join(self.directory, filename)
             #logmessage("Found " + fullpath)
             if os.path.isfile(fullpath):
@@ -363,10 +361,12 @@ class SavedFile(object):
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
                     #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                    if not os.path.isfile(fullpath):
+                        continue
                     key.set_contents_from_filename(fullpath)
                     self.modtimes[filename] = key.get_epoch_modtime()
         for filename, key in self.keydict.items():
-            if filename not in existing_files:
+            if not os.path.isfile(os.path.join(self.directory, filename)):
                 sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                 try:
                     key.delete()

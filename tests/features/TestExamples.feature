@@ -1506,8 +1506,8 @@ Feature: Example interviews
   Scenario: Test the interview "Checkboxes within fields"
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes.yml"
     Then I should see the phrase "Please tell me what you think."
-    And I click the "Apples" option
-    And I click the "Pears" option
+    And I click the "apple" option
+    And I click the "pear" option
     And I set "What is your favorite fruit overall?" to "mango"
     And I click the button "Continue"
     Then I should see the phrase "You like apples."

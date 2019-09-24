@@ -5180,6 +5180,8 @@ def get_variables():
 
 @app.route("/", methods=['GET'])
 def rootindex():
+    if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+        return redirect(url_for('user.login'))
     url = daconfig.get('root redirect url', None)
     if url is not None:
         return redirect(url)
@@ -5316,6 +5318,8 @@ def index(action_argument=None):
     need_to_resave = False
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is None:
+        if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            return redirect(url_for('user.login'))
         if len(daconfig['dispatch']):
             return redirect(url_for('interview_start'))
         else:
@@ -5325,6 +5329,8 @@ def index(action_argument=None):
     if session_info is None or reset_interview or new_interview:
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
             raise DAError(word("Not authorized"), code=403)
+        if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
         if yaml_filename.startswith('docassemble.playground'):
             if not app.config['ENABLE_PLAYGROUND']:
                 raise DAError(word("Not authorized"), code=403)
@@ -5380,6 +5386,9 @@ def index(action_argument=None):
                 release_lock(user_code, yaml_filename)
                 session_info = get_session(yaml_filename)
                 need_to_resave = True
+                need_to_reset = True
+            else:
+                session_info = update_session(yaml_filename, uid=session_parameter)
                 need_to_reset = True
             if show_flash:
                 if current_user.is_authenticated:
@@ -9593,7 +9602,9 @@ def index(action_argument=None):
             bodyclass="dabody"
         else:
             bodyclass="dabody da-pad-for-navbar"
-    if hasattr(interview_status.question, 'id'):
+    if 'cssClass' in interview_status.extras:
+        bodyclass += ' ' + re.sub(r'[^A-Za-z0-9\_]+', '-', interview_status.extras['cssClass'])
+    elif hasattr(interview_status.question, 'id'):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
     if debug_mode:
         interview_status.screen_reader_text = dict()
@@ -10125,6 +10136,8 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
 
 @app.route('/list', methods=['GET'])
 def interview_start():
+    if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+        return redirect(url_for('user.login'))
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):

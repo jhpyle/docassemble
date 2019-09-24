@@ -480,7 +480,7 @@ class InterviewStatus(object):
                 result[param] = getattr(self, param).rstrip()
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
             result['menu_items'] = self.extras['menu_items']
-        for param in ('rightText', 'underText', 'back_button_label', 'css', 'script'):
+        for param in ('rightText', 'underText', 'cssClass', 'back_button_label', 'css', 'script'):
             if param in self.extras and isinstance(self.extras[param], string_types):
                 result[param] = self.extras[param].rstrip()
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
@@ -2018,6 +2018,10 @@ class Question:
                 self.content_type = TextObject(definitions + text_type(data['content type']), question=self)
             else:
                 self.content_type = TextObject('text/plain; charset=utf-8')
+        if 'css class' in data:
+            if 'question' not in data:
+                raise DAError("A css class can only accompany a question." + self.idebug(data))
+            self.css_class = TextObject(definitions + text_type(data['css class']), question=self)
         if 'question' in data:
             self.content = TextObject(definitions + text_type(data['question']), question=self)
         if 'subquestion' in data:
@@ -3489,6 +3493,14 @@ class Question:
             if key not in the_default_titles:
                 the_default_titles[key] = val
         extras = dict()
+        if hasattr(self, 'css_class') and self.css_class is not None:
+            extras['cssClass'] = self.css_class.text(user_dict)
+        elif 'css class' in user_dict['_internal'] and user_dict['_internal']['css class'] is not None:
+            extras['cssClass'] = user_dict['_internal']['css class']
+        elif self.language in self.interview.default_screen_parts and 'css class' in self.interview.default_screen_parts[self.language]:
+            extras['cssClass'] = self.interview.default_screen_parts[self.language]['css class'].text(user_dict)
+        elif 'css_class' in the_default_titles:
+            extras['cssClass'] = the_default_titles['css class']
         if hasattr(self, 'undertext') and self.undertext is not None:
             extras['underText'] = self.undertext.text(user_dict)
         elif 'under' in user_dict['_internal'] and user_dict['_internal']['under'] is not None:
@@ -5035,7 +5047,7 @@ class Interview:
     def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
@@ -5213,7 +5225,7 @@ class Interview:
         for metadata in self.metadata:
             for key, val in metadata.items():
                 self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:
@@ -5967,7 +5979,7 @@ class Interview:
                             for indexno in range(len(iterators)):
                                 temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         if question.target is not None:
-                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
                         string = "import docassemble.base.core"
                         exec(string, user_dict)
                         if question.decorations is None:

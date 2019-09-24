@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.15] - 2019-09-23
+### Added
+- The `css class` screen part.
+- The `allow anonymous access` Configuration directive.
+### Fixed
+- Session-related bug.
+
 ## [0.5.14] - 2019-09-23
 ### Fixed
 - Markdown of single-column `table`s not recognized.
