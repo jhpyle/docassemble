@@ -557,6 +557,18 @@ mimics the style of the standard start page:
 
 {% include side-by-side.html demo="list-interview" %}
 
+## <a name="allow anonymous access">Requiring login for all interviews</a>
+
+If you want to require users to be logged in before they can run any
+interviews, set `allow anonymous access` to `False`.
+
+{% highlight yaml %}
+allow anonymous access: False
+{% endhighlight %}
+
+The default is `True`.  You can also forbid anonymous access on an
+interview-by-interview basis using [`required privileges`].
+
 ## <a name="administrative interviews">Administrative interviews</a>
 
 The `administrative interviews` directive adds hyperlinks to

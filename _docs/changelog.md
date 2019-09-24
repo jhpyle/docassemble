@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.15](https://github.com/jhpyle/docassemble/releases/tag/v0.5.15) - 2019-09-23
+
+### Added
+- The `css class` screen part.
+- The `allow anonymous access` Configuration directive.
+
+### Fixed
+- Session-related bug.
+
 ## [0.5.14](https://github.com/jhpyle/docassemble/releases/tag/v0.5.14) - 2019-09-23
 
 ### Fixed

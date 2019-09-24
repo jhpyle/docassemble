@@ -1561,6 +1561,12 @@
         background-repeat: repeat;
       }
     </style>
+"css-class": |-
+  css class: first-question
+  mandatory: True
+  question: |
+    View the source and look for
+    the word `first-question`.
 "currency": |-
   question: |
     If you sold ${ number } fish for
@@ -2027,6 +2033,7 @@
     post: |
       This interview was generously
       sponsored by Example, Inc.
+    css class: normalquestion
 "default-screen-parts-override": |-
   interview help: |
     This interview demonstrates the

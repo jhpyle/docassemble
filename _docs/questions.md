@@ -61,6 +61,13 @@ on the right is wider.
 
 {% include side-by-side.html demo="right" %}
 
+# <a name="css class"></a>The `css class` specifier
+
+The optional `css class` specifier can be used to set a [CSS] class
+for the `<body>` of the screen of a question.
+
+{% include side-by-side.html demo="css-class" %}
+
 # Using questions to set variables
 
 Here is a brief summary of the types of questions that can be asked.
@@ -301,7 +308,8 @@ more information, see [`event`], [`url_action()`],
 
 When the user looks at a screen in an interview, there are many
 different "parts" of the screen.  Above, you were introduced to the
-[`question`], [`subquestion`], [`under`], and [`right`] parts.
+[`question`], [`subquestion`], [`under`], [`right`], and [`css class`]
+parts.
 
 There are other parts of the screen as well, which by default are
 empty or have a useful default.  The following interview demonstrates
@@ -341,9 +349,6 @@ results with different screen sizes.
   `resume button label`.
 * The `back button label` is the label for the back button that
   appears within the question itself (not the upper-left corner).
-* The `currency symbol` is the default currency symbol to be used when
-  using fields with `datatype: currency` and when calling the
-  `currency()` function.
 
 There are a variety of ways that you can specify what content should
 appear in these areas.  These ways range from question-specific
@@ -434,6 +439,7 @@ For more information about each method, see its documentation.
 [`subquestion`]: #subquestion
 [`right`]: #right
 [`under`]: #under
+[`css class`]: #css class
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code`]: {{ site.baseurl }}/docs/code.html#code
