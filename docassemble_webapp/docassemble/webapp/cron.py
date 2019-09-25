@@ -78,8 +78,10 @@ def run_cron(cron_type):
         del the_dict
         del dict_result
     del results
+    base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
+    path_url = base_url + 'interview'
     with app.app_context():
-        with app.test_request_context():
+        with app.test_request_context(base_url=base_url, path=path_url):
             login_user(cron_user, remember=False)
             for item in to_do:
                 try:

@@ -272,7 +272,10 @@ class SavedFile(object):
             if r.setnx(keyname, str(self.section) + '^' + str(self.file_number)):
                 r.expire(keyname, seconds)
                 break
-        return docassemble.base.functions.get_url_root() + '/tempfile/' + code + '/' + kwargs.get('display_filename', self.filename)
+        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
+        from flask import url_for
+        url = url_for('rootindex', _external=use_external).rstrip('/')
+        url += '/tempfile/' + code + '/' + kwargs.get('display_filename', self.filename)
     def cloud_path(self, filename=None):
         if cloud is None:
             return None
@@ -286,7 +289,6 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
         if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
@@ -308,34 +310,33 @@ class SavedFile(object):
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
         else:
+            use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
+            from flask import url_for
+            base_url = url_for('rootindex', _external=use_external).rstrip('/')
             if extn is None:
                 extn = ''
             else:
                 extn = '.' + extn
-            root = daconfig.get('root', '/')
-            fileroot = daconfig.get('fileserver', root)
             if 'display_filename' in kwargs:
                 filename = kwargs['display_filename']
             if self.section == 'files':
                 if 'page' in kwargs and kwargs['page']:
                     page = re.sub(r'[^0-9]', '', str(kwargs['page']))
                     size = kwargs.get('size', 'page')
-                    url = fileroot + 'uploadedpage'
+                    url = base_url + '/uploadedpage'
                     if size == 'screen':
                         url += 'screen'
                     url += '/' + str(self.file_number) + '/' + str(page)
                 else:
                     if re.search(r'\.', str(filename)):
-                        url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename)
+                        url = base_url + '/uploadedfile/' + str(self.file_number) + '/' + str(filename)
                     elif extn != '':
-                        url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename) + extn
+                        url = base_url + '/uploadedfile/' + str(self.file_number) + '/' + str(filename) + extn
                     else:
-                        url = fileroot + 'uploadedfile/' + str(self.file_number)
+                        url = base_url + '/uploadedfile/' + str(self.file_number)
             else:
                 sys.stderr.write("section " + section + " was wrong\n")
                 url = 'about:blank'
-            if use_external and url.startswith('/'):
-                url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
         #sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")

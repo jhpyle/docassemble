@@ -1498,8 +1498,6 @@ def get_video_urls(the_video, question=None):
     return output
 
 def to_text(html_doc, terms, links, status):
-    #url = status.current_info.get('url', 'http://localhost')
-    #logmessage("url is " + text_type(url))
     output = ""
     #logmessage("to_text: html doc is " + text_type(html_doc))
     soup = BeautifulSoup(html_doc, 'html.parser')

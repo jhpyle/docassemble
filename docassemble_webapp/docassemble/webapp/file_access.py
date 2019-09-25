@@ -27,6 +27,8 @@ cloud = docassemble.webapp.cloud.get_cloud()
 
 def url_if_exists(file_reference, **kwargs):
     parts = file_reference.split(":")
+    from flask import url_for
+    base_url = url_for('rootindex', _external=kwargs.get('_external', False)).rstrip('/')
     if len(parts) == 2:
         if cloud:
             m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
@@ -47,12 +49,12 @@ def url_if_exists(file_reference, **kwargs):
                 section = 'playgroundstatic'
                 filename = re.sub(r'^data/static/', '', parts[1])
                 version_parameter = get_version_parameter(parts[0])
-                return docassemble.base.config.daconfig.get('root', '/') + 'packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
+                return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None
         version_parameter = get_version_parameter(parts[0])
-        return docassemble.base.config.daconfig.get('root', '/') + 'packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
+        return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
     return None
 
 def get_version_parameter(package):
@@ -102,10 +104,17 @@ def get_info_from_file_reference(file_reference, **kwargs):
         privileged = None
     has_info = False
     if re.search(r'^[0-9]+$', str(file_reference)):
-        if 'filename' in kwargs:
-            result = get_info_from_file_number(int(file_reference), privileged=privileged, filename=kwargs['filename'])
+        if 'uids' in kwargs:
+            uids = kwargs['uids']
         else:
-            result = get_info_from_file_number(int(file_reference), privileged=privileged)
+            try:
+                uids = [docassemble.base.functions.this_thread.current_info['session']]
+            except:
+                uids = []
+        if 'filename' in kwargs:
+            result = get_info_from_file_number(int(file_reference), privileged=privileged, filename=kwargs['filename'], uids=uids)
+        else:
+            result = get_info_from_file_number(int(file_reference), privileged=privileged, uids=uids)
         if 'fullpath' not in result:
             result['fullpath'] = None
         has_info = True

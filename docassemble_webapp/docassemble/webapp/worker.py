@@ -867,13 +867,17 @@ def email_attachments(user_code, email_address, attachment_info, language):
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
+    if url_root is None:
+        url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    if url is None:
+        url = url_root + 'interview'
     time.sleep(1.0)
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     worker_controller.functions.reset_local_variables()
     worker_controller.functions.set_uid(session_code)
     with worker_controller.flaskapp.app_context():
-        with worker_controller.flaskapp.test_request_context(base_url=url):
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
             if not str(user_info['the_user_id']).startswith('t'):
                 worker_controller.login_user(worker_controller.get_user_object(user_info['theid']), remember=False)
             sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action) + "\n")

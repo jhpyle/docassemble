@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from six import string_types, text_type, PY2
-from docassemble.base.functions import word, get_currency_symbol, url_action, comma_and_list, server
+from docassemble.base.functions import word, get_currency_symbol, url_action, comma_and_list, server, custom_types
 from docassemble.base.util import format_date
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
@@ -870,7 +870,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     else:
                         fieldlist.append('                <div class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
-                field_class = ' da-field-container da-field-container-datatype-' + field.datatype
+                if field.datatype in custom_types:
+                    field_class = ' da-field-container ' + custom_types[field.datatype]['container_class']
+                else:
+                    field_class = ' da-field-container da-field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
                     if hasattr(field, 'collect_type'):
                         if 'list_minimum' in status.extras and field.collect_number < status.extras['list_minimum']:
@@ -1332,7 +1335,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if 'image' in pair:
-                            the_icon = '<span>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</span>';
+                            the_icon = '<div>' + icon_html(status, pair['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</div>';
                             btn_class = ' btn-light btn-da btn-da-custom'
                         else:
                             the_icon = ''
@@ -2355,6 +2358,9 @@ def input_for(status, field, wide=False, embedded=False):
                 input_type = 'text'
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
+            if field.datatype in custom_types:
+                input_type = custom_types[field.datatype]['input_type']
+                extra_class = ' ' + custom_types[field.datatype]['input_class']
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + '/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error text-danger" id="' + escape_id(saveas_string) + '-error"></label>'

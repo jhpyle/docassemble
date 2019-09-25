@@ -5316,12 +5316,8 @@ class Interview:
         user_dict['_internal']['tracker'] += 1
         if interview_status is None:
             interview_status = InterviewStatus()
-        if 'docvar' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
-            user_dict['_internal']['docvar'] = dict()
-        if 'doc_cache' not in user_dict['_internal']: # waste of CPU cycles; eventually take out!
-            user_dict['_internal']['doc_cache'] = dict()
-        if interview_status.current_info['url'] is not None:
-            user_dict['_internal']['url'] = interview_status.current_info['url']
+        #if interview_status.current_info['url'] is not None:
+        #    user_dict['_internal']['url'] = interview_status.current_info['url']
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         #docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
@@ -6412,6 +6408,11 @@ def process_selections(data, manual=False, exclude=None):
                             elif entry['image'].__class__.__name__ == 'DAFileList':
                                 entry['image'][0].retrieve()
                                 if entry['image'][0].mimetype is not None and entry['image'][0].mimetype.startswith('image'):
+                                    the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
+                            elif entry['image'].__class__.__name__ == 'DAFileCollection':
+                                the_file = entry['image']._first_file()
+                                the_file.retrieve()
+                                if the_file.mimetype is not None and the_file.mimetype.startswith('image'):
                                     the_item['image'] = dict(type='url', value=entry['image'][0].url_for())
                             elif entry['image'].__class__.__name__ == 'DAStaticFile':
                                 the_item['image'] = dict(type='url', value=entry['image'].url_for())

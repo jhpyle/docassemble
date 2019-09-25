@@ -413,7 +413,7 @@ class Playground(PlaygroundSection):
     def __init__(self):
         return super(Playground, self).__init__()
     def interview_url(self, filename):
-        return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
+        return docassemble.base.functions.url_of('interview', i='docassemble.playground' + str(self.user_id) + ":" + filename)
     def write_package(self, pkgname, info):
         if PY2:
             the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|').decode()

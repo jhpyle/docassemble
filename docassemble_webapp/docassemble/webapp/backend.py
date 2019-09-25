@@ -240,6 +240,16 @@ def sql_delete(key):
     GlobalObjectStorage.query.filter_by(key=key).delete()
     db.session.commit()
 
+def get_info_from_file_reference_with_uids(*pargs, **kwargs):
+    if 'uids' not in kwargs:
+        kwargs['uids'] = get_session_uids()
+    return get_info_from_file_reference(*pargs, **kwargs)
+
+def get_info_from_file_number_with_uids(*pargs, **kwargs):
+    if 'uids' not in kwargs:
+        kwargs['uids'] = get_session_uids()
+    return get_info_from_file_number(*pargs, **kwargs)
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
@@ -258,8 +268,8 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          url_for=url_for,
                                          get_new_file_number=get_new_file_number,
                                          get_ext_and_mimetype=get_ext_and_mimetype,
-                                         file_finder=get_info_from_file_reference,
-                                         file_number_finder=get_info_from_file_number,
+                                         file_finder=get_info_from_file_reference_with_uids,
+                                         file_number_finder=get_info_from_file_number_with_uids,
                                          server_sql_get=sql_get,
                                          server_sql_defined=sql_defined,
                                          server_sql_set=sql_set,

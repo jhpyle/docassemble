@@ -128,8 +128,8 @@ key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\]
 match_brackets = re.compile('\[B?\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[u?B?\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[u?(B?)\'([^\]]+)\'\]')
-valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]+')
-valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]+')
+valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]*')
+valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]*')
 
 default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default short title', default_title)
@@ -588,7 +588,7 @@ def logout():
     next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
     if current_user.is_authenticated and current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
         if next.startswith('/'):
-            next = docassemble.base.functions.get_url_root() + next
+            next = get_base_url() + next
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
     set_cookie = False
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
@@ -1236,8 +1236,6 @@ def get_url_from_file_reference(file_reference, **kwargs):
     else:
         question = kwargs.get('_question', None)
         package_arg = kwargs.get('_package', None)
-        root = daconfig.get('root', '/')
-        fileroot = daconfig.get('fileserver', root)
         if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']
             extn = re.sub(r'^\.', '', extn)
@@ -1256,13 +1254,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
         parts[1] = re.sub(r'^data/[^/]+/', '', parts[1])
-        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **kwargs)
-        # if reference_exists(parts[0] + ':data/static/' + parts[1]):
-        #     url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
-        # else:
-        #     url = None
-        if ('jsembed' in docassemble.base.functions.this_thread.misc or kwargs.get('_external', False)) and url is not None and url.startswith('/'):
-            url = docassemble.base.functions.get_url_root() + url
+        the_kwargs = copy.copy(kwargs)
+        if 'jsembed' in docassemble.base.functions.this_thread.misc:
+            the_kwargs['_external'] = True
+        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **the_kwargs)
     return(url)
 
 def user_id_dict():
@@ -1418,9 +1413,6 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             to_do.add((the_record.filename, the_record.key))
         for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id, UserDict.encrypted == True)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
             to_do.add((the_record.filename, the_record.key))
-        if user_code:
-            for the_record in db.session.query(UserDict.filename).filter_by(key=user_code).group_by(UserDict.filename).all():
-                to_do.add((the_record.filename, user_code))
     else:
         to_do = set(to_convert)
     for (filename, user_code) in to_do:
@@ -3509,15 +3501,15 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
     headers = dict()
     if req is None:
-        url = 'http://localhost'
-        url_root = 'http://localhost'
+        url_root = daconfig.get('url root', 'http://localhost') + ROOT
+        url = url_root + 'interview'
         secret = None
         clientip = None
         method = None
         unique_id = '0'
     else:
-        url = req.base_url
-        url_root = req.url_root
+        url_root = url_for('rootindex', _external=True)
+        url = url_root + 'interview'
         secret = req.cookies.get('secret', None)
         for key, value in req.headers.items():
             headers[key] = value
@@ -10200,7 +10192,7 @@ def serve_stored_file(uid, number, filename, extension):
     if not can_access_file_number(number, uids=[uid]):
         abort(404)
     try:
-        file_info = get_info_from_file_number(number, privileged=True)
+        file_info = get_info_from_file_number(number, privileged=True, uids=get_session_uids())
     except:
         abort(404)
     if 'path' not in file_info:
@@ -10270,7 +10262,7 @@ def serve_uploaded_file_with_extension(number, extension):
         the_file = SavedFile(number)
     else:
         try:
-            file_info = get_info_from_file_number(number, privileged=privileged, uids=uids)
+            file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
             abort(404)
         if 'path' not in file_info:
@@ -10293,7 +10285,7 @@ def serve_uploaded_file(number):
     else:
         privileged = False
     try:
-        file_info = get_info_from_file_number(number, privileged=privileged)
+        file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
         abort(404)
     #file_info = get_info_from_file_reference(number)
@@ -10316,7 +10308,7 @@ def serve_uploaded_page(number, page):
     else:
         privileged = False
     try:
-        file_info = get_info_from_file_number(number, privileged=privileged)
+        file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
         abort(404)
     if 'path' not in file_info:
@@ -10341,7 +10333,7 @@ def serve_uploaded_pagescreen(number, page):
     else:
         privileged = False
     try:
-        file_info = get_info_from_file_number(number, privileged=privileged)
+        file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
         abort(404)
     if 'path' not in file_info:
@@ -10351,8 +10343,8 @@ def serve_uploaded_pagescreen(number, page):
         try:
             the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
             filename = the_file.page_path(page, 'screen')
-        except:
-            logmessage("Could not make thumbnail")
+        except Exception as err:
+            logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + text_type(err))
             filename = None
         if filename is None:
             the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
@@ -14500,16 +14492,12 @@ def playground_download(userid, filename):
 def playground_office_functionfile():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', request.base_url))), 200
+    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    #defaultDaServer = daconfig.get('url root', None)
-    #if defaultDaServer is None:
-    #    defaultDaServer = request.url_root
-    #defaultDaServer += daconfig.get('root', '/')
     defaultDaServer = url_for('rootindex', _external=True)
     return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
 
@@ -14571,7 +14559,7 @@ def playground_office_addin():
         else:
             variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
             return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
-    parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', daconfig.get('url root', request.base_url)))
+    parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', get_base_url()))
     return render_template('pages/officeaddin.html', page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
@@ -17215,12 +17203,10 @@ def request_developer():
             for role in user.roles:
                 if role.name == 'admin':
                     recipients.append(user.email)
-        url = request.base_url
-        url = re.sub(r'^(https?://[^/]+)/.*', r'\1', url)
         body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
-        body += "Go to " + str(url) + url_for('edit_user_profile_page', id=current_user.id) + " to change the user's privileges."
+        body += "Go to " + url_for('edit_user_profile_page', id=current_user.id, _external=True) + " to change the user's privileges."
         msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
         if not len(recipients):
             flash(word('No administrators could be found.'), 'error')
@@ -18387,7 +18373,7 @@ def voice():
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
         logmessage("voice: item " + str(item) + " is " + str(request.form[item]))
-    with resp.gather(action=daconfig.get('root', '/') + "digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as gg:
+    with resp.gather(action=url_for("digits"), finishOnKey='#', method="POST", timeout=10, numDigits=5) as gg:
         gg.say(word("Please enter the four digit code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)
@@ -18448,8 +18434,8 @@ def sms_body(phone_number, body='question', config='default'):
     if 'doing_sms' in session:
         raise DAError("Cannot call sms_body from within sms_body")
     form = dict(To=tconfig['number'], From=phone_number, Body=body, AccountSid=tconfig['account sid'])
-    base_url = request.base_url
-    url_root = request.url_root
+    base_url = url_for('rootindex', _external=True)
+    url_root = base_url
     tbackup = docassemble.base.functions.backup_thread_variables()
     sbackup = backup_session()
     session['doing_sms'] = True
@@ -18516,8 +18502,8 @@ def robots():
 def sms():
     #logmessage("Received: " + str(request.form))
     form = request.form
-    base_url = request.base_url
-    url_root = request.url_root
+    base_url = url_for('rootindex', _external=True)
+    url_root = base_url
     resp = do_sms(form, base_url, url_root)
     return Response(str(resp), mimetype='text/xml')
 
@@ -19250,7 +19236,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             continue
                         filename = attachment['filename'] + '.' + docassemble.base.parse.extension_of_doc_format[doc_format]
                         #saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
+                        url = url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
                         media_count += 1
@@ -20382,7 +20368,7 @@ def api_file(file_number):
         else:
             privileged = False
         try:
-            file_info = get_info_from_file_number(number, privileged=privileged)
+            file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
             return ('File not found', 404)
         if 'path' not in file_info:
@@ -22187,6 +22173,9 @@ if not in_celery:
         docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
     else:
         docassemble.base.logger.set_logmessage(syslog_message)
+
+def get_base_url():
+    return re.sub(r'^(https?://[^/]+).*', r'\1', url_for('rootindex', _external=True))
 
 def null_func(*pargs, **kwargs):
     logmessage("Null function called")

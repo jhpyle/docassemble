@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
-from six import string_types, text_type, PY2
+from six import string_types, text_type, PY2, with_metaclass
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
@@ -204,30 +204,6 @@ def get_uid():
 def get_chat_log(utc=False, timezone=None):
     """Returns the messages in the chat log of the interview."""
     return server.get_chat_log(this_thread.current_info.get('yaml_filename', None), this_thread.current_info.get('session', None), this_thread.current_info.get('secret', None), utc=utc, timezone=timezone)
-
-def get_url_start():
-    if this_thread.current_info.get('url_root', None) is not None:
-        url_start = re.sub(r'/$', r'', this_thread.current_info['url_root'])
-    else:
-        url_start = get_config('url root')
-        if url_start is None:
-            url_start = 'http://localhost'
-        url_start = re.sub(r'/$', r'', url_start)
-        root = get_config('root')
-        if root is None:
-            root = '/'
-        url_start += root
-    return url_start
-
-def get_url_root():
-    if this_thread.current_info.get('url_root', None) is not None:
-        url_root = re.sub(r'/$', r'', this_thread.current_info['url_root'])
-    else:
-        url_root = get_config('url root')
-        if url_root is None:
-            url_root = 'http://localhost'
-        url_root = re.sub(r'/$', r'', url_root)
-    return url_root
 
 def get_current_package():
     if this_thread.current_package is not None:
@@ -549,19 +525,9 @@ def interview_url(**kwargs):
     else:
         args['i'] = this_thread.current_info['yaml_filename']
         args['session'] = this_thread.current_info['session']
-    if do_local:
-        url = get_config('root')
-        if url is None:
-            url = '/'
-        url += 'interview'
-    else:
-        root_url = get_config('root')
-        if root_url is None:
-            root_url = '/'
-        root_url += 'interview'
-        url = str(this_thread.internal['url'])
-        url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
-    url += '?' + '&'.join(map(lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1])), args.items()))
+    if not do_local:
+        args['_external'] = True
+    url = url_of('interview', **args)
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -740,19 +706,9 @@ def interview_url_action(action, **kwargs):
     if contains_volatile.search(action):
         raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
-    if do_local:
-        url = get_config('root')
-        if url is None:
-            url = '/'
-        url += 'interview'
-    else:
-        root_url = get_config('root')
-        if root_url is None:
-            root_url = '/'
-        root_url += 'interview'
-        url = str(this_thread.internal['url'])
-        url = re.sub(r'(https?://[^/]+).*', r'\1', url) + root_url
-    url += '?' + '&'.join(map((lambda kv: str(kv[0]) + '=' + urllibquote(str(kv[1]))), args.items()))
+    if not do_local:
+        args['_external'] = True
+    url = url_of('interview', **args)
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -4121,8 +4077,26 @@ def single_to_double_newlines(text):
     """Converts single newlines to double newlines."""
     return re.sub(r'[\n\r]+', r'\n\n', text_type(text))
 
+custom_types = dict()
+
+class CustomDataTypeRegister(type):
+    def __init__(cls, name, bases, clsdict):
+        if len(cls.mro()) > 2:
+            if 'name' in clsdict and isinstance(clsdict['name'], string_types) and not re.search(r'[^a-z0-9A-Z\-\_]', clsdict['name']):
+                dataname = clsdict['name']
+                new_type = dict()
+                new_type['container_class'] = clsdict.get('container_class', 'da-field-container-datatype-' + dataname)
+                new_type['input_class'] = clsdict.get('input_class', 'da' + dataname)
+                new_type['input_type'] = clsdict.get('input_type', 'text')
+                custom_types[dataname] = new_type
+        super(CustomDataTypeRegister, cls).__init__(name, bases, clsdict)
+
+class CustomDataType(with_metaclass(CustomDataTypeRegister, object)):
+    pass
+
 class ServerContext(object):
     pass
 
 server_context = ServerContext()
 server_context.context = 'web'
+

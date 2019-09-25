@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.5.16] - 2019-09-24
+### Added
+- Custom `datatype` feature.
+### Fixed
+- Session-related bug.
+- Thumbnail generation bug.
+- Image icon problems.
+- External URLs calculated inconsistently.
+
 ## [0.5.15] - 2019-09-23
 ### Added
 - The `css class` screen part.
@@ -139,6 +148,8 @@
 ### Fixed
 - Setting of `__version__` in Python 2.7 raised Unicode error.
 - Back button after action in URL repeated the action.
+- The `progress` value was missing from the JSON representation of the
+  question.
 
 ## [0.4.79] - 2019-08-21
 ### Added
