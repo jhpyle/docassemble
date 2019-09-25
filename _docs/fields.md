@@ -924,6 +924,43 @@ that is "trained" to classify user input.
 For more information about how to use machine learning variables, see
 the [machine learning section].
 
+## <a name="custom datatype"></a>Custom data types
+
+You can use custom data types by declaring a subclass of
+`CustomDataType` in a Python module with class attributes that
+describe the data type.  For example:
+
+{% highlight yaml %}
+from docassemble.base.util import CustomDataType
+
+class SSN(CustomDataType):
+    name = 'ssn'
+    container_class = 'da-ssn-container'
+    input_class = 'da-ssn'
+{% endhighlight %}
+
+This will allow you to write:
+
+{% highlight yaml %}
+question: |
+  What is your Social Security Number?
+fields:
+  - SSN: user.ssn
+    datatype: ssn
+{% endhighlight %}
+
+The available class attributes are:
+
+* `name` (required) - the `datatype` name.  The only valid characters
+  are alphanumeric characters, the hyphen, and the underscore.
+* `container_class` - a [CSS] class for the parent container.  By
+  default, this will be set to `da-field-container-datatype-` followed
+  by the `name`.
+* `input_class` - a [CSS] class for the `<input>` element.  By
+  default, this will be set to `da` followed by the `name`.
+* `input_type` - the `type` for the `<input>` element.  By default,
+  this will be set to `text`.
+
 # <a name="fields options"></a>Options for items in `fields`
 
 The following are the keys that have special meaning within a list
