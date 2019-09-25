@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.5.16] - 2019-09-24
+## [0.5.16] - 2019-09-25
 ### Added
 - Custom `datatype` feature.
 ### Fixed
