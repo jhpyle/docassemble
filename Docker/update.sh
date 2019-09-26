@@ -16,6 +16,8 @@ source "${DA_ACTIVATE}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export HOME=/var/www
 
+export LC_ALL=C
+
 set -- $LOCALE
 export LANG=$1
 

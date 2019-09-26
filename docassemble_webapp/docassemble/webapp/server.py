@@ -4381,6 +4381,8 @@ def mfa_login():
 def manage_account():
     if (current_user.is_authenticated and current_user.has_roles(['admin'])) or not daconfig.get('user can delete account', True):
         abort(403)
+    if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+        return redirect(url_for('user.login'))
     secret = request.cookies.get('secret', None)
     if current_user.is_anonymous:
         logged_in = False
@@ -5330,7 +5332,7 @@ def index(action_argument=None):
             yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
         show_flash = False
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        if session_info is None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview:
+        if session_info is None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview and len(session['sessions']) > 0:
             show_flash = True
         if current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate'):
             show_flash = False
@@ -16346,6 +16348,12 @@ def playground_page_run():
         return redirect(url_for('playground_page', file=the_file))
     return redirect(url_for('playground_page'))
 
+@app.route('/playgroundproject', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_project():
+    pass#PPP
+    
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])

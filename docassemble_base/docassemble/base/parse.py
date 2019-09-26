@@ -543,7 +543,7 @@ class InterviewStatus(object):
                 result['default_email'] = self.current_info['user']['email']
             for attachment in self.attachments:
                 the_attachment = dict(url=dict(), number=dict(), filename_with_extension=dict())
-                for key in ('valid_formats', 'filename', 'name', 'description', 'content', 'markdown'):
+                for key in ('valid_formats', 'filename', 'name', 'description', 'content', 'markdown', 'raw'):
                     if key in attachment:
                         if attachment[key]:
                             the_attachment[key] = attachment[key]
@@ -3282,6 +3282,23 @@ class Question:
                         metadata[key] = data
                     else:
                         raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata' + self.idebug(target))
+            if 'raw' in target and target['raw']:
+                if 'content file' in target:
+                    content_file = target['content file']
+                    if not isinstance(content_file, list):
+                        content_file = [content_file]
+                    the_ext = None
+                    for item in content_file:
+                        (the_base, the_ext) = os.path.splitext(item)
+                    if the_ext:
+                        target['raw'] = the_ext
+                        target['valid formats'] = ['raw']
+                    else:
+                        target['raw'] = False
+                else:
+                    target['raw'] = False
+            else:
+                target['raw'] = False
             if 'content file' in target:
                 if not isinstance(target['content file'], list):
                     target['content file'] = [target['content file']]
@@ -3440,9 +3457,9 @@ class Question:
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
-            return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': target['raw']})
         elif isinstance(orig_target, string_types):
-            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, question=self), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, question=self), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': False})
         else:
             raise DAError("Unknown data type in attachment")
     def get_question_for_field_with_sub_fields(self, field, user_dict):
@@ -4267,7 +4284,7 @@ class Question:
             for the_att in computed_attachment_list:
                 if the_att.__class__.__name__ == 'DAFileCollection':
                     file_dict = dict()
-                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html'):
+                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw'):
                         if hasattr(the_att, doc_format):
                             the_dafile = getattr(the_att, doc_format)
                             if hasattr(the_dafile, 'number'):
@@ -4276,7 +4293,7 @@ class Question:
                         the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
                             the_att.info['valid_formats'] = list(file_dict.keys())
-                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str()})
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info['raw']})
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
@@ -4412,10 +4429,10 @@ class Question:
         if self.interview.cache_documents and attachment['variable_name']:
             try:
                 existing_object = eval(attachment['variable_name'], the_user_dict)
-                for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html'):
+                for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw'):
                     if hasattr(existing_object, doc_format):
                         the_file = getattr(existing_object, doc_format)
-                        for key in ('extension', 'mimetype', 'content', 'markdown'):
+                        for key in ('extension', 'mimetype', 'content', 'markdown', 'raw'):
                             if hasattr(the_file, key):
                                 result[key][doc_format] = getattr(the_file, key)
                         if hasattr(the_file, 'number'):
@@ -4431,7 +4448,14 @@ class Question:
         #logmessage("In finalize where redact is " + repr(result['redact']))
         docassemble.base.functions.this_thread.misc['redact'] = result['redact']
         for doc_format in result['formats_to_use']:
-            if doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
+            if doc_format == 'raw':
+                the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
+                with open(the_temp.name, 'w', encoding='utf-8') as the_file:
+                    the_file.write(result['markdown'][doc_format].lstrip("\n"))
+                result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
+                result['raw'] = attachment['raw']
+                result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
+            elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
                         docassemble.base.functions.set_context('pdf')
@@ -4533,11 +4557,14 @@ class Question:
             the_filename = attachment['filename'].text(the_user_dict).strip()
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False))
+            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'])
             exec(variable_name + '.info = _attachment_info', the_user_dict)
             del the_user_dict['_attachment_info']
             for doc_format in result['file']:
-                variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                if doc_format == 'raw':
+                    variable_string = variable_name + '.raw'
+                else:
+                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                 # filename = result['filename'] + '.' + doc_format
                 # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if result['file'][doc_format] is None:
@@ -4550,7 +4577,11 @@ class Question:
                     markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
                 else:
                     markdown_string = ''
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + '.' + extension_of_doc_format[doc_format]) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
+                if result['raw']:
+                    the_ext = result['raw']
+                else:
+                    the_ext = '.' + extension_of_doc_format[doc_format]
+                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
                 #logmessage("Executing " + string + "\n")
                 exec(string, the_user_dict)
             for doc_format in result['content']:
@@ -4562,6 +4593,7 @@ class Question:
                     exec(string, the_user_dict)
         return(result)
     def prepare_attachment(self, attachment, the_user_dict, **kwargs):
+        logmessage("prepare_attachment: raw is " + repr(attachment['raw']))
         if 'language' in attachment['options']:
             old_language = docassemble.base.functions.get_language()
             docassemble.base.functions.set_language(attachment['options']['language'])
@@ -4589,10 +4621,15 @@ class Question:
         result['extension'] = dict();
         result['mimetype'] = dict();
         result['file'] = dict();
-        if '*' in attachment['valid_formats']:
-            result['formats_to_use'] = ['pdf', 'rtf', 'html']
+        if attachment['raw']:
+            result['raw'] = attachment['raw']
+            result['formats_to_use'] = ['raw']
         else:
-            result['formats_to_use'] = attachment['valid_formats']
+            result['raw'] = False
+            if '*' in attachment['valid_formats']:
+                result['formats_to_use'] = ['pdf', 'rtf', 'html']
+            else:
+                result['formats_to_use'] = attachment['valid_formats']
         result['metadata'] = dict()
         if len(attachment['metadata']) > 0:
             for key in attachment['metadata']:
@@ -4633,7 +4670,7 @@ class Question:
         else:
             result['template_password'] = None
         for doc_format in result['formats_to_use']:
-            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx']:
+            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
                 if 'decimal_places' in attachment['options']:
                     try:
                         float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
@@ -4802,6 +4839,11 @@ class Question:
                                 else:
                                     result['data_strings'].append((key, val))
                     docassemble.base.functions.reset_context()
+                elif doc_format == 'raw':
+                    docassemble.base.functions.set_context('raw')
+                    the_markdown = attachment['content'].text(the_user_dict)
+                    result['markdown'][doc_format] = the_markdown
+                    docassemble.base.functions.reset_context()                    
                 else:
                     the_markdown = u""
                     if len(result['metadata']):
