@@ -4593,7 +4593,6 @@ class Question:
                     exec(string, the_user_dict)
         return(result)
     def prepare_attachment(self, attachment, the_user_dict, **kwargs):
-        logmessage("prepare_attachment: raw is " + repr(attachment['raw']))
         if 'language' in attachment['options']:
             old_language = docassemble.base.functions.get_language()
             docassemble.base.functions.set_language(attachment['options']['language'])

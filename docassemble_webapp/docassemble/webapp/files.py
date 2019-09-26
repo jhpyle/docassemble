@@ -30,26 +30,8 @@ cloud = docassemble.webapp.cloud.get_cloud()
 
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
-def listfiles(directory):
-    result = list()
-    directory = directory.rstrip(os.sep)
-    trimstart = len(directory) + 1
-    for root, dirs, files in os.walk(directory):
-        for filename in files:
-            result.append(os.path.join(root, filename)[trimstart:])
-    return result
-
-def listdirs(directory):
-    result = list()
-    directory = directory.rstrip(os.sep)
-    trimstart = len(directory) + 1
-    for root, dirs, files in os.walk(directory):
-        for subdir in dirs:
-            result.append(os.path.join(root, subdir)[trimstart:])
-    return result
-
 class SavedFile(object):
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', project=None):
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
         file_number = int(file_number)
         section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
@@ -87,7 +69,6 @@ class SavedFile(object):
             return
         # sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is not None:
-            dirs_in_use = set()
             self.modtimes = dict()
             self.keydict = dict()
             if not os.path.isdir(self.directory):
@@ -97,12 +78,8 @@ class SavedFile(object):
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #sys.stderr.write("fix: prefix is " + prefix + "\n")
             for key in cloud.list_keys(prefix):
-                filename = os.path.join(*key.name[len(prefix):].split('/'))
+                filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
-                fulldir = os.path.dirname(fullpath)
-                dirs_in_use.add(fulldir)
-                if not os.path.isdir(fulldir):
-                    os.makedirs(fulldir)        
                 server_time = key.get_epoch_modtime()
                 if not os.path.isfile(fullpath):
                     key.get_contents_to_filename(fullpath)
@@ -116,16 +93,15 @@ class SavedFile(object):
                         if not (local_time == server_time):
                             key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
-                
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
             self.path = os.path.join(self.directory, self.filename)
-            for filename in listfiles(self.directory):
+            to_delete = list()
+            for filename in os.listdir(self.directory):
                 if filename not in self.modtimes:
-                    os.remove(os.path.join(self.directory, filename))
-            for subdir in listdirs(self.directory):
-                if subdir not in dirs_in_use and os.path.isdir(subdir):
-                    shutil.rmtree(subdir)
+                    to_delete.append(filename)
+            for filename in to_delete:
+                os.remove(os.path.join(self.directory, filename))
         else:
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
@@ -183,6 +159,19 @@ class SavedFile(object):
         c.perform()
         c.close()
         cookiefile.close()
+        # cookiejar = cookielib.LWPCookieJar()
+        # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+        # response = opener.open(url)
+        # f = open(os.path.join(self.directory, filename), 'wb')
+        # block_sz = 8192
+        # while True:
+        #     buffer = u.read(block_sz)
+        #     if not buffer:
+        #         break
+
+        #     f.write(buffer)
+        # f.close()
+        #urllib.urlretrieve(url, os.path.join(self.directory, filename))
         self.save()
         return
     def fetch_url_post(self, url, post_args, **kwargs):
@@ -194,6 +183,7 @@ class SavedFile(object):
         with open(os.path.join(self.directory, filename), 'wb') as fp:
             for block in r.iter_content(1024):
                 fp.write(block)
+        #urlretrieve(url, os.path.join(self.directory, filename), None, urlencode(post_args))
         self.save()
         return
     def size_in_bytes(self, **kwargs):
@@ -210,21 +200,17 @@ class SavedFile(object):
         if cloud is not None and not self.fixed:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             for key in cloud.list_keys(prefix):
-                output.append(os.path.join(*key.name[len(prefix):].split('/')))
+                output.append(re.sub(r'.*/', '', key.name))
         else:
             if os.path.isdir(self.directory):
-                for filename in listfiles(self.directory):
+                for filename in os.listdir(self.directory):
                     output.append(filename)
         return sorted(output)
     def copy_from(self, orig_path, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
         #logmessage("Saving to " + os.path.join(self.directory, filename))
-        new_file = os.path.join(self.directory, filename)
-        new_file_dir = os.path.dirname(new_file)
-        if not os.path.isdir(new_file_dir):
-            os.path.makedirs(new_file_dir)
-        shutil.copyfile(orig_path, new_file)
+        shutil.copyfile(orig_path, os.path.join(self.directory, filename))
         if 'filename' not in kwargs:
             self.save()
     def get_modtime(self, **kwargs):

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.17] - 2019-09-26
+### Added
+- An option for assembling text files by setting `raw: True` under
+  `attachment`.
+
 ## [0.5.16] - 2019-09-25
 ### Added
 - Custom `datatype` feature.

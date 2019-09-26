@@ -16347,12 +16347,6 @@ def playground_page_run():
         pipe.execute()
         return redirect(url_for('playground_page', file=the_file))
     return redirect(url_for('playground_page'))
-
-@app.route('/playgroundproject', methods=['GET', 'POST'])
-@login_required
-@roles_required(['developer', 'admin'])
-def playground_project():
-    pass#PPP
     
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
