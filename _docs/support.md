@@ -59,7 +59,7 @@ is a good idea to ask a question about the error message first.
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
 [e-mail the developer]: mailto:jhpyle@gmail.com
-[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTAzYzY5NWExMzUxNTNhNjUyZjRkMDg0NGE2Yjc2YjI0OGNlMTcwNjhjYzRhMjljZWU0MTI2N2U0MTFlM2ZjNzg
+[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
 [Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
 [Quinten Steenhuis]: https://www.nonprofittechy.com/blog/
 [Rina Padua]: https://github.com/Rinapadua

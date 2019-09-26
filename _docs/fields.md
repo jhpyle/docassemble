@@ -930,7 +930,7 @@ You can use custom data types by declaring a subclass of
 `CustomDataType` in a Python module with class attributes that
 describe the data type.  For example:
 
-{% highlight yaml %}
+{% highlight python %}
 from docassemble.base.util import CustomDataType
 
 class SSN(CustomDataType):
