@@ -11873,6 +11873,15 @@
     What fruit were you thinking of?
   fields:
     - Fruit: fruit_name
+"raw": |-
+  mandatory: True
+  question: |
+    Here is the source code.
+  attachment:
+    name: Hello, world program
+    filename: hello_world
+    raw: True
+    content file: sample.cpp
 "raw-data-example": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\

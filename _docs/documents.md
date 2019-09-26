@@ -1446,6 +1446,19 @@ With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
 
+## <a name="raw"></a>Assembling text files
+
+If you want to use **docassemble** to assemble text files, set `raw:
+True` and use a [`content file`].
+
+{% include demo-side-by-side.html demo="raw" %}
+
+The only option on the download screen will be a download.
+
+If you use [`variable name`], the result will be a
+[`DAFileCollection`] object with the attribute `raw` set to a
+[`DAFile`] object representing the assembled text file.
+
 ## <a name="redact"></a>Redacting information from documents
 
 If you want to assemble a document but redact certain pieces of
@@ -1570,6 +1583,7 @@ to deletes the variable that represents the document.  Here is an example:
 If you want to turn off document caching entirely for a given
 interview, see the [`cache documents` feature].
 
+[`content file`]: #content file
 [`cache documents` feature]: {{ site.baseurl }}/docs/initial.html#cache documents
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
