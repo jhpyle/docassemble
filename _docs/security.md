@@ -127,7 +127,7 @@ trusted, you may worry that they will teach themselves how
 **docassemble** works and take steps to "snoop around" in the
 interview and access information they shouldn't, for example by
 running [`get_interview_variables()`] in the [JavaScript] console or
-visiting the `/vars` page (which is called by
+visiting the `/vars?i=...` page (which is called by
 [`get_interview_variables()`] to obtain a [JSON] version of the
 interview answers for the current session).
 

@@ -22,8 +22,10 @@ called "Show variables and values."  If you click this, a browser tab
 will open and you will see a [JSON] representation of the variables
 that had been defined before the error occurred.  (If your interview
 generated an error on the very first screen, however, the variables
-will not be available.)  The location of this screen is simply
-`/vars`.
+will not be available.)  The location of this screen is
+`/vars?i=docassemble.missouri:data/questions/custody.yml`, where
+`docassemble.missouri:data/questions/custody.yml` is the name of your
+interview.
 
 A common debugging technique is to print messages at various points in
 your code.  You can use the [`log()`] function to do this.  The
