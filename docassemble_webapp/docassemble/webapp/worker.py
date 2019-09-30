@@ -398,6 +398,7 @@ def sync_with_onedrive(user_id):
             local_files = dict()
             local_modtimes = dict()
             od_files = dict()
+            od_dirlist = dict()
             od_ids = dict()
             od_modtimes = dict()
             od_createtimes = dict()
@@ -433,7 +434,8 @@ def sync_with_onedrive(user_id):
                 else:
                     the_section = 'playground' + section
                 area = SavedFile(user_id, fix=True, section=the_section)
-                for f in os.listdir(area.directory):
+                for f in area.list_of_files():
+                    #sys.stderr.write("sync_with_onedrive: local file is " + f + "\n")
                     local_files[section].add(f)
                     local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
                     #local_modtimes[section][f] = area.get_modtime(filename=f)
@@ -443,11 +445,12 @@ def sync_with_onedrive(user_id):
                 od_modtimes[section] = dict()
                 od_createtimes[section] = dict()
                 od_deleted[section] = set()
+                od_dirlist[section] = dict()
                 page_token = None
                 if subdir_count[section] == 0:
                     sys.stderr.write("sync_with_onedrive: skipping " + section + " because empty on remote\n")
                 else:
-                    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo", "GET")
+                    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo,folder", "GET")
                     sys.stderr.write("sync_with_onedrive: processing " + section + ", which is " + text_type(subdirs[section]) + "\n")
                     while True:
                         if int(r['status']) != 200:
@@ -455,9 +458,11 @@ def sync_with_onedrive(user_id):
                         info = json.loads(content.decode())
                         #sys.stderr.write("sync_with_onedrive: result was " + repr(info) + "\n")
                         for the_file in info['value']:
-                            #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
                             if 'folder' in the_file:
+                                sys.stderr.write("sync_with_onedrive: found a folder " + repr(the_file) + "\n")
+                                od_dirlist[section][the_file['name']] = the_file['id']
                                 continue
+                            sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
                             if re.search(r'^(\~|\.)', the_file['name']):
                                 continue
                             od_ids[section][the_file['name']] = the_file['id']
@@ -471,6 +476,31 @@ def sync_with_onedrive(user_id):
                         if "@odata.nextLink" not in info:
                             break
                         r, content = try_request(http, info["@odata.nextLink"], "GET")
+                    for subdir_name, subdir_id in od_dirlist[section].items():
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdir_id) + "/children?$select=id,name,deleted,fileSystemInfo,folder", "GET")
+                        sys.stderr.write("sync_with_onedrive: processing " + section + " subdir " + subdir_name + ", which is " + text_type(subdir_id) + "\n")
+                        while True:
+                            if int(r['status']) != 200:
+                                return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " subdir " + subdir_name + " " + text_type(r['status']) + ": " + content.decode() + " looking for " + text_type(subdir_id), restart=False)
+                            info = json.loads(content.decode())
+                            for the_file in info['value']:
+                                if 'folder' in the_file:
+                                    continue
+                                sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                                if re.search(r'^(\~|\.)', the_file['name']):
+                                    continue
+                                path_name = os.path.join(subdir_name, the_file['name'])
+                                od_ids[section][path_name] = the_file['id']
+                                od_modtimes[section][path_name] = epoch_from_iso(the_file['fileSystemInfo']['lastModifiedDateTime'])
+                                od_createtimes[section][path_name] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
+                                sys.stderr.write("OneDrive says modtime on " + text_type(path_name) + " in " + section + " is " + text_type(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + text_type(od_modtimes[section][path_name]) + "\n")
+                                if the_file.get('deleted', None):
+                                    od_deleted[section].add(path_name)
+                                    continue
+                                od_files[section].add(path_name)
+                            if "@odata.nextLink" not in info:
+                                break
+                            r, content = try_request(http, info["@odata.nextLink"], "GET")
                 od_deleted[section] = od_deleted[section] - od_files[section]
                 for f in od_files[section]:
                     sys.stderr.write("Considering " + text_type(f) + " on OD\n")
@@ -494,6 +524,8 @@ def sync_with_onedrive(user_id):
                         if f not in od_files[section]:
                             sys.stderr.write("Considering " + text_type(f) + " is not in OneDrive\n")
                             the_path = os.path.join(area.directory, f)
+                            dir_name = os.path.dirname(f)
+                            base_name = os.path.basename(f)
                             if os.path.getsize(the_path) == 0:
                                 sys.stderr.write("Found zero byte file: " + text_type(the_path) + "\n")
                                 continue
@@ -503,12 +535,26 @@ def sync_with_onedrive(user_id):
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting OD modtime on new file " + text_type(f) + " to " + text_type(the_modtime) + " which is " + text_type(local_modtimes[section][f]) + "\n")
                             data = dict()
-                            data['name'] = f
+                            data['name'] = base_name
                             data['description'] = ''
                             data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["fileSystemInfo"] = { "createdDateTime": the_modtime, "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime }
                             #data["@microsoft.graph.conflictBehavior"] = "replace"
-                            result = onedrive_upload(http, subdirs[section], section, data, the_path)
+                            if dir_name != '':
+                                if dir_name not in od_dirlist[section]:
+                                    headers = {'Content-Type': 'application/json'}
+                                    dirdata = dict()
+                                    dirdata['name'] = dir_name
+                                    dirdata['folder'] = dict()
+                                    dirdata["@microsoft.graph.conflictBehavior"] = "rename"
+                                    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdirs[section]) + "/children", "POST", headers=headers, body=json.dumps(dirdata))
+                                    if int(r['status']) != 201:
+                                        raise DAError("sync_with_onedrive: could not create subfolder " + dir_name + ' in ' + text_type(subdirs[section]) + '.  ' + content.decode() + ' status: ' + text_type(r['status']))
+                                    new_item = json.loads(content.decode())
+                                    od_dirlist[section][dir_name] = new_item['id']
+                                result = onedrive_upload(http, od_dirlist[section][dir_name], dir_name, data, the_path)
+                            else:
+                                result = onedrive_upload(http, subdirs[section], section, data, the_path)
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_files[section].add(f)

@@ -229,9 +229,6 @@ class InterviewSource(object):
 
 class InterviewSourceString(InterviewSource):
     def __init__(self, **kwargs):
-        #self.playground = None
-        #self.package = None
-        #self.set_filepath(kwargs.get('filepath', None))
         self.set_path(kwargs.get('path', None))
         self.set_directory(kwargs.get('directory', None))
         self.set_content(kwargs.get('content', None))
@@ -243,8 +240,14 @@ class InterviewSourceFile(InterviewSource):
         self.playground = None
         if 'filepath' in kwargs:
             if re.search(r'SavedFile', str(type(kwargs['filepath']))):
-                #logmessage("We have a saved file on our hands")
                 self.playground = kwargs['filepath']
+                if self.playground.subdir and self.playground.subdir != 'default':
+                    sys.stderr.write("found subdir\n")
+                    self.playground_file = os.path.join(self.playground.subdir, self.playground.filename)
+                else:
+                    sys.stderr.write("no subdir\n")
+                    self.playground_file = self.playground.filename
+                sys.stderr.write("The path is " + repr(self.playground.path) + "\n")
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
                 else:
@@ -301,7 +304,7 @@ class InterviewSourceFile(InterviewSource):
     def get_modtime(self):
         #logmessage("get_modtime called in parse where path is " + str(self.path))
         if self.playground is not None:
-            return self.playground.get_modtime(filename=self.basename)
+            return self.playground.get_modtime(filename=self.playground_file)
         self._modtime = os.path.getmtime(self.filepath)
         return(self._modtime)
     def append(self, path):
@@ -4940,7 +4943,7 @@ def interview_source_from_string(path, **kwargs):
         new_source = context_interview.source.append(path)
         if new_source is not None:
             return new_source
-    #sys.stderr.write("Trying to find it\n")
+    #sys.stderr.write("Trying to find " + path + "\n")
     for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:

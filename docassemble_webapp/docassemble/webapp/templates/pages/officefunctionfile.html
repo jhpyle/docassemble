@@ -11,6 +11,7 @@
     </form>
     <script>
       var parentOrigin = "{{ parent_origin }}";
+      var currentProject = "{{ current_project }}";
     </script>
     <script type="text/javascript" src="{{ url_for('static', filename='app/jquery.min.js', v=config['DA_VERSION']) }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='office/officefunctionfile.js', v=config['DA_VERSION']) }}"></script>

@@ -7,7 +7,7 @@ from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
 from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage #Attachments
 from docassemble.webapp.packages.models import PackageAuth
-from docassemble.base.generate_key import random_string, random_bytes
+from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
@@ -88,8 +88,9 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         try:
             uid = docassemble.base.functions.this_thread.current_info['session']
+            assert uid is not None
         except:
-            pass
+            uid = unattached_uid()
     if uid is None:
         raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
@@ -99,14 +100,14 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
-def fix_ml_files(playground_number):
+def fix_ml_files(playground_number, current_project):
     playground = SavedFile(playground_number, section='playgroundsources', fix=False)
     changed = False
     for filename in playground.list_of_files():
         if re.match(r'^ml-.*\.json', filename):
             playground.fix()
             try:
-                if write_ml_source(playground, playground_number, filename, finalize=False):
+                if write_ml_source(playground, playground_number, current_project, filename, finalize=False):
                     changed = True
             except:
                 logmessage("Error writing machine learning source file " + str(filename))
@@ -118,50 +119,65 @@ def is_package_ml(parts):
         return True
     return False
 
-def write_ml_source(playground, playground_number, filename, finalize=True):
+def project_name(name):
+    return '' if name == 'default' else name
+
+def directory_for(area, current_project):
+    if current_project == 'default':
+        return area.directory
+    else:
+        return os.path.join(area.directory, current_project)
+
+def write_ml_source(playground, playground_number, current_project, filename, finalize=True):
     if re.match(r'ml-.*\.json', filename):
         output = dict()
-        prefix = 'docassemble.playground' + str(playground_number) + ':data/sources/' + str(filename)
+        prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
         for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
             if parts[2] not in output:
                 output[parts[2]] = list()
-            the_entry = dict(independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
+            the_independent = record.independent
+            if the_independent is not None:
+                the_independent = fix_pickle_obj(codecs.decode(bytearray(the_independent, encoding='utf-8'), 'base64'))
+            the_dependent = record.dependent
+            if the_dependent is not None:
+                the_dependent = fix_pickle_obj(codecs.decode(bytearray(the_dependent, encoding='utf-8'), 'base64'))
+            the_entry = dict(independent=the_independent, dependent=the_dependent)
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
         if len(output):
-            playground.write_as_json(output, filename=filename)
+            playground.write_as_json(output, filename=os.path.join(directory_for(playground, current_project), filename))
             if finalize:
                 playground.finalize()
             return True
     return False
 
 def absolute_filename(the_file):
-    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
+    match = re.match(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        #logmessage("absolute_filename: filename is " + filename)
-        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        #logmessage("absolute_filename: filename is " + filename + " and subdir is " + match.group(2))
+        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundtemplate/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundstatic/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundstatic/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundsources/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundsources/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename)
-        write_ml_source(playground, match.group(1), filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename, subdir=match.group(2))
+        write_ml_source(playground, match.group(1), match.group(2), filename)
         return playground
     return(None)
 
@@ -893,6 +909,14 @@ def get_session(i):
             return session['sessions'][i]
         delete_obsolete()
     return None
+
+def unattached_uid():
+    while True:
+        newname = random_alphanumeric(32)
+        existing_key = UserDict.query.filter_by(key=newname).first()
+        if existing_key:
+            continue
+        return newname
 
 def get_uid_for_filename(i):
     if 'sessions' not in session:

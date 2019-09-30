@@ -5,6 +5,12 @@ import re
 import sys
 from six import string_types
 
+def validate_project_name(form, field):
+    if re.search('^[0-9]', field.data):
+        raise ValidationError(word('Project name cannot begin with a number'))
+    if re.search('[^A-Za-z0-9]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
+
 def validate_name(form, field):
     if re.search('[^A-Za-z0-9\-]', field.data):
         raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, hyphen'))
@@ -78,6 +84,19 @@ class PlaygroundFilesEditForm(FlaskForm):
     submit = SubmitField(word('Save'))
     delete = SubmitField(word('Delete'))
 
+class RenameProject(FlaskForm):
+    name = StringField(word('New Name'), validators=[
+        validators.Required(word('Project name is required')), validate_project_name])
+    submit = SubmitField(word('Rename'))
+
+class DeleteProject(FlaskForm):
+    submit = SubmitField(word('Delete'))
+
+class NewProject(FlaskForm):
+    name = StringField(word('Name'), validators=[
+        validators.Required(word('Project name is required')), validate_project_name])
+    submit = SubmitField(word('Save'))
+
 class PullPlaygroundPackage(FlaskForm):
     github_url = StringField(word('GitHub URL'))
     github_branch = SelectField(word('GitHub Branch'))
@@ -148,7 +167,7 @@ class TrainingUploadForm(FlaskForm):
 class AddinUploadForm(FlaskForm):
     content = HiddenField()
     filename = HiddenField()
-    
+
 class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()

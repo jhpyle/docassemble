@@ -3,21 +3,21 @@
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 <ul class="nav nav-pills mt-1">
   <li class="nav-item">
-    <a class="nav-link" tabindex="1" title="{{ word('Create a new interview') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
+    <a class="nav-link" tabindex="1" title="{{ word('Create a new interview') }}" href="{{ url_for('playground_page', new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link" tabindex="2" title="{{ word('Create an interview with the wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a class="nav-link" tabindex="2" title="{{ word('Create an interview with the wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml', project=current_project) }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li class="nav-item dropdown">
     <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
       <i class="fas fa-folder-open" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Folders') }}
     </a>
     <div class="dropdown-menu">
-      <a class="dropdown-item" href="{{ url_for('playground_packages') }}"><i class="fas fa-briefcase fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Packages') }}</a>
-      <a class="dropdown-item" href="{{ url_for('playground_files', section='template') }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Templates') }}</a>
-      <a class="dropdown-item" href="{{ url_for('playground_files', section='static') }}"><i class="fas fa-image fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Static files') }}</a>
-      <a class="dropdown-item" href="{{ url_for('playground_files', section='sources') }}"><i class="fas fa-database fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Sources') }}</a>
-      <a class="dropdown-item" href="{{ url_for('playground_files', section='modules') }}"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Modules') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_packages', project=current_project) }}"><i class="fas fa-briefcase fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Packages') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', project=current_project, section='template') }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Templates') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', project=current_project, section='static') }}"><i class="fas fa-image fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Static files') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', project=current_project, section='sources') }}"><i class="fas fa-database fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Sources') }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_files', project=current_project, section='modules') }}"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i>&nbsp;{{ word('Modules') }}</a>
     </div>
   </li>
   <li role="presentation" class="nav-item dropdown">
@@ -29,7 +29,7 @@
       {%- for file in files %}{% if file['name'] == current_file %}
       <a class="dropdown-item active" href="#"><i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file['name'] }}</a>
       {%- else %}
-      <a class="dropdown-item" href="?file={{ file['name'] }}"><span style="opacity: {{ file['opacity'] }};"><i class="fas fa-file fa-fw" aria-hidden="true"></i></span>&nbsp;{{ file['name'] }}</a>
+      <a class="dropdown-item" href="{{ url_for('playground_page', file=file['name'], project=current_project) }}"><span style="opacity: {{ file['opacity'] }};"><i class="fas fa-file fa-fw" aria-hidden="true"></i></span>&nbsp;{{ file['name'] }}</a>
       {%- endif %}
       {%- endfor %}
       {%- else %}
@@ -39,7 +39,7 @@
   </li>
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
-      <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
+      <form action="{{ url_for('playground_page', project=current_project) }}" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
           <i class="fas fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Upload") }}
@@ -52,27 +52,27 @@
   </li>
   {%- if current_file != '' %}
   <li class="nav-item" role="presentation">
-    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
+    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', project=current_project, userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
       <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
     </a>
   </li>
   {%- endif %}
   {%- if use_gd %}
   <li class="nav-item" role="presentation">
-    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', next=url_for('playground_page')) }}" title="{{ word('Sync with Google Drive') }}">
+    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', project=current_project, next=url_for('playground_page', project=current_project)) }}" title="{{ word('Sync with Google Drive') }}">
       <i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Sync') }}
     </a>
   </li>
   {%- endif %}
   {%- if use_od %}
   <li class="nav-item" role="presentation">
-    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_onedrive', next=url_for('playground_page')) }}" title="{{ word('Sync with OneDrive') }}">
+    <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_onedrive', project=current_project, next=url_for('playground_page', project=current_project)) }}" title="{{ word('Sync with OneDrive') }}">
       <i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Sync') }}
     </a>
   </li>
   {%- endif %}
 </ul>
-<form action="{{ url_for('playground_page') }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
+<form action="{{ url_for('playground_page', project=current_project) }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
   <div class="row mb-1 mt-1">
@@ -86,7 +86,7 @@
   <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
   <div class="form-actions mt-2 ml-1">
     {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], tabindex="90") }}
-    {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
+    {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect', project=current_project) }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
     {%- if use_gd %}
     <a tabindex="101" id="daRunSyncGD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn btn-warning {{ config['BUTTON_CLASS'] }}" ><i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
     {%- endif %}

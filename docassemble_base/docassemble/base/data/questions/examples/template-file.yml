@@ -1,7 +1,7 @@
 metadata:
   title: Template from file
   short title: Template
-  documentation: "https://docassemble.org/docs/template.html"
+  documentation: "https://docassemble.org/docs/documents.html#content file"
   example start: 1
   example end: 2
 ---

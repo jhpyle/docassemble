@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.18] - 2019-09-
+### Added
+- Ability to use multiple Projects in the Playground.
+
 ## [0.5.17] - 2019-09-26
 ### Added
 - An option for assembling text files by setting `raw: True` under

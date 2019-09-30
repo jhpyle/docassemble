@@ -788,7 +788,8 @@ from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, RenameProject, DeleteProject, NewProject
+
 import flask_user.signals
 import flask_user.translations
 import flask_user.views
@@ -812,7 +813,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -829,15 +830,15 @@ import collections
 import pandas
 
 import importlib
-modules_to_import = daconfig.get('preloaded modules', None)
-if isinstance(modules_to_import, list):
-    for module_name in daconfig['preloaded modules']:
-        try:
-            importlib.import_module(module_name)
-        except:
-            pass
-
 def import_necessary():
+    modules_to_import = daconfig.get('preloaded modules', None)
+    if isinstance(modules_to_import, list):
+        for module_name in daconfig['preloaded modules']:
+            try:
+                importlib.import_module(module_name)
+            except:
+                pass
+
     start_dir = len(FULL_PACKAGE_DIRECTORY.split(os.sep))
     avoid_dirs = [os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'base'),
                   os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'demo'),
@@ -1201,13 +1202,21 @@ def get_url_from_file_reference(file_reference, **kwargs):
         remove_question_package(kwargs)
         return(url_for('playground_page', **kwargs))
     elif file_reference == 'playgroundtemplate':
-        return(url_for('playground_files', section='template'))
+        kwargs['section'] = 'template'
+        remove_question_package(kwargs)
+        return(url_for('playground_files', **kwargs))
     elif file_reference == 'playgroundstatic':
-        return(url_for('playground_files', section='static'))
+        kwargs['section'] = 'static'
+        remove_question_package(kwargs)
+        return(url_for('playground_files', **kwargs))
     elif file_reference == 'playgroundsources':
-        return(url_for('playground_files', section='sources'))
+        kwargs['section'] = 'sources'
+        remove_question_package(kwargs)
+        return(url_for('playground_files', **kwargs))
     elif file_reference == 'playgroundmodules':
-        return(url_for('playground_files', section='modules'))
+        kwargs['section'] = 'modules'
+        remove_question_package(kwargs)
+        return(url_for('playground_files', **kwargs))
     elif file_reference == 'playgroundpackages':
         remove_question_package(kwargs)
         return(url_for('playground_packages', **kwargs))
@@ -1490,22 +1499,25 @@ def copy_playground_modules():
                 devs.append(user.id)
     for user_id in devs:
         mod_dir = SavedFile(user_id, fix=True, section='playgroundmodules')
-        local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
-        if os.path.isdir(local_dir):
-            try:
-                shutil.rmtree(local_dir)
-            except:
-                pass
-        if PY3:
-            os.makedirs(local_dir, exist_ok=True)
-        elif not os.path.isdir(local_dir):
-            os.makedirs(local_dir)
-        #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
-        for f in [f for f in os.listdir(mod_dir.directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
-            shutil.copyfile(os.path.join(mod_dir.directory, f), os.path.join(local_dir, f))
-        #shutil.copytree(mod_dir.directory, local_dir)
-        with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
-            the_file.write(init_py_file)
+        local_dirs = [(os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id)), mod_dir.directory)]
+        for dirname in mod_dir.list_of_dirs():
+            local_dirs.append((os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id) + dirname), os.path.join(mod_dir.directory, dirname)))
+        for local_dir, mod_directory in local_dirs:
+            if os.path.isdir(local_dir):
+                try:
+                    shutil.rmtree(local_dir)
+                except:
+                    pass
+            if PY3:
+                os.makedirs(local_dir, exist_ok=True)
+            elif not os.path.isdir(local_dir):
+                os.makedirs(local_dir)
+            #sys.stderr.write("Copying " + str(mod_directory) + " to " + str(local_dir) + "\n")
+            for f in [f for f in os.listdir(mod_directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
+                shutil.copyfile(os.path.join(mod_directory, f), os.path.join(local_dir, f))
+            #shutil.copytree(mod_dir.directory, local_dir)
+            with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
+                the_file.write(init_py_file)
 
 def proc_example_list(example_list, package, directory, examples):
     for example in example_list:
@@ -2488,13 +2500,13 @@ def delete_session():
 
 def backup_session():
     backup = dict()
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in backup:
             session[key] = backup[key]
 
@@ -2503,7 +2515,7 @@ def get_existing_session(yaml_filename, secret):
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(result.key, yaml_filename, secret=secret)
         except:
-            logmessage("reset_session: unable to decrypt existing interview session " + result.key)
+            logmessage("get_existing_session: unable to decrypt existing interview session " + result.key)
             continue
         update_session(yaml_filename, uid=result.key, key_logged=True, encrypted=is_encrypted)
         return result.key, is_encrypted
@@ -2888,7 +2900,7 @@ def source_code_url(the_name, datatype=None):
     #logmessage("no match for " + str(source_file))
     return None
 
-def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False):
+def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False, current_project='default'):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
     #if 'uid' not in session:
@@ -2955,13 +2967,17 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     classes = set()
     name_info = copy.deepcopy(base_name_info)
     area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
-    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area, current_project)
+    templates = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
-    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area, current_project)
+    static = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundsources')
-    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area, current_project)
+    sources = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
-    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area, current_project)
+    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             if val not in pg_code_cache:
@@ -3253,7 +3269,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             content += '\n                <tr><td>'
             content += '\n                  <ul>'
             for path in sorted([x.path for x in all_sources]):
-                content += '\n                    <li><a target="_blank" href="' + url_for('view_source', i=path)+ '">' + path + '<a></li>'
+                content += '\n                    <li><a target="_blank" href="' + url_for('view_source', i=path, project=current_project)+ '">' + path + '<a></li>'
             content += '\n                  </ul>'
             content += '\n                </td></tr>'
     if len(functions):
@@ -12765,6 +12781,7 @@ def update_package():
 def create_playground_package():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
     do_pypi = request.args.get('pypi', False)
@@ -12863,7 +12880,8 @@ def create_playground_package():
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
-    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area['playgroundpackages'], current_project)
+    file_list['playgroundpackages'] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     the_choices = list()
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
@@ -12889,9 +12907,10 @@ def create_playground_package():
         section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
         for sec in ('playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
             area[sec] = SavedFile(current_user.id, fix=True, section=sec)
-            file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-        if os.path.isfile(os.path.join(area['playgroundpackages'].directory, current_package)):
-            filename = os.path.join(area['playgroundpackages'].directory, current_package)
+            the_directory = directory_for(area[sec], current_project)
+            file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), current_package)):
+            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), current_package)
             info = dict()
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
@@ -12927,16 +12946,16 @@ def create_playground_package():
             if do_pypi:
                 if current_user.pypi_username is None or current_user.pypi_password is None or current_user.pypi_username == '' or current_user.pypi_password == '':
                     flash("Could not publish to PyPI because username and password were not defined")
-                    return redirect(url_for('playground_packages', file=current_package))
+                    return redirect(url_for('playground_packages', project=current_project, file=current_package))
                 if current_user.timezone:
                     the_timezone = current_user.timezone
                 else:
                     the_timezone = get_default_timezone()
-                fix_ml_files(author_info['id'])
-                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone)
+                fix_ml_files(author_info['id'], current_project)
+                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
                 flash(logmessages, 'info')
                 time.sleep(3.0)
-                return redirect(url_for('playground_packages', file=current_package))
+                return redirect(url_for('playground_packages', project=current_project, file=current_package))
             if do_github:
                 if github_package_name in all_repositories:
                     first_time = False
@@ -12957,7 +12976,7 @@ def create_playground_package():
                 if first_time:
                     pulled_already = False
                 else:
-                    current_commit_file = os.path.join(area['playgroundpackages'].directory, '.' + github_package_name)
+                    current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
                     if os.path.isfile(current_commit_file):
                         pulled_already = True
                         with open(current_commit_file, 'rU', encoding='utf-8') as fp:
@@ -13009,8 +13028,8 @@ def create_playground_package():
                     the_timezone = current_user.timezone
                 else:
                     the_timezone = get_default_timezone()
-                fix_ml_files(author_info['id'])
-                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory)
+                fix_ml_files(author_info['id'], current_project)
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory, current_project=current_project)
                 # try:
                 #     output += subprocess.check_output(["git", "init"], cwd=packagedir, stderr=subprocess.STDOUT)
                 # except subprocess.CalledProcessError as err:
@@ -13111,9 +13130,9 @@ def create_playground_package():
                 time.sleep(3.0)
                 shutil.rmtree(directory)
                 if branch:
-                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, branch=branch, show_message='0'))
+                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, branch=branch, show_message='0'))
                 else:
-                    return redirect(url_for('playground_packages', pull='1', github_url=ssh_url, show_message='0'))
+                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, show_message='0'))
                 #return redirect(url_for('playground_packages', file=current_package))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(None, nice_name)
@@ -13123,8 +13142,8 @@ def create_playground_package():
                 the_timezone = current_user.timezone
             else:
                 the_timezone = get_default_timezone()
-            fix_ml_files(author_info['id'])
-            zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info, the_timezone)
+            fix_ml_files(author_info['id'], current_project)
+            zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info, the_timezone, current_project=current_project)
             saved_file.copy_from(zip_file.name)
             saved_file.finalize()
             # # Why do this here?  To reserve the name?  It is all done by install_zip_package
@@ -13145,13 +13164,13 @@ def create_playground_package():
                 install_zip_package('docassemble.' + pkgname, file_number)
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 session['taskwait'] = result.id
-                return redirect(url_for('update_package_wait', next=url_for('playground_packages', file=current_package)))
+                return redirect(url_for('update_package_wait', next=url_for('playground_packages', project=current_project, file=current_package)))
                 #return redirect(url_for('playground_packages', file=current_package))
             else:
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
-    return render_template('pages/create_playground_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
+    return render_template('pages/create_playground_package.html', current_project=current_project, version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -13656,7 +13675,8 @@ def trash_gd_file(section, filename):
 def sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    next = request.args.get('next', url_for('playground_page'))
+    current_project = get_current_project()
+    next = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
@@ -13680,7 +13700,8 @@ def sync_with_google_drive():
 def gd_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    next_url = request.args.get('next', url_for('playground_page'))
+    current_project = get_current_project()
+    next_url = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
@@ -13878,7 +13899,8 @@ def trash_od_file(section, filename):
 def sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    next = request.args.get('next', url_for('playground_page'))
+    current_project = get_current_project()
+    next = request.args.get('next', url_for('playground_page', project=get_current_project()))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
@@ -13902,7 +13924,8 @@ def sync_with_onedrive():
 def od_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    next_url = request.args.get('next', url_for('playground_page'))
+    current_project = get_current_project()
+    next_url = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
@@ -14392,6 +14415,7 @@ def config_page():
 @roles_required(['developer', 'admin'])
 def view_source():
     source_path = request.args.get('i', None)
+    current_project = get_current_project()
     if source_path is None:
         logmessage("view_source: no source path")
         abort(404)
@@ -14400,7 +14424,7 @@ def view_source():
             source = docassemble.base.parse.interview_source_from_string(source_path)
         else:
             try:
-                source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + source_path)
+                source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + source_path)
             except:
                 source = docassemble.base.parse.interview_source_from_string(source_path)
     except Exception as errmess:
@@ -14409,48 +14433,47 @@ def view_source():
     header = source_path
     return render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight dafullheight")))), 200
 
-@app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
-def playground_static(userid, filename):
+@app.route('/playgroundstatic/<current_project>/<userid>/<filename>', methods=['GET'])
+def playground_static(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundstatic')
-    filename = os.path.join(area.directory, filename)
+    the_directory = directory_for(area, current_project)
+    filename = os.path.join(the_directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
         return(response)
     abort(404)
 
-@app.route('/playgroundmodules/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundmodules/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
-def playground_modules(userid, filename):
+def playground_modules(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundmodules')
-    filename = os.path.join(area.directory, filename)
+    the_directory = directory_for(area, current_project)
+    filename = os.path.join(the_directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
         return(response)
     abort(404)
 
-@app.route('/playgroundsources/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundsources/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
-def playground_sources(userid, filename):
+def playground_sources(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
-    reslt = write_ml_source(area, userid, filename)
-    # if reslt:
-    #     logmessage("playground_sources: was True")
-    # else:
-    #     logmessage("playground_sources: was False")
-    filename = os.path.join(area.directory, filename)
+    reslt = write_ml_source(area, userid, current_project, filename)
+    the_directory = directory_for(area, current_project)
+    filename = os.path.join(the_directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
@@ -14458,15 +14481,16 @@ def playground_sources(userid, filename):
         return(response)
     abort(404)
 
-@app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundtemplate/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
-def playground_template(userid, filename):
+def playground_template(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
-    filename = os.path.join(area.directory, filename)
+    the_directory = directory_for(area, current_project)
+    filename = os.path.join(the_directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
@@ -14474,15 +14498,16 @@ def playground_template(userid, filename):
         return(response)
     abort(404)
 
-@app.route('/playgrounddownload/<userid>/<filename>', methods=['GET'])
+@app.route('/playgrounddownload/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
-def playground_download(userid, filename):
+def playground_download(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
-    filename = os.path.join(area.directory, filename)
+    the_directory = directory_for(area, current_project)
+    filename = os.path.join(the_directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
@@ -14494,14 +14519,14 @@ def playground_download(userid, filename):
 def playground_office_functionfile():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
-    return render_template('pages/officefunctionfile.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200
+    return render_template('pages/officefunctionfile.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     defaultDaServer = url_for('rootindex', _external=True)
-    return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
+    return render_template('pages/officeouter.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True, current_project=get_current_project()), 9) + "        </script>")), 200
 
 @app.route('/officeaddin', methods=['GET', 'POST'])
 @login_required
@@ -14509,9 +14534,11 @@ def playground_office_taskpane():
 def playground_office_addin():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     if request.args.get('fetchfiles', None):
         playground = SavedFile(current_user.id, fix=True, section='playground')
-        files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        the_directory = directory_for(playground, current_project)
+        files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         return jsonify(success=True, files=files)
     pg_var_file = request.args.get('pgvars', None)
     #logmessage("playground_office_addin: YAML file is " + text_type(pg_var_file))
@@ -14541,28 +14568,29 @@ def playground_office_addin():
                 return jsonify({'success': True, 'variables_json': [], 'vocab_list': []})
     if pg_var_file is not None:
         playground = SavedFile(current_user.id, fix=True, section='playground')
-        files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        the_directory = directory_for(playground, current_project)
+        files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if pg_var_file in files:
             #logmessage("playground_office_addin: file " + text_type(pg_var_file) + " was found")
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + pg_var_file)
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file)
             interview_source.set_testing(True)
         else:
             #logmessage("playground_office_addin: file " + text_type(pg_var_file) + " was not found")
             if pg_var_file == '':
                 pg_var_file = 'test.yml'
             content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + pg_var_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + pg_var_file, testing=True)
         interview = interview_source.get_interview()
-        ensure_ml_file_exists(interview, pg_var_file)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + pg_var_file, req=request, action=None))
+        ensure_ml_file_exists(interview, pg_var_file, current_project)
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None))
         if use_html:
-            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True)
+            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=current_project)
             return jsonify({'success': True, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
         else:
-            variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True)
+            variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=current_project)
             return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
     parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', get_base_url()))
-    return render_template('pages/officeaddin.html', page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
+    return render_template('pages/officeaddin.html', current_project=current_project, page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
@@ -14570,6 +14598,7 @@ def playground_office_addin():
 def playground_files():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
         use_od = False
     else:
@@ -14606,30 +14635,38 @@ def playground_files():
     if section not in ("template", "static", "sources", "modules", "packages"):
         section = "template"
     pgarea = SavedFile(current_user.id, fix=True, section='playground')
-    pulldown_files = sorted([f for f in os.listdir(pgarea.directory) if os.path.isfile(os.path.join(pgarea.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    if 'variablefile' in session:
-        if session['variablefile'] in pulldown_files:
-            active_file = session['variablefile']
+    the_directory = directory_for(pgarea, current_project)
+    pulldown_files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    current_variable_file = get_variable_file(current_project)
+    if current_variable_file is not None:
+        if current_variable_file in pulldown_files:
+            active_file = current_variable_file
         else:
-            del session['variablefile']
+            delete_variable_file(current_project)
             active_file = None
     else:
         active_file = None
     if active_file is None:
-        if 'playgroundfile' in session and session['playgroundfile'] in pulldown_files:
-            active_file = session['playgroundfile']
+        current_file = get_current_file(current_project, 'questions')
+        if current_file in pulldown_files:
+            active_file = current_file
         elif len(pulldown_files):
+            delete_current_file(current_project, 'questions')
             active_file = pulldown_files[0]
+        else:
+            delete_current_file(current_project, 'questions')
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
+    the_directory = directory_for(area, current_project)
     if request.args.get('delete', False):
         #argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('delete'))
         argument = request.args.get('delete')
         if argument:
-            filename = os.path.join(area.directory, argument)
+            the_directory = directory_for(area, current_project)
+            filename = os.path.join(the_directory, argument)
             if os.path.exists(filename):
                 os.remove(filename)
                 area.finalize()
-                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                     r.incr(key.decode())
                 if use_gd:
                     try:
@@ -14645,19 +14682,19 @@ def playground_files():
                         except:
                             logmessage("playground_files: unable to delete file on OneDrive.")
                 flash(word("Deleted file: ") + argument, "success")
-                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                     r.incr(key.decode())
-                return redirect(url_for('playground_files', section=section))
+                return redirect(url_for('playground_files', section=section, project=current_project))
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.args.get('convert', False):
         #argument = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', request.args.get('convert'))
         argument = request.args.get('convert')
         if argument:
-            filename = os.path.join(area.directory, argument)
+            filename = os.path.join(the_directory, argument)
             if os.path.exists(filename):
                 to_file = os.path.splitext(argument)[0] + '.md'
-                to_path = os.path.join(area.directory, to_file)
+                to_path = os.path.join(the_directory, to_file)
                 if not os.path.exists(to_path):
                     extension, mimetype = get_ext_and_mimetype(argument)
                     if (mimetype and mimetype in convertible_mimetypes):
@@ -14666,15 +14703,15 @@ def playground_files():
                         the_format = convertible_extensions[extension]
                     else:
                         flash(word("File format not understood: ") + argument, "error")
-                        return redirect(url_for('playground_files', section=section))
+                        return redirect(url_for('playground_files', section=section, project=current_project))
                     result = word_to_markdown(filename, the_format)
                     if result is None:
                         flash(word("File could not be converted: ") + argument, "error")
-                        return redirect(url_for('playground_files', section=section))
+                        return redirect(url_for('playground_files', section=section, project=current_project))
                     shutil.copyfile(result.name, to_path)
                     flash(word("Created new Markdown file called ") + to_file + word("."), "success")
                     area.finalize()
-                    return redirect(url_for('playground_files', section=section, file=to_file))
+                    return redirect(url_for('playground_files', section=section, file=to_file, project=current_project))
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.method == 'POST':
@@ -14688,12 +14725,12 @@ def playground_files():
                         extension, mimetype = get_ext_and_mimetype(filename)
                         if section == 'modules' and extension != 'py':
                             flash(word("Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders."), 'error')
-                            return redirect(url_for('playground_files', section=section))
+                            return redirect(url_for('playground_files', section=section, project=current_project))
                         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
                         the_file = filename
-                        filename = os.path.join(area.directory, filename)
+                        filename = os.path.join(the_directory, filename)
                         up_file.save(filename)
-                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                             r.incr(key.decode())
                         area.finalize()
                         if section == 'modules':
@@ -14702,18 +14739,18 @@ def playground_files():
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
                 if need_to_restart:
                     flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
-                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
+                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file, project=current_project)))
                 flash(word("Upload successful"), "success")
         if formtwo.delete.data:
             if the_file != '':
-                filename = os.path.join(area.directory, the_file)
+                filename = os.path.join(the_directory, the_file)
                 if os.path.exists(filename):
                     os.remove(filename)
-                    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                         r.incr(key.decode())
                     area.finalize()
                     flash(word("Deleted file: ") + the_file, "success")
-                    return redirect(url_for('playground_files', section=section))
+                    return redirect(url_for('playground_files', section=section, project=current_project))
                 else:
                     flash(word("File not found: ") + the_file, "error")
         if formtwo.submit.data and formtwo.file_content.data:
@@ -14721,19 +14758,19 @@ def playground_files():
                 if section == 'modules' and not re.search(r'\.py$', the_file):
                     the_file = re.sub(r'\..*', '', the_file) + '.py'
                 if formtwo.original_file_name.data and formtwo.original_file_name.data != the_file:
-                    old_filename = os.path.join(area.directory, formtwo.original_file_name.data)
+                    old_filename = os.path.join(the_directory, formtwo.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
-                filename = os.path.join(area.directory, the_file)
+                filename = os.path.join(the_directory, the_file)
                 with open(filename, 'w', encoding='utf-8') as fp:
                     fp.write(re.sub(r'\r\n', r'\n', formtwo.file_content.data))
                 the_time = formatted_current_time()
-                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                     r.incr(key.decode())
                 area.finalize()
                 if formtwo.active_file.data and formtwo.active_file.data != the_file:
                     #interview_file = os.path.join(pgarea.directory, formtwo.active_file.data)
-                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + formtwo.active_file.data)
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + formtwo.active_file.data)
                     #if os.path.isfile(interview_file):
                     #    with open(interview_file, 'a'):
                     #        os.utime(interview_file, None)
@@ -14742,14 +14779,14 @@ def playground_files():
                 if section == 'modules':
                     #restart_all()
                     flash(word('Since you changed a Python module, the server needs to restart in order to load your module.'), 'info')
-                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
+                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file, project=current_project)))
                 if is_ajax:
                     return jsonify(success=True, flash_message=flash_message)
                 else:
-                    return redirect(url_for('playground_files', section=section, file=the_file))
+                    return redirect(url_for('playground_files', section=section, file=the_file, project=current_project))
             else:
                 flash(word('You need to type in a name for the file'), 'error')
-    files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
 
     editable_files = list()
     convertible_files = list()
@@ -14761,7 +14798,7 @@ def playground_files():
             if section == 'sources' and re.match(r'ml-.*\.json', a_file):
                 trainable_files[a_file] = re.sub(r'^ml-|\.json$', '', a_file)
             else:
-                editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(area.directory, a_file))))
+                editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
     assign_opacity(editable_files)
     editable_file_listing = [x['name'] for x in editable_files]
     for a_file in files:
@@ -14772,11 +14809,11 @@ def playground_files():
     if the_file and not is_new and the_file not in editable_file_listing:
         the_file = ''
     if not the_file and not is_new:
-        if 'playground' + section in session and session['playground' + section] in editable_file_listing:
-            the_file = session['playground' + section]
+        current_file = get_current_file(current_project, section)
+        if current_file in editable_file_listing:
+            the_file = current_file
         else:
-            if 'playground' + section in session:
-                del session['playground' + section]
+            delete_current_file(current_project, section)
             if len(editable_files):
                 the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
@@ -14787,7 +14824,7 @@ def playground_files():
                 else:
                     the_file = 'test.md'
     if the_file in editable_file_listing:
-        session['playground' + section] = the_file
+        set_current_file(current_project, section, the_file)
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)
         if (mimetype and mimetype in ok_mimetypes):
@@ -14800,8 +14837,8 @@ def playground_files():
         active_file = None
     formtwo.original_file_name.data = the_file
     formtwo.file_name.data = the_file
-    if the_file != '' and os.path.isfile(os.path.join(area.directory, the_file)):
-        filename = os.path.join(area.directory, the_file)
+    if the_file != '' and os.path.isfile(os.path.join(the_directory, the_file)):
+        filename = os.path.join(the_directory, the_file)
     else:
         filename = None
     if filename is not None:
@@ -14870,7 +14907,7 @@ def playground_files():
       var existingFiles = """ + json.dumps(files) + """;
       var daSection = """ + '"' + section + '";' + """
       var attrs_showing = Object();
-""" + indent_by(variables_js(form='formtwo'), 6) + """
+""" + indent_by(variables_js(form='formtwo', current_project=current_project), 6) + """
 """ + indent_by(search_js(form='formtwo'), 6) + """
       function saveCallback(data){
         fetchVars(true);
@@ -14931,7 +14968,7 @@ def playground_files():
             }
             $.ajax({
               type: "POST",
-              url: """ + '"' + url_for('playground_files') + '"' + """,
+              url: """ + '"' + url_for('playground_files', project=current_project) + '"' + """,
               data: $("#formtwo").serialize() + extraVariable + '&submit=Save&ajax=1',
               success: function(data){
                 saveCallback(data);
@@ -14973,7 +15010,7 @@ def playground_files():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page', project=current_project) + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     cm_mode = ''
     if mode == 'null':
         modes = []
@@ -14983,7 +15020,7 @@ def playground_files():
         modes = [mode]
     for the_mode in modes:
         cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js", v=da_version) + '"></script>'
-    return render_template('pages/playgroundfiles.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=current_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(current_user.id)), 200
+    return render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=current_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(current_user.id) + project_name(current_project)), 200
 
 @app.route('/pullplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -14991,17 +15028,18 @@ def playground_files():
 def pull_playground_package():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     form = PullPlaygroundPackage(request.form)
     if request.method == 'POST':
         if form.pull.data:
             if form.github_url.data and form.pypi.data:
                 flash(word("You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank."), 'error')
             elif form.github_url.data:
-                return redirect(url_for('playground_packages', pull='1', github_url=form.github_url.data, branch=form.github_branch.data))
+                return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=form.github_url.data, branch=form.github_branch.data))
             elif form.pypi.data:
-                return redirect(url_for('playground_packages', pull='1', pypi=form.pypi.data))
+                return redirect(url_for('playground_packages', project=current_project, pull='1', pypi=form.pypi.data))
         if form.cancel.data:
-            return redirect(url_for('playground_packages'))
+            return redirect(url_for('playground_packages', project=current_project))
     elif 'github' in request.args:
         form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github'])
     elif 'pypi' in request.args:
@@ -15047,7 +15085,7 @@ def pull_playground_package():
       });
     </script>
 """
-    return render_template('pages/pull_playground_package.html', form=form, description=description, version_warning=version_warning, bodyclass='daadminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200
+    return render_template('pages/pull_playground_package.html', current_project=current_project, form=form, description=description, version_warning=version_warning, bodyclass='daadminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200
 
 @app.route('/get_git_branches', methods=['GET'])
 @login_required
@@ -15163,6 +15201,7 @@ def get_branch_info(http, full_name):
 def playground_packages():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
     the_file = request.args.get('file', '')
@@ -15217,7 +15256,8 @@ def playground_packages():
     section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundsources': form.sources_files, 'playgroundmodules': form.module_files}
     for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
-        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        the_directory = directory_for(area[sec], current_project)
+        file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for sec, field in section_field.items():
         the_list = []
         for item in file_list[sec]:
@@ -15246,19 +15286,20 @@ def playground_packages():
             raise DAError("Form did not validate with " + str(the_error))
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
-    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(area['playgroundpackages'], current_project)
+    files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     editable_files = list()
     mode = "yaml"
     for a_file in files:
-        editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(area['playgroundpackages'].directory, a_file))))
+        editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
     assign_opacity(editable_files)
     editable_file_listing = [x['name'] for x in editable_files]
     if request.method == 'GET' and not the_file and not is_new:
-        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_file_listing:
-            the_file = session['playgroundpackages']
+        current_file = get_current_file(current_project, 'packages')
+        if current_file in editable_file_listing:
+            the_file = current_file
         else:
-            if 'playgroundpackages' in session:
-                del session['playgroundpackages']
+            delete_current_file(current_project, 'packages')
             if len(editable_files):
                 the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
@@ -15267,7 +15308,7 @@ def playground_packages():
     #    flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
     #    validated = False
     if request.method == 'GET' and the_file in editable_file_listing:
-        session['playgroundpackages'] = the_file
+        set_current_file(current_project, 'packages', the_file)
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
     old_info = dict()
@@ -15362,8 +15403,8 @@ def playground_packages():
     github_url_from_file = None
     pypi_package_from_file = None
     if request.method == 'GET' and the_file != '':
-        if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
-            filename = os.path.join(area['playgroundpackages'].directory, the_file)
+        if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
+            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
                 old_info = yaml.load(content, Loader=yaml.FullLoader)
@@ -15422,7 +15463,7 @@ def playground_packages():
                             for sec in ('templates', 'static', 'sources', 'questions'):
                                 if directory.endswith('data/' + sec) and filename != 'README.md':
                                     data_files[sec].append(filename)
-                                    target_filename = os.path.join(area[area_sec[sec]].directory, filename)
+                                    target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
                                     with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                         shutil.copyfileobj(source_fp, target_fp)
                                     os.utime(target_filename, (the_time, the_time))
@@ -15437,7 +15478,7 @@ def playground_packages():
                             elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
-                                target_filename = os.path.join(area['playgroundmodules'].directory, filename)
+                                target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
                                 with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                     shutil.copyfileobj(source_fp, target_fp)
                                     os.utime(target_filename, (the_time, the_time))
@@ -15462,10 +15503,10 @@ def playground_packages():
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
-                        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
+                        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), package_name), 'w', encoding='utf-8') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
                             fp.write(text_type(the_yaml))
-                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                             r.incr(key.decode())
                         for sec in area:
                             area[sec].finalize()
@@ -15476,8 +15517,8 @@ def playground_packages():
         if show_message:
             flash(word("The package was unpacked into the Playground."), 'success')
         if need_to_restart:
-            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
-        return redirect(url_for('playground_packages', file=the_file))
+            return redirect(url_for('restart_page', next=url_for('playground_packages', project=current_project, file=the_file)))
+        return redirect(url_for('playground_packages', project=current_project, file=the_file))
     if request.method == 'GET' and 'pull' in request.args and int(request.args['pull']) == 1 and ('github_url' in request.args or 'pypi' in request.args):
         area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
         readme_text = ''
@@ -15535,7 +15576,7 @@ def playground_packages():
             logmessage(output)
             dirs_inside = [f for f in os.listdir(directory) if os.path.isdir(os.path.join(directory, f)) and re.search(r'^[A-Za-z0-9]', f)]
             if len(dirs_inside) == 1:
-                commit_file = os.path.join(area['playgroundpackages'].directory, '.' + dirs_inside[0])
+                commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + dirs_inside[0])
                 packagedir = os.path.join(directory, dirs_inside[0])
                 try:
                     current_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -15562,10 +15603,10 @@ def playground_packages():
                             break
                 else:
                     flash(word("The package you specified could not be downloaded from PyPI."), 'error')
-                    return redirect(url_for('playground_packages'))
+                    return redirect(url_for('playground_packages', project=current_project))
                 if pypi_url is None:
                     flash(word("The package you specified could not be downloaded from PyPI as a tar.gz file."), 'error')
-                    return redirect(url_for('playground_packages'))
+                    return redirect(url_for('playground_packages', project=current_project))
             except Exception as err:
                 raise DAError("playground_packages: error getting information about PyPI package.  " + str(err))
             try:
@@ -15595,7 +15636,7 @@ def playground_packages():
                 for sec in ('templates', 'static', 'sources', 'questions'):
                     if the_directory.endswith('data/' + sec) and filename != 'README.md':
                         data_files[sec].append(filename)
-                        target_filename = os.path.join(area[area_sec[sec]].directory, filename)
+                        target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
                         #output += "Copying " + orig_file + "\n"
                         copy_if_different(orig_file, target_filename)
                 if filename == 'README.md' and len(levels) == 0:
@@ -15606,7 +15647,7 @@ def playground_packages():
                         setup_py = fp.read()
                 elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                     data_files['modules'].append(filename)
-                    target_filename = os.path.join(area['playgroundmodules'].directory, filename)
+                    target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
                     #output += "Copying " + orig_file + "\n"
                     if (not os.path.isfile(target_filename)) or filecmp.cmp(orig_file, target_filename) is False:
                         need_to_restart = True
@@ -15640,7 +15681,7 @@ def playground_packages():
         #     while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
         #         index += 1
         #         package_name = orig_package_name + str(index)
-        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w', encoding='utf-8') as fp:
+        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
             fp.write(text_type(the_yaml))
         area['playgroundpackages'].finalize()
@@ -15653,13 +15694,13 @@ def playground_packages():
             flash(word("The package was unpacked into the Playground."), 'success')
         #shutil.rmtree(directory)
         if need_to_restart:
-            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
-        return redirect(url_for('playground_packages', file=the_file))
-    if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
-        os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
+            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file, project=current_project)))
+        return redirect(url_for('playground_packages', project=current_project, file=the_file))
+    if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
+        os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file))
         area['playgroundpackages'].finalize()
         flash(word("Deleted package"), "success")
-        return redirect(url_for('playground_packages'))
+        return redirect(url_for('playground_packages', project=current_project))
     if not is_new:
         pkgname = 'docassemble.' + the_file
         pypi_info = pypi_status(pkgname)
@@ -15686,7 +15727,7 @@ def playground_packages():
             if the_file != '':
                 area['playgroundpackages'].finalize()
                 if form.original_file_name.data and form.original_file_name.data != the_file:
-                    old_filename = os.path.join(area['playgroundpackages'].directory, form.original_file_name.data)
+                    old_filename = os.path.join(directory_for(area['playgroundpackages'], current_project), form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 if form.pypi.data and pypi_version is not None:
@@ -15697,24 +15738,24 @@ def playground_packages():
                         if 'releases' not in pypi_info['info'] or new_info['version'] not in pypi_info['info']['releases'].keys():
                             break
                         versions = new_info['version'].split(".")
-                filename = os.path.join(area['playgroundpackages'].directory, the_file)
+                filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
                 with open(filename, 'w', encoding='utf-8') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
                     fp.write(text_type(the_yaml))
                 area['playgroundpackages'].finalize()
                 if form.download.data:
-                    return redirect(url_for('create_playground_package', package=the_file))
+                    return redirect(url_for('create_playground_package', package=the_file, project=current_project))
                 if form.install.data:
-                    return redirect(url_for('create_playground_package', package=the_file, install='1'))
+                    return redirect(url_for('create_playground_package', package=the_file, project=current_project, install='1'))
                 if form.pypi.data:
-                    return redirect(url_for('create_playground_package', package=the_file, pypi='1'))
+                    return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
                 if form.github.data:
                     the_branch = form.github_branch.data
                     if the_branch == "<new>":
                         the_branch = re.sub(r'[^A-Za-z0-9\_\-]', r'', text_type(form.github_branch_new.data))
-                        return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch)))
                     else:
-                        return redirect(url_for('create_playground_package', package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch)))
                 the_time = formatted_current_time()
                 # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
                 # if existing_package is None:
@@ -15732,8 +15773,8 @@ def playground_packages():
                     flash(word('The package information was saved.'), 'success')
     form.original_file_name.data = the_file
     form.file_name.data = the_file
-    if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
-        filename = os.path.join(area['playgroundpackages'].directory, the_file)
+    if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
+        filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
     else:
         filename = None
     header = word("Packages")
@@ -15803,7 +15844,7 @@ def playground_packages():
     else:
         any_files = False
     #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page') + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page', project=current_project) + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -15895,7 +15936,7 @@ def playground_packages():
         form.author_name.data = current_user.first_name + " " + current_user.last_name
     if form.author_email.data in ('', None) and current_user.email:
         form.author_email.data = current_user.email
-    return render_template('pages/playgroundpackages.html', branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=sorted(package_names, key=lambda y: y.lower()), any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', current_project=current_project, branch=default_branch, version_warning=None, bodyclass='daadminbody', can_publish_to_pypi=can_publish_to_pypi, pypi_message=pypi_message, can_publish_to_github=can_publish_to_github, github_message=github_message, github_url=the_github_url, pypi_package_name=the_pypi_package_name, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=sorted(package_names, key=lambda y: y.lower()), any_files=any_files), 200
 
 def github_as_http(url):
     if url.startswith('http'):
@@ -16135,7 +16176,7 @@ function update_search(event){
 
 """
 
-def variables_js(form=None, office_mode=False):
+def variables_js(form=None, office_mode=False, current_project='default'):
     output = """
 function activatePopovers(){
   $(function () {
@@ -16229,7 +16270,7 @@ function activateVariables(){
   });
 }
 
-var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':.yml') + """';
 
 function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
@@ -16240,7 +16281,7 @@ function fetchVars(changed){
   updateRunLink();
   $.ajax({
     type: "POST",
-    url: """ + '"' + url_for('playground_variables') + '"' + """,
+    url: """ + '"' + url_for('playground_variables', project=current_project) + '"' + """,
     data: 'csrf_token=' + $("#""" + form + """ input[name='csrf_token']").val() + '&variablefile=' + $("#daVariables").val() + '&changed=' + (changed ? 1 : 0),
     success: function(data){
       if (data.vocab_list != null){
@@ -16272,49 +16313,59 @@ function variablesReady(){
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_variables():
+    current_project = get_current_project()
+    logmessage("playground_variables: project is " + repr(current_project))
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     playground = SavedFile(current_user.id, fix=True, section='playground')
-    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    the_directory = directory_for(playground, current_project)
+    files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     if len(files) == 0:
         return jsonify(success=False, reason=1)
     post_data = request.form.copy()
     if request.method == 'POST' and 'variablefile' in post_data:
         active_file = post_data['variablefile']
+        logmessage("active_file is " + active_file)
         if post_data['variablefile'] in files:
             if 'changed' in post_data and int(post_data['changed']):
-                session['variablefile'] = active_file
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+                set_variable_file(current_project, active_file)
+            logmessage("Loading up " + 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
             interview_source.set_testing(True)
         else:
+            logmessage("variablefile not in it.")
             if active_file == '':
                 active_file = 'test.yml'
             content = ''
             if 'playground_content' in post_data:
                 content = re.sub(r'\r\n', r'\n', post_data['playground_content'])
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, package="docassemble.playground" + str(current_user.id), path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
-        ensure_ml_file_exists(interview, active_file)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-        variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False)
+        ensure_ml_file_exists(interview, active_file, current_project)
+        logmessage("getting status for " + 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+        variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
     return jsonify(success=False, reason=2)
 
-def ensure_ml_file_exists(interview, yaml_file):
+def ensure_ml_file_exists(interview, yaml_file, current_project):
     if len(interview.mlfields):
         if hasattr(interview, 'ml_store'):
             parts = interview.ml_store.split(':')
-            if parts[0] != 'docassemble.playground' + str(current_user.id):
+            if parts[0] != 'docassemble.playground' + str(current_user.id) + current_project:
                 return
             source_filename = re.sub(r'.*/', '', parts[1])
         else:
             source_filename = 'ml-' + re.sub(r'\.ya?ml$', '', yaml_file) + '.json'
         #logmessage("Source filename is " + source_filename)
         source_dir = SavedFile(current_user.id, fix=False, section='playgroundsources')
+        source_directory = directory_for(source_dir, current_project)
+        if current_project != 'default':
+            source_filename = os.path.join(current_project, source_filename)
         if source_filename not in source_dir.list_of_files():
             #logmessage("Source filename does not exist yet")
             source_dir.fix()
-            source_path = os.path.join(source_dir.directory, source_filename)
+            source_path = os.path.join(source_directory, source_filename)
             with open(source_path, 'a'):
                 os.utime(source_path, None)
             source_dir.finalize()
@@ -16335,9 +16386,10 @@ def assign_opacity(files):
 def playground_page_run():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    current_project = get_current_project()
     the_file = request.args.get('file')
     if the_file:
-        active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
+        active_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
         the_url = url_for('index', reset=1, i=active_interview_string)
         key = 'da:runplayground:' + str(current_user.id)
         #logmessage("Setting key " + str(key) + " to " + str(the_url))
@@ -16345,13 +16397,152 @@ def playground_page_run():
         pipe.set(key, the_url)
         pipe.expire(key, 25)
         pipe.execute()
-        return redirect(url_for('playground_page', file=the_file))
-    return redirect(url_for('playground_page'))
-    
+        return redirect(url_for('playground_page', file=the_file, project=current_project))
+    return redirect(url_for('playground_page', project=current_project))
+
+def get_list_of_projects(user_id):
+    playground = SavedFile(user_id, fix=False, section='playground')
+    return playground.list_of_dirs()
+
+def rename_project(user_id, old_name, new_name):
+    for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
+        area = SavedFile(user_id, fix=True, section='playground' + sec)
+        if os.path.isdir(os.path.join(area.directory, oldname)):
+            os.rename(os.path.join(area.directory, oldname), os.path.join(area.directory, new_name))
+            area.finalize()
+
+def create_project(user_id, new_name):
+    for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
+        area = SavedFile(user_id, fix=True, section='playground' + sec)
+        new_dir = os.path.join(area.directory, new_name)
+        os.makedirs(new_dir)
+        path = os.path.join(new_dir, '.placeholder')
+        with open(path, 'a'):
+            os.utime(path, None)
+        area.finalize()
+
+def delete_project(user_id, project_name):
+    for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
+        area = SavedFile(user_id, fix=True, section='playground' + sec)
+        area.delete_directory(project_name)
+        area.finalize()
+
+@app.route('/playgroundproject', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_project():
+    current_project = get_current_project()
+    if request.args.get('rename'):
+        form = RenameProject(request.form)
+        mode = 'rename'
+        description = word("You are renaming the project called %s.") % (current_project, )
+        page_title = word("Rename project")
+        if request.method == 'POST' and form.validate():
+            if current_project == 'default':
+                flash(word("You cannot rename the default Playground project"), 'error')
+            else:
+                rename_project(current_user.id, current_project, form.name.data)
+                current_project = set_current_project(form.name.data)
+                flash(word('Since you renamed a project, the server needs to restart in order to reload any modules.'), 'info')
+                return redirect(url_for('restart_page', next=url_for('playground_project', project=current_project)))
+    elif request.args.get('new'):
+        form = NewProject(request.form)
+        mode = 'new'
+        description = word("Enter the name of the new project you want to create.")
+        page_title = word("New project")
+        if request.method == 'POST' and form.validate():
+            if form.name.data == 'default' or form.name.data in get_list_of_projects(current_user.id):
+                flash(word("The project name %s is not available.") % (form.name.data, ), "error")
+            else:
+                create_project(current_user.id, form.name.data)
+                current_project = set_current_project(form.name.data)
+                mode = 'standard'
+    elif request.args.get('delete'):
+        form = DeleteProject(request.form)
+        mode = 'delete'
+        description = word("WARNING!  If you press Delete, the contents of the %s project will be permanently deleted.") % (current_project, )
+        page_title = word("Delete project")
+        if request.method == 'POST' and form.validate():
+            if current_project == 'default':
+                flash(word("The default project cannot be deleted."), "error")
+            else:
+                delete_project(current_user.id, current_project)
+                current_project = set_current_project('default')
+                mode = 'standard'
+    else:
+        form = None
+        mode = 'standard'
+        page_title = word("Projects")
+        description = "You can divide up your Playground into multiple separate areas, apart from your default Playground area.  Each Project has its own question files and Folders."
+    return render_template('pages/manage_projects.html', version_warning=None, bodyclass='daadminbody', tab_title=word("Projects"), description=description, page_title=page_title, projects=get_list_of_projects(current_user.id), current_project=current_project, mode=mode, form=form)
+
+def set_current_project(new_name):
+    key = 'da:playground:project:' + str(current_user.id)
+    pipe = r.pipeline()
+    pipe.set(key, new_name)
+    pipe.expire(key, 2592000)
+    pipe.execute()
+    return new_name
+
+def get_current_project():
+    current_project = request.args.get('project', None)
+    key = 'da:playground:project:' + str(current_user.id)
+    if current_project is None:
+        current_project = r.get(key)
+        if current_project is not None:
+            current_project = current_project.decode()
+    else:
+        pipe = r.pipeline()
+        pipe.set(key, current_project)
+        pipe.expire(key, 2592000)
+        pipe.execute()
+    if current_project is None:
+        return 'default'
+    return current_project
+
+def set_current_file(current_project, section, new_name):
+    key = 'da:playground:project:' + str(current_user.id) + ':playground' + section + ':' + current_project
+    pipe = r.pipeline()
+    pipe.set(key, new_name)
+    pipe.expire(key, 2592000)
+    pipe.execute()
+    return new_name
+
+def get_current_file(current_project, section):
+    key = 'da:playground:project:' + str(current_user.id) + ':playground' + section + ':' + current_project
+    current_file = r.get(key)
+    if current_file is None:
+        return ''
+    return current_file.decode()
+
+def delete_current_file(current_project, section):
+    key = 'da:playground:project:' + str(current_user.id) + ':playground' + section + ':' + current_project
+    r.delete(key)
+
+def set_variable_file(current_project, variable_file):
+    key = 'da:playground:project:' + str(current_user.id) + ':' + current_project + ':variablefile'
+    pipe = r.pipeline()
+    pipe.set(key, variable_file)
+    pipe.expire(key, 2592000)
+    pipe.execute()
+    return variable_file
+
+def get_variable_file(current_project):
+    key = 'da:playground:project:' + str(current_user.id) + ':' + current_project + ':variablefile'
+    variable_file = r.get(key)
+    if variable_file is not None:
+        variable_file = variable_file.decode()
+    return variable_file
+
+def delete_variable_file(current_project):
+    key = 'da:playground:project:' + str(current_user.id) + ':' + current_project + ':variablefile'
+    r.delete(key)
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
+    current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     if 'ajax' in request.form and int(request.form['ajax']):
@@ -16370,11 +16561,11 @@ def playground_page():
             use_gd = True
             use_od = False
         if request.method == 'GET' and needs_to_change_password():
-            return redirect(url_for('user.change_password', next=url_for('playground_page')))
+            return redirect(url_for('user.change_password', next=url_for('playground_page', project=current_project)))
     fileform = PlaygroundUploadForm(request.form)
     form = PlaygroundForm(request.form)
     interview = None
-    the_file = request.args.get('file', '')
+    the_file = request.args.get('file', get_current_file(current_project, 'questions'))
     if request.method == 'GET':
         is_new = request.args.get('new', False)
         debug_mode = request.args.get('debug', False)
@@ -16384,6 +16575,7 @@ def playground_page():
     if is_new:
         the_file = ''
     playground = SavedFile(current_user.id, fix=True, section='playground')
+    the_directory = directory_for(playground, current_project)
     #path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
     #if not os.path.exists(path):
     #    os.makedirs(path)
@@ -16396,10 +16588,10 @@ def playground_page():
                     extension, mimetype = get_ext_and_mimetype(filename)
                     if extension not in ('yml', 'yaml'):
                         flash(word("Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders."), 'error')
-                        return redirect(url_for('playground_page'))
+                        return redirect(url_for('playground_page', project=current_project))
                     filename = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', filename)
                     new_file = filename
-                    filename = os.path.join(playground.directory, filename)
+                    filename = os.path.join(the_directory, filename)
                     up_file.save(filename)
                     try:
                         with open(filename, 'rU', encoding='utf-8') as fp:
@@ -16407,13 +16599,13 @@ def playground_page():
                     except:
                         os.remove(filename)
                         flash(word("There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved."), 'error')
-                        return redirect(url_for('playground_page'))
+                        return redirect(url_for('playground_page', project=current_project))
                     playground.finalize()
-                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + new_file)
-                    return redirect(url_for('playground_page', file=os.path.basename(filename)))
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + new_file)
+                    return redirect(url_for('playground_page', project=current_project, file=os.path.basename(filename)))
                 except Exception as errMess:
                     flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
-        return redirect(url_for('playground_page'))
+        return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
         if (form.playground_name.data):
             the_file = form.playground_name.data
@@ -16421,7 +16613,7 @@ def playground_page():
             if the_file != '':
                 if not re.search(r'\.ya?ml$', the_file):
                     the_file = re.sub(r'\..*', '', the_file) + '.yml'
-                filename = os.path.join(playground.directory, the_file)
+                filename = os.path.join(the_directory, the_file)
                 if not os.path.isfile(filename):
                     with open(filename, 'a'):
                         os.utime(filename, None)
@@ -16432,7 +16624,7 @@ def playground_page():
             flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
     the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
-    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(playground.directory, f))) for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
+    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(the_directory, f))) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
     file_listing = [x['name'] for x in files]
     assign_opacity(files)
     content = ''
@@ -16440,11 +16632,11 @@ def playground_page():
         the_file = ''
     is_default = False
     if request.method == 'GET' and not the_file and not is_new:
-        if 'playgroundfile' in session and session['playgroundfile'] in files:
-            the_file = session['playgroundfile']
+        current_file = get_current_file(current_project, 'questions')
+        if current_file in files:
+            the_file = current_file
         else:
-            if 'playgroundfile' in session:
-                del session['playgroundfile']
+            delete_current_file(current_project, 'questions')
             if len(files):
                 the_file = sorted(files, key=lambda x: x['modtime'])[-1]['name']
             else:
@@ -16452,47 +16644,29 @@ def playground_page():
                 is_default = True
                 content = default_playground_yaml
     if the_file in file_listing:
-        session['playgroundfile'] = the_file
+        set_current_file(current_project, 'questions', the_file)
     active_file = the_file
-    if 'variablefile' in session:
-        if session['variablefile'] in file_listing:
-            active_file = session['variablefile']
+    current_variable_file = get_variable_file(current_project)
+    if current_variable_file is not None:
+        if current_variable_file in file_listing:
+            active_file = current_variable_file
         else:
-            del session['variablefile']
+            delete_variable_file(current_project)
     if the_file != '':
-        filename = os.path.join(playground.directory, the_file)
+        filename = os.path.join(the_directory, the_file)
         if not os.path.isfile(filename):
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
-    # post_data = request.form.copy()
-    # if request.method == 'POST' and 'variablefile' in post_data:
-    #     active_file = post_data['variablefile']
-    #     if post_data['variablefile'] in files:
-    #         session['variablefile'] = active_file
-    #         interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
-    #         interview_source.set_testing(True)
-    #     else:
-    #         if active_file == '':
-    #             active_file = 'test.yml'
-    #         content = ''
-    #         if form.playground_content.data:
-    #             content = form.playground_content.data
-    #         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
-    #     interview = interview_source.get_interview()
-    #     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    #     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-    #     if is_ajax:
-    #         return jsonify(variables_html=variables_html, vocab_list=vocab_list)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
-            filename_to_del = os.path.join(playground.directory, form.playground_name.data)
+            filename_to_del = os.path.join(the_directory, form.playground_name.data)
             if os.path.isfile(filename_to_del):
                 os.remove(filename_to_del)
                 flash(word('File deleted.'), 'info')
-                r.delete('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + the_file)
+                r.delete('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file)
                 if active_file != the_file:
-                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + ':' + active_file)
+                    r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
                 playground.finalize()
                 if use_gd:
                     try:
@@ -16510,19 +16684,20 @@ def playground_page():
                             logmessage("playground_page: unable to delete file on OneDrive.  " + str(the_err))
                         except:
                             logmessage("playground_page: unable to delete file on OneDrive.")
-                if 'variablefile' in session and (session['variablefile'] == the_file or session['variablefile'] == form.playground_name.data):
-                    del session['variablefile']
-                return redirect(url_for('playground_page'))
+                current_variable_file = get_variable_file(current_project)
+                if current_variable_file == the_file or current_variable_file == form.playground_name.data:
+                    delete_variable_file(current_project)
+                return redirect(url_for('playground_page', project=current_project))
             else:
                 flash(word('File not deleted.  There was an error.'), 'error')
         if (form.submit.data or form.run.data) and form.playground_content.data:
             if form.original_playground_name.data and form.original_playground_name.data != the_file:
-                old_filename = os.path.join(playground.directory, form.original_playground_name.data)
+                old_filename = os.path.join(the_directory, form.original_playground_name.data)
                 if not is_ajax:
                     flash(word("Changed name of interview"), 'success')
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
-                    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(playground.directory, f))) for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
+                    files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(the_directory, f))) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
                     file_listing = [x['name'] for x in files]
                     assign_opacity(files)
             the_time = formatted_current_time()
@@ -16537,21 +16712,11 @@ def playground_page():
             if should_save:
                 with open(filename, 'w', encoding='utf-8') as fp:
                     fp.write(the_content)
-            this_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + the_file
-            active_interview_string = 'docassemble.playground' + str(current_user.id) + ':' + active_file
+            this_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
+            active_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file
             r.incr('da:interviewsource:' + this_interview_string)
             if the_file != active_file:
                 r.incr('da:interviewsource:' + active_interview_string)
-            # for a_file in files:
-            #     docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
-            #     a_filename = os.path.join(playground.directory, a_file)
-            #     if a_filename != filename and os.path.isfile(a_filename):
-            #         with open(a_filename, 'a'):
-            #             os.utime(a_filename, None)
-            # a_filename = os.path.join(playground.directory, active_file)
-            # if a_filename != filename and os.path.isfile(a_filename):
-            #     with open(a_filename, 'a'):
-            #         os.utime(a_filename, None)
             playground.finalize()
             docassemble.base.interview_cache.clear_cache(this_interview_string)
             if active_interview_string != this_interview_string:
@@ -16568,9 +16733,9 @@ def playground_page():
                 interview_source = docassemble.base.parse.interview_source_from_string(active_interview_string)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                ensure_ml_file_exists(interview, active_file)
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+                ensure_ml_file_exists(interview, active_file, current_project)
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+                variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
@@ -16592,9 +16757,9 @@ def playground_page():
                 #form.playground_content.data = content
     if active_file != '':
         is_fictitious = False
-        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + active_file
+        interview_path = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file
         if is_default:
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         else:
             interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
             interview_source.set_testing(True)
@@ -16603,12 +16768,12 @@ def playground_page():
         active_file = 'test.yml'
         if form.playground_content.data:
             content = re.sub(r'\r', '', form.playground_content.data)
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         else:
-            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
     pulldown_files = [x['name'] for x in files]
     define_examples()
     if is_fictitious or is_new or is_default:
@@ -16626,7 +16791,7 @@ var existingFiles = """ + json.dumps(file_listing) + """;
 var currentFile = """ + json.dumps(the_file) + """;
 var attrs_showing = Object();
 
-""" + variables_js() + """
+""" + variables_js(current_project=current_project) + """
 
 """ + search_js() + """
 
@@ -16723,7 +16888,7 @@ $( document ).ready(function() {
     daCodeMirror.save();
     $.ajax({
       type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
+      url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&run=Save+and+Run&ajax=1',
       success: function(data){
         saveCallback(data);
@@ -16734,10 +16899,22 @@ $( document ).ready(function() {
     return true;
   });
   $("#daRunSyncGD").click(function(event){
-    window.location.replace('""" + url_for('sync_with_google_drive', auto_next=url_for('playground_page_run', file=the_file)) + """');
+    daCodeMirror.save();
+    $("#form").trigger("checkform.areYouSure");
+    if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
+      event.preventDefault();
+      return false;
+    }
+    window.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
   });
   $("#daRunSyncOD").click(function(event){
-    window.location.replace('""" + url_for('sync_with_onedrive', auto_next=url_for('playground_page_run', file=the_file)) + """');
+    daCodeMirror.save();
+    $("#form").trigger("checkform.areYouSure");
+    if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
+      event.preventDefault();
+      return false;
+    }
+    window.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
   });
   $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();
@@ -16746,7 +16923,7 @@ $( document ).ready(function() {
     }
     $.ajax({
       type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
+      url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&submit=Save&ajax=1',
       success: function(data){
         saveCallback(data);
@@ -16875,7 +17052,10 @@ $( document ).ready(function() {
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playground.html', version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    page_title = word("Playground")
+    if current_project != 'default':
+        page_title += " &ndash; " + current_project
+    return render_template('pages/playground.html', projects=get_list_of_projects(current_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 @app.errorhandler(404)
 def page_not_found_error(the_error):
@@ -22377,7 +22557,10 @@ with app.app_context():
         copy_playground_modules()
         write_pypirc()
         release_lock('init', 'init')
-    import_necessary()
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
+    with app.test_request_context(base_url=url_root, path=url):
+        import_necessary()
 
 if __name__ == "__main__":
     app.run()

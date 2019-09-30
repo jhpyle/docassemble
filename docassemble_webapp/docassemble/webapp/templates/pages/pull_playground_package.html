@@ -10,7 +10,7 @@
   </div>
 </div>
 
-<form action="" method="POST" role="form" class="form">
+<form action="{{ url_for('pull_playground_package', project=current_project) }}" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
   <div class="form-actions">
     {{ render_field(form.github_url, tabindex=100, placeholder='https://github.com/username/docassemble-packagename') }}

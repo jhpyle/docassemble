@@ -26,7 +26,7 @@ function fetchFiles(){
     //console.log("Calling fetchFiles");
     $.ajax({
         type: "GET",
-        url: "?fetchfiles=1",
+        url: "?fetchfiles=1&project=" + currentProject,
         success: function(data){
             //console.log("Got response for fetchFiles");
             if (data.success){
@@ -50,7 +50,7 @@ function fetchVars(yamlFile){
     }
     $.ajax({
         type: "GET",
-        url: "?pgvars=" + yamlFile,
+        url: "?pgvars=" + yamlFile + "&project=" + currentProject,
         success: function(data){
             //console.log("Got response for fetchVars");
             if (data.success){
@@ -74,7 +74,7 @@ function fetchVarsEtc(yamlFile){
     }
     $.ajax({
         type: "GET",
-        url: "?pgvars=" + yamlFile + '&html=1',
+        url: "?pgvars=" + yamlFile + '&html=1&project=' + currentProject,
         success: function(data){
             //console.log("Got response for fetchVarsEtc");
             if (data.success){
@@ -98,7 +98,7 @@ function uploadFile(yamlFile, fileName, content){
     }
     $.ajax({
         type: "POST",
-        url: "?pgvars=" + yamlFile + '&html=1',
+        url: "?pgvars=" + yamlFile + '&html=1&project=' + currentProject,
         data: $.param({'filename': fileName, 'content': content, 'csrf_token': $("input[name='csrf_token']").val()}),
         success: function(data){
             //console.log("Got response for uploadFile");

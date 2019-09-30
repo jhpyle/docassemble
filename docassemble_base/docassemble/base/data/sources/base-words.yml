@@ -104,6 +104,7 @@
 "Deleted package": Null
 "delete my account": Null
 "Delete": Null
+"Delete project": Null
 "Dependencies": Null
 "Description": Null
 "Developer Access": Null
@@ -141,6 +142,7 @@
 "(embedded question, source code not available)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
+"Enter the name of the new project you want to create.": Null
 "Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
@@ -289,6 +291,8 @@
 "(New file)": Null
 "New message above": Null
 "New message below": Null
+"New Name": Null
+"New project": Null
 "Next will be": Null
 "Nickname": Null
 "n": Null
@@ -379,6 +383,9 @@
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
+"Project name cannot begin with a number": Null
+"Project name is required": Null
+"Projects": Null
 "published on GitHub": Null
 "published on PyPI": Null
 "published on your GitHub account": Null
@@ -398,6 +405,8 @@
 "Reconfigure": Null
 "Registration is invite only": Null
 "Remove": Null
+"Rename": Null
+"Rename project": Null
 "Reorder by moving down": Null
 "Reorder by moving up": Null
 "Restarting": Null
@@ -439,6 +448,7 @@
 "Sign Your Name": Null
 "Since you changed a Python module, the server needs to restart in order to load your module.": Null
 "Since you did not type \"delete my account\" I did not delete your account.": Null
+"Since you renamed a project, the server needs to restart in order to reload any modules.": Null
 "Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
 "skip": Null
 "SMS": Null
@@ -472,6 +482,7 @@
 "That screen is already being controlled by another operator": Null
 "The author is": Null
 "The configuration file was saved.": Null
+"The default project cannot be deleted.": Null
 "The document is available in the following formats:": Null
 "The file you requested does not exist.": Null
 "The following document has been created for you.": Null
@@ -495,6 +506,7 @@
 "The previously selected OneDrive folder was deleted.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
+"The project name %s is not available.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
 "The regular expression you provided could not be parsed.": Null
 "There is already a username and password on this system with the e-mail address": Null
@@ -614,6 +626,7 @@
 "Waiting": Null
 "Warning: a file by that name already exists.  If you save, you will overwrite it.": Null
 "Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
+"WARNING!  If you press Delete, the contents of the %s project will be permanently deleted.": Null
 "was saved at": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
 "We were unable to submit your request.": Null
@@ -626,10 +639,12 @@
 "You are not allowed to access this interview.": Null
 "You are not authorized to access": Null
 "You are now set up with two factor authentication.": Null
+"You are renaming the project called %s.": Null
 "You can also follow this link: ": Null
 "You cannot log in this way.": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null
+"You cannot rename the default Playground project": Null
 "You cannot take away your own admin privilege.": Null
 "You cannot type more than %s characters.": Null
 "You can type link1, etc. to visit a link": Null

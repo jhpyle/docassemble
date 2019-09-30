@@ -2777,10 +2777,10 @@ def package_template_filename(the_file, **kwargs):
         if package is not None:
             parts = [package, the_file]
     if len(parts) == 2:
-        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
             if abs_file is None:
                 return None
             return(abs_file.path)
@@ -2808,16 +2808,16 @@ def package_data_filename(the_file):
         parts = [this_thread.current_package, the_file]
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
-        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                abs_file = server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+                abs_file = server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
                 if abs_file is None:
                     return None
                 return(abs_file.path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            abs_file = server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
+            abs_file = server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))
             if abs_file is None:
                 return None
             return(abs_file.path)
