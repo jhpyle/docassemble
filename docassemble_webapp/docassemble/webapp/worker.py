@@ -160,6 +160,7 @@ def sync_with_google_drive(user_id):
             local_files = dict()
             local_modtimes = dict()
             gd_files = dict()
+            gd_dirlist = dict()
             gd_ids = dict()
             gd_modtimes = dict()
             gd_deleted = dict()
@@ -175,10 +176,9 @@ def sync_with_google_drive(user_id):
                 else:
                     the_section = 'playground' + section
                 area = SavedFile(user_id, fix=True, section=the_section)
-                for f in os.listdir(area.directory):
+                for f in area.list_of_files():
                     local_files[section].add(f)
                     local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
-                    #local_modtimes[section][f] = area.get_modtime(filename=f)
                 subdirs = list()
                 page_token = None
                 while True:
@@ -196,16 +196,22 @@ def sync_with_google_drive(user_id):
                     return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
                 subdir = subdirs[0]
                 gd_files[section] = set()
+                gd_dirlist[section] = dict()
                 gd_ids[section] = dict()
                 gd_modtimes[section] = dict()
                 gd_deleted[section] = set()
                 page_token = None
                 while True:
-                    param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir) + "' in parents")
+                    param = dict(spaces="drive", fields="nextPageToken, files(id, mimeType, name, modifiedTime, trashed)", q="'" + str(subdir) + "' in parents")
                     if page_token is not None:
                         param['pageToken'] = page_token
                     response = service.files().list(**param).execute()
                     for the_file in response.get('files', []):
+                        sys.stderr.write("GD found " + the_file['name'] + "\n")
+                        if the_file['mimeType'] == 'application/vnd.google-apps.folder':
+                            sys.stderr.write("sync_with_google_drive: found a folder " + repr(the_file) + "\n")
+                            gd_dirlist[section][the_file['name']] = the_file['id']
+                            continue
                         if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                             continue
                         if re.search(r'^(\~|\.)', the_file['name']):
@@ -220,6 +226,30 @@ def sync_with_google_drive(user_id):
                     page_token = response.get('nextPageToken', None)
                     if page_token is None:
                         break
+                for subdir_name, subdir_id in gd_dirlist[section].items():
+                    page_token = None
+                    while True:
+                        param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir_id) + "' in parents")
+                        if page_token is not None:
+                            param['pageToken'] = page_token
+                        response = service.files().list(**param).execute()
+                        for the_file in response.get('files', []):
+                            sys.stderr.write("GD found " + the_file['name'] + " in subdir " + subdir_name + "\n")
+                            if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
+                                continue
+                            if re.search(r'^(\~|\.)', the_file['name']):
+                                continue
+                            path_name = os.path.join(subdir_name, the_file['name'])
+                            gd_ids[section][path_name] = the_file['id']
+                            gd_modtimes[section][path_name] = epoch_from_iso(the_file['modifiedTime'])
+                            sys.stderr.write("Google says modtime on " + text_type(path_name) + " is " + text_type(the_file['modifiedTime']) + ", which is " + text_type(gd_modtimes[section][path_name]) + "\n")
+                            if the_file['trashed']:
+                                gd_deleted[section].add(path_name)
+                                continue
+                            gd_files[section].add(path_name)
+                        page_token = response.get('nextPageToken', None)
+                        if page_token is None:
+                            break
                 gd_deleted[section] = gd_deleted[section] - gd_files[section]
                 for f in gd_files[section]:
                     sys.stderr.write("Considering " + text_type(f) + " on GD\n")
@@ -435,10 +465,8 @@ def sync_with_onedrive(user_id):
                     the_section = 'playground' + section
                 area = SavedFile(user_id, fix=True, section=the_section)
                 for f in area.list_of_files():
-                    #sys.stderr.write("sync_with_onedrive: local file is " + f + "\n")
                     local_files[section].add(f)
                     local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
-                    #local_modtimes[section][f] = area.get_modtime(filename=f)
                 page_token = None
                 od_files[section] = set()
                 od_ids[section] = dict()

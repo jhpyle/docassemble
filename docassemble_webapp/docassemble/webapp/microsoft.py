@@ -31,7 +31,7 @@ class azureobject(object):
         return None
     def list_keys(self, prefix):
         output = list()
-        for blob in self.conn.list_blobs(self.container, prefix=prefix, delimiter='/'):
+        for blob in self.conn.list_blobs(self.container, prefix=prefix):
             output.append(azurekey(self, blob.name))
         return output
     

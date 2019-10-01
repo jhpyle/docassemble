@@ -28,14 +28,11 @@ class s3object(object):
         return None
     def list_keys(self, prefix):
         output = list()
-        for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
+        for obj in self.bucket.objects.filter(Prefix=prefix):
             new_key = s3key(self, obj)
             new_key.size = obj.size
             new_key.last_modified = obj.last_modified
             output.append(new_key)
-        # else:
-        #     for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
-        #         output.append(s3key(self, self.conn.Object(self.bucket_name, obj.key), load=True))
         return output
 
 class s3key(object):
