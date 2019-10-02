@@ -777,6 +777,17 @@ If you did not remove line breaks from the text, then if the
 `meaning_of_life` contained two consecutive line breaks, only the
 first paragraph of the answer would be indented.
 
+## <a name="verbatim"></a>verbatim()
+
+If you are inserting user-supplied input into a document or onto the
+screen, it is possible that the text may contain characters that will
+result in undesired formatting changes.  For example, the input may
+contain Markdown codes, HTML codes, or LaTeX codes.  To avoid the
+effects of such characters, wrap the text with the `verbatim()`
+function.
+
+{% include side-by-side.html demo="verbatim" %}
+
 ## <a name="quote_paragraphs"></a>quote_paragraphs()
 
 The `quote_paragraphs()` function adds [Markdown] to text so that it
@@ -1160,7 +1171,9 @@ The `url_of()` function also has a few special uses.
 * If applied to a [`DAFile`] object, it will return a URL to the file.
 * `url_of('help')` returns a URL that causes the help tab to be shown,
   if there is a help tab.
-* `url_of('login')` returns a URL to the sign-in page.
+* `url_of('login')` returns a URL to the sign-in page.  It takes an
+  optional keyword parameter `next`, which you can set to a URL if you
+  want the user to be directed to a particular URL after they log in.
 * `url_of('signin')` does the same thing as `url_of('login')`.
 * `url_of('restart')` returns a URL that will delete the current
   session and restart it with the same URL parameters.
@@ -1171,7 +1184,8 @@ The `url_of()` function also has a few special uses.
   [`exitpage`] if there is no `next` parameter.
 * `url_of('interview')` returns a URL to the interview page.  (See
   also [`interview_url()`].)
-* `url_of('logout')` returns a URL that logs the user out.
+* `url_of('logout')` returns a URL that logs the user out.  It accepts
+  a `next` parameter.
 * `url_of('exit_logout')` returns a URL that deletes the interview session,
   logs the user out (if the user is logged in), and redirects to the
   URL at the `next` parameter, or to the [`exitpage`] if there is no
@@ -1180,6 +1194,7 @@ The `url_of()` function also has a few special uses.
   [`exitpage`] if there is no `next` parameter.  It does not log the
   user out or delete the interview session.
 * `url_of('register')` returns a URL to the user registration page.
+  It accepts a `next` parameter.
 * `url_of('profile')` returns a URL to the logged-in user's profile page.
 * `url_of('change_password')` returns a URL to a page where a logged-in user
   can change his or her password.
@@ -1943,24 +1958,14 @@ The `user_logged_in()` function returns `True` if the user is logged
 in, and otherwise returns `False`.
 
 You can use this function to ensure that the user is logged in before
-the user can use your interview:
+the user can finish your interview:
 
 {% include side-by-side.html demo="user-logged-in" %}
 
-This function uses the [`initial`] modifier in combination with the
-[`url_of()`] function and the [`interview_url()`] function.
-
-The code block should be [`initial`], so that it runs every time a
-user accesses the interview.  If the block is merely [`mandatory`],
-there are some circumstances (albeit rare circumstances) when a user
-who is not logged in could access the interview.
-
-The [`command()`] function redirects the browser to the given `url`.
-You could set the `url` to the result of `url_of('login')`, but then
-when the user logs in, the user will not be redirected back to the
-same interview session.  Thus the `next` parameter is set to a URL for
-the session.  The URL returned by [`interview_url()`] takes the user
-back to the original session.
+This function uses the [`url_of()`] function and the
+[`interview_url()`] function.  The `next` parameter is set to a URL
+for the session.  The URL returned by [`interview_url()`] takes the
+user back to the original session.
 
 ## <a name="user_privileges"></a>user_privileges()
 

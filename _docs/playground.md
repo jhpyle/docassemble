@@ -195,7 +195,7 @@ class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> Add."
 To view a different package, select it from the <i class="glyphicon glyphicon-briefcase"
 aria-hidden="true"></i> pull-down menu.
 
-To download the current package as a Zip file, click 
+To download the current package as a Zip file, click
 "<i class="glyphicon glyphicon-download" aria-hidden="true"></i>
 Download."
 
@@ -288,7 +288,7 @@ that is included in the package, edit your [profile].
 If the references to [PyPI] and [GitHub] do not appear for you, an
 administrator on your system will need to enable these features.  See
 [sharing packages on PyPI]({{ site.baseurl }}/docs/config.html#pypi)
-[setting up GitHub integration]({{ site.baseurl }}/docs/installation.html#github) 
+[setting up GitHub integration]({{ site.baseurl }}/docs/installation.html#github)
 for more information.
 
 For more information on managing [Python packages] within
@@ -420,6 +420,45 @@ example block to run as part of a working interview.  This working
 interview is what you will run when you click the "Preview"
 screenshot.
 
+## <a name="projects"></a>Switching Projects
+
+By default, your Playground is like the "desktop" on a computer; it is
+a single area where a variety of different files can be stored.  As
+you "play," you will accumulate a variety of files, some of which
+might be from short-lived experiments and others of which might be
+bundled into a [package].  You can give yourself a "blank slate" in
+your Playground by creating a "Project."
+
+To manage your projects, click "Playground <i class="fas
+fa-caret-down"></i>" in the upper left corner .
+
+![Playground]({{ site.baseurl }}/img/playground-projects-caret.png)
+
+This will open a menu listing the projects that are enabled on your
+site.
+
+![Playground Projects]({{ site.baseurl }}/img/playground-projects-caret-open.png)
+
+This control will allow you to switch among your projects.  For
+example, if you click "custody," you will be taken to your "custody"
+project.  The contents of the Playground and all of the folders will
+be different.  You can tell which project is active by looking the
+title of the page:
+
+![Playground]({{ site.baseurl }}/img/playground-projects-caret-other.png)
+
+At first, your only project will be the "Default Playground" project,
+so you will only see "Manage Projects" on the projects menu.  If you
+click "Manage Projects," you will be taken to the Projects page.
+
+![Projects]({{ site.baseurl }}/img/playground-projects-manage.png)
+
+On this page, you can "Add a New Project," rename existing projects,
+delete existing projects, or choose a new active project.
+
+When adding or renaming a project, note that project names can only
+consist of alphanumeric characters, and cannot begin with a digit.
+
 # <a name="wizard"></a>The Wizard
 
 If you are new to **docassemble**, a good way to learn is by using the
@@ -509,11 +548,11 @@ like this:
 
 When you go into a "folder," you will see a button that looks like this:
 
-![Playground Files GD Sync]({{ site.baseurl }}/img/playground-files-gd-sync.png) 
+![Playground Files GD Sync]({{ site.baseurl }}/img/playground-files-gd-sync.png)
 
 Pressing any of these buttons will trigger a synchronization process.
 
-![Playground GD Sync and Run]({{ site.baseurl }}/img/playground-gd-sync-and-run.png) 
+![Playground GD Sync and Run]({{ site.baseurl }}/img/playground-gd-sync-and-run.png)
 
 Pressing the "Sync and Run" button is like "Save and Run" except it
 triggers a synchronization process and then starts an interview in

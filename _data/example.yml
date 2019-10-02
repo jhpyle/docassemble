@@ -10551,10 +10551,28 @@
     ${ grantee }.
     % endif
 "user-logged-in": |-
-  initial: True
+  mandatory: True
+  code: |
+    favorite_fruit
+    ok_to_finish
+    final_screen
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
   code: |
     if not user_logged_in():
-      command('leave', url=url_of('login', next=interview_url()))
+      require_login_screen
+    ok_to_finish = True
+  ---
+  event: require_login_screen
+  question: |
+    You need to log in to finish this interview.
+  buttons:
+    - Log in: leave
+      url: ${ url_of('login', next=interview_url()) }
 "val": |-
   question: |
     What do you want for
@@ -10627,6 +10645,24 @@
   \ link](${ interview_url_action('query_variables') })\n  to query the information\
   \ from\n  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
   \ })\n  and the\n  [number of pieces](${ url_action('number_of_pieces') })."
+"verbatim": |-
+  question: |
+    Provide some text.
+  subquestion: |
+    Try inserting Markdown or HTML characters.
+  fields:
+    no label: user_input
+    datatype: area
+  ---
+  mandatory: True
+  question: |
+    This content should be devoid
+    of formatting.
+  subquestion: |
+    ${ verbatim(user_input) }
+  attachment:
+    content: |
+      ${ verbatim(user_input) }
 "video": |-
   field: ready_to_proceed
   question: |

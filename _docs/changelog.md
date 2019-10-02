@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.18](https://github.com/jhpyle/docassemble/releases/tag/v0.5.18) - 2019-10-02
+
+### Added
+- Projects system in the Playground.
+- The `verbatim()` function.
+
 ## [0.5.17](https://github.com/jhpyle/docassemble/releases/tag/v0.5.17) - 2019-09-26
 
 ### Added

@@ -426,9 +426,9 @@ file is `myinterview.yml`, your users can access the interview at:
 Note that while you are using an interview, the URL in the location
 bar will change.  It will end with `#page1`, then `#page2`, then
 `#page3`, etc., as the interview progresses.  These tags have no
-effect and the page number has no particular meaning; these tags exist
-for the sole purpose of enabling the user to click the browser's back
-button in order to go back one screen.
+direct effect and the page number has no particular meaning; these
+tags exist because of their side effect, which is to enable the user
+to click the browser's back button in order to go back one screen.
 
 The remainder of this subsection will discuss ways that you can
 customize the way that interviews are invoked.  This is a fairly
@@ -436,9 +436,8 @@ advanced topic, so if you are new, feel free to skip to the section on
 [how answers are stored].
 
 If you want to use **docassemble** to give users a list of interviews
-from which to choose, there is also a special page of the site,
-located at `/list`, which displays a [list of interviews] available on
-your site.
+from which to choose, there is a special page of the site, located at
+`/list`, which displays a [list of interviews] available on your site.
 
 > https://interview.example.com/list
 
@@ -486,9 +485,8 @@ user who visits the "root" URL of your site will be redirected to
 
 However, if the user had previously been using another interview
 during the same browser session, going to
-`https://interview.example.com/` (without a [`root redirect url`]) or
-`https://interview.example.com/interview` will resume the original
-session.
+`https://interview.example.com/` (without a [`root redirect url`])
+will resume the original session.
 
 If you want your users who are in the middle of an interview to be
 able to begin a different interview, you can enable [`show dispatch
@@ -799,10 +797,10 @@ server].
 The **docassemble** web application uses browser cookies to keep track
 of the user's current interview session.  If the user starts an
 interview, then navigates to a different page, and then navigates to
-`/interview` on the **docassemble** site with no URL parameters, or
-with an `i` parameter that is the same as the `i` parameter of the
-current interview session, the user will be redirected to where they left
-off in the previous session.
+`/interview` on the **docassemble** site with an `i` parameter that is
+the same as the `i` parameter of the interview they were using before,
+the user will resume where they had left off in their existing
+session.
 
 <a name="new_session"></a>If you want to be able to provide your users
 with a URL that always starts a fresh interview session, and will not
@@ -817,11 +815,6 @@ have the same effect as `&new_session=1`, but if the user had just
 been in a session with the same interview, that session will be
 deleted.  In this cirumstance, adding `&reset=1` is like a "restart"
 operation.
-
-If the user is in interview session, and then clicks a link to an
-interview with a different `i` parameter, this has the same effect as
-if `&new_session=1` had been added; a fresh interview session will
-always be started.
 
 For other session restarting options, see the `'restart'` and
 `'new_session'` options for the [`url_of()`] and [`command()`]
@@ -879,7 +872,8 @@ a spreadsheet the way that the results of a [Google Form] can be.  If
 you want to be able to store a session's interview answers in a
 spreadsheet form, you can write [Python] code to do so.  There are
 also some helpful [Objects] and [Functions] that you can use, such as
-the [`DAStore`] object and the [`write_record()`] function.
+the [`DAStore`] object, the [`SQLObject`], and the [`write_record()`]
+function.
 
 # <a name="comingback"></a>Leaving an interview and coming back
 
@@ -1021,3 +1015,4 @@ functions.
 [WordPress plugin]: https://github.com/jpylephilalegal/docassemble-embedder
 [installing on a machine already using a web server]: {{ site.baseurl }}/docs/docker.html#forwarding
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
+[`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
