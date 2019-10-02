@@ -52,7 +52,7 @@
   </li>
   {%- if current_file != '' %}
   <li class="nav-item" role="presentation">
-    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', project=current_project, userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
+    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', current_project=current_project, userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
       <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
     </a>
   </li>

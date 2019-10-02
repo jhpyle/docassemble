@@ -1,4 +1,4 @@
-from six import string_types, text_type, PY2
+from six import string_types, text_type, PY2, PY3
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
@@ -133,6 +133,13 @@ class RedisCredStorage(oauth2client.client.Storage):
     def locked_delete(self):
         self.r.delete(self.key)
 
+def ensure_directories(the_path):
+    the_dir = os.path.dirname(the_path)
+    if PY3:
+        os.makedirs(the_dir, exist_ok=True)
+    elif not os.path.isdir(the_dir):
+        os.makedirs(the_dir)
+
 @workerapp.task
 def sync_with_google_drive(user_id):
     sys.stderr.write("sync_with_google_drive: starting\n")
@@ -209,12 +216,12 @@ def sync_with_google_drive(user_id):
                     for the_file in response.get('files', []):
                         sys.stderr.write("GD found " + the_file['name'] + "\n")
                         if the_file['mimeType'] == 'application/vnd.google-apps.folder':
-                            sys.stderr.write("sync_with_google_drive: found a folder " + repr(the_file) + "\n")
+                            #sys.stderr.write("sync_with_google_drive: found a folder " + repr(the_file) + "\n")
                             gd_dirlist[section][the_file['name']] = the_file['id']
                             continue
                         if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                             continue
-                        if re.search(r'^(\~|\.)', the_file['name']):
+                        if re.search(r'^(\~)', the_file['name']):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
@@ -237,7 +244,7 @@ def sync_with_google_drive(user_id):
                             sys.stderr.write("GD found " + the_file['name'] + " in subdir " + subdir_name + "\n")
                             if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                                 continue
-                            if re.search(r'^(\~|\.)', the_file['name']):
+                            if re.search(r'^(\~)', the_file['name']):
                                 continue
                             path_name = os.path.join(subdir_name, the_file['name'])
                             gd_ids[section][path_name] = the_file['id']
@@ -260,6 +267,8 @@ def sync_with_google_drive(user_id):
                         sections_modified.add(section)
                         commentary += "Copied " + text_type(f) + " from Google Drive.\n"
                         the_path = os.path.join(area.directory, f)
+                        ensure_directories(the_path)
+                        sys.stderr.write("the_path is " + the_path)
                         with open(the_path, 'wb') as fh:
                             response = service.files().get_media(fileId=gd_ids[section][f])
                             downloader = worker_controller.apiclient.http.MediaIoBaseDownload(fh, response)
@@ -277,15 +286,30 @@ def sync_with_google_drive(user_id):
                         if f not in gd_files[section]:
                             sys.stderr.write("Considering " + text_type(f) + " is not in Google Drive\n")
                             the_path = os.path.join(area.directory, f)
-                            if os.path.getsize(the_path) == 0:
+                            if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
                                 sys.stderr.write("Found zero byte file: " + text_type(the_path) + "\n")
                                 continue
                             sys.stderr.write("Copying " + text_type(f) + " to Google Drive.\n")
-                            commentary += "Copied " + text_type(f) + " to Google Drive.\n"
+                            if not the_path.endswith('.placeholder'):
+                                commentary += "Copied " + text_type(f) + " to Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting GD modtime on new file " + text_type(f) + " to " + text_type(the_modtime) + "\n")
-                            file_metadata = { 'name': f, 'parents': [subdir], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
+                            dir_part, file_part = os.path.split(f)
+                            if dir_part != '':
+                                if dir_part not in gd_dirlist[section]:
+                                    file_metadata = {
+                                        'name' : dir_part,
+                                        'mimeType' : 'application/vnd.google-apps.folder',
+                                        'parents': [subdir]
+                                    }
+                                    new_file = service.files().create(body=file_metadata,
+                                                                      fields='id').execute()
+                                    gd_dirlist[section][dir_part] = new_file.get('id', None)
+                                parent_to_use = gd_dirlist[section][dir_part]
+                            else:
+                                parent_to_use = subdir
+                            file_metadata = { 'name': file_part, 'parents': [parent_to_use], 'modifiedTime': the_modtime, 'createdTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                             the_new_file = service.files().create(body=file_metadata,
                                                                   media_body=media,
@@ -294,7 +318,7 @@ def sync_with_google_drive(user_id):
                         elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
                             sys.stderr.write("Considering " + text_type(f) + " is in Google Drive but local is more recent\n")
                             the_path = os.path.join(area.directory, f)
-                            if os.path.getsize(the_path) == 0:
+                            if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
                                 sys.stderr.write("Found zero byte file during update: " + text_type(the_path) + "\n")
                                 continue
                             commentary += "Updated " + text_type(f) + " on Google Drive.\n"
@@ -467,14 +491,12 @@ def sync_with_onedrive(user_id):
                 for f in area.list_of_files():
                     local_files[section].add(f)
                     local_modtimes[section][f] = os.path.getmtime(os.path.join(area.directory, f))
-                page_token = None
                 od_files[section] = set()
                 od_ids[section] = dict()
                 od_modtimes[section] = dict()
                 od_createtimes[section] = dict()
                 od_deleted[section] = set()
                 od_dirlist[section] = dict()
-                page_token = None
                 if subdir_count[section] == 0:
                     sys.stderr.write("sync_with_onedrive: skipping " + section + " because empty on remote\n")
                 else:
@@ -487,11 +509,11 @@ def sync_with_onedrive(user_id):
                         #sys.stderr.write("sync_with_onedrive: result was " + repr(info) + "\n")
                         for the_file in info['value']:
                             if 'folder' in the_file:
-                                sys.stderr.write("sync_with_onedrive: found a folder " + repr(the_file) + "\n")
+                                #sys.stderr.write("sync_with_onedrive: found a folder " + repr(the_file) + "\n")
                                 od_dirlist[section][the_file['name']] = the_file['id']
                                 continue
-                            sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
-                            if re.search(r'^(\~|\.)', the_file['name']):
+                            #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                            if re.search(r'^(\~)', the_file['name']):
                                 continue
                             od_ids[section][the_file['name']] = the_file['id']
                             od_modtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['lastModifiedDateTime'])
@@ -514,8 +536,8 @@ def sync_with_onedrive(user_id):
                             for the_file in info['value']:
                                 if 'folder' in the_file:
                                     continue
-                                sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
-                                if re.search(r'^(\~|\.)', the_file['name']):
+                                #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                                if re.search(r'^(\~)', the_file['name']):
                                     continue
                                 path_name = os.path.join(subdir_name, the_file['name'])
                                 od_ids[section][path_name] = the_file['id']
@@ -539,6 +561,7 @@ def sync_with_onedrive(user_id):
                         sections_modified.add(section)
                         commentary += "Copied " + text_type(f) + " from OneDrive.\n"
                         the_path = os.path.join(area.directory, f)
+                        ensure_directories(the_path)
                         r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]) + "/content", "GET")
                         with open(the_path, 'wb') as fh:
                             fh.write(content)
@@ -554,11 +577,12 @@ def sync_with_onedrive(user_id):
                             the_path = os.path.join(area.directory, f)
                             dir_name = os.path.dirname(f)
                             base_name = os.path.basename(f)
-                            if os.path.getsize(the_path) == 0:
+                            if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
                                 sys.stderr.write("Found zero byte file: " + text_type(the_path) + "\n")
                                 continue
                             sys.stderr.write("Copying " + text_type(f) + " to OneDrive.\n")
-                            commentary += "Copied " + text_type(f) + " to OneDrive.\n"
+                            if not the_path.endswith('.placeholder'):
+                                commentary += "Copied " + text_type(f) + " to OneDrive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
                             sys.stderr.write("Setting OD modtime on new file " + text_type(f) + " to " + text_type(the_modtime) + " which is " + text_type(local_modtimes[section][f]) + "\n")
@@ -592,7 +616,7 @@ def sync_with_onedrive(user_id):
                         elif local_modtimes[section][f] - od_modtimes[section][f] > 3:
                             sys.stderr.write("Considering " + text_type(f) + " is in OneDrive but local is more recent\n")
                             the_path = os.path.join(area.directory, f)
-                            if os.path.getsize(the_path) == 0:
+                            if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
                                 sys.stderr.write("Found zero byte file during update: " + text_type(the_path) + "\n")
                                 continue
                             commentary += "Updated " + text_type(f) + " on OneDrive.\n"
@@ -690,40 +714,50 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     else:
         is_new = False
         #the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(new_item_id) + '/createUploadSession'
-    the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
-    body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace"}}
-    r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data, sort_keys=True))
-    if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
-    sys.stderr.write("Upload session created.\n")
-    upload_url = json.loads(content.decode())["uploadUrl"]
-    sys.stderr.write("Upload url obtained.\n")
     total_bytes = os.path.getsize(the_path)
-    start_byte = 0
-    with open(the_path, 'rb') as fh:
-        while start_byte < total_bytes:
-            num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
-            custom_headers = { 'Content-Length': text_type(num_bytes), 'Content-Range': 'bytes ' + text_type(start_byte) + '-' + text_type(start_byte + num_bytes - 1) + '/' + text_type(total_bytes), 'Content-Type': 'application/octet-stream' }
-            #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
-            r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=bytes(fh.read(num_bytes)))
-            sys.stderr.write("Sent request\n")
-            start_byte += num_bytes
-            if start_byte == total_bytes:
-                sys.stderr.write("Reached end\n")
-                if int(r['status']) not in (200, 201):
-                    sys.stderr.write("Error1\n")
-                    sys.stderr.write(text_type(r['status']) + "\n")
-                    sys.stderr.write(content.decode())
-                    return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
-                if new_item_id is None:
-                    new_item_id = json.loads(content.decode())['id']
-            else:
-                if int(r['status']) != 202:
-                    sys.stderr.write("Error2\n")
-                    sys.stderr.write(text_type(r['status']) + "\n")
-                    sys.stderr.write(content.decode())
-                    return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
-                sys.stderr.write("Got 202\n")
+    if total_bytes == 0:
+        r, content = try_request(http, 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/content', 'PUT', headers={ 'Content-Type': 'text/plain' }, body=bytes())
+        if int(r['status']) not in (200, 201):
+            sys.stderr.write("Error0\n")
+            sys.stderr.write(text_type(r['status']) + "\n")
+            sys.stderr.write(content.decode())
+            return worker_controller.functions.ReturnValue(ok=False, error="error uploading zero-byte file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
+        if new_item_id is None:
+            new_item_id = json.loads(content.decode())['id']
+    else:
+        the_url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/createUploadSession'
+        body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace"}}
+        r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data, sort_keys=True))
+        if int(r['status']) != 200:
+            return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
+        sys.stderr.write("Upload session created.\n")
+        upload_url = json.loads(content.decode())["uploadUrl"]
+        sys.stderr.write("Upload url obtained.\n")
+        start_byte = 0
+        with open(the_path, 'rb') as fh:
+            while start_byte < total_bytes:
+                num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
+                custom_headers = { 'Content-Length': text_type(num_bytes), 'Content-Range': 'bytes ' + text_type(start_byte) + '-' + text_type(start_byte + num_bytes - 1) + '/' + text_type(total_bytes), 'Content-Type': 'application/octet-stream' }
+                #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
+                r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=bytes(fh.read(num_bytes)))
+                sys.stderr.write("Sent request\n")
+                start_byte += num_bytes
+                if start_byte == total_bytes:
+                    sys.stderr.write("Reached end\n")
+                    if int(r['status']) not in (200, 201):
+                        sys.stderr.write("Error1\n")
+                        sys.stderr.write(text_type(r['status']) + "\n")
+                        sys.stderr.write(content.decode())
+                        return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
+                    if new_item_id is None:
+                        new_item_id = json.loads(content.decode())['id']
+                else:
+                    if int(r['status']) != 202:
+                        sys.stderr.write("Error2\n")
+                        sys.stderr.write(text_type(r['status']) + "\n")
+                        sys.stderr.write(content.decode())
+                        return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + text_type(r['status']) + ": " + content.decode(), restart=False)
+                    sys.stderr.write("Got 202\n")
     item_data = copy.deepcopy(data)
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
         del item_data['fileSystemInfo']['createdDateTime']

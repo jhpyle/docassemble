@@ -1,8 +1,9 @@
 # Change Log
 
-## [0.5.18] - 2019-09-
+## [0.5.18] - 2019-10-02
 ### Added
-- Ability to use multiple Projects in the Playground.
+- Projects system in the Playground.
+- The `verbatim()` function.
 
 ## [0.5.17] - 2019-09-26
 ### Added

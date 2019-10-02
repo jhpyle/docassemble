@@ -1483,7 +1483,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 multiple_formats = True
             else:
                 multiple_formats = False
-            if attachment['raw']:
+            if attachment.get('raw', False):
                 show_preview = False
                 show_markdown = False
                 show_download = True
@@ -1506,7 +1506,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '                <div class="tab-pane show active" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
                 if multiple_formats:
                     output += '                  <p>' + word('The document is available in the following formats:') + '</p>\n'
-                if attachment['raw']:
+                if attachment.get('raw', False):
                     output += '                  <p><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fas fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
                 else:
                     if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:

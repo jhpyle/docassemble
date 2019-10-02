@@ -122,6 +122,12 @@ def is_package_ml(parts):
 def project_name(name):
     return '' if name == 'default' else name
 
+def add_project(filename, current_project):
+    if current_project == 'default':
+        return filename
+    else:
+        return os.path.join(current_project, filename)
+
 def directory_for(area, current_project):
     if current_project == 'default':
         return area.directory

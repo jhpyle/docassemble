@@ -813,7 +813,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -13624,7 +13624,111 @@ def google_drive_callback():
         flash(word('Connected to Google Drive'), 'success')
     return redirect(url_for('google_drive_page'))
 
-def trash_gd_file(section, filename):
+def rename_gd_project(old_project, new_project):
+    the_folder = get_gd_folder()
+    if the_folder is None:
+        logmessage('rename_gd_project: folder not configured')
+        return False
+    storage = RedisCredStorage(app='googledrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('rename_gd_project: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    service = apiclient.discovery.build('drive', 'v3', http=http)
+    response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+    trashed = response.get('trashed', False)
+    the_mime_type = response.get('mimeType', None)
+    if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+        logmessage('rename_gd_project: folder did not exist')
+        return False
+    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+        logmessage("rename_gd_project: section is " + section)
+        subdir = None
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(section) + "' and '" + str(the_folder) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                if 'id' in the_file:
+                    subdir = the_file['id']
+                    break
+            page_token = response.get('nextPageToken', None)
+            if subdir is not None or page_token is None:
+                break
+        if subdir is None:
+            logmessage('rename_gd_project: section ' + str(section) + ' could not be found')
+            continue
+        subsubdir = None
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(old_project) + "' and '" + str(subdir) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                if 'id' in the_file:
+                    subsubdir = the_file['id']
+                    break
+            page_token = response.get('nextPageToken', None)
+            if subsubdir is not None or page_token is None:
+                break
+        if subsubdir is None:
+            logmessage('rename_gd_project: project ' + str(old_project) + ' could not be found in ' + str(section))
+            continue
+        metadata = {'name': new_project}
+        service.files().update(fileId=subsubdir, body=metadata, fields='name').execute()
+        logmessage('rename_gd_project: folder ' + str(old_project) + ' renamed in section '  + str(section))
+    return True
+
+def trash_gd_project(old_project):
+    the_folder = get_gd_folder()
+    if the_folder is None:
+        logmessage('trash_gd_project: folder not configured')
+        return False
+    storage = RedisCredStorage(app='googledrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('trash_gd_project: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    service = apiclient.discovery.build('drive', 'v3', http=http)
+    response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
+    trashed = response.get('trashed', False)
+    the_mime_type = response.get('mimeType', None)
+    if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
+        logmessage('trash_gd_project: folder did not exist')
+        return False
+    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+        subdir = None
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(section) + "' and '" + str(the_folder) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                if 'id' in the_file:
+                    subdir = the_file['id']
+                    break
+            page_token = response.get('nextPageToken', None)
+            if subdir is not None or page_token is None:
+                break
+        if subdir is None:
+            logmessage('trash_gd_project: section ' + str(section) + ' could not be found')
+            continue
+        subsubdir = None
+        page_token = None
+        while True:
+            response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(old_project) + "' and '" + str(subdir) + "' in parents").execute()
+            for the_file in response.get('files', []):
+                if 'id' in the_file:
+                    subsubdir = the_file['id']
+                    break
+            page_token = response.get('nextPageToken', None)
+            if subsubdir is not None or page_token is None:
+                break
+        if subsubdir is None:
+            logmessage('trash_gd_project: project ' + str(old_project) + ' could not be found in ' + str(section))
+            continue
+        service.files().delete(fileId=subsubdir).execute()
+        logmessage('trash_gd_project: project ' + str(old_project) + ' deleted in section '  + str(section))
+    return True
+
+def trash_gd_file(section, filename, current_project):
     if section == 'template':
         section = 'templates'
     the_folder = get_gd_folder()
@@ -13653,6 +13757,16 @@ def trash_gd_file(section, filename):
     if subdir is None:
         logmessage('trash_gd_file: section ' + str(section) + ' could not be found')
         return False
+    if current_project != 'default':
+        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + str(current_project) + "' and '" + str(subdir) + "' in parents").execute()
+        subdir = None
+        for the_file in response.get('files', []):
+            if 'id' in the_file:
+                subdir = the_file['id']
+                break
+        if subdir is None:
+            logmessage('trash_gd_file: project ' + str(current_project) + ' could not be found')
+            return False
     id_of_filename = None
     response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and name='" + str(filename) + "' and '" + str(subdir) + "' in parents").execute()
     for the_file in response.get('files', []):
@@ -13662,9 +13776,6 @@ def trash_gd_file(section, filename):
     if id_of_filename is None:
         logmessage('trash_gd_file: file ' + str(filename) + ' could not be found in ' + str(section))
         return False
-    #file_metadata = { 'trashed': True }
-    # service.files().update(fileId=id_of_filename,
-    #                        body=file_metadata).execute()
     service.files().delete(fileId=id_of_filename).execute()
     logmessage('trash_gd_file: file ' + str(filename) + ' permanently deleted from '  + str(section))
     return True
@@ -13823,7 +13934,168 @@ def onedrive_callback():
         flash(word('Connected to OneDrive'), 'success')
     return redirect(url_for('onedrive_page'))
 
-def trash_od_file(section, filename):
+def rename_od_project(old_project, new_project):
+    the_folder = get_od_folder()
+    if the_folder is None:
+        logmessage('rename_od_project: folder not configured')
+        return False
+    storage = RedisCredStorage(app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('rename_od_project: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder), "GET")
+    if int(r['status']) != 200:
+        trashed = True
+    else:
+        info = json.loads(content.decode())
+        #logmessage("Found " + repr(info))
+        if info.get('deleted', None):
+            trashed = True
+        else:
+            trashed = False
+    if trashed is True or 'folder' not in info:
+        logmessage('rename_od_project: folder did not exist')
+        return False
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    subdir = dict()
+    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+        subdir[section] = None
+    while True:
+        if int(r['status']) != 200:
+            logmessage('rename_od_project: could not obtain subfolders')
+            return False
+        info = json.loads(content.decode())
+        for item in info.get('value', []):
+            if item.get('deleted', None) or 'folder' not in item:
+                continue
+            if item['name'] in subdir:
+                subdir[item['name']] = item['id']
+        if "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    for section in subdir.keys():
+        if subdir[section] is None:
+            logmessage('rename_od_project: could not obtain subfolder for ' + str(section))
+            continue
+        subsubdir = None
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdir[section]) + "/children?$select=id,name,deleted,folder", "GET")
+        while True:
+            if int(r['status']) != 200:
+                logmessage('rename_od_project: could not obtain contents of subfolder for ' + str(section))
+                break
+            info = json.loads(content.decode())
+            for item in info.get('value', []):
+                if item.get('deleted', None) or 'folder' not in item:
+                    continue
+                if item['name'] == old_project:
+                    subsubdir = item['id']
+                    break
+            if subsubdir is not None or "@odata.nextLink" not in info:
+                break
+            r, content = http.request(info["@odata.nextLink"], "GET")
+        if subsubdir is None:
+            logmessage("rename_od_project: subdirectory " + str(old_project) + " not found")
+        else:
+            headers = { 'Content-Type': 'application/json' }
+            r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subsubdir), "PATCH", headers=headers, body=json.dumps(dict(name=new_project)))
+            if int(r['status']) != 200:
+                logmessage('rename_od_project: could not rename folder ' + str(old_project) + " in " + str(section) + " because " + repr(content))
+                continue
+        logmessage('rename_od_project: project ' + str(old_project) + ' rename in section '  + str(section))
+    return True
+
+def trash_od_project(old_project):
+    the_folder = get_od_folder()
+    if the_folder is None:
+        logmessage('trash_od_project: folder not configured')
+        return False
+    storage = RedisCredStorage(app='onedrive')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        logmessage('trash_od_project: credentials missing or expired')
+        return False
+    http = credentials.authorize(httplib2.Http())
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder), "GET")
+    if int(r['status']) != 200:
+        trashed = True
+    else:
+        info = json.loads(content.decode())
+        #logmessage("Found " + repr(info))
+        if info.get('deleted', None):
+            trashed = True
+        else:
+            trashed = False
+    if trashed is True or 'folder' not in info:
+        logmessage('trash_od_project: folder did not exist')
+        return False
+    subdir = dict()
+    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+        subdir[section] = None
+    r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
+    while True:
+        if int(r['status']) != 200:
+            logmessage('trash_od_project: could not obtain subfolders')
+            return False
+        info = json.loads(content.decode())
+        for item in info['value']:
+            if item.get('deleted', None) or 'folder' not in item:
+                continue
+            if item['name'] in subdir:
+                subdir[item['name']] = item['id']
+        if "@odata.nextLink" not in info:
+            break
+        r, content = http.request(info["@odata.nextLink"], "GET")
+    for section in subdir.keys():
+        if subdir[section] is None:
+            logmessage('trash_od_project: could not obtain subfolder for ' + str(section))
+            continue
+        subsubdir = None
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdir[section]) + "/children?$select=id,name,deleted,folder", "GET")
+        while True:
+            if int(r['status']) != 200:
+                logmessage('trash_od_project: could not obtain contents of subfolder for ' + str(section))
+                break
+            info = json.loads(content.decode())
+            for item in info['value']:
+                if item.get('deleted', None) or 'folder' not in item:
+                    continue
+                if item['name'] == old_project:
+                    subsubdir = item['id']
+                    break
+            if subsubdir is not None or "@odata.nextLink" not in info:
+                break
+            r, content = http.request(info["@odata.nextLink"], "GET")
+        if subsubdir is None:
+            logmessage("Could not find subdirectory " + old_project + " in section " + str(section))
+        else:
+            r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(subsubdir) + "/children?$select=id", "GET")
+            to_delete = list()
+            while True:
+                if int(r['status']) != 200:
+                    logmessage('trash_od_project: could not obtain contents of project folder')
+                    return False
+                info = json.loads(content.decode())
+                for item in info.get('value', []):
+                    if 'id' in item:
+                        to_delete.append(item['id'])
+                if "@odata.nextLink" not in info:
+                    break
+                r, content = http.request(info["@odata.nextLink"], "GET")
+            for item_id in to_delete:
+                r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(item_id), "DELETE")
+                if int(r['status']) != 204:
+                    logmessage('trash_od_project: could not delete file ' + str(item_id) + ".  Result: " + repr(content))
+                    return False
+            r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subsubdir), "DELETE")
+            if int(r['status']) != 204:
+                logmessage('trash_od_project: could not delete project ' + str(old_project) + ".  Result: " + repr(content))
+                return False
+            logmessage('trash_od_project: project ' + str(old_project) + ' trashed in section '  + str(section))
+    return True
+
+def trash_od_file(section, filename, current_project):
     if section == 'template':
         section = 'templates'
     the_folder = get_od_folder()
@@ -13869,6 +14141,26 @@ def trash_od_file(section, filename):
     if subdir is None:
         logmessage('trash_od_file: could not obtain subfolder')
         return False
+    if current_project != 'default':
+        r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdir) + "/children?$select=id,name,deleted,folder", "GET")
+        subdir = None
+        while True:
+            if int(r['status']) != 200:
+                logmessage('trash_od_file: could not obtain subfolders to find project')
+                return False
+            info = json.loads(content.decode())
+            for item in info['value']:
+                if item.get('deleted', None) or 'folder' not in item:
+                    continue
+                if item['name'] == current_project:
+                    subdir = item['id']
+                    break
+            if subdir is not None or "@odata.nextLink" not in info:
+                break
+            r, content = http.request(info["@odata.nextLink"], "GET")
+        if subdir is None:
+            logmessage('trash_od_file: could not obtain subfolder')
+            return False
     id_of_filename = None
     r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + text_type(subdir) + "/children?$select=id,name,deleted,folder", "GET")
     while True:
@@ -13879,6 +14171,8 @@ def trash_od_file(section, filename):
         #logmessage("Found " + repr(info))
         for item in info['value']:
             if item.get('deleted', None) or 'folder' in item:
+                continue
+            if 'folder' in item:
                 continue
             if item['name'] == filename:
                 id_of_filename = item['id']
@@ -14135,7 +14429,7 @@ def google_drive_page():
     #items = []
     page_token = None
     while True:
-        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and 'root' in parents").execute()
+        response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and 'root' in parents").execute()
         for the_file in response.get('files', []):
             items.append(the_file)
         page_token = response.get('nextPageToken', None)
@@ -14210,7 +14504,7 @@ def gd_fix_subdirs(service, the_folder):
     subdirs = list()
     page_token = None
     while True:
-        response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
+        response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
         for the_file in response.get('files', []):
             subdirs.append(the_file)
         page_token = response.get('nextPageToken', None)
@@ -14592,6 +14886,21 @@ def playground_office_addin():
     parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', get_base_url()))
     return render_template('pages/officeaddin.html', current_project=current_project, page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200
 
+def cloud_trash(use_gd, use_od, section, the_file, current_project):
+    if use_gd:
+        try:
+            trash_gd_file(section, the_file, current_project)
+        except Exception as the_err:
+            logmessage("cloud_trash: unable to delete file on Google Drive.  " + str(the_err))
+    elif use_od:
+        try:
+            trash_od_file(section, the_file, current_project)
+        except Exception as the_err:
+            try:
+                logmessage("cloud_trash: unable to delete file on OneDrive.  " + str(the_err))
+            except:
+                logmessage("cloud_trash: unable to delete file on OneDrive.")
+
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -14662,26 +14971,15 @@ def playground_files():
         argument = request.args.get('delete')
         if argument:
             the_directory = directory_for(area, current_project)
+            the_file = add_project(argument, current_project)
             filename = os.path.join(the_directory, argument)
             if os.path.exists(filename):
                 os.remove(filename)
                 area.finalize()
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                     r.incr(key.decode())
-                if use_gd:
-                    try:
-                        trash_gd_file(section, argument)
-                    except Exception as the_err:
-                        logmessage("playground_files: unable to delete file on Google Drive.  " + str(the_err))
-                elif use_od:
-                    try:
-                        trash_od_file(section, argument)
-                    except Exception as the_err:
-                        try:
-                            logmessage("playground_files: unable to delete file on OneDrive.  " + str(the_err))
-                        except:
-                            logmessage("playground_files: unable to delete file on OneDrive.")
-                flash(word("Deleted file: ") + argument, "success")
+                cloud_trash(use_gd, use_od, section, argument, current_project)
+                flash(word("Deleted file: ") + the_file, "success")
                 for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
                     r.incr(key.decode())
                 return redirect(url_for('playground_files', section=section, project=current_project))
@@ -14759,6 +15057,7 @@ def playground_files():
                     the_file = re.sub(r'\..*', '', the_file) + '.py'
                 if formtwo.original_file_name.data and formtwo.original_file_name.data != the_file:
                     old_filename = os.path.join(the_directory, formtwo.original_file_name.data)
+                    cloud_trash(use_gd, use_od, section, formtwo.original_file_name.data, current_project)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 filename = os.path.join(the_directory, the_file)
@@ -16318,7 +16617,6 @@ function variablesReady(){
 @roles_required(['developer', 'admin'])
 def playground_variables():
     current_project = get_current_project()
-    logmessage("playground_variables: project is " + repr(current_project))
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     playground = SavedFile(current_user.id, fix=True, section='playground')
@@ -16329,15 +16627,12 @@ def playground_variables():
     post_data = request.form.copy()
     if request.method == 'POST' and 'variablefile' in post_data:
         active_file = post_data['variablefile']
-        logmessage("active_file is " + active_file)
         if post_data['variablefile'] in files:
             if 'changed' in post_data and int(post_data['changed']):
                 set_variable_file(current_project, active_file)
-            logmessage("Loading up " + 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
             interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
             interview_source.set_testing(True)
         else:
-            logmessage("variablefile not in it.")
             if active_file == '':
                 active_file = 'test.yml'
             content = ''
@@ -16346,7 +16641,6 @@ def playground_variables():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file, current_project)
-        logmessage("getting status for " + 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
         variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
@@ -16411,8 +16705,8 @@ def get_list_of_projects(user_id):
 def rename_project(user_id, old_name, new_name):
     for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
         area = SavedFile(user_id, fix=True, section='playground' + sec)
-        if os.path.isdir(os.path.join(area.directory, oldname)):
-            os.rename(os.path.join(area.directory, oldname), os.path.join(area.directory, new_name))
+        if os.path.isdir(os.path.join(area.directory, old_name)):
+            os.rename(os.path.join(area.directory, old_name), os.path.join(area.directory, new_name))
             area.finalize()
 
 def create_project(user_id, new_name):
@@ -16435,6 +16729,15 @@ def delete_project(user_id, project_name):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_project():
+    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
+        use_od = False
+    else:
+        use_od = True
+    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+        use_gd = False
+    else:
+        use_gd = True
+        use_od = False
     current_project = get_current_project()
     if request.args.get('rename'):
         form = RenameProject(request.form)
@@ -16446,6 +16749,19 @@ def playground_project():
                 flash(word("You cannot rename the default Playground project"), 'error')
             else:
                 rename_project(current_user.id, current_project, form.name.data)
+                if use_gd:
+                    try:
+                        rename_gd_project(current_project, form.name.data)
+                    except Exception as the_err:
+                        logmessage("playground_project: unable to rename project on Google Drive.  " + str(the_err))
+                elif use_od:
+                    try:
+                        rename_od_project(current_project, form.name.data)
+                    except Exception as the_err:
+                        try:
+                            logmessage("playground_project: unable to rename project on OneDrive.  " + str(the_err))
+                        except:
+                            logmessage("playground_project: unable to rename project on OneDrive.")
                 current_project = set_current_project(form.name.data)
                 flash(word('Since you renamed a project, the server needs to restart in order to reload any modules.'), 'info')
                 return redirect(url_for('restart_page', next=url_for('playground_project', project=current_project)))
@@ -16470,6 +16786,19 @@ def playground_project():
             if current_project == 'default':
                 flash(word("The default project cannot be deleted."), "error")
             else:
+                if use_gd:
+                    try:
+                        trash_gd_project(current_project)
+                    except Exception as the_err:
+                        logmessage("playground_project: unable to delete project on Google Drive.  " + str(the_err))
+                elif use_od:
+                    try:
+                        trash_od_project(current_project)
+                    except Exception as the_err:
+                        try:
+                            logmessage("playground_project: unable to delete project on OneDrive.  " + str(the_err))
+                        except:
+                            logmessage("playground_project: unable to delete project on OneDrive.")
                 delete_project(current_user.id, current_project)
                 current_project = set_current_project('default')
                 mode = 'standard'
@@ -16671,23 +17000,8 @@ def playground_page():
                 r.delete('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file)
                 if active_file != the_file:
                     r.incr('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
+                cloud_trash(use_gd, use_od, 'questions', form.playground_name.data, current_project)
                 playground.finalize()
-                if use_gd:
-                    try:
-                        trash_gd_file('questions', form.playground_name.data)
-                    except Exception as the_err:
-                        try:
-                            logmessage("playground_page: unable to delete file on Google Drive.  " + str(the_err))
-                        except:
-                            logmessage("playground_page: unable to delete file on Google Drive.")
-                if use_od:
-                    try:
-                        trash_od_file('questions', form.playground_name.data)
-                    except Exception as the_err:
-                        try:
-                            logmessage("playground_page: unable to delete file on OneDrive.  " + str(the_err))
-                        except:
-                            logmessage("playground_page: unable to delete file on OneDrive.")
                 current_variable_file = get_variable_file(current_project)
                 if current_variable_file == the_file or current_variable_file == form.playground_name.data:
                     delete_variable_file(current_project)
@@ -16699,6 +17013,7 @@ def playground_page():
                 old_filename = os.path.join(the_directory, form.original_playground_name.data)
                 if not is_ajax:
                     flash(word("Changed name of interview"), 'success')
+                cloud_trash(use_gd, use_od, 'questions', form.original_playground_name.data, current_project)
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
                     files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(the_directory, f))) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])

@@ -2401,7 +2401,7 @@ div.daconstraintlist div + div {
 }
 
 #dasigcanvas{
-    cursor:crosshair;
+    cursor: crosshair;
     border-style: solid;
     border-color: black;
     border-width: 1px;
@@ -2687,5 +2687,9 @@ tr:first-child .datableup, tr:last-child .databledown {
 
 .dawideimage {
     width: 100%;
+}
+
+.navbar .dropdown .dropdown-toggle {
+    cursor: pointer;
 }
 
