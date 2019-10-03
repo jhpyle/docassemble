@@ -195,8 +195,11 @@ def set_uid(uid):
     this_thread.session_id = uid
 
 def get_uid():
-    if this_thread.session_id is not None:
-        return this_thread.session_id
+    try:
+        if this_thread.session_id is not None:
+            return this_thread.session_id
+    except:
+        pass
     try:
         return this_thread.current_info['session']
     except:

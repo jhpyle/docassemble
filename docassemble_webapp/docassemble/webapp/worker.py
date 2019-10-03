@@ -784,37 +784,47 @@ def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.reset_local_variables()
-    worker_controller.functions.set_uid(kwargs['user_code'])
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
     with worker_controller.flaskapp.app_context():
-        return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            worker_controller.functions.reset_local_variables()
+            worker_controller.functions.set_uid(kwargs['user_code'])
+            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
 
 @workerapp.task
 def ocr_finalize(*pargs, **kwargs):
     sys.stderr.write("ocr_finalize started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    #worker_controller.functions.set_uid(kwargs['user_code'])
-    if 'message' in kwargs and kwargs['message']:
-        message = kwargs['message']
-    else:
-        message = worker_controller.functions.word("OCR succeeded")
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
     with worker_controller.flaskapp.app_context():
-        try:
-            return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs), extra=kwargs.get('extra', None))
-        except Exception as the_error:
-            return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            #worker_controller.functions.set_uid(kwargs['user_code'])
+            if 'message' in kwargs and kwargs['message']:
+                message = kwargs['message']
+            else:
+                message = worker_controller.functions.word("OCR succeeded")
+            with worker_controller.flaskapp.app_context():
+                try:
+                    return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs), extra=kwargs.get('extra', None))
+                except Exception as the_error:
+                    return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
     sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.reset_local_variables()
-    worker_controller.functions.set_uid(user_code)
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
     with worker_controller.flaskapp.app_context():
-        worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
-    return
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            worker_controller.functions.reset_local_variables()
+            worker_controller.functions.set_uid(user_code)
+            worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
+            return
 
 @workerapp.task
 def reset_server(result):
@@ -867,44 +877,47 @@ def email_attachments(user_code, email_address, attachment_info, language):
     success = False
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    worker_controller.functions.reset_local_variables()
-    worker_controller.functions.set_uid(user_code)
-    if language and language != '*':
-        worker_controller.functions.set_language(language)
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
     with worker_controller.flaskapp.app_context():
-        worker_controller.set_request_active(False)
-        doc_names = list()
-        for attach_info in attachment_info:
-            if attach_info['attachment']['name'] not in doc_names:
-                doc_names.append(attach_info['attachment']['name'])
-        subject = worker_controller.functions.comma_and_list(doc_names)
-        if len(doc_names) > 1:
-            body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
-        else:
-            body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
-        html = "<p>" + body + "</p>"
-        msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
-        success_attach = True
-        for attach_info in attachment_info:
-            file_info = worker_controller.get_info_from_file_number(attach_info['number'])
-            if 'fullpath' in file_info:
-                with open(file_info['fullpath'], 'rb') as fp:
-                    msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            worker_controller.functions.reset_local_variables()
+            worker_controller.functions.set_uid(user_code)
+            if language and language != '*':
+                worker_controller.functions.set_language(language)
+            worker_controller.set_request_active(False)
+            doc_names = list()
+            for attach_info in attachment_info:
+                if attach_info['attachment']['name'] not in doc_names:
+                    doc_names.append(attach_info['attachment']['name'])
+            subject = worker_controller.functions.comma_and_list(doc_names)
+            if len(doc_names) > 1:
+                body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
             else:
-                success_attach = False
-        if success_attach:
-            try:
-                sys.stderr.write("Starting to send\n")
-                worker_controller.da_send_mail(msg)
-                sys.stderr.write("Finished sending\n")
-                success = True
-            except Exception as errmess:
-                sys.stderr.write(str(errmess) + "\n")
-                success = False
-    if success:
-        return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
-    else:
-        return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
+                body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
+            html = "<p>" + body + "</p>"
+            msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
+            success_attach = True
+            for attach_info in attachment_info:
+                file_info = worker_controller.get_info_from_file_number(attach_info['number'])
+                if 'fullpath' in file_info:
+                    with open(file_info['fullpath'], 'rb') as fp:
+                        msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+                else:
+                    success_attach = False
+            if success_attach:
+                try:
+                    sys.stderr.write("Starting to send\n")
+                    worker_controller.da_send_mail(msg)
+                    sys.stderr.write("Finished sending\n")
+                    success = True
+                except Exception as errmess:
+                    sys.stderr.write(str(errmess) + "\n")
+                    success = False
+            if success:
+                return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
+            else:
+                return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
 
 # @workerapp.task
 # def old_email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):

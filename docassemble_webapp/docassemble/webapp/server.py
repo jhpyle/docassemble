@@ -3380,7 +3380,7 @@ def make_png_for_pdf(doc, prefix, page=None):
         resolution = PNG_RESOLUTION
     else:
         resolution = PNG_SCREEN_RESOLUTION
-    session_id = docassemble.base.functions.this_thread.current_info['session']
+    session_id = docassemble.base.functions.get_uid()
     task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session_id, PDFTOPPM_COMMAND, page=page)
     return task.id
 
@@ -5701,8 +5701,7 @@ def index(action_argument=None):
         if illegal_variable_name(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + text_type(file_field)))
         else:
-            if (not something_changed) and (not should_assemble) and key_requires_preassembly.search(file_field):
-                interview.assemble(user_dict, interview_status)
+            interview.assemble(user_dict, interview_status)
             initial_string = 'import docassemble.base.core'
             try:
                 exec(initial_string, user_dict)
@@ -6347,8 +6346,7 @@ def index(action_argument=None):
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + text_type(errMess)))
-                if (not something_changed) and (not should_assemble) and should_assemble_now:
-                    interview.assemble(user_dict, interview_status)
+                interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
@@ -21588,7 +21586,7 @@ def api_package():
             try:
                 the_file = request.files['zip']
                 filename = secure_filename(the_file.filename)
-                file_number = get_new_file_number(docassemble.base.functions.this_thread.current_info.get('session', None), filename)
+                file_number = get_new_file_number(docassemble.base.functions.get_uid(), filename)
                 saved_file = SavedFile(file_number, extension='zip', fix=True)
                 file_set_attributes(file_number, private=False, persistent=True)
                 zippath = saved_file.path
@@ -22056,7 +22054,7 @@ def retrieve_emails(**pargs):
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = docassemble.base.functions.this_thread.current_info.get('session', None)
+        uid = docassemble.base.functions.get_uid()
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None
@@ -22241,7 +22239,7 @@ def get_short_code(**pargs):
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = docassemble.base.functions.this_thread.current_info.get('session', None)
+        uid = docassemble.base.functions.get_uid()
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None

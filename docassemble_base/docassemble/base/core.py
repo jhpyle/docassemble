@@ -2861,8 +2861,7 @@ class DAFile(DAObject):
             uid = None
             if hasattr(docassemble.base.functions.this_thread, 'current_info'):
                 yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
-                uid = docassemble.base.functions.this_thread.current_info.get('session', None)
-                #logmessage("yaml_filename is " + str(yaml_filename) + " and uid is " + str(uid))
+            uid = docassemble.base.functions.get_uid()
             self.number = server.get_new_file_number(uid, self.filename, yaml_file_name=yaml_filename)
             self.ok = True
             self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)

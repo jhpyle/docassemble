@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.19] - 2019-10-02
+### Fixed
+- Problem with background tasks and uploads.
+
 ## [0.5.18] - 2019-10-02
 ### Added
 - Projects system in the Playground.

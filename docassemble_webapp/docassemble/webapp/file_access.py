@@ -20,6 +20,7 @@ from sqlalchemy import or_, and_
 import docassemble.base.config
 from io import open
 from six import text_type
+import sys
 from docassemble.base.generate_key import random_lower_string
 
 import docassemble.webapp.cloud
@@ -107,9 +108,12 @@ def get_info_from_file_reference(file_reference, **kwargs):
         if 'uids' in kwargs:
             uids = kwargs['uids']
         else:
-            try:
-                uids = [docassemble.base.functions.this_thread.current_info['session']]
-            except:
+            uids = None
+        if uids is None or len(uids) == 0:
+            new_uid = docassemble.base.functions.get_uid()
+            if new_uid is not None:
+                uids = [new_uid]
+            else:
                 uids = []
         if 'filename' in kwargs:
             result = get_info_from_file_number(int(file_reference), privileged=privileged, filename=kwargs['filename'], uids=uids)
@@ -251,10 +255,11 @@ def add_info_about_file(filename, basename, result):
 def get_info_from_file_number(file_number, privileged=False, filename=None, uids=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         privileged = True
-    elif uids is None:
-        try:
-            uids = [docassemble.base.functions.this_thread.current_info['session']]
-        except:
+    elif uids is None or len(uids) == 0:
+        new_uid = docassemble.base.functions.get_uid()
+        if new_uid is not None:
+            uids = [new_uid]
+        else:
             uids = []
     result = dict()
     upload = Uploads.query.filter_by(indexno=file_number).first()

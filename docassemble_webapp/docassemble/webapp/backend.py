@@ -87,7 +87,7 @@ def delete_record(key, id):
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         try:
-            uid = docassemble.base.functions.this_thread.current_info['session']
+            uid = docassemble.base.functions.get_uid()
             assert uid is not None
         except:
             uid = unattached_uid()
@@ -379,10 +379,11 @@ def can_access_file_number(file_number, uids=None):
         return False
     if not upload.private:
         return True
-    if uids is None:
-        try:
-            uids = [docassemble.base.functions.this_thread.current_info['session']]
-        except:
+    if uids is None or len(uids) == 0:
+        new_uid = docassemble.base.functions.get_uid()
+        if new_uid is not None:
+            uids = [new_uid]
+        else:
             uids = []
     if upload.key in uids:
         return True
