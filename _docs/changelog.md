@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.19](https://github.com/jhpyle/docassemble/releases/tag/v0.5.19) - 2019-10-02
+
+### Fixed
+- Problem with background tasks and uploads.
+
 ## [0.5.18](https://github.com/jhpyle/docassemble/releases/tag/v0.5.18) - 2019-10-02
 
 ### Added
