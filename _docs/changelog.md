@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.20](https://github.com/jhpyle/docassemble/releases/tag/v0.5.20) - 2019-10-04
+
+### Fixed
+- Problem with office task pane.
+- Problem with YAML in field scanner in utilities.
+- Problem with `endpoint url` option.
+
 ## [0.5.19](https://github.com/jhpyle/docassemble/releases/tag/v0.5.19) - 2019-10-02
 
 ### Fixed
