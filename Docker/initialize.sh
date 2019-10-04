@@ -232,7 +232,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
         tar -xf /tmp/letsencrypt.tar.gz
         rm -f /tmp/letsencrypt.tar.gz
     else
-        rm -r /etc/letsencrypt/da_using_lets_encrypt
+        rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
     if [ "${DABACKUPDAYS}" != "0" ] && [[ $(python -m docassemble.webapp.list-cloud backup/${LOCAL_HOSTNAME}/) ]]; then
         BACKUPDIR="backup/${LOCAL_HOSTNAME}/"
@@ -257,7 +257,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
             fi
         done
     else
-        rm -r /etc/letsencrypt/da_using_lets_encrypt
+        rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
     if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
         if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
@@ -819,7 +819,10 @@ fi
 if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/certs/exim.crt.orig" ]; then
     mv "${DA_ROOT}/certs/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
 fi
+
 python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
+
+echo "41.1" >&2
 
 if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
     function backup_nginx {
@@ -868,6 +871,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         fi
     }
 
+    echo "41.2" >&2
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$NGINXRUNNING" = false ]; then
         if [ "${WWWUID:-none}" != "none" ] && [ "${WWWGID:-none}" != "none" ] && [ `id -u www-data` != $WWWUID ]; then
             OLDUID=`id -u www-data`
@@ -886,6 +890,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 supervisorctl --serverurl http://localhost:9001 start celery
             fi
         fi
+        echo "41.8" >&2
         if [ "${USEHTTPS:-false}" == "true" ]; then
             rm -f /etc/nginx/sites-enabled/docassemblehttp
             ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
@@ -908,6 +913,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             ln -sf /etc/nginx/sites-available/docassemblehttp /etc/nginx/sites-enabled/docassemblehttp
         fi
     fi
+    echo "41.9" >&2
     backup_nginx
 
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then

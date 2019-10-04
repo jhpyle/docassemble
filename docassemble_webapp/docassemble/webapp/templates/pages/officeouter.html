@@ -59,7 +59,6 @@
         <script src="{{ url_for('static', filename='office/polyfill.js', v=config['DA_VERSION']) }}"></script>
         <script>
           var defaultServer = "{{ defaultDaServer }}";
-          var currentProject = "{{ current_project }}";
           var fileErrorMessage = "{{ word("There was a problem uploading the file.") }}";
           var fileSuccessMessage = "{{ word("The file was uploaded to the Templates folder.") }}";
         </script>
