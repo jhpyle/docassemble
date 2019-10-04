@@ -17725,7 +17725,7 @@ def docx_variable_fix(variable):
 
 def sanitize(default):
     default = re.sub(r'\n?\r\n?', "\n", text_type(default))
-    if re.search(r'[\n\r\"\'\[\]\{\}]+', default):
+    if re.search(r'[\#\!\?\:\n\r\"\'\[\]\{\}]+', default):
         return "|\n" + docassemble.base.functions.indent(default, by=10)
     return default
 
