@@ -14818,7 +14818,7 @@ def playground_office_taskpane():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
     defaultDaServer = url_for('rootindex', _external=True)
-    return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True, current_project=get_current_project()), 9) + "        </script>")), 200
+    return render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200
 
 @app.route('/officeaddin', methods=['GET', 'POST'])
 @login_required

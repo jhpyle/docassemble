@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.20] - 2019-10-02
+### Fixed
+- Problem with office task pane.
+- Problem with YAML in field scanner in utilities.
+
 ## [0.5.19] - 2019-10-02
 ### Fixed
 - Problem with background tasks and uploads.
