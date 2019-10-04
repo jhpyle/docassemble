@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.5.20] - 2019-10-02
+## [0.5.20] - 2019-10-04
 ### Fixed
 - Problem with office task pane.
 - Problem with YAML in field scanner in utilities.
