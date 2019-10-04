@@ -14877,7 +14877,7 @@ def playground_office_addin():
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None))
         if use_html:
             variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=current_project)
-            return jsonify({'success': True, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
+            return jsonify({'success': True, 'current_project': current_project, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
         else:
             variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=current_project)
             return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
@@ -15204,7 +15204,8 @@ def playground_files():
       var existingFiles = """ + json.dumps(files) + """;
       var daSection = """ + '"' + section + '";' + """
       var attrs_showing = Object();
-""" + indent_by(variables_js(form='formtwo', current_project=current_project), 6) + """
+      var currentProject = """ + json.dumps(current_project) + """;
+""" + indent_by(variables_js(form='formtwo'), 6) + """
 """ + indent_by(search_js(form='formtwo'), 6) + """
       function saveCallback(data){
         fetchVars(true);
@@ -16477,7 +16478,7 @@ function update_search(event){
 
 """
 
-def variables_js(form=None, office_mode=False, current_project='default'):
+def variables_js(form=None, office_mode=False):
     output = """
 function activatePopovers(){
   $(function () {
@@ -16571,10 +16572,15 @@ function activateVariables(){
   });
 }
 
-var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':.yml') + """';
+var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
-  $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
+  if (currentProject == 'default'){
+    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', ':' + $("#daVariables").val()));
+  }
+  else{
+    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', currentProject + ':' + $("#daVariables").val()));
+  }
 }
 
 function fetchVars(changed){
@@ -16582,11 +16588,14 @@ function fetchVars(changed){
   updateRunLink();
   $.ajax({
     type: "POST",
-    url: """ + '"' + url_for('playground_variables', project=current_project) + '"' + """,
+    url: """ + '"' + url_for('playground_variables') + '"' + """ + '?project=' + currentProject,
     data: 'csrf_token=' + $("#""" + form + """ input[name='csrf_token']").val() + '&variablefile=' + $("#daVariables").val() + '&changed=' + (changed ? 1 : 0),
     success: function(data){
       if (data.vocab_list != null){
         vocab = data.vocab_list;
+      }
+      if (data.current_project != null){
+        currentProject = data.current_project;
       }
       if (data.variables_html != null){
         $("#daplaygroundtable").html(data.variables_html);
@@ -16641,7 +16650,7 @@ def playground_variables():
         ensure_ml_file_exists(interview, active_file, current_project)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
         variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
-        return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
+        return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list, current_project=current_project)
     return jsonify(success=False, reason=2)
 
 def ensure_ml_file_exists(interview, yaml_file, current_project):
@@ -17061,7 +17070,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message)
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -17105,10 +17114,11 @@ var originalFileName = """ + json.dumps(the_file) + """;
 var isNew = """ + json.dumps(is_new) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
 var existingFiles = """ + json.dumps(file_listing) + """;
+var currentProject = """ + json.dumps(current_project) + """;
 var currentFile = """ + json.dumps(the_file) + """;
 var attrs_showing = Object();
 
-""" + variables_js(current_project=current_project) + """
+""" + variables_js() + """
 
 """ + search_js() + """
 
@@ -17166,6 +17176,9 @@ function saveCallback(data){
   }
   if (data.vocab_list != null){
     vocab = data.vocab_list;
+  }
+  if (data.current_project != null){
+    currentProject = data.current_project;
   }
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);

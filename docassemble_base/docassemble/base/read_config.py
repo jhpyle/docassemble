@@ -140,7 +140,7 @@ if __name__ == "__main__":
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
-            print('export S4CMD_OPTS="--endpoint_url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
+            print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
             print('export AZUREENABLE=true')

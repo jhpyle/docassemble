@@ -121,7 +121,7 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
 fi
 
 if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
-    export S4CMD_OPTS="--endpoint_url=\"${S3ENDPOINTURL}\""
+    export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
 fi
 
 echo "9" >&2
