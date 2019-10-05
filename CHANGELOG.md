@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.21] - 2019-10-04
+### Fixed
+- Error when Playground project name matched name of a Playground
+  package.
+
 ## [0.5.20] - 2019-10-04
 ### Fixed
 - Problem with office task pane.

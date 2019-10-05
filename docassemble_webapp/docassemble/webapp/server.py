@@ -12779,6 +12779,7 @@ def update_package():
 def create_playground_package():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    fix_package_folder()
     current_project = get_current_project()
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
@@ -12879,7 +12880,7 @@ def create_playground_package():
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
     the_directory = directory_for(area['playgroundpackages'], current_project)
-    file_list['playgroundpackages'] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    file_list['playgroundpackages'] = sorted([re.sub(r'^docassemble.', r'', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     the_choices = list()
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
@@ -12907,8 +12908,8 @@ def create_playground_package():
             area[sec] = SavedFile(current_user.id, fix=True, section=sec)
             the_directory = directory_for(area[sec], current_project)
             file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-        if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), current_package)):
-            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), current_package)
+        if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
+            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
             info = dict()
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
@@ -15495,12 +15496,40 @@ def get_branch_info(http, full_name):
         logmessage("get_branch_info: could not get info from https://api.github.com/repos/" + str(full_name) + '/branches')
     return branch_info
 
+def fix_package_folder():
+    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
+        use_od = False
+    else:
+        use_od = True
+    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
+        use_gd = False
+    else:
+        use_gd = True
+        use_od = False
+    problem_exists = False
+    area = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+    for f in os.listdir(area.directory):
+        path = os.path.join(area.directory, f)
+        if os.path.isfile(path) and not f.startswith('docassemble.') and not f.startswith('.'):
+            os.rename(path, os.path.join(area.directory, 'docassemble.' + f))
+            cloud_trash(use_gd, use_od, 'packages', f, 'default')
+            problem_exists = True
+        if os.path.isdir(path) and not f.startswith('.'):
+            for e in os.listdir(path):
+                if os.path.isfile(os.path.join(path, e)) and not e.startswith('docassemble.') and not e.startswith('.'):
+                    os.rename(os.path.join(path, e), os.path.join(path, 'docassemble.' + e))
+                    cloud_trash(use_gd, use_od, 'packages', e, f)
+                    problem_exists = True
+    if problem_exists:
+        area.finalize()
+
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_packages():
     if not app.config['ENABLE_PLAYGROUND']:
         abort(404)
+    fix_package_folder()
     current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
@@ -15591,13 +15620,16 @@ def playground_packages():
     editable_files = list()
     mode = "yaml"
     for a_file in files:
-        editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
+        editable_files.append(dict(name=re.sub(r'^docassemble.', r'', a_file), modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
     assign_opacity(editable_files)
     editable_file_listing = [x['name'] for x in editable_files]
     if request.method == 'GET' and not the_file and not is_new:
         current_file = get_current_file(current_project, 'packages')
-        if current_file in editable_file_listing:
-            the_file = current_file
+        if not current_file.startswith('docassemble.'):
+            current_file = 'docassemble.' + current_file
+            set_current_file(current_project, 'packages', current_file)
+        if re.sub(r'^docassemble.', r'', current_file) in editable_file_listing:
+            the_file = re.sub(r'^docassemble.', r'', current_file)
         else:
             delete_current_file(current_project, 'packages')
             if len(editable_files):
@@ -15608,9 +15640,10 @@ def playground_packages():
     #    flash(word('Sorry, that package name,') + ' ' + the_file + word(', is already in use by someone else'), 'error')
     #    validated = False
     if request.method == 'GET' and the_file in editable_file_listing:
-        set_current_file(current_project, 'packages', the_file)
+        set_current_file(current_project, 'packages', 'docassemble.' + the_file)
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
+        the_file = re.sub(r'^docassemble.', r'', the_file)
     old_info = dict()
     on_github = False
     branch_info = list()
@@ -15703,8 +15736,8 @@ def playground_packages():
     github_url_from_file = None
     pypi_package_from_file = None
     if request.method == 'GET' and the_file != '':
-        if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
-            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
+        if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
+            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
             with open(filename, 'rU', encoding='utf-8') as fp:
                 content = fp.read()
                 old_info = yaml.load(content, Loader=yaml.FullLoader)
@@ -15803,7 +15836,7 @@ def playground_packages():
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                         package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
-                        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), package_name), 'w', encoding='utf-8') as fp:
+                        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
                             fp.write(text_type(the_yaml))
                         for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
@@ -15922,8 +15955,8 @@ def playground_packages():
             package_file.close()
         initial_directories = len(splitall(directory)) + 1
         for root, dirs, files in os.walk(directory):
-            for the_file in files:
-                orig_file = os.path.join(root, the_file)
+            for a_file in files:
+                orig_file = os.path.join(root, a_file)
                 #output += "Original file is " + orig_file + "\n"
                 thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
                 (the_directory, filename) = os.path.split(thefilename)
@@ -15981,7 +16014,7 @@ def playground_packages():
         #     while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
         #         index += 1
         #         package_name = orig_package_name + str(index)
-        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), package_name), 'w', encoding='utf-8') as fp:
+        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
             fp.write(text_type(the_yaml))
         area['playgroundpackages'].finalize()
@@ -15996,8 +16029,8 @@ def playground_packages():
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file, project=current_project)))
         return redirect(url_for('playground_packages', project=current_project, file=the_file))
-    if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
-        os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file))
+    if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
+        os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file))
         area['playgroundpackages'].finalize()
         flash(word("Deleted package"), "success")
         return redirect(url_for('playground_packages', project=current_project))
@@ -16027,7 +16060,7 @@ def playground_packages():
             if the_file != '':
                 area['playgroundpackages'].finalize()
                 if form.original_file_name.data and form.original_file_name.data != the_file:
-                    old_filename = os.path.join(directory_for(area['playgroundpackages'], current_project), form.original_file_name.data)
+                    old_filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 if form.pypi.data and pypi_version is not None:
@@ -16038,7 +16071,7 @@ def playground_packages():
                         if 'releases' not in pypi_info['info'] or new_info['version'] not in pypi_info['info']['releases'].keys():
                             break
                         versions = new_info['version'].split(".")
-                filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
+                filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
                 with open(filename, 'w', encoding='utf-8') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
                     fp.write(text_type(the_yaml))
@@ -16073,8 +16106,8 @@ def playground_packages():
                     flash(word('The package information was saved.'), 'success')
     form.original_file_name.data = the_file
     form.file_name.data = the_file
-    if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)):
-        filename = os.path.join(directory_for(area['playgroundpackages'], current_project), the_file)
+    if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
+        filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
     else:
         filename = None
     header = word("Packages")
@@ -16710,6 +16743,7 @@ def get_list_of_projects(user_id):
     return playground.list_of_dirs()
 
 def rename_project(user_id, old_name, new_name):
+    fix_package_folder()
     for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
         area = SavedFile(user_id, fix=True, section='playground' + sec)
         if os.path.isdir(os.path.join(area.directory, old_name)):
@@ -16717,16 +16751,19 @@ def rename_project(user_id, old_name, new_name):
             area.finalize()
 
 def create_project(user_id, new_name):
+    fix_package_folder()
     for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
         area = SavedFile(user_id, fix=True, section='playground' + sec)
         new_dir = os.path.join(area.directory, new_name)
-        os.makedirs(new_dir)
+        if not os.path.isdir(new_dir):
+            os.makedirs(new_dir)
         path = os.path.join(new_dir, '.placeholder')
         with open(path, 'a'):
             os.utime(path, None)
         area.finalize()
 
 def delete_project(user_id, project_name):
+    fix_package_folder()
     for sec in ('', 'sources', 'static', 'template', 'modules', 'packages'):
         area = SavedFile(user_id, fix=True, section='playground' + sec)
         area.delete_directory(project_name)
@@ -17742,6 +17779,72 @@ def sanitize(default):
         return "|\n" + docassemble.base.functions.indent(default, by=10)
     return default
 
+def read_fields(filename, orig_file_name, input_format, output_format):
+    if output_format == 'yaml':
+        if input_format == 'pdf':
+            fields = docassemble.base.pdftk.read_fields(filename)
+            fields_seen = set()
+            if fields is None:
+                raise Exception(word("Error: no fields could be found in the file"))
+            fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(orig_file_name)[0] + "\n    filename: " + os.path.splitext(orig_file_name)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', orig_file_name) + "\n    fields:\n"
+            for field, default, pageno, rect, field_type in fields:
+                if field not in fields_seen:
+                    fields_output += '      - "' + text_type(field) + '": ' + sanitize(default) + "\n"
+                    fields_seen.add(field)
+            fields_output += "---"
+            return fields_output
+        if input_format == 'docx' or input_format == 'markdown':
+            if input_format == 'docx':
+                result_file = word_to_markdown(filename, 'docx')
+                if result_file is None:
+                    raise Exception(word("Error: no fields could be found in the file"))
+                with open(result_file.name, 'rU', encoding='utf-8') as fp:
+                    result = fp.read()
+            elif input_format == 'markdown':
+                with open(filename, 'rU', encoding='utf-8') as fp:
+                    result = fp.read()
+            fields = set()
+            for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+                fields.add(docx_variable_fix(variable))
+            for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
+                fields.add(docx_variable_fix(variable))
+            if len(fields) == 0:
+                raise Exception(word("Error: no fields could be found in the file"))
+            fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(orig_file_name)[0] + "\n    filename: " + os.path.splitext(orig_file_name)[0] + "\n    docx template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', orig_file_name) + "\n    fields:\n"
+            for field in fields:
+                fields_output += '      "' + field + '": ' + "Something\n"
+            fields_output += "---"
+            return fields_output
+    if output_format == 'json':
+        if input_format == 'pdf':
+            output = dict(fields=list(), default_values=dict(), types=dict(), locations=dict())
+            fields = docassemble.base.pdftk.read_fields(filename)
+            if fields is not None:
+                fields_seen = set()
+                for field, default, pageno, rect, field_type in fields:
+                    if field not in fields_seen:
+                        output['fields'].append(field)
+                        output['default_values'][field] = default
+                        output['types'][field] = field_type
+                        output['locations'][field] = dict(page=pageno, rectangle=rect)
+            return json.dumps(output, sort_keys=True, indent=2)
+        if input_format == 'docx' or input_format == 'markdown':
+            if input_format == 'docx':
+                result_file = word_to_markdown(filename, 'docx')
+                if result_file is None:
+                    raise Exception(word("Error: no fields could be found in the file"))
+                with open(result_file.name, 'rU', encoding='utf-8') as fp:
+                    result = fp.read()
+            elif input_format == 'markdown':
+                with open(filename, 'rU', encoding='utf-8') as fp:
+                    result = fp.read()
+            fields = set()
+            for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+                fields.add(docx_variable_fix(variable))
+            for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
+                fields.add(docx_variable_fix(variable))
+            return json.dumps(dict(fields=list(fields)), sort_keys=True, indent=2)
+
 @app.route('/utilities', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -17825,42 +17928,21 @@ def utilities():
                 pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
                 the_file = request.files['pdfdocxfile']
                 the_file.save(pdf_file.name)
-                fields = docassemble.base.pdftk.read_fields(pdf_file.name)
-                fields_seen = set()
+                try:
+                    fields_output = read_fields(pdf_file.name, the_file.filename, 'pdf', 'yaml')
+                except Exception as err:
+                    fields_output = text_type(err)
                 pdf_file.close()
-                if fields is None:
-                    fields_output = word("Error: no fields could be found in the file")
-                else:
-                    fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file.filename) + "\n    fields:\n"
-                    for field, default, pageno, rect, field_type in fields:
-                        if field not in fields_seen:
-                            fields_output += '      - "' + text_type(field) + '": ' + sanitize(default) + "\n"
-                            fields_seen.add(field)
-                    fields_output += "---"
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 file_type = 'docx'
                 docx_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".docx", delete=True)
                 the_file = request.files['pdfdocxfile']
                 the_file.save(docx_file.name)
-                result_file = word_to_markdown(docx_file.name, 'docx')
+                try:
+                    fields_output = read_fields(docx_file.name, the_file.filename, 'docx', 'yaml')
+                except Exception as err:
+                    fields_output = text_type(err)
                 docx_file.close()
-                if result_file is None:
-                    fields_output = word("Error: no fields could be found in the file")
-                else:
-                    with open(result_file.name, 'rU', encoding='utf-8') as fp:
-                        result = fp.read()
-                    fields = set()
-                    for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
-                        fields.add(docx_variable_fix(variable))
-                    for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
-                        fields.add(docx_variable_fix(variable))
-                    if len(fields):
-                        fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    docx template file: " + the_file.filename + "\n    fields:\n"
-                        for field in fields:
-                            fields_output += '      "' + field + '": ' + "Something\n"
-                        fields_output += "---"
-                    else:
-                        fields_output = word("Error: no fields could be found in the file")
         if form.officeaddin_submit.data:
             resp = make_response(render_template('pages/officemanifest.xml', office_app_version=form.officeaddin_version.data, guid=str(uuid.uuid4())))
             resp.headers['Content-type'] = 'text/xml; charset=utf-8'
