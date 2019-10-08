@@ -576,7 +576,6 @@
 "Type your selection, or type skip to move on without selecting.": Null
 "Type your selection(s), separated by commas.": Null
 "Type your selection(s), separated by commas, or type none.": Null
-"Unable to decrypt interview session.  Starting a new session instead.": Null
 "Unable to determine if the package is published on PyPI.": Null
 "Unable to determine if the package is published on your GitHub account.": Null
 "(Unable to display map)": Null
@@ -584,6 +583,7 @@
 "(Unable to extract images from PDF file)": Null
 "Unable to find documents to e-mail.": Null
 "Unable to locate interview session.  Starting a new session instead.": Null
+"Unable to retrieve interview session.  Starting a new session instead.": Null
 "Unable to send e-mail.  Error was: ": Null
 "Unable to send e-mail to": Null
 "Unable to send verification code.": Null

@@ -5425,7 +5425,8 @@ def index(action_argument=None):
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
-        flash(word("Unable to decrypt interview session.  Starting a new session instead."), "error")
+        if session_parameter is not None:
+            flash(word("Unable to retrieve interview session.  Starting a new session instead."), "error")
         return response
     if user_dict is None:
         sys.stderr.write("index: no user_dict found after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
@@ -6514,8 +6515,6 @@ def index(action_argument=None):
         user_dict['_internal']['steps_offset'] = steps
     if not changed and url_args_changed:
         changed = True
-    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
-    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "restart":
         manual_checkout(manual_filename=yaml_filename)
         url_args = user_dict['url_args']
@@ -6525,17 +6524,31 @@ def index(action_argument=None):
         user_dict['_internal']['referer'] = referer
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             update_session(yaml_filename, key_logged=True)
         steps = 1
         changed = False
         interview.assemble(user_dict, interview_status)
+    elif interview_status.question.question_type == "new_session":
+        manual_checkout(manual_filename=yaml_filename)
+        referer = user_dict['_internal'].get('referer', None)
+        user_dict = fresh_dictionary()
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
+        release_lock(user_code, yaml_filename)
+        user_code, user_dict = reset_session(yaml_filename, secret)
+        if 'visitor_secret' not in request.cookies:
+            save_user_dict_key(user_code, yaml_filename)
+            update_session(yaml_filename, uid=user_code, key_logged=True)
+        steps = 1
+        changed = False
+        interview.assemble(user_dict, interview_status)
+    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "exit":
         manual_checkout(manual_filename=yaml_filename)
         reset_user_dict(user_code, yaml_filename)
-        delete_session_for_interview()
+        delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -6565,20 +6578,6 @@ def index(action_argument=None):
         if return_fake_html:
             fake_up(response)
         return response
-    if interview_status.question.question_type == "new_session":
-        manual_checkout(manual_filename=yaml_filename)
-        referer = user_dict['_internal'].get('referer', None)
-        user_dict = fresh_dictionary()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
-        release_lock(user_code, yaml_filename)
-        user_code, user_dict = reset_session(yaml_filename, secret)
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if 'visitor_secret' not in request.cookies:
-            save_user_dict_key(user_code, yaml_filename)
-            update_session(yaml_filename, key_logged=True)
-        steps = 1
-        changed = False
-        interview.assemble(user_dict, interview_status)
     will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
@@ -6846,7 +6845,10 @@ def index(action_argument=None):
       var locationBar = """ + json.dumps(url_for('index', **index_params)) + """;
       var daPostURL = """ + json.dumps(url_for('index', **index_params_external)) + """;
       var daYamlFilename = """ + json.dumps(yaml_filename) + """;
+      var daFetchAcceptIncoming = false;
       var daFetchAjaxTimeout = null;
+      var daFetchAjaxTimeoutRunning = null;
+      var daFetchAjaxTimeoutFetchAfter = null;
       if (daJsEmbed){
         daTargetDiv = '#' + daJsEmbed;
       }
@@ -8509,24 +8511,28 @@ def index(action_argument=None):
       function daFetchAjax(elem, cb, doShow){
         var wordStart = $(elem).val();
         if (wordStart.length < parseInt(cb.$source.data('trig'))){
+          if (cb.shown){
+            cb.hide();
+          }
           return;
         }
-        if (daFetchAjaxTimeout != null && daFetchAjaxTimeout.running){
-          daFetchAjaxTimeout.fetchAfter = true;
+        if (daFetchAjaxTimeout != null && daFetchAjaxTimeoutRunning){
+          daFetchAjaxTimeoutFetchAfter = true;
           return;
         }
         if (doShow){
           daFetchAjaxTimeout = setTimeout(function(){
-            if (daFetchAjaxTimeout.fetchAfter){
+            daFetchAjaxTimeoutRunning = false;
+            if (daFetchAjaxTimeoutFetchAfter){
               daFetchAjax(elem, cb, doShow);
-              daFetchAjaxTimeout.running = false;
-              daFetchAjaxTimeout.fetchAfter = false;
+              daFetchAjaxTimeoutFetchAfter = false;
             }
           }, 2000);
-          daFetchAjaxTimeout.running = true;
-          daFetchAjaxTimeout.fetchAfter = false;
+          daFetchAjaxTimeoutRunning = true;
+          daFetchAjaxTimeoutFetchAfter = false;
         }
         action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
+          wordStart = $(elem).val();
           if (typeof data == "object"){
             var upperWordStart = wordStart.toUpperCase()
             cb.$source.empty();
@@ -8541,7 +8547,7 @@ def index(action_argument=None):
                 if (Array.isArray(data[i])){
                   if (data[i].length >= 2){
                     var item = $("<option>");
-                    if (notYetSelected && ((doShow && data[i][1].toString().toUpperCase() == upperWordStart) || data[i][0].toString() == wordStart)){
+                    if (notYetSelected && ((doShow && data[i][1].toString() == wordStart) || data[i][0].toString() == wordStart)){
                       item.prop('selected', true);
                       notYetSelected = false;
                       selectedValue = data[i][1]
@@ -8552,7 +8558,7 @@ def index(action_argument=None):
                   }
                   else if (data[i].length == 1){
                     var item = $("<option>");
-                    if (notYetSelected && ((doShow && data[i][0].toString().toUpperCase() == upperWordStart) || data[i][0].toString() == wordStart)){
+                    if (notYetSelected && ((doShow && data[i][0].toString() == wordStart) || data[i][0].toString() == wordStart)){
                       item.prop('selected', true);
                       notYetSelected = false;
                       selectedValue = data[i][0]
@@ -8566,7 +8572,7 @@ def index(action_argument=None):
                   for (var key in data[i]){
                     if (data[i].hasOwnProperty(key)){
                       var item = $("<option>");
-                      if (notYetSelected && ((doShow && key.toString().toUpperCase() == upperWordStart) || key.toString() == wordStart)){
+                      if (notYetSelected && ((doShow && key.toString() == wordStart) || key.toString() == wordStart)){
                         item.prop('selected', true);
                         notYetSelected = false;
                         selectedValue = data[i][key];
@@ -8815,13 +8821,14 @@ def index(action_argument=None):
               case 35: // end
               case 16: // shift
               case 17: // ctrl
-              case 9: // tab
+              case 9:  // tab
               case 13: // enter
               case 27: // escape
               case 18: // alt
                 return;
             }
             daFetchAjax(this, cb, true);
+            daFetchAcceptIncoming = true;
             e.preventDefault();
             return false;
           });
@@ -15208,6 +15215,15 @@ def playground_files():
       var currentProject = """ + json.dumps(current_project) + """;
 """ + indent_by(variables_js(form='formtwo'), 6) + """
 """ + indent_by(search_js(form='formtwo'), 6) + """
+      var daExpireSession = null;
+      function resetExpireSession(){
+        if (daExpireSession != null){
+          window.clearTimeout(daExpireSession);
+        }
+        daExpireSession = setTimeout(function(){
+          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+      }
       function saveCallback(data){
         fetchVars(true);
         if ($("#daflash").length){
@@ -15223,9 +15239,7 @@ def playground_files():
         }, "slow");
       }
       $( document ).ready(function() {
-        setInterval(function(){
-          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+        resetExpireSession();
         $("#file_name").on('change', function(){
           var newFileName = $(this).val();
           if ((!daIsNew) && newFileName == currentFile){
@@ -15270,6 +15284,7 @@ def playground_files():
               url: """ + '"' + url_for('playground_files', project=current_project) + '"' + """,
               data: $("#formtwo").serialize() + extraVariable + '&submit=Save&ajax=1',
               success: function(data){
+                resetExpireSession();
                 saveCallback(data);
                 setTimeout(function(){
                   $("#daflash .alert-success").hide(300, function(){
@@ -16189,13 +16204,20 @@ def playground_packages():
       var isNew = """ + json.dumps(is_new) + """;
       var existingFiles = """ + json.dumps(files) + """;
       var currentFile = """ + json.dumps(the_file) + """;
+      var daExpireSession = null;
+      function resetExpireSession(){
+        if (daExpireSession != null){
+          window.clearTimeout(daExpireSession);
+        }
+        daExpireSession = setTimeout(function(){
+          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+      }
       function scrollBottom(){
         $("html, body").animate({ scrollTop: $(document).height() }, "slow");
       }
       $( document ).ready(function() {
-        setInterval(function(){
-          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-        }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+        resetExpireSession();
         $("#file_name").on('change', function(){
           var newFileName = $(this).val();
           if ((!isNew) && newFileName == currentFile){
@@ -17154,6 +17176,15 @@ var existingFiles = """ + json.dumps(file_listing) + """;
 var currentProject = """ + json.dumps(current_project) + """;
 var currentFile = """ + json.dumps(the_file) + """;
 var attrs_showing = Object();
+var daExpireSession = null;
+function resetExpireSession(){
+  if (daExpireSession != null){
+    window.clearTimeout(daExpireSession);
+  }
+  daExpireSession = setTimeout(function(){
+    alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
+  }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+}
 
 """ + variables_js() + """
 
@@ -17230,9 +17261,7 @@ function saveCallback(data){
 $( document ).ready(function() {
   variablesReady();
   searchReady();
-  setInterval(function(){
-    alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-  }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
+  resetExpireSession();
   $("#playground_name").on('change', function(){
     var newFileName = $(this).val();
     if ((!isNew) && newFileName == currentFile){
@@ -17258,6 +17287,7 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&run=Save+and+Run&ajax=1',
       success: function(data){
+        resetExpireSession();
         saveCallback(data);
       },
       dataType: 'json'
@@ -17293,6 +17323,7 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&submit=Save&ajax=1',
       success: function(data){
+        resetExpireSession();
         saveCallback(data);
         setTimeout(function(){
           $("#daflash .alert-success").hide(300, function(){
@@ -17817,22 +17848,26 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             return fields_output
     if output_format == 'json':
         if input_format == 'pdf':
+            default_text = word("something")
             output = dict(fields=list(), default_values=dict(), types=dict(), locations=dict())
             fields = docassemble.base.pdftk.read_fields(filename)
             if fields is not None:
                 fields_seen = set()
                 for field, default, pageno, rect, field_type in fields:
+                    real_default = text_type(default)
+                    if real_default == default_text:
+                        real_default = ''
                     if field not in fields_seen:
-                        output['fields'].append(field)
-                        output['default_values'][field] = default
-                        output['types'][field] = field_type
-                        output['locations'][field] = dict(page=pageno, rectangle=rect)
+                        output['fields'].append(text_type(field))
+                        output['default_values'][field] = real_default
+                        output['types'][field] = re.sub(r"'", r'', text_type(field_type))
+                        output['locations'][field] = dict(page=int(pageno), box=rect)
             return json.dumps(output, sort_keys=True, indent=2)
         if input_format == 'docx' or input_format == 'markdown':
             if input_format == 'docx':
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
-                    raise Exception(word("Error: no fields could be found in the file"))
+                    return json.dumps(dict(fields=list()), indent=2)
                 with open(result_file.name, 'rU', encoding='utf-8') as fp:
                     result = fp.read()
             elif input_format == 'markdown':
@@ -20423,6 +20458,52 @@ def api_user_by_id(user_id):
         except Exception as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
+
+@app.route('/api/fields', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_fields():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    output_format = post_data.get('format', 'json')
+    if output_format not in ('json', 'yaml'):
+        return jsonify_with_status("Invalid output format.", 400)
+    if 'template' not in request.files:
+        return jsonify_with_status("File not included.", 400)
+    the_files = request.files.getlist('template')
+    if not the_files:
+        return jsonify_with_status("File not included.", 400)
+    for the_file in the_files:
+        filename = secure_filename(the_file.filename)
+        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
+        the_file.save(temp_file.name)
+        try:
+            input_format = os.path.splitext(filename.lower())[1][1:]
+        except:
+            input_format = 'bin'
+        if input_format == 'md':
+            input_format = 'markdown'
+        if input_format not in ('docx', 'markdown', 'pdf'):
+            return jsonify_with_status("Invalid input format.", 400)
+        try:
+            output = read_fields(temp_file.name, filename, input_format, output_format)
+        except Exception as err:
+            logmessage("api_fields: got error " + err.__class__.__name__ + ": " + text_type(err))
+            if output_format == 'yaml':
+                return jsonify_with_status("No fields could be found.", 400)
+            else:
+                return jsonify(dict(fields=list()))
+        break
+    if output_format == 'yaml':
+        response = make_response(output.encode('utf-8'), '200 OK')
+        response.headers['Content-type'] = 'text/plain; charset=utf-8'
+    else:
+        response = make_response(output.encode('utf-8'), 200)
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
 
 @app.route('/api/privileges', methods=['GET', 'DELETE', 'POST'])
 @csrf.exempt

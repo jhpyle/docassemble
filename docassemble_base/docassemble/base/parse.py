@@ -247,7 +247,7 @@ class InterviewSourceFile(InterviewSource):
                 else:
                     sys.stderr.write("no subdir\n")
                     self.playground_file = self.playground.filename
-                sys.stderr.write("The path is " + repr(self.playground.path) + "\n")
+                #sys.stderr.write("The path is " + repr(self.playground.path) + "\n")
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
                 else:
@@ -608,8 +608,8 @@ class InterviewStatus(object):
                     the_field['show_if_sign'] = field.extras['show_if_sign']
                     the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
-                if 'show_if_js' in self.extras:
-                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                if 'show_if_js' in field.extras:
+                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
             if hasattr(field, 'datatype'):
                 if 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]

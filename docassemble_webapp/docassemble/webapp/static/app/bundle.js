@@ -8581,7 +8581,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
  * bootstrap-combobox.js v1.1.8
  * =============================================================
  * Copyright 2012 Daniel Farrell
- * Modified 2018 for docassemble by Jonathan Pyle 
+ * Modified 2018 for docassemble by Jonathan Pyle
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -8628,6 +8628,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     constructor: Combobox
 
   , setup: function () {
+      //console.log('setup');
       var combobox = $(this.template());
       this.$source.before(combobox);
       this.$source.hide();
@@ -8635,6 +8636,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , disable: function() {
+      //console.log('disable');
       this.$element.prop('disabled', true);
       this.$button.attr('disabled', true);
       this.disabled = true;
@@ -8642,12 +8644,14 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , enable: function() {
+      //console.log('enable');
       this.$element.prop('disabled', false);
       this.$button.attr('disabled', false);
       this.disabled = false;
       this.$container.removeClass('combobox-disabled');
     }
   , parse: function () {
+      //console.log('parse');
       var that = this
         , map = {}
         , source = []
@@ -8677,6 +8681,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , transferAttributes: function() {
+    //console.log('transferAttributes');
     this.options.placeholder = this.$source.attr('data-placeholder') || this.options.placeholder
     if(this.options.appendId !== "undefined") {
     	this.$element.attr('id', this.$source.attr('id') + this.options.appendId);
@@ -8697,6 +8702,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
   }
 
   , select: function () {
+      //console.log('select');
       var val = this.$menu.find('.active').attr('data-value');
       this.$container.parent().find('.da-has-error').remove();
       this.$element.val(this.updater(val)).trigger('change');
@@ -8708,10 +8714,12 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , updater: function (item) {
+      //console.log('updater');
       return item;
     }
 
   , show: function () {
+      //console.log('show');
       var pos = $.extend({}, this.$element.position(), {
         height: this.$element[0].offsetHeight
       });
@@ -8731,6 +8739,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , hide: function () {
+      //console.log('hide');
       this.$menu.hide();
       $('.dropdown-menu').off('mousedown', $.proxy(this.scrollSafety, this));
       this.$element.on('blur', $.proxy(this.blur, this));
@@ -8739,11 +8748,13 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , lookup: function (event) {
+      //console.log('lookup');
       this.query = this.$element.val();
       return this.process(this.source);
     }
 
   , process: function (items) {
+      //console.log('process');
       var that = this;
 
       items = $.grep(items, function (item) {
@@ -8760,6 +8771,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , template: function() {
+      //console.log('template');
       if (this.options.bsVersion == '2') {
         return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>'
       } else {
@@ -8768,10 +8780,12 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , matcher: function (item) {
+      //console.log('matcher');
       return ~item.toLowerCase().indexOf(this.query.toLowerCase());
     }
 
   , sorter: function (items) {
+      //console.log('sorter');
       var beginswith = []
         , caseSensitive = []
         , caseInsensitive = []
@@ -8787,6 +8801,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , highlighter: function (item) {
+      //console.log('highlighter');
       var query = this.query.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&');
       return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
         return '<strong>' + match + '</strong>';
@@ -8794,6 +8809,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , render: function (items) {
+      //console.log('render');
       var that = this;
 
       items = $(items).map(function (i, item) {
@@ -8808,6 +8824,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , next: function (event) {
+      //console.log('next');
       var active = this.$menu.find('.active').removeClass('active')
         , next = active.next();
 
@@ -8819,6 +8836,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , prev: function (event) {
+      //console.log('prev');
       var active = this.$menu.find('.active').removeClass('active')
         , prev = active.prev();
 
@@ -8830,6 +8848,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , toggle: function () {
+    //console.log('toggle');
     if (!this.disabled) {
       if (this.$container.hasClass('combobox-selected')) {
         this.clearTarget();
@@ -8847,15 +8866,18 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
   }
 
   , scrollSafety: function(e) {
+      //console.log('scrollsafety');
       if (e.target.tagName == 'UL') {
           this.$element.off('blur');
       }
   }
   , clearElement: function () {
+    //console.log('clearElement');
     this.$element.val('').focus();
   }
 
   , clearTarget: function () {
+    //console.log('clearTarget');
     this.$source.val('');
     this.$target.val('');
     this.$container.removeClass('combobox-selected');
@@ -8863,15 +8885,18 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
   }
 
   , triggerChange: function () {
+    //console.log('triggerChange');
     this.$source.trigger('change');
   }
 
   , refresh: function () {
+    //console.log('refresh');
     this.source = this.parse();
     this.options.items = this.source.length;
   }
 
   , listen: function () {
+      //console.log('listen');
       this.$element
         .on('focus',    $.proxy(this.focus, this))
         .on('change',   $.proxy(this.change, this))
@@ -8893,6 +8918,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , eventSupported: function(eventName) {
+      //console.log('eventSupported');
       var isSupported = eventName in this.$element;
       if (!isSupported) {
         this.$element.setAttribute(eventName, 'return;');
@@ -8902,6 +8928,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , move: function (e) {
+      //console.log('move');
       if (!this.shown) {return;}
 
       switch(e.keyCode) {
@@ -8928,6 +8955,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , fixMenuScroll: function(){
+      //console.log('fixMenuScroll');
       var active = this.$menu.find('.active');
       if(active.length){
           var top = active.position().top;
@@ -8943,16 +8971,19 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
   }
 
   , keydown: function (e) {
+      //console.log('keyDown');
       this.suppressKeyPressRepeat = ~$.inArray(e.keyCode, [40,38,9,13,27]);
       this.move(e);
     }
 
   , keypress: function (e) {
+      //console.log('keyPress');
       if (this.suppressKeyPressRepeat) {return;}
       this.move(e);
     }
 
   , keyup: function (e) {
+      //console.log('keyUp');
       switch(e.keyCode) {
         case 40: // down arrow
          if (!this.shown){
@@ -8981,7 +9012,7 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
           break;
 
         default:
-          this.clearTarget();    
+          this.clearTarget();
           this.$target.val(this.$element.val());
           this.lookup();
       }
@@ -8991,10 +9022,12 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
   }
 
   , focus: function (e) {
+      //console.log('focus');
       this.focused = true;
   }
 
   , blur: function (e) {
+      //console.log('blur');
       var that = this;
       this.focused = false;
       var val = this.$element.val();
@@ -9010,19 +9043,24 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     }
 
   , click: function (e) {
+      //console.log('click');
       e.stopPropagation();
       e.preventDefault();
+      daFetchAjaxTimeoutFetchAfter = false;
+      daFetchAcceptIncoming = false;
       this.select();
       this.$element.focus();
     }
 
   , mouseenter: function (e) {
+      //console.log('mouseenter');
       this.mousedover = true;
       this.$menu.find('.active').removeClass('active');
       $(e.currentTarget).addClass('active');
     }
 
   , mouseleave: function (e) {
+      //console.log('mouseleave');
       this.mousedover = false;
     }
   };
