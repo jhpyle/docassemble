@@ -16674,10 +16674,10 @@ var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassem
 
 function updateRunLink(){
   if (currentProject == 'default'){
-    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', ':' + $("#daVariables").val()));
+    $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', ':' + $("#daVariables").val()));
   }
   else{
-    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', currentProject + ':' + $("#daVariables").val()));
+    $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', currentProject + ':' + $("#daVariables").val()));
   }
 }
 

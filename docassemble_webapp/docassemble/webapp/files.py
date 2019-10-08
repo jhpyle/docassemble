@@ -322,6 +322,7 @@ class SavedFile(object):
         from flask import url_for
         url = url_for('rootindex', _external=use_external).rstrip('/')
         url += '/tempfile/' + code + '/' + path_to_key(kwargs.get('display_filename', filename))
+        return(url)
     def cloud_path(self, filename=None):
         if cloud is None:
             return None
