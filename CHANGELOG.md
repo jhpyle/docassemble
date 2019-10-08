@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.23] - 2019-10-08
+### Added
+- Additional cache invalidation headers.
+
 ## [0.5.22] - 2019-10-08
 ### Added
 - The `/api/fields` endpoint.

@@ -1,7 +1,7 @@
 from six import text_type
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from flask import redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
+from flask import make_response, redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
 from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
@@ -41,12 +41,14 @@ def privilege_list():
             output += '        <tr><td>' + text_type(role.name) + '</td><td><a class="btn btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + text_type(role.name) + '</td><td>&nbsp;</td></tr>\n'
-            
+
     output += """\
       </tbody>
     </table>
 """
-    return render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
+    response = make_response(render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 @app.route('/userlist', methods=['GET', 'POST'])
 @login_required
@@ -84,7 +86,9 @@ def user_list():
         else:
             is_active = False
         users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
-    return render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users)
+    response = make_response(render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
 @login_required
@@ -198,7 +202,9 @@ def edit_user_profile_page(id):
         }
       });
     </script>"""
-    return render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script))
+    response = make_response(render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script)), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
@@ -210,14 +216,16 @@ def add_privilege():
             if role.name == form.name.data:
                 flash(word('The privilege could not be added because it already exists.'), 'error')
                 return redirect(url_for('privilege_list'))
-        
+
         db.session.add(Role(name=form.name.data))
         db.session.commit()
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
-    return render_template('users/new_role_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
+    response = make_response(render_template('users/new_role_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -237,7 +245,9 @@ def user_profile_page():
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('interview_list'))
-    return render_template('users/user_profile_page.html', version_warning=None, page_title=word('User Profile'), tab_title=word('User Profile'), form=form, debug=debug_status())
+    response = make_response(render_template('users/user_profile_page.html', version_warning=None, page_title=word('User Profile'), tab_title=word('User Profile'), form=form, debug=debug_status()), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 def _endpoint_url(endpoint):
     url = url_for('index')
@@ -268,7 +278,7 @@ def invite():
             email_addresses.append(part_two)
 
         the_role_id = None
-        
+
         for role in Role.query.order_by('id'):
             if role.id == int(invite_form.role_id.data) and role.name != 'admin' and role.name != 'cron':
                 the_role_id = role.id
@@ -316,7 +326,9 @@ def invite():
             flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form)
+    response = make_response(render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 @app.route('/user/add', methods=['GET', 'POST'])
 @login_required
@@ -363,4 +375,6 @@ def user_add():
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
-    return render_template('users/add_user_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form)
+    response = make_response(render_template('users/add_user_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
