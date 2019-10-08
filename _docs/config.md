@@ -3624,6 +3624,19 @@ requires system version 0.5.0 or later.
 
 See also the [`DAWEBSERVER`] environment variable.
 
+## <a name="use cloud urls"></a>URLs pointing to files in cloud server
+
+If you are using [S3] or [Azure blob storage], then for efficiency,
+URLs to files will link directly to the cloud provider.  However, this
+can cause problems with [Cross-Origin Resource Sharing], and will not
+work if you are using an [S3]-compatible cloud storage system that
+is not accessible from the user's network.  If you would rather serve
+files from the server itself, set `use cloud urls` to `False`.
+
+{% highlight yaml %}
+use cloud urls: False
+{% endhighlight %}
+
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to

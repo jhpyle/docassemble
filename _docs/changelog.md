@@ -4,6 +4,20 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.22](https://github.com/jhpyle/docassemble/releases/tag/v0.5.22) - 2019-10-08
+
+### Added
+- The `/api/fields` endpoint.
+- The `use cloud urls` directive in the Configuration.
+
+### Fixed
+- Miscellaneous problems with ajax field type.
+- Syntax with Let's Encrypt renewal not compatible with all
+  configuration types.
+- Problem with obtaining JSON version of `question` where `js show if`
+  is in use.
+- Unnecessary saving of interview answers with the wrong encryption.
+
 ## [0.5.21](https://github.com/jhpyle/docassemble/releases/tag/v0.5.21) - 2019-10-04
 
 ### Fixed

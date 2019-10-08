@@ -496,6 +496,181 @@ Response on success: [204]
 
 Body of response: empty.
 
+## <a name="fields"></a>Extract fields from a template file
+
+Description: Returns information about the field names used in a PDF,
+DOCX, or Markdown file.
+
+Path: `/api/fields`
+
+Method: [POST]
+
+Form data:
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `format` (optional): the desired output format.  The default is
+   `json`, where the response to the request is a [JSON] data
+   structure with information about the fields.  The other option is
+   `yaml`, in which case the response to the request is plain text
+   containing a draft [`question`] in [YAML] format, which can be used
+   as the starting point for how you might use the template in an interview.
+
+File data:
+ - `template`: a template file in PDF or DOCX format.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid output format" if the `format` is not `json` or
+   `yaml`.
+ - [400] "File not included." if a file is not uploaded with the
+   request.
+ - [400] "Invalid input format." if the file that is uploaded does not
+   have the extension `.pdf` or `.docx`.
+ - [400] "No fields could be found." if the `format` is `yaml` and no
+   fields could be detected in the file.
+ 
+Response on success: [200]
+
+Body of response: a [JSON] list of field information, or a [YAML]
+draft [`question`], depending on the requested `format`.
+
+The [JSON] output for the file [sample-form.pdf] looks like this:
+
+{% highlight javascript %}
+{
+  "default_values": {
+    "Apple Checkbox": "No",
+    "Orange Checkbox": "No",
+    "Pear Checkbox": "No",
+    "Toast Checkbox": "No",
+    "Your Name": "",
+    "Your Organization": ""
+  },
+  "fields": [
+    "Your Name",
+    "Your Organization",
+    "Apple Checkbox",
+    "Orange Checkbox",
+    "Pear Checkbox",
+    "Toast Checkbox"
+  ],
+  "locations": {
+    "Apple Checkbox": {
+      "box": [
+        72.1975,
+        580.914,
+        94.395,
+        600.593
+      ],
+      "page": 1
+    },
+    "Orange Checkbox": {
+      "box": [
+        72.1975,
+        555.494,
+        94.3951,
+        575.173
+      ],
+      "page": 1
+    },
+    "Pear Checkbox": {
+      "box": [
+        72.1975,
+        529.42,
+        94.3951,
+        549.099
+      ],
+      "page": 1
+    },
+    "Toast Checkbox": {
+      "box": [
+        72.1975,
+        505.025,
+        94.3951,
+        524.704
+      ],
+      "page": 1
+    },
+    "Your Name": {
+      "box": [
+        127.32,
+        652.84,
+        288.12,
+        677.44
+      ],
+      "page": 1
+    },
+    "Your Organization": {
+      "box": [
+        157.92,
+        627.4,
+        288.12,
+        652.0
+      ],
+      "page": 1
+    }
+  },
+  "types": {
+    "Apple Checkbox": "/Btn",
+    "Orange Checkbox": "/Btn",
+    "Pear Checkbox": "/Btn",
+    "Toast Checkbox": "/Btn",
+    "Your Name": "/Tx",
+    "Your Organization": "/Tx"
+  }
+}
+{% endhighlight %}
+
+The field "types" come from the PDF specification.  Common values are
+`/Btn`, `/Tx`, and `/Sig`.
+
+The "locations" indicate the page number and bounding box of the
+fields.  For "box" coordinates a, b, c, and d, the coordinates refer
+to:
+
+* a: lower-left corner, horizontal coordinate
+* b: lower-left corner, vertical coordinate
+* c: upper-right corner, horizontal coordinate
+* d: upper-right corner, vertical coordinate
+
+The coordinates are measured in "points" (there are 72 points in an
+inch).  The "origin" for this coordinate system is the lower-left corner of the page.
+
+If no fields could be found, the [JSON] response will look like this:
+
+{% highlight javascript %}
+{
+  "fields": []
+}
+{% endhighlight %}
+
+If the file format of the template is DOCX, only "fields" will be returned.
+
+If the output `format` is `yaml`, the response will be like that of
+the [Get list of fields from PDF/DOCX template] utility.  For example:
+
+{% highlight yaml %}
+---
+question: Here is your document.
+event: some_event
+attachment:
+  - name: sample-form
+    filename: sample-form
+    pdf template file: sample-form.pdf
+    fields:
+      - "Your Name": something
+      - "Your Organization": something
+      - "Apple Checkbox": No
+      - "Orange Checkbox": No
+      - "Pear Checkbox": No
+      - "Toast Checkbox": No
+---
+{% endhighlight %}
+
 ## <a name="privileges"></a>List available privileges
 
 Description: Returns a list of names of privileges that exist in the
@@ -1992,3 +2167,6 @@ function.
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
 [pickle]: https://docs.python.org/3.6/library/pickle.html
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[sample-form.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/sample-form.pdf
+[Get list of fields from PDF/DOCX template]: {{ site.baseurl }}/docs/admin.html#pdf fields
