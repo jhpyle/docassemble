@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.24](https://github.com/jhpyle/docassemble/releases/tag/v0.5.24) - 2019-10-08
+
+### Fixed
+- Error with Run button in Playground.
+- Erroneous space in the CSS class names of some fieldsets.
+- Error with non-cloud temporary URLs.
+
 ## [0.5.23](https://github.com/jhpyle/docassemble/releases/tag/v0.5.23) - 2019-10-08
 
 ### Added
