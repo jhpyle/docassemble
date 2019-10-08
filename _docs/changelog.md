@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.23](https://github.com/jhpyle/docassemble/releases/tag/v0.5.23) - 2019-10-08
+
+### Added
+- Additional cache invalidation headers.
+
 ## [0.5.22](https://github.com/jhpyle/docassemble/releases/tag/v0.5.22) - 2019-10-08
 
 ### Added
