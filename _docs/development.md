@@ -648,20 +648,20 @@ source code is located.
 The second complication is that you need to install the [Python]
 packages in the right place, using the right file permissions.  On
 your server, your **docassemble** server will be running in a [Python
-virtual environment] located in `/usr/share/docassemble/local` (unless
+virtual environment] located in `/usr/share/docassemble/local3.6` (unless
 you significantly deviated from the standard installation procedures).
 The files in this folder will all be owned by `www-data`.  The [uWSGI]
 web server process that runs the **docassemble** code runs as this
 user.  The files in the virtual environment are owned by `www-data` so
 that you can use the web application to install and upgrade [Python]
 packages.  If you change the ownership of any of the files in
-`/usr/share/docassemble/local` to `root` or another user, you may get
+`/usr/share/docassemble/local3.6` to `root` or another user, you may get
 errors in the web application.  When using `pip` from the command line
 to install your own version of the **docassemble** packages, you need
 to first become `www-data` by running `su www-data` as root.  Then you
 need to tell `pip` that you are using a specific [Python virtual
 environment] by running `source
-/usr/share/docassemble/local/bin/activate`.  Then, you can run `pip`
+/usr/share/docassemble/local3.6/bin/activate`.  Then, you can run `pip`
 to install your altered version of the **docassemble** code.  This
 line will install all the packages:
 
@@ -716,9 +716,9 @@ Here are the contents of `www-compile.sh`:
 {% highlight bash %}
 #! /bin/bash
 source /etc/profile
-source /usr/share/docassemble/local/bin/activate
+source /usr/share/docassemble/local3.6/bin/activate
 pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi
-history -s "source /usr/share/docassemble/local/bin/activate"
+history -s "source /usr/share/docassemble/local3.6/bin/activate"
 history -s "pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi"
 {% endhighlight %}
 
