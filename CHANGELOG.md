@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.26] - 2019-10-09
+### Fixed
+- NGINX configuration omitted `POSTURLROOT`.
+
 ## [0.5.25] - 2019-10-09
 ### Changed
 - Configuration page now shows a listing of errors in the

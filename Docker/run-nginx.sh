@@ -43,6 +43,7 @@ else
 fi
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
 -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
 -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
@@ -52,6 +53,7 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
 -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
 -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \

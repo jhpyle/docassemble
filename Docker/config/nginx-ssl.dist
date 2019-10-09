@@ -7,17 +7,17 @@ server {
     ssl_certificate {{DASSLCERTIFICATE}}
     ssl_certificate_key {{DASSLCERTIFICATEKEY}}
     {{DAREALIP}}
-    location / {
+    location {{DAPOSTURLROOT}} {
         include uwsgi_params;
         uwsgi_pass unix:/var/run/uwsgi/docassemble.sock;
     }
 
-    location /ws {
+    location {{DAPOSTURLROOT}}ws {
         include proxy_params;
         proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};
     }
 
-    location /ws/socket.io {
+    location {{DAPOSTURLROOT}}ws/socket.io {
         include proxy_params;
         proxy_http_version 1.1;
         proxy_buffering off;

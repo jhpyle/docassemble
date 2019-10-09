@@ -889,6 +889,11 @@ def clear_session(i):
     if 'sessions' in session and i in session['sessions']:
         del session['sessions'][i]
 
+def clear_specific_session(i, uid):
+    if 'sessions' in session and i in session['sessions']:
+        if session['sessions'][i]['uid'] == uid:
+            del session['sessions'][i]
+
 def guess_yaml_filename():
     yaml_filename = None
     if 'i' in session and 'uid' in session: #TEMPORARY

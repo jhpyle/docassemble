@@ -558,6 +558,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         if [ "${DAHOSTNAME:-none}" != "none" ]; then
             if [ ! -f /etc/nginx/sites-available/docassemblessl ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
@@ -569,6 +570,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             fi
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
@@ -592,6 +594,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         else
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
