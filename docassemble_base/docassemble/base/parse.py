@@ -242,10 +242,8 @@ class InterviewSourceFile(InterviewSource):
             if re.search(r'SavedFile', str(type(kwargs['filepath']))):
                 self.playground = kwargs['filepath']
                 if self.playground.subdir and self.playground.subdir != 'default':
-                    sys.stderr.write("found subdir\n")
                     self.playground_file = os.path.join(self.playground.subdir, self.playground.filename)
                 else:
-                    sys.stderr.write("no subdir\n")
                     self.playground_file = self.playground.filename
                 #sys.stderr.write("The path is " + repr(self.playground.path) + "\n")
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):

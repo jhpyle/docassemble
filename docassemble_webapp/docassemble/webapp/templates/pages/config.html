@@ -3,6 +3,15 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
           <p>{{ version }}</p>
+          {%- if config_errors %}
+          <h3>{{ word("Errors") }}</h3>
+          <p>{{ word("The following errors were detected in your Configuration.") }}</p>
+          <ul>
+              {%- for error_message in config_errors %}
+              <li>{{ error_message }}</li>
+              {%- endfor %}
+          </ul>
+          {%- endif %}
           <form action="" method="POST" role="form" class="daconfigform">
             {{ form.hidden_tag() }}
             <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>

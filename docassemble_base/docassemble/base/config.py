@@ -28,6 +28,11 @@ AZURE_ENABLED = False
 hostname = None
 loaded = False
 in_celery = False
+errors = list()
+
+def config_error(error):
+    errors.append(error)
+    sys.stderr.write(error + "\n")
 
 def load(**kwargs):
     global daconfig
@@ -42,7 +47,7 @@ def load(**kwargs):
     global loaded
     global in_celery
     # changed = False
-    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
+    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1 and kwargs['arguments'][1] != '':
         filename = kwargs['arguments'][1]
     else:
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
@@ -56,7 +61,11 @@ def load(**kwargs):
             config_file.write(default_config())
             sys.stderr.write("Wrote configuration file to " + str(filename) + "\n")
     if not os.path.isfile(filename):
-        sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
+        sys.stderr.write("Configuration file " + str(filename) + " does not exist.  Trying default instead.\n")
+        filename = '/usr/share/docassemble/config/config.yml'
+    if not os.path.isfile(filename):
+        sys.stderr.write("Configuration file " + str(filename) + " does not exist.\n")
+        sys.exit(1)
     with open(filename, 'rU', encoding='utf-8') as stream:
         raw_daconfig = yaml.load(stream, Loader=yaml.FullLoader)
     if raw_daconfig is None:
@@ -67,7 +76,7 @@ def load(**kwargs):
     daconfig.clear()
     for key, val in raw_daconfig.items():
         if re.search(r'_', key):
-            sys.stderr.write("WARNING!  Configuration keys should not contain underscores.  Your configuration key " + str(key) + " has been converted.\n")
+            config_error("Configuration keys may not contain underscores.  Your configuration key " + str(key) + " has been converted.")
             daconfig[re.sub(r'_', r' ', key)] = val
         else:
             daconfig[key] = val
@@ -95,7 +104,7 @@ def load(**kwargs):
             if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
                 daconfig['maximum content length'] = None
         else:
-            sys.stderr.write("The maximum content length must be an integer number of bytes, or null.\n")
+            config_error("The maximum content length must be an integer number of bytes, or null.")
             del daconfig['maximum content length']
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
@@ -110,7 +119,7 @@ def load(**kwargs):
             daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
             assert daconfig['session lifetime seconds'] > 0
         except:
-            sys.stderr.write("Invalid session lifetime seconds.\n")
+            config_error("Invalid session lifetime seconds.")
             del daconfig['session lifetime seconds']
     if 'page after login' in daconfig:
         if isinstance(daconfig['page after login'], string_types):
@@ -124,15 +133,26 @@ def load(**kwargs):
                     for key, val in item.items():
                         if isinstance(key, string_types) and isinstance(val, string_types):
                             page_after_login.append((key, val))
+                        else:
+                            config_error('page after login keys and values must be strings')
+                else:
+                    config_error('page after login items must be dictionaries')
+        else:
+            config_error('page after login must be a string, a list, or a dict')
         daconfig['page after login'] = page_after_login
     else:
         daconfig['page after login'] = []
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
-        sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
+        config_error("You used a keymap that is not supported.  Available values are vim, emacs, and sublime.")
         del daconfig['keymap']
-    if 'voicerss' in daconfig and isinstance(daconfig['voicerss'], dict) and 'languages' in daconfig['voicerss']:
-        daconfig['voicerss']['dialects'] = daconfig['voicerss']['languages']
-        del daconfig['voicerss']['languages']
+    if 'voicerss' in daconfig:
+        if isinstance(daconfig['voicerss'], dict):
+            if 'languages' in daconfig['voicerss']:
+                daconfig['voicerss']['dialects'] = daconfig['voicerss']['languages']
+                del daconfig['voicerss']['languages']
+        else:
+            config_error('voicerss must be a dict')
+            del daconfig['voicerss']
     if 'cross site domain' in daconfig and 'cross site domains' not in daconfig:
         daconfig['cross site domains'] = [daconfig['cross site domain'].strip()]
         del daconfig['cross site domain']
@@ -140,16 +160,16 @@ def load(**kwargs):
         if isinstance(daconfig['cross site domains'], list):
             for item in daconfig['cross site domains']:
                 if not isinstance(item, string_types):
-                    sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list of strings.\n")
+                    config_error("The configuration directive cross site domains must be a list of strings.")
                     del daconfig['cross site domains']
                     break
             if len(daconfig['cross site domains']) == 1 and daconfig['cross site domains'] == '*':
                 daconfig['cross site domains'] = '*'
         else:
-            sys.stderr.write("ERROR!  The configuration directive cross site domains must be a list.\n")
+            config_error("The configuration directive cross site domains must be a list.")
             del daconfig['cross site domains']
     if 'vim' in daconfig:
-        sys.stderr.write("WARNING!  The configuration directive vim is deprecated.  Please use keymap instead.\n")
+        config_error("The configuration directive vim is deprecated.  Please use keymap instead.")
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
     # for key in [['S3BUCKET', 'bucket'], ['S3SECRETACCESSKEY', 'secret access key'], ['S3ACCESSKEY', 'access key id'], ['S3ENABLE', 'enable']]:
@@ -178,8 +198,10 @@ def load(**kwargs):
     #         if key[1] not in daconfig['azure'] or daconfig['azure'][key[1]] != val:
     #             daconfig['azure'][key[1]] = val
     #             changed = True
+    if 'azure' in daconfig and not isinstance(daconfig['azure'], dict):
+        config_error('azure must be a dict')
     azure_config = daconfig.get('azure', None)
-    if type(azure_config) is not dict or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
+    if not isinstance(azure_config, dict) or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
         AZURE_ENABLED = False
     else:
         AZURE_ENABLED = True
@@ -194,7 +216,7 @@ def load(**kwargs):
         if resp['status'] and int(resp['status']) == 200:
             hostname = content.decode()
         else:
-            sys.stderr.write("Could not get hostname from ec2\n")
+            config_error("Could not get hostname from ec2")
             sys.exit(1)
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
@@ -252,47 +274,75 @@ def load(**kwargs):
             daconfig['db']['port'] = '3306'
         elif daconfig['db']['prefix'].startswith('oracle'):
             daconfig['db']['port'] = '1521'
-    if 'ocr languages' not in daconfig or type(daconfig['ocr languages']) is not dict:
+    if 'ocr languages' not in daconfig:
+        daconfig['ocr languages'] = dict()
+    if not isinstance(daconfig['ocr languages'], dict):
+        config_error('ocr languages must be a dict')
         daconfig['ocr languages'] = dict()
     if 'zh' not in daconfig['ocr languages']:
         daconfig['ocr languages']['zh'] = 'chi-tra'
-    if 'attempt limit' not in daconfig or type(daconfig['attempt limit']) not in [int, float] or daconfig['attempt limit'] < 2:
+    if 'attempt limit' not in daconfig:
         daconfig['attempt limit'] = 10
-    if 'ban period' not in daconfig or type(daconfig['ban period']) not in [int, float] or daconfig['ban period'] < 2:
+    if not isinstance(daconfig['attempt limit'], (int, float)):
+        config_error('attempt limit must be a number')
+        daconfig['attempt limit'] = 10
+    if daconfig['attempt limit'] < 2:
+        config_error('attempt limit cannot be less than 2')
+        daconfig['attempt limit'] = 10
+    if 'ban period' not in daconfig:
         daconfig['ban period'] = 86400
-    if 'verification code digits' not in daconfig or type(daconfig['verification code digits']) not in [int, float] or daconfig['verification code digits'] < 1 or daconfig['verification code digits'] > 32:
+    if not isinstance(daconfig['ban period'], (int, float)):
+        config_error('ban period must be a number')
+        daconfig['ban period'] = 86400
+    if daconfig['ban period'] < 2:
+        config_error('ban period cannot be less than 2')
+        daconfig['ban period'] = 86400
+    if 'verification code digits' not in daconfig:
         daconfig['verification code digits'] = 6
-    if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
+    if not isinstance(daconfig['verification code digits'], (int, float)):
+        config_error('verification code digits must be a number')
+        daconfig['verification code digits'] = 6
+    if daconfig['verification code digits'] < 1 or daconfig['verification code digits'] > 32:
+        config_error('verification code digits must be between 1 and 32')
+        daconfig['verification code digits'] = 6
+    if 'verification code timeout' not in daconfig:
+        daconfig['verification code timeout'] = 180
+    if not isinstance(daconfig['verification code timeout'], (int, float)):
+        config_error('verification code timeout must be a number')
+        daconfig['verification code timeout'] = 180
+    if daconfig['verification code timeout'] < 1:
+        config_error('verification code timeout must be one or greater')
         daconfig['verification code timeout'] = 180
     if 'api privileges' in daconfig:
-        if type(daconfig['api privileges']) is not list:
-            sys.stderr.write("api privileges must be in the form of a list\n")
+        if not isinstance(daconfig['api privileges'], list):
+            config_error("api privileges must be in the form of a list")
             daconfig['api privileges'] = ['admin', 'developer']
     else:
         daconfig['api privileges'] = ['admin', 'developer']
     if 'two factor authentication' in daconfig:
-        if type(daconfig['two factor authentication']) is bool:
+        if isinstance(daconfig['two factor authentication'], bool):
             daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
-        if type(daconfig['two factor authentication']) is not dict:
+        if not isinstance(daconfig['two factor authentication'], dict):
+            config_error('two factor authentication must be boolean or a dict')
             daconfig['two factor authentication'] = dict()
     else:
         daconfig['two factor authentication'] = dict(enable=False)
     if 'allowed for' in daconfig['two factor authentication']:
-        if type(daconfig['two factor authentication']['allowed for']) is not list:
-            sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+        if not isinstance(daconfig['two factor authentication']['allowed for'], list):
+            config_error("two factor authentication allowed for must be in the form of a list")
             daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     else:
         if 'two factor authentication privileges' in daconfig:
-            if type(daconfig['two factor authentication privileges']) is list:
+            if isinstance(daconfig['two factor authentication privileges'], list):
                 daconfig['two factor authentication']['allowed for'] = daconfig['two factor authentication privileges']
             else:
-                sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+                config_error("two factor authentication privileges must be in the form of a list")
                 daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
         else:
             daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     if 'email confirmation privileges' in daconfig:
-        if type(daconfig['email confirmation privileges']) is not list:
-            sys.stderr.write("email confirmation privileges must be in the form of a list\n")
+        if not isinstance(daconfig['email confirmation privileges'], list):
+            config_error("email confirmation privileges must be in the form of a list")
             daconfig['email confirmation privileges'] = []
     else:
         daconfig['email confirmation privileges'] = []
@@ -301,23 +351,23 @@ def load(**kwargs):
         if key in daconfig:
             if daconfig[key] is None:
                 del daconfig[key]
-            elif type(daconfig[key]) is not list:
+            elif not isinstance(daconfig[key], list):
                 daconfig[key] = [daconfig[key]]
     if 'password complexity' in daconfig:
-        if type(daconfig['password complexity']) is dict:
+        if isinstance(daconfig['password complexity'], dict):
             for key in ('length', 'lowercase', 'uppercase', 'digits', 'punctuation'):
-                if key in daconfig['password complexity'] and type(daconfig['password complexity'][key]) is not int:
-                    sys.stderr.write("password complexity key " + key + " must be an integer.\n")
+                if key in daconfig['password complexity'] and not isinstance(daconfig['password complexity'][key], int):
+                    config_error("password complexity key " + key + " must be an integer.")
                     del daconfig['password complexity'][key]
         else:
-            sys.stderr.write("password complexity must be in the form of a dict.\n")
+            config_error("password complexity must be in the form of a dict.")
             del daconfig['password complexity']
     if 'checkin interval' in daconfig:
-        if type(daconfig['checkin interval']) is not int:
-            sys.stderr.write("checkin interval must be an integer.\n")
+        if not isinstance(daconfig['checkin interval'], int):
+            config_error("checkin interval must be an integer.")
             del daconfig['checkin interval']
         elif daconfig['checkin interval'] > 0 and daconfig['checkin interval'] < 1000:
-            sys.stderr.write("checkin interval must be at least 1000, if not 0.\n")
+            config_error("checkin interval must be at least 1000, if not 0.")
             del daconfig['checkin interval']
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
@@ -325,13 +375,19 @@ def load(**kwargs):
         try:
             daconfig['websockets port'] = int(daconfig['websockets port'])
         except:
-            sys.stderr.write("websockets port must be an integer\n")
+            config_error("websockets port must be an integer")
             del daconfig['websockets port']
     if 'mail' not in daconfig:
         daconfig['mail'] = dict()
-    if 'dispatch' not in daconfig or type(daconfig['dispatch']) is not dict:
+    if 'dispatch' not in daconfig:
         daconfig['dispatch'] = dict()
-    if 'ldap login' not in daconfig or type(daconfig['ldap login']) is not dict:
+    if not isinstance(daconfig['dispatch'], dict):
+        config_error("dispatch must be structured as a dictionary")
+        daconfig['dispatch'] = dict()
+    if 'ldap login' not in daconfig:
+        daconfig['ldap login'] = dict()
+    if not isinstance(daconfig['ldap login'], dict):
+        config_error("ldap login must be structured as a dictionary")
         daconfig['ldap login'] = dict()
     if daconfig.get('auto resume interview', None) is not None:
         daconfig['show interviews link'] = False
