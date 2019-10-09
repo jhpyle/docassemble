@@ -232,8 +232,12 @@ dispatch:
   madlibs: docassemble.base:data/questions/examples/madlibs.yml
 {% endhighlight %}
 
-In this example, the URL shortcuts `/start/legal` and `/start/madlibs`
-are enabled.
+A `dispatch` directive is a lookup table; it must be structured as a
+[YAML] dictionary where the keys are shortcut names and the values are
+interview names.
+
+In the above example, the URL shortcuts `/start/legal` and
+`/start/madlibs` are enabled.
 
 In addition, when you define the [`dispatch`] directive, your users
 can see a list of available interviews by going to the URL `/list` on
