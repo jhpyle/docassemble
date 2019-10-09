@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.25] - 2019-10-09
+### Changed
+- Configuration page now shows a listing of errors in the
+  Configuration, if there are any.
+### Fixed
+- Error with URLs to cloud-hosted files.
+
 ## [0.5.24] - 2019-10-08
 ### Fixed
 - Error with Run button in Playground.
