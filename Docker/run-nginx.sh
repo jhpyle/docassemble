@@ -42,7 +42,15 @@ else
     DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
 fi
 
+if [ "${POSTURLROOT}" == "/" ]; then
+    DALOCATIONREWRITE=" "
+else
+    DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
+fi
+
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DALOCATIONREWRITE}}@'"${DALOCATIONREWRITE}"'@' \
+-e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
 -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
 -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
@@ -53,6 +61,8 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+-e 's@{{DALOCATIONREWRITE}}@'"${DALOCATIONREWRITE}"'@' \
+-e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
 -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
 -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \

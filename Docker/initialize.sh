@@ -408,6 +408,7 @@ echo "16.5" >&2
 
 if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
     sed -e 's@{{DA_PYTHON}}@'"${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}"'@' \
+        -e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
         -e 's@{{DA_ROOT}}@'"${DA_ROOT}"'@' \
         "${DA_ROOT}/config/docassemble.ini.dist" > "${DA_ROOT}/config/docassemble.ini"
     sed -e 's@{{DA_PYTHON}}@'"${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}"'@' \
@@ -552,12 +553,20 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         rm -f /etc/nginx/sites-enabled/docassembleredirect
     fi
 
+    if [ "${POSTURLROOT}" == "/" ]; then
+	DALOCATIONREWRITE=" "
+    else
+	DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
+    fi
+
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
         rm -f /etc/nginx/sites-available/default
         rm -f /etc/nginx/sites-enabled/default
         if [ "${DAHOSTNAME:-none}" != "none" ]; then
             if [ ! -f /etc/nginx/sites-available/docassemblessl ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DALOCATIONREWRITE}}@'"${DALOCATIONREWRITE}"'@' \
+                    -e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
                     -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
@@ -570,6 +579,8 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             fi
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DALOCATIONREWRITE}}@'"${DALOCATIONREWRITE}"'@' \
+                    -e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
                     -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
@@ -594,6 +605,8 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         else
             if [ ! -f /etc/nginx/sites-available/docassemblehttp ]; then
                 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+                    -e 's@{{DALOCATIONREWRITE}}@'"${DALOCATIONREWRITE}"'@' \
+                    -e 's@{{DAWSGIROOT}}@'"${WSGIROOT}"'@' \
                     -e 's@{{DAPOSTURLROOT}}@'"${POSTURLROOT}"'@' \
                     -e 's@{{DAREALIP}}@'"${DAREALIP}"'@' \
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
@@ -933,8 +946,9 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             supervisorctl --serverurl http://localhost:9001 start nginx
         fi
     fi
-
 fi
+
+echo "42.9" >&2
 
 if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 
@@ -1092,7 +1106,6 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
         supervisorctl --serverurl http://localhost:9001 start apache2
     fi
-
 fi
 
 echo "47" >&2

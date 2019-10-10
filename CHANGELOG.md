@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.28] - 2019-10-10
+### Fixed
+- Issue with NGINX and `POSTURLROOT`.
+
 ## [0.5.27] - 2019-10-10
 ### Fixed
 - Issue with session deletion.
