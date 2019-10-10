@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.26](https://github.com/jhpyle/docassemble/releases/tag/v0.5.26) - 2019-10-09
+
+### Changed
+- Limited data retrieved by Google address autocomplete feature.
+
+### Fixed
+- NGINX configuration omitted `POSTURLROOT`.
+
 ## [0.5.25](https://github.com/jhpyle/docassemble/releases/tag/v0.5.25) - 2019-10-09
 
 ### Changed
