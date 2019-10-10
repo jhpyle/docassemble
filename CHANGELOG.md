@@ -1,6 +1,8 @@
 # Change Log
 
 ## [0.5.26] - 2019-10-09
+### Changed
+- Limited data retrieved by Google address autocomplete feature.
 ### Fixed
 - NGINX configuration omitted `POSTURLROOT`.
 

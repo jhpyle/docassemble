@@ -8043,7 +8043,8 @@ function daInitAutocomplete(id) {
     setTimeout(function(){
 	daAutocomplete = new google.maps.places.Autocomplete(
 	    (document.getElementById(daBaseId)),
-	    {types: ['geocode']});
+	    {types: ['address']});
+	daAutocomplete.setFields(['address_components']);
 	daAutocomplete.addListener('place_changed', daFillInAddress);
     }, timePeriod);
 }
