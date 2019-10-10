@@ -3504,7 +3504,7 @@ session associated with the current user:
 {% highlight yaml %}
 question: Sessions
 subquestion: |
-  % for info in interview_list()
+  % for info in interview_list():
   * ${ info['title'] }
   % endfor
 {% endhighlight %}
@@ -3515,7 +3515,7 @@ can provide the optional keyword argument `filename`:
 {% highlight yaml %}
 question: Session start times
 subquestion: |
-  % for info in interview_list(filename='docassemble.demo:data/questions/questions.yml')
+  % for info in interview_list(filename='docassemble.demo:data/questions/questions.yml'):
   * ${ info['starttime'] }
   % endfor
 {% endhighlight %}
@@ -3527,7 +3527,7 @@ belonging to another user:
 {% highlight yaml %}
 question: Sessions John has started
 subquestion: |
-  % for info in interview_list(user_id=22)
+  % for info in interview_list(user_id=22):
   * ${ info['title'] }
   % endfor
 {% endhighlight %}
