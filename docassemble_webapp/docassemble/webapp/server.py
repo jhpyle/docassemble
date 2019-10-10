@@ -1641,7 +1641,7 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict
 
-def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None):
+def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None, delete_session=False):
     if manual_filename is not None:
         yaml_filename = manual_filename
     else:
@@ -1665,8 +1665,9 @@ def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None):
             the_user_id = current_user.id
     else:
         the_user_id = user_id
-    if not (not current_user.is_anonymous and user_id != current_user.id):
-        clear_specific_session(yaml_filename, session_id)
+    if delete_session:
+        if not (not current_user.is_anonymous and user_id != current_user.id):
+            clear_specific_session(yaml_filename, session_id)
     endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
     pipe = r.pipeline()
     pipe.expire('da:session' + endpart, 12)
@@ -6532,7 +6533,7 @@ def index(action_argument=None):
         reset_user_dict(user_code, yaml_filename)
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
-            update_session(yaml_filename, key_logged=True)
+            update_session(yaml_filename, uid=user_code, key_logged=True)
         steps = 1
         changed = False
         interview.assemble(user_dict, interview_status)
@@ -18620,7 +18621,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         logmessage("Deleting " + str(len(sessions_to_delete)) + " interviews")
         if len(sessions_to_delete):
             for session_id, yaml_filename, the_user_id in sessions_to_delete:
-                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id)
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id, delete_session=True)
                 #obtain_lock(session_id, yaml_filename)
                 if the_user_id is None or delete_shared:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id, force=True)
@@ -18631,7 +18632,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     if action == 'delete':
         if filename is None or session is None:
             raise Exception("user_interviews: filename and session must be provided in order to delete interview")
-        manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id)
+        manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id, delete_session=True)
         #obtain_lock(session, filename)
         reset_user_dict(session, filename, user_id=user_id, force=delete_shared)
         #release_lock(session, filename)
