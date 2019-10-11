@@ -97,8 +97,11 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
-    if 'update on start' in daconfig and daconfig['update on start'] is False:
-        print('export DAUPDATEONSTART=false')
+    if 'update on start' in daconfig:
+        if daconfig['update on start'] is False:
+            print('export DAUPDATEONSTART=false')
+        elif daconfig['update on start'] == 'initial':
+            print('export DAUPDATEONSTART=initial')
     if 'expose websockets' in daconfig and daconfig['expose websockets']:
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
