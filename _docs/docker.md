@@ -819,7 +819,9 @@ effect.
   whatever reason.  See the [`xsendfile`] configuration directive.
 * <a name="DAUPDATEONSTART"></a>`DAUPDATEONSTART`: Set this to `false`
   if you do not want the container to update its software using `pip`
-  when it starts up.
+  when it starts up.  Set `DAUPDATEONSTART` to `initial` if you want
+  the container to update its software during the first `docker run`,
+  but not on every `docker start`.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
