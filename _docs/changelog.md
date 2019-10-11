@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.28](https://github.com/jhpyle/docassemble/releases/tag/v0.5.28) - 2019-10-10
+
+### Fixed
+- Issue with NGINX and `POSTURLROOT`.
+
 ## [0.5.27](https://github.com/jhpyle/docassemble/releases/tag/v0.5.27) - 2019-10-10
 
 ### Fixed
