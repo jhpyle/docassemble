@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.30](https://github.com/jhpyle/docassemble/releases/tag/v0.5.30) - 2019-10-11
+
+### Fixed
+- Free disk space indicator not compatible with Python 2.7.
+
 ## [0.5.29](https://github.com/jhpyle/docassemble/releases/tag/v0.5.29) - 2019-10-11
 
 ### Added
