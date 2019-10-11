@@ -743,6 +743,7 @@ import dateutil
 import dateutil.parser
 import time
 import humanize
+import psutil
 #import pip.utils.logging
 #import pip
 import shutil
@@ -14729,7 +14730,10 @@ def config_page():
             content = fp.read()
     if content is None:
         abort(404)
-    (disk_total, disk_used, disk_free) = shutil.disk_usage(daconfig['config file'])
+    if PY2:
+        disk_free = psutil.disk_usage('/').free
+    else:
+        (disk_total, disk_used, disk_free) = shutil.disk_usage(daconfig['config file'])
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
         kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
