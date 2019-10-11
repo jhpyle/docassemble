@@ -2,7 +2,7 @@
 
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
-          <p>{{ version }}</p>
+          <p>{{ version }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ free_disk_space + ' ' + word('remaining on disk') }}</p>
           {%- if config_errors %}
           <h3>{{ word("Errors") }}</h3>
           <p>{{ word("The following errors were detected in your Configuration.") }}</p>

@@ -1,12 +1,19 @@
 # Change Log
 
+## [0.5.29] - 2019-10-11
+### Added
+- Ability to download all log files as a ZIP file.
+- Free disk space indicator on Configuration page.
+### Fixed
+- Problem with Google Drive Sync and zero-byte files.
+
 ## [0.5.28] - 2019-10-10
 ### Fixed
-- Issue with NGINX and `POSTURLROOT`.
+- Problem with NGINX and `POSTURLROOT`.
 
 ## [0.5.27] - 2019-10-10
 ### Fixed
-- Issue with session deletion.
+- Problem with session deletion.
 
 ## [0.5.26] - 2019-10-09
 ### Changed

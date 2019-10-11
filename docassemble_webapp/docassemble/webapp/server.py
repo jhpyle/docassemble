@@ -742,6 +742,7 @@ from dateutil import tz
 import dateutil
 import dateutil.parser
 import time
+import humanize
 #import pip.utils.logging
 #import pip
 import shutil
@@ -14386,7 +14387,7 @@ def checkin_sync_with_google_drive():
                 logmessage("checkin_sync_with_google_drive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
             elif hasattr(the_result, 'error'):
-                logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result.error))
+                logmessage("checkin_sync_with_google_drive: failed return value is " + text_type(the_result.error))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error), restart=False)
             elif hasattr(the_result, 'summary'):
                 return jsonify(success=True, status='failed', summary=add_br(the_result.summary), restart=False)
@@ -14395,7 +14396,7 @@ def checkin_sync_with_google_drive():
         else:
             logmessage("checkin_sync_with_google_drive: failed return value is a " + str(type(the_result)))
             logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result))
-            return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
+            return jsonify(success=True, status='failed', error_message=noquote(text_type(the_result)), restart=False)
     else:
         return jsonify(success=True, status='waiting', restart=False)
 
@@ -14728,6 +14729,7 @@ def config_page():
             content = fp.read()
     if content is None:
         abort(404)
+    (disk_total, disk_used, disk_free) = shutil.disk_usage(daconfig['config file'])
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
         kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
@@ -14740,7 +14742,7 @@ def config_page():
         version = word("Version ") + text_type(python_version)
     else:
         version = word("Version ") + text_type(python_version) + ' (Python); ' + text_type(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', config_errors=docassemble.base.config.errors, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200)
+    response = make_response(render_template('pages/config.html', free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -17759,15 +17761,44 @@ def logfile(filename):
 @roles_required(['admin', 'developer'])
 def logs():
     form = LogForm(request.form)
+    use_zip = request.args.get('zip', None)
+    if LOGSERVER is None and use_zip:
+        timezone = get_default_timezone()
+        zip_archive = tempfile.NamedTemporaryFile(mode="wb", prefix="datemp", suffix=".zip", delete=False)
+        zf = zipfile.ZipFile(zip_archive.name, mode='w')
+        for f in os.listdir(LOG_DIRECTORY):
+            zip_path = os.path.join(LOG_DIRECTORY, f)
+            if f.startswith('.') or not os.path.isfile(zip_path):
+                continue
+            info = zipfile.ZipInfo(f)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(zip_path)).replace(tzinfo=pytz.utc).astimezone(pytz.timezone(timezone)).timetuple()
+            with open(zip_path, 'rb') as fp:
+                zf.writestr(info, fp.read())
+        zf.close()
+        zip_file_name = re.sub(r'[^A-Za-z0-9_]+', '', app.config['APP_NAME']) + '_logs.zip'
+        response = send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return(response)
     the_file = request.args.get('file', None)
     default_filter_string = request.args.get('q', '')
     if request.method == 'POST' and form.file_name.data:
         the_file = form.file_name.data
     if the_file is not None and (the_file.startswith('.') or the_file.startswith('/') or the_file == ''):
         the_file = None
+    total_bytes = 0;
     if LOGSERVER is None:
         call_sync()
-        files = sorted([f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))])
+        files = list()
+        for f in os.listdir(LOG_DIRECTORY):
+            path = os.path.join(LOG_DIRECTORY, f)
+            if not os.path.isfile(path):
+                continue
+            files.append(f)
+            total_bytes += os.path.getsize(path)
+        files = sorted(files)
+        total_bytes = humanize.naturalsize(total_bytes)
         if the_file is None and len(files):
             if 'docassemble.log' in files:
                 the_file = 'docassemble.log'
@@ -17820,7 +17851,11 @@ def logs():
         content = "\n".join(map(lambda x: x, lines))
     else:
         content = "No log files available"
-    response = make_response(render_template('pages/logs.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200)
+    if LOGSERVER is None:
+        show_download_all = True
+    else:
+        show_download_all = False
+    response = make_response(render_template('pages/logs.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string, show_download_all=show_download_all, total_bytes=total_bytes), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 

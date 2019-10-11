@@ -17,8 +17,13 @@
     </div>
   </li>
   <li class="nav-item">
-    <a class="nav-link" title="{{ word('Download this log file') }}" href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
+    <a class="nav-link" title="{{ word('Download this log file') }}" href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download this file') }}</a>
   </li>
+  {%- if show_download_all %}
+  <li class="nav-item">
+    <a class="nav-link" title="{{ word('Download all files') + ' ' + word('(%s uncompressed)') % (total_bytes, ) }}" href="{{ url_for('logs', zip=1) }}"><span class="fas fa-file-archive" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download all files') }}</a>
+  </li>
+  {%- endif %}
 </ul>
 <form action="{{ url_for('logs') }}" method="POST" role="form" id="form">
   <div class="form-row">

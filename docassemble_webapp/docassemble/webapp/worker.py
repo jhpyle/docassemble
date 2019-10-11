@@ -59,7 +59,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification, noquote
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     docassemble.base.functions.server_context.context = 'celery'
@@ -90,6 +90,7 @@ def initialize_db():
     worker_controller.get_user_object = get_user_object
     worker_controller.login_user = login_user
     worker_controller.error_notification = error_notification
+    worker_controller.noquote = noquote
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -171,6 +172,7 @@ def sync_with_google_drive(user_id):
             gd_ids = dict()
             gd_modtimes = dict()
             gd_deleted = dict()
+            gd_zero = dict()
             sections_modified = set()
             commentary = ''
             for section in ['static', 'templates', 'questions', 'modules', 'sources']:
@@ -207,9 +209,10 @@ def sync_with_google_drive(user_id):
                 gd_ids[section] = dict()
                 gd_modtimes[section] = dict()
                 gd_deleted[section] = set()
+                gd_zero[section] = set()
                 page_token = None
                 while True:
-                    param = dict(spaces="drive", fields="nextPageToken, files(id, mimeType, name, modifiedTime, trashed)", q="'" + str(subdir) + "' in parents")
+                    param = dict(spaces="drive", fields="nextPageToken, files(id, mimeType, name, modifiedTime, trashed, size)", q="'" + str(subdir) + "' in parents")
                     if page_token is not None:
                         param['pageToken'] = page_token
                     response = service.files().list(**param).execute()
@@ -225,6 +228,8 @@ def sync_with_google_drive(user_id):
                             continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
+                        if int(the_file['size']) == 0:
+                            gd_zero[section].add(the_file['name'])
                         sys.stderr.write("Google says modtime on " + text_type(the_file['name']) + " is " + text_type(the_file['modifiedTime']) + ", which is " + text_type(gd_modtimes[section][the_file['name']]) + "\n")
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
@@ -236,7 +241,7 @@ def sync_with_google_drive(user_id):
                 for subdir_name, subdir_id in gd_dirlist[section].items():
                     page_token = None
                     while True:
-                        param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir_id) + "' in parents")
+                        param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed, size)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir_id) + "' in parents")
                         if page_token is not None:
                             param['pageToken'] = page_token
                         response = service.files().list(**param).execute()
@@ -249,6 +254,8 @@ def sync_with_google_drive(user_id):
                             path_name = os.path.join(subdir_name, the_file['name'])
                             gd_ids[section][path_name] = the_file['id']
                             gd_modtimes[section][path_name] = epoch_from_iso(the_file['modifiedTime'])
+                            if int(the_file['size']) == 0:
+                                gd_zero[section].add(path_name)
                             sys.stderr.write("Google says modtime on " + text_type(path_name) + " is " + text_type(the_file['modifiedTime']) + ", which is " + text_type(gd_modtimes[section][path_name]) + "\n")
                             if the_file['trashed']:
                                 gd_deleted[section].add(path_name)
@@ -268,15 +275,18 @@ def sync_with_google_drive(user_id):
                         commentary += "Copied " + text_type(f) + " from Google Drive.\n"
                         the_path = os.path.join(area.directory, f)
                         ensure_directories(the_path)
-                        sys.stderr.write("the_path is " + the_path)
-                        with open(the_path, 'wb') as fh:
-                            response = service.files().get_media(fileId=gd_ids[section][f])
-                            downloader = worker_controller.apiclient.http.MediaIoBaseDownload(fh, response)
-                            done = False
-                            while done is False:
-                                status, done = downloader.next_chunk()
-                                #sys.stderr.write("Download %d%%." % int(status.progress() * 100) + "\n")
-                        os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
+                        if f in gd_zero[section]:
+                            with open(the_path, 'a'):
+                                os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
+                        else:
+                            with open(the_path, 'wb') as fh:
+                                response = service.files().get_media(fileId=gd_ids[section][f])
+                                downloader = worker_controller.apiclient.http.MediaIoBaseDownload(fh, response)
+                                done = False
+                                while done is False:
+                                    status, done = downloader.next_chunk()
+                                    #sys.stderr.write("Download %d%%." % int(status.progress() * 100) + "\n")
+                            os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
                 for f in local_files[section]:
                     sys.stderr.write("Considering " + text_type(f) + ", which is a local file\n")
                     if f in gd_files[section]:
@@ -389,7 +399,7 @@ def sync_with_google_drive(user_id):
             do_restart = False
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except Exception as e:
-        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + str(e), restart=False)
+        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + worker_controller.noquote(text_type(e)), restart=False)
 
 def try_request(*pargs, **kwargs):
     start_time = time.time()
@@ -457,6 +467,7 @@ def sync_with_onedrive(user_id):
             od_modtimes = dict()
             od_createtimes = dict()
             od_deleted = dict()
+            od_zero = dict()
             sections_modified = set()
             commentary = ''
             subdirs = dict()
@@ -496,11 +507,12 @@ def sync_with_onedrive(user_id):
                 od_modtimes[section] = dict()
                 od_createtimes[section] = dict()
                 od_deleted[section] = set()
+                od_zero[section] = set()
                 od_dirlist[section] = dict()
                 if subdir_count[section] == 0:
                     sys.stderr.write("sync_with_onedrive: skipping " + section + " because empty on remote\n")
                 else:
-                    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo,folder", "GET")
+                    r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo,folder,size", "GET")
                     sys.stderr.write("sync_with_onedrive: processing " + section + ", which is " + text_type(subdirs[section]) + "\n")
                     while True:
                         if int(r['status']) != 200:
@@ -518,6 +530,8 @@ def sync_with_onedrive(user_id):
                             od_ids[section][the_file['name']] = the_file['id']
                             od_modtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['lastModifiedDateTime'])
                             od_createtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
+                            if the_file['size'] == 0:
+                                od_zero[section].add(the_file['name'])
                             sys.stderr.write("OneDrive says modtime on " + text_type(the_file['name']) + " in " + section + " is " + text_type(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + text_type(od_modtimes[section][the_file['name']]) + "\n")
                             if the_file.get('deleted', None):
                                 od_deleted[section].add(the_file['name'])
@@ -527,7 +541,7 @@ def sync_with_onedrive(user_id):
                             break
                         r, content = try_request(http, info["@odata.nextLink"], "GET")
                     for subdir_name, subdir_id in od_dirlist[section].items():
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdir_id) + "/children?$select=id,name,deleted,fileSystemInfo,folder", "GET")
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdir_id) + "/children?$select=id,name,deleted,fileSystemInfo,folder,size", "GET")
                         sys.stderr.write("sync_with_onedrive: processing " + section + " subdir " + subdir_name + ", which is " + text_type(subdir_id) + "\n")
                         while True:
                             if int(r['status']) != 200:
@@ -543,6 +557,8 @@ def sync_with_onedrive(user_id):
                                 od_ids[section][path_name] = the_file['id']
                                 od_modtimes[section][path_name] = epoch_from_iso(the_file['fileSystemInfo']['lastModifiedDateTime'])
                                 od_createtimes[section][path_name] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
+                                if the_file['size'] == 0:
+                                    od_zero[section].add(path_name)
                                 sys.stderr.write("OneDrive says modtime on " + text_type(path_name) + " in " + section + " is " + text_type(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + text_type(od_modtimes[section][path_name]) + "\n")
                                 if the_file.get('deleted', None):
                                     od_deleted[section].add(path_name)
@@ -562,10 +578,14 @@ def sync_with_onedrive(user_id):
                         commentary += "Copied " + text_type(f) + " from OneDrive.\n"
                         the_path = os.path.join(area.directory, f)
                         ensure_directories(the_path)
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]) + "/content", "GET")
-                        with open(the_path, 'wb') as fh:
-                            fh.write(content)
-                        os.utime(the_path, (od_modtimes[section][f], od_modtimes[section][f]))
+                        if f in od_zero[section]:
+                            with open(the_path, 'a'):
+                                os.utime(the_path, (od_modtimes[section][f], od_modtimes[section][f]))
+                        else:
+                            r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]) + "/content", "GET")
+                            with open(the_path, 'wb') as fh:
+                                fh.write(content)
+                            os.utime(the_path, (od_modtimes[section][f], od_modtimes[section][f]))
                 for f in local_files[section]:
                     sys.stderr.write("Considering " + text_type(f) + ", which is a local file\n")
                     if f in od_files[section]:
