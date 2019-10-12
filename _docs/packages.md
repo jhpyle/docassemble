@@ -309,6 +309,21 @@ such package actually exists.)
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
+If you want to install a *private* [Github] repository, you will need a Personal 
+Access Token to access it. If you do not have already have a token,
+you will have to generate a new one under the "Personal access tokens" tab under
+your "Developer settings". Your token must enable all of the 
+capabilities under "repo". You can do this by checking the "repo" checkbox when you
+generate your token.
+
+If your token is `personalaccesstoken`, your GitHub username is
+`johnsmith`, and your package is called `docassemble-missouri-familylaw`, the 
+"GitHub URL" you enter in step 3 is as follows:
+
+{% highlight text %}
+https://johnsmith:personalaccesstoken@github.com/johnsmith/docassemble-missouri-familylaw
+{% endhighlight %}
+
 ## <a name="zip_install"></a>Installing through a .zip file
 
 You can also install [Python] packages from ZIP files.  For example,
