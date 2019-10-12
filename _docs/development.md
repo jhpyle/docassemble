@@ -424,19 +424,19 @@ to whatever you like (e.g. "docassemble playground access").  Check
 the "repo" checkbox, so that all of the capabilities under "repo" are
 selected.  Then click "Generate token."  Copy the "personal access
 token" and keep it in a safe place.  If your token is
-`personalaccesstoken`, your GitHub username is
+`e8cc02bec7061de98ba4851263638d7483f63d41`, your GitHub username is
 `johnsmith`, and your package is called
 `docassemble-missouri-familylaw`, then you can access your private
 repository at this URL:
 
 {% highlight text %}
-https://johnsmith:personalaccesstoken@github.com/johnsmith/docassemble-missouri-familylaw
+https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
 {% endhighlight %}
 
 For example, you could do:
 
 {% highlight bash %}
-git clone https://johnsmith:personalaccesstoken@github.com/johnsmith/docassemble-missouri-familylaw
+git clone https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
 {% endhighlight %}
 
 Within docassemble, you can go to "Package Management" and enter this

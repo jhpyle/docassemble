@@ -309,20 +309,27 @@ such package actually exists.)
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
-If you want to install a *private* [Github] repository, you will need a Personal 
-Access Token to access it. If you do not have already have a token,
-you will have to generate a new one under the "Personal access tokens" tab under
-your "Developer settings". Your token must enable all of the 
-capabilities under "repo". You can do this by checking the "repo" checkbox when you
-generate your token.
+If you want to commit into a private [Github] repository, you will
+need a URL that points to your repository and that includes
+authentication information.  To make such a URL, you will need a
+"personal access token."  If you do not already have a personal access
+token, go to your "Developer settings" and go to the "Personal access
+tokens" tab.  Click "Generate new token."  You can set the "Token
+description" to whatever you like (e.g. "for installing on
+docassemble").  Check the "repo" checkbox, so that all of the
+capabilities under "repo" are selected.  Then click "Generate token."
+Copy the "personal access token" and keep it in a safe place.
 
-If your token is `personalaccesstoken`, your GitHub username is
-`johnsmith`, and your package is called `docassemble-missouri-familylaw`, the 
-"GitHub URL" you enter in step 3 is as follows:
+If your token is `e8cc02bec7061de98ba4851263638d7483f63d41`, your
+GitHub username is `johnsmith`, and your package is called
+`docassemble-missouri-familylaw`, then the GitHub URL for your private
+repository will be:
 
 {% highlight text %}
-https://johnsmith:personalaccesstoken@github.com/johnsmith/docassemble-missouri-familylaw
+https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
 {% endhighlight %}
+
+You can enter this into the "GitHub URL" field.
 
 ## <a name="zip_install"></a>Installing through a .zip file
 
