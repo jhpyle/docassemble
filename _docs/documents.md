@@ -216,6 +216,16 @@ content file:
 In this case, the content of multiple `content file` files will be
 concatenated.
 
+If `content file` refers to a dictionary in which the only key is
+`code`, the `code` will be evaluated as [Python] code, and the result
+will be used as the file.
+
+{% include side-by-side.html demo="document-file-code" %}
+
+In this example, the `code` evaluated to the name of a file in the
+templates folder.  The `code` may also evaluate to a URL, [`DAFile`],
+[`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`].
+
 ## <a name="markup"></a>Formatting documents with special markup tags
 
 In addition to using [Markdown] syntax, you can use

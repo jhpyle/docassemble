@@ -691,6 +691,16 @@ In the example above, the sample interview is in the file
 the [Markdown] file is located at
 [`docassemble.base:data/templates/disclaimer.md`].
 
+If the `content file` specifier refers to a dictionary in which the
+only key is `code`, the `code` will be evaluated as [Python] code, and
+the result will be used as the file.
+
+{% include side-by-side.html demo="template-file" %}
+
+In this example, the `code` evaluated to the name of a file in the
+templates folder.  The `code` may also evaluate to a URL, [`DAFile`],
+[`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`].
+
 A `template` can also be inserted into a [`docx template file`].  This
 can be useful when you want to insert multiple paragraphs of text into
 a DOCX file.  Ordinarily, when you insert text into a [`docx template
@@ -2028,6 +2038,9 @@ features:
 [`process_action`]: {{ site.baseurl}}/docs/functions.html#process_action
 [`template`]: #template
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
+[`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`Thing`]: {{ site.baseurl }}/docs/objects.html#Thing

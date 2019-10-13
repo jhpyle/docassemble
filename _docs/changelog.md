@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.31](https://github.com/jhpyle/docassemble/releases/tag/v0.5.31) - 2019-10-13
+
+### Added
+- Ability to use `code` in `content file` specifiers of `template`s
+  and `attachment`s.
+
+### Changed
+- When `labels above fields` is used, the input element will now be
+  wrapped in a `<div>` with CSS class `dafieldpart`.
+- Server-side validation errors are now scrolled to when the screen
+  loads.
+
+### Fixed
+- Broken link to variables and values on error page.
+
 ## [0.5.30](https://github.com/jhpyle/docassemble/releases/tag/v0.5.30) - 2019-10-11
 
 ### Fixed
