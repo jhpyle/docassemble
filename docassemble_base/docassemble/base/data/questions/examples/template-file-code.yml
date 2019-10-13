@@ -1,0 +1,31 @@
+metadata:
+  title: Template from file from code
+  short title: Template
+  documentation: "https://docassemble.org/docs/documents.html#content file"
+  example start: 1
+  example end: 3
+---
+code: |
+  template_file_to_use = 'disclaimer.md'
+---
+template: disclaimer
+content file:
+  code: template_file_to_use
+---
+field: intro_screen
+question: Welcome to the interview!
+subquestion: |
+  Greetings.  We hope you learn something
+  from this guided interview.
+
+  ${ disclaimer }
+
+  To get started, press **Continue**.
+---
+mandatory: true
+need: intro_screen
+question: |
+  This is the end of the interview.
+---
+code: |
+  company = "ABC Widgets, Incorporated"

@@ -2355,20 +2355,33 @@ class Question:
             self.subcontent = TextObject('')
             self.question_type = 'table'
         if 'template' in data and 'content file' in data:
-            if not isinstance(data['content file'], list):
-                data['content file'] = [data['content file']]
-            data['content'] = ''
-            for content_file in data['content file']:
-                if not isinstance(content_file, string_types):
-                    raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
-                file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
-                #if file_to_read is not None and get_mimetype(file_to_read) != 'text/markdown':
-                #    raise DAError('The content file ' + str(data['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
-                if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                    with open(file_to_read, 'rU', encoding='utf-8') as the_file:
-                        data['content'] += the_file.read()
+            if isinstance(data['content file'], dict):
+                if len(data['content file']) == 1 and 'code' in data['content file'] and isinstance(data['content file']['code'], string_types):
+                    if self.scan_for_variables:
+                        self.fields_used.add(data['template'])
+                    field_data = {'saveas': data['template']}
+                    self.fields.append(Field(field_data))
+                    self.compute = compile(data['content file']['code'], '<content file code>', 'eval')
+                    self.sourcecode = data['content file']['code']
+                    self.find_fields_in(data['content file']['code'])
+                    self.question_type = 'template_code'
                 else:
-                    raise DAError('Unable to read content file ' + str(data['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
+                    raise DAError('A content file must be specified as text, as a list of text filenames, or as a dictionary with code as the key' + self.idebug(data))
+            else:
+                if not isinstance(data['content file'], list):
+                    data['content file'] = [data['content file']]
+                data['content'] = ''
+                for content_file in data['content file']:
+                    if not isinstance(content_file, string_types):
+                        raise DAError('A content file must be specified as text, as a list of text filenames, or as a dictionary with code as the key' + self.idebug(data))
+                    file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
+                    #if file_to_read is not None and get_mimetype(file_to_read) != 'text/markdown':
+                    #    raise DAError('The content file ' + str(data['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
+                    if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                        with open(file_to_read, 'rU', encoding='utf-8') as the_file:
+                            data['content'] += the_file.read()
+                    else:
+                        raise DAError('Unable to read content file ' + str(data['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
         if 'template' in data and 'content' in data:
             if isinstance(data['template'], (list, dict)):
                 raise DAError("A template must designate a single variable expressed as text." + self.idebug(data))
@@ -3301,18 +3314,25 @@ class Question:
             else:
                 target['raw'] = False
             if 'content file' in target:
-                if not isinstance(target['content file'], list):
-                    target['content file'] = [target['content file']]
-                target['content'] = ''
-                for content_file in target['content file']:
-                    if not isinstance(content_file, string_types):
-                        raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(target))
-                    file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
-                    if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                        with open(file_to_read, 'rU', encoding='utf-8') as the_file:
-                            target['content'] += the_file.read()
+                if isinstance(target['content file'], dict):
+                    if len(target['content file']) == 1 and 'code' in target['content file'] and isinstance(target['content file']['code'], string_types):
+                        options['content file code'] = compile(target['content file']['code'], '<content file code>', 'eval')
+                        self.find_fields_in(target['content file']['code'])
                     else:
-                        raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
+                        raise DAError('A content file must be specified as text, a list of text filenames, or a dictionary where the one key is code' + self.idebug(target))
+                else:
+                    if not isinstance(target['content file'], list):
+                        target['content file'] = [target['content file']]
+                    target['content'] = ''
+                    for content_file in target['content file']:
+                        if not isinstance(content_file, string_types):
+                            raise DAError('A content file must be specified as text, a list of text filenames, or a dictionary where the one key is code' + self.idebug(target))
+                        file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
+                        if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                            with open(file_to_read, 'rU', encoding='utf-8') as the_file:
+                                target['content'] += the_file.read()
+                        else:
+                            raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
             if 'pdf template file' in target and ('code' in target or 'field variables' in target or 'field code' in target or 'raw field variables' in target) and 'fields' not in target:
                 target['fields'] = dict()
                 field_mode = 'manual'
@@ -3456,6 +3476,8 @@ class Question:
                 else:
                     raise DAError('Unknown data type in attachment tagged pdf.' + self.idebug(target))
             if 'content' not in target:
+                if 'content file code' in options:
+                    return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': target['raw']})
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': target['raw']})
@@ -4604,6 +4626,29 @@ class Question:
         if the_filename == '':
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
+        if attachment['content'] is None and 'content file code' in attachment['options']:
+            the_filename = eval(attachment['options']['content file code'], the_user_dict)
+            the_orig_filename = the_filename
+            if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                the_filename = the_filename.path()
+            elif isinstance(the_filename, string_types):
+                if re.search(r'^https?://', str(the_filename)):
+                    temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                    try:
+                        urlretrieve(str(the_filename), temp_template_file.name)
+                    except Exception as err:
+                        raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
+                    the_filename = temp_template_file.name
+                else:
+                    the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
+            else:
+                the_filename = None
+            if the_filename is None or not os.path.isfile(the_filename):
+                raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
+            with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                the_content = TextObject(the_file.read(), question=self)
+        else:
+            the_content = attachment['content']
         if 'redact' in attachment['options']:
             if isinstance(attachment['options']['redact'], CodeType):
                 result['redact'] = eval(attachment['options']['redact'], the_user_dict)
@@ -4841,7 +4886,7 @@ class Question:
                     docassemble.base.functions.reset_context()
                 elif doc_format == 'raw':
                     docassemble.base.functions.set_context('raw')
-                    the_markdown = attachment['content'].text(the_user_dict)
+                    the_markdown = the_content.text(the_user_dict)
                     result['markdown'][doc_format] = the_markdown
                     docassemble.base.functions.reset_context()                    
                 else:
@@ -4859,14 +4904,14 @@ class Question:
                         else:
                             the_markdown += u'---\n' + codecs.decode(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), 'utf-8') + u"...\n"
                     docassemble.base.functions.set_context('pandoc')
-                    the_markdown += attachment['content'].text(the_user_dict)
+                    the_markdown += the_content.text(the_user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                         the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                     result['markdown'][doc_format] = the_markdown
                     docassemble.base.functions.reset_context()
             elif doc_format in ['html']:
-                result['markdown'][doc_format] = attachment['content'].text(the_user_dict)
+                result['markdown'][doc_format] = the_content.text(the_user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                     result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
                 #logmessage("output was:\n" + repr(result['content'][doc_format]))
@@ -6018,8 +6063,6 @@ class Interview:
                                 temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         if question.target is not None:
                             return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
-                        string = "import docassemble.base.core"
-                        exec(string, user_dict)
                         if question.decorations is None:
                             decoration_list = []
                         else:
@@ -6034,12 +6077,69 @@ class Interview:
                         except:
                             pass
                         if not found_object:
+                            string = "import docassemble.base.core"
+                            exec(string, user_dict)
                             string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
                             exec(string, user_dict)
                             the_object = eval(actual_saveas, user_dict)
                             if the_object.__class__.__name__ != 'DALazyTemplate':
                                 raise DAError("askfor: failure to define template object")
                         the_object.source_content = question.content
+                        the_object.source_subject = question.subcontent
+                        the_object.source_decorations = [dec['image'] for dec in decoration_list]
+                        the_object.userdict = user_dict
+                        the_object.tempvars = temp_vars
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
+                    if question.question_type == "template_code":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        the_filename = eval(question.compute, user_dict)
+                        the_orig_filename = the_filename
+                        if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                            the_filename = the_filename.path()
+                        elif isinstance(the_filename, string_types):
+                            if re.search(r'^https?://', str(the_filename)):
+                                temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                                try:
+                                    urlretrieve(str(the_filename), temp_template_file.name)
+                                except Exception as err:
+                                    raise DAError("askfor: error downloading " + str(the_filename) + ": " + str(err))
+                                the_filename = temp_template_file.name
+                            else:
+                                the_filename = docassemble.base.functions.package_template_filename(the_filename, package=question.package)
+                        else:
+                            the_filename = None
+                        if the_filename is None or not os.path.isfile(the_filename):
+                            raise DAError("askfor: error obtaining template file from code: " + repr(the_orig_filename))
+                        temp_vars = dict()
+                        if is_generic:
+                            if the_x != 'None':
+                                temp_vars['x'] = user_dict['x']
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
+                        if question.decorations is None:
+                            decoration_list = []
+                        else:
+                            decoration_list = question.decorations
+                        actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
+                        found_object = False
+                        try:
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ == 'DALazyTemplate':
+                                found_object = True
+                        except:
+                            pass
+                        if not found_object:
+                            string = "import docassemble.base.core"
+                            exec(string, user_dict)
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DALazyTemplate(' + repr(actual_saveas) + ')'
+                            exec(string, user_dict)
+                            the_object = eval(actual_saveas, user_dict)
+                            if the_object.__class__.__name__ != 'DALazyTemplate':
+                                raise DAError("askfor: failure to define template object")
+                        with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                            the_object.source_content = TextObject(the_file.read(), question=question)
                         the_object.source_subject = question.subcontent
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
                         the_object.userdict = user_dict

@@ -604,6 +604,8 @@ decoration: picture
 fields:
   - A test file: x.picture
     datatype: camera
+    accept: |
+      "image/jpeg, image/png"
 comment: |
   You can accept file uploads from users by using the datatypes "file"
   (for a single file) or "files" (for one or more files).  The "camera"

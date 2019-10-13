@@ -7509,15 +7509,24 @@ def index(action_argument=None):
       }
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
+        var scrollTarget = null;
         if (errors) {
-          if ($(validator.errorList[0].element).is(":visible")){
-            $("html, body").animate({
-              scrollTop: $(validator.errorList[0].element).offset().top - 60
+          if (daJsEmbed){
+            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
+          }
+          else{
+            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().offset().top - 60;
+          }
+        }
+        if (scrollTarget != null){
+          if (daJsEmbed){
+            $(daTargetDiv).animate({
+              scrollTop: scrollTarget
             }, 1000);
           }
           else{
             $("html, body").animate({
-              scrollTop: $($(validator.errorList[0].element).parent()).offset().top - 60
+              scrollTop: scrollTarget
             }, 1000);
           }
         }
@@ -7993,6 +8002,23 @@ def index(action_argument=None):
               globalEval(scripts[i].innerHTML);
             }
           }
+          $(".da-group-has-error").each(function(){
+            if ($(this).is(":visible")){
+              if (daJsEmbed){
+                var scrollToTarget = $(this).position().top - 60;
+                setTimeout(function(){
+                  $(daTargetDiv).animate({scrollTop: scrollToTarget}, 1000);
+                }, 100);
+              }
+              else{
+                var scrollToTarget = $(this).offset().top - 60;
+                setTimeout(function(){
+                  $(daTargetDiv).parent().parent().animate({scrollTop: scrollToTarget}, 1000);
+                }, 100);
+              }
+              return false;
+            }
+          });
           for (var i = 0; i < data.extra_css.length; i++){
             $("head").append(data.extra_css[i]);
           }
@@ -8695,7 +8721,6 @@ def index(action_argument=None):
             $(this).addClass("dainvisible");
             rationalizeListCollect();
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
-            //$('div[data-collectnum="' + num + '"]')[0].scrollIntoView();
           }
           return false;
         });
@@ -10609,15 +10634,24 @@ def observer():
       }
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
+        var scrollTarget = null;
         if (errors) {
-          if ($(validator.errorList[0].element).is(":visible")){
-            $("html, body").animate({
-              scrollTop: $(validator.errorList[0].element).offset().top - 60
+          if (daJsEmbed){
+            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
+          }
+          else{
+            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().offset().top - 60;
+          }
+        }
+        if (scrollTarget != null){
+          if (daJsEmbed){
+            $(daTargetDiv).animate({
+              scrollTop: scrollTarget
             }, 1000);
           }
           else{
             $("html, body").animate({
-              scrollTop: $($(validator.errorList[0].element).parent()).offset().top - 60
+              scrollTop: scrollTarget
             }, 1000);
           }
         }
@@ -17654,7 +17688,11 @@ def server_error(the_error):
         the_template = 'pages/404.html'
     else:
         the_template = 'pages/501.html'
-    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug), error_code
+    try:
+        yaml_filename = docassemble.base.functions.interview_path()
+    except:
+        yaml_filename = None
+    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=text_type(the_history), logtext=text_type(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename), error_code
 
 @app.route('/bundle.css', methods=['GET'])
 def css_bundle():

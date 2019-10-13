@@ -17,7 +17,9 @@
 
 {{ historytext | safe }}
 
-<p><a target="_blank" href="{{ url_for('get_variables') }}">{{ word('Show variables and values') }}</a></p>
+  {%- if yaml_filename %}
+<p><a target="_blank" href="{{ url_for('get_variables', i=yaml_filename) }}">{{ word('Show variables and values') }}</a></p>
+  {%- endif %}
 {%- endif %}
 
 {%- if show_debug and logtext != 'None' %}

@@ -1818,7 +1818,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
         error_mess = dict()
         for key, val in field_error.items():
             error_mess[key] = val
-        error_show = "\n  daValidator.showErrors(" + json.dumps(error_mess) + ");"
+        error_show = "\n    daValidator.showErrors(" + json.dumps(error_mess) + ");"
     extra_scripts.append("""<script>
   var daValidationRules = """ + json.dumps(validation_rules) + """;
   daValidationRules.submitHandler = daValidationHandler;
