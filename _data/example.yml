@@ -2390,6 +2390,17 @@
       filename: Hello_World_Document
       content file: hello.md
   mandatory: True
+"document-file-code": |-
+  code: |
+    template_file_to_use = 'hello.md'
+  ---
+  question: Your document is ready.
+  attachment:
+    - name: A *hello world* document
+      filename: Hello_World_Document
+      content file:
+        code: template_file_to_use
+  mandatory: True
 "document-language": "initial: True\ncode: |\n  set_language('es')\n---\nmandatory:\
   \ True\nlanguage: es\nquestion: El documento est\xE1 listo.\nattachment:\n  - name:\
   \ Alimentos\n    language: en\n    filename: food_order\n    content: |\n      This\
@@ -10161,6 +10172,23 @@
 "template-file": |-
   template: disclaimer
   content file: disclaimer.md
+  ---
+  field: intro_screen
+  question: Welcome to the interview!
+  subquestion: |
+    Greetings.  We hope you learn something
+    from this guided interview.
+
+    ${ disclaimer }
+
+    To get started, press **Continue**.
+"template-file-code": |-
+  code: |
+    template_file_to_use = 'disclaimer.md'
+  ---
+  template: disclaimer
+  content file:
+    code: template_file_to_use
   ---
   field: intro_screen
   question: Welcome to the interview!
