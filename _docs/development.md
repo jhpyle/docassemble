@@ -416,47 +416,57 @@ special-purpose interview files.
 If you want to keep your docassemble extension package in a private
 GitHub repository, you can still use the [Playground].
 
-Create the repository on [GitHub], and mark it as private.
+Create the repository on [GitHub], give it a name that follows the
+standard naming convention (`docassemble-debtconsult`), and mark it as
+private.
 
-Then go to your "Developer settings" and go to the "Personal access tokens"
-tab.  Click "Generate new token."  You can set the "Token description"
-to whatever you like (e.g. "docassemble playground access").  Check
-the "repo" checkbox, so that all of the capabilities under "repo" are
-selected.  Then click "Generate token."  Copy the "personal access
-token" and keep it in a safe place.  If your token is
+Then, on your **docassemble** development server, [set up GitHub
+integration]({{ site.baseurl }}/docs/installation.html#github) so that
+your [Playground] can access the private repositories that your GitHub
+account can access.  Then, using the "Packages" folder, you can create
+a package called, e.g., `debtconsult`, and when you save it, you will
+see that the Playground recognizes that the package is already
+installed on GitHub.  When you use the Commit button, you will commit
+to the private repository.
+
+You can also "Pull" your private repository into your Playground.
+When you click "Pull," it asks for a GitHub URL.  For public
+repositories, this is usually something like
+`https://github.com/jsmith/docassemble-debtconsult`, for private
+repositories you can use the SSH form of the repository, which is
+`git@github.com:jsmith/docassemble-debtconsult.git`.
+
+When it comes time to install your private repository on a production
+server, you will not be able to use SSH authentication, so you will
+need a GitHub URL that embeds an "OAuth" code.  You can create these
+codes on the GitHub web site.  Within your "Settings," go to
+"Developer settings" and go to the "Personal access tokens" tab.
+Click "Generate new token."  You can set the "Token description" to
+whatever you like (e.g. "docassemble").  Check the "repo" checkbox, so
+that all of the capabilities under "repo" are selected.  Then click
+"Generate token."  Copy the "personal access token" and keep it in a
+safe place.  If your token is
 `e8cc02bec7061de98ba4851263638d7483f63d41`, your GitHub username is
-`johnsmith`, and your package is called
-`docassemble-missouri-familylaw`, then you can access your private
+`jsmith`, and your package is called
+`docassemble-debtconsult`, then you can access your private
 repository at this URL:
 
 {% highlight text %}
-https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
+https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/jsmith/docassemble-debtconsult
 {% endhighlight %}
 
-For example, you could do:
+This functions just like a URL to a public repository.  For example, you could do:
 
 {% highlight bash %}
-git clone https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/johnsmith/docassemble-missouri-familylaw
+git clone https://e8cc02bec7061de98ba4851263638d7483f63d41:x-oauth-basic@github.com/jsmith/docassemble-debtconsult
 {% endhighlight %}
 
-Within docassemble, you can go to "Package Management" and enter this
-URL into the "GitHub URL".  This will install the package on your
+Within **docassemble**, you can go to "Package Management" and enter
+this URL into the "GitHub URL".  This will install the package on your
 server.  Any time you wanted to update the package, you could visit
 the link
-`/updatepackage?action=update&package=docassemble.missouri-family-law`
-on your server.
-
-If you want to use that package within your Playground, you could go
-to "Playground," open the "Packages" folder, click the "Pull" button,
-put the URL into the "GitHub URL" field, and click the "Pull" button.
-If you want to do another "pull" from GitHub later, go to
-"Playground," open the "Packages" folder, select the package you want
-to update, and then click the "Pull" button.  It will default the
-"GitHub URL" to the URL of the package.
-
-If you are using the [GitHub integration] feature, you can then
-publish changes to the GitHub repository by clicking the "GitHub"
-button.
+`/updatepackage?action=update&package=docassemble.debtconsult` on your
+server.
 
 # <a name="localediting"></a>Editing Playground files in a text editor on a local machine
 

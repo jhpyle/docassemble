@@ -222,6 +222,14 @@ feature does, and has the same limitations.
 
 {% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
+To "Pull" a private GitHub repository, [set up GitHub integration]({{
+site.baseurl }}/docs/installation.html#github) and use the SSH name of
+the GitHub repository.  For example, if your private repository is
+called `docassemble-familylaw`, and your GitHub username is called
+`jsmith`, use `git@github.com:jsmith/docassemble-familylaw.git` as the
+GitHub URL.  Alternatively, you can use a GitHub URL that embeds an
+OAUTH code.
+
 Packages are defined with the following elements:
 
 * **Package Name**: By necessity, all **docassemble** packages are

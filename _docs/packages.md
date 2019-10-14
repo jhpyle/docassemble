@@ -309,16 +309,16 @@ such package actually exists.)
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
 
-If you want to commit into a private [Github] repository, you will
+If you want to install from a private [Github] repository, you will
 need a URL that points to your repository and that includes
 authentication information.  To make such a URL, you will need a
 "personal access token."  If you do not already have a personal access
-token, go to your "Developer settings" and go to the "Personal access
-tokens" tab.  Click "Generate new token."  You can set the "Token
-description" to whatever you like (e.g. "for installing on
-docassemble").  Check the "repo" checkbox, so that all of the
-capabilities under "repo" are selected.  Then click "Generate token."
-Copy the "personal access token" and keep it in a safe place.
+token, go to your "Settings," go to "Developer settings," and go to
+the "Personal access tokens" tab.  Click "Generate new token."  You
+can set the "Token description" to whatever you like (e.g. "for
+installing on docassemble").  Check the "repo" checkbox, so that all
+of the capabilities under "repo" are selected.  Then click "Generate
+token."  Copy the "personal access token" and keep it in a safe place.
 
 If your token is `e8cc02bec7061de98ba4851263638d7483f63d41`, your
 GitHub username is `johnsmith`, and your package is called
