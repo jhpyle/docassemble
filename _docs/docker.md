@@ -1168,6 +1168,141 @@ way, you could remove the virtual machine that runs the application,
 along with its primary drive, without affecting the drive with the
 **docassemble** data.
 
+## <a name="recovery"></a>Recovery from backup files
+
+When you are using [data storage], you can do `docker stop -t 600` on
+a container, followed by `docker rm`, and then re-run your original
+`docker run` command, and when the system starts again, it will be in
+the same place it was before, with the same uploaded files, the same
+SQL database.
+
+During `docker stop -t 600`, files are saved in the [data storage]
+area.  During `docker run` (and `docker start` as well), files are
+restored from the [data storage] area.
+
+However, if your server has an unsafe shutdown, the files in the [data
+storage] area might be corrupted.  They might also be missing or very
+old (perhaps dating from the last time there was a safe shutdown).
+If this happens, not all is lost, because you can restore from a backup.
+
+If you are using [S3](#persistent s3) or [Azure blob
+storage](#persistent azure), the files and directories that are saved
+during the shutdown process are:
+
+* `postgres` - a folder containing a "dump" of each database hosted by
+  the PostgreSQL server.  Usually the operative file is called
+  `docassemble`, for the database called `docassemble`.  If you point
+  your server to an external database using the [`db` section] of your
+  [Configuration], this is not applicable.  The backup file will
+  exist, but it will be an empty database.
+* `redis.rdb` - a file containing a backup of the [Redis] database.
+  If you point your server to an external [Redis] database using a
+  [`redis`] directive in your [Configuration], this is not
+  applicable.  The `redis.rdb` file will exist, but it will be an
+  empty database.
+* `log` - a folder containing **docassemble** log files.
+* `nginxlogs` - a folder containing the logs for [NGINX].  If you are
+  using Apache, the relevant folder is `apachelogs`.  This is not
+  applicable unless the `CONTAINERROLE` is `all`.
+
+The `files` folder, the `config.yml` file, and the
+`letsencrypt.tar.gz` (if Let's Encrypt is used) are important for
+restoring the system on startup, but they are always up-to-date; they
+are not copied from the server during the shutdown process.
+
+If you are using [persistent volumes], the files and directories that
+are saved during the shutdown process are:
+
+* `/usr/share/docassemble/backup/postgres` - a folder containing a
+  "dump" of each database hosted by the PostgreSQL server.  Usually
+  the operative file is called `docassemble`, for the database called
+  `docassemble`.  If you point your server to an external database
+  using the [`db` section] of your [Configuration], this is not
+  applicable.  The backup file will exist, but it will be an empty
+  database.
+* `/usr/share/docassemble/backup/redis.rdb` - a file containing a
+  backup of the [Redis] database.  If you point your server to an
+  external [Redis] database using a [`redis`] directive in your
+  [Configuration], this is not applicable.  The `redis.rdb` file will
+  exist, but it will be an empty database.
+* `/usr/share/docassemble/backup/files` - a directory containing all
+  of the stored files in your system (document uploads, assembled
+  documents, ZIP files for installed packages, etc.).
+* `/usr/share/docassemble/backup/log` - a folder containing
+  **docassemble** log files.
+* `/usr/share/docassemble/backup/nginxlogs` - a folder containing the
+  logs for [NGINX].  If you are using Apache, the relevant folder is
+  `/usr/share/docassemble/backup/apachelogs`.  This is not applicable
+  unless the `CONTAINERROLE` is `all`.
+* `/usr/share/docassemble/backup/config/config.yml` - a file
+  containing the Configuration of your system.
+
+The file `/usr/share/docassemble/backup/letsencrypt.tar` is important
+for restoring the system (if Let's Encrypt is used), but it is always
+up-to-date; it is not copied from the server during the shutdown
+process.
+
+Whenever a **docassemble** container starts up, the PostgreSQL
+database in `postgres/docassemble` is used to restore
+**docassemble**'s SQL database.  The `redis.rdb` file is used to
+restore the Redis database.  These files are created during the
+shutdown process.  It is important that the shutdown process happens
+gracefully, because otherwise these files will not be complete.
+
+As protection against the risk of an unsafe shutdown (as well as the
+risk of the accidental deletion of data), **docassemble** maintains a
+daily rotating backup.  The daily backup is created whenever the daily
+cron job runs (which is typically around 6:00 in the morning).
+
+If you are using [S3](#persistent s3) or [Azure blob
+storage](#persistent azure), these backups are in the `backup` folder
+in the cloud storage.  There is a subfolder in the `backup` folder for
+each container that has used the cloud storage area.  The subfolder
+names come from the internal hostnames of containers.  In a
+[multi-server arrangement], you will see several subfolders.  You may
+also see several subfolders if you have called `docker run` multiple
+times.  Within a subfolder for a container, there are subfolders for
+each day for which there is a backup.  The folders are in the format
+`MM-DD` where `MM` is the month and `DD` is the day of the month.  If
+you want to restore your system to a snapshot of where it was when a
+daily backup was made, you will need to shut down your server(s) with
+`docker stop -t 600` if it is still running.  Then you will need to
+copy files from the daily backup location to the places where they
+will be used when the system starts up again.  In particular, you will
+copy the following out of the daily backup folder:
+
+* `config/config.yml to `config.yml` in the root of the cloud storage.
+* `files` to `files` in the root of the cloud storage.
+* `postgres` to `postgres` in the root of the cloud storage.
+* `redis.rdb` to `redis.rdb` in the root of the cloud storage.
+* `log` to `log` in the root of the cloud storage.
+
+Copying `log` is optional.  The contents of log files are not critical
+to the functionality of the systems.
+
+If you are using persistent volumes, the disaster recovery backup
+files are in folders named `/usr/share/docassemble/backup/MM-DD` where
+`MM` is the month and `DD` is the day the backup was made.  If you
+want to restore your system to a snapshot of where it was when a daily
+backup was made, you will first need to shut down your server with
+`docker stop -t 600` if it is still running.  Then you will need to
+copy files from the daily backup location to the places where they
+will be used when the system starts up again.  In particular, you will
+copy the following out of the daily backup folder:
+
+* `config/config.yml` to `/usr/share/docassemble/backup/config.yml`
+* `files` to `/usr/share/docassemble/backup/files`
+* `postgres` `/usr/share/docassemble/backup/postgres`
+* `redis.rdb` to `/usr/share/docassemble/backup/redis.rdb`
+* `log` to `/usr/share/docassemble/backup/log`
+
+Copying `log` is optional.  The contents of log files are not critical
+to the functionality of the systems.
+
+After copying these files into place, you can start your server(s)
+with `docker run` (using the same parameters you originally used) or
+`docker start`.
+
 # <a name="multi server arrangement"></a>Multi-server arrangement
 
 ## Services on different machines
