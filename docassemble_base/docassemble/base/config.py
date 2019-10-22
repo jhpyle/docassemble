@@ -41,11 +41,11 @@ def env_exists(var):
 
 def env_translate(var):
     value = text_type(os.getenv(var)).strip()
-    if value == 'true':
+    if value in ('true', 'True'):
         return True
-    if value == 'false':
+    if value in ('false', 'False'):
         return False
-    if value == 'null':
+    if value in ('null', 'None'):
         return None
     if re.match(r'^\-?[0-9]+$', value):
         return int(value)
@@ -53,11 +53,8 @@ def env_translate(var):
 
 def override_config(the_config, messages, key, var, pre_key=None):
     value = env_translate(var)
-    if S3_ENABLED or AZURE_ENABLED:
-        if value is None and key in ('redis', 'rabbitmq', 'log server'):
-            return
-        if pre_key == 'db' and key == 'host':
-            return
+    if value is None and (key in ('redis', 'rabbitmq', 'log server') or (pre_key == 'db' and key == 'host')):
+        return
     if pre_key is None:
         if key in the_config and text_type(the_config[key]) != text_type(value):
             messages.append("The value of configuration key %s has been replaced with %s based on the value of environment variable %s" % (key, value, var))
