@@ -160,7 +160,7 @@ def check_for_updates(doing_startup=False):
             sys.stderr.write("check_for_updates: installing pdfminer\n")
             pdfminer = DummyPackage('pdfminer')
             pdfminer.type = 'git'
-            pdfminer.giturl = 'https://github.com/euske/pdfminer'
+            pdfminer.giturl = 'https://github.com/jhpyle/pdfminer'
             pdfminer.gitsubdir = None
             pdfminer.gitbranch = None
             install_package(pdfminer)

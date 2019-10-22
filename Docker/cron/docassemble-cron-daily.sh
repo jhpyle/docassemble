@@ -122,12 +122,31 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
         if [ -f /var/lib/redis/dump.rdb ]; then
 	    cp /var/lib/redis/dump.rdb "${BACKUPDIR}/redis.rdb"
         fi
+    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${REDIS:-redis://localhost}" != "redis://localhost" ]; then
+	REDISHOST="$(echo ${REDIS} | cut -c9-)"
+	redis-cli -h "${REDISHOST}" --rdb "${BACKUPDIR}/redis.rdb"
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
 	PGBACKUPDIR=`mktemp -d`
 	chown postgres.postgres "${PGBACKUPDIR}"
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
+	if [ "${S3ENABLE:-false}" == "true" ]; then
+	    s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
+	fi
+	if [ "${AZUREENABLE:-false}" == "true" ]; then
+	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
+		target_file=`basename ${the_file}`
+		blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+	    done
+	fi
+	rm -rf "${PGBACKUPDIR}"
+    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ]; then
+	PGBACKUPDIR=`mktemp -d`
+	export PGPASSWORD="${DBPASSWORD:-abc123}"
+	pg_dump -F c -f "${PGBACKUPDIR}/${DBNAME}" -h "${DBHOST}" -U "${DBUSER:-docassemble}" -w -p "${DBPORT:-5432}" "${DBNAME}"
+	unset PGPASSWORD
 	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
 	if [ "${S3ENABLE:-false}" == "true" ]; then
 	    s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"

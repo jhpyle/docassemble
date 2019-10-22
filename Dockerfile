@@ -75,7 +75,7 @@ bash -c \
    pycrypto \
    six \
 && pip install --upgrade \
-   'git+https://github.com/euske/pdfminer.git' \
+   'git+https://github.com/jhpyle/pdfminer.git' \
    simplekv==0.10.0 \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
