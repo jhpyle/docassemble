@@ -115,12 +115,14 @@ function stopfunc {
 	echo "uwsgi log stopped" >&2
 	exit 0
     fi
-    NGINX_PID=$(</var/run/nginx.pid)
-    echo "Sending stop command" >&2
-    kill -QUIT $NGINX_PID
-    echo "Waiting for nginx to stop" >&2
-    wait $NGINX_PID
-    echo "nginx stopped" >&2
+    if [ -f /var/run/nginx.pid ]; then
+	NGINX_PID=$(</var/run/nginx.pid)
+	echo "Sending stop command" >&2
+	kill -QUIT $NGINX_PID
+	echo "Waiting for nginx to stop" >&2
+	wait $NGINX_PID
+	echo "nginx stopped" >&2
+    fi
     exit 0
 }
 

@@ -53,6 +53,8 @@ def env_translate(var):
 
 def override_config(the_config, messages, key, var, pre_key=None):
     value = env_translate(var)
+    if value == '':
+        return
     if value is None and (key in ('redis', 'rabbitmq', 'log server') or (pre_key == 'db' and key == 'host')):
         return
     if pre_key is None:
