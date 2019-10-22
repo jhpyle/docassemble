@@ -12,6 +12,15 @@
               {%- endfor %}
           </ul>
           {%- endif %}
+          {%- if config_messages %}
+          <h3>{{ word("Overrides") }}</h3>
+          <p>{{ word("The following overrides were applied.") }}</p>
+          <ul>
+              {%- for config_message in config_messages %}
+              <li>{{ config_message }}</li>
+              {%- endfor %}
+          </ul>
+          {%- endif %}
           <form action="" method="POST" role="form" class="daconfigform">
             {{ form.hidden_tag() }}
             <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>

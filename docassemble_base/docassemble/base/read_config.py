@@ -165,6 +165,14 @@ if __name__ == "__main__":
         print('export USEHTTPS=true')
     else:
         print('export USEHTTPS=false')
+    if 'use cloud urls' in daconfig and daconfig['use cloud urls']:
+        print('export USECLOUDURLS=true')
+    else:
+        print('export USECLOUDURLS=false')
+    if 'use minio' in daconfig and daconfig['use minio']:
+        print('export USEMINIO=true')
+    else:
+        print('export USEMINIO=false')
     if 'use lets encrypt' in daconfig and daconfig['use lets encrypt']:
         print('export USELETSENCRYPT=true')
     else:

@@ -1386,6 +1386,8 @@ class Question:
         if 'mandatory' in data:
             if 'initial' in data:
                 raise DAError("You cannot use the mandatory modifier and the initial modifier at the same time." + self.idebug(data))
+            if 'id' not in data and self.interview.debug and self.interview.source.package.startswith('docassemble.playground'):
+                self.interview.mandatory_id_issue = True
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
             if data['mandatory'] is True:
@@ -5501,6 +5503,8 @@ class Interview:
                             #logmessage("Skipping " + question.name + " because answered")
                             continue
                         if question.question_type in ("objects_from_file", "objects_from_file_da"):
+                            if self.debug:
+                                interview_status.seeking.append({'question': question, 'reason': 'objects from file', 'time': time.time()})
                             if question.question_type == "objects_from_file_da":
                                 use_objects = True
                             else:
@@ -5514,24 +5518,34 @@ class Interview:
                             question.mark_as_answered(user_dict)
                         if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "data_da":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
                                 exec(import_core, user_dict)
                                 string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "data_from_code":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
                                 string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "data_from_code_da":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
                                 exec(import_core, user_dict)
                                 string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                                 exec(string, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'objects', 'time': time.time()})
                                 #logmessage("Going into objects")
                                 for keyvalue in question.objects:
                                     for variable in keyvalue:
@@ -5572,6 +5586,8 @@ class Interview:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory question', 'time': time.time()})
                                 if question.name and question.name in user_dict['_internal']['answers']:
                                     the_question = question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
+                                    if self.debug and the_question is not question:
+                                        interview_status.seeking.append({'question': the_question, 'reason': 'result of multiple choice', 'time': time.time()})
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
                                         exec_with_trap(the_question, user_dict)

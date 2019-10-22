@@ -124,6 +124,14 @@ if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
     export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
 fi
 
+if [ "${S3ENABLE:-null}" == "true" ]; then
+    if [ "${USEMINIO:-false}" == "true" ]; then
+	python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}"
+    else
+	s4cmd mb "s3://${S3BUCKET}" &> /dev/null
+    fi
+fi
+
 echo "9" >&2
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
@@ -378,6 +386,8 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
         -e 's/{{EC2}}/'"${EC2:-false}"'/' \
+        -e 's/{{USECLOUDURLS}}/'"${USECLOUDURLS:-false}"'/' \
+        -e 's/{{USEMINIO}}/'"${USEMINIO:-false}"'/' \
         -e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \
         -e 's/{{USELETSENCRYPT}}/'"${USELETSENCRYPT:-false}"'/' \
         -e 's/{{LETSENCRYPTEMAIL}}/'"${LETSENCRYPTEMAIL:-null}"'/' \

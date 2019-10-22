@@ -74,6 +74,8 @@ azure:
   container: {{AZURECONTAINER}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
+use cloud urls: {{USECLOUDURLS}}
+use minio: {{USEMINIO}}
 use https: {{USEHTTPS}}
 use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
