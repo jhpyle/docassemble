@@ -261,6 +261,8 @@ def load(**kwargs):
         else:
             config_error("Could not get hostname from ec2")
             sys.exit(1)
+    elif daconfig.get('kubernetes', False):
+        hostname = socket.gethostbyname(socket.gethostname())
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
@@ -481,7 +483,9 @@ def load(**kwargs):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='azure')
         if env_exists('EC2'):
-            override_config(daconfig, messages, 'ec2', 'ec2')
+            override_config(daconfig, messages, 'ec2', 'EC2')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, messages, 'kubernetes', 'KUBERNETES')
         if env_exists('LOGSERVER'):
             override_config(daconfig, messages, 'log server', 'LOGSERVER')
         if env_exists('USECLOUDURLS'):

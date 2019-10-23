@@ -386,6 +386,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
         -e 's/{{EC2}}/'"${EC2:-false}"'/' \
+        -e 's/{{KUBERNETES}}/'"${KUBERNETES:-false}"'/' \
         -e 's/{{USECLOUDURLS}}/'"${USECLOUDURLS:-false}"'/' \
         -e 's/{{USEMINIO}}/'"${USEMINIO:-false}"'/' \
         -e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \

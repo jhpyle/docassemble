@@ -17351,6 +17351,7 @@ function saveCallback(data){
   if (data.current_project != null){
     currentProject = data.current_project;
   }
+  history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);
     activateVariables();
@@ -17528,6 +17529,9 @@ $( document ).ready(function() {
   updateRunLink();
   origPosition = daCodeMirror.getCursor();
   daShowConsoleMessages();
+  if (currentFile != ''){
+    history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
+  }
 });
 """
     if len(files):
