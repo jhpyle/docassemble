@@ -253,7 +253,7 @@ def load(**kwargs):
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    if daconfig.get('ec2', False):
+    if daconfig.get('ec2', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('EC2')):
         h = httplib2.Http()
         resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
@@ -261,7 +261,7 @@ def load(**kwargs):
         else:
             config_error("Could not get hostname from ec2")
             sys.exit(1)
-    elif daconfig.get('kubernetes', False):
+    elif daconfig.get('kubernetes', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('KUBERNETES')):
         hostname = socket.gethostbyname(socket.gethostname())
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())

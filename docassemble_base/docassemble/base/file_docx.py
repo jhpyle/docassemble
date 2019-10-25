@@ -415,6 +415,9 @@ class SoupParser(object):
                     self.traverse(part)
                     self.underline = False
                     self.end_link()
+                elif part.name == 'br':
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                    self.still_new = False
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 

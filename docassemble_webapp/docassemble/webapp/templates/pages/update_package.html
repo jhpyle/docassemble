@@ -3,13 +3,15 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
+{%- if allowed_to_upgrade %}
 <h2>{{ word('Upgrade docassemble') }}</h2>
 
 <p class="h6">{{ version }}</p>
 
 <div>
-  <a class="btn btn-primary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
 </div>
+{%- endif %}
 
 <h2>{{ word('Install or update a package') }}</h2>
 

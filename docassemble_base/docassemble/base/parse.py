@@ -1387,7 +1387,7 @@ class Question:
             if 'initial' in data:
                 raise DAError("You cannot use the mandatory modifier and the initial modifier at the same time." + self.idebug(data))
             if 'id' not in data and self.interview.debug and self.interview.source.package.startswith('docassemble.playground'):
-                self.interview.mandatory_id_issue = True
+                self.interview.issue['mandatory_id'] = True
             if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
                 raise DAError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
             if data['mandatory'] is True:
@@ -1534,6 +1534,8 @@ class Question:
             # if text_type(data['id']) in self.interview.ids_in_use:
             #     raise DAError("The id " + text_type(data['id']) + " is already in use by another block.  Id names must be unique." + self.idebug(data))
             self.id = text_type(data['id']).strip()
+            if self.interview.debug and self.interview.source.package.startswith('docassemble.playground') and self.id in self.interview.ids_in_use:
+                self.interview.issue['id_collision'] = self.id
             self.interview.ids_in_use.add(self.id)
             self.interview.questions_by_id[self.id] = self
         if 'ga id' in data:
@@ -5092,6 +5094,7 @@ class Interview:
         self.translations = list()
         self.scan_for_emojis = False
         self.consolidated_metadata = dict()
+        self.issue = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def ordered(self, the_list):

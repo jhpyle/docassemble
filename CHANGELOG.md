@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.5.32] - 2019-10-25
+### Added
+- `ENVIRONMENT_TAKES_PRECEDENCE` Docker environment variable.
+- The `use minio` Configuration directive.
+- Added `account_type` as a response from `get_user_info().
+### Changed
+- Improved backup and logging in multi-server configuration.
+- Any `admin` can upgrade or downgrade packages.
+### Fixed
+- The `subtitle` did not work with `set_parts()`.
+- Certain PDF fields raised error.
+- Not all language functions were compatible with keyword parameters.
+- Manual newlines in Markdown not converted to line breaks.
+- Double quotes in HTML input element values not properly escaped.
+
 ## [0.5.31] - 2019-10-13
 ### Added
 - Ability to use `code` in `content file` specifiers of `template`s

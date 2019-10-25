@@ -860,7 +860,7 @@ def import_necessary():
             thefilename = os.path.join(root, the_file)
             with open(thefilename, 'r', encoding='utf-8') as fp:
                 for cnt, line in enumerate(fp):
-                    if line.startswith('class'):
+                    if line.startswith('class') or 'update_language_function' in line:
                         parts = thefilename.split(os.sep)[start_dir:]
                         parts[-1] = parts[-1][0:-3]
                         modules.append(('.'.join(parts)))
@@ -2539,6 +2539,8 @@ def _endpoint_url(endpoint):
     return url
 
 def user_can_edit_package(pkgname=None, giturl=None):
+    if current_user.has_role('admin'):
+        return True
     if not PACKAGE_PROTECTION:
         if pkgname in ('docassemble.base', 'docassemble.demo', 'docassemble.webapp'):
             return False
@@ -12800,11 +12802,12 @@ def update_package():
       });
     </script>"""
     python_version = daconfig.get('python version', word('Unknown'))
-    version = word("Current") + ': <span class="badge badge-secondary">' + text_type(python_version) + '</span>'
+    version = word("Current") + ': <span class="badge badge-primary">' + text_type(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
     if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != text_type(python_version):
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
-    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version)), 200)
+    allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
+    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -17227,8 +17230,10 @@ def playground_page():
             except DAError as foo:
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
-            if hasattr(interview, 'mandatory_id_issue') and interview.mandatory_id_issue:
+            if interview.issue.get('mandatory_id', False):
                 console_messages.append(word("Note: it is a best practice to tag every mandatory block with an id."))
+            if interview.issue.get('id_collision', False):
+                console_messages.append(word("Note: more than one block uses id") + " " + interview.issue['id_collision'])
             if is_ajax:
                 return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages)
         else:

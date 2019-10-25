@@ -1831,11 +1831,11 @@ def pickleable_objects(input_dict):
         output_dict[key] = input_dict[key]
     return(output_dict)
 
-def ordinal_number_default(i):
+def ordinal_number_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number.
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
-    num = text_type(i)
+    num = text_type(the_number)
     if this_thread.language in ordinal_numbers:
         language_to_use = this_thread.language
     elif '*' in ordinal_numbers:
@@ -1850,10 +1850,12 @@ def ordinal_number_default(i):
         language_to_use = '*'
     else:
         language_to_use = 'en'
-    return ordinal_functions[language_to_use](i)
+    return ordinal_functions[language_to_use](the_number)
 
-def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
+def salutation_default(indiv, **kwargs):
     """Returns Mr., Ms., etc. for an individual."""
+    with_name = kwargs.get('with_name', False)
+    with_name_and_punctuation = kwargs.get('with_name_and_punctuation', False)
     ensure_definition(indiv, with_name, with_name_and_punctuation)
     used_gender = False
     if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
@@ -1887,18 +1889,20 @@ def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
             return salut_and_name
     return salut
 
-def ordinal_default(j, **kwargs):
+def ordinal_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
     number function, see ordinal_number()."""
-    result = ordinal_number(int(float(j)) + 1)
+    result = ordinal_number(int(float(the_number)) + 1)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return capitalize(result)
     return result
 
-def nice_number_default(num, capitalize=False, language=None):
+def nice_number_default(the_number, **kwargs):
     """Returns the number as a word in the current language."""
-    ensure_definition(num, capitalize, language)
+    capitalize = kwargs.get('capitalize', False)
+    language = kwargs.get('language', None)
+    ensure_definition(the_number, capitalize, language)
     if language is None:
         language = this_thread.language
     if language in nice_numbers:
@@ -1907,24 +1911,27 @@ def nice_number_default(num, capitalize=False, language=None):
         language_to_use = '*'
     else:
         language_to_use = 'en'
-    if int(float(num)) == float(num):
-        num = int(float(num))
-    if text_type(num) in nice_numbers[language_to_use]:
-        the_word = nice_numbers[language_to_use][text_type(num)]
+    if int(float(the_number)) == float(the_number):
+        the_number = int(float(the_number))
+    if text_type(the_number) in nice_numbers[language_to_use]:
+        the_word = nice_numbers[language_to_use][text_type(the_number)]
         if capitalize:
             return capitalize_function(the_word)
         else:
             return the_word
-    elif type(num) is int:
-        return text_type(locale.format_string("%d", num, grouping=True))
+    elif type(the_number) is int:
+        return text_type(locale.format_string("%d", the_number, grouping=True))
     else:
-        return text_type(locale.format_string("%.2f", float(num), grouping=True)).rstrip('0')
+        return text_type(locale.format_string("%.2f", float(the_number), grouping=True)).rstrip('0')
 
-def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
-    ensure_definition(num, noun, as_integer, capitalize, language)
+def quantity_noun_default(the_number, noun, **kwargs):
+    as_integer = kwargs.get('as_integer', True)
+    capitalize = kwargs.get('capitalize', False)
+    language = kwargs.get('language', None)
+    ensure_definition(the_number, noun, as_integer, capitalize, language)
     if as_integer:
-        num = int(round(num))
-    result = nice_number(num, language=language) + " " + noun_plural(noun, num, language=language)
+        the_number = int(round(the_number))
+    result = nice_number(the_number, language=language) + " " + noun_plural(noun, the_number, language=language)
     if capitalize:
         return capitalize_function(result)
     else:
@@ -1943,7 +1950,7 @@ def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
     return text_type(locale.localeconv()['currency_symbol'])
 
-def currency_default(value, decimals=True, symbol=None):
+def currency_default(value, **kwargs):
     """Returns the value as a currency, according to the conventions of
     the current locale.  Use the optional keyword argument
     decimals=False if you do not want to see decimal places in the
@@ -1951,6 +1958,8 @@ def currency_default(value, decimals=True, symbol=None):
     than the default.
 
     """
+    decimals = kwargs.get('decimals', True)
+    symbol = kwargs.get('symbol', None)
     ensure_definition(value, decimals, symbol)
     obj_type = type(value).__name__
     if obj_type in ['FinancialList', 'PeriodicFinancialList']:
@@ -2523,8 +2532,6 @@ language_functions = {
 }
 
 def language_function_constructor(term):
-    if term not in language_functions:
-        raise SystemError("term " + text_type(term) + " not in language_functions")
     def func(*args, **kwargs):
         ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
