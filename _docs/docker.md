@@ -758,6 +758,10 @@ effect.
   [Docker] on [EC2].  This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
   which it is running.  See the [`ec2`] configuration directive.
+* <a name="KUBERNETES"></a>`KUBERNETES`: Set this to `true` if you are
+  running inside [Kubernetes].  This tells **docassemble** that it can
+  use the IP address of the Pod in place of the hostname.  See the
+  [`kubernetes`] configuration directive.
 * <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
   like **docassemble** to communicate with the browser using
   encryption.  Read the [HTTPS] section for more information.
@@ -780,9 +784,9 @@ effect.
   server to run [Syslog-ng].  See the [`log server`] configuration
   directive.
 * <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
-  [multi-server arrangement], set this to the host name at which the
-  [Redis] server can be accessed.  See the [`redis`] configuration
-  directive.
+  [multi-server arrangement], set this to `redis://thehostname` where
+  `thehostname` is the host name at which the [Redis] server can be
+  accessed.  See the [`redis`] configuration directive.
 * <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
   **docassemble** in a [multi-server arrangement], set this to the host
   name at which the [RabbitMQ] server can be accessed.  Note that
@@ -866,6 +870,14 @@ effect.
 * <a name="DAWEBSOCKETSPORT"></a>`DAWEBSOCKETSPORT`: You can set this
   if you need to manually specify the port on which the `websockets`
   service runs.  See the [`websockets port`] configuration directive.
+* <a name="USEMINIO"></a>`USEMINIO`: Set this to `true` if you are
+  setting `S3ENDPOINTURL` to point to [MinIO] and you would like the
+  bucket to be created when the container starts.  See the [`use
+  minio`] configuration directive.
+* <a name="USECLOUDURLS"></a>`USECLOUDURLS`: Set this to `false` if
+  you are using cloud storage but you do not want URLs for files to
+  point directly to the cloud storage provider.  See the [`use cloud
+  urls`] configuration directive.
 * <a name="DAPYTHONVERSION"></a>`DAPYTHONVERSION`: Set this to `3` in
   order to run **docassemble** using Python 3.6.  If `DAPYTHONVERSION`
   is not set, **docassemble** will be run using Python 2.7.  If you
@@ -2019,6 +2031,7 @@ line), as the containers depend on the images.
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
 [`use https`]: {{ site.baseurl }}/docs/config.html#use https
 [`ec2`]: {{ site.baseurl }}/docs/config.html#ec2
+[`kubernetes`]: {{ site.baseurl }}/docs/config.html#kubernetes
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [`root`]: {{ site.baseurl }}/docs/config.html#root
@@ -2112,3 +2125,6 @@ line), as the containers depend on the images.
 [Dockerfile]: https://docs.docker.com/engine/reference/builder/
 [`web server`]: {{ site.baseurl }}/docs/config.html#web server
 [`docker stop -t 600`]: https://docs.docker.com/engine/reference/commandline/stop/
+[MinIO]: https://min.io/
+[`use minio`]: {{ site.baseurl }}/docs/config.html#use minio
+[Kubernetes]: https://kubernetes.io/

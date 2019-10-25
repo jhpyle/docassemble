@@ -3003,7 +3003,7 @@ wanted to use for writing possessives.  You could include the
 following in a [Python module] that you include in your interview:
 
 {% highlight python %}
-import docassemble.base.util
+import docassemble.base.functions
 from special.spanish.package import spanish_possessify
 
 def possessify_es(a, b, **kwargs):
@@ -3021,12 +3021,51 @@ reference to your function.
 If you want to override the default function, use `'*'` as the
 language.  This will be used if no language-specific function exists.
 
-Updates to language functions are not [thread-safe]; they have a
-server-wide effect.  The best practice for calling
+If you want to create a new language function that does not already
+exist in **docassemble**, you can use the
+`language_function_constructor()` function from
+`docassemble.base.functions`.
+
+{% highlight python %}
+import docassemble.base.functions
+
+__all__ = ['closing']
+
+closing = docassemble.base.functions.language_function_constructor('closing')
+
+def closing_default(indiv, **kwargs):
+    return "Goodbye, " + indiv.name.first + "!"
+
+def closing_fr(indiv, **kwargs):
+    return "Au revoir, " + indiv.name.first + "."
+
+docassemble.base.functions.update_language_function('*', 'closing', closing_default)
+docassemble.base.functions.update_language_function('fr', 'closing', closing_fr)
+{% endhighlight %}
+
+When writing a language function, do not use named keyword parameters.
+Instead, using `**kwargs` so that the function accepts any combination
+of keyword parameters.  This is necessary because language functions
+can be called with an optional parameter `language`, which forces the
+use of a language other than the default language.  It is also helpful
+so that other developers can extend your language function.  For
+example, suppose someone wants to add a Japanese version of
+`closing()`, but in Japanese there are formal and informal ways of
+saying goodbye.  In interviews, the developer will want to write
+things like `closing(client, formal=False)` or `closing(judge,
+formal=True)` to use these different forms.  The developer would
+create a module that imports your module.  Then they would write a
+function called `closing_ja` and call
+`docassemble.base.functions.update_language_function('ja', 'closing',
+closing_ja)`.  Unless `**kwargs` is used, the keyword parameter
+`formal` would trigger an error when used outside of a Japanese context.
+
+Note that updates to language functions are not [thread-safe]; they
+have a server-wide effect.  The best practice for calling
 `update_language_function()` is to call it in main body of a module.
 The code will be run once, when the server starts.
 
-Listed below are some of the language functions that can be customized.
+Listed below are some of the existing language functions that can be customized.
 
 ## <a name="capitalize"></a>capitalize()
 
@@ -3761,6 +3800,9 @@ are optional:
    code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
  - `password`: user's password.
+ - `account_type`: the type of login the user used.  This is `local`
+   for the username/password system, `auth0` for Auth0, `google` for
+   Google, etc.
 
 The current user's profile will be updated with the values of the
 parameters.  Note that the `user_id` and `email` attributes cannot be

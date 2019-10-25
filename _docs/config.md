@@ -2619,6 +2619,25 @@ work, you can change the URL that **docassemble** uses by setting the
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
+### <a name="kubernetes"></a>kubernetes
+
+If you are running **docassemble** from within a [Kubernetes]
+deployment, add this to your Configuration
+
+{% highlight yaml %}
+kubernetes: True
+{% endhighlight %}
+
+This is necessary because when **docassemble** runs in a [multi-server
+arrangement], each **docassemble** web server instance needs to allow
+other **docassemble** web instances to send messages to it through
+[supervisor].  Each web server instance advertises the hostname or IP
+address through which its [supervisor] can be accessed.  Normally,
+this can be obtained using the computer's hostname, but within a
+[Kubernetes] cluster, this hostname is not one that other web servers
+can resolve.  If `kubernetes` is set to `True`, then **docassemble**
+will use the IP address of the Pod as the hostname.
+
 ## <a name="api privileges"></a>API usage
 
 By default, only users with privileges of `admin` or `developer` may
@@ -3628,6 +3647,18 @@ requires system version 0.5.0 or later.
 
 See also the [`DAWEBSERVER`] environment variable.
 
+## <a name="use minio"></a>Use of MinIO
+
+If you are using [MinIO] in combination with an [S3](#s3)
+configuration, and you would like the bucket to be created when the
+container starts, then set `use minio` to `True`.
+
+{% highlight yaml %}
+use minio: True
+{% endhighlight %}
+
+See also the [`USEMINIO`] environment variable for [Docker].
+
 ## <a name="use cloud urls"></a>URLs pointing to files in cloud server
 
 If you are using [S3] or [Azure blob storage], then for efficiency,
@@ -3983,3 +4014,6 @@ and Facebook API keys.
 [`currency symbol` field modifier]: {{ site.baseurl }}/docs/fields.html#currency
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
 [customizing based on language and locale]: {{ site.baseurl }}/docs/language.html#customizing
+[MinIO]: https://min.io/
+[`USEMINIO`]: {{ site.baseurl }}/docs/docker.html#USEMINIO
+[Kubernetes]: https://kubernetes.io/
