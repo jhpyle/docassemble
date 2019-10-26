@@ -2075,8 +2075,8 @@ It accepts any of the following optional keyword arguments:
   user's answers will not be deleted.  The default behavior is `'exit'`.
 * `exit_label` - can be used to change the appearance of the "Exit"
   menu option.
-* `pre` - can be set to HTML that will be inserted immediately after
-  the `question` part of a screen
+* `pre` - can be set to HTML that will be inserted before
+  the `question` part of a screen.
 * `submit` - can be set to HTML that will be inserted before the
   buttons.
 * `continue_button_label` - will change the text in the Continue
