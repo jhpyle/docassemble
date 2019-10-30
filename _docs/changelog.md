@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.33](https://github.com/jhpyle/docassemble/releases/tag/v0.5.33) - 2019-10-30
+
+### Changed
+- All Python dependencies have version numbers explicitly indicated.
+- Backend server health check tests for completion of initialization.
+- The `websockets ip` Configuration directive no longer defaults to localhost.
+
+### Fixed
+- Better handling of Markdown when passing values to a DOCX file
+  directly.
+- Ordinal functions now accept arbitrary keyword arguments.
+- Some phrases for translation not detected.
+- The `verbatim()` function did not escape formatting characters in
+  some circumstances.
+
 ## [0.5.32](https://github.com/jhpyle/docassemble/releases/tag/v0.5.32) - 2019-10-25
 
 ### Added
