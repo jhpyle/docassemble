@@ -5366,8 +5366,10 @@ def index(action_argument=None):
         if session_parameter is None:
             if show_flash:
                 if current_user.is_authenticated:
+                    #word("Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu.")
                     message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                 else:
+                    #word("Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews.")
                     message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
             if reset_interview and session_info is not None:
                 reset_user_dict(session_info['uid'], yaml_filename)
@@ -5413,8 +5415,10 @@ def index(action_argument=None):
                 need_to_reset = True
             if show_flash:
                 if current_user.is_authenticated:
+                    #word("Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu.")
                     message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
                 else:
+                    #word("Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews.")
                     message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
         if show_flash:
             flash(word(message), 'info')

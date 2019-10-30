@@ -448,8 +448,8 @@ def load(**kwargs):
         daconfig['use lets encrypt'] = False
     if 'behind https load balancer' not in daconfig or not daconfig['behind https load balancer']:
         daconfig['behind https load balancer'] = False
-    if 'websockets ip' not in daconfig or not daconfig['websockets ip']:
-        daconfig['websockets ip'] = '127.0.0.1'
+    if 'websockets ip' in daconfig and not daconfig['websockets ip']:
+        del daconfig['websockets ip']
     if 'websockets port' not in daconfig or not daconfig['websockets port']:
         daconfig['websockets port'] = 5000
     if 'root' not in daconfig or not daconfig['root']:

@@ -58,33 +58,34 @@ def transform_for_docx(text, question, tpl, width=None):
     if type(text) in (int, float, bool, NoneType):
         return text
     text = text_type(text)
-    m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
-    if m:
-        amount = m.group(2)
-        units = m.group(3).lower()
-        if units in ['in', 'inches', 'inch']:
-            the_width = Inches(amount)
-        elif units in ['pt', 'pts', 'point', 'points']:
-            the_width = Pt(amount)
-        elif units in ['mm', 'millimeter', 'millimeters']:
-            the_width = Mm(amount)
-        elif units in ['cm', 'centimeter', 'centimeters']:
-            the_width = Cm(amount)
-        elif units in ['twp', 'twip', 'twips']:
-            the_width = Twips(amount)
-        else:
-            the_width = Pt(amount)
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-        if 'fullpath' not in file_info:
-            return '[FILE NOT FOUND]'
-        return InlineImage(tpl, file_info['fullpath'], the_width)
-    m = re.search(r'\[FILE ([^,\]]+)\]', text)
-    if m:
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-        if 'fullpath' not in file_info:
-            return '[FILE NOT FOUND]'
-        return InlineImage(tpl, file_info['fullpath'], Inches(2))
-    return docassemble.base.filter.docx_template_filter(text, question=question)
+    # m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
+    # if m:
+    #     amount = m.group(2)
+    #     units = m.group(3).lower()
+    #     if units in ['in', 'inches', 'inch']:
+    #         the_width = Inches(amount)
+    #     elif units in ['pt', 'pts', 'point', 'points']:
+    #         the_width = Pt(amount)
+    #     elif units in ['mm', 'millimeter', 'millimeters']:
+    #         the_width = Mm(amount)
+    #     elif units in ['cm', 'centimeter', 'centimeters']:
+    #         the_width = Cm(amount)
+    #     elif units in ['twp', 'twip', 'twips']:
+    #         the_width = Twips(amount)
+    #     else:
+    #         the_width = Pt(amount)
+    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+    #     if 'fullpath' not in file_info:
+    #         return '[FILE NOT FOUND]'
+    #     return InlineImage(tpl, file_info['fullpath'], the_width)
+    # m = re.search(r'\[FILE ([^,\]]+)\]', text)
+    # if m:
+    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+    #     if 'fullpath' not in file_info:
+    #         return '[FILE NOT FOUND]'
+    #     return InlineImage(tpl, file_info['fullpath'], Inches(2))
+    #return docassemble.base.filter.docx_template_filter(text, question=question)
+    return text
 
 def create_hyperlink(url, anchor_text, tpl):
     return InlineHyperlink(tpl, url, anchor_text)
@@ -421,7 +422,7 @@ class SoupParser(object):
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
-def markdown_to_docx(text, tpl):
+def markdown_to_docx(text, question, tpl):
     if get_config('new markdown to docx', False):
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
         source_code = re.sub("\n", ' ', source_code)
@@ -432,7 +433,7 @@ def markdown_to_docx(text, tpl):
             parser.traverse(elem)
         output = text_type(parser)
         # logmessage(output)
-        return output
+        return docassemble.base.filter.docx_template_filter(output, question=question)
     else:
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
         source_code = re.sub(r'(?<!\>)\n', ' ', source_code)

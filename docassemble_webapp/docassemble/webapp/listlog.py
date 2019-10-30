@@ -1,10 +1,12 @@
 import os
 import subprocess
 
-from flask import Flask, make_response, render_template
+from flask import Flask, make_response, render_template, request
 app = Flask(__name__)
 
 LOG_DIRECTORY = '/var/www/html/log'
+
+ready_file = '/usr/share/docassemble/webapp/ready'
 
 @app.route('/listlog')
 def list_log_files():
@@ -16,6 +18,9 @@ def list_log_files():
 
 @app.route("/listlog/health_check", methods=['GET'])
 def health_check():
+    if request.args.get('ready', False):
+        if not os.path.isfile(ready_file):
+            abort(400)
     response = make_response(render_template('pages/health_check.html', content="OK"), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response

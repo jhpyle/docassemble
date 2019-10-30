@@ -106,8 +106,6 @@ if __name__ == "__main__":
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
         print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
-    else:
-        print('export DAWEBSOCKETSIP="127.0.0.1"')
     if 'websockets port' in daconfig and daconfig['websockets port']:
         print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
     else:

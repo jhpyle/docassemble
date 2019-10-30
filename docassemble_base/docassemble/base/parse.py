@@ -4493,7 +4493,7 @@ class Question:
                                 del result[key]
                         docassemble.base.functions.reset_context()
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
-                        #logmessage("field_data is " + str(result['field_data']))
+                        #logmessage("field_data is " + repr(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         try:
                             the_template = result['template']
@@ -7003,7 +7003,7 @@ def custom_jinja_env():
     return env
 
 def markdown_filter(text):
-    return docassemble.base.file_docx.markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.misc.get('docx_template', None))
+    return docassemble.base.file_docx.markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 def get_docx_variables(the_path):
     import docassemble.base.legal

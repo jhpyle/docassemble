@@ -1446,10 +1446,7 @@ def worker_caller(func, ui_notification, action):
 #     global server_redis
 #     server_redis = target
 
-def default_ordinal_function(i):
-    return text_type(i)
-
-def ordinal_function_en(i):
+def ordinal_function_en(i, **kwargs):
     num = text_type(i)
     if 10 <= i % 100 <= 20:
         return num + u'th'
@@ -1850,7 +1847,7 @@ def ordinal_number_default(the_number, **kwargs):
         language_to_use = '*'
     else:
         language_to_use = 'en'
-    return ordinal_functions[language_to_use](the_number)
+    return ordinal_functions[language_to_use](the_number, **kwargs)
 
 def salutation_default(indiv, **kwargs):
     """Returns Mr., Ms., etc. for an individual."""
@@ -4054,7 +4051,14 @@ def verbatim(text):
     if this_thread.evaluation_context == 'pandoc':
         return '\\textrm{' + text_type(escape_latex(re.sub(r'\r?\n(\r?\n)+', '\n', text_type(text).strip()))) + '}'
     if this_thread.evaluation_context is None:
-        text = '<div>' + re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text).strip()))) + '</div>'
+        text = '<span>' + re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text).strip()))) + '</span>'
+        text = re.sub(r'\*', r'&#42;', text)
+        text = re.sub(r'\_', r'&#95;', text)
+        text = re.sub(r'(?<!&)\#', r'&#35;', text)
+        text = re.sub(r'\=', r'&#61;', text)
+        text = re.sub(r'\+', r'&#43;', text)
+        text = re.sub(r'\-', r'&#45;', text)
+        text = re.sub(r'([0-9])\.', r'\1&#46;', text)
         return re.sub(r'\r?\n(\r?\n)+', '<br>', text)
     if this_thread.evaluation_context == 'docx':
         return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text))))

@@ -3472,7 +3472,7 @@ class DATemplate(DAObject):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             #return text_type(self.content)
             #return text_type(docassemble.base.filter.docx_template_filter(self.content))
-            return text_type(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.misc('docx_template', None)))
+            return text_type(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc('docx_template', None)))
         return(text_type(self.content))
     def __str__(self):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
@@ -3637,7 +3637,7 @@ class DALazyTemplate(DAObject):
             content = re.sub(r'\\_', r'\\\\_', content)
             #return text_type(self.content)
             #return text_type(docassemble.base.filter.docx_template_filter(self.content))
-            return text_type(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+            return text_type(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return(text_type(self.content))
     def __str__(self):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()

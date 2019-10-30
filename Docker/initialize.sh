@@ -1221,6 +1221,7 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
 fi
 
 function deregister {
+    rm -f "${DA_ROOT}/webapp/ready"
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.deregister \"${DA_CONFIG_FILE}\"" www-data
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
         su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.cloud_deregister" www-data
@@ -1301,5 +1302,6 @@ function deregister {
 trap deregister SIGINT SIGTERM
 
 echo "initialize finished" >&2
+touch "${DA_ROOT}/webapp/ready"
 sleep infinity &
 wait %1

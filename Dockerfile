@@ -61,19 +61,19 @@ bash -c \
 && source /usr/share/docassemble/local/bin/activate \
 && pip install --upgrade pip \
 && pip install \
-   3to2 \
-   bcrypt \
-   flask \
-   flask-login \
-   flask-mail \
-   flask-sqlalchemy \
-   flask-wtf \
-   s4cmd \
-   uwsgi \
-   distutils2 \
-   passlib \
-   pycrypto \
-   six \
+   3to2==1.1.1 \
+   bcrypt==3.1.7 \
+   flask==1.1.1 \
+   flask-login==0.4.1 \
+   flask-mail==0.9.1 \
+   flask-sqlalchemy==2.4.0 \
+   flask-wtf==0.14.2 \
+   s4cmd==2.1.0 \
+   uwsgi==2.0.18 \
+   distutils2==1.0a4 \
+   passlib==1.7.1 \
+   pycrypto==2.6.1 \
+   six==1.12.0 \
 && pip install --upgrade \
    'git+https://github.com/jhpyle/pdfminer.git' \
    simplekv==0.10.0 \
@@ -92,20 +92,20 @@ bash -c \
 && pip3 install --upgrade pip \
 && pip3 install --upgrade mod_wsgi \
 && pip3 install --upgrade \
-   3to2 \
-   bcrypt \
-   flask \
-   flask-login \
-   flask-mail \
-   flask-sqlalchemy \
-   flask-wtf \
-   s4cmd \
-   uwsgi \
-   passlib \
-   pycryptodome \
-   pycryptodomex \
-   six \
-   setuptools \
+   3to2==1.1.1 \
+   bcrypt==3.1.7 \
+   flask==1.1.1 \
+   flask-login==0.4.1 \
+   flask-mail==0.9.1 \
+   flask-sqlalchemy==2.4.1 \
+   flask-wtf==0.14.2 \
+   s4cmd==2.1.0 \
+   uwsgi==2.0.18 \
+   passlib==1.7.1 \
+   pycryptodome==3.9.0 \
+   pycryptodomex==3.9.0 \
+   six==1.12.0 \
+   setuptools==40.6.2 \
 && pip3 install --upgrade \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

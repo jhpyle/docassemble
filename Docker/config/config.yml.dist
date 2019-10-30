@@ -93,3 +93,4 @@ words:
   - docassemble.base:data/sources/us-words.yml
 allow non-idempotent questions: False
 web server: {{DAWEBSERVER}}
+new markdown to docx: True

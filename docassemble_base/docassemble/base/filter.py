@@ -411,10 +411,10 @@ def docx_template_filter(text, question=None):
     elif text == 'None':
         return None
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx_template(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx_template, text)
@@ -453,7 +453,7 @@ def docx_template_filter(text, question=None):
     text = re.sub(r'\[SKIPLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[VERTICALSPACE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
-    text = re.sub(r'\n *\n', '[NEWPAR]', text)
+    #text = re.sub(r'\n *\n', '[NEWPAR]', text)
     text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\[NEWPAR\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[TAB\] *', '\t', text)
@@ -1623,7 +1623,7 @@ def image_include_docx_template(match, question=None):
                 if file_info['mimetype'] == 'text/plain':
                     return contents
                 else:
-                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+                    return docassemble.base.file_docx.markdown_to_docx(contents, question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
             if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return text_type(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
             else:
