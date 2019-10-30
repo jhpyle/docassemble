@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.34] - 2019-10-30
+### Fixed
+- Erroneous dependency on `pkg-resources` in `docassemble.base` for
+  Python 2.7.
+
 ## [0.5.33] - 2019-10-30
 ### Changed
 - All Python dependencies have version numbers explicitly indicated.
