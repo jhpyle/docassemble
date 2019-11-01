@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.5.35] - 2019-10-
+### Changed
+- The "remember me" feature removed.
+### Fixed
+- Deleted or renamed playground modules not culled from Python
+  installation.
+- Content of new file in Playground lost if filename blank.
+- Erroneous `session` parameter added to result of
+  `interview_url_action()` if `i` specified.
+
 ## [0.5.34] - 2019-10-30
 ### Fixed
 - Erroneous dependency on `pkg-resources` in `docassemble.base` for

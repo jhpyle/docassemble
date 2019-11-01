@@ -600,6 +600,7 @@ def logout():
     if set_cookie:
         response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     else:
+        response.set_cookie('remember_token', '', expires=0)
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
@@ -1494,6 +1495,13 @@ def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
 
 def copy_playground_modules():
+    root_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble')
+    for d in os.listdir(root_dir):
+        if re.search(r'^playground[0-9]', d) and os.path.isdir(os.path.join(root_dir, d)):
+            try:
+                shutil.rmtree(os.path.join(root_dir, d))
+            except:
+                sys.stderr.write("copy_playground_modules: error deleting " + os.path.join(root_dir, d) + "\n")
     devs = list()
     for user in UserModel.query.options(db.joinedload('roles')).filter_by(active=True).all():
         for role in user.roles:
@@ -1509,7 +1517,7 @@ def copy_playground_modules():
                 try:
                     shutil.rmtree(local_dir)
                 except:
-                    pass
+                    sys.stderr.write("copy_playground_modules: error deleting " + local_dir + " before replacing it\n")
             if PY3:
                 os.makedirs(local_dir, exist_ok=True)
             elif not os.path.isdir(local_dir):
@@ -4434,6 +4442,7 @@ def manage_account():
         delete_session()
         session.clear()
         response = redirect(exit_page)
+        response.set_cookie('remember_token', '', expires=0)
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
@@ -4688,6 +4697,7 @@ def leave():
     #delete_session_for_interview(i=request.args.get('i', None))
     #delete_session()
     #response = redirect(exit_page)
+    #response.set_cookie('remember_token', '', expires=0)
     #response.set_cookie('visitor_secret', '', expires=0)
     #response.set_cookie('secret', '', expires=0)
     #response.set_cookie('session', '', expires=0)
@@ -4754,6 +4764,7 @@ def exit_logout():
         logout_user()
     session.clear()
     response = redirect(the_exit_page)
+    response.set_cookie('remember_token', '', expires=0)
     response.set_cookie('visitor_secret', '', expires=0)
     response.set_cookie('secret', '', expires=0)
     response.set_cookie('session', '', expires=0)
@@ -6587,6 +6598,7 @@ def index(action_argument=None):
             logout_user()
         delete_session()
         session.clear()
+        response.set_cookie('remember_token', '', expires=0)
         response.set_cookie('visitor_secret', '', expires=0)
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
@@ -15039,11 +15051,18 @@ def playground_files():
         scroll = True
         the_file = ''
     if request.method == 'POST':
-        if (form.section.data):
-            section = form.section.data
-        if (formtwo.file_name.data):
-            the_file = formtwo.file_name.data
-            the_file = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file)
+        if (form.purpose.data == 'upload' and form.validate()) or (formtwo.purpose.data == 'edit' and formtwo.validate()):
+            form_validated = True
+        else:
+            form_validated = False
+        if form_validated:
+            if (form.section.data):
+                section = form.section.data
+            if (formtwo.file_name.data):
+                the_file = formtwo.file_name.data
+                the_file = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file)
+    else:
+        form_validated = None
     if section not in ("template", "static", "sources", "modules", "packages"):
         section = "template"
     pgarea = SavedFile(current_user.id, fix=True, section='playground')
@@ -15115,7 +15134,7 @@ def playground_files():
                     return redirect(url_for('playground_files', section=section, file=to_file, project=current_project))
             else:
                 flash(word("File not found: ") + argument, "error")
-    if request.method == 'POST':
+    if request.method == 'POST' and form_validated:
         if 'uploadfile' in request.files:
             the_files = request.files.getlist('uploadfile')
             if the_files:
@@ -15188,6 +15207,12 @@ def playground_files():
                     return redirect(url_for('playground_files', section=section, file=the_file, project=current_project))
             else:
                 flash(word('You need to type in a name for the file'), 'error')
+    if is_ajax and not form_validated:
+        errors = list()
+        for fieldName, errorMessages in formtwo.errors.items():
+            for err in errorMessages:
+                errors.append(dict(fieldName=fieldName, err=err))
+        return jsonify(success=False, errors=errors)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
 
     editable_files = list()
@@ -15322,6 +15347,15 @@ def playground_files():
         }, """ + text_type(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
       }
       function saveCallback(data){
+        if (!data.success){
+          var n = data.errors.length;
+          for (var i = 0; i < n; ++i){
+            $('input[name="' + data.errors[i].fieldName + '"]').parents('.input-group').addClass("da-group-has-error").after('<p class="da-has-error text-danger">' + data.errors[i].err + '</p>');
+          }
+          return;
+        }
+        $('.da-has-error').remove();
+        $('.da-group-has-error').removeClass('da-group-has-error');
         fetchVars(true);
         if ($("#daflash").length){
           $("#daflash").html(data.flash_message);
@@ -15718,17 +15752,16 @@ def playground_packages():
         form.github_branch.choices.append((form.github_branch.data, form.github_branch.data))
     else:
         form.github_branch.choices.append(('', ''))
-    if request.method == 'POST' and 'uploadfile' not in request.files:
-        if form.validate():
-            the_file = form.file_name.data
-            validated = True
-        else:
-            the_error = ''
-            for attrib in ('original_file_name', 'file_name', 'license', 'description', 'author_name', 'author_email', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
-                the_field = getattr(form, attrib)
-                for error in the_field.errors:
-                    the_error += str(error)
-            raise DAError("Form did not validate with " + str(the_error))
+    if request.method == 'POST' and 'uploadfile' not in request.files and form.validate():
+        the_file = form.file_name.data
+        validated = True
+        # else:
+            # the_error = ''
+            # for attrib in ('original_file_name', 'file_name', 'license', 'description', 'author_name', 'author_email', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
+            #     the_field = getattr(form, attrib)
+            #     for error in the_field.errors:
+            #         the_error += str(error)
+            # raise DAError("Form did not validate with " + str(the_error))
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
     the_directory = directory_for(area['playgroundpackages'], current_project)
@@ -16145,7 +16178,7 @@ def playground_packages():
         if need_to_restart:
             return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file, project=current_project)))
         return redirect(url_for('playground_packages', project=current_project, file=the_file))
-    if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
+    if request.method == 'POST' and validated and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
         os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file))
         area['playgroundpackages'].finalize()
         flash(word("Deleted package"), "success")
@@ -17070,12 +17103,18 @@ def playground_page():
     form = PlaygroundForm(request.form)
     interview = None
     the_file = request.args.get('file', get_current_file(current_project, 'questions'))
+    valid_form = None
+    if request.method == 'POST':
+        valid_form = form.validate()
     if request.method == 'GET':
         is_new = request.args.get('new', False)
         debug_mode = request.args.get('debug', False)
     else:
         debug_mode = False
-        is_new = False
+        if not valid_form and form.status.data == 'new':
+            is_new = True
+        else:
+            is_new = False
     if is_new:
         the_file = ''
     playground = SavedFile(current_user.id, fix=True, section='playground')
@@ -17111,7 +17150,7 @@ def playground_page():
                     flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
-        if (form.playground_name.data):
+        if form.validate() and form.playground_name.data:
             the_file = form.playground_name.data
             the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
             if the_file != '':
@@ -17122,16 +17161,19 @@ def playground_page():
                     with open(filename, 'a'):
                         os.utime(filename, None)
             else:
-                flash(word('You need to type in a name for the interview'), 'error')
+                #flash(word('You need to type in a name for the interview'), 'error')
                 is_new = True
         else:
-            flash(word('You need to type in a name for the interview'), 'error')
+            #flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
     the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
     files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(the_directory, f))) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
     file_listing = [x['name'] for x in files]
     assign_opacity(files)
-    content = ''
+    if valid_form is False:
+        content = form.playground_content.data
+    else:
+        content = ''
     if the_file and not is_new and the_file not in file_listing:
         the_file = ''
     is_default = False
@@ -17231,13 +17273,13 @@ def playground_page():
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success', is_ajax=is_ajax)
+                if interview.issue.get('mandatory_id', False):
+                    console_messages.append(word("Note: it is a best practice to tag every mandatory block with an id."))
+                if interview.issue.get('id_collision', False):
+                    console_messages.append(word("Note: more than one block uses id") + " " + interview.issue['id_collision'])
             except DAError as foo:
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
-            if interview.issue.get('mandatory_id', False):
-                console_messages.append(word("Note: it is a best practice to tag every mandatory block with an id."))
-            if interview.issue.get('id_collision', False):
-                console_messages.append(word("Note: more than one block uses id") + " " + interview.issue['id_collision'])
             if is_ajax:
                 return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages)
         else:

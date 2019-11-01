@@ -17,6 +17,7 @@
 
           <form action="{{ url_for('playground_files', project=current_project) }}" method="POST" class="form" role="form" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
+            {{ myrender_hidden_field(form.purpose, value='upload') }}
             {{ myrender_hidden_field(form.section, value=section) }}
             {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
             <div class="form-actions">
@@ -100,6 +101,7 @@
 
             <form action="{{ url_for('playground_files', project=current_project) }}" method="POST" class="form pgform" role="form" id="formtwo" autocomplete="off">
               {{ formtwo.hidden_tag() }}
+              {{ myrender_hidden_field(formtwo.purpose, value='edit') }}
               {{ myrender_hidden_field(formtwo.section, value=section) }}
               {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
               <div class="row mb-1 mt-1">

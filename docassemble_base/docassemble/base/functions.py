@@ -700,14 +700,26 @@ def interview_url_action(action, **kwargs):
         del kwargs['local']
     args = dict()
     if 'i' in kwargs:
-        args['i'] = kwargs['i']
+        if kwargs['i']:
+            args['i'] = kwargs['i']
+        else:
+            args['i'] = this_thread.current_info['yaml_filename']
         del kwargs['i']
     else:
         args['i'] = this_thread.current_info['yaml_filename']
+    if 'new_session' in kwargs:
+        if kwargs['new_session']:
+            args['new_session'] = '1'
+        del kwargs['new_session']
+    if 'reset' in kwargs:
+        if kwargs['reset']:
+            args['reset'] = '1'
+        del kwargs['reset']
     if 'session' in kwargs:
-        args['session'] = kwargs['session']
+        if kwargs['session']:
+            args['session'] = kwargs['session']
         del kwargs['session']
-    else:
+    elif args['i'] == this_thread.current_info['yaml_filename']:
         args['session'] = this_thread.current_info['session']
     if contains_volatile.search(action):
         raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")

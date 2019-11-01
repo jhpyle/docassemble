@@ -42,6 +42,7 @@ class ConfigForm(FlaskForm):
     cancel = SubmitField(word('Cancel'))
 
 class PlaygroundForm(FlaskForm):
+    status = StringField('Status')
     original_playground_name = StringField(word('Original Name'))
     playground_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
     playground_content = TextAreaField(word('Playground YAML'))
@@ -70,11 +71,13 @@ class Utilities(FlaskForm):
     officeaddin_submit = SubmitField(word('Download'))
     
 class PlaygroundFilesForm(FlaskForm):
+    purpose = StringField('Purpose')
     section = StringField(word('Section'))
     uploadfile = FileField(word('File to upload'))
     submit = SubmitField(word('Upload'))
 
 class PlaygroundFilesEditForm(FlaskForm):
+    purpose = StringField('Purpose')
     section = StringField(word('Section'))
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])

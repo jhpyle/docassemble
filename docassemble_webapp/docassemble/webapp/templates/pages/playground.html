@@ -74,6 +74,11 @@
 </ul>
 <form action="{{ url_for('playground_page', project=current_project) }}" method="POST" class="form pgform" role="form" id="form" autocomplete="off">
   {{ form.hidden_tag() }}
+  {%- if is_new != 'False' %}
+  {{ myrender_hidden_field(form.status, value='new') }}
+  {%- else %}
+  {{ myrender_hidden_field(form.status, value='existing') }}
+  {%- endif %}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
   <div class="row mb-1 mt-1">
     <div class="col-lg-6">
