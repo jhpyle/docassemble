@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.5.35] - 2019-10-
+## [0.5.35] - 2019-10-31
 ### Changed
 - The "remember me" feature removed.
 ### Fixed
