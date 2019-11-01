@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.35](https://github.com/jhpyle/docassemble/releases/tag/v0.5.35) - 2019-10-31
+
+### Changed
+- The "remember me" feature removed.
+
+### Fixed
+- Deleted or renamed playground modules not culled from Python
+  installation.
+- Content of new file in Playground lost if filename blank.
+- Erroneous `session` parameter added to result of
+  `interview_url_action()` if `i` specified.
+
+## [0.5.34](https://github.com/jhpyle/docassemble/releases/tag/v0.5.34) - 2019-10-30
+
+### Fixed
+- Erroneous dependency on `pkg-resources` in `docassemble.base` for
+  Python 2.7.
+
 ## [0.5.33](https://github.com/jhpyle/docassemble/releases/tag/v0.5.33) - 2019-10-30
 
 ### Changed

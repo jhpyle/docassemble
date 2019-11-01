@@ -706,7 +706,7 @@ subquestion: |
 This leads to:
 
 > * Your phone number: **202-555-2030**
-> * Your fax number: 
+> * Your fax number:
 
 Alternatively, you can pass an optional keyword argument, `default`,
 if it should plug in something different when empty.
@@ -1071,6 +1071,35 @@ disables server-side encryption of answers.  This is necessary because
 the encryption uses an decryption key, and a decryption key should not
 be embedded in a URL.
 
+The first argument to `interview_url_action()` is the name of the
+action.  The keyword arguments are the arguments of the action.  In
+this respect, `interview_url_action()` is similar to
+[`url_action()`].  However, the following keyword arguments have
+special meaning:
+
+* `i` - if you set an `i` parameter, `interview_url_action()` will
+  form a URL for an interview other than the current interview.  The
+  current session ID will not be included by default in the URL.
+* `session`: if you set a `session` parameter, the value of `session`
+  will be used as the session ID.  This will allow the user of the URL
+  to resume an existing interview session other than the current
+  interview session.  By default, if `i` is not set, the session ID of
+  the current session is included in the URL, which allows the user of
+  the URL to resume the current interview session
+* `local`: if you set the `local` parameter to a true value, then a
+  relative URL will be returned.  By default, `interview_url_action()`
+  returns a complete URL.
+* `new_session`: if you set the `new_session` parameter to a true
+  value, then `new_session=1` will be included in the URL.  Set this
+  if you are providing an `i` parameter and you want to make sure that the
+  user of the URL starts a new session rather than resuming an
+  existing one.
+* `reset`: if you set the `reset` parameter to a true value, then
+  `reset=1` will be included in the URL.  Set this if you are
+  providing an `i` parameter and you want the user of the URL to
+  restart any existing session they may be using in the interview
+  indicated by `i`.
+
 ## <a name="interview_url_action_as_qr"></a>interview_url_action_as_qr()
 
 `interview_url_action_as_qr()` is like `interview_url_action()`,
@@ -1277,7 +1306,7 @@ It accepts the following optional keyword arguments:
   [`word()`]  function, so you can use the translation system to
   handle different languages.
 * `classname` - set this to one or more class names (separated by a
-  space) if you want to add additional [CSS] classes to the button. 
+  space) if you want to add additional [CSS] classes to the button.
 * `new_window` - set this to `False` if you don't want the button to
   open a new tab.  The default value is `True`, which means external
   links will open in a new tab.  If you use a value other than `True`
@@ -1521,7 +1550,7 @@ fields:
   - Fax: user.fax_number
 ---
 question: |
-  What file would you like 
+  What file would you like
   me to fax?
 fields:
   - File: document
@@ -1535,7 +1564,7 @@ question: |
   % if fax_result.received():
   The fax was received.
   % else:
-  The status of the fax is 
+  The status of the fax is
   ${ fax_result.status() }.
   % endif
 reload: True
@@ -1573,7 +1602,7 @@ of the fax sending.  The object has the following methods:
 * `.received()` - this will be `True` or `False` depending on whether
   the fax has been received yet.  It will be `None` if no result is
   available.
-  
+
 Immediately after `send_fax()` is called, the result will likely be
 unavailable, because [Twilio] will not have had time to start
 processing the request.
@@ -1721,7 +1750,7 @@ For more information about the progress bar, see the documentation for
 the [progress bar] initial block and the [`progress`] modifier.
 
 For more information about the navigation bar, see the documentation
-for the [navigation bar] feature. 
+for the [navigation bar] feature.
 
 ## <a name="get_progress"></a>get_progress()
 
@@ -1745,7 +1774,7 @@ object.
 {% include side-by-side.html demo="sections" %}
 
 You can retrieve the current section by calling `nav.get_section()`.
-This will return the keyword corresponding to the current section.  
+This will return the keyword corresponding to the current section.
 To get the displayed name of the section, call it using
 `nav.get_section(display=True)`.  When you call it with
 `display=True`, you can also use the optional keyword parameter
@@ -1783,8 +1812,8 @@ names for a language other than the current language.
 ## <a name="DANav.show_sections"></a>nav.show_sections()
 
 To display the section list to the user in the body of a question, you
-can include the `nav` variable in a [Mako] template like so: 
-`${ nav }`.  This has the effect of doing 
+can include the `nav` variable in a [Mako] template like so:
+`${ nav }`.  This has the effect of doing
 `${ nav.show_sections(style='inline') }`.  This method takes the optional
 keyword arguments `style`, the options for which are `None` or
 `'inline'`, and `show_links`, which you can set to `True` if you want
@@ -2722,7 +2751,7 @@ keyword argument `timezone` (e.g., `'America/New_York'`) to use a
 different time zone.
 
 The object returned by `date_difference()` has a method
-`.describe()`.  If you set 
+`.describe()`.  If you set
 `z = date_difference(starting='1/1/2014', ending='4/3/2015')`, then:
 
 * `z.describe()` returns `one year, three months, and one day`.
@@ -2993,9 +3022,9 @@ returned.
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
-the default functions, by 
+the default functions, by
 using `import docassemble.base.functions` and
-then running 
+then running
 `docassemble.base.functions.update_language_function()`.
 
 For example, suppose you had a Spanish linguistic package that you
@@ -3473,7 +3502,7 @@ condition is true, and otherwise returns empty text (`''`).
 * `showif('favorite_fruit', likes_fruit)` returns the value of the
   variable `favorite_fruit`, but only if the variable `likes_fruit` is
   true.
-  
+
 Note that the first argument must be a variable name in quotes.  This
 ensures that a definition of the variable will not be sought unless
 the condition is true.
@@ -3653,7 +3682,7 @@ See the [`dispatch`] configuration directive for information about
 setting up this menu.  This function provides a programmatic version
 of the screen available at `/list`.
 
-The keys in each dictionary are: 
+The keys in each dictionary are:
 
 * `title`: the [title](#set_parts) of the interview
 * `subtitle`: the [subtitle](#set_parts) of the interview
@@ -3717,14 +3746,14 @@ user.  The `info` dictionary can contain any of the following keys:
  - `first_name`: user's first name.
  - `language`: user's language code.
  - `last_name`: user's last name.
- - `organization`: user's organization 
+ - `organization`: user's organization
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
  - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
    code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
- 
+
 To set this information after the user account is created, use
 [`set_user_info()`].
 
@@ -3745,10 +3774,10 @@ each dictionary has the following keys:
  - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `email`: user's e-mail address.
  - `first_name`: user's first name.
- - `id`: the integer ID of the user. 
+ - `id`: the integer ID of the user.
  - `language`: user's language code.
  - `last_name`: user's last name.
- - `organization`: user's organization 
+ - `organization`: user's organization
  - `privileges`: a [Python list] of the user's [privileges] (e.g., `'admin'`,
    `'developer'`).
  - `subdivisionfirst`: user's state.
@@ -3792,7 +3821,7 @@ are optional:
  - `first_name`: user's first name.
  - `language`: user's language code.
  - `last_name`: user's last name.
- - `organization`: user's organization 
+ - `organization`: user's organization
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
@@ -4509,7 +4538,7 @@ This in [YAML]:
 
 {% highlight yaml %}
 claim: |
-  The landlord is not entitled 
+  The landlord is not entitled
   to collect back rent.
 {% endhighlight %}
 
@@ -4534,7 +4563,7 @@ This in [YAML]:
 
 {% highlight yaml %}
 claim: |-
-  The landlord is not entitled 
+  The landlord is not entitled
   to collect back rent.
 {% endhighlight %}
 
@@ -4551,7 +4580,7 @@ This in [YAML]:
 
 {% highlight yaml %}
 claim: >
-  The landlord is not entitled 
+  The landlord is not entitled
   to collect back rent.
 {% endhighlight %}
 
@@ -4565,7 +4594,7 @@ The `>` treats newlines as spaces, but adds a newline at the end.
 
 {% highlight yaml %}
 claim: >-
-  The landlord is not entitled 
+  The landlord is not entitled
   to collect back rent.
 {% endhighlight %}
 
@@ -5158,7 +5187,7 @@ package.  To use it, you will need to include the
 `docassemble.base.mermaid` module in your interview:
 
 {% highlight yaml %}
-modules: 
+modules:
   - docassemble.base.mermaid
 {% endhighlight %}
 

@@ -1804,16 +1804,6 @@ can set the `retype password` directive to `False`.
 retype password: False
 {% endhighlight %}
 
-## <a name="enable remember me"></a>Controlling whether the "remember me" feature is available
-
-By default, users can click the "Remember me" checkbox when they log
-in, so that they do not have to log in when they come back to the
-site.  To disable this feature, set `enable remember me` to `False`.
-
-{% highlight yaml %}
-enable remember me: False
-{% endhighlight %}
-
 ## <a name="password complexity"></a>Controlling password complexity
 
 By default, users when registering must select a password that is at
