@@ -1487,9 +1487,23 @@ def syslog_message(message):
     else:
         the_user = "anonymous"
     if request_active:
-        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
+        try:
+            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
+        except Exception as err:
+            sys.stderr.write("Error writing log message " + text_type(message) + "\n")
+            try:
+                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + text_type(err) + "\n")
+            except:
+                pass
     else:
-        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
+        try:
+            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
+        except Exception as err:
+            sys.stderr.write("Error writing log message " + text_type(message) + "\n")
+            try:
+                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + text_type(err) + "\n")
+            except:
+                pass
 
 def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)

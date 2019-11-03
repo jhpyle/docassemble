@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.36] - 2019-11-03
+### Fixed
+- Exceptions raised by syslog calls not trapped.
+
 ## [0.5.35] - 2019-10-31
 ### Changed
 - The "remember me" feature removed.
