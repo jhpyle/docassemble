@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.36](https://github.com/jhpyle/docassemble/releases/tag/v0.5.36) - 2019-11-04
+
+### Fixed
+- Exceptions raised by syslog calls were not trapped.
+- Problems with restarting server in multi-server configuration.
+
 ## [0.5.35](https://github.com/jhpyle/docassemble/releases/tag/v0.5.35) - 2019-10-31
 
 ### Changed

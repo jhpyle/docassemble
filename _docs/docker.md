@@ -788,16 +788,18 @@ effect.
   `thehostname` is the host name at which the [Redis] server can be
   accessed.  See the [`redis`] configuration directive.
 * <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
-  **docassemble** in a [multi-server arrangement], set this to the host
-  name at which the [RabbitMQ] server can be accessed.  Note that
+  **docassemble** in a [multi-server arrangement], set this to the URL
+  at which the [RabbitMQ] server can be accessed, in the form
+  `pyamqp://guest@rabbitmqserver.local//` or
+  `pyamqp://user:xxsecretpasswdxx@rabbitmqserver.local//`.  Note that
   [RabbitMQ] is very particular about hostnames.  If the [RabbitMQ]
-  server is running on a machine on which the `hostname` command
-  evaluates to `abc`, then your application servers will need to set
-  `RABBITMQ` to `abc` and nothing else.  It is up to you to make sure
-  that `abc` resolves to an IP address.  Note that if you run
-  **docassemble** using the instructions in the [scalability] section,
-  you do not need to worry about this.  See the [`rabbitmq`]
-  configuration directive.
+  server is running on a machine on which the command `hostname -s`
+  evaluates to `rabbitmqserver.local`, then your application servers
+  will need to use `rabbitmqserver.local` as the hostname in the
+  `RABBITMQ` URL, even if other names resolve to the same IP address.
+  Note that if you run **docassemble** using the instructions in the
+  [scalability] section, you may not need to worry about setting
+  `RABBITMQ`.  See the [`rabbitmq`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
   address that the user can contact for help.  This e-mail address

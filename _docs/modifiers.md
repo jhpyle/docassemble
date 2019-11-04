@@ -6,7 +6,8 @@ short_title: Question Modifiers
 
 There are a number of optional modifiers that can be included in
 [`question`] blocks to control the appearance or behavior of the
-question.
+question.  Some of these can also be applied to other types of blocks
+that set variables, such as `code` blocks.
 
 # <a name="audio"></a>Including `audio`
 
@@ -935,6 +936,28 @@ code: |
 ---
 {% endhighlight %}
 
+# <a name="need"></a>Indicate variables that are prerequisites
+
+You can add a `need` specifier to a block to indicate that before the
+block is used, the definitions of one or more variables must be
+obtained.  This specifier is explained in the [`need`] subsection of
+the [Logic section].
+
+# <a name="undefine"></a>Undefine variables when a `question` is asked
+
+You can add an `undefine` specifier to a block to indicate that before
+the block is used, one or more variables must be undefined if they are
+defined.  This specifier is explained in the [`undefine`] subsection of
+the [Logic section].
+
+# <a name="reconsider"></a>Obtain new values of variables when a `question` is asked
+
+You can add a `reconsider` specifier to a block to indicate that
+before the block is used, the definitions of one or more variables
+must be obtained and re-obtained if they are already obtained.  This
+specifier is explained in the [`reconsider`] subsection of the [Logic
+section].
+
 # <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
@@ -1017,3 +1040,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [`id`]: #id
 [Segment integration]: {{ site.baseurl}}/docs/config.html#segment id
 [Segment]: https://segment.com/
+[Logic section]: {{ site.baseurl }}/docs/logic.html
+[`need`]: {{ site.baseurl }}/docs/logic.html#need
+[`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
+[`undefine`]: {{ site.baseurl }}/docs/logic.html#undefine

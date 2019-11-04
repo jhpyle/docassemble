@@ -468,15 +468,37 @@ definitions of those variables.
 
 ## <a name="reconsider"></a>`reconsider`
 
-The `reconsider` specifier can only be used on [`code`] blocks.
+The `reconsider` modifier can be used in two ways: it can be set to a
+list of variables, or it can be set to `True`.
 
-If `reconsider` is set to `True`, then **docassemble** will always
-"reconsider" the values of any of the variables set by the `code`
-block.
+### Effect when set to a list of variable names
 
-That is, every time the interview is assembled (every time the screen
-loads) **docassemble** will forget about the value of any of the
-variables set by the `code` block.
+When you set `reconsider` to a list of variable names, then before the
+`question` is asked, the variables will be undefined (if they are
+defined at all), and then the definition of each variable will be
+sought again.
+
+{% highlight yaml %}
+reconsider:
+  - minutes_since_world_series
+question: |
+  It has been ${ minutes_since_world_series } minutes since
+  your team won the world series.  Have you gotten over
+  your excitement yet?
+yesno: gotten_over_excitement
+{% endhighlight %}
+
+This can be useful when your [`question`] refers to a computed
+variable that might have become out-of-date since the last time it was
+computed.
+
+### Effect when set to `True`
+
+If `reconsider` is set to `True` on a `code` block, then
+**docassemble** will always "reconsider" the values of any of the
+variables set by the block.  That is, every time the interview is
+assembled (every time the screen loads) **docassemble** will forget
+about the value of any of the variables set by the `code` block.
 
 You will want to set `reconsider` to `True` if your interview flow is
 such that you want **docassemble** to reconsider its definition of a
@@ -559,6 +581,33 @@ same effect as the `reconsider` modifier, but using a different way of
 specifying which variables should be reconsidered.  Whether you use
 the [`reset` initial block] or the `reconsider` modifier is a question
 of what you consider to be more convenient and/or readable.
+
+## <a name="undefine"></a>`undefine`
+
+When you set `undefine` to a list of variable names, then before the
+`question` is asked, the variables will be undefined.
+
+{% highlight yaml %}
+undefine:
+  - favorite_foods
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+code: |
+  favorite_foods = [favorite_vegetable, favorite_fruit]
+---
+mandatory: True
+question: |
+  Your favorite foods are
+  ${ comma_and_list(favorite_foods) }.
+{% endhighlight %}
+
+This can be useful when you allow users to change their answers using
+review screens.  Sometimes a change to one variable will invalidate
+answers to other [`question`]s, or to computations made by [`code`]
+blocks.
 
 # <a name="order"></a>The logical order of an interview
 

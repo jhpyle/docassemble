@@ -3028,7 +3028,7 @@ on the same server as the web server.  You can designate a different
 [RabbitMQ] server by setting the `rabbitmq` directive:
 
 {% highlight yaml %}
-rabbitmq: amqp://guest@192.168.0.2//
+rabbitmq: pyamqp://guest@rabbitmqserver.local//
 {% endhighlight %}
 
 The `rabbitmq` directive needs to be written in the form of an [AMQP
