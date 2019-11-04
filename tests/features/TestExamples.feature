@@ -6809,7 +6809,7 @@ Feature: Example interviews
     Then I should see the phrase "Tell me which thing you want."
     And I set "How many things are there?" to "5"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I click the option "4" under "Which thing do you want?"
     And I wait 2 seconds
     And I click the button "Continue"

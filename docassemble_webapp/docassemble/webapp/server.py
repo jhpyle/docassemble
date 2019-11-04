@@ -3483,7 +3483,7 @@ def trigger_update(except_for=None):
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
                 result = call(args)
                 if result == 0:
-                    logmessage("trigger_update: sent reset to " + str(host.hostname))
+                    logmessage("trigger_update: sent update to " + str(host.hostname))
                 else:
                     logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
     return

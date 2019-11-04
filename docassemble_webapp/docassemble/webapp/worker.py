@@ -854,7 +854,7 @@ def reset_server(result):
         return result
     if USING_SUPERVISOR:
         if re.search(r':(web|celery|all):', container_role):
-            args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
+            args = [SUPERVISORCTL, '-s', 'http://' + result.hostname + ':9001', 'start', 'reset']
             result = call(args)
             sys.stderr.write("reset_server in worker: called " + ' '.join(args) + "\n")
         else:
@@ -883,7 +883,7 @@ def update_packages():
             sys.stderr.write("update_packages in worker: update completed\n")
             worker_controller.trigger_update(except_for=hostname)
             sys.stderr.write("update_packages in worker: trigger completed\n")
-            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results)
+            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname)
     except:
         e = sys.exc_info()[0]
         error_mess = sys.exc_info()[1]
