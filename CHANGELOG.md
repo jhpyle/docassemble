@@ -1,8 +1,8 @@
 # Change Log
 
-## [0.5.36] - 2019-11-03
+## [0.5.36] - 2019-11-04
 ### Fixed
-- Exceptions raised by syslog calls not trapped.
+- Exceptions raised by syslog calls were not trapped.
 - Problems with restarting server in multi-server configuration.
 
 ## [0.5.35] - 2019-10-31

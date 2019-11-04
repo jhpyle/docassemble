@@ -126,9 +126,9 @@ fi
 
 if [ "${S3ENABLE:-null}" == "true" ]; then
     if [ "${USEMINIO:-false}" == "true" ]; then
-	python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}"
+        python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}"
     else
-	s4cmd mb "s3://${S3BUCKET}" &> /dev/null
+        s4cmd mb "s3://${S3BUCKET}" &> /dev/null
     fi
 fi
 
@@ -565,9 +565,9 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
     fi
 
     if [ "${POSTURLROOT}" == "/" ]; then
-	DALOCATIONREWRITE=" "
+        DALOCATIONREWRITE=" "
     else
-	DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
+        DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
@@ -1229,11 +1229,15 @@ function deregister {
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
         if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             backup_apache
-            rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            if [ "$OTHERLOGSERVER" = false ]; then
+                rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            fi
         fi
         if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             backup_nginx
-            rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            if [ "$OTHERLOGSERVER" = false ]; then
+                rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            fi
         fi
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then

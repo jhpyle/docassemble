@@ -4789,8 +4789,13 @@ def cleanup_sessions():
     kv_session.cleanup_sessions()
     return render_template('base_templates/blank.html')
 
+ready_file = os.path.join(os.path.dirname(WEBAPP_PATH), 'ready')
+
 @app.route("/health_check", methods=['GET'])
 def health_check():
+    if request.args.get('ready', False):
+        if not os.path.isfile(ready_file):
+            abort(400)
     response = make_response(render_template('pages/health_check.html', content="OK"), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
