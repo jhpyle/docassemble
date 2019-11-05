@@ -741,7 +741,14 @@ fi
 echo "30" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+    if [ -f /configdata/initial_credentials ]; then
+	echo "Found initial credentials" >&2
+	source /configdata/initial_credentials
+	rm -f /configdata/initial_credentials
+    fi
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.fix_postgresql_tables \"${DA_CONFIG_FILE}\" && python -m docassemble.webapp.create_tables \"${DA_CONFIG_FILE}\"" www-data
+    unset DA_ADMIN_EMAIL
+    unset DA_ADMIN_PASSWORD
 fi
 
 echo "31" >&2

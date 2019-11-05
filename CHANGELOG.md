@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.5.37] - 2019-11-05
+### Added
+- Method of initializing admin e-mail and password through volume
+  mount.
+### Fixed
+- Dependency on `mod_wsgi` caused problems when upgrading.
+- HTML codes non-printable in dropdown lists.
+- Potential problem with too-short RabbitMQ heartbeat.
+
 ## [0.5.36] - 2019-11-04
 ### Fixed
 - Exceptions raised by syslog calls were not trapped.
