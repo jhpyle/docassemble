@@ -15160,7 +15160,7 @@ def playground_files():
                 need_to_restart = False
                 for up_file in the_files:
                     try:
-                        filename = secure_filename(up_file.filename)
+                        filename = werkzeug.secure_filename(up_file.filename)
                         extension, mimetype = get_ext_and_mimetype(filename)
                         if section == 'modules' and extension != 'py':
                             flash(word("Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders."), 'error')
@@ -15939,7 +15939,7 @@ def playground_packages():
         if the_files:
             for up_file in the_files:
                 #try:
-                    zip_filename = secure_filename(up_file.filename)
+                    zip_filename = werkzeug.secure_filename(up_file.filename)
                     zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", delete=True)
                     up_file.save(zippath.name)
                     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
@@ -22216,7 +22216,7 @@ def api_playground():
                 the_files = request.files.getlist(filekey)
                 if the_files:
                     for the_file in the_files:
-                        filename = secure_filename(the_file.filename)
+                        filename = werkzeug.secure_filename(the_file.filename)
                         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
                         the_file.save(temp_file.name)
                         pg_section.copy_from(temp_file.name, filename=filename)

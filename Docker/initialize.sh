@@ -736,15 +736,29 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     if [ -z "$dbexists" ]; then
         echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
+elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
+    export PGHOST="${DBHOST}"
+    export PGUSER="${DBUSER}"
+    export PGPASSWORD="${DBPASSWORD}"
+    export PGDATABASE="postgres"
+    while ! pg_isready -q; do sleep 1; done
+    dbexists=`psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'"`
+    if [ -z "$dbexists" ]; then
+        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | psql
+    fi
+    unset PGHOST
+    unset PGUSER
+    unset PGPASSWORD
+    unset PGDATABASE
 fi
 
 echo "30" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     if [ -f /configdata/initial_credentials ]; then
-	echo "Found initial credentials" >&2
-	source /configdata/initial_credentials
-	rm -f /configdata/initial_credentials
+        echo "Found initial credentials" >&2
+        source /configdata/initial_credentials
+        rm -f /configdata/initial_credentials
     fi
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.fix_postgresql_tables \"${DA_CONFIG_FILE}\" && python -m docassemble.webapp.create_tables \"${DA_CONFIG_FILE}\"" www-data
     unset DA_ADMIN_EMAIL
