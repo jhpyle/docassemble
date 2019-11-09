@@ -155,6 +155,8 @@ if __name__ == "__main__":
             print('export AZURECONTAINER="' + str(daconfig['azure']['container']) + '"')
     if 'ec2' in daconfig and daconfig['ec2']:
         print('export EC2=true')
+    if 'collect statistics' in daconfig and daconfig['collect statistics']:
+        print('export COLLECTSTATISTICS=true')
     if 'kubernetes' in daconfig and daconfig['kubernetes']:
         print('export KUBERNETES=true')
     if 'log server' in daconfig and daconfig['log server'] is not None:

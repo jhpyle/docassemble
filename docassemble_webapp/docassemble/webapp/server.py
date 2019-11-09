@@ -34,6 +34,7 @@ TypeType = type(type(None))
 
 from docassemble.base.config import daconfig, hostname, in_celery
 
+STATS = daconfig.get('collect statistics', False)
 DEBUG = daconfig.get('debug', False)
 if DEBUG:
     PREVENT_DEMO = False
@@ -2551,6 +2552,8 @@ def get_existing_session(yaml_filename, secret):
 def reset_session(yaml_filename, secret):
     user_dict = fresh_dictionary()
     user_code = get_unique_name(yaml_filename, secret)
+    if STATS:
+        r.incr('da:stats:sessions')
     update_session(yaml_filename, uid=user_code)
     return(user_code, user_dict)
 

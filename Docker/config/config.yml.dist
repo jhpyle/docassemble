@@ -72,6 +72,7 @@ azure:
   account name: {{AZUREACCOUNTNAME}}
   account key: {{AZUREACCOUNTKEY}}
   container: {{AZURECONTAINER}}
+collect statistics: {{COLLECTSTATISTICS}}
 kubernetes: {{KUBERNETES}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}

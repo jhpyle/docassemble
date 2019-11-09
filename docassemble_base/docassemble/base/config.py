@@ -484,6 +484,8 @@ def load(**kwargs):
                 override_config(daconfig, messages, key, env_var, pre_key='azure')
         if env_exists('EC2'):
             override_config(daconfig, messages, 'ec2', 'EC2')
+        if env_exists('COLLECTSTATISTICS'):
+            override_config(daconfig, messages, 'collect statistics', 'COLLECTSTATISTICS')
         if env_exists('KUBERNETES'):
             override_config(daconfig, messages, 'kubernetes', 'KUBERNETES')
         if env_exists('LOGSERVER'):

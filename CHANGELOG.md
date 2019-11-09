@@ -1,9 +1,12 @@
 # Change Log
 
-## [0.5.37] - 2019-11-05
+## [0.5.37] - 2019-11-09
 ### Added
 - Method of initializing admin e-mail and password through volume
   mount.
+- The `collect statistics` Configuration directive.
+### Changed
+- External PostgreSQL database created if it does not exist.
 ### Fixed
 - Dependency on `mod_wsgi` caused problems when upgrading.
 - HTML codes non-printable in dropdown lists.

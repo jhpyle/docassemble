@@ -386,6 +386,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
         -e 's/{{EC2}}/'"${EC2:-false}"'/' \
+        -e 's/{{COLLECTSTATISTICS}}/'"${COLLECTSTATISTICS:-false}"'/' \
         -e 's/{{KUBERNETES}}/'"${KUBERNETES:-false}"'/' \
         -e 's/{{USECLOUDURLS}}/'"${USECLOUDURLS:-false}"'/' \
         -e 's/{{USEMINIO}}/'"${USEMINIO:-false}"'/' \
@@ -1249,13 +1250,13 @@ function deregister {
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
         if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-            backup_apache
+            #backup_apache
             if [ "$OTHERLOGSERVER" = false ]; then
                 rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
             fi
         fi
         if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-            backup_nginx
+            #backup_nginx
             if [ "$OTHERLOGSERVER" = false ]; then
                 rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
             fi

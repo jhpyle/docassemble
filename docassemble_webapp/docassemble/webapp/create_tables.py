@@ -132,8 +132,10 @@ def main():
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if not db.engine.has_table(dbtableprefix + 'alembic_version'):
+                sys.stderr.write("Creating alembic stamp\n")
                 command.stamp(alembic_cfg, "head")
             if db.engine.has_table(dbtableprefix + 'user'):
+                sys.stderr.write("Running alembic upgrade\n")
                 command.upgrade(alembic_cfg, "head")
         #db.drop_all()
         try:
