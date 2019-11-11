@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.5.38] - 2019-11-11
+### Changed
+- Testing scripts now support the `aloe` package as an alternative to
+  `lettuce`.
+### Fixed
+- Web sockets logs not sent to syslog.
+- `RABBITMQ` and `REDIS` not overridden when
+  `ENVIRONMENT_TAKES_PRECEDENCE` is true.
+- Reverted change made in 0.5.37 regarding HTML codes.
+
 ## [0.5.37] - 2019-11-09
 ### Added
 - Method of initializing admin e-mail and password through volume

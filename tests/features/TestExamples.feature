@@ -165,6 +165,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/auto-terms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
     And I click the link "creeper"
+    And I wait 1 second
     Then I should see the phrase "A tall green creature that explodes if you get too close."
     And I click the button "No"
     Then I should see the phrase "You clearly need to play more Minecraft."
@@ -6321,7 +6322,7 @@ Feature: Example interviews
   Scenario: Test the interview "Combobox" in fields with selection
     Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
     Then I should see the phrase "What is your favorite color?"
-    I select "Green" in the combobox
+    And I select "Green" in the combobox
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
@@ -6335,7 +6336,7 @@ Feature: Example interviews
   Scenario: Test the interview "Combobox" with selection
     Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
     Then I should see the phrase "What is your favorite color?"
-    I select "Green" in the combobox
+    And I select "Green" in the combobox
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
@@ -7975,7 +7976,7 @@ Feature: Example interviews
     Then I should see the phrase "I will send your bill to 211 S 11th St, Philadelphia, PA 19107."
     And I should see the phrase "I will ship your order to 222 S 13th St, Philadelphia, PA 19107."
 
-  Scenario: Test the interview "Billing and shipping 2"
+  Scenario: Test the interview "Billing and shipping 3"
     Given I start the interview "docassemble.base:data/questions/examples/object-radio-address.yml"
     Then I should see the phrase "What is your billing address?"
     And I set "Address" to "211 S 11th St"
@@ -7992,6 +7993,7 @@ Feature: Example interviews
     And I click the back button
     Then I should see the phrase "What is your shipping address?"
     And I click the "A new address" option
+    And I wait 1 second
     And I set "Address" to "222 S 13th St"
     And I set "City" to "Philadelphia"
     And I select "Pennsylvania" as the "State"
