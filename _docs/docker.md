@@ -242,14 +242,14 @@ as a minute to stop a container if you are using [Azure Blob
 Storage](#persistent azure).
 
 It is very important to avoid a forced shutdown of **docassemble**.
-The container runs a [PostgreSQL] server, and the data files of the
-server may become corrupted if [PostgreSQL] is not gracefully shut
-down.  To facilitate [data storage] (more on this later),
-**docassemble** backs up your data during the shutdown process and
-restores from that backup during the initialization process.  If the
-shutdown process is interrupted, your data may be left in an
-inconsistent state and there may be errors during later
-initialization.
+The container runs a [PostgreSQL] server (unless configured to use an
+external SQL server), and the data files of the server may become
+corrupted if [PostgreSQL] is not gracefully shut down.  To facilitate
+[data storage] (more on this later), **docassemble** backs up your
+data during the shutdown process and restores from that backup during
+the initialization process.  If the shutdown process is interrupted,
+your data may be left in an inconsistent state and there may be errors
+during later initialization.
 
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
@@ -735,17 +735,25 @@ effect.
 * <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
   server.  Keep undefined or set to `null` in order to use the
   [PostgreSQL] server on the same host.  This environment variable,
-  along with others that begin with `DB`, populates values in
-  [`db` section] of the [configuration] file.
-* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL]
-  database.  The default is `docassemble`.
+  along with others that begin with `DB`, populates values in [`db`
+  section] of the [configuration] file.  If you are using a managed
+  SQL database service, set `DBHOST` to the hostname of the database
+  service.  If you are using [PostgreSQL] and the database referenced
+  by `DBNAME` does not exist on the SQL server, the [Docker] startup
+  process will attempt to use the `DBUSER` and `DBPASSWORD`
+  credentials to create the database.  Otherwise, you need to make
+  sure the database by the name of `DBNAME` exists before
+  **docassemble** starts.
+* <a name="DBNAME"></a>`DBNAME`: The name of the database.  The
+  default is `docassemble`.
 * <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
   [PostgreSQL] server.  The default is `docassemble`.
 * <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
   to the SQL server.  The default is `abc123`.  The password cannot
   contain the character `#`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
-  database specifier.  The default is `postgresql+psycopg2://`.
+  database specifier.  The default is `postgresql+psycopg2://`.  This
+  corresponds with the `prefix` of the [`db`] configuration directive.
 * <a name="DBPORT"></a>`DBPORT`: This sets the port that
   **docassemble** will use to access the SQL server.  If you are using
   the default port for your database backend, you do not need to set
@@ -758,6 +766,10 @@ effect.
   [Docker] on [EC2].  This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
   which it is running.  See the [`ec2`] configuration directive.
+* <a name="COLLECTSTATISTICS"></a>`COLLECTSTATISTICS`: Set this to
+  `true` if you want the server to use [Redis] to track the number of
+  interview sessions initiated.  See the [`collect statistics`]
+  configuration directive.
 * <a name="KUBERNETES"></a>`KUBERNETES`: Set this to `true` if you are
   running inside [Kubernetes].  This tells **docassemble** that it can
   use the IP address of the Pod in place of the hostname.  See the
@@ -2130,3 +2142,4 @@ line), as the containers depend on the images.
 [MinIO]: https://min.io/
 [`use minio`]: {{ site.baseurl }}/docs/config.html#use minio
 [Kubernetes]: https://kubernetes.io/
+[`collect statistics`]: {{ site.baseurl }}/docs/config.html#collect statistics

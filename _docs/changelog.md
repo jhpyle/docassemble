@@ -4,6 +4,33 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.38](https://github.com/jhpyle/docassemble/releases/tag/v0.5.38) - 2019-11-11
+
+### Changed
+- Testing scripts now support the `aloe` package as an alternative to
+  `lettuce`.
+
+### Fixed
+- Web sockets logs not sent to syslog.
+- `RABBITMQ` and `REDIS` not overridden when
+  `ENVIRONMENT_TAKES_PRECEDENCE` is true.
+- Reverted change made in 0.5.37 regarding HTML codes.
+
+## [0.5.37](https://github.com/jhpyle/docassemble/releases/tag/v0.5.37) - 2019-11-09
+
+### Added
+- Method of initializing admin e-mail and password through volume
+  mount.
+- The `collect statistics` Configuration directive.
+
+### Changed
+- External PostgreSQL database created if it does not exist.
+
+### Fixed
+- Dependency on `mod_wsgi` caused problems when upgrading.
+- HTML codes non-printable in dropdown lists.
+- Potential problem with too-short RabbitMQ heartbeat.
+
 ## [0.5.36](https://github.com/jhpyle/docassemble/releases/tag/v0.5.36) - 2019-11-04
 
 ### Fixed

@@ -1083,14 +1083,14 @@ should behave, you can detect not only obvious bugs and also the
 stealthy bugs that most people won't notice or report.
 
 **docassemble** comes with scripts and examples for running automated
-acceptance tests using [Lettuce], which is a Python version of the
+acceptance tests using [Aloe], which is a Python version of the
 [Cucumber] system for [Behavior-Driven Development].
 
 The idea behind "[Behavior-Driven Development]" is for development and
 management teams to work together write acceptance tests in a
 human-readable domain-specific language that can also be interpreted
 by the computer in order to test the software.  In [Cucumber] and
-[Lettuce], this human-readable language is a plain text file written
+[Aloe], this human-readable language is a plain text file written
 in the [Gherkin] format.  **docassemble** allows interview developers
 to write [Gherkin] scripts that look like this:
 
@@ -1111,7 +1111,7 @@ language appears.  This ensures that testing is thorough because it
 tests the software from the user's perspective.  Everything the
 technology does, from the JavaScript running in the user's browser to
 the background processes running on **docassemble**, is tested.  More
-information about deploying [Lettuce] is available [below](#lettuce).
+information about deploying [Aloe] is available [below](#aloe).
 
 Technology for web browser automation exists that allows you to
 "record" keystrokes and button clicks and then "play" it back at a
@@ -1226,7 +1226,7 @@ could seek the definition of `scenario_user_has_employer` and
 `scenario_high_tax_bracket`.  This will allow you to avoid having to
 copy and paste code.
 
-You could then have a [Lettuce] script that starts with:
+You could then have a [Aloe] script that starts with:
 
 {% highlight text %}
 Scenario: Test the interview "Debt collection advice"
@@ -1239,7 +1239,7 @@ Scenario: Test the interview "Debt collection advice"
 
 These few lines effectively "stand in" for many lines of [Gherkin]
 sentences you would otherwise have to write to simulate the user typing in
-information.  A [Lettuce] script like this is easier to maintain than
+information.  A [Aloe] script like this is easier to maintain than
 one that you have to modify every time you make a change to the
 language or order of your information-gathering screens.
 
@@ -1320,7 +1320,7 @@ for testing purposes.  These test interviews could be operated by
 subject matter experts manually, who could manually try out various
 possibilities in to make sure the algorithm produces the legally
 correct response.  These same interviews could also be tested in an
-automated fashion with [Lettuce] scripts.  For example, a test
+automated fashion with [Aloe] scripts.  For example, a test
 interview, `test-jurisdiction.yml`, might look like this:
 
 {% highlight yaml %}
@@ -1359,7 +1359,7 @@ question: |
 ---
 {% endhighlight %}
 
-The corresponding [Lettuce] script would look like this:
+The corresponding [Aloe] script would look like this:
 
 {% highlight text %}
 Feature: Determination of jurisdiction
@@ -1386,7 +1386,7 @@ Feature: Determination of jurisdiction
 
 You could have a number of testing scripts like these, which you could
 run to ensure that the legal logic of your interview is proper.
-Unlike [Lettuce] scripts that test your actual interview, these
+Unlike [Aloe] scripts that test your actual interview, these
 scripts will not need to be changed whenever you make stylistic
 modifications to your interview.  In that way, they are much easier to
 maintain.
@@ -1403,27 +1403,27 @@ You do not need to develop a rigid habit of writing test scripts for
 every piece of code you write.  If you have a `code` block that
 capitalizes a word, for example, it is reasonable to "test" it by
 "eyeballing" it or testing it incidentally as part of a
-whole-interview [Lettuce] script.  But if you have mission-critical
+whole-interview [Aloe] script.  But if you have mission-critical
 algorithms that do somewhat tricky things, spending a lot of time on
 test code will yield a good return on investment.
 
 The next section provides a practical explanation of how to use
-[Lettuce] to test **docassemble** interviews.
+[Aloe] to test **docassemble** interviews.
 
-## <a name="lettuce"></a>Using Lettuce
+## <a name="aloe"></a>Using Aloe
 
-[Lettuce] is a Python program that runs on your local computer.  It
+[Aloe] is a Python program that runs on your local computer.  It
 uses [selenium] to automate the behavior of a web browser such as
 Firefox or Chrome.
 
-The way that [Lettuce] works is beyond the scope of this
+The way that [Aloe] works is beyond the scope of this
 documentation.  This section describes only a broad outline of how
-[Lettuce] can be used to test **docassemble** interviews.
+[Aloe] can be used to test **docassemble** interviews.
 
-To install [Lettuce], do:
+To install [Aloe], do:
 
 {% highlight bash %}
-pip install lettuce selenium
+pip install aloe selenium
 {% endhighlight %}
 
 You will then need a "driver" that will control your web browser.  If
@@ -1436,7 +1436,7 @@ If your docassemble extension package is in the directory
 
 {% highlight bash %}
 $ cd /home/jsmith/docassemble-lt/tests
-$ lettuce
+$ aloe
 {% endhighlight %}
 
 Of course, you first need to create a `tests` directory and create the
@@ -1450,15 +1450,18 @@ docassemble-lt
 |-- ... various files like README.md ...
 `-- tests
     `-- features
+        `-- __init__.py
         |-- steps
-        |   `-- docassemble.py
+            `-- __init__.py
+            |-- docassemble.py
         |-- terrain.py
         `-- MyTest.feature
 {% endhighlight %}
 
-The file `MyTest.feature` can be called anything, and you can have
-more than one `.feature` file.  When you run `lettuce`, all of the
-feature files will be used.
+The `__init__.py` files are empty placeholder files.  The file
+`MyTest.feature` can be called anything, and you can have more than
+one `.feature` file.  When you run `aloe`, all of the feature files
+will be used.
 
 The `terrain.py` and `docassemble.py` files are the [Python] modules
 that perform the web browser automation.  Versions of these files are
@@ -1493,14 +1496,14 @@ Feature: Interview that works with actions
 
 One useful feature is the "step" invoked by "I wait forever."  If you
 run this step, the browser will stay open and you can use it.  This
-can be helpful if you want to use [Lettuce] to bring you to a
+can be helpful if you want to use [Aloe] to bring you to a
 particular step in your interview, without you having to re-do all of
 the steps by hand.
 
 For more information about how automated testing works, read the
-documentation for [Lettuce].  You may also wish to read about
+documentation for [Aloe].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
-to use [Lettuce].
+to use [Aloe].
 
 ## <a name="nontechnical"></a>Improving quality with non-technical staff
 
@@ -1571,7 +1574,7 @@ writing and editing [Gherkin] scripts, which the developers can clean
 up for syntax and use as a basis for implementing changes.
 Non-technical people can review [Gherkin] scripts to make sure they
 make sense from a substantive perspective.  They can edit them to add
-additional conditions so that the [Lettuce] tests are more
+additional conditions so that the [Aloe] tests are more
 comprehensive.
 
 It is possible to structure [YAML] interview files so that they are
@@ -1630,7 +1633,7 @@ staff member who knows a lot about the subject matter.
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
-[Lettuce]: http://lettuce.it/
+[Aloe]: https://aloe.readthedocs.io/en/latest/
 [Cucumber]: https://cucumber.io/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
