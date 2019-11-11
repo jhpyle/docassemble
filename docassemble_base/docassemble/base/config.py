@@ -142,6 +142,16 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
+        null_messages = list()
+        for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='s3')
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='azure')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
     if 'maximum content length' in daconfig:
         if isinstance(daconfig['maximum content length'], (int, type(None))):
             if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
@@ -473,9 +483,9 @@ def load(**kwargs):
         if env_exists('TIMEZONE'):
             override_config(daconfig, messages, 'timezone', 'TIMEZONE')
         if env_exists('REDIS'):
-            override_config(daconfig, messages, 'redis', 'redis')
+            override_config(daconfig, messages, 'redis', 'REDIS')
         if env_exists('RABBITMQ'):
-            override_config(daconfig, messages, 'rabbitmq', 'rabbitmq')
+            override_config(daconfig, messages, 'rabbitmq', 'RABBITMQ')
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='s3')
