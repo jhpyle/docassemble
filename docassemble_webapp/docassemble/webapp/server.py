@@ -17958,7 +17958,7 @@ def logs():
             if the_file is None:
                 the_file = files[0]
             filename, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(the_file))
-    if not os.path.isfile(filename):
+    if len(files) and not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
         if len(files):
             the_file = files[0]
