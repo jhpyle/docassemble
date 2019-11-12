@@ -21496,6 +21496,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     ci = current_info(yaml=yaml_filename, req=request)
     ci['session'] = session_id
     ci['encrypted'] = True
+    ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
@@ -21506,7 +21507,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     except Exception as e:
         release_lock(session_id, yaml_filename)
         docassemble.base.functions.set_language(old_language)
-        raise Exception("Failure to assemble interview: " + str(e))
+        raise Exception("create_new_interview: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e))
     docassemble.base.functions.set_language(old_language)
     if user_dict.get('multi_user', False) is True:
         encrypted = False
@@ -21558,6 +21559,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     ci = current_info(yaml=yaml_filename, req=request)
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
+    ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     #interview_status.checkin = True
     tbackup = docassemble.base.functions.backup_thread_variables()
@@ -21576,7 +21578,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
-        raise Exception("Failure to assemble interview: " + text_type(e))
+        raise Exception("get_question_data: failure to assemble interview: " + e.__class__.__name__ + ": " + text_type(e))
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
@@ -21703,6 +21705,7 @@ def api_session_action():
     ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments))
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
+    ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
@@ -21717,7 +21720,7 @@ def api_session_action():
     except Exception as e:
         release_lock(session_id, yaml_filename)
         docassemble.base.functions.set_language(old_language)
-        return jsonify_with_status("Failure to assemble interview: " + str(e), 400)
+        return jsonify_with_status("api_session_action: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e), 400)
     docassemble.base.functions.set_language(old_language)
     steps += 1
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
@@ -23075,7 +23078,8 @@ sys_logger.setLevel(logging.DEBUG)
 
 LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
 
-if LOGSERVER is None:
+#if LOGSERVER is None:
+if True:
     docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
     sys_logger.addHandler(docassemble_log_handler)
 else:
