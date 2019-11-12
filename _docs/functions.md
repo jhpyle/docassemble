@@ -732,7 +732,8 @@ will substitute the `default` keyword argument.
 If `user_name` is `John Wilkes Booth`,
 `space_to_underscore(user_name)` will return `John_Wilkes_Booth`.
 This is useful if you do not want spaces in the filenames of your
-[attachments].
+[attachments]. This function will also do [basic filename sanitization](https://werkzeug.palletsprojects.com/en/0.16.x/utils/#werkzeug.utils.secure_filename)
+to remove dangerous characters and command injection.
 
 {% highlight yaml %}
 ---
