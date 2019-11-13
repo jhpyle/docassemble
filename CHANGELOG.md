@@ -1,11 +1,12 @@
 # Change Log
 
-## [0.5.39] - 2019-11-12
+## [0.5.39] - 2019-11-13
 ### Changed
-- Multi-server configuration syslog system improved.
+- Multi-server syslog system improved.
 - `objects_from_file()` now accepts `DAFile` and related objects.
 ### Fixed
 - Problem with `DAStore` being used with the API.
+- Logrotate not rotating all files.
 
 ## [0.5.38] - 2019-11-11
 ### Changed
