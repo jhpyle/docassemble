@@ -36,6 +36,15 @@ def click_inside(step):
     action.move_to_element_with_offset(elem, 20, 20)
     action.click()
     action.perform()
+    action.move_to_element_with_offset(elem, 20, 40)
+    action.click()
+    action.perform()
+    action.move_to_element_with_offset(elem, 40, 40)
+    action.click()
+    action.perform()
+    action.move_to_element_with_offset(elem, 40, 20)
+    action.click()
+    action.perform()
 
 @step(r'I am using the server "([^"]+)"')
 def using_server(step, server):

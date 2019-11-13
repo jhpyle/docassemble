@@ -3780,6 +3780,14 @@ def setify(item, output=set()):
 def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_objects=False):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
     #from docassemble.base.core import DAObject, DAList, DADict, DASet
+    if isinstance(file_ref, DAFileCollection):
+        file_ref = file_ref._first_file()
+    if isinstance(file_ref, DAFileList) and len(file_ref.elements):
+        file_ref = file_ref.elements[0]
+    if file_ref is None:
+        raise Exception("objects_from_file: no file referenced")
+    if isinstance(file_ref, DAFile):
+        file_ref = file_ref.number
     if name is None:
         frame = inspect.stack()[1][0]
         #logmessage("co_name is " + str(frame.f_code.co_names))

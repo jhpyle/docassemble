@@ -9,6 +9,8 @@ else
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 
+source "${DA_ACTIVATE}"
+
 export HOME=/var/www
 export CRONTYPE=${1:-cron_daily}
 

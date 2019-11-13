@@ -380,10 +380,10 @@ Feature: Example interviews
     Then I should see the phrase "What is your favorite food?"
     And I set "Favorite food" to "potatoes"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I set "Favorite food" to "tomatoes"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food"
     And I should see the phrase "potatoes"
@@ -934,7 +934,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
@@ -951,7 +951,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "What is the subject of your complaint?"
@@ -1008,7 +1008,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "What is the subject of your complaint?"
@@ -6828,8 +6828,10 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
     Then I should see the phrase "What is your favorite food?"
     And I set "Favorite food" to "soup"
+    And I unfocus
     And I set "Favorite drink" to "water"
-    And I wait 1 second
+    And I unfocus
+    And I wait 4 seconds
     Then I should see the phrase "What? You like SOUP?"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food is soup and your favorite drink is water."

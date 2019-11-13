@@ -8,12 +8,11 @@ else
     export DA_DEFAULT_LOCAL="local3.6"
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
+source "${DA_ACTIVATE}"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
-
-source "${DA_ACTIVATE}"
 
 set -- $LOCALE
 export LANG=$1
@@ -153,7 +152,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	rm -rf "${PGBACKUPDIR}"
     fi
     if [ "${AZUREENABLE:-false}" == "false" ]; then
-        rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print`
+        rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print`
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
