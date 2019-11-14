@@ -758,7 +758,7 @@ template files.
 
 If you accidentially write code that gets into an infinite loop, the
 only way to stop the code is to terminate the process in which the
-code is runnnig.  In a production web server environment, this could
+code is running.  In a production web server environment, this could
 impact other users because the process may be running multiple threads
 for different users, only one of which is stuck in an infinite loop.
 Unfortunately, it is not possible in [Python] to terminate a specific

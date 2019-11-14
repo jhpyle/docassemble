@@ -915,7 +915,7 @@ you can edit the [configuration] using the web interface.
 
 If the server is not running, and you are using [persistent volumes],
 you can use [`docker volume inspect`] to find the location of the
-persistent volume, and find
+persistent volume.
 
 When **docassemble** starts up on a [Docker] container, it:
 

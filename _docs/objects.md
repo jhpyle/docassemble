@@ -2033,7 +2033,8 @@ For a storage object `mystore`, you can set `mystore.base` to:
 
 * `'user'` - The prefix will be based on the user's ID.
   (If the user is not logged in, but then registers, the key will be
-  automatically re-assigned to the logged-in user's ID.)  By 
+  automatically re-assigned to the logged-in user's ID.)  By
+  default, the objects will be encrypted.
 * `'interview'` - The prefix will be based on the interview name
   (e.g., `docassemble.demo:data/questions/questions.yml`).  By
   default, the objects will not be encrypted.
