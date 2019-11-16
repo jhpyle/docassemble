@@ -3,6 +3,7 @@
 ## [0.5.40] - 2019-11-
 ### Added
 - The `button style` Configuration directive.
+- The `disable analytics` option under `features`.
 
 ## [0.5.39] - 2019-11-13
 ### Changed
