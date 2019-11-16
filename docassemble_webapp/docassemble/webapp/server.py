@@ -1785,7 +1785,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
         api_key = google_config.get('api key')
     else:
         api_key = None
-    if ga_configured:
+    if ga_configured and interview_status.question.interview.options.get('analytics on', True):
         ga_id = google_config.get('analytics id')
     else:
         ga_id = None
@@ -1832,7 +1832,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
     return scripts
 
 def additional_css(interview_status, js_only=False):
-    if 'segment id' in daconfig:
+    if 'segment id' in daconfig and interview_status.question.interview.options.get('analytics on', True):
         segment_id = daconfig['segment id']
     else:
         segment_id = None
@@ -6768,10 +6768,11 @@ def index(action_argument=None):
     else:
         question_id = None;
     question_id_dict = dict(id=question_id)
-    if 'segment' in interview_status.extras:
-        question_id_dict['segment'] = interview_status.extras['segment']
-    if 'ga_id' in interview_status.extras:
-        question_id_dict['ga'] = interview_status.extras['ga_id']
+    if interview_status.question.interview.options.get('analytics on', True):
+        if 'segment' in interview_status.extras:
+            question_id_dict['segment'] = interview_status.extras['segment']
+        if 'ga_id' in interview_status.extras:
+            question_id_dict['ga'] = interview_status.extras['ga_id']
     append_script_urls = list()
     append_javascript = ''
     if not is_ajax:
@@ -6846,13 +6847,17 @@ def index(action_argument=None):
         else:
             forceFullScreen = ''
         the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
-        if ga_configured:
-            ga_id = google_config.get('analytics id')
+        if interview_status.question.interview.options.get('analytics on', True):
+            if ga_configured:
+                ga_id = google_config.get('analytics id')
+            else:
+                ga_id = None
+            if 'segment id' in daconfig:
+                segment_id = daconfig['segment id']
+            else:
+                segment_id = None
         else:
             ga_id = None
-        if 'segment id' in daconfig:
-            segment_id = daconfig['segment id']
-        else:
             segment_id = None
         index_params_external = copy.copy(index_params)
         index_params_external['_external'] = True
