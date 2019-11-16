@@ -2459,7 +2459,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""

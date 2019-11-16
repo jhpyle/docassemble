@@ -9,7 +9,7 @@
 <p class="h6">{{ version }}</p>
 
 <div>
-  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
 </div>
 {%- endif %}
 
@@ -44,7 +44,7 @@
   {% for package in package_list %}
     <tr>
       <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}{% if package.package.gitbranch %} ({{ package.package.gitbranch }}){% endif %}</td>
-      <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
+      <td style="text-align:right;">{% if package.can_update %}<a class="btn {{ config['BUTTON_STYLE'] }}secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn {{ config['BUTTON_STYLE'] }}warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}
   </tbody>

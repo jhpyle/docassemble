@@ -968,12 +968,19 @@ app.config['USE_PYPI'] = daconfig.get('pypi', False)
 
 if daconfig.get('button size', 'medium') == 'medium':
     app.config['BUTTON_CLASS'] = 'btn-da'
-elif daconfig.get('button size', 'medium') == 'large':
+elif daconfig['button size'] == 'large':
     app.config['BUTTON_CLASS'] = 'btn-lg btn-da'
-elif daconfig.get('button size', 'medium') == 'small':
+elif daconfig['button size'] == 'small':
     app.config['BUTTON_CLASS'] = 'btn-sm btn-da'
 else:
     app.config['BUTTON_CLASS'] = 'btn-da'
+
+if daconfig.get('button style', 'normal') == 'normal':
+    app.config['BUTTON_STYLE'] = 'btn-'
+elif daconfig['button style'] == 'outline':
+    app.config['BUTTON_STYLE'] = 'btn-outline-'
+else:
+    app.config['BUTTON_STYLE'] = 'btn-'
 
 page_parts = dict()
 for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
@@ -3264,18 +3271,18 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 if not base_name_info[var]['show']:
                     continue
             if var in documentation_dict or var in base_name_info:
-                class_type = 'info'
+                class_type = 'btn-info'
                 title = 'title=' + json.dumps(word("Special variable")) + ' '
             elif var not in fields_used and var not in implicitly_defined and var_trans not in fields_used and var_trans not in implicitly_defined:
-                class_type = 'default'
+                class_type = 'btn-secondary'
                 title = 'title=' + json.dumps(word("Possibly not defined")) + ' '
             elif var not in needed_names:
-                class_type = 'warning'
+                class_type = 'btn-warning'
                 title = 'title=' + json.dumps(word("Possibly not used")) + ' '
             else:
-                class_type = 'primary'
+                class_type = 'btn-primary'
                 title = ''
-            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm btn-' + class_type + ' playground-variable">' + var + '</a>'
+            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm ' + class_type + ' playground-variable">' + var + '</a>'
             vocab_dict[var] = var
             if var in has_children:
                 content += '&nbsp;<a tabindex="0" class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fas fa-ellipsis-h"></i></a>'
@@ -7602,17 +7609,17 @@ def index(action_argument=None):
         if (daWhichButton != null){
           $(".btn-da").each(function(){
             if (this != daWhichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-danger btn-secondary");
-              $(this).addClass("btn-light");
+              $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary """ + app.config['BUTTON_STYLE'] + """info """ + app.config['BUTTON_STYLE'] + """warning """ + app.config['BUTTON_STYLE'] + """danger """ + app.config['BUTTON_STYLE'] + """secondary");
+              $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """light");
             }
           });
-          if ($(daWhichButton).hasClass("btn-success")){
-            $(daWhichButton).removeClass("btn-success");
-            $(daWhichButton).addClass("btn-primary");
+          if ($(daWhichButton).hasClass(""" + '"' + app.config['BUTTON_STYLE'] + """success")){
+            $(daWhichButton).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
+            $(daWhichButton).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary");
           }
           else{
-            $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-danger btn-success btn-light");
-            $(daWhichButton).addClass("btn-secondary");
+            $(daWhichButton).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary """ + app.config['BUTTON_STYLE'] + """info """ + app.config['BUTTON_STYLE'] + """warning """ + app.config['BUTTON_STYLE'] + """danger """ + app.config['BUTTON_STYLE'] + """success """ + app.config['BUTTON_STYLE'] + """light");
+            $(daWhichButton).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
           }
         }
         var tableOrder = {};
@@ -9340,12 +9347,12 @@ def index(action_argument=None):
             var the_a = $(this);
             var the_delay = 1000 + 250 * parseInt($(this).data('index'));
             setTimeout(function(){
-              $(the_a).removeClass('btn-secondary');
+              $(the_a).removeClass('""" + app.config['BUTTON_STYLE'] + """secondary');
               if ($(the_a).hasClass('active')){
-                $(the_a).addClass('btn-success');
+                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """success');
               }
               else{
-                $(the_a).addClass('btn-warning');
+                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """warning');
               }
             }, the_delay);
           }
@@ -11756,8 +11763,8 @@ def monitor():
           $("#listelement" + skey).addClass("list-group-item-danger");
           $("#session" + skey).find("a").remove();
           $("#session" + skey).find("span").first().html(""" + json.dumps(word("offline")) + """);
-          $("#session" + skey).find("span").first().removeClass('btn-info');
-          $("#session" + skey).find("span").first().addClass('btn-danger');
+          $("#session" + skey).find("span").first().removeClass('""" + app.config['BUTTON_STYLE'] + """info');
+          $("#session" + skey).find("span").first().addClass('""" + app.config['BUTTON_STYLE'] + """danger');
           $(xButton).click(function(){
               $("#listelement" + skey).slideUp(300, function(){
                   $("#listelement" + skey).remove();
@@ -11882,7 +11889,7 @@ def monitor():
               $(theIframeContainer).appendTo($(theListElement));
               var theChatArea = document.createElement('div');
               $(theChatArea).addClass('monitor-chat-area dainvisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn btn-secondary daChatButton" type="button" disabled="">""" + word("Send") + """<\/button><\/div><\/div><\/div><\/form>');
+              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn """ + app.config['BUTTON_STYLE'] + """secondary daChatButton" type="button" disabled="">""" + word("Send") + """<\/button><\/div><\/div><\/div><\/form>');
               $(theChatArea).attr('id', 'chatarea' + key);
               var submitter = function(){
                   //console.log("I am the submitter and I am submitting " + key);
@@ -11928,11 +11935,11 @@ def monitor():
             $(phoneButton).addClass("btn phone");
             $(phoneButton).data('name', 'phone');
             if (key in daPhonePartners){
-              $(phoneButton).addClass("phone-on btn-success");
+              $(phoneButton).addClass("phone-on """ + app.config['BUTTON_STYLE'] + """success");
               $(phoneButton).attr('title', daPhoneOnMessage);
             }
             else{
-              $(phoneButton).addClass("phone-off btn-secondary");
+              $(phoneButton).addClass("phone-off """ + app.config['BUTTON_STYLE'] + """secondary");
               $(phoneButton).attr('title', daPhoneOffMessage);
             }
             $(phoneButton).attr('tabindex', 0);
@@ -11946,9 +11953,9 @@ def monitor():
               e.preventDefault();
               if ($(this).hasClass("phone-off") && daPhoneNumber != null){
                 $(this).removeClass("phone-off");
-                $(this).removeClass("btn-secondary");
+                $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
                 $(this).addClass("phone-on");
-                $(this).addClass("btn-success");
+                $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
                 $(this).attr('title', daPhoneOnMessage);
                 daPhonePartners[key] = 1;
                 daNewPhonePartners[key] = 1;
@@ -11958,9 +11965,9 @@ def monitor():
               }
               else{
                 $(this).removeClass("phone-on");
-                $(this).removeClass("btn-success");
+                $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
                 $(this).addClass("phone-off");
-                $(this).addClass("btn-secondary");
+                $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
                 $(this).attr('title', daPhoneOffMessage);
                 if (key in daPhonePartners){
                   delete daPhonePartners[key];
@@ -11975,7 +11982,7 @@ def monitor():
             });
           }
           var unblockButton = document.createElement('a');
-          $(unblockButton).addClass("btn btn-info daobservebutton");
+          $(unblockButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """info daobservebutton");
           $(unblockButton).data('name', 'unblock');
           if (!obj.blocked){
               $(unblockButton).addClass("dainvisible");
@@ -11984,7 +11991,7 @@ def monitor():
           $(unblockButton).attr('href', '#');
           $(unblockButton).appendTo($(sessionDiv));
           var blockButton = document.createElement('a');
-          $(blockButton).addClass("btn btn-danger daobservebutton");
+          $(blockButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """danger daobservebutton");
           if (obj.blocked){
               $(blockButton).addClass("dainvisible");
           }
@@ -12008,7 +12015,7 @@ def monitor():
               return false;
           });
           var joinButton = document.createElement('a');
-          $(joinButton).addClass("btn btn-warning daobservebutton");
+          $(joinButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """warning daobservebutton");
           $(joinButton).html(""" + json.dumps(word("Join")) + """);
           $(joinButton).attr('href', """ + json.dumps(url_for('visit_interview') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
           $(joinButton).data('name', 'join');
@@ -12016,7 +12023,7 @@ def monitor():
           $(joinButton).appendTo($(sessionDiv));
           if (wants_to_chat){
               var openButton = document.createElement('a');
-              $(openButton).addClass("btn btn-primary daobservebutton");
+              $(openButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """primary daobservebutton");
               $(openButton).attr('href', """ + json.dumps(url_for('observer') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
               //$(openButton).attr('href', 'about:blank');
               $(openButton).attr('id', 'observe' + key);
@@ -12025,19 +12032,19 @@ def monitor():
               $(openButton).data('name', 'open');
               $(openButton).appendTo($(sessionDiv));
               var stopObservingButton = document.createElement('a');
-              $(stopObservingButton).addClass("btn btn-secondary daobservebutton dainvisible");
+              $(stopObservingButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """secondary daobservebutton dainvisible");
               $(stopObservingButton).html(""" + json.dumps(word("Stop Observing")) + """);
               $(stopObservingButton).attr('href', '#');
               $(stopObservingButton).data('name', 'stopObserving');
               $(stopObservingButton).appendTo($(sessionDiv));
               var controlButton = document.createElement('a');
-              $(controlButton).addClass("btn btn-info daobservebutton");
+              $(controlButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """info daobservebutton");
               $(controlButton).html(""" + json.dumps(word("Control")) + """);
               $(controlButton).attr('href', '#');
               $(controlButton).data('name', 'control');
               $(controlButton).appendTo($(sessionDiv));
               var stopControllingButton = document.createElement('a');
-              $(stopControllingButton).addClass("btn btn-secondary daobservebutton dainvisible");
+              $(stopControllingButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """secondary daobservebutton dainvisible");
               $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
               $(stopControllingButton).attr('href', '#');
               $(stopControllingButton).data('name', 'stopcontrolling');
@@ -23049,7 +23056,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          get_question_data=get_question_data,
                                          fix_pickle_obj=fix_pickle_obj,
                                          main_page_parts=main_page_parts,
-                                         SavedFile=SavedFile)
+                                         SavedFile=SavedFile,
+                                         button_class_prefix=app.config['BUTTON_STYLE'])
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

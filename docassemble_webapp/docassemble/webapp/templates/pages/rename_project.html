@@ -12,8 +12,8 @@
                 </div>
             </div>
             <div class="form-actions">
-                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], title=word('Save your changes')) }}
-                <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">{{ word('Cancel') }}</a>
+                {{ render_submit_field(form.submit, class="btn {{ config['BUTTON_STYLE'] }}primary " + config['BUTTON_CLASS'], title=word('Save your changes')) }}
+                <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">{{ word('Cancel') }}</a>
             </div>
         </form>
         {%- if after_text %}
@@ -21,6 +21,6 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page') }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
 {%- endblock %}
 

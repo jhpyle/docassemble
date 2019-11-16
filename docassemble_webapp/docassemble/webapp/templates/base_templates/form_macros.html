@@ -125,7 +125,7 @@
 {%- endmacro %}
 
 {% macro render_submit_field(field, label=None, id=None, tabindex=None, class=None, title=None, style=None, data=None) %}
-    {%- if not class %}{% set class="btn btn-primary " + config['BUTTON_CLASS'] %}{% endif %}
+    {%- if not class %}{% set class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'] %}{% endif %}
     {%- if not label %}{% set label=field.label.text|word %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if style %} style="{{ style }}"{% endif %}{% if data %}{% for key in data %} data-{{ key }}="{{ data[key] }}"{% endfor %}{% endif %}>{{label}}</button>
 {%- endmacro %}
 
@@ -150,7 +150,7 @@
 
 {% macro myrender_submit_field(field, label=None, tabindex=None, id=None) %}
     {%- if not label %}{% set label=field.label.text|word %}{% endif %}
-    <button type="submit" {% if id %}id="{{ id }}" {% endif %}class="btn btn-primary {{ config['BUTTON_CLASS'] }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{ label }}</button>
+    <button type="submit" {% if id %}id="{{ id }}" {% endif %}class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{ label }}</button>
 {%- endmacro %}
 
 {% macro myrender_hidden_field(field, value="") -%}

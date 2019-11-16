@@ -25,8 +25,8 @@
             {{ form.hidden_tag() }}
             <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
             <div class="form-actions mt-2">
-              {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-              {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
             </div>
           </form>
 {% endblock %}

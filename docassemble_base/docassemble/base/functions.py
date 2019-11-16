@@ -947,7 +947,7 @@ class DANav(object):
         if style == "inline":
             the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'
-            a_class = "btn btn-secondary danavlink "
+            a_class = "btn " + server.button_class_prefix + "secondary danavlink "
         else:
             if not self.visible():
                 return ''

@@ -25,7 +25,7 @@ columns:
   - Started: |
       row_item['modtime'] if 'modtime' in row_item else ''
   - Delete: |
-      '<a href="' + url_action('delete', filename=row_item['filename'], session=row_item['session']) + '" class="btn btn-sm btn-warning">Delete</a>' if 'title' in row_item else '<a href="' + url_action('delete_all') + '" class="btn btn-sm btn-danger">Delete All</a>'
+      '<a href="' + url_action('delete', filename=row_item['filename'], session=row_item['session']) + '" class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning">Delete</a>' if 'title' in row_item else '<a href="' + url_action('delete_all') + '" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger">Delete All</a>'
 ---
 prevent going back: True
 mandatory: True

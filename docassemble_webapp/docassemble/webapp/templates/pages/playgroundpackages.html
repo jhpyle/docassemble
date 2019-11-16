@@ -135,19 +135,19 @@
               </div>
               {%- endif %}
               <div class="form-actions">
-                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
+                {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
                 {%- if current_file != '' %}
-                {{ render_submit_field(form.install, class="btn btn-success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
+                {{ render_submit_field(form.install, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
                 {%- if can_publish_to_pypi %}
-                {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
+                {{ render_submit_field(form.pypi, id="daPyPI", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
                 {%- endif %}
                 {%- if can_publish_to_github %}
-                {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
-                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-secondary " + config['BUTTON_CLASS'], style="display:none") }}
+                {{ render_submit_field(form.github, id="daGitHub", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
+                {{ render_submit_field(form.cancel, id="daCancel", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
-                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
+                {{ render_submit_field(form.delete, id="daDelete", class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
-                <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages', project=current_project) }}">{{ word('Cancel') }}</a>
+                <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages', project=current_project) }}">{{ word('Cancel') }}</a>
                 {%- endif %}
               </div>
             </div>
@@ -158,5 +158,5 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
 {%- endblock %}

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.40] - 2019-11-
+### Added
+- The `button style` Configuration directive.
+
 ## [0.5.39] - 2019-11-13
 ### Changed
 - Multi-server syslog system improved.
