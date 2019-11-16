@@ -4,6 +4,9 @@
 ### Added
 - The `button style` Configuration directive.
 - The `disable analytics` option under `features`.
+### Fixed
+- The LDAP login feature was not compatible with the new version of
+  the `python-ldap` package.
 
 ## [0.5.39] - 2019-11-13
 ### Changed

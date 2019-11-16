@@ -61,7 +61,7 @@ class MySignInForm(LoginForm):
                 else:
                     connect.unbind_s()
                     result = super(MySignInForm, self).validate()
-            except ldap.LDAPError,ldap.INVALID_CREDENTIALS:
+            except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
                 result = super(MySignInForm, self).validate()
         else:
