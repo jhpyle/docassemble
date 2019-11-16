@@ -5456,12 +5456,12 @@ Feature: Example interviews
 
   Scenario: Test the interview "Interviews"
     Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
-    And I wait 1 second
+    And I wait 3 seconds
     Then I should see the phrase "Sign in"
 
   Scenario: Test the interview "Interviews"
     Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
-    And I wait 1 second
+    And I wait 3 seconds
     Then I should see the phrase "Sign in"
 
   Scenario: Test the interview "Logo title"
