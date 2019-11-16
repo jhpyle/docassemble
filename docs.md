@@ -114,12 +114,12 @@ enter the interview to evaluate the information and provide legal
 advice, which the user would see the next time they log in.
 
 Using the [Background Tasks] features, you can have your interviews do
-things on the server at times other than times when the user presses a
+things on the server at times other than when the user presses a
 button to advance to a new page.  Time-intensive tasks can run in the
 [background].  The interview can [evaluate user input] before the user
-submits it.  Interviews can do things [when the user is not logged
-in], like send a reminder [e-mail] to a user about a deadline as the date
-approaches.
+clicks the Continue button.  Interviews can do things [when the user
+is not logged in], like send a reminder [e-mail] to a user about a
+deadline as the date approaches.
 
 **docassemble** is a multi-purpose platform, but it is particularly
 designed for [Legal Applications], and has special functionality for

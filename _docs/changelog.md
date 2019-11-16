@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.40](https://github.com/jhpyle/docassemble/releases/tag/v0.5.40) - 2019-11-15
+
+### Added
+- The `button style` Configuration directive.
+- The `disable analytics` option under `features`.
+
+### Fixed
+- The LDAP login feature was not compatible with the new version of
+  the `python-ldap` package.
+
 ## [0.5.39](https://github.com/jhpyle/docassemble/releases/tag/v0.5.39) - 2019-11-13
 
 ### Changed

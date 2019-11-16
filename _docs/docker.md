@@ -141,7 +141,9 @@ sudo usermod -a -G docker ec2-user
 
 The `usermod` line allows the non-root user to run [Docker].  You may
 need to log out and log back in again for this new user permission to
-take effect.
+take effect.  On some distributions, the `docker` group is not created
+by the installation process, so you will need to manually create it by
+running `sudo groupadd docker` before you run the `usermod` command.
 
 [Docker] will probably start automatically after it is installed.  On
 Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo

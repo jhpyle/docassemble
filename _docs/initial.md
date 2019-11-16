@@ -1715,6 +1715,19 @@ Here is an example interview that draws a pie chart using [Google Charts].
 
 {% include side-by-side.html demo="googlechart" %}
 
+## <a name="disable analytics"></a>Disable analytics
+
+By default, if your [Configuration] enables a [`segment id`], your
+interviews will send information to [Segment], and if it enables an
+[`analytics id`] in the [`google`] configuration, it will send
+information to [Google Analytics].  To turn this off for a particular
+interview, set `disable analytics` to `True` in the `features` block.
+
+{% highlight yaml %}
+features:
+  disable analytics: True
+{% endhighlight %}
+
 ## <a name="bootstrap theme"></a>Bootstrap theme
 
 Using the `bootstrap theme` feature, you can change the look and feel
@@ -2084,3 +2097,8 @@ features:
 [special pages]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`command()`]: {{ site.baseurl}}/docs/functions.html#command
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[Google Analytics]: https://analytics.google.com
+[Segment]: https://segment.com/
+[`segment id`]: {{ site.baseurl}}/docs/config.html#segment id
+[`analytics id`]: {{ site.baseurl}}/docs/config.html#analytics id
+[`google`]: {{ site.baseurl}}/docs/config.html#google

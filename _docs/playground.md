@@ -483,8 +483,8 @@ For example, your Word file could include:
 
   > Your phone number is {% raw %}{{ phone number }}{% endraw %} and you live in {% raw %}{{ city }}{% endraw %}.
 
-Along the way, the Wizard will show you what blocks it is adding the
-interview it is generating.
+Along the way, the Wizard will show you what blocks it is adding to
+the interview it is generating.
 
 When you are done specifying the elements of your interview, the
 Wizard allows you to download the assembled interview as a [package].

@@ -896,6 +896,16 @@ inverse navbar: False
 You can also control this on a per-interview basis with the
 [`inverse navbar` feature].
 
+## <a name="button style"></a>Button style
+
+There are two button styles: `normal` and `outline`.  The normal style
+uses [Bootstrap] styles like `btn btn-success`.  The outline style
+uses styles like `btn btn-outline-success`.  The default is `normal`.
+
+{% highlight yaml %}
+button style: outline
+{% endhighlight %}
+
 ## <a name="button size"></a>Button size
 
 By default, most buttons in the **docassemble** user interface are
