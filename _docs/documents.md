@@ -1299,7 +1299,7 @@ the message "Hello, world!" and offers the files as hyperlinks.
 
 {% include side-by-side.html demo="document-variable-name-link" %}
 
-The varible indicated by `variable name` will be defined as an object
+The variable indicated by `variable name` will be defined as an object
 of class [`DAFileCollection`].  An object of this type will have
 attributes for each file type generated, where each atttribute is an
 object of type [`DAFile`].  In the above example, the variable
