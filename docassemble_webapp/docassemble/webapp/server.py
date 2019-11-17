@@ -4805,7 +4805,7 @@ ready_file = os.path.join(os.path.dirname(WEBAPP_PATH), 'ready')
 def health_check():
     if request.args.get('ready', False):
         if not os.path.isfile(ready_file):
-            abort(400)
+            return ('', 400)
     response = make_response(render_template('pages/health_check.html', content="OK"), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -22183,6 +22183,7 @@ def api_playground():
         return jsonify_with_status("Access denied.", 403)
     if request.method in ('GET', 'DELETE'):
         folder = request.args.get('folder', 'static')
+        project = request.args.get('project', 'default')
         try:
             if current_user.has_role('admin'):
                 user_id = int(request.args.get('user_id', current_user.id))
@@ -22197,6 +22198,7 @@ def api_playground():
         if post_data is None:
             post_data = request.form.copy()
         folder = post_data.get('folder', 'static')
+        project = post_data.get('project', 'default')
         try:
             if current_user.has_role('admin'):
                 user_id = int(post_data.get('user_id', current_user.id))
@@ -22211,15 +22213,17 @@ def api_playground():
             return jsonify_with_status("Missing filename.", 400)
     if folder not in ('questions', 'sources', 'static', 'templates', 'modules'):
         return jsonify_with_status("Invalid folder.", 400)
+    if project != 'default' and project not in get_list_of_projects(user_id):
+        return jsonify_with_status("Invalid project.", 400)
     if folder == 'questions':
         section = ''
-    elif folder == 'template':
+    elif folder == 'templates':
         section = 'template'
     else:
         section = folder
     docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
     from docassemble.webapp.playground import PlaygroundSection
-    pg_section = PlaygroundSection(section=section)
+    pg_section = PlaygroundSection(section=section, project=project)
     if request.method == 'GET':
         return jsonify(pg_section.file_list)
     elif request.method == 'DELETE':
@@ -22243,7 +22247,7 @@ def api_playground():
             return jsonify_with_status("Error saving file(s).", 400)
         if not found:
             return jsonify_with_status("No file found.", 400)
-        for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
+        for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + project_name(project) + ':*'):
             r.incr(key.decode())
         if section == 'modules':
             restart_all()

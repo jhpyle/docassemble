@@ -13,7 +13,10 @@ else:
 def fix_pickle_obj(data):
     if PY2:
         return pickle.loads(data)
-    return recursive_fix_pickle(pickle.loads(data, encoding="bytes", fix_imports=True), seen=set())
+    try:
+        return recursive_fix_pickle(pickle.loads(data, encoding="bytes", fix_imports=True), seen=set())
+    except:
+        return recursive_fix_pickle(pickle.loads(data, encoding="latin1", fix_imports=True), seen=set())
 
 def fix_pickle_dict(the_dict):
     if PY2:
@@ -23,7 +26,10 @@ def fix_pickle_dict(the_dict):
         assert '_internal' in obj
         return obj
     except:
-        obj = pickle.loads(the_dict, encoding="bytes", fix_imports=True)
+        try:
+            obj = pickle.loads(the_dict, encoding="bytes", fix_imports=True)
+        except:
+            obj = pickle.loads(the_dict, encoding="latin1", fix_imports=True)
         return recursive_fix_pickle(obj, seen=set())
 
 def recursive_fix_pickle(the_object, seen):
@@ -62,6 +68,10 @@ def recursive_fix_pickle(the_object, seen):
             new_list.append(recursive_fix_pickle(item, seen=seen))
         seen.add(object_id)
         return type(the_object)(new_list)
-    the_object.__dict__ = dict((recursive_fix_pickle(k, seen=seen), recursive_fix_pickle(v, seen=seen)) for k, v in the_object.__dict__.items())
+    if hasattr(the_object, '__dict__'):
+        try:
+            the_object.__dict__ = dict((recursive_fix_pickle(k, seen=seen), recursive_fix_pickle(v, seen=seen)) for k, v in the_object.__dict__.items())
+        except:
+            pass
     seen.add(object_id)
     return the_object
