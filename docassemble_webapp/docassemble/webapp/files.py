@@ -303,7 +303,7 @@ class SavedFile(object):
             seconds = int(seconds)
         if type(seconds) is not int:
             seconds = 30
-        if cloud is not None and daconfig.get('use cloud urls', True):
+        if cloud is not None and daconfig.get('use cloud urls', False):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             key = cloud.get_key(keyname)
             if key.does_exist:
@@ -336,7 +336,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']) and daconfig.get('use cloud urls', True):
+        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']) and daconfig.get('use cloud urls', False):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             page = kwargs.get('page', None)
             if page:

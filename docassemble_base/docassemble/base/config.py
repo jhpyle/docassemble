@@ -450,8 +450,10 @@ def load(**kwargs):
         daconfig['use minio'] = False
     if 'server administrator email' not in daconfig or not daconfig['server administrator email']:
         daconfig['server administrator email'] = 'webmaster@localhost'
-    if 'use cloud urls' not in daconfig or not daconfig['use cloud urls']:
+    if 'use cloud urls' not in daconfig:
         daconfig['use cloud urls'] = False
+    else:
+        daconfig['use cloud urls'] = True if daconfig['use cloud urls'] else False
     if 'use https' not in daconfig or not daconfig['use https']:
         daconfig['use https'] = False
     if 'use lets encrypt' not in daconfig or not daconfig['use lets encrypt']:

@@ -1,12 +1,16 @@
 # Change Log
 
+## [0.5.42] - 2019-11-17
+### Fixed
+- Problem unpickling from 2.7.
+
 ## [0.5.41] - 2019-11-16
 ### Fixed
 - Problem with the Playground API using the Templates folder.
 - Playground API did not support projects other than the default
   project.
 - HTML typo that was introduced in 0.5.40.
-- Problem unpicking from 2.7.
+- Problem unpickling from 2.7.
 
 ## [0.5.40] - 2019-11-15
 ### Added

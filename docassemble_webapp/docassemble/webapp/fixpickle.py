@@ -44,34 +44,35 @@ def recursive_fix_pickle(the_object, seen):
     object_id = id(the_object)
     if object_id in seen:
         return the_object
+    seen.add(object_id)
     if isinstance(the_object, dict):
         new_dict = type(the_object)()
         for key, val in the_object.items():
             new_dict[recursive_fix_pickle(key, seen=seen)] = recursive_fix_pickle(val, seen=seen)
-        seen.add(object_id)
+        #seen.add(object_id)
         return new_dict
     if isinstance(the_object, list):
         new_list = type(the_object)()
         for item in the_object:
             new_list.append(recursive_fix_pickle(item, seen=seen))
-        seen.add(object_id)
+        #seen.add(object_id)
         return new_list
     if isinstance(the_object, set):
         new_set = type(the_object)()
         for item in the_object:
             new_set.add(recursive_fix_pickle(item, seen=seen))
-        seen.add(object_id)
+        #seen.add(object_id)
         return new_set
     if isinstance(the_object, tuple):
         new_list = list()
         for item in the_object:
             new_list.append(recursive_fix_pickle(item, seen=seen))
-        seen.add(object_id)
+        #seen.add(object_id)
         return type(the_object)(new_list)
     if hasattr(the_object, '__dict__'):
         try:
             the_object.__dict__ = dict((recursive_fix_pickle(k, seen=seen), recursive_fix_pickle(v, seen=seen)) for k, v in the_object.__dict__.items())
         except:
             pass
-    seen.add(object_id)
+    #seen.add(object_id)
     return the_object

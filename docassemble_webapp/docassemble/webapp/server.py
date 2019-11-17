@@ -10339,7 +10339,7 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
     else:
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
-    if cloud is not None and daconfig.get('use cloud urls', True):
+    if cloud is not None and daconfig.get('use cloud urls', False):
         if not can_access_file_number(number, uids=get_session_uids()):
             abort(404)
         the_file = SavedFile(number)
@@ -10375,7 +10375,7 @@ def serve_uploaded_file_with_extension(number, extension):
     else:
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
-    if cloud is not None and daconfig.get('use cloud urls', True):
+    if cloud is not None and daconfig.get('use cloud urls', False):
         if not can_access_file_number(number, uids=get_session_uids()):
             abort(404)
         the_file = SavedFile(number)
