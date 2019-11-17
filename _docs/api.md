@@ -1692,6 +1692,9 @@ Parameters:
  - `folder` (optional): the folder in the [Playground] from which to
    obtain the list of files.  Must be one of `questions`, `sources`,
    `static`, `templates`, or `modules`.
+ - `project` (optional): the project in the [Playground] from which to
+   obtain the list of files.  The default is `default`, which is the
+   "Default Playground" project.
 
 Required privileges:
 - `admin` or
@@ -1703,6 +1706,8 @@ Responses on failure:
    privileges and the `user_id` is different from the current user's
    user ID.
  - [400] "Invalid folder" if the value of `folder` is unknown.
+ - [400] "Invalid project" if the project given by `project` does not
+   exist.
 
 Response on success: [200]
 
@@ -1721,12 +1726,15 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be read.  Only users with `admin` privileges can read from a
-   different user's [Playground].  The default is the user ID of the
+   should be used.  Only users with `admin` privileges can delete from
+   a different user's [Playground].  The default is the user ID of the
    owner of the API key.
  - `folder` (optional): the folder in the [Playground] from which to
-   obtain the list of files.  Must be one of `questions`, `sources`,
-   `static`, `templates`, or `modules`.  The default is `static`.
+   delete the file.  Must be one of `questions`, `sources`, `static`,
+   `templates`, or `modules`.  The default is `static`.
+ - `project` (optional): the project in the [Playground] from which to
+   delete the file.  The default is `default`, which is the
+   "Default Playground" project.
  - `filename`: the name of the file to be deleted.  If the filename
    does not exist, a success code is still returned.
 
@@ -1740,6 +1748,8 @@ Responses on failure:
    privileges and the `user_id` is different from the current user's
    user ID.
  - [400] "Invalid folder" if the value of `folder` is unknown.
+ - [400] "Invalid project" if the project given by `project` does not
+   exist.
  - [400] "Missing filename." if a `filename` is not provided.
 
 Response on success: [204]
@@ -1765,6 +1775,9 @@ Form data:
  - `folder` (optional): the folder in the [Playground] to which the
    uploaded file(s) should be written.  Must be one of `questions`,
    `sources`, `static`, `templates`, or `modules`.
+ - `project` (optional): the project in the [Playground] to which the
+   uploaded file(s) should be written.  The default is `default`,
+   which is the "Default Playground" project.
 
 File data:
  - `file` or `files[]`: the files to upload.
@@ -1779,6 +1792,8 @@ Responses on failure:
    privileges and the `user_id` is different from the current user's
    user ID.
  - [400] "Invalid folder" if the value of `folder` is unknown.
+ - [400] "Invalid project" if the project given by `project` does not
+   exist.
  - [400] "Error saving file(s)" if an error occurred during the
    process of saving files.
  - [400] "No file found." if no uploaded files were provided.
