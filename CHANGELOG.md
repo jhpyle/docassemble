@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.43] - 2019-11-18
+### Added
+- Ability to pass keyword parameters to the `show()` method of a
+  template.
+### Fixed
+- Problem with object storage cache invalidation.
+
 ## [0.5.42] - 2019-11-17
 ### Fixed
 - Problem unpickling from 2.7.

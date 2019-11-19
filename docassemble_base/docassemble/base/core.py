@@ -3622,15 +3622,16 @@ class DALazyTemplate(DAObject):
         return [dec.text(user_dict_copy).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
+        if not hasattr(self, 'source_content'):
+            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        user_dict_copy.update(kwargs)
+        content = self.source_content.text(user_dict_copy).rstrip()
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            content = text_type(self)
-            content = re.sub(r'^<w:r>', r'', content)
-            content = re.sub(r'^<w:rPr>.*?</w:rPr>', r'', content)
-            content = re.sub(r'^<w:t.*?>', r'', content)
-            content = re.sub(r'</w:r>$', r'', content)
-            content = re.sub(r'</w:t>$', r'', content)
-            return content
-        return text_type(self)
+            content = re.sub(r'\\_', r'\\\\_', content)
+            return text_type(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+        return content
     def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             content = self.content
