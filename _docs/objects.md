@@ -1866,7 +1866,16 @@ Note that the text may have [Markdown]<span></span> [markup] in it.
 `disclaimer`, the content can be inserted by writing 
 `${ disclaimer }`, `${ disclaimer.content }`, or 
 `${ disclaimer.show() }`.  The latter method facilitates the use of
-[`DALazyTemplate`]s and [`DAFile`]s interchangably. 
+[`DALazyTemplate`]s and [`DAFile`]s interchangably.
+
+You can also use `show()` to pass variables to a template.  The
+template can still access variables in the interview answers, but the
+names you pass will take precedence over any names that already
+exist.  Passing these variables will not change the interview
+answers.  You cannot pass variables that use indexes (`[]`) or
+attributes (`.`).
+
+{% include side-by-side.html demo="template-show" %}
 
 <a name="DALazyTemplate.subject_as_html"></a><a
 name="DALazyTemplate.content_as_html"></a>If you write Python modules
