@@ -19038,7 +19038,6 @@ def interview_list():
     #    else:
     #        return redirect(url_for('index', i=session['i']))
     if request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer)):
-        next_page = request.args.get('next', None)
         next_page = request.args.get('next', page_after_login())
         if next_page is None:
             logmessage("Invalid page " + text_type(next_page))

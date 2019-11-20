@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.44] - 2019-11-20
+### Fixed
+- Cron job was overtaxing the SQL server.
+- `does_verb()` used the wrong tense.
+
 ## [0.5.43] - 2019-11-18
 ### Added
 - Ability to pass keyword parameters to the `show()` method of a

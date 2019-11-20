@@ -1358,7 +1358,7 @@ class Person(DAObject):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
-            tense = '1sg'
+            tense = '2sg'
         else:
             tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
