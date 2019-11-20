@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.44](https://github.com/jhpyle/docassemble/releases/tag/v0.5.44) - 2019-11-20
+
+### Fixed
+- Cron job was overtaxing the SQL server.
+- `does_verb()` used the wrong tense.
+
 ## [0.5.43](https://github.com/jhpyle/docassemble/releases/tag/v0.5.43) - 2019-11-18
 
 ### Added
