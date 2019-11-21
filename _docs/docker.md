@@ -764,6 +764,11 @@ effect.
   separate **docassemble** implementations to share the same SQL
   database.  The value is a prefix to be added to each table in the
   database.
+* <a name="DBBACKUP"></a>`DBBACKUP`: Set this to `false` if you are
+  using an off-site [PostgreSQL] `DBHOST` and you do not want the
+  database to be backed up by the daily cron job.  This is important
+  if the off-site SQL database is large compared to the available disk
+  space on the server.  The default value is `true`.
 * <a name="EC2"></a>`EC2`: Set this to `true` if you are running
   [Docker] on [EC2].  This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
@@ -924,7 +929,7 @@ When **docassemble** starts up on a [Docker] container, it:
 * Creates a [configuration] file from a template, using environment
   variables for initial values, if a [configuration] file does not
   already exist.
-* Initializes a PostgreSQL database, if one is not already initialized.
+* Initializes a [PostgreSQL] database, if one is not already initialized.
 * Configures the [NGINX] configuration, if one is not already
   configured.
 * Runs [Let's Encrypt] if the configuration indicates that
@@ -932,14 +937,14 @@ When **docassemble** starts up on a [Docker] container, it:
   configured.
   
 When **docassemble** stops, it saves the [configuration] file, a
-backup of the PostgreSQL database, and backups of the [Let's Encrypt]
+backup of the [PostgreSQL] database, and backups of the [Let's Encrypt]
 configuration.  If you are using [persistent volumes], the information
 will be stored there.  If you are using [S3](#persistent s3) or [Azure
 blob storage](#persistent azure), the information will be stored in
 the cloud.
 
 When **docassemble** starts again, it will retrieve the
-[configuration] file, the backup of the PostgreSQL database, and
+[configuration] file, the backup of the [PostgreSQL] database, and
 backups of the [Let's Encrypt] configuration from storage and use them
 for the container.
 
@@ -1218,7 +1223,7 @@ storage](#persistent azure), the files and directories that are saved
 during the shutdown process are:
 
 * `postgres` - a folder containing a "dump" of each database hosted by
-  the PostgreSQL server.  Usually the operative file is called
+  the [PostgreSQL] server.  Usually the operative file is called
   `docassemble`, for the database called `docassemble`.  If you point
   your server to an external database using the [`db` section] of your
   [Configuration], this is not applicable.  The backup file will
@@ -1242,7 +1247,7 @@ If you are using [persistent volumes], the files and directories that
 are saved during the shutdown process are:
 
 * `/usr/share/docassemble/backup/postgres` - a folder containing a
-  "dump" of each database hosted by the PostgreSQL server.  Usually
+  "dump" of each database hosted by the [PostgreSQL] server.  Usually
   the operative file is called `docassemble`, for the database called
   `docassemble`.  If you point your server to an external database
   using the [`db` section] of your [Configuration], this is not
@@ -1270,7 +1275,7 @@ for restoring the system (if Let's Encrypt is used), but it is always
 up-to-date; it is not copied from the server during the shutdown
 process.
 
-Whenever a **docassemble** container starts up, the PostgreSQL
+Whenever a **docassemble** container starts up, the [PostgreSQL]
 database in `postgres/docassemble` is used to restore
 **docassemble**'s SQL database.  The `redis.rdb` file is used to
 restore the Redis database.  These files are created during the
@@ -1394,7 +1399,7 @@ to the container.
 
 * Regardless of the [`CONTAINERROLE`], port 9001 needs to be forwarded
   so that the container can be controlled via [supervisor].
-* If [`CONTAINERROLE`] includes `sql`: forward port 5432 ([Postgresql])
+* If [`CONTAINERROLE`] includes `sql`: forward port 5432 ([PostgreSQL])
 * If [`CONTAINERROLE`] includes `web`: forward ports 80 (HTTP) and 443 (HTTPS)
 * If [`CONTAINERROLE`] includes `log`: forward ports 514 ([Syslog-ng])
   and 8080 (custom web server)

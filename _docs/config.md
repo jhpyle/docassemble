@@ -1106,6 +1106,7 @@ db:
   host: localhost
   port: 5432
   table prefix: Null
+  backup: True
 {% endhighlight %}
 
 The `prefix` is a [SQLAlchemy] prefix.  If you use a database other
@@ -1121,6 +1122,12 @@ If you are using [Docker] with [S3] or [Azure blob storage], and you
 omit the `host` or set it to `null`, then **docassemble** will
 automatically find the hostname of the central SQL server in cloud
 storage.
+
+The value of `backup` is only applicable if you are using [Docker] and
+the `host` is off-site.  If `backup` is true (which is the default),
+then the SQL database will be backed up on a daily basis.  You will
+want to set it to `false` if backing up the SQL database could lead to
+the exhaustion of hard drive space.
 
 ## <a name="appname"></a><a name="brandname"></a>Branding
 
