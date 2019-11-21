@@ -18878,29 +18878,46 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).group_by(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDictKeys.indexno, UserModel.email, UserDict.modtime).order_by(UserDictKeys.indexno).with_entities(UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.modtime, UserModel.email)
     #logmessage(str(interview_query))
     interviews = list()
+    stored_info = list()
     for interview_info in interview_query:
         #logmessage("filename is " + str(interview_info.filename) + " " + str(interview_info.key))
         if session is not None and interview_info.key != session:
             continue
         if include_dict and interview_info.dictionary is None:
             continue
+        if include_dict:
+            stored_info.append(dict(filename=interview_info.filename,
+                                    encrypted=interview_info.encrypted,
+                                    dictionary=interview_info.dictionary,
+                                    key=interview_info.key,
+                                    email=interview_info.email,
+                                    user_id=interview_info.user_id,
+                                    temp_user_id=interview_info.temp_user_id))
+        else:
+            stored_info.append(dict(filename=interview_info.filename,
+                                    modtime=interview_info.modtime,
+                                    key=interview_info.key,
+                                    email=interview_info.email,
+                                    user_id=interview_info.user_id,
+                                    temp_user_id=interview_info.temp_user_id))
+    for interview_info in stored_info:
         interview_title = dict()
         is_valid = True
         interview_valid = True
         try:
-            interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+            interview = docassemble.base.interview_cache.get_interview(interview_info['filename'])
         except Exception as the_err:
             if exclude_invalid:
                 continue
-            logmessage("user_interviews: unable to load interview file " + interview_info.filename)
+            logmessage("user_interviews: unable to load interview file " + interview_info['filename'])
             interview_title['full'] = word('Error: interview not found')
             interview_valid = False
             is_valid = False
         #logmessage("Found old interview with title " + interview_title)
         if include_dict:
-            if interview_info.encrypted:
+            if interview_info['encrypted']:
                 try:
-                    dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+                    dictionary = decrypt_dictionary(interview_info['dictionary'], secret)
                 except Exception as the_err:
                     if exclude_invalid:
                         continue
@@ -18914,7 +18931,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     is_valid = False
             else:
                 try:
-                    dictionary = unpack_dictionary(interview_info.dictionary)
+                    dictionary = unpack_dictionary(interview_info['dictionary'])
                 except Exception as the_err:
                     if exclude_invalid:
                         continue
@@ -18970,11 +18987,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             utc_starttime = None
             starttime = ''
-            utc_modtime = interview_info.modtime
-            modtime = nice_date_from_utc(interview_info.modtime, timezone=the_timezone)
+            utc_modtime = interview_info['modtime']
+            modtime = nice_date_from_utc(interview_info['modtime'], timezone=the_timezone)
         if tag is not None and tag not in tags:
             continue
-        out = {'filename': interview_info.filename, 'session': interview_info.key, 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info.email, 'user_id': interview_info.user_id, 'temp_user_id': interview_info.temp_user_id}
+        out = {'filename': interview_info['filename'], 'session': interview_info['key'], 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info['email'], 'user_id': interview_info['user_id'], 'temp_user_id': interview_info['temp_user_id']}
         if include_dict:
             out['dict'] = dictionary
         interviews.append(out)
