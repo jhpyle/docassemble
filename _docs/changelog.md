@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.46](https://github.com/jhpyle/docassemble/releases/tag/v0.5.46) - 2019-11-21
+
+### Fixed
+- Possible race condition in `interview_list()`.
+
 ## [0.5.45](https://github.com/jhpyle/docassemble/releases/tag/v0.5.45) - 2019-11-20
 
 ### Added
