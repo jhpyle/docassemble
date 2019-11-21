@@ -10,6 +10,7 @@ db:
   host: {{DBHOST}}
   port: {{DBPORT}}
   table prefix: {{DBTABLEPREFIX}}
+  backup: {{DBBACKUP}}
 oauth:
   facebook:
     enable: False

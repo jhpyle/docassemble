@@ -470,7 +470,7 @@ def load(**kwargs):
         daconfig['web server'] = 'nginx'
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
         messages = list()
-        for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix')):
+        for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='db')
         if env_exists('DASECRETKEY'):

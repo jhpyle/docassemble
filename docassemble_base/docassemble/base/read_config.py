@@ -97,6 +97,8 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
+        if 'backup' in daconfig['db'] and daconfig['db']['backup'] is not None:
+            print('export DBBACKUP="' + ('true' if daconfig['db']['backup'] else 'false') + '"')
     if 'update on start' in daconfig:
         if daconfig['update on start'] is False:
             print('export DAUPDATEONSTART=false')

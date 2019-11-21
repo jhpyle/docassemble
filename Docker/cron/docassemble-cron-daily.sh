@@ -143,7 +143,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	    done
 	fi
 	rm -rf "${PGBACKUPDIR}"
-    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ]; then
+    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ] && [ "${DBBACKUP:-true}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
 	export PGPASSWORD="${DBPASSWORD:-abc123}"
 	pg_dump -F c -f "${PGBACKUPDIR}/${DBNAME}" -h "${DBHOST}" -U "${DBUSER:-docassemble}" -w -p "${DBPORT:-5432}" "${DBNAME}"

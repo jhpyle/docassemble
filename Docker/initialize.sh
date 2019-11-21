@@ -371,6 +371,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DBHOST}}/'"${DBHOST:-null}"'/' \
         -e 's/{{DBPORT}}/'"${DBPORT:-null}"'/' \
         -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX:-null}"'/' \
+        -e 's/{{DBBACKUP}}/'"${DBBACKUP:-true}"'/' \
         -e 's/{{S3ENABLE}}/'"${S3ENABLE:-false}"'/' \
         -e 's#{{S3ACCESSKEY}}#'"${S3ACCESSKEY:-null}"'#' \
         -e 's#{{S3SECRETACCESSKEY}}#'"${S3SECRETACCESSKEY:-null}"'#' \
@@ -830,8 +831,15 @@ fi
 
 echo "39" >&2
 
-if su -c "source \"${DA_ACTIVATE}\" && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
-    CELERYRUNNING=true;
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+    echo "checking if celery is already running..." >&2
+    if su -c "source \"${DA_ACTIVATE}\" && timeout 5s celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
+	echo "celery is running" >&2
+	CELERYRUNNING=true;
+    else
+	echo "celery is not already running" >&2
+	CELERYRUNNING=false;
+    fi
 else
     CELERYRUNNING=false;
 fi

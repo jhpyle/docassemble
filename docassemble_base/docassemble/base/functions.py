@@ -3664,8 +3664,20 @@ def safe_json(the_object, level=0, is_key=False):
         return [safe_json(x, level=level+1) for x in the_object]
     if isinstance(the_object, dict):
         new_dict = dict()
+        used_string = False
+        used_non_string = False
         for key, value in the_object.items():
-            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(value, level=level+1)
+            the_key = safe_json(key, level=level+1, is_key=True)
+            if isinstance(the_key, string_types):
+                used_string = True
+            else:
+                used_non_string = True
+            new_dict[the_key] = safe_json(value, level=level+1)
+        if used_non_string and used_string:
+            corrected_dict = dict()
+            for key, value in new_dict.items():
+                corrected_dict[text_type(key)] = value
+            return corrected_dict
         return new_dict
     if isinstance(the_object, set):
         new_list = list()

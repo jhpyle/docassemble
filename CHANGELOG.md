@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.45] - 2019-11-20
+### Added
+- The `backup` directive under `db`.
+### Fixed
+- Problem converting some types of interview answers to JSON.
+
 ## [0.5.44] - 2019-11-20
 ### Fixed
 - Cron job was overtaxing the SQL server.
