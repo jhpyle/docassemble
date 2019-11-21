@@ -10,6 +10,7 @@ db:
   host: {{DBHOST}}
   port: {{DBPORT}}
   table prefix: {{DBTABLEPREFIX}}
+  backup: {{DBBACKUP}}
 oauth:
   facebook:
     enable: False
@@ -72,8 +73,12 @@ azure:
   account name: {{AZUREACCOUNTNAME}}
   account key: {{AZUREACCOUNTKEY}}
   container: {{AZURECONTAINER}}
+collect statistics: {{COLLECTSTATISTICS}}
+kubernetes: {{KUBERNETES}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
+use cloud urls: {{USECLOUDURLS}}
+use minio: {{USEMINIO}}
 use https: {{USEHTTPS}}
 use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
@@ -90,3 +95,4 @@ words:
   - docassemble.base:data/sources/us-words.yml
 allow non-idempotent questions: False
 web server: {{DAWEBSERVER}}
+new markdown to docx: True

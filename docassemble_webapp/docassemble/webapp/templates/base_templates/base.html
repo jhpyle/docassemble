@@ -133,12 +133,12 @@
               $(the_button).prop("disabled", true);
             }, 1);
             if (this != daWhichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
-              $(this).addClass("btn-secondary");
+              $(this).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}success");
+              $(this).addClass("{{ config['BUTTON_STYLE'] }}secondary");
             }
             else{
-              $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
-              $(daWhichButton).addClass("btn-success");
+              $(daWhichButton).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}secondary");
+              $(daWhichButton).addClass("{{ config['BUTTON_STYLE'] }}success");
             }
           });
         });

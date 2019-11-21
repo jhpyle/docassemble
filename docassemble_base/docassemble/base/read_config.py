@@ -97,6 +97,8 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
+        if 'backup' in daconfig['db'] and daconfig['db']['backup'] is not None:
+            print('export DBBACKUP="' + ('true' if daconfig['db']['backup'] else 'false') + '"')
     if 'update on start' in daconfig:
         if daconfig['update on start'] is False:
             print('export DAUPDATEONSTART=false')
@@ -106,8 +108,6 @@ if __name__ == "__main__":
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
         print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
-    else:
-        print('export DAWEBSOCKETSIP="127.0.0.1"')
     if 'websockets port' in daconfig and daconfig['websockets port']:
         print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
     else:
@@ -157,6 +157,10 @@ if __name__ == "__main__":
             print('export AZURECONTAINER="' + str(daconfig['azure']['container']) + '"')
     if 'ec2' in daconfig and daconfig['ec2']:
         print('export EC2=true')
+    if 'collect statistics' in daconfig and daconfig['collect statistics']:
+        print('export COLLECTSTATISTICS=true')
+    if 'kubernetes' in daconfig and daconfig['kubernetes']:
+        print('export KUBERNETES=true')
     if 'log server' in daconfig and daconfig['log server'] is not None:
         print('export LOGSERVER="' + str(daconfig['log server']) + '"')
     if 'log' in daconfig and daconfig['log'] is not None:
@@ -165,6 +169,14 @@ if __name__ == "__main__":
         print('export USEHTTPS=true')
     else:
         print('export USEHTTPS=false')
+    if 'use cloud urls' in daconfig and daconfig['use cloud urls']:
+        print('export USECLOUDURLS=true')
+    else:
+        print('export USECLOUDURLS=false')
+    if 'use minio' in daconfig and daconfig['use minio']:
+        print('export USEMINIO=true')
+    else:
+        print('export USEMINIO=false')
     if 'use lets encrypt' in daconfig and daconfig['use lets encrypt']:
         print('export USELETSENCRYPT=true')
     else:

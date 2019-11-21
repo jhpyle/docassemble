@@ -22,7 +22,7 @@
   </div>
   <div>
     {{ render_submit_field(form.submit) }}
-    {{ render_submit_field(form.cancel, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 {% endblock %}

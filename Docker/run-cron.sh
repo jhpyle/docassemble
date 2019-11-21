@@ -9,6 +9,8 @@ else
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 
+source "${DA_ACTIVATE}"
+
 export HOME=/var/www
 export CRONTYPE=${1:-cron_daily}
 
@@ -18,4 +20,4 @@ source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.ba
 set -- $LOCALE
 export LANG=$1
 
-exec su -c "source \"$DA_ACTIVATE\" && python -m docassemble.webapp.cron -type $CRONTYPE" www-data
+exec su -c "source \"$DA_ACTIVATE\" && python -m docassemble.webapp.cron \"$DA_CONFIG_FILE\" -type $CRONTYPE" www-data

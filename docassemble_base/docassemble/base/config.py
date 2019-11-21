@@ -29,6 +29,48 @@ hostname = None
 loaded = False
 in_celery = False
 errors = list()
+env_messages = list()
+
+def env_true_false(var):
+    value = text_type(os.getenv(var, 'false')).lower().strip()
+    return value == 'true'
+
+def env_exists(var):
+    value = os.getenv(var)
+    return value is not None
+
+def env_translate(var):
+    value = text_type(os.getenv(var)).strip()
+    if value in ('true', 'True'):
+        return True
+    if value in ('false', 'False'):
+        return False
+    if value in ('null', 'None'):
+        return None
+    if re.match(r'^\-?[0-9]+$', value):
+        return int(value)
+    return value
+
+def override_config(the_config, messages, key, var, pre_key=None):
+    value = env_translate(var)
+    if value == '':
+        return
+    if value is None and (key in ('redis', 'rabbitmq', 'log server') or (pre_key == 'db' and key == 'host')):
+        return
+    if pre_key is None:
+        if key in the_config and text_type(the_config[key]) != text_type(value):
+            messages.append("The value of configuration key %s has been replaced with %s based on the value of environment variable %s" % (key, value, var))
+        elif key not in the_config:
+            messages.append("The value of configuration key %s has been set to %s based on the value of environment variable %s" % (key, value, var))
+        the_config[key] = value
+    else:
+        if pre_key not in the_config:
+            the_config[pre_key] = dict()
+        if key in the_config[pre_key] and text_type(the_config[pre_key][key]) != text_type(value):
+            messages.append("The value of configuration key %s in %s has been replaced with %s based on the value of environment variable %s" % (key, pre_key, value, var))
+        elif key not in the_config[pre_key]:
+            messages.append("The value of configuration key %s in %s has been set to %s based on the value of environment variable %s" % (key, pre_key, value, var))
+        the_config[pre_key][key] = value
 
 def config_error(error):
     errors.append(error)
@@ -46,6 +88,7 @@ def load(**kwargs):
     global hostname
     global loaded
     global in_celery
+    global env_messages
     # changed = False
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1 and kwargs['arguments'][1] != '':
         filename = kwargs['arguments'][1]
@@ -99,6 +142,16 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
+        null_messages = list()
+        for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='s3')
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='azure')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
     if 'maximum content length' in daconfig:
         if isinstance(daconfig['maximum content length'], (int, type(None))):
             if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
@@ -210,7 +263,7 @@ def load(**kwargs):
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    if daconfig.get('ec2', False):
+    if daconfig.get('ec2', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('EC2')):
         h = httplib2.Http()
         resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
@@ -218,6 +271,8 @@ def load(**kwargs):
         else:
             config_error("Could not get hostname from ec2")
             sys.exit(1)
+    elif daconfig.get('kubernetes', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('KUBERNETES')):
+        hostname = socket.gethostbyname(socket.gethostname())
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
@@ -391,6 +446,93 @@ def load(**kwargs):
         daconfig['ldap login'] = dict()
     if daconfig.get('auto resume interview', None) is not None:
         daconfig['show interviews link'] = False
+    if 'use minio' not in daconfig:
+        daconfig['use minio'] = False
+    if 'server administrator email' not in daconfig or not daconfig['server administrator email']:
+        daconfig['server administrator email'] = 'webmaster@localhost'
+    if 'use cloud urls' not in daconfig:
+        daconfig['use cloud urls'] = False
+    else:
+        daconfig['use cloud urls'] = True if daconfig['use cloud urls'] else False
+    if 'use https' not in daconfig or not daconfig['use https']:
+        daconfig['use https'] = False
+    if 'use lets encrypt' not in daconfig or not daconfig['use lets encrypt']:
+        daconfig['use lets encrypt'] = False
+    if 'behind https load balancer' not in daconfig or not daconfig['behind https load balancer']:
+        daconfig['behind https load balancer'] = False
+    if 'websockets ip' in daconfig and not daconfig['websockets ip']:
+        del daconfig['websockets ip']
+    if 'websockets port' not in daconfig or not daconfig['websockets port']:
+        daconfig['websockets port'] = 5000
+    if 'root' not in daconfig or not daconfig['root']:
+        daconfig['root'] = '/'
+    if 'web server' not in daconfig or not daconfig['web server']:
+        daconfig['web server'] = 'nginx'
+    if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
+        messages = list()
+        for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='db')
+        if env_exists('DASECRETKEY'):
+            override_config(daconfig, messages, 'secretkey', 'DASECRETKEY')
+            daconfig['secretkey'] = env_translate('DASECRETKEY')
+        if env_exists('DABACKUPDAYS'):
+            override_config(daconfig, messages, 'backup days', 'DABACKUPDAYS')
+        if env_exists('SERVERADMIN'):
+            override_config(daconfig, messages, 'server administrator email', 'SERVERADMIN')
+        if env_exists('LOCALE'):
+            override_config(daconfig, messages, 'os locale', 'LOCALE')
+        if env_exists('TIMEZONE'):
+            override_config(daconfig, messages, 'timezone', 'TIMEZONE')
+        if env_exists('REDIS'):
+            override_config(daconfig, messages, 'redis', 'REDIS')
+        if env_exists('RABBITMQ'):
+            override_config(daconfig, messages, 'rabbitmq', 'RABBITMQ')
+        for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='s3')
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='azure')
+        if env_exists('EC2'):
+            override_config(daconfig, messages, 'ec2', 'EC2')
+        if env_exists('COLLECTSTATISTICS'):
+            override_config(daconfig, messages, 'collect statistics', 'COLLECTSTATISTICS')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, messages, 'kubernetes', 'KUBERNETES')
+        if env_exists('LOGSERVER'):
+            override_config(daconfig, messages, 'log server', 'LOGSERVER')
+        if env_exists('USECLOUDURLS'):
+            override_config(daconfig, messages, 'use cloud urls', 'USECLOUDURLS')
+        if env_exists('USEMINIO'):
+            override_config(daconfig, messages, 'use minio', 'USEMINIO')
+        if env_exists('USEHTTPS'):
+            override_config(daconfig, messages, 'use https', 'USEHTTPS')
+        if env_exists('USELETSENCRYPT'):
+            override_config(daconfig, messages, 'use lets encrypt', 'USELETSENCRYPT')
+        if env_exists('LETSENCRYPTEMAIL'):
+            override_config(daconfig, messages, 'lets encrypt email', 'LETSENCRYPTEMAIL')
+        if env_exists('BEHINDHTTPSLOADBALANCER'):
+            override_config(daconfig, messages, 'behind https load balancer', 'BEHINDHTTPSLOADBALANCER')
+        if env_exists('XSENDFILE'):
+            override_config(daconfig, messages, 'xsendfile', 'XSENDFILE')
+        if env_exists('DAUPDATEONSTART'):
+            override_config(daconfig, messages, 'update on start', 'DAUPDATEONSTART')
+        if env_exists('URLROOT'):
+            override_config(daconfig, messages, 'url root', 'URLROOT')
+        if env_exists('DAHOSTNAME'):
+            override_config(daconfig, messages, 'external hostname', 'DAHOSTNAME')
+        if env_exists('DAEXPOSEWEBSOCKETS'):
+            override_config(daconfig, messages, 'expose websockets', 'DAEXPOSEWEBSOCKETS')
+        if env_exists('DAWEBSOCKETSIP'):
+            override_config(daconfig, messages, 'websockets ip', 'DAWEBSOCKETSIP')
+        if env_exists('DAWEBSOCKETSPORT'):
+            override_config(daconfig, messages, 'websockets port', 'DAWEBSOCKETSPORT')
+        if env_exists('POSTURLROOT'):
+            override_config(daconfig, messages, 'root', 'POSTURLROOT')
+        if env_exists('DAWEBSERVER'):
+            override_config(daconfig, messages, 'web server', 'DAWEBSERVER')
+        env_messages = messages
     return
 
 def default_config():

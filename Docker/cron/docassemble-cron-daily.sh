@@ -8,12 +8,11 @@ else
     export DA_DEFAULT_LOCAL="local3.6"
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
+source "${DA_ACTIVATE}"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
-
-source "${DA_ACTIVATE}"
 
 set -- $LOCALE
 export LANG=$1
@@ -105,7 +104,9 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
     rm -rf $BACKUPDIR
     mkdir -p $BACKUPDIR
     if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
-	rsync -auq "${DA_ROOT}/files" "${BACKUPDIR}/"
+	if [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${S3ENABLE:-false}" == "false" ] && [ "${AZUREENABLE:-false}" == "false" ]; then
+	    rsync -auq "${DA_ROOT}/files" "${BACKUPDIR}/"
+	fi
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"
         if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
@@ -122,6 +123,9 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
         if [ -f /var/lib/redis/dump.rdb ]; then
 	    cp /var/lib/redis/dump.rdb "${BACKUPDIR}/redis.rdb"
         fi
+    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${REDIS:-redis://localhost}" != "redis://localhost" ]; then
+	REDISHOST="$(echo ${REDIS} | cut -c9-)"
+	redis-cli -h "${REDISHOST}" --rdb "${BACKUPDIR}/redis.rdb"
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
@@ -139,30 +143,47 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	    done
 	fi
 	rm -rf "${PGBACKUPDIR}"
+    elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ] && [ "${DBBACKUP:-true}" == "true" ]; then
+	PGBACKUPDIR=`mktemp -d`
+	export PGPASSWORD="${DBPASSWORD:-abc123}"
+	pg_dump -F c -f "${PGBACKUPDIR}/${DBNAME}" -h "${DBHOST}" -U "${DBUSER:-docassemble}" -w -p "${DBPORT:-5432}" "${DBNAME}"
+	unset PGPASSWORD
+	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
+	rm -rf "${PGBACKUPDIR}"
     fi
     if [ "${AZUREENABLE:-false}" == "false" ]; then
-        rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print`
+        rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print`
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	if [ "${EC2:-false}" == "true" ]; then
-	    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    BACKUPTARGET="s3://${S3BUCKET}/backup"
 	else
-	    export LOCAL_HOSTNAME=`hostname --fqdn`
+	    if [ "${EC2:-false}" == "true" ]; then
+		export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	    else
+		export LOCAL_HOSTNAME=`hostname --fqdn`
+	    fi
+	    BACKUPTARGET="s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}"
 	fi
-	s4cmd --delete-removed dsync "${DA_ROOT}/backup" "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}"
+	s4cmd --delete-removed dsync "${DA_ROOT}/backup" "${BACKUPTARGET}"
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
-	if [ "${EC2:-false}" == "true" ]; then
-	    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup"
 	else
-	    export LOCAL_HOSTNAME=`hostname --fqdn`
+	    if [ "${EC2:-false}" == "true" ]; then
+		export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	    else
+		export LOCAL_HOSTNAME=`hostname --fqdn`
+	    fi
+	    BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}"
 	fi
 	for the_file in $( find "${DA_ROOT}/backup/" -type f | cut -c 31- ); do
-	    blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}"
+	    blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "${BACKUPTARGET}/${the_file}"
 	done
 	for the_dir in $( find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS} -print | cut -c 31- ); do
 	    for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
-		blob-cmd -f rm "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}"
+		blob-cmd -f rm "${BACKUPTARGET}/${the_file}"
 	    done
 	    rm -rf "${DA_ROOT}/backup/$the_dir"
 	done

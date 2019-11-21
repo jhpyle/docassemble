@@ -26,7 +26,7 @@ if [ "${DAHOSTNAME:-none}" == "none" ]; then
     export DAHOSTNAME="${PUBLIC_HOSTNAME}"
 fi
 
-if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     DAREALIP="include ${DA_ROOT}/config/nginx-realip;"
     ln -sf /etc/nginx/sites-available/docassembleredirect /etc/nginx/sites-enabled/docassembleredirect
 else
@@ -87,14 +87,21 @@ else
     rm -f /etc/nginx/sites-enabled/docassemblelog
 fi
 
-if [ "${USEHTTPS:-false}" == "true" ]; then
-    rm -f /etc/nginx/sites-enabled/docassemblehttp
-    ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
-    ln -sf /etc/nginx/sites-available/docassemblesslredirect /etc/nginx/sites-enabled/docassemblesslredirect
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+    if [ "${USEHTTPS:-false}" == "true" ]; then
+	rm -f /etc/nginx/sites-enabled/docassemblehttp
+	ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
+	ln -sf /etc/nginx/sites-available/docassemblesslredirect /etc/nginx/sites-enabled/docassemblesslredirect
+    else
+	rm -f /etc/nginx/sites-enabled/docassemblessl
+	rm -f /etc/nginx/sites-enabled/docassemblesslredirect
+	ln -sf /etc/nginx/sites-available/docassemblehttp /etc/nginx/sites-enabled/docassemblehttp
+	rm -f /etc/letsencrypt/da_using_lets_encrypt
+    fi
 else
+    rm -f /etc/nginx/sites-enabled/docassemblehttp
     rm -f /etc/nginx/sites-enabled/docassemblessl
     rm -f /etc/nginx/sites-enabled/docassemblesslredirect
-    ln -sf /etc/nginx/sites-available/docassemblehttp /etc/nginx/sites-enabled/docassemblehttp
     rm -f /etc/letsencrypt/da_using_lets_encrypt
 fi
 
@@ -108,12 +115,14 @@ function stopfunc {
 	echo "uwsgi log stopped" >&2
 	exit 0
     fi
-    NGINX_PID=$(</var/run/nginx.pid)
-    echo "Sending stop command" >&2
-    kill -QUIT $NGINX_PID
-    echo "Waiting for nginx to stop" >&2
-    wait $NGINX_PID
-    echo "nginx stopped" >&2
+    if [ -f /var/run/nginx.pid ]; then
+	NGINX_PID=$(</var/run/nginx.pid)
+	echo "Sending stop command" >&2
+	kill -QUIT $NGINX_PID
+	echo "Waiting for nginx to stop" >&2
+	wait $NGINX_PID
+	echo "nginx stopped" >&2
+    fi
     exit 0
 }
 

@@ -160,7 +160,7 @@ def check_for_updates(doing_startup=False):
             sys.stderr.write("check_for_updates: installing pdfminer\n")
             pdfminer = DummyPackage('pdfminer')
             pdfminer.type = 'git'
-            pdfminer.giturl = 'https://github.com/euske/pdfminer'
+            pdfminer.giturl = 'https://github.com/jhpyle/pdfminer'
             pdfminer.gitsubdir = None
             pdfminer.gitbranch = None
             install_package(pdfminer)
@@ -615,6 +615,7 @@ if __name__ == "__main__":
         from docassemble.webapp.daredis import r
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
+            sys.stderr.write("updating with mode initialize\n")
             update_versions()
             any_package = Package.query.filter_by(active=True).first()
             if any_package is None:
@@ -623,14 +624,18 @@ if __name__ == "__main__":
             check_for_updates(doing_startup=True)
             remove_inactive_hosts()
         else:
+            sys.stderr.write("updating with mode check_for_updates\n")
             check_for_updates()
             from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
+                    sys.stderr.write("Sending reset signal\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
                     result = subprocess.call(args)
+                else:
+                    sys.stderr.write("Not sending reset signal because not web or celery\n")
             else:
                 sys.stderr.write("update: touched wsgi file" + "\n")
                 wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')

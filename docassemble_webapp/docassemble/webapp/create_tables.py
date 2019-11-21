@@ -68,13 +68,15 @@ def populate_tables():
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
     admin_defaults = daconfig.get('default admin account', dict())
     if 'email' not in admin_defaults:
-        admin_defaults['email'] = 'admin@admin.com'
+        admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@admin.com')
     if 'nickname' not in admin_defaults:
         admin_defaults['nickname'] = 'admin'
     if 'first_name' not in admin_defaults:
         admin_defaults['first_name'] = word('System')
     if 'last_name' not in admin_defaults:
         admin_defaults['last_name'] = word('Administrator')
+    if 'password' not in admin_defaults:
+        admin_defaults['password'] = os.getenv('DA_ADMIN_PASSWORD', 'password')
     cron_defaults = daconfig.get('default cron account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
     user_role = get_role(db, 'user')
@@ -130,8 +132,10 @@ def main():
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if not db.engine.has_table(dbtableprefix + 'alembic_version'):
+                sys.stderr.write("Creating alembic stamp\n")
                 command.stamp(alembic_cfg, "head")
             if db.engine.has_table(dbtableprefix + 'user'):
+                sys.stderr.write("Running alembic upgrade\n")
                 command.upgrade(alembic_cfg, "head")
         #db.drop_all()
         try:

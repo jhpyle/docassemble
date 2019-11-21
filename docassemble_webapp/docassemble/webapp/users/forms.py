@@ -33,30 +33,35 @@ class MySignInForm(LoginForm):
             ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
             username = self.email.data
             password = self.password.data
-            connect = ldap.open(ldap_server)
+            connect = ldap.initialize('ldap://' + ldap_server)
+            connect.set_option(ldap.OPT_REFERRALS, 0)
             try:
                 connect.simple_bind_s(username, password)
-                connect.unbind_s()
-                from flask import current_app
-                user_manager = current_app.user_manager
-                user, user_email = user_manager.find_user_by_email(self.email.data)
-                if not user:
-                    from docassemble.base.generate_key import random_alphanumeric
-                    from docassemble.webapp.db_object import db
-                    from docassemble.webapp.users.models import UserModel, Role
-                    while True:
-                        new_social = 'ldap$' + random_alphanumeric(32)
-                        existing_user = UserModel.query.filter_by(social_id=new_social).first()
-                        if existing_user:
-                            continue
-                        break
-                    user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
-                    user_role = Role.query.filter_by(name='user').first()
-                    user.roles.append(user_role)
-                    db.session.add(user)
-                    db.session.commit()
-                result = True
-            except ldap.LDAPError:
+                if not (connect.whoami_s() is None):
+                    connect.unbind_s()
+                    from flask import current_app
+                    user_manager = current_app.user_manager
+                    user, user_email = user_manager.find_user_by_email(self.email.data)
+                    if not user:
+                        from docassemble.base.generate_key import random_alphanumeric
+                        from docassemble.webapp.db_object import db
+                        from docassemble.webapp.users.models import UserModel, Role
+                        while True:
+                            new_social = 'ldap$' + random_alphanumeric(32)
+                            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+                            if existing_user:
+                                continue
+                            break
+                        user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
+                        user_role = Role.query.filter_by(name='user').first()
+                        user.roles.append(user_role)
+                        db.session.add(user)
+                        db.session.commit()
+                    result = True
+                else:
+                    connect.unbind_s()
+                    result = super(MySignInForm, self).validate()
+            except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
                 result = super(MySignInForm, self).validate()
         else:
@@ -97,7 +102,7 @@ def da_unique_email_validator(form, field):
         ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
         base_dn = daconfig['ldap login']['base dn'].strip()
         search_filter = daconfig['ldap login'].get('search pattern', "mail=%s") % (form.email.data,)
-        connect = ldap.open(ldap_server)
+        connect = ldap.initialize('ldap://' + ldap_server)
         try:
             connect.simple_bind_s(daconfig['ldap login']['bind email'], daconfig['ldap login']['bind password'])
             if len(connect.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)) > 0:

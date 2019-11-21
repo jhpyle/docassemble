@@ -52,3 +52,4 @@ tests/features/Temp.feature
 tests/features/Screenshots.feature
 fix-seq.sql
 rtftest.py
+tests/.noseids

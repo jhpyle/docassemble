@@ -302,7 +302,7 @@ class PlaygroundSection(object):
         return SavedFile(self.user_id, fix=True, section='playground' + self.section)
     def _update_file_list(self):
         the_directory = directory_for(self.get_area(), self.project)
-        self.file_list = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f))])
+        self.file_list = sorted([f for f in os.listdir(the_directory) if f != '.placeholder' and os.path.isfile(os.path.join(the_directory, f))])
     def image_file_list(self):
         out_list = list()
         for the_file in self.file_list:

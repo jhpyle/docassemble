@@ -117,8 +117,9 @@ class SavedFile(object):
                     local_time = os.path.getmtime(fullpath)
                     access_time = os.path.getatime(fullpath)
                     if self.section == 'files':
-                        if not (local_time == server_time and time.time() - access_time < 7000):
+                        if local_time != server_time:
                             key.get_contents_to_filename(fullpath)
+                        update_access_time(fullpath)
                     else:
                         if not (local_time == server_time):
                             key.get_contents_to_filename(fullpath)
@@ -303,7 +304,7 @@ class SavedFile(object):
             seconds = int(seconds)
         if type(seconds) is not int:
             seconds = 30
-        if cloud is not None and daconfig.get('use cloud urls', True):
+        if cloud is not None and daconfig.get('use cloud urls', False):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             key = cloud.get_key(keyname)
             if key.does_exist:
@@ -336,7 +337,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']) and daconfig.get('use cloud urls', True):
+        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']) and daconfig.get('use cloud urls', False):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             page = kwargs.get('page', None)
             if page:
@@ -411,8 +412,11 @@ class SavedFile(object):
                     #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
                     if not os.path.isfile(fullpath):
                         continue
-                    key.set_contents_from_filename(fullpath)
-                    self.modtimes[filename] = key.get_epoch_modtime()
+                    try:
+                        key.set_contents_from_filename(fullpath)
+                        self.modtimes[filename] = key.get_epoch_modtime()
+                    except FileNotFoundError:
+                        sys.stderr.write("finalize: error while saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "; path " + str(fullpath) + " disappeared\n")
         for filename, key in self.keydict.items():
             if not os.path.isfile(os.path.join(self.directory, filename)):
                 sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename) + "\n")
@@ -707,3 +711,8 @@ def directory_for(area, current_project):
         return area.directory
     else:
         return os.path.join(area.directory, current_project)
+
+def update_access_time(filepath):
+    with open(filepath, "rb") as fp:
+        fp.seek(0, 0)
+        first_byte = fp.read(1)

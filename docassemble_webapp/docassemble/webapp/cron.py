@@ -65,19 +65,16 @@ def run_cron(cron_type):
     user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     to_do = list()
     subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
-    results = db.session.query(UserDict.key, UserDict.filename, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)
-    for record in results:
-        dict_result = db.session.query(UserDict.dictionary).filter(UserDict.indexno == record.indexno).first()
+    for indexno, key, filename in [(record.indexno, record.key, record.filename) for record in db.session.query(UserDict.key, UserDict.filename, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename)).order_by(UserDict.indexno)]:
+        dict_result = db.session.query(UserDict.dictionary).filter(UserDict.indexno == indexno).first()
         try:
             the_dict = unpack_dictionary(dict_result.dictionary)
         except:
             continue
-        if 'allow_cron' in the_dict:
-            if the_dict['allow_cron']:
-                to_do.append(dict(key=record.key, filename=record.filename))
+        if the_dict.get('allow_cron', False):
+            to_do.append(dict(key=key, filename=filename))
         del the_dict
         del dict_result
-    del results
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
     with app.app_context():

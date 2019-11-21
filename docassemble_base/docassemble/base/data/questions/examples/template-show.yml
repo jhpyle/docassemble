@@ -1,0 +1,26 @@
+metadata:
+  title: Template
+  documentation: "https://docassemble.org/docs/objects.html#DALazyTemplate.show"
+  example start: 1
+  example end: 2
+---
+template: disclaimer
+content: |
+  The opinions expressed herein do not
+  *necessarily* reflect the views
+  of ${ company }.
+---
+field: intro_screen
+question: Welcome to the interview!
+subquestion: |
+  Greetings.  We hope you learn something
+  from this guided interview.
+
+  ${ disclaimer.show(company="ABC Widgets, Incorporated") }
+
+  To get started, press **Continue**.
+---
+mandatory: true
+need: intro_screen
+question: |
+  This is the end of the interview.

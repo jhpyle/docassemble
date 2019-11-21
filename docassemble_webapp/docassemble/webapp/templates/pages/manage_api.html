@@ -39,9 +39,9 @@
   {%- endfor %}
 </div>
 <div class="form-actions">
-  {{ render_submit_field(form.submit, id='submit', label=word("Save"), class="btn btn-primary " + config['BUTTON_CLASS']) }}
-  {{ render_submit_field(form.delete, id='delete', class="btn btn-warning " + config['BUTTON_CLASS']) }}
-  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('manage_api') }}">Cancel</a>
+  {{ render_submit_field(form.submit, id='submit', label=word("Save"), class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+  {{ render_submit_field(form.delete, id='delete', class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('manage_api') }}">Cancel</a>
 </div>
 </form>
 {%- endif %}
@@ -57,8 +57,8 @@
 <p>{{ word("You do not have any API keys yet.") }}</p>
 {%- endif %}
 <div class="form-actions mt-2">
-  <a class="btn btn-primary {{ config['BUTTON_CLASS'] }}" href="?action=new">New</a>
-  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_profile_page') }}">Back to Profile</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}" href="?action=new">New</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_profile_page') }}">Back to Profile</a>
 </div>
 {%- endif %}
 {% endblock %}

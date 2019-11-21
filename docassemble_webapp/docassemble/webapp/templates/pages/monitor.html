@@ -3,8 +3,8 @@
 {% block content %}
 <div class="monitorcontrols" id="monitorcontrols">
 <h4>{{ word("Your status: ") }}
-<button title="{{ word("Click to change your status to not available") }}" id="daAvailable" class="btn btn-primary">Available for chat</button>
-<button title="{{ word("Click to change your status to available") }}" id="daNotAvailable" class="btn btn-danger">Not available for chat</button>
+<button title="{{ word("Click to change your status to not available") }}" id="daAvailable" class="btn {{ config['BUTTON_STYLE'] }}primary">Available for chat</button>
+<button title="{{ word("Click to change your status to available") }}" id="daNotAvailable" class="btn {{ config['BUTTON_STYLE'] }}danger">Not available for chat</button>
 </h4>
 <div class="row dainvisible" id="daPhoneInfo">
   <div class="col-lg-6">
