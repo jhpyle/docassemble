@@ -2546,14 +2546,18 @@ def restore_session(backup):
             session[key] = backup[key]
 
 def get_existing_session(yaml_filename, secret):
-    for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno):
+    start_time = time.time()
+    keys = [result.key for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno)]
+    for key in keys:
         try:
-            steps, user_dict, is_encrypted = fetch_user_dict(result.key, yaml_filename, secret=secret)
+            steps, user_dict, is_encrypted = fetch_user_dict(key, yaml_filename, secret=secret)
         except:
             logmessage("get_existing_session: unable to decrypt existing interview session " + result.key)
             continue
-        update_session(yaml_filename, uid=result.key, key_logged=True, encrypted=is_encrypted)
-        return result.key, is_encrypted
+        update_session(yaml_filename, uid=key, key_logged=True, encrypted=is_encrypted)
+        sys.stderr.write("Time in get_existing_session 1 was " + str(time.time() - start_time) + "\n")
+        return key, is_encrypted
+    sys.stderr.write("Time in get_existing_session 2 was " + str(time.time() - start_time) + "\n")
     return None, True
 
 def reset_session(yaml_filename, secret):
@@ -5380,8 +5384,10 @@ def index(action_argument=None):
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is None:
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            sys.stderr.write("Redirecting to login because no YAML filename provided and no anonymous access is allowed.\n")
             return redirect(url_for('user.login'))
         if len(daconfig['dispatch']):
+            sys.stderr.write("Redirecting to dispatch page because no YAML filename provided.\n")
             return redirect(url_for('interview_start'))
         else:
             yaml_filename = final_default_yaml_filename
@@ -5391,6 +5397,7 @@ def index(action_argument=None):
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            sys.stderr.write("Redirecting to login because no anonymous access allowed.\n")
             return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
         if yaml_filename.startswith('docassemble.playground'):
             if not app.config['ENABLE_PLAYGROUND']:
@@ -5417,6 +5424,7 @@ def index(action_argument=None):
                 if not interview.allowed_to_access(is_anonymous=True):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
+                    sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
                     return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
             elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                 raise DAError(word('You are not allowed to access this interview.'), code=403)
@@ -5424,6 +5432,7 @@ def index(action_argument=None):
             if unique_sessions is not False and not current_user.is_authenticated:
                 delete_session_for_interview(yaml_filename)
                 flash(word("You need to be logged in to access this interview."), "info")
+                sys.stderr.write("Redirecting to login because sessions are unique.\n")
                 return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
             session_id = None
             if reset_interview == 2:
@@ -5479,6 +5488,7 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
+        sys.stderr.write("Redirecting back to index because of failure to get user dictionary.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if session_parameter is not None:
             flash(word("Unable to retrieve interview session.  Starting a new session instead."), "error")
@@ -5488,6 +5498,7 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch returned no results")
         clear_session(yaml_filename)
+        sys.stderr.write("Redirecting back to index because user dictionary was None.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         flash(word("Unable to locate interview session.  Starting a new session instead."), "error")
         return response
@@ -5531,6 +5542,7 @@ def index(action_argument=None):
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         if action:
             index_params['action'] = safeid(json.dumps(action))
+        sys.stderr.write("Redirecting back to index because of need_to_reset.\n")
         response = do_redirect(url_for('index', **index_params), is_ajax, is_json, js_target)
         if set_cookie:
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
@@ -6605,6 +6617,7 @@ def index(action_argument=None):
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of an exit.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6618,6 +6631,7 @@ def index(action_argument=None):
             reset_user_dict(user_code, yaml_filename)
         release_lock(user_code, yaml_filename)
         delete_session()
+        sys.stderr.write("Redirecting because of a logout.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6643,18 +6657,21 @@ def index(action_argument=None):
         return response
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a signin.\n")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "register":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a register.\n")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a leave.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6712,6 +6729,7 @@ def index(action_argument=None):
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
+        sys.stderr.write("Redirecting because of a redirect.\n")
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
@@ -9942,6 +9960,7 @@ def index(action_argument=None):
         if reload_after and reload_after > 0:
             data['reload_after'] = reload_after
         if 'action' in data and data['action'] == 'redirect' and 'url' in data:
+            sys.stderr.write("Redirecting because of a redirect action.\n")
             response = redirect(data['url'])
         else:
             response = jsonify(**data)
@@ -18768,6 +18787,7 @@ def train():
         return response
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False):
+    start_time = time.time()
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
     if user_id is None and not in_celery and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
         raise Exception('user_interviews: only administrators and advocates can access information about other users')
@@ -18816,6 +18836,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 else:
                     reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
                 #release_lock(session_id, yaml_filename)
+        sys.stderr.write("Time in user_interviews 1 was " + str(time.time() - start_time) + "\n")
         return len(sessions_to_delete)
     if action == 'delete':
         if filename is None or session is None:
@@ -18824,11 +18845,13 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         #obtain_lock(session, filename)
         reset_user_dict(session, filename, user_id=user_id, force=delete_shared)
         #release_lock(session, filename)
+        sys.stderr.write("Time in user_interviews 2 was " + str(time.time() - start_time) + "\n")
         return True
     if current_user and current_user.is_authenticated and current_user.timezone:
         the_timezone = pytz.timezone(current_user.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
+    inner_start_time = time.time()
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     if user_id is not None:
         if include_dict:
@@ -18879,6 +18902,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     #logmessage(str(interview_query))
     interviews = list()
     stored_info = list()
+
     for interview_info in interview_query:
         #logmessage("filename is " + str(interview_info.filename) + " " + str(interview_info.key))
         if session is not None and interview_info.key != session:
@@ -18900,6 +18924,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                                     email=interview_info.email,
                                     user_id=interview_info.user_id,
                                     temp_user_id=interview_info.temp_user_id))
+    sys.stderr.write("Time in SQL query was " + str(time.time() - inner_start_time) + "\n")
     for interview_info in stored_info:
         interview_title = dict()
         is_valid = True
@@ -18995,11 +19020,13 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if include_dict:
             out['dict'] = dictionary
         interviews.append(out)
+    sys.stderr.write("Time in user_interviews 3 was " + str(time.time() - start_time) + "\n")
     return interviews
 
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
+    start_time = time.time()
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
@@ -19024,8 +19051,10 @@ def interview_list():
         response = redirect(url_for('interview_list', **the_args))
         response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
         del session['newsecret']
+        sys.stderr.write("Time in interview_list 1 was " + str(time.time() - start_time) + "\n")
         return response
     if request.method == 'GET' and needs_to_change_password():
+        sys.stderr.write("Time in interview_list 2 was " + str(time.time() - start_time) + "\n")
         return redirect(url_for('user.change_password', next=url_for('interview_list')))
     secret = request.cookies.get('secret', None)
     if secret is not None:
@@ -19035,6 +19064,7 @@ def interview_list():
         num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all', tag=tag)
         if num_deleted > 0:
             flash(word("Deleted interviews"), 'success')
+        sys.stderr.write("Time in interview_list 3 was " + str(time.time() - start_time) + "\n")
         if is_json:
             return redirect(url_for('interview_list', json='1'))
         else:
@@ -19045,6 +19075,7 @@ def interview_list():
         if yaml_file is not None and session_id is not None:
             user_interviews(user_id=current_user.id, secret=secret, action='delete', session=session_id, filename=yaml_file)
             flash(word("Deleted interview"), 'success')
+        sys.stderr.write("Time in interview_list 4 was " + str(time.time() - start_time) + "\n")
         if is_json:
             return redirect(url_for('interview_list', json='1'))
         else:
@@ -19060,8 +19091,10 @@ def interview_list():
             logmessage("Invalid page " + text_type(next_page))
             next_page = 'interview_list'
         if next_page not in ('interview_list', 'interviews'):
+            sys.stderr.write("Time in interview_list 5 was " + str(time.time() - start_time) + "\n")
             return redirect(get_url_from_file_reference(next_page))
     if daconfig.get('session list interview', None) is not None:
+        sys.stderr.write("Time in interview_list 6 was " + str(time.time() - start_time) + "\n")
         if is_json:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
         else:
@@ -19073,8 +19106,10 @@ def interview_list():
     resume_interview = request.args.get('resume', None)
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
+    sys.stderr.write("Time in interview_list before calling user_interviews was " + str(time.time() - start_time) + "\n")
     if resume_interview is not None:
         interviews = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dict=True)
+        sys.stderr.write("Time in interview_list 7 was " + str(time.time() - start_time) + "\n")
         if len(interviews):
             return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list='1'))
         return redirect(url_for('index', i=resume_interview, from_list='1'))
@@ -19087,6 +19122,7 @@ def interview_list():
                 del interview['dict']
             if 'tags' in interview:
                 interview['tags'] = sorted(interview['tags'])
+        sys.stderr.write("Time in interview_list 8 was " + str(time.time() - start_time) + "\n")
         return jsonify(action="interviews", interviews=interviews)
     script = """
     <script>
@@ -19100,6 +19136,7 @@ def interview_list():
     </script>"""
     script += global_js
     if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
+        sys.stderr.write("Time in interview_list 9 was " + str(time.time() - start_time) + "\n")
         return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list=1))
     tags_used = set()
     for interview in interviews:
@@ -19117,10 +19154,12 @@ def interview_list():
             template_string = fp.read()
             response = make_response(render_template_string(template_string, **argu), 200)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            sys.stderr.write("Time in interview_list 10 was " + str(time.time() - start_time) + "\n")
             return response
     else:
         response = make_response(render_template('pages/interviews.html', **argu), 200)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        sys.stderr.write("Time in interview_list 11 was " + str(time.time() - start_time) + "\n")
         return response
 
 def valid_date_key(x):
@@ -21344,6 +21383,7 @@ def api_file(file_number):
         return ('File not found', 404)
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
+    start_time = time.time()
     #obtain_lock(session_id, yaml_filename)
     #sys.stderr.write("get_session_variables: fetch_user_dict\n")
     if secret is None:
@@ -21359,7 +21399,9 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     if simplify:
         variables = docassemble.base.functions.serializable_dict(user_dict, include_internal=True)
         #variables['_internal'] = docassemble.base.functions.serializable_dict(user_dict['_internal'])
+        sys.stderr.write("Time in get_session_variables was " + str(time.time() - start_time) + "\n")
         return variables
+    sys.stderr.write("Time in get_session_variables was " + str(time.time() - start_time) + "\n")
     return user_dict
 
 def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False):
@@ -21566,6 +21608,7 @@ def api_session_question():
     return jsonify(**data)
 
 def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False, advance_progress_meter=False):
+    start_time = time.time()
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     if user_dict is None:
@@ -21600,6 +21643,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
+        sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
         return dict(questionType='undefined_variable', variable=err.variable, message_log=docassemble.base.functions.get_message_log())
     except Exception as e:
         if use_lock:
@@ -21637,16 +21681,20 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         else:
             response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
+        sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
         return dict(questionType='response', response=response_to_send)
     elif interview_status.question.question_type == "sendfile":
         if interview_status.question.response_file is not None:
             the_path = interview_status.question.response_file.path()
         else:
+            sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
             return jsonify_with_status("Could not send file because the response was None", 404)
         if not os.path.isfile(the_path):
+            sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
             return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
         response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
         return dict(questionType='response', response=response_to_send)
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -21693,6 +21741,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         elif key.startswith('_'):
             del data[key]
     #logmessage("Ok returning")
+    sys.stderr.write("Time in get_question_data was " + str(time.time() - start_time) + "\n")
     return data
 
 @app.route('/api/session/action', methods=['POST'])

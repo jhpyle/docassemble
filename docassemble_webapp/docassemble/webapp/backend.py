@@ -138,7 +138,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
     if re.match(r'ml-.*\.json', filename):
         output = dict()
         prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
-        for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+        for record in [record for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%'))]:
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
@@ -556,14 +556,14 @@ def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
 def nice_utc_date(timestamp, timezone=tz.tzlocal()):
     return timestamp.strftime('%F %T')
 
-#@elapsed('fetch_user_dict')
+@elapsed('fetch_user_dict')
 def fetch_user_dict(user_code, filename, secret=None):
     #logmessage("fetch_user_dict: user_code is " + str(user_code) + " and filename is " + str(filename))
     user_dict = None
     steps = 1
     encrypted = True
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    results = [d for d in db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)]
     #logmessage("fetch_user_dict: 01 query is " + str(results))
     for d in results:
         #logmessage("fetch_user_dict: indexno is " + str(d.indexno))
@@ -589,7 +589,7 @@ def user_dict_exists(user_code, filename):
         return True
     return False
 
-#@elapsed('fetch_previous_user_dict')
+@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()

@@ -1075,11 +1075,11 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables))
                 else:
-                    sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time))
+                    sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time) + "\n")
                     worker_controller.functions.set_language(old_language)
                     return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
             worker_controller.functions.set_language(old_language)
-            sys.stderr.write("Time in background action was " + str(time.time() - start_time))
+            sys.stderr.write("Time in background action was " + str(time.time() - start_time) + "\n")
             if not hasattr(interview_status, 'question'):
                 #sys.stderr.write("background_action: status had no question\n")
                 return(worker_controller.functions.ReturnValue(extra=extra))
@@ -1151,9 +1151,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                         elif not hasattr(interview_status.question, 'binaryresponse'):
                             sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                     elif interview_status.question.question_type == "backgroundresponse":
-                        sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
+                        sys.stderr.write("Time in background response action was " + str(time.time() - start_time) + "\n")
                         return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
-                sys.stderr.write("Time in background response action was " + str(time.time() - start_time))
+                sys.stderr.write("Time in background response action was " + str(time.time() - start_time) + "\n")
                 return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
             if hasattr(interview_status, 'questionText') and interview_status.questionText:
                 if interview_status.orig_sought != interview_status.sought:
@@ -1213,14 +1213,14 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":
-            sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+            sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
             #sys.stderr.write("background_action: status in error callback was response\n")
             if hasattr(interview_status.question, 'all_variables'):
                 pass
             elif not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         elif interview_status.question.question_type == "backgroundresponse":
-            sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+            sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
             return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
-    sys.stderr.write("Time in error callback was " + str(time.time() - start_time))
+    sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
