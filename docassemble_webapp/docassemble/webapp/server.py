@@ -18286,6 +18286,8 @@ def after_reset():
 def needs_to_change_password():
     if not current_user.has_role('admin'):
         return False
+    if not (current_user.social_id and current_user.social_id.startswith('local')):
+        return False
     #logmessage("needs_to_change_password: starting")
     if app.user_manager.verify_password('password', current_user):
         flash(word("Your password is insecure and needs to be changed"), "warning")
