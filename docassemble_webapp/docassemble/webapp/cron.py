@@ -62,6 +62,7 @@ def clear_old_interviews():
             obtain_lock_patiently(item['key'], item['filename'])
             reset_user_dict(item['key'], item['filename'], force=True)
             release_lock(item['key'], item['filename'])
+            time.sleep(0.05)
         time.sleep(0.2)
     
 def run_cron(cron_type):
@@ -111,6 +112,8 @@ def run_cron(cron_type):
                                     reset_user_dict(key, filename, force=True)
                                 if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                                     release_lock(key, filename)
+                                    if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
+                                        time.sleep(0.05)
                                 elif interview_status.question.question_type == "backgroundresponseaction":
                                     new_action = interview_status.question.action
                                     interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=new_action['action'], arguments=new_action['arguments'], interface='cron'))
@@ -122,12 +125,16 @@ def run_cron(cron_type):
                                     if save_status != 'ignore':
                                         save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                     release_lock(key, filename)
+                                    if save_status != 'ignore':
+                                        time.sleep(0.05)
                                 elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
                                     release_lock(key, filename)
                                 else:
                                     if save_status != 'ignore':
                                         save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                     release_lock(key, filename)
+                                    if save_status != 'ignore':
+                                        time.sleep(0.05)
                                     if interview_status.question.question_type == "response":
                                         if hasattr(interview_status.question, 'all_variables'):
                                             if hasattr(interview_status.question, 'include_internal'):
