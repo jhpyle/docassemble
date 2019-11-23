@@ -40,15 +40,46 @@ def get_cron_user():
 
 def clear_old_interviews():
     #sys.stderr.write("clear_old_interviews: starting\n")
-    interview_delete_days = docassemble.base.config.daconfig.get('interview delete days', 90)
-    if interview_delete_days == 0:
-        return
+    try:
+        interview_delete_days = int(docassemble.base.config.daconfig.get('interview delete days', 90))
+    except:
+        sys.stderr.write("Error in configuration for interview delete days\n")
+        interview_delete_days = 0
+    days_by_filename = dict()
+    if 'interview delete days by filename' in docassemble.base.config.daconfig:
+        try:
+            for filename, days in docassemble.base.config.daconfig['interview delete days by filename'].items():
+                assert isinstance(filename, string_types)
+                days_by_filename[filename] = int(days)
+        except:
+            sys.stderr.write("Error in configuration for interview delete days by filename\n")
     nowtime = datetime.datetime.utcnow()
     #sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
     subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).subquery()
+    for filename, days in days_by_filename.items():
+        last_index = -1
+        while True:
+            results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index, subq.c.filename == filename)).order_by(UserDict.indexno).limit(1000)
+            if results.count() == 0:
+                break
+            stale = list()
+            for record in results:
+                last_index = record.indexno
+                delta = nowtime - record.modtime
+                #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
+                if delta.days > days:
+                    stale.append(dict(key=record.key, filename=record.filename))
+            for item in stale:
+                obtain_lock_patiently(item['key'], item['filename'])
+                reset_user_dict(item['key'], item['filename'], force=True)
+                release_lock(item['key'], item['filename'])
+                time.sleep(0.05)
+            time.sleep(0.2)
     last_index = -1
+    if interview_delete_days == 0:
+        return
     while True:
-        results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index)).order_by(UserDict.indexno).limit(1000)
+        results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index, subq.c.filename.notin_(days_by_filename.keys()))).order_by(UserDict.indexno).limit(1000)
         if results.count() == 0:
             break
         stale = list()
@@ -64,7 +95,7 @@ def clear_old_interviews():
             release_lock(item['key'], item['filename'])
             time.sleep(0.05)
         time.sleep(0.2)
-    
+
 def run_cron(cron_type):
     cron_types = [cron_type]
     if not re.search(r'_background$', cron_type):
@@ -73,6 +104,7 @@ def run_cron(cron_type):
     user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
+    skip_interview = dict()
     with app.app_context():
         with app.test_request_context(base_url=base_url, path=path_url):
             login_user(cron_user, remember=False)
@@ -85,7 +117,19 @@ def run_cron(cron_type):
                 to_do = list()
                 for indexno, key, filename, dictionary, steps in records:
                     last_index = indexno
-                    #dict_result = db.session.query(UserDict.dictionary).filter(UserDict.indexno == indexno).first()
+                    if skip_interview.get(filename, False):
+                        continue
+                    try:
+                        interview = docassemble.base.interview_cache.get_interview(filename)
+                    except:
+                        continue
+                    if filename not in skip_interview:
+                        skip_interview[filename] = True
+                        for cron_type_to_use in cron_types:
+                            if cron_type_to_use in interview.questions:
+                                skip_interview[filename] = False
+                        if skip_interview[filename]:
+                            continue
                     try:
                         the_dict = unpack_dictionary(dictionary)
                     except:
@@ -97,6 +141,7 @@ def run_cron(cron_type):
                     except:
                         continue
                     for cron_type_to_use in cron_types:
+                        time.sleep(0.05)
                         if cron_type_to_use not in interview.questions:
                             continue
                         if re.search(r'_background$', cron_type_to_use):
@@ -112,8 +157,6 @@ def run_cron(cron_type):
                                     reset_user_dict(key, filename, force=True)
                                 if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                                     release_lock(key, filename)
-                                    if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
-                                        time.sleep(0.05)
                                 elif interview_status.question.question_type == "backgroundresponseaction":
                                     new_action = interview_status.question.action
                                     interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=new_action['action'], arguments=new_action['arguments'], interface='cron'))
@@ -125,16 +168,12 @@ def run_cron(cron_type):
                                     if save_status != 'ignore':
                                         save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                     release_lock(key, filename)
-                                    if save_status != 'ignore':
-                                        time.sleep(0.05)
                                 elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
                                     release_lock(key, filename)
                                 else:
                                     if save_status != 'ignore':
                                         save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                     release_lock(key, filename)
-                                    if save_status != 'ignore':
-                                        time.sleep(0.05)
                                     if interview_status.question.question_type == "response":
                                         if hasattr(interview_status.question, 'all_variables'):
                                             if hasattr(interview_status.question, 'include_internal'):
@@ -157,9 +196,8 @@ def run_cron(cron_type):
                                 error_notification(err, trace=error_trace)
                                 continue
                     del the_dict
-                    #del dict_result
                 time.sleep(0.2)
-            
+
 if __name__ == "__main__":
     with app.app_context():
         if cron_type == 'cron_daily':
@@ -167,4 +205,3 @@ if __name__ == "__main__":
         run_cron(cron_type)
         db.engine.dispose()
     sys.exit(0)
-

@@ -21,7 +21,9 @@ if PY2:
 else:
     import pickle
 from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError
+from jinja2.runtime import UndefinedError
+
 import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
@@ -2525,5 +2527,15 @@ def get_status(setting):
         return None
     return this_thread.internal['misc'].get(setting, None)
 
-from docassemble.base.oauth import DAOAuth
+def prevent_dependency_satisfaction(f):
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+            if PY2:
+                raise Exception(err.__class__.__name__ + ": " + text_type(err))
+            else:
+                raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+    return wrapper
 
+from docassemble.base.oauth import DAOAuth

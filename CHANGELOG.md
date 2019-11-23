@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.5.47] - 2019-11-
+### Added
+- The `prevent_dependency_satisfaction` decorator.
+- The `interview delete days by filename` Configuration directive.
+### Fixed
+- Inefficiencies in ways cron jobs are run.
+- JavaScript error when using `check in` and `list collect` at the
+  same time.
+
 ## [0.5.46] - 2019-11-21
 ### Fixed
 - Possible race condition in `interview_list()`.
