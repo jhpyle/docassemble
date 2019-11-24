@@ -1023,13 +1023,18 @@ def fix_quotes(match):
     instring = match.group(1)
     n = len(instring)
     output = ''
-    for i in range(n):
+    i = 0
+    while i < n:
         if instring[i] == u'\u201c' or instring[i] == u'\u201d':
             output += '"'
         elif instring[i] == u'\u2018' or instring[i] == u'\u2019':
             output += "'"
+        elif instring[i] == '&' and i + 4 < n and instring[i:i+5] == '&amp;':
+            output += '&'
+            i += 4
         else:
             output += instring[i]
+        i += 1
     return output
 
 def docx_variable_fix(variable):

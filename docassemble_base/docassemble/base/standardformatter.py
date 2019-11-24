@@ -967,14 +967,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
                     elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
-                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one."))
+                        validation_rules['messages'][the_saveas]['ajaxrequired'] = field.validation_message('combobox required', status, word("You need to select one."))
                     elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('multiple choice required', status, word("You need to select one."))
                     else:
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('required', status, word("This field is required."))
                     if status.extras['required'][field.number]:
                         #sys.stderr.write(field.datatype + "\n")
-                        validation_rules['rules'][the_saveas]['required'] = True
+                        if hasattr(field, 'inputtype') and field.inputtype == 'ajax':
+                            validation_rules['rules'][the_saveas]['ajaxrequired'] = True
+                            validation_rules['rules'][the_saveas]['required'] = False
+                        else:
+                            validation_rules['rules'][the_saveas]['required'] = True
                     else:
                         validation_rules['rules'][the_saveas]['required'] = False
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:

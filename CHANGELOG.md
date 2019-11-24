@@ -8,6 +8,10 @@
 - Inefficiencies in ways cron jobs are run.
 - JavaScript error when using `check in` and `list collect` at the
   same time.
+- Error when `admin` user signs in with a social login.
+- An `input type: ajax` in `list collect` did not allow adding
+  additional items.
+- Ampersands in Jinja2 code were converted to `&amp;`.
 
 ## [0.5.46] - 2019-11-21
 ### Fixed

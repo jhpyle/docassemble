@@ -9603,6 +9603,17 @@ def index(action_argument=None):
       $.validator.addMethod("datetime", function(a, b){
         return true;
       });
+      $.validator.addMethod("ajaxrequired", function(value, element, params){
+        var realElement = $("#" + $(element).attr('name') + "combobox");
+        var realValue = $(realElement).val();
+        if (!$(realElement).parent().is(":visible")){
+          return true;
+        }
+        if (realValue == null || realValue.replace(/\s/g, '') == ''){
+          return false;
+        }
+        return true;
+      });
       $.validator.addMethod('checkone', function(value, element, params){
         var number_needed = params[0];
         var css_query = params[1];
