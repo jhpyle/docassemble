@@ -1206,6 +1206,10 @@ class Question:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
+            if 'review button color' in data['features']:
+                self.interview.options['review button color'] = data['features']['review button color']
+            if 'review button icon' in data['features']:
+                self.interview.options['review button icon'] = data['features']['review button icon']
             if 'disable analytics' in data['features'] and data['features']['disable analytics']:
                 self.interview.options['analyics on'] = data['features']['disable analytics']
             if 'hide navbar' in data['features']:
