@@ -3485,6 +3485,17 @@
         if lower_line.startswith(wordstart):
           results.append(line.rstrip())
     json_response(results)
+"fields-ajax-list-collect": |-
+  objects:
+    - favorite_word: DAList.using(there_are_any=True)
+  ---
+  question: |
+    What is your ${ ordinal(i) } favorite word?
+  fields:
+    - Word: favorite_word[i]
+      input type: ajax
+      action: wordlist
+  list collect: True
 "fields-checkboxes": |-
   question: |
     Please tell me what you think.
@@ -8661,6 +8672,10 @@
   question: |\n  Edit the people\nsubquestion: |\n  ${ person.table }\n  \n  ${ person.add_action()\
   \ }\n---\ntable: person.table\nrows: person\ncolumns:\n  - Name: |\n      row_item.name.full()\n\
   \  - Fruit: |\n      row_item.favorite_fruit\nedit:\n  - name.first\n  - favorite_fruit"
+"review-edit-list-custom-button": |-
+  features:
+    review button color: secondary
+    review button icon: pencil-alt
 "review-edit-list-table": "need: person.table\nmandatory: true\nquestion: |\n  Thank\
   \ you for your answers!\nsubquestion: |\n  The people are ${ person }.\n\n  You\
   \ can\n  [edit your answers](${ url_action('review_interview') })\n  if you want.\n\
@@ -11714,6 +11729,25 @@
   mandatory: True
   question: |
     You sound ${ mood }.
+"prevent-dependency-satisfaction": |-
+  modules:
+    .legume
+  ---
+  objects:
+    - bean: Legume
+  ---
+  mandatory: True
+  code: |
+    bean.sweet_index
+    final_screen
+  ---
+  event: final_screen
+  question: |
+    % if bean.is_tasty():
+    It is tasty.
+    % else:
+    It is not tasty.
+    % endif
 "progressive-disclosure": "modules:\n  - .progressivedisclosure\n---\nfeatures:\n\
   \  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\nsubject: |\n\
   \  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n  \n  A fruit\

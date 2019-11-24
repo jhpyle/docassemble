@@ -431,11 +431,14 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `remove` (optional): set this to `'account'` if you want to remove
-   the user's data, but keep [`multi_user`] interview sessions that
-   have been joined by another user.  Set this to
-   `'account_and_shared'` if you want to remove shared interview
-   sessions as well.  The default is only to make the account
-   inactive.
+   the user's account entirely.  This will irrevocably remove the
+   user's data and prevent them from logging in.  The only things that
+   will be retained are [`multi_user`] interview sessions that were
+   joined by another user.  If you set `remove` to
+   `'account_and_shared'`, then these shared interview sessions will
+   also be removed.  If you leave `account` unset, the user's account
+   will simply be made inactive, which will prevent the user from
+   logging in, but will not delete their account or their data.
 
 Required privileges: `admin`.
 

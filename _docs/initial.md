@@ -1904,7 +1904,31 @@ features:
   loop limit: 600
   recursion limit: 600
 {% endhighlight %}
-   
+
+## <a name="review button color"></a><a name="review button icon"></a>Customizing buttons on review pages
+
+By default, when you use a [`review`] screen that includes buttons,
+the buttons have the [Bootstrap] "success" color.  You can style these
+buttons using the `review button color` and `review button icon`
+features.
+
+The `review button color` can be one of `primary`, `secondary`,
+`success`, `danger`, `warning`, `info`, `light`, `link`, and `dark`.
+The default is `'success'`.  The actual colors depend on the Bootstrap
+theme.
+
+The `review button icon` can be set to the name of the [Font Awesome]
+icon to use at the start of the button.  The default is
+`'pencil-alt'`.  The icon name is assumed to refer to an icon in the
+"solid" collection (`fas`).  To use a different collection, specify a
+name such as `fab-fa-windows` for the `windows` icon in the "brand"
+collection.  The default is `None`, which means no icon is included.
+
+Here is an example that uses the same style as "Edit" buttons within
+tables.
+
+{% include side-by-side.html demo="review-edit-list-custom-button" %}
+
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
 [`device()`]: {{ site.baseurl }}/docs/functions.html#device
@@ -2102,3 +2126,4 @@ features:
 [`segment id`]: {{ site.baseurl}}/docs/config.html#segment id
 [`analytics id`]: {{ site.baseurl}}/docs/config.html#analytics id
 [`google`]: {{ site.baseurl}}/docs/config.html#google
+[Font Awesome]: https://fontawesome.com

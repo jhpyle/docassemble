@@ -287,7 +287,7 @@ The requirement of making sure your objects are aware of their names
 is inconvenient, but necessary.  [Python] has no built-in system by
 which a variable can know its own name.  In **docassemble**, it is
 necessary for objects to know their own names so that when your
-interview logic refers to an undefined object attribute, list element,
+[interview logic] refers to an undefined object attribute, list element,
 or dictionary key, **docassemble** knows what [`question`] or [`code`]
 block to use to obtain a definition of the undefined variable.
 
@@ -4142,7 +4142,7 @@ Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
 and let it warm up.
 {% endhighlight %}
 
-# <a name="extending"></a>Extending existing classes
+## <a name="extending"></a>Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
 as [`Individual`], you do not need to reinvent the wheel or copy and
@@ -4197,6 +4197,73 @@ question: |
 then you would get an error because `can_practice_in()` is not a valid
 method for `user`, which is only an instance of the [`Individual`] class
 and not an instance of the `Attorney` class.
+
+## <a name="prevent_dependency_satisfaction"></a>Preventing dependency satisfaction
+
+**docassemble**'s dependency satisfaction process can be used from
+inside methods.  For example, you have an class `Legume` with a method
+`.is_tasty()`, which references `self.savory_index`, running
+`.is_tasty()` can trigger a [`question`] to be asked if the
+`savory_index` attribute is needed and is not defined.
+
+{% highlight python %}
+class Legume(Thing):
+    def is_tasty(self):
+        if self.sweet_index > 5 or self.savory_index > 6:
+            return True
+        else:
+            return False
+{% endhighlight %}
+
+However, this feature can also cause confusion, because if you make a
+mistake when coding a method and refer to a non-existent name,
+**docassemble** will try to obtain a definition for that name in the
+interview itself.  Although the namespace of a method is different
+from the namespace of the interview answers, **docassemble** doesn't
+know the difference.  The symptoms of this might be very confusing,
+because you might see strange behavior instead of an error message.
+
+The automatic dependency satisfaction system can also be a problem
+when the code in your method needs to run idempotently.  For example,
+if your code appends records to a database, you may find that
+mysterious duplicate entries are appearing in the database; this can
+happen if your method references an undefined variable that
+**docassemble**'s dependency satisfaction [logic] is able to define.
+
+You can turn off **docassemble**'s dependency satisfaction logic for a
+method by using the `prevent_dependency_satisfaction` [decorator].
+This [decorator] is defined in the [`docassemble.base.util`] module.
+
+Here is an example module called `legume.py` that uses the
+`prevent_dependency_satisfaction` decorator.
+
+{% highlight python %}
+from docassemble.base.util import Thing, prevent_dependency_satisfaction
+
+__all__ = ['Legume']
+
+class Legume(Thing):
+    @prevent_dependency_satisfaction
+    def is_tasty(self):
+        if self.sweet_index > 5 or self.savory_index > 6:
+            return True
+        else:
+            return False
+{% endhighlight %}
+
+Here is an interview that uses the `legume` module and the `Legume` class:
+
+{% include demo-side-by-side.html demo="prevent-dependency-satisfaction" %}
+
+If `@prevent_dependency_satisfaction` had not been applied to the
+method, then the `savory_index` attribute would have been gathered
+from the user.  The `prevent_dependency_satisfaction` [decorator]
+instead forces an exception to be raised.
+
+The code for `prevent_dependency_satisfaction` is very simple; it
+basically just wraps the method in a `try`/`except` and raises a
+generic [`Exception`] if any exception is raised from inside the
+method.
 
 # <a name="DADateTime"></a>Special date/time class `DADateTime`
 
@@ -4817,8 +4884,8 @@ validation code: |
 
 Although the [`validation code`] here won't raise a
 [`validation_error()`] to make the user fix something, it is code that
-runs after `customer.ssn` has been defined and before the interview
-logic is evaluated.  It "validates" the `customer` object by
+runs after `customer.ssn` has been defined and before the [interview
+logic] is evaluated.  It "validates" the `customer` object by
 populating `customer` with additional attributes from [SQL] if there
 is a record in the [SQL] table where the `ssn` column is equal to
 `customer.ssn`.
@@ -4983,7 +5050,7 @@ of a class attribute of the table definition (i.e. a column in the
 [SQL] table).  The [`SQLObject`] will be considered nascent until each
 of these columns can be defined.  The [`SQLObject`] will not trigger
 the seeking of a definition of any undefined [`DAObject`] attributes;
-your interview logic will need to trigger the asking of the necessary
+your [interview logic] will need to trigger the asking of the necessary
 [`question`]s or running the necessary [`code`] blocks.  If you do not
 specify a `_required` class attribute, the empty list will be used.
 
@@ -5386,6 +5453,7 @@ the `_uid` of the table rather than the `id`.
 [Python book]: http://shop.oreilly.com/product/0636920028154.do
 [list comprehension]: https://docs.python.org/3.6/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
+[logic]: {{ site.baseurl }}/docs/logic.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [namespace]: https://docs.python.org/3.6/tutorial/classes.html#python-scopes-and-namespaces
 [write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown
@@ -5434,3 +5502,5 @@ the `_uid` of the table rather than the `id`.
 [`SQLObject`]: #SQLObject
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`DALazyTemplate`]: #DALazyTemplate
+[decorator]: https://realpython.com/primer-on-python-decorators/
+[`Exception`]: https://docs.python.org/3.6/library/exceptions.html#Exception

@@ -604,6 +604,13 @@ embedded in the URL.  The result is an immediate PDF document.
 
 > [{{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
 
+When you write code that runs in a [scheduled task], you can use
+`response()` to finish the scheduled task.  In this context, you can
+pass the optional keyword argument `sleep` with a number of seconds
+that you want to pause after the task is finished.  This can be useful
+when your [scheduled tasks] would overwhelm your SQL server if
+executed one after another without pauses.
+
 ## <a name="json_response"></a>json_response()
 
 The function `json_response(data)` is a shorthand for
@@ -657,12 +664,17 @@ The optional keyword argument `url` provides a URL to which the user
 should be redirected.  The value of [`exitpage`] will be used if no
 `url` is provided.
 
-One use of `command()` is to delete interviews after a period of
-inactivity.  See [scheduled tasks] for more information.
-
 Note that the [special buttons] perform a similar function to
 `command()`.  See also the [starting an interview from the beginning]
 subsection for URL parameters that reset interview sessions.
+
+One use of `command()` is to delete interviews after a period of
+inactivity.  See [scheduled tasks] for more information.  In the
+context of [scheduled tasks], you can pass the optional keyword
+argument `sleep` with a number of seconds that you want to pause after
+the session is deleted.  This can be useful when your [scheduled
+tasks] would overwhelm your SQL server if executed one after another
+without pauses.
 
 # <a name="texttransformation"></a>Text transformation functions
 

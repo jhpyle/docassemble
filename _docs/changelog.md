@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.47](https://github.com/jhpyle/docassemble/releases/tag/v0.5.47) - 2019-11-24
+
+### Added
+- The `prevent_dependency_satisfaction` decorator.
+- The `interview delete days by filename` Configuration directive.
+- The `review button color` and `review button icon` options under
+  `features`.
+- The `sleep` option for `response()` and `command()`.
+
+### Fixed
+- Cron job inefficiencies.
+- JavaScript error when using `check in` and `list collect` at the
+  same time.
+- Error when `admin` user signs in with a social login.
+- An `input type: ajax` in `list collect` did not allow adding
+  additional items.
+- Ampersands in Jinja2 code were converted to `&amp;`.
+
 ## [0.5.46](https://github.com/jhpyle/docassemble/releases/tag/v0.5.46) - 2019-11-21
 
 ### Fixed
