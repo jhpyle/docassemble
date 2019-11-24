@@ -744,7 +744,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'light', 'dark', 'success'):
                         color = 'success'
                     icon = status.question.interview.options.get('review button icon', None)
-                    if isinstance(icon, string_types):
+                    if isinstance(icon, string_types) and icon != '':
                         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
                         if not re.search(r'^fa[a-z] fa-', icon):
                             icon = 'fas fa-' + icon

@@ -371,6 +371,12 @@ class InterviewStatus(object):
         self.followed_mc = False
         self.tentatively_answered = set()
         self.checkin = False
+    def do_sleep(self):
+        if hasattr(self.question, 'sleep'):
+            try:
+                time.sleep(self.question.sleep)
+            except:
+                sys.stderr.write("do_sleep: invalid sleep amount " + repr(self.question.sleep) + "\n")
     def get_field_list(self):
         if 'sub_fields' in self.extras:
             field_list = list()
@@ -2027,6 +2033,8 @@ class Question:
         elif 'null response' in data:
             self.content = TextObject('null')
             self.question_type = 'response'
+        if 'sleep' in data:
+            self.sleep = data['sleep']
         if 'response' in data or 'binaryresponse' in data or 'all_variables' or 'null response' in data:
             if 'include_internal' in data:
                 self.include_internal = data['include_internal']
@@ -5689,7 +5697,7 @@ class Interview:
                 except CommandError as qError:
                     #logmessage("CommandError")
                     docassemble.base.functions.reset_context()
-                    question_data = dict(command=qError.return_type, url=qError.url)
+                    question_data = dict(command=qError.return_type, url=qError.url, sleep=qError.sleep)
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -5716,6 +5724,8 @@ class Interview:
                         question_data['all_variables'] = True
                     elif hasattr(qError, 'nullresponse') and qError.nullresponse:
                         question_data['null response'] = qError.nullresponse
+                    elif hasattr(qError, 'sleep') and qError.sleep:
+                        question_data['sleep'] = qError.sleep
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
                     # new_interview = copy.deepcopy(self)
@@ -5737,6 +5747,8 @@ class Interview:
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'backgroundresponse'):
                         question_data['backgroundresponse'] = qError.backgroundresponse
+                    if hasattr(qError, 'sleep'):
+                        question_data['sleep'] = qError.sleep
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -6365,7 +6377,7 @@ class Interview:
             except CommandError as qError:
                 #logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
-                question_data = dict(command=qError.return_type, url=qError.url)
+                question_data = dict(command=qError.return_type, url=qError.url, sleep=qError.sleep)
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)
@@ -6392,6 +6404,8 @@ class Interview:
                     question_data['all_variables'] = True
                 elif hasattr(qError, 'nullresponse') and qError.nullresponse:
                     question_data['null response'] = qError.nullresponse
+                elif hasattr(qError, 'sleep') and qError.sleep:
+                    question_data['sleep'] = qError.sleep
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
                 new_interview_source = InterviewSourceString(content='')
@@ -6409,6 +6423,8 @@ class Interview:
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'backgroundresponse'):
                     question_data['backgroundresponse'] = qError.backgroundresponse
+                if hasattr(qError, 'sleep'):
+                    question_data['sleep'] = qError.sleep
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)

@@ -556,7 +556,7 @@ def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
 def nice_utc_date(timestamp, timezone=tz.tzlocal()):
     return timestamp.strftime('%F %T')
 
-@elapsed('fetch_user_dict')
+#@elapsed('fetch_user_dict')
 def fetch_user_dict(user_code, filename, secret=None):
     #logmessage("fetch_user_dict: user_code is " + str(user_code) + " and filename is " + str(filename))
     user_dict = None
@@ -589,7 +589,7 @@ def user_dict_exists(user_code, filename):
         return True
     return False
 
-@elapsed('fetch_previous_user_dict')
+#@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()

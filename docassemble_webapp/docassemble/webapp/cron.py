@@ -142,7 +142,6 @@ def run_cron(cron_type):
                         for cron_type_to_use in cron_types:
                             if cron_type_to_use not in interview.questions:
                                 continue
-                            time.sleep(0.05)
                             if re.search(r'_background$', cron_type_to_use):
                                 new_task = docassemble.webapp.worker.background_action.delay(filename, user_info, key, None, None, None, {'action': cron_type_to_use, 'arguments': dict()})
                             else:
@@ -156,6 +155,7 @@ def run_cron(cron_type):
                                         reset_user_dict(key, filename, force=True)
                                     if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
                                         release_lock(key, filename)
+                                        interview_status.do_sleep()
                                     elif interview_status.question.question_type == "backgroundresponseaction":
                                         new_action = interview_status.question.action
                                         interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=new_action['action'], arguments=new_action['arguments'], interface='cron'))
@@ -167,12 +167,15 @@ def run_cron(cron_type):
                                         if save_status != 'ignore':
                                             save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                         release_lock(key, filename)
+                                        interview_status.do_sleep()
                                     elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
                                         release_lock(key, filename)
+                                        interview_status.do_sleep()
                                     else:
                                         if save_status != 'ignore':
                                             save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
                                         release_lock(key, filename)
+                                        interview_status.do_sleep()
                                         if interview_status.question.question_type == "response":
                                             if hasattr(interview_status.question, 'all_variables'):
                                                 if hasattr(interview_status.question, 'include_internal'):
@@ -184,8 +187,8 @@ def run_cron(cron_type):
                                                 if interview_status.questionText != 'Empty Response':
                                                     sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                                 except Exception as err:
-                                    sys.stderr.write("Cron error: " + text_type(key) + " " + text_type(filename) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")
                                     release_lock(key, filename)
+                                    sys.stderr.write("Cron error: " + text_type(key) + " " + text_type(filename) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")
                                     if hasattr(err, 'traceback'):
                                         error_trace = text_type(err.traceback)
                                         if hasattr(err, 'da_line_with_error'):

@@ -1,7 +1,7 @@
 metadata:
-  title: Edit list
-  short title: Edit list
-  documentation: "https://docassemble.org/docs/groups.html#editing"
+  title: Custom review button
+  short title: Custom
+  documentation: "https://docassemble.org/docs/initial.html#review button color"
   example start: 1
   example end: 1
 ---
