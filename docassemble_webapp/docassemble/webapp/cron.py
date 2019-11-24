@@ -108,7 +108,7 @@ def run_cron(cron_type):
         with app.test_request_context(base_url=base_url, path=path_url):
             login_user(cron_user, remember=False)
             filenames = list()
-            for filename in [record.filename for record in db.session.query(UserDict.filename).group_by(UserDict.filename)]:
+            for filename in [record.filename for record in db.session.query(UserDict.filename).filter(UserDict.encrypted == False).group_by(UserDict.filename)]:
                 try:
                     interview = docassemble.base.interview_cache.get_interview(filename)
                 except:
