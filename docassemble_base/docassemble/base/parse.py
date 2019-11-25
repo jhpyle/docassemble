@@ -371,6 +371,12 @@ class InterviewStatus(object):
         self.followed_mc = False
         self.tentatively_answered = set()
         self.checkin = False
+    def do_sleep(self):
+        if hasattr(self.question, 'sleep'):
+            try:
+                time.sleep(self.question.sleep)
+            except:
+                sys.stderr.write("do_sleep: invalid sleep amount " + repr(self.question.sleep) + "\n")
     def get_field_list(self):
         if 'sub_fields' in self.extras:
             field_list = list()
@@ -1023,13 +1029,18 @@ def fix_quotes(match):
     instring = match.group(1)
     n = len(instring)
     output = ''
-    for i in range(n):
+    i = 0
+    while i < n:
         if instring[i] == u'\u201c' or instring[i] == u'\u201d':
             output += '"'
         elif instring[i] == u'\u2018' or instring[i] == u'\u2019':
             output += "'"
+        elif instring[i] == '&' and i + 4 < n and instring[i:i+5] == '&amp;':
+            output += '&'
+            i += 4
         else:
             output += instring[i]
+        i += 1
     return output
 
 def docx_variable_fix(variable):
@@ -1201,6 +1212,10 @@ class Question:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
+            if 'review button color' in data['features']:
+                self.interview.options['review button color'] = data['features']['review button color']
+            if 'review button icon' in data['features']:
+                self.interview.options['review button icon'] = data['features']['review button icon']
             if 'disable analytics' in data['features'] and data['features']['disable analytics']:
                 self.interview.options['analyics on'] = data['features']['disable analytics']
             if 'hide navbar' in data['features']:
@@ -2018,6 +2033,8 @@ class Question:
         elif 'null response' in data:
             self.content = TextObject('null')
             self.question_type = 'response'
+        if 'sleep' in data:
+            self.sleep = data['sleep']
         if 'response' in data or 'binaryresponse' in data or 'all_variables' or 'null response' in data:
             if 'include_internal' in data:
                 self.include_internal = data['include_internal']
@@ -5680,7 +5697,7 @@ class Interview:
                 except CommandError as qError:
                     #logmessage("CommandError")
                     docassemble.base.functions.reset_context()
-                    question_data = dict(command=qError.return_type, url=qError.url)
+                    question_data = dict(command=qError.return_type, url=qError.url, sleep=qError.sleep)
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -5707,6 +5724,8 @@ class Interview:
                         question_data['all_variables'] = True
                     elif hasattr(qError, 'nullresponse') and qError.nullresponse:
                         question_data['null response'] = qError.nullresponse
+                    elif hasattr(qError, 'sleep') and qError.sleep:
+                        question_data['sleep'] = qError.sleep
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
                     # new_interview = copy.deepcopy(self)
@@ -5728,6 +5747,8 @@ class Interview:
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'backgroundresponse'):
                         question_data['backgroundresponse'] = qError.backgroundresponse
+                    if hasattr(qError, 'sleep'):
+                        question_data['sleep'] = qError.sleep
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -6356,7 +6377,7 @@ class Interview:
             except CommandError as qError:
                 #logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
-                question_data = dict(command=qError.return_type, url=qError.url)
+                question_data = dict(command=qError.return_type, url=qError.url, sleep=qError.sleep)
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)
@@ -6383,6 +6404,8 @@ class Interview:
                     question_data['all_variables'] = True
                 elif hasattr(qError, 'nullresponse') and qError.nullresponse:
                     question_data['null response'] = qError.nullresponse
+                elif hasattr(qError, 'sleep') and qError.sleep:
+                    question_data['sleep'] = qError.sleep
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
                 new_interview_source = InterviewSourceString(content='')
@@ -6400,6 +6423,8 @@ class Interview:
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'backgroundresponse'):
                     question_data['backgroundresponse'] = qError.backgroundresponse
+                if hasattr(qError, 'sleep'):
+                    question_data['sleep'] = qError.sleep
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)

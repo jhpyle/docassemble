@@ -138,7 +138,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
     if re.match(r'ml-.*\.json', filename):
         output = dict()
         prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
-        for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+        for record in [record for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%'))]:
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
@@ -372,11 +372,11 @@ from docassemble.base.functions import pickleable_objects
 
 #@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uids=None):
-    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
-        return True
     upload = Uploads.query.filter(Uploads.indexno == file_number).first()
     if upload is None:
         return False
+    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+        return True
     if not upload.private:
         return True
     if uids is None or len(uids) == 0:
@@ -386,6 +386,8 @@ def can_access_file_number(file_number, uids=None):
         else:
             uids = []
     if upload.key in uids:
+        return True
+    if current_user and current_user.is_authenticated and UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first():
         return True
     return False
 
@@ -563,7 +565,7 @@ def fetch_user_dict(user_code, filename, secret=None):
     steps = 1
     encrypted = True
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    results = [d for d in db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)]
     #logmessage("fetch_user_dict: 01 query is " + str(results))
     for d in results:
         #logmessage("fetch_user_dict: indexno is " + str(d.indexno))

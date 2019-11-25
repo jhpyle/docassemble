@@ -740,7 +740,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('                <div class="row' + side_note_parent + '"><div class="col-md-12"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + 'success da-review-action da-review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
+                    color = status.question.interview.options.get('review button color', 'success')
+                    if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'light', 'dark', 'success'):
+                        color = 'success'
+                    icon = status.question.interview.options.get('review button icon', None)
+                    if isinstance(icon, string_types) and icon != '':
+                        icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
+                        if not re.search(r'^fa[a-z] fa-', icon):
+                            icon = 'fas fa-' + icon
+                        icon = '<i class="' + icon + '"></i> '
+                    else:
+                        icon = ''
+                    fieldlist.append('                <div class="row' + side_note_parent + '"><div class="col-md-12"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
                     continue
             if hasattr(field, 'label'):
                 fieldlist.append('                <div class="form-group row' + side_note_parent + '"><div class="col-md-12"><a href="#" class="da-review-action" data-action=' + myb64doublequote(json.dumps(field.action)) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div>' + side_note + '</div>\n')
@@ -949,7 +960,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     field_class += ' da-field-container-inputtype-dropdown'
             if field.number in status.helptexts:
                 helptext_start = '<a tabindex="0" class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>'
-                helptext_end = '</a>'
+                helptext_end = ' <sup><i class="fas fa-question-circle"></i></sup></a>'
             else:
                 helptext_start = ''
                 helptext_end = ''
@@ -967,14 +978,18 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
                     elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
-                        validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one."))
+                        validation_rules['messages'][the_saveas]['ajaxrequired'] = field.validation_message('combobox required', status, word("You need to select one."))
                     elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('multiple choice required', status, word("You need to select one."))
                     else:
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('required', status, word("This field is required."))
                     if status.extras['required'][field.number]:
                         #sys.stderr.write(field.datatype + "\n")
-                        validation_rules['rules'][the_saveas]['required'] = True
+                        if hasattr(field, 'inputtype') and field.inputtype == 'ajax':
+                            validation_rules['rules'][the_saveas]['ajaxrequired'] = True
+                            validation_rules['rules'][the_saveas]['required'] = False
+                        else:
+                            validation_rules['rules'][the_saveas]['required'] = True
                     else:
                         validation_rules['rules'][the_saveas]['required'] = False
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
@@ -1631,8 +1646,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             <div id="daChatBox" class="dainvisible">
               <div class="row">
                 <div class="col-md-12 dachatbutton">
-                  <a href="#" id="daChatOnButton" role="button" class="btn """ + BUTTON_STYLE + """-success">""" + word("Activate chat") + """</a>
-                  <a href="#" id="daChatOffButton" role="button" class="btn """ + BUTTON_STYLE + """-warning">""" + word("Turn off chat") + """</a>
+                  <a href="#" id="daChatOnButton" role="button" class="btn """ + BUTTON_STYLE + """success">""" + word("Activate chat") + """</a>
+                  <a href="#" id="daChatOffButton" role="button" class="btn """ + BUTTON_STYLE + """warning">""" + word("Turn off chat") + """</a>
                   <h1 class="h3" id="dachatHeading">""" + word("Live chat") + """</h1>
                 </div>
               </div>

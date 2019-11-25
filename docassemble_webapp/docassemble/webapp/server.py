@@ -2546,14 +2546,15 @@ def restore_session(backup):
             session[key] = backup[key]
 
 def get_existing_session(yaml_filename, secret):
-    for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno):
+    keys = [result.key for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno)]
+    for key in keys:
         try:
-            steps, user_dict, is_encrypted = fetch_user_dict(result.key, yaml_filename, secret=secret)
+            steps, user_dict, is_encrypted = fetch_user_dict(key, yaml_filename, secret=secret)
         except:
             logmessage("get_existing_session: unable to decrypt existing interview session " + result.key)
             continue
-        update_session(yaml_filename, uid=result.key, key_logged=True, encrypted=is_encrypted)
-        return result.key, is_encrypted
+        update_session(yaml_filename, uid=key, key_logged=True, encrypted=is_encrypted)
+        return key, is_encrypted
     return None, True
 
 def reset_session(yaml_filename, secret):
@@ -5380,8 +5381,10 @@ def index(action_argument=None):
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is None:
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            sys.stderr.write("Redirecting to login because no YAML filename provided and no anonymous access is allowed.\n")
             return redirect(url_for('user.login'))
         if len(daconfig['dispatch']):
+            sys.stderr.write("Redirecting to dispatch page because no YAML filename provided.\n")
             return redirect(url_for('interview_start'))
         else:
             yaml_filename = final_default_yaml_filename
@@ -5391,6 +5394,7 @@ def index(action_argument=None):
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
+            sys.stderr.write("Redirecting to login because no anonymous access allowed.\n")
             return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
         if yaml_filename.startswith('docassemble.playground'):
             if not app.config['ENABLE_PLAYGROUND']:
@@ -5417,6 +5421,7 @@ def index(action_argument=None):
                 if not interview.allowed_to_access(is_anonymous=True):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
+                    sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
                     return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
             elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                 raise DAError(word('You are not allowed to access this interview.'), code=403)
@@ -5424,6 +5429,7 @@ def index(action_argument=None):
             if unique_sessions is not False and not current_user.is_authenticated:
                 delete_session_for_interview(yaml_filename)
                 flash(word("You need to be logged in to access this interview."), "info")
+                sys.stderr.write("Redirecting to login because sessions are unique.\n")
                 return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
             session_id = None
             if reset_interview == 2:
@@ -5479,6 +5485,7 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
+        sys.stderr.write("Redirecting back to index because of failure to get user dictionary.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if session_parameter is not None:
             flash(word("Unable to retrieve interview session.  Starting a new session instead."), "error")
@@ -5488,6 +5495,7 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch returned no results")
         clear_session(yaml_filename)
+        sys.stderr.write("Redirecting back to index because user dictionary was None.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         flash(word("Unable to locate interview session.  Starting a new session instead."), "error")
         return response
@@ -5531,6 +5539,7 @@ def index(action_argument=None):
             save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         if action:
             index_params['action'] = safeid(json.dumps(action))
+        sys.stderr.write("Redirecting back to index because of need_to_reset.\n")
         response = do_redirect(url_for('index', **index_params), is_ajax, is_json, js_target)
         if set_cookie:
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
@@ -6605,6 +6614,7 @@ def index(action_argument=None):
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of an exit.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6618,6 +6628,7 @@ def index(action_argument=None):
             reset_user_dict(user_code, yaml_filename)
         release_lock(user_code, yaml_filename)
         delete_session()
+        sys.stderr.write("Redirecting because of a logout.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6643,18 +6654,21 @@ def index(action_argument=None):
         return response
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a signin.\n")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "register":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a register.\n")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
+        sys.stderr.write("Redirecting because of a leave.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -6712,6 +6726,7 @@ def index(action_argument=None):
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
+        sys.stderr.write("Redirecting because of a redirect.\n")
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
@@ -6896,7 +6911,7 @@ def index(action_argument=None):
       var daQuestionID = """ + json.dumps(question_id_dict) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list'];
       var daVarLookup;
       var daVarLookupRev;
       var daValLookup;
@@ -8926,7 +8941,7 @@ def index(action_argument=None):
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true});
         });
         $('[data-toggle="popover"]').on('click', function(event){
           event.preventDefault();
@@ -9585,6 +9600,17 @@ def index(action_argument=None):
       $.validator.addMethod("datetime", function(a, b){
         return true;
       });
+      $.validator.addMethod("ajaxrequired", function(value, element, params){
+        var realElement = $("#" + $(element).attr('name') + "combobox");
+        var realValue = $(realElement).val();
+        if (!$(realElement).parent().is(":visible")){
+          return true;
+        }
+        if (realValue == null || realValue.replace(/\s/g, '') == ''){
+          return false;
+        }
+        return true;
+      });
       $.validator.addMethod('checkone', function(value, element, params){
         var number_needed = params[0];
         var css_query = params[1];
@@ -9942,6 +9968,7 @@ def index(action_argument=None):
         if reload_after and reload_after > 0:
             data['reload_after'] = reload_after
         if 'action' in data and data['action'] == 'redirect' and 'url' in data:
+            sys.stderr.write("Redirecting because of a redirect action.\n")
             response = redirect(data['url'])
         else:
             response = jsonify(**data)
@@ -10340,7 +10367,7 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
-        if not can_access_file_number(number, uids=get_session_uids()):
+        if not (privileged or can_access_file_number(number, uids=get_session_uids())):
             abort(404)
         the_file = SavedFile(number)
         return redirect(the_file.temp_url_for())
@@ -13071,10 +13098,11 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
-                flash(logmessages, 'info')
-                time.sleep(3.0)
-                return redirect(url_for('playground_packages', project=current_project, file=current_package))
+                had_error, logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
+                flash(logmessages, 'danger' if had_error else 'info')
+                if not do_install:
+                    time.sleep(3.0)
+                    return redirect(url_for('playground_packages', project=current_project, file=current_package))
             if do_github:
                 if github_package_name in all_repositories:
                     first_time = False
@@ -13248,11 +13276,18 @@ def create_playground_package():
                 flash(word("Pushed commit to GitHub.") + "<br>" + re.sub(r'[\n\r]+', '<br>', output), 'info')
                 time.sleep(3.0)
                 shutil.rmtree(directory)
+                the_args = dict(project=current_project, pull='1', github_url=ssh_url, show_message='0')
+                do_pypi_also = true_or_false(request.args.get('pypi_also', False))
+                do_install_also = true_or_false(request.args.get('install_also', False))
+                if do_pypi_also or do_install_also:
+                    the_args['file'] = current_package
+                    if do_pypi_also:
+                        the_args['pypi_also'] = '1'
+                    if do_install_also:
+                        the_args['install_also'] = '1'
                 if branch:
-                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, branch=branch, show_message='0'))
-                else:
-                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, show_message='0'))
-                #return redirect(url_for('playground_packages', file=current_package))
+                    the_args['branch'] = branch
+                return redirect(url_for('playground_packages', **the_args))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
@@ -13442,8 +13477,7 @@ yesno: user_doing_well
             templatereadme = u"""\
 # Template directory
 
-If you want to use non-standard document templates with pandoc,
-put template files in this directory.
+If you want to use templates for document assembly, put them in this directory.
 """
             staticreadme = u"""\
 # Static file directory
@@ -16103,6 +16137,15 @@ def playground_packages():
                     fp.write(current_commit.strip())
             else:
                 logmessage("Did not find a single directory inside repo")
+            do_pypi_also = true_or_false(request.args.get('pypi_also', False))
+            do_install_also = true_or_false(request.args.get('install_also', False))
+            if do_pypi_also or do_install_also:
+                the_args = dict(package=the_file, project=current_project)
+                if do_pypi_also:
+                    the_args['pypi'] = '1'
+                if do_install_also:
+                    the_args['install'] = '1'
+                return redirect(url_for('create_playground_package', **the_args))
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
@@ -16264,14 +16307,17 @@ def playground_packages():
                 if form.install.data:
                     return redirect(url_for('create_playground_package', package=the_file, project=current_project, install='1'))
                 if form.pypi.data:
-                    return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
+                    if form.install_also.data:
+                        return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1', install='1'))
+                    else:
+                        return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
                 if form.github.data:
                     the_branch = form.github_branch.data
                     if the_branch == "<new>":
                         the_branch = re.sub(r'[^A-Za-z0-9\_\-]', r'', text_type(form.github_branch_new.data))
-                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch), pypi_also=('1' if form.pypi_also.data else '0'), install_also=('1' if form.install_also.data else '0')))
                     else:
-                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch), pypi_also=('1' if form.pypi_also.data else '0'), install_also=('1' if form.install_also.data else '0')))
                 the_time = formatted_current_time()
                 # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
                 # if existing_package is None:
@@ -16303,11 +16349,24 @@ def playground_packages():
     else:
         extra_command = ""
     extra_command += upload_js() + """
-        $("#daCancel").click(function(event){
+        $("#daCancelPyPI").click(function(event){
+          var daWhichButton = this;
+          $("#pypi_message_div").hide();
+          $(".btn-da").each(function(){
+            if (this != daWhichButton && $(this).attr('id') != 'daCancelGitHub' && $(this).is(":hidden")){
+              $(this).show();
+            }
+          });
+          $("#daPyPI").html(""" + json.dumps(word("PyPI")) + """);
+          $(this).hide();
+          event.preventDefault();
+          return false;
+        });
+        $("#daCancelGitHub").click(function(event){
           var daWhichButton = this;
           $("#commit_message_div").hide();
           $(".btn-da").each(function(){
-            if (this != daWhichButton && $(this).is(":hidden")){
+            if (this != daWhichButton && $(this).attr('id') != 'daCancelPyPI' && $(this).is(":hidden")){
               $(this).show();
             }
           });
@@ -16327,6 +16386,35 @@ def playground_packages():
             $("#new_branch_div").hide();
           }
         });
+        $("#daPyPI").click(function(event){
+          if (existingPypiVersion != null && existingPypiVersion == $("#version").val()){
+            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
+            $('html, body').animate({
+              scrollTop: $("#version").offset().top-90,
+              scrollLeft: 0
+            });
+            $("#version").focus();
+            var tmpStr = $("#version").val();
+            $("#version").val('');
+            $("#version").val(tmpStr);
+            event.preventDefault();
+            return false;
+          }
+          var daWhichButton = this;
+          if ($("#pypi_message_div").is(":hidden")){
+            $("#pypi_message_div").show();
+            $(".btn-da").each(function(){
+              if (this != daWhichButton && $(this).is(":visible")){
+                $(this).hide();
+              }
+            });
+            $(this).html(""" + json.dumps(word("Publish")) + """);
+            $("#daCancelPyPI").show();
+            window.scrollTo(0, document.body.scrollHeight);
+            event.preventDefault();
+            return false;
+          }
+        });
         $("#daGitHub").click(function(event){
           var daWhichButton = this;
           if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
@@ -16341,10 +16429,23 @@ def playground_packages():
                 }
               });
               $(this).html(""" + json.dumps(word("Commit")) + """);
-              $("#daCancel").show();
+              $("#daCancelGitHub").show();
             }
             $("#commit_message").focus();
             window.scrollTo(0, document.body.scrollHeight);
+            event.preventDefault();
+            return false;
+          }
+          if ($("#pypi_also").prop('checked') && existingPypiVersion != null && existingPypiVersion == $("#version").val()){
+            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
+            $('html, body').animate({
+              scrollTop: $("#version").offset().top-90,
+              scrollLeft: 0
+            });
+            $("#version").focus();
+            var tmpStr = $("#version").val();
+            $("#version").val('');
+            $("#version").val(tmpStr);
             event.preventDefault();
             return false;
           }
@@ -16369,6 +16470,7 @@ def playground_packages():
     extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
+      var existingPypiVersion = """ + json.dumps(pypi_version) + """;
       var isNew = """ + json.dumps(is_new) + """;
       var existingFiles = """ + json.dumps(files) + """;
       var currentFile = """ + json.dumps(the_file) + """;
@@ -16401,11 +16503,6 @@ def playground_packages():
         });
         $("#daDelete").click(function(event){
           if (!confirm(""" + '"' + word("Are you sure that you want to delete this package?") + '"' + """)){
-            event.preventDefault();
-          }
-        });
-        $("#daPyPI").click(function(event){
-          if(!confirm(""" + '"' + word("Are you sure that you want to publish this package to PyPI?") + '"' + """)){
             event.preventDefault();
           }
         });
@@ -18267,6 +18364,8 @@ def after_reset():
 def needs_to_change_password():
     if not current_user.has_role('admin'):
         return False
+    if not (current_user.social_id and current_user.social_id.startswith('local')):
+        return False
     #logmessage("needs_to_change_password: starting")
     if app.user_manager.verify_password('password', current_user):
         flash(word("Your password is insecure and needs to be changed"), "warning")
@@ -18879,6 +18978,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     #logmessage(str(interview_query))
     interviews = list()
     stored_info = list()
+
     for interview_info in interview_query:
         #logmessage("filename is " + str(interview_info.filename) + " " + str(interview_info.key))
         if session is not None and interview_info.key != session:

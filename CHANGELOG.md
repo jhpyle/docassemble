@@ -1,5 +1,45 @@
 # Change Log
 
+## [0.5.49] - 2019-11-24
+### Fixed
+- Python 2.7 bug introduced in 0.5.47.
+
+## [0.5.48] - 2019-11-24
+### Added
+- The `external` keyword parameter for the `.url_for()` method.
+### Changed
+- Access to files is now granted to users across sessions, whether the
+  session was active in the browser's session or not.  Previously,
+  access was restricted based on sessions that had been active in the
+  browser's session.
+- The `.url_for()` method when used with `temporary=True` now implies
+  `external=True`, which means that the URL returned includes the
+  protocol and hostname.  Use `external=False` to preserve the old
+  behavior.
+- A superscripted question mark icon is now shown in the green text
+  when `help` is added to a field.
+- When committing to GitHub from the Playground Packages screen, you
+  can choose to also publish on PyPI and install the package on the
+  server.
+- When publishing to PyPI from the Playground Packages screen, you can
+  choose to also install the package on the server.
+
+## [0.5.47] - 2019-11-24
+### Added
+- The `prevent_dependency_satisfaction` decorator.
+- The `interview delete days by filename` Configuration directive.
+- The `review button color` and `review button icon` options under
+  `features`.
+- The `sleep` option for `response()` and `command()`.
+### Fixed
+- Cron job inefficiencies.
+- JavaScript error when using `check in` and `list collect` at the
+  same time.
+- Error when `admin` user signs in with a social login.
+- An `input type: ajax` in `list collect` did not allow adding
+  additional items.
+- Ampersands in Jinja2 code were converted to `&amp;`.
+
 ## [0.5.46] - 2019-11-21
 ### Fixed
 - Possible race condition in `interview_list()`.

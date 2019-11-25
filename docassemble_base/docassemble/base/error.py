@@ -199,6 +199,8 @@ class BackgroundResponseError(Exception):
             self.backgroundresponse = pargs[0]
         else:
             self.backgroundresponse = kwargs
+        if 'sleep' in kwargs:
+            self.sleep = kwargs['sleep'];
     def __str__(self):
         if hasattr(self, 'backgroundresponse'):
             return str(self.backgroundresponse)
@@ -234,6 +236,8 @@ class ResponseError(Exception):
             self.url = kwargs['url'];
         elif 'null' in kwargs:
             self.nullresponse = kwargs['null'];
+        elif 'sleep' in kwargs:
+            self.sleep = kwargs['sleep'];
         if 'all_variables' in kwargs:
             self.all_variables = kwargs['all_variables'];
             if 'include_internal' in kwargs:
@@ -254,5 +258,6 @@ class CommandError(Exception):
         else:
             self.return_type = "exit"
         self.url = kwargs.get('url', '');
+        self.sleep = kwargs.get('sleep', None)
     def __str__(self):
         return str(self.return_type)

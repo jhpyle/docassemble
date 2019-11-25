@@ -127,6 +127,8 @@ class PlaygroundPackagesForm(FlaskForm):
     github_branch = SelectField(word('Branch'))
     github_branch_new = StringField(word('Name of new branch'))
     commit_message = StringField(word('Commit message'), default="")
+    pypi_also = BooleanField(word('Publish on PyPI also'))
+    install_also = BooleanField(word('Install package on this server also'))
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))
     install = SubmitField(word('Install'))
