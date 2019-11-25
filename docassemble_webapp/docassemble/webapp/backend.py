@@ -372,11 +372,11 @@ from docassemble.base.functions import pickleable_objects
 
 #@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uids=None):
-    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
-        return True
     upload = Uploads.query.filter(Uploads.indexno == file_number).first()
     if upload is None:
         return False
+    if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
+        return True
     if not upload.private:
         return True
     if uids is None or len(uids) == 0:
@@ -386,6 +386,8 @@ def can_access_file_number(file_number, uids=None):
         else:
             uids = []
     if upload.key in uids:
+        return True
+    if current_user and current_user.is_authenticated and UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first():
         return True
     return False
 

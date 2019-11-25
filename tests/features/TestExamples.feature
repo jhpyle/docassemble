@@ -4097,7 +4097,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/sections-keywords-set-sections.yml"
     Then I should see the phrase "What additional section would you like to add to this interview?"
     And I set "Name" to "Apple Cake"
-    And I set "Keyword" to "apple"
+    And I set "Keyword " to "apple"
     And I click the button "Continue"
     Then I should see the phrase "Welcome to the interview"
 
@@ -4570,18 +4570,18 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/text-help.yml"
     Then I should see the phrase "What are your favorite things to eat?"
     And I should see the phrase "If you don’t know what a vegetable or fruit is, click the green text."
-    And I click the link "Vegetable"
+    And I click the link "Vegetable "
     And I wait 1 second
     Then I should see the phrase "A plant."
     And I unfocus
     And I wait 1 second
-    And I click the link "Fruit"
+    And I click the link "Fruit "
     And I wait 1 second
     Then I should see the phrase "The pulpy, edible seed vessels of certain plants."
     And I unfocus
     And I wait 1 second
-    And I set "Vegetable" to "turnip"
-    And I set "Fruit" to "orange"
+    And I set "Vegetable " to "turnip"
+    And I set "Fruit " to "orange"
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “turnip”"
 

@@ -3103,6 +3103,11 @@ class DAFile(DAObject):
         return docassemble.base.file_docx.pdf_pages(file_info, width)
     def url_for(self, **kwargs):
         """Returns a URL to the file."""
+        if kwargs.get('temporary', False) and 'external' not in kwargs:
+            kwargs['_external'] = True
+        if kwargs.get('external', False):
+            kwargs['_external'] = True
+            del kwargs['external']
         return server.url_finder(self, **kwargs)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""

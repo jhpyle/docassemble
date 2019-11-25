@@ -453,8 +453,10 @@ def publish_package(pkgname, info, author_info, tz_name, current_project='defaul
         output += err.output.decode()
     dist_file = None
     dist_dir = os.path.join(packagedir, 'dist')
+    had_error = False
     if not os.path.isdir(dist_dir):
         output += "dist directory " + str(dist_dir) + " did not exist after calling sdist"
+        had_error = True
     else:
         # for f in os.listdir(dist_dir):
         #     try:
@@ -469,11 +471,12 @@ def publish_package(pkgname, info, author_info, tz_name, current_project='defaul
             output += subprocess.check_output(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')], cwd=packagedir, stderr=subprocess.STDOUT).decode()
         except subprocess.CalledProcessError as err:
             output += "Error calling twine upload.\n"
-            output += err.output
+            output += err.output.decode()
+            had_error = True
     output = re.sub(r'\n', '<br>', output)
     shutil.rmtree(directory)
     logmessage(output)
-    return output
+    return had_error, output
 
 def make_package_zip(pkgname, info, author_info, tz_name, current_project='default'):
     directory = make_package_dir(pkgname, info, author_info, tz_name, current_project=current_project)
@@ -607,8 +610,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     templatereadme = u"""\
 # Template directory
 
-If you want to use non-standard document templates with pandoc,
-put template files in this directory.
+If you want to use templates for document assembly, put them in this directory.
 """
     staticreadme = u"""\
 # Static file directory

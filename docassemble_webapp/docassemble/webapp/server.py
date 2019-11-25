@@ -8941,7 +8941,7 @@ def index(action_argument=None):
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true});
         });
         $('[data-toggle="popover"]').on('click', function(event){
           event.preventDefault();
@@ -10367,7 +10367,7 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
-        if not can_access_file_number(number, uids=get_session_uids()):
+        if not (privileged or can_access_file_number(number, uids=get_session_uids())):
             abort(404)
         the_file = SavedFile(number)
         return redirect(the_file.temp_url_for())
@@ -13098,10 +13098,11 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
-                flash(logmessages, 'info')
-                time.sleep(3.0)
-                return redirect(url_for('playground_packages', project=current_project, file=current_package))
+                had_error, logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
+                flash(logmessages, 'danger' if had_error else 'info')
+                if not do_install:
+                    time.sleep(3.0)
+                    return redirect(url_for('playground_packages', project=current_project, file=current_package))
             if do_github:
                 if github_package_name in all_repositories:
                     first_time = False
@@ -13275,11 +13276,18 @@ def create_playground_package():
                 flash(word("Pushed commit to GitHub.") + "<br>" + re.sub(r'[\n\r]+', '<br>', output), 'info')
                 time.sleep(3.0)
                 shutil.rmtree(directory)
+                the_args = dict(project=current_project, pull='1', github_url=ssh_url, show_message='0')
+                do_pypi_also = true_or_false(request.args.get('pypi_also', False))
+                do_install_also = true_or_false(request.args.get('install_also', False))
+                if do_pypi_also or do_install_also:
+                    the_args['file'] = current_package
+                    if do_pypi_also:
+                        the_args['pypi_also'] = '1'
+                    if do_install_also:
+                        the_args['install_also'] = '1'
                 if branch:
-                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, branch=branch, show_message='0'))
-                else:
-                    return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=ssh_url, show_message='0'))
-                #return redirect(url_for('playground_packages', file=current_package))
+                    the_args['branch'] = branch
+                return redirect(url_for('playground_packages', **the_args))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
@@ -13469,8 +13477,7 @@ yesno: user_doing_well
             templatereadme = u"""\
 # Template directory
 
-If you want to use non-standard document templates with pandoc,
-put template files in this directory.
+If you want to use templates for document assembly, put them in this directory.
 """
             staticreadme = u"""\
 # Static file directory
@@ -16130,6 +16137,15 @@ def playground_packages():
                     fp.write(current_commit.strip())
             else:
                 logmessage("Did not find a single directory inside repo")
+            do_pypi_also = true_or_false(request.args.get('pypi_also', False))
+            do_install_also = true_or_false(request.args.get('install_also', False))
+            if do_pypi_also or do_install_also:
+                the_args = dict(package=the_file, project=current_project)
+                if do_pypi_also:
+                    the_args['pypi'] = '1'
+                if do_install_also:
+                    the_args['install'] = '1'
+                return redirect(url_for('create_playground_package', **the_args))
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
@@ -16291,14 +16307,17 @@ def playground_packages():
                 if form.install.data:
                     return redirect(url_for('create_playground_package', package=the_file, project=current_project, install='1'))
                 if form.pypi.data:
-                    return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
+                    if form.install_also.data:
+                        return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1', install='1'))
+                    else:
+                        return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
                 if form.github.data:
                     the_branch = form.github_branch.data
                     if the_branch == "<new>":
                         the_branch = re.sub(r'[^A-Za-z0-9\_\-]', r'', text_type(form.github_branch_new.data))
-                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, new_branch=text_type(the_branch), pypi_also=('1' if form.pypi_also.data else '0'), install_also=('1' if form.install_also.data else '0')))
                     else:
-                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch)))
+                        return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=text_type(the_branch), pypi_also=('1' if form.pypi_also.data else '0'), install_also=('1' if form.install_also.data else '0')))
                 the_time = formatted_current_time()
                 # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
                 # if existing_package is None:
@@ -16330,11 +16349,24 @@ def playground_packages():
     else:
         extra_command = ""
     extra_command += upload_js() + """
-        $("#daCancel").click(function(event){
+        $("#daCancelPyPI").click(function(event){
+          var daWhichButton = this;
+          $("#pypi_message_div").hide();
+          $(".btn-da").each(function(){
+            if (this != daWhichButton && $(this).attr('id') != 'daCancelGitHub' && $(this).is(":hidden")){
+              $(this).show();
+            }
+          });
+          $("#daPyPI").html(""" + json.dumps(word("PyPI")) + """);
+          $(this).hide();
+          event.preventDefault();
+          return false;
+        });
+        $("#daCancelGitHub").click(function(event){
           var daWhichButton = this;
           $("#commit_message_div").hide();
           $(".btn-da").each(function(){
-            if (this != daWhichButton && $(this).is(":hidden")){
+            if (this != daWhichButton && $(this).attr('id') != 'daCancelPyPI' && $(this).is(":hidden")){
               $(this).show();
             }
           });
@@ -16354,6 +16386,35 @@ def playground_packages():
             $("#new_branch_div").hide();
           }
         });
+        $("#daPyPI").click(function(event){
+          if (existingPypiVersion != null && existingPypiVersion == $("#version").val()){
+            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
+            $('html, body').animate({
+              scrollTop: $("#version").offset().top-90,
+              scrollLeft: 0
+            });
+            $("#version").focus();
+            var tmpStr = $("#version").val();
+            $("#version").val('');
+            $("#version").val(tmpStr);
+            event.preventDefault();
+            return false;
+          }
+          var daWhichButton = this;
+          if ($("#pypi_message_div").is(":hidden")){
+            $("#pypi_message_div").show();
+            $(".btn-da").each(function(){
+              if (this != daWhichButton && $(this).is(":visible")){
+                $(this).hide();
+              }
+            });
+            $(this).html(""" + json.dumps(word("Publish")) + """);
+            $("#daCancelPyPI").show();
+            window.scrollTo(0, document.body.scrollHeight);
+            event.preventDefault();
+            return false;
+          }
+        });
         $("#daGitHub").click(function(event){
           var daWhichButton = this;
           if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
@@ -16368,10 +16429,23 @@ def playground_packages():
                 }
               });
               $(this).html(""" + json.dumps(word("Commit")) + """);
-              $("#daCancel").show();
+              $("#daCancelGitHub").show();
             }
             $("#commit_message").focus();
             window.scrollTo(0, document.body.scrollHeight);
+            event.preventDefault();
+            return false;
+          }
+          if ($("#pypi_also").prop('checked') && existingPypiVersion != null && existingPypiVersion == $("#version").val()){
+            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
+            $('html, body').animate({
+              scrollTop: $("#version").offset().top-90,
+              scrollLeft: 0
+            });
+            $("#version").focus();
+            var tmpStr = $("#version").val();
+            $("#version").val('');
+            $("#version").val(tmpStr);
             event.preventDefault();
             return false;
           }
@@ -16396,6 +16470,7 @@ def playground_packages():
     extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    '
     extra_js += kbLoad
     extra_js += """<script>
+      var existingPypiVersion = """ + json.dumps(pypi_version) + """;
       var isNew = """ + json.dumps(is_new) + """;
       var existingFiles = """ + json.dumps(files) + """;
       var currentFile = """ + json.dumps(the_file) + """;
@@ -16428,11 +16503,6 @@ def playground_packages():
         });
         $("#daDelete").click(function(event){
           if (!confirm(""" + '"' + word("Are you sure that you want to delete this package?") + '"' + """)){
-            event.preventDefault();
-          }
-        });
-        $("#daPyPI").click(function(event){
-          if(!confirm(""" + '"' + word("Are you sure that you want to publish this package to PyPI?") + '"' + """)){
             event.preventDefault();
           }
         });

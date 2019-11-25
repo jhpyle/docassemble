@@ -125,13 +125,32 @@
               {%- endif %}
               {%- if can_publish_to_github %}
               <div id="commit_message_div" style="display:none">
-                <div id="github_branch_div">  
+                <div id="github_branch_div">
                   {{ render_select_field(form.github_branch) }}
-                  <div id="new_branch_div" style="display:none">  
+                  <div id="new_branch_div" style="display:none">
                     {{ render_field(form.github_branch_new) }}
                   </div>
                 </div>
-                {{ render_field(form.commit_message) }}    
+                {{ render_field(form.commit_message) }}
+                {%- if can_publish_to_pypi %}
+                <div class="form-check">
+                    {{ form.pypi_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.pypi_also.id }}">{{ form.pypi_also.label }}</label>
+                </div>
+                {%- endif %}
+                <div class="form-check">
+                    {{ form.install_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
+                </div>
+              </div>
+              {%- endif %}
+              {%- if can_publish_to_pypi %}
+              <div id="pypi_message_div" style="display:none">
+                <p>{{ word("Press the Publish button to publish the package on PyPI.") }}</p>
+                <div class="form-check">
+                    {{ form.install_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
+                </div>
               </div>
               {%- endif %}
               <div class="form-actions">
@@ -140,10 +159,11 @@
                 {{ render_submit_field(form.install, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
                 {%- if can_publish_to_pypi %}
                 {{ render_submit_field(form.pypi, id="daPyPI", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
+                {{ render_submit_field(form.cancel, id="daCancelPyPI", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
                 {%- if can_publish_to_github %}
                 {{ render_submit_field(form.github, id="daGitHub", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
-                {{ render_submit_field(form.cancel, id="daCancel", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
+                {{ render_submit_field(form.cancel, id="daCancelGitHub", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
                 {{ render_submit_field(form.delete, id="daDelete", class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
