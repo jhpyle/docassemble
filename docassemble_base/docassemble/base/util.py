@@ -2529,12 +2529,15 @@ def get_status(setting):
 
 def prevent_dependency_satisfaction(f):
     def wrapper(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
-            if PY2:
-                raise Exception(err.__class__.__name__ + ": " + text_type(err))
-            else:
+        if PY2:
+            try:
+                return f(*args, **kwargs)
+            except Exception as err:
+                raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+        else:
+            try:
+                return f(*args, **kwargs)
+            except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
                 raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
     return wrapper
 

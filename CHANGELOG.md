@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.49] - 2019-11-24
+### Fixed
+- Bug in Python 2.7.
+
 ## [0.5.48] - 2019-11-24
 ### Added
 - The `external` keyword parameter for the `.url_for()` method.
