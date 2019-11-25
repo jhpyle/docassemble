@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.49](https://github.com/jhpyle/docassemble/releases/tag/v0.5.49) - 2019-11-24
+
+### Fixed
+- Python 2.7 bug introduced in 0.5.47.
+
 ## [0.5.48](https://github.com/jhpyle/docassemble/releases/tag/v0.5.48) - 2019-11-24
 
 ### Added
