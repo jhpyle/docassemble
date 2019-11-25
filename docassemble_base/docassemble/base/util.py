@@ -2533,7 +2533,7 @@ def prevent_dependency_satisfaction(f):
             try:
                 return f(*args, **kwargs)
             except Exception as err:
-                raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+                raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed")
         else:
             try:
                 return f(*args, **kwargs)
