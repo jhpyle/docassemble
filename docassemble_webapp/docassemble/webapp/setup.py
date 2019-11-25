@@ -2,7 +2,7 @@ from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 from datetime import timedelta
 import docassemble.webapp.database
-da_version = '0.5.31'
+da_version = '0.5.49'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -47,7 +47,7 @@ app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
 app.config['USER_SEND_REGISTERED_EMAIL'] = False
 app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
 app.config['USER_ENABLE_RETYPE_PASSWORD'] = True if daconfig.get('retype password', True) else False
-app.config['USER_ENABLE_REMEMBER_ME'] = True if daconfig.get('enable remember me', True) else False
+app.config['USER_ENABLE_REMEMBER_ME'] = False
 app.config['USER_ENABLE_EMAIL'] = True
 app.config['USER_ENABLE_USERNAME'] = False
 app.config['USER_ENABLE_REGISTRATION'] = True

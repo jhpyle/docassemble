@@ -165,6 +165,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/auto-terms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
     And I click the link "creeper"
+    And I wait 1 second
     Then I should see the phrase "A tall green creature that explodes if you get too close."
     And I click the button "No"
     Then I should see the phrase "You clearly need to play more Minecraft."
@@ -379,10 +380,10 @@ Feature: Example interviews
     Then I should see the phrase "What is your favorite food?"
     And I set "Favorite food" to "potatoes"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I set "Favorite food" to "tomatoes"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food"
     And I should see the phrase "potatoes"
@@ -933,7 +934,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "Here is your document."
@@ -950,7 +951,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "What is the subject of your complaint?"
@@ -1007,7 +1008,7 @@ Feature: Example interviews
     Then I should see the phrase "What is the address of David Defendant?"
     And I set "Address" to "123 Main St"
     And I set "City" to "Springfield"
-    And I set "State" to "Missouri"
+    And I select "Missouri" as the "State"
     And I set "Zip" to "12121"
     And I click the button "Continue"
     Then I should see the phrase "What is the subject of your complaint?"
@@ -4096,7 +4097,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/sections-keywords-set-sections.yml"
     Then I should see the phrase "What additional section would you like to add to this interview?"
     And I set "Name" to "Apple Cake"
-    And I set "Keyword" to "apple"
+    And I set "Keyword " to "apple"
     And I click the button "Continue"
     Then I should see the phrase "Welcome to the interview"
 
@@ -4569,18 +4570,18 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/text-help.yml"
     Then I should see the phrase "What are your favorite things to eat?"
     And I should see the phrase "If you don’t know what a vegetable or fruit is, click the green text."
-    And I click the link "Vegetable"
+    And I click the link "Vegetable "
     And I wait 1 second
     Then I should see the phrase "A plant."
     And I unfocus
     And I wait 1 second
-    And I click the link "Fruit"
+    And I click the link "Fruit "
     And I wait 1 second
     Then I should see the phrase "The pulpy, edible seed vessels of certain plants."
     And I unfocus
     And I wait 1 second
-    And I set "Vegetable" to "turnip"
-    And I set "Fruit" to "orange"
+    And I set "Vegetable " to "turnip"
+    And I set "Fruit " to "orange"
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “turnip”"
 
@@ -5455,12 +5456,12 @@ Feature: Example interviews
 
   Scenario: Test the interview "Interviews"
     Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
-    And I wait 1 second
+    And I wait 3 seconds
     Then I should see the phrase "Sign in"
 
   Scenario: Test the interview "Interviews"
     Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
-    And I wait 1 second
+    And I wait 3 seconds
     Then I should see the phrase "Sign in"
 
   Scenario: Test the interview "Logo title"
@@ -6321,7 +6322,7 @@ Feature: Example interviews
   Scenario: Test the interview "Combobox" in fields with selection
     Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
     Then I should see the phrase "What is your favorite color?"
-    I select "Green" in the combobox
+    And I select "Green" in the combobox
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
@@ -6335,7 +6336,7 @@ Feature: Example interviews
   Scenario: Test the interview "Combobox" with selection
     Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
     Then I should see the phrase "What is your favorite color?"
-    I select "Green" in the combobox
+    And I select "Green" in the combobox
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
@@ -6809,7 +6810,7 @@ Feature: Example interviews
     Then I should see the phrase "Tell me which thing you want."
     And I set "How many things are there?" to "5"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 8 seconds
     And I click the option "4" under "Which thing do you want?"
     And I wait 2 seconds
     And I click the button "Continue"
@@ -6827,8 +6828,10 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
     Then I should see the phrase "What is your favorite food?"
     And I set "Favorite food" to "soup"
+    And I unfocus
     And I set "Favorite drink" to "water"
-    And I wait 1 second
+    And I unfocus
+    And I wait 4 seconds
     Then I should see the phrase "What? You like SOUP?"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food is soup and your favorite drink is water."
@@ -7975,7 +7978,7 @@ Feature: Example interviews
     Then I should see the phrase "I will send your bill to 211 S 11th St, Philadelphia, PA 19107."
     And I should see the phrase "I will ship your order to 222 S 13th St, Philadelphia, PA 19107."
 
-  Scenario: Test the interview "Billing and shipping 2"
+  Scenario: Test the interview "Billing and shipping 3"
     Given I start the interview "docassemble.base:data/questions/examples/object-radio-address.yml"
     Then I should see the phrase "What is your billing address?"
     And I set "Address" to "211 S 11th St"
@@ -7992,6 +7995,7 @@ Feature: Example interviews
     And I click the back button
     Then I should see the phrase "What is your shipping address?"
     And I click the "A new address" option
+    And I wait 1 second
     And I set "Address" to "222 S 13th St"
     And I set "City" to "Philadelphia"
     And I select "Pennsylvania" as the "State"

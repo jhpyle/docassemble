@@ -29,7 +29,7 @@
                         {%- for project in projects %}
                         <tr>
                             <td><a href="{{ url_for('playground_page', project=project) }}">{{ project }}</a></td>
-                            <td style="text-align:right;"><a tabindex="20" class="btn btn-success btn-sm" href="{{ url_for('playground_project', rename='1', project=project) }}">{{ word('Rename') }}</a>&nbsp;<a tabindex="20" class="btn btn-danger btn-sm" href="{{ url_for('playground_project', delete='1', project=project) }}">{{ word('Delete') }}</a></td>
+                            <td style="text-align:right;"><a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm" href="{{ url_for('playground_project', rename='1', project=project) }}">{{ word('Rename') }}</a>&nbsp;<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}danger btn-sm" href="{{ url_for('playground_project', delete='1', project=project) }}">{{ word('Delete') }}</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -47,7 +47,7 @@
                     {{ render_field(form.name) }}
                     <div class="form-actions">
                         {{ render_submit_field(form.submit) }}
-                        <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                     </div>
                 </form>
                 {%- elif mode == 'rename' %}
@@ -63,7 +63,7 @@
                     {{ render_field(form.name) }}
                     <div class="form-actions">
                         {{ render_submit_field(form.submit) }}
-                        <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                     </div>
                 </form>
                 {%- elif mode == 'delete' %}
@@ -78,7 +78,7 @@
                     {{ form.csrf_token }}
                     <div class="form-actions">
                         {{ render_submit_field(form.submit) }}
-                        <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                     </div>
                 </form>
                 {%- endif %}
@@ -90,7 +90,7 @@
 {%- endblock %}
 {%- block bottom %}
       {%- if mode == 'standard' %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
       {%- endif %}
 {%- endblock %}
 

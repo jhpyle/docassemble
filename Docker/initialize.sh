@@ -124,6 +124,14 @@ if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
     export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
 fi
 
+if [ "${S3ENABLE:-null}" == "true" ]; then
+    if [ "${USEMINIO:-false}" == "true" ]; then
+        python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}"
+    else
+        s4cmd mb "s3://${S3BUCKET}" &> /dev/null
+    fi
+fi
+
 echo "9" >&2
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
@@ -363,6 +371,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DBHOST}}/'"${DBHOST:-null}"'/' \
         -e 's/{{DBPORT}}/'"${DBPORT:-null}"'/' \
         -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX:-null}"'/' \
+        -e 's/{{DBBACKUP}}/'"${DBBACKUP:-true}"'/' \
         -e 's/{{S3ENABLE}}/'"${S3ENABLE:-false}"'/' \
         -e 's#{{S3ACCESSKEY}}#'"${S3ACCESSKEY:-null}"'#' \
         -e 's#{{S3SECRETACCESSKEY}}#'"${S3SECRETACCESSKEY:-null}"'#' \
@@ -378,6 +387,10 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
         -e 's/{{EC2}}/'"${EC2:-false}"'/' \
+        -e 's/{{COLLECTSTATISTICS}}/'"${COLLECTSTATISTICS:-false}"'/' \
+        -e 's/{{KUBERNETES}}/'"${KUBERNETES:-false}"'/' \
+        -e 's/{{USECLOUDURLS}}/'"${USECLOUDURLS:-false}"'/' \
+        -e 's/{{USEMINIO}}/'"${USEMINIO:-false}"'/' \
         -e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \
         -e 's/{{USELETSENCRYPT}}/'"${USELETSENCRYPT:-false}"'/' \
         -e 's/{{LETSENCRYPTEMAIL}}/'"${LETSENCRYPTEMAIL:-null}"'/' \
@@ -554,9 +567,9 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
     fi
 
     if [ "${POSTURLROOT}" == "/" ]; then
-	DALOCATIONREWRITE=" "
+        DALOCATIONREWRITE=" "
     else
-	DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
+        DALOCATIONREWRITE="location = ${WSGIROOT} { rewrite ^ ${POSTURLROOT}; }"
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
@@ -725,12 +738,33 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     if [ -z "$dbexists" ]; then
         echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
+elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
+    export PGHOST="${DBHOST}"
+    export PGUSER="${DBUSER}"
+    export PGPASSWORD="${DBPASSWORD}"
+    export PGDATABASE="postgres"
+    while ! pg_isready -q; do sleep 1; done
+    dbexists=`psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'"`
+    if [ -z "$dbexists" ]; then
+        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | psql
+    fi
+    unset PGHOST
+    unset PGUSER
+    unset PGPASSWORD
+    unset PGDATABASE
 fi
 
 echo "30" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+    if [ -f /configdata/initial_credentials ]; then
+        echo "Found initial credentials" >&2
+        source /configdata/initial_credentials
+        rm -f /configdata/initial_credentials
+    fi
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.fix_postgresql_tables \"${DA_CONFIG_FILE}\" && python -m docassemble.webapp.create_tables \"${DA_CONFIG_FILE}\"" www-data
+    unset DA_ADMIN_EMAIL
+    unset DA_ADMIN_PASSWORD
 fi
 
 echo "31" >&2
@@ -797,8 +831,15 @@ fi
 
 echo "39" >&2
 
-if su -c "source \"${DA_ACTIVATE}\" && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
-    CELERYRUNNING=true;
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+    echo "checking if celery is already running..." >&2
+    if su -c "source \"${DA_ACTIVATE}\" && timeout 5s celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
+	echo "celery is running" >&2
+	CELERYRUNNING=true;
+    else
+	echo "celery is not already running" >&2
+	CELERYRUNNING=false;
+    fi
 else
     CELERYRUNNING=false;
 fi
@@ -1210,18 +1251,23 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
 fi
 
 function deregister {
+    rm -f "${DA_ROOT}/webapp/ready"
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.deregister \"${DA_CONFIG_FILE}\"" www-data
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
         su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.cloud_deregister" www-data
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
         if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-            backup_apache
-            rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            #backup_apache
+            if [ "$OTHERLOGSERVER" = false ]; then
+                rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            fi
         fi
         if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-            backup_nginx
-            rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            #backup_nginx
+            if [ "$OTHERLOGSERVER" = false ]; then
+                rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+            fi
         fi
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
@@ -1290,5 +1336,6 @@ function deregister {
 trap deregister SIGINT SIGTERM
 
 echo "initialize finished" >&2
+touch "${DA_ROOT}/webapp/ready"
 sleep infinity &
 wait %1

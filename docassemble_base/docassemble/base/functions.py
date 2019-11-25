@@ -573,9 +573,11 @@ def set_parts(**kwargs):
         this_thread.internal['short title'] = kwargs['short']
     if 'tab' in kwargs:
         this_thread.internal['tab title'] = kwargs['tab']
+    if 'subtitle' in kwargs:
+        this_thread.internal['sub'] = kwargs['subtitle']
     for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
-        if key in ('title', 'logo', 'subtitle', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label'):
+        if key in ('title', 'logo', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label'):
             this_thread.internal[key] = val
 
 def set_title(**kwargs):
@@ -698,14 +700,26 @@ def interview_url_action(action, **kwargs):
         del kwargs['local']
     args = dict()
     if 'i' in kwargs:
-        args['i'] = kwargs['i']
+        if kwargs['i']:
+            args['i'] = kwargs['i']
+        else:
+            args['i'] = this_thread.current_info['yaml_filename']
         del kwargs['i']
     else:
         args['i'] = this_thread.current_info['yaml_filename']
+    if 'new_session' in kwargs:
+        if kwargs['new_session']:
+            args['new_session'] = '1'
+        del kwargs['new_session']
+    if 'reset' in kwargs:
+        if kwargs['reset']:
+            args['reset'] = '1'
+        del kwargs['reset']
     if 'session' in kwargs:
-        args['session'] = kwargs['session']
+        if kwargs['session']:
+            args['session'] = kwargs['session']
         del kwargs['session']
-    else:
+    elif args['i'] == this_thread.current_info['yaml_filename']:
         args['session'] = this_thread.current_info['session']
     if contains_volatile.search(action):
         raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")
@@ -933,7 +947,7 @@ class DANav(object):
         if style == "inline":
             the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'
-            a_class = "btn btn-secondary danavlink "
+            a_class = "btn " + server.button_class_prefix + "secondary danavlink "
         else:
             if not self.visible():
                 return ''
@@ -1444,10 +1458,7 @@ def worker_caller(func, ui_notification, action):
 #     global server_redis
 #     server_redis = target
 
-def default_ordinal_function(i):
-    return text_type(i)
-
-def ordinal_function_en(i):
+def ordinal_function_en(i, **kwargs):
     num = text_type(i)
     if 10 <= i % 100 <= 20:
         return num + u'th'
@@ -1829,11 +1840,11 @@ def pickleable_objects(input_dict):
         output_dict[key] = input_dict[key]
     return(output_dict)
 
-def ordinal_number_default(i):
+def ordinal_number_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number.
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
-    num = text_type(i)
+    num = text_type(the_number)
     if this_thread.language in ordinal_numbers:
         language_to_use = this_thread.language
     elif '*' in ordinal_numbers:
@@ -1848,10 +1859,12 @@ def ordinal_number_default(i):
         language_to_use = '*'
     else:
         language_to_use = 'en'
-    return ordinal_functions[language_to_use](i)
+    return ordinal_functions[language_to_use](the_number, **kwargs)
 
-def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
+def salutation_default(indiv, **kwargs):
     """Returns Mr., Ms., etc. for an individual."""
+    with_name = kwargs.get('with_name', False)
+    with_name_and_punctuation = kwargs.get('with_name_and_punctuation', False)
     ensure_definition(indiv, with_name, with_name_and_punctuation)
     used_gender = False
     if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
@@ -1885,18 +1898,20 @@ def salutation_default(indiv, with_name=False, with_name_and_punctuation=False):
             return salut_and_name
     return salut
 
-def ordinal_default(j, **kwargs):
+def ordinal_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
     number function, see ordinal_number()."""
-    result = ordinal_number(int(float(j)) + 1)
+    result = ordinal_number(int(float(the_number)) + 1)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return capitalize(result)
     return result
 
-def nice_number_default(num, capitalize=False, language=None):
+def nice_number_default(the_number, **kwargs):
     """Returns the number as a word in the current language."""
-    ensure_definition(num, capitalize, language)
+    capitalize = kwargs.get('capitalize', False)
+    language = kwargs.get('language', None)
+    ensure_definition(the_number, capitalize, language)
     if language is None:
         language = this_thread.language
     if language in nice_numbers:
@@ -1905,24 +1920,27 @@ def nice_number_default(num, capitalize=False, language=None):
         language_to_use = '*'
     else:
         language_to_use = 'en'
-    if int(float(num)) == float(num):
-        num = int(float(num))
-    if text_type(num) in nice_numbers[language_to_use]:
-        the_word = nice_numbers[language_to_use][text_type(num)]
+    if int(float(the_number)) == float(the_number):
+        the_number = int(float(the_number))
+    if text_type(the_number) in nice_numbers[language_to_use]:
+        the_word = nice_numbers[language_to_use][text_type(the_number)]
         if capitalize:
             return capitalize_function(the_word)
         else:
             return the_word
-    elif type(num) is int:
-        return text_type(locale.format_string("%d", num, grouping=True))
+    elif type(the_number) is int:
+        return text_type(locale.format_string("%d", the_number, grouping=True))
     else:
-        return text_type(locale.format_string("%.2f", float(num), grouping=True)).rstrip('0')
+        return text_type(locale.format_string("%.2f", float(the_number), grouping=True)).rstrip('0')
 
-def quantity_noun_default(num, noun, as_integer=True, capitalize=False, language=None):
-    ensure_definition(num, noun, as_integer, capitalize, language)
+def quantity_noun_default(the_number, noun, **kwargs):
+    as_integer = kwargs.get('as_integer', True)
+    capitalize = kwargs.get('capitalize', False)
+    language = kwargs.get('language', None)
+    ensure_definition(the_number, noun, as_integer, capitalize, language)
     if as_integer:
-        num = int(round(num))
-    result = nice_number(num, language=language) + " " + noun_plural(noun, num, language=language)
+        the_number = int(round(the_number))
+    result = nice_number(the_number, language=language) + " " + noun_plural(noun, the_number, language=language)
     if capitalize:
         return capitalize_function(result)
     else:
@@ -1941,7 +1959,7 @@ def currency_symbol_default(**kwargs):
     """Returns the currency symbol for the current locale."""
     return text_type(locale.localeconv()['currency_symbol'])
 
-def currency_default(value, decimals=True, symbol=None):
+def currency_default(value, **kwargs):
     """Returns the value as a currency, according to the conventions of
     the current locale.  Use the optional keyword argument
     decimals=False if you do not want to see decimal places in the
@@ -1949,6 +1967,8 @@ def currency_default(value, decimals=True, symbol=None):
     than the default.
 
     """
+    decimals = kwargs.get('decimals', True)
+    symbol = kwargs.get('symbol', None)
     ensure_definition(value, decimals, symbol)
     obj_type = type(value).__name__
     if obj_type in ['FinancialList', 'PeriodicFinancialList']:
@@ -2521,8 +2541,6 @@ language_functions = {
 }
 
 def language_function_constructor(term):
-    if term not in language_functions:
-        raise SystemError("term " + text_type(term) + " not in language_functions")
     def func(*args, **kwargs):
         ensure_definition(*args, **kwargs)
         language = kwargs.get('language', None)
@@ -3646,8 +3664,20 @@ def safe_json(the_object, level=0, is_key=False):
         return [safe_json(x, level=level+1) for x in the_object]
     if isinstance(the_object, dict):
         new_dict = dict()
+        used_string = False
+        used_non_string = False
         for key, value in the_object.items():
-            new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(value, level=level+1)
+            the_key = safe_json(key, level=level+1, is_key=True)
+            if isinstance(the_key, string_types):
+                used_string = True
+            else:
+                used_non_string = True
+            new_dict[the_key] = safe_json(value, level=level+1)
+        if used_non_string and used_string:
+            corrected_dict = dict()
+            for key, value in new_dict.items():
+                corrected_dict[text_type(key)] = value
+            return corrected_dict
         return new_dict
     if isinstance(the_object, set):
         new_list = list()
@@ -4045,7 +4075,14 @@ def verbatim(text):
     if this_thread.evaluation_context == 'pandoc':
         return '\\textrm{' + text_type(escape_latex(re.sub(r'\r?\n(\r?\n)+', '\n', text_type(text).strip()))) + '}'
     if this_thread.evaluation_context is None:
-        text = '<div>' + re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text).strip()))) + '</div>'
+        text = '<span>' + re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text).strip()))) + '</span>'
+        text = re.sub(r'\*', r'&#42;', text)
+        text = re.sub(r'\_', r'&#95;', text)
+        text = re.sub(r'(?<!&)\#', r'&#35;', text)
+        text = re.sub(r'\=', r'&#61;', text)
+        text = re.sub(r'\+', r'&#43;', text)
+        text = re.sub(r'\-', r'&#45;', text)
+        text = re.sub(r'([0-9])\.', r'\1&#46;', text)
         return re.sub(r'\r?\n(\r?\n)+', '<br>', text)
     if this_thread.evaluation_context == 'docx':
         return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', text_type(text))))

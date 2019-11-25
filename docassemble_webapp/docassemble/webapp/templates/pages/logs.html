@@ -31,10 +31,10 @@
       <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}" placeholder="{{ word('Filter for') }}">
     </div>
     <div class="col-auto my-1">
-      <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
+      <button type="submit" name="{{ form.submit.id }}" class="btn {{ config['BUTTON_STYLE'] }}primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
     </div>
     <div class="col-auto my-1">
-      <button type="submit" name="{{ form.clear.id }}" class="btn btn-secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
+      <button type="submit" name="{{ form.clear.id }}" class="btn {{ config['BUTTON_STYLE'] }}secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
     </div>
     <div class="col-auto ml-auto my-1 h3">
       {%- if default_filter_string == '' %}

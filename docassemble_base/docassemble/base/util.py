@@ -21,7 +21,9 @@ if PY2:
 else:
     import pickle
 from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError
+from jinja2.runtime import UndefinedError
+
 import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
@@ -1358,7 +1360,7 @@ class Person(DAObject):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
-            tense = '1sg'
+            tense = '2sg'
         else:
             tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
@@ -2459,7 +2461,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
@@ -2525,5 +2527,17 @@ def get_status(setting):
         return None
     return this_thread.internal['misc'].get(setting, None)
 
-from docassemble.base.oauth import DAOAuth
+def prevent_dependency_satisfaction(f):
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+            raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed")
+        # Python 3 version:
+        # try:
+        #     return f(*args, **kwargs)
+        # except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+        #     raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+    return wrapper
 
+from docassemble.base.oauth import DAOAuth

@@ -10,9 +10,9 @@
 {{ form.csrf_token }}
 <div class="form-actions">
   {{ render_field(form.confirm) }}
-  {{ render_submit_field(form.delete, id='delete', class="btn btn-danger " + config['BUTTON_CLASS']) }}
+  {{ render_submit_field(form.delete, id='delete', class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}
   {%- if logged_in %}
-  <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">Cancel</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">Cancel</a>
   {%- endif %}
 </div>
 </form>

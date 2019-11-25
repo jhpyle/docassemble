@@ -38,7 +38,7 @@ def privilege_list():
 """
     for role in db.session.query(Role).order_by(Role.name):
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + text_type(role.name) + '</td><td><a class="btn btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + text_type(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + 'danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + text_type(role.name) + '</td><td>&nbsp;</td></tr>\n'
 

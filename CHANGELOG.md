@@ -1,5 +1,165 @@
 # Change Log
 
+## [0.5.49] - 2019-11-24
+### Fixed
+- Python 2.7 bug introduced in 0.5.47.
+
+## [0.5.48] - 2019-11-24
+### Added
+- The `external` keyword parameter for the `.url_for()` method.
+### Changed
+- Access to files is now granted to users across sessions, whether the
+  session was active in the browser's session or not.  Previously,
+  access was restricted based on sessions that had been active in the
+  browser's session.
+- The `.url_for()` method when used with `temporary=True` now implies
+  `external=True`, which means that the URL returned includes the
+  protocol and hostname.  Use `external=False` to preserve the old
+  behavior.
+- A superscripted question mark icon is now shown in the green text
+  when `help` is added to a field.
+- When committing to GitHub from the Playground Packages screen, you
+  can choose to also publish on PyPI and install the package on the
+  server.
+- When publishing to PyPI from the Playground Packages screen, you can
+  choose to also install the package on the server.
+
+## [0.5.47] - 2019-11-24
+### Added
+- The `prevent_dependency_satisfaction` decorator.
+- The `interview delete days by filename` Configuration directive.
+- The `review button color` and `review button icon` options under
+  `features`.
+- The `sleep` option for `response()` and `command()`.
+### Fixed
+- Cron job inefficiencies.
+- JavaScript error when using `check in` and `list collect` at the
+  same time.
+- Error when `admin` user signs in with a social login.
+- An `input type: ajax` in `list collect` did not allow adding
+  additional items.
+- Ampersands in Jinja2 code were converted to `&amp;`.
+
+## [0.5.46] - 2019-11-21
+### Fixed
+- Possible race condition in `interview_list()`.
+
+## [0.5.45] - 2019-11-20
+### Added
+- The `backup` directive under `db`.
+### Fixed
+- Problem converting some types of interview answers to JSON.
+
+## [0.5.44] - 2019-11-20
+### Fixed
+- Cron job was overtaxing the SQL server.
+- `does_verb()` used the wrong tense.
+
+## [0.5.43] - 2019-11-18
+### Added
+- Ability to pass keyword parameters to the `show()` method of a
+  template.
+### Fixed
+- Problem with object storage cache invalidation.
+
+## [0.5.42] - 2019-11-17
+### Fixed
+- Problem unpickling from 2.7.
+
+## [0.5.41] - 2019-11-16
+### Fixed
+- Problem with the Playground API using the Templates folder.
+- Playground API did not support projects other than the default
+  project.
+- HTML typo that was introduced in 0.5.40.
+- Problem unpickling from 2.7.
+
+## [0.5.40] - 2019-11-15
+### Added
+- The `button style` Configuration directive.
+- The `disable analytics` option under `features`.
+### Fixed
+- The LDAP login feature was not compatible with the new version of
+  the `python-ldap` package.
+
+## [0.5.39] - 2019-11-13
+### Changed
+- Multi-server syslog system improved.
+- `objects_from_file()` now accepts `DAFile` and related objects.
+### Fixed
+- Problem with `DAStore` being used with the API.
+- Logrotate not rotating all files.
+
+## [0.5.38] - 2019-11-11
+### Changed
+- Testing scripts now support the `aloe` package as an alternative to
+  `lettuce`.
+### Fixed
+- Web sockets logs not sent to syslog.
+- `RABBITMQ` and `REDIS` not overridden when
+  `ENVIRONMENT_TAKES_PRECEDENCE` is true.
+- Reverted change made in 0.5.37 regarding HTML codes.
+
+## [0.5.37] - 2019-11-09
+### Added
+- Method of initializing admin e-mail and password through volume
+  mount.
+- The `collect statistics` Configuration directive.
+### Changed
+- External PostgreSQL database created if it does not exist.
+### Fixed
+- Dependency on `mod_wsgi` caused problems when upgrading.
+- HTML codes non-printable in dropdown lists.
+- Potential problem with too-short RabbitMQ heartbeat.
+
+## [0.5.36] - 2019-11-04
+### Fixed
+- Exceptions raised by syslog calls were not trapped.
+- Problems with restarting server in multi-server configuration.
+
+## [0.5.35] - 2019-10-31
+### Changed
+- The "remember me" feature removed.
+### Fixed
+- Deleted or renamed playground modules not culled from Python
+  installation.
+- Content of new file in Playground lost if filename blank.
+- Erroneous `session` parameter added to result of
+  `interview_url_action()` if `i` specified.
+
+## [0.5.34] - 2019-10-30
+### Fixed
+- Erroneous dependency on `pkg-resources` in `docassemble.base` for
+  Python 2.7.
+
+## [0.5.33] - 2019-10-30
+### Changed
+- All Python dependencies have version numbers explicitly indicated.
+- Backend server health check tests for completion of initialization.
+- The `websockets ip` Configuration directive no longer defaults to localhost.
+### Fixed
+- Better handling of Markdown when passing values to a DOCX file
+  directly.
+- Ordinal functions now accept arbitrary keyword arguments.
+- Some phrases for translation not detected.
+- The `verbatim()` function did not escape formatting characters in
+  some circumstances.
+
+## [0.5.32] - 2019-10-25
+### Added
+- `ENVIRONMENT_TAKES_PRECEDENCE` Docker environment variable.
+- The `use minio` Configuration directive.
+- Added `account_type` as a response from `get_user_info().
+### Changed
+- Improved backup and logging in multi-server configuration.
+- Any `admin` can upgrade or downgrade packages.
+### Fixed
+- The `subtitle` did not work with `set_parts()`.
+- Certain PDF fields raised error.
+- Not all language functions were compatible with keyword parameters.
+- Manual newlines in Markdown not converted to line breaks.
+- Double quotes in HTML input element values not properly escaped.
+
 ## [0.5.31] - 2019-10-13
 ### Added
 - Ability to use `code` in `content file` specifiers of `template`s

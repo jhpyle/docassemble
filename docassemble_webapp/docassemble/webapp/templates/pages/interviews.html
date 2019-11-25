@@ -44,7 +44,7 @@
                   </td>
                   {%- endif %}
                   <td>{{ interview['starttime'] }}</td>
-                  <td><a class="btn btn-sm btn-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
+                  <td><a class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
                 </tr>
               {%- endif %}
               {%- endfor %}
@@ -55,7 +55,7 @@
                   <td>&nbsp;</td>
                   {%- endif %}
                   <td>&nbsp;</td>
-                  <td><a id="delete_all" class="btn btn-sm btn-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
+                  <td><a id="delete_all" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
                 </tr>
               {%- endif %}
               </tbody>

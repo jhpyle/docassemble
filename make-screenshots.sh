@@ -94,7 +94,7 @@ do
 done
 
 cd tests
-lettuce -v 3 -r --failfast features/Screenshots.feature
+aloe --verbosity=3 --color -x -d features/Screenshots.feature
 if [ $? -ne 0 ]
 then
     echo "Failure while making screenshots"

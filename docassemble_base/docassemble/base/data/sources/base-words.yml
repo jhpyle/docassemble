@@ -142,6 +142,8 @@
 "(embedded question, source code not available)": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
+"Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
+"Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
 "Enter the name of the new project you want to create.": Null
 "Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
@@ -306,6 +308,8 @@
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
 "Not authorized": Null
+"Note: it is a best practice to tag every mandatory block with an id.": Null
+"Note: more than one block uses id": Null
 "Note": Null
 "Note: only users with e-mail/password accounts can be given admin privileges.": Null
 "Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.": Null
@@ -465,6 +469,8 @@
 "Source Files": Null
 "Source": Null
 "Special variable": Null
+"Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
+"Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
 "Static files": Null
 "Static Files": Null
 "Stop Controlling": Null

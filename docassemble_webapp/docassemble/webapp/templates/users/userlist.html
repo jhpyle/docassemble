@@ -5,7 +5,7 @@
 <div class="row mb-2">
   <div class="col text-right">
     <div class="dropdown">
-      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i> {{ word('Menu') }}</button>
+      <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i> {{ word('Menu') }}</button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
         <a class="dropdown-item" href="{{ url_for('user_add') }}"><i class="fas fa-user-plus fa-fw"></i> {{ word('Add a user') }}</a>
         <a class="dropdown-item" href="{{ url_for('invite') }}"><i class="fas fa-envelope fa-fw"></i> {{ word('Invite a user') }} </a>
@@ -57,7 +57,7 @@
       <td class="text-danger">{{ user_info['email'] }}</td>
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
-      <td style="text-align:right;"><a class="btn btn-success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>
+      <td style="text-align:right;"><a class="btn {{ config['BUTTON_STYLE'] }}success" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}">{{ word('Edit') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>

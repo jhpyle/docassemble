@@ -1,6 +1,7 @@
-from lettuce import *
-from lettuce_webdriver.util import assert_false
-from lettuce_webdriver.util import AssertContextManager
+try:
+    from aloe import *
+except ImportError:
+    from lettuce import *
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -89,7 +90,7 @@ def setup_browser():
     world.wait_seconds = default_wait_seconds
 
 @after.all
-def tear_down(total):
+def tear_down():
     time.sleep(2)
-    print("Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed ))
+    #print("Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed ))
     world.browser.quit()
