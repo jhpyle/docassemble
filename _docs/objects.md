@@ -1218,10 +1218,10 @@ returns 1.
 <a name="DAFile.url_for"></a>The `.url_for()` method returns a URL at
 which the file can be accessed.  The URL should only be used in the
 context of the user's session and the user's web browser.  For
-example, if you are using cloud storage as your form of
-[data storage], the URL will link directly to the cloud and will
-expire after an hour.  If you are not using cloud storage, the server
-will only allow access to the file to the current user.
+example, if you are using cloud storage as your form of [data
+storage], the URL will link directly to the cloud and will expire
+after an hour.  If you are not using cloud storage, the server will
+only allow access to the file to the current user.
 
 {% include side-by-side.html demo="dafile-url-for" %}
 
@@ -1231,26 +1231,33 @@ from `.url_for()` will be accessible to anyone, regardless of whether
 they are logged in.  For more information, see
 [`.set_attributes()`](#DAFile.set_attributes).
 
-The `.url_for()` method can also be used to generate a temporary URL
-where anyone who knows the URL can access the file, regardless of
-whether they are logged in, regardless of whether the server uses
-cloud [data storage], and regardless of whether the `private`
-attribute is `True` or `False`.  To obtain such a URL, include
-`temporary=True` as a keyword parameter.  By default, the URL will
-expire after 30 seconds.  To extend this time, include the optional
-keyword parameter `seconds`.  This example creates a URL that expires
-in 60 seconds.
+The following keyword parameters can be used.
+
+`temporary` - the `.url_for()` method can also be used to generate a
+temporary URL where anyone who knows the URL can access the file,
+regardless of whether they are logged in, regardless of whether the
+server uses cloud [data storage], and regardless of whether the
+`private` attribute is `True` or `False`.  To obtain such a URL,
+include `temporary=True` as a keyword parameter.  By default, the URL
+will expire after 30 seconds.  To extend this time, include the
+optional keyword parameter `seconds`.  This example creates a URL that
+expires in 60 seconds.
 
 {% include side-by-side.html demo="dafile-url-for-temporary" %}
 
-If you are using cloud storage, then the URLs will point directly to
-the cloud provider rather than to your server.  (This has important
-performance benefits.)  The links are long and technical because they
-contain access codes.  By default, if a user clicks on a link, the URL
-will open as an attachment, and the user may be prompted to download
-the file or open it in an application; it will not open in the
-browser.  If you would like the links to open in the browser, add
+`inline` - if you are using cloud storage, then the URLs will point
+directly to the cloud provider rather than to your server.  (This has
+important performance benefits.)  The links are long and technical
+because they contain access codes.  By default, if a user clicks on a
+link, the URL will open as an attachment, and the user may be prompted
+to download the file or open it in an application; it will not open in
+the browser.  If you would like the links to open in the browser, add
 the keyword parameter `inline=True` to `.url_for()`.
+
+`external` - by default, if you are not using cloud storage, the URLs
+returned by `.url_for()` will be root-relative URLs.  If you want URLs
+that include the protocol and hostname, include `external=True` when
+you call `.url_for()`.  Using `temporary=True` implies `external=True`.
 
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is

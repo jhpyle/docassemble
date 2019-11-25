@@ -4,6 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.48](https://github.com/jhpyle/docassemble/releases/tag/v0.5.48) - 2019-11-24
+
+### Added
+- The `external` keyword parameter for the `.url_for()` method.
+
+### Changed
+- Access to files is now granted to users across sessions, whether the
+  session was active in the browser's session or not.  Previously,
+  access was restricted based on sessions that had been active in the
+  browser's session.
+- The `.url_for()` method when used with `temporary=True` now implies
+  `external=True`, which means that the URL returned includes the
+  protocol and hostname.  Use `external=False` to preserve the old
+  behavior.
+- A superscripted question mark icon is now shown in the green text
+  when `help` is added to a field.
+- When committing to GitHub from the Playground Packages screen, you
+  can choose to also publish on PyPI and install the package on the
+  server.
+- When publishing to PyPI from the Playground Packages screen, you can
+  choose to also install the package on the server.
+
 ## [0.5.47](https://github.com/jhpyle/docassemble/releases/tag/v0.5.47) - 2019-11-24
 
 ### Added
