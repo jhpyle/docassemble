@@ -7025,12 +7025,16 @@ def custom_jinja_env():
     env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
+    env.filters['inline_markdown'] = inline_markdown_filter
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
     env.filters['RichText'] = docassemble.base.file_docx.RichText
     return env
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+
+def inline_markdown_filter(text):
+    return docassemble.base.file_docx.inline_markdown_to_docx(text_type(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 def get_docx_variables(the_path):
     import docassemble.base.legal

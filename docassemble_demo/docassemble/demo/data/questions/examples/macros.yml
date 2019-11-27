@@ -1,0 +1,122 @@
+metadata:
+  title: Jinja2 macros
+  short title: Macros
+  documentation: "https://docassemble.org/docs/documents.html#macros"
+  example start: 11
+  example end: 11
+---
+objects:
+  - leader: Individual
+  - people: DAList.using(object_type=Individual,
+                         complete_attribute='complete')
+---
+mandatory: True
+code: |
+  leader.name.first = 'John'
+  leader.name.last = 'Smith'
+  leader.birthdate = as_datetime('1/10/1943')
+  leader.favorite_fruit = 'apple'
+  leader.happy = True
+  leader.gender = 'male'
+  people.clear()
+  people.appendObject()
+  people[-1].name.first = 'Sally'
+  people[-1].name.last = 'Jones'
+  people[-1].birthdate = as_datetime('4/15/1969')
+  people[-1].favorite_fruit = 'peach'
+  people[-1].happy = True
+  people[-1].gender = 'female'
+  people.appendObject()
+  people[-1].name.first = 'Robert'
+  people[-1].name.last = 'Andrews'
+  people[-1].birthdate = as_datetime('7/24/1979')
+  people[-1].favorite_fruit = 'starfruit'
+  people[-1].happy = False
+  people[-1].gender = 'male'
+  people.there_are_any = True
+  people.there_is_another = False
+---
+code: |
+  people[i].name.first
+  people[i].birthdate
+  people[i].gender
+  people[i].favorite_fruit
+  people[i].happy
+  people[i].complete = True
+---
+question: |
+  What is the name of the
+  ${ ordinal(i)} team member?
+fields:
+  - First name: people[i].name.first
+  - Last name: people[i].name.last
+---
+question: |
+  Tell me more about ${ people[i] }.
+fields:
+  - Birth date: people[i].birthdate
+    datatype: date
+  - Gender: people[i].gender
+    choices:
+      - Male: male
+      - Female: female
+  - Favorite fruit: people[i].favorite_fruit
+---
+question: |
+  Are there any additional team members besides
+  ${ people }?
+yesno: people[i].there_is_another
+---
+question: |
+  Tell me about the team leader.
+fields:
+  - First name: leader.name.first
+  - Last name: leader.name.last
+  - Birth date: leader.birthdate
+    datatype: date
+  - Gender: leader.gender
+    choices:
+      - Male: male
+      - Female: female
+  - Favorite fruit: leader.favorite_fruit
+---
+generic object: Individual
+question: |
+  Does ${ x } have a positive disposition?
+yesno: x.happy
+---
+table: people.table
+rows: people
+columns:
+  - Name: row_item
+  - Fruit: row_item.favorite_fruit
+edit:
+  - name.first
+  - birthdate
+  - happy
+---
+question: The team
+subquestion: |
+  The team leader is ${ leader }.
+
+  ${ action_button_html(url_action('leader.name.first'), label='Edit this') }
+
+  The team members are:
+
+  ${ people.table }
+
+  ${ people.add_action() }
+field: info_reviewed
+---
+event: final_screen
+question: |
+  Here is a description of the team.
+attachment:
+  name: Team
+  filename: team_summary
+  docx template file: team.docx
+---
+mandatory: True
+code: |
+  info_reviewed
+  final_screen

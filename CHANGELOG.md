@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.50] - 2019-11-26
+### Added
+- The `inline_markdown` Jinja2 filter.
+### Fixed
+- Problem with XLSX translation file colorization.
+
 ## [0.5.49] - 2019-11-24
 ### Fixed
 - Python 2.7 bug introduced in 0.5.47.

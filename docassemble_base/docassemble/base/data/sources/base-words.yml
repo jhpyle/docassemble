@@ -30,7 +30,6 @@
 "Are you sure that you want to delete this file?": Null
 "Are you sure that you want to delete this package?": Null
 "Are you sure that you want to delete this playground file?": Null
-"Are you sure that you want to publish this package to PyPI?": Null
 "Are you sure you want to delete all saved interviews?": Null
 "Are you sure you want to delete this item?": Null
 "Are you sure you want to permanently delete this user's account?": Null
@@ -220,6 +219,7 @@
 "Input not processed because the question changed.  Please continue.": Null
 "Insert": Null
 "Install": Null
+"Install package on this server also": Null
 "interview answers cannot be decrypted": Null
 "Interview answers cannot be decrypted": Null
 "Interview files": Null
@@ -393,6 +393,8 @@
 "published on GitHub": Null
 "published on PyPI": Null
 "published on your GitHub account": Null
+"Publish": Null
+"Publish on PyPI also": Null
 "Pull GitHub or PyPI Package": Null
 "Pull": Null
 "Pushed commit to GitHub.": Null
@@ -681,6 +683,7 @@
 "You need to enter a valid date and time.": Null
 "You need to enter a valid date.": Null
 "You need to enter a valid time.": Null
+"You need to increment the version before publishing to PyPI.": Null
 "You need to log in before you can access": Null
 "You need to log in with Auth0.": Null
 "You need to log in with Azure.": Null

@@ -79,7 +79,7 @@ incomplete:
     code block or question</a>.
 compilefail:
   doc: >-
-    A syntax error was encountered.  Click "Save and Run" to see the error.
+    A syntax error was encountered.  Click "Run" to see the error.
 generic error:
   doc: >-
-    Your interview has an error.  Click "Save and Run" to see the error.
+    Your interview has an error.  Click "Run" to see the error.

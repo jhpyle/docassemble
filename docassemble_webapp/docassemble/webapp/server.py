@@ -22918,6 +22918,10 @@ def mako_parts(expression):
                 in_square = False
                 i += 1
                 continue
+            elif i + 1 < n and expression[i:i+2] == '^^':
+                current += ':'
+                i += 2
+                continue
         elif in_colon:
             if i + 1 < n and expression[i:i+2] == '^^':
                 current += ':'

@@ -75,9 +75,9 @@ def clear_old_interviews():
                 release_lock(item['key'], item['filename'])
                 time.sleep(0.05)
             time.sleep(0.2)
-    last_index = -1
     if interview_delete_days == 0:
         return
+    last_index = -1
     while True:
         results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index, subq.c.filename.notin_(days_by_filename.keys()))).order_by(UserDict.indexno).limit(1000)
         if results.count() == 0:
