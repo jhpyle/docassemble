@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.50](https://github.com/jhpyle/docassemble/releases/tag/v0.5.50) - 2019-11-26
+
+### Added
+- The `inline_markdown` Jinja2 filter.
+
+### Fixed
+- Problem with XLSX translation file colorization.
+
 ## [0.5.49](https://github.com/jhpyle/docassemble/releases/tag/v0.5.49) - 2019-11-24
 
 ### Fixed

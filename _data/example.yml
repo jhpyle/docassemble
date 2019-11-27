@@ -11363,6 +11363,14 @@
   template: life_story
   content: |
     ${ single_to_double_newlines(life_story_text) }
+"macros": |-
+  event: final_screen
+  question: |
+    Here is a description of the team.
+  attachment:
+    name: Team
+    filename: team_summary
+    docx template file: team.docx
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
   \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
   \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
