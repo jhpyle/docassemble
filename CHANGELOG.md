@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.51] - 2019-11-28
+### Changed
+- The `pt-words.yml` file has been renamed to `pt-br-words.yml`.  If
+  you are using this file, you will need to change your `words`
+  configuration.
+### Fixed
+- HTML codes non-printable in dropdown lists.
+
 ## [0.5.50] - 2019-11-26
 ### Added
 - The `inline_markdown` Jinja2 filter.
