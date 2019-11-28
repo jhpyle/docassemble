@@ -1282,10 +1282,11 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     elif pclass:
         result = re.sub('<p>', '<p class="' + pclass + '">', result)
     if escape:
-        result = noquote_match.sub('&quot;', result)
+        if escape is True:
+            result = amp_match.sub('&amp;', result)
+            result = noquote_match.sub('&quot;', result)
         result = lt_match.sub('&lt;', result)
         result = gt_match.sub('&gt;', result)
-        result = amp_match.sub('&amp;', result)
     #logmessage("after: " + result)
     #result = result.replace('\n', ' ')
     if result:

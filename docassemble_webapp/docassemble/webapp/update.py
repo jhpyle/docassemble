@@ -223,20 +223,24 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: 2\n")
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
+        sys.stderr.write("check_for_updates: database includes a package called " + package.name + ".\n")
     # packages is what is supposed to be installed
     sys.stderr.write("check_for_updates: 3\n")
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
+            sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type.\n")
             #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
+            sys.stderr.write("check_for_updates: database says " + uninstalled_packages[install.package_id].name + " should be uninstalled.\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     sys.stderr.write("check_for_updates: 5\n")
     for install in Install.query.filter_by(hostname=hostname).all():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
+            sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled.\n")
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
@@ -246,7 +250,7 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: 7\n")
     for package in packages.values():
         if package.id not in installs and package.name in here_already:
-            sys.stderr.write("check_for_updates: package " + package.name + " here already\n")
+            sys.stderr.write("check_for_updates: package " + package.name + " here already.  Writing an Install record for it.\n")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
             db.session.add(install)
             installs[package.id] = install
@@ -258,16 +262,25 @@ def check_for_updates(doing_startup=False):
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
+            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + text_type(package.packageversion) + ", is ahead of the installed version, " + text_type(installs[package.id].packageversion) + "\n")
             new_version_needed = True
         else:
             new_version_needed = False
         #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
         # Check for missing local packages
         if (package.name not in here_already) and (package.id in installs):
+            sys.stderr.write("check_for_updates: the package " + package.name + " is supposed to be installed on this server, but was not detected.\n")
             package_missing = True
         else:
             package_missing = False
-        if package.id not in installs or package.version > installs[package.id].version or new_version_needed or package_missing:
+        if package.id in installs and package.version > installs[package.id].version:
+            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + text_type(package.version) + " but the installed version has version " + text_type(installs[package.id].version) + ".\n")
+            package_version_greater = True
+        else:
+            package_version_greater = False
+        if package.id not in installs:
+            sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server.\n")
+        if package.id not in installs or package_version_greater or new_version_needed or package_missing:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9\n")
