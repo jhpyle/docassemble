@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.52] - 2019-11-29
+### Fixed
+- Bug in package update script.
+
 ## [0.5.51] - 2019-11-28
 ### Changed
 - The `pt-words.yml` file has been renamed to `pt-br-words.yml`.  If

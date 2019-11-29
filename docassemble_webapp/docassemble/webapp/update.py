@@ -234,7 +234,7 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
-            sys.stderr.write("check_for_updates: database says " + uninstalled_packages[install.package_id].name + " should be uninstalled.\n")
+            sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled.\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     sys.stderr.write("check_for_updates: 5\n")
     for install in Install.query.filter_by(hostname=hostname).all():
