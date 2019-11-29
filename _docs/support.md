@@ -8,7 +8,8 @@ short_title: Support
 
 To get help from the community of developers and other users, join the
 [**docassemble** Slack group].  If you would prefer not to ask a
-question to the group, you can [e-mail the developer].
+question to the group, you can send a private message in the Slack to
+the developer, Jonathan Pyle.
 
 # Mailing list
 
@@ -58,7 +59,6 @@ is a good idea to ask a question about the error message first.
 [Slack]: https://slack.com
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
-[e-mail the developer]: mailto:jhpyle@gmail.com
 [**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
 [Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
 [Quinten Steenhuis]: https://www.nonprofittechy.com/blog/

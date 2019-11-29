@@ -56,8 +56,7 @@ Although **docassemble** has extensive [documentation], you may have
 questions about how to use it.  To [get help] from the community of
 developers and other users, you can chat in real time with
 knowledgeable developers on the [**docassemble** Slack group].  If you
-find a bug, you can [submit an issue on GitHub].  You can also [e-mail
-the developer].
+find a bug, you can [submit an issue on GitHub].
 
 In June 2018 and June 2019, the **docassemble** community convened for
 <a href="https://docacon.com">Docacon</a>, a one-day docassemble
@@ -68,7 +67,6 @@ of conferences on law and technology.
 [documentation]: {{ site.baseurl }}/docs.html
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
-[e-mail the developer]: mailto:jhpyle@gmail.com
 [Markdown]: https://daringfireball.net/projects/markdown/syntax
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
