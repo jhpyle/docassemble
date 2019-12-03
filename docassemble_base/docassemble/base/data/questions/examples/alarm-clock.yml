@@ -57,12 +57,12 @@ code: |
   if email_sent or counter > 48:
     command('exit')
   if local_wakeup_time >= now:
-    response("Not ready to send wakeup call:" + text_type(local_wakeup_time))
+    response("Not ready to send wakeup call:" + text_type(local_wakeup_time), sleep=0.1)
   else:
     email_sent = send_email(to=email, template=wakeup_email)
     if email_sent:
       command('exit')
-    response("E-mail could not be sent")
+    response("E-mail could not be sent", sleep=0.1)
 ---
 template: wakeup_email
 subject: |

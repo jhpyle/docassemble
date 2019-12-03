@@ -73,8 +73,8 @@ def clear_old_interviews():
                 obtain_lock_patiently(item['key'], item['filename'])
                 reset_user_dict(item['key'], item['filename'], force=True)
                 release_lock(item['key'], item['filename'])
-                time.sleep(0.05)
-            time.sleep(0.2)
+                time.sleep(0.15)
+            time.sleep(0.6)
     if interview_delete_days == 0:
         return
     last_index = -1
@@ -93,8 +93,8 @@ def clear_old_interviews():
             obtain_lock_patiently(item['key'], item['filename'])
             reset_user_dict(item['key'], item['filename'], force=True)
             release_lock(item['key'], item['filename'])
-            time.sleep(0.05)
-        time.sleep(0.2)
+            time.sleep(0.15)
+        time.sleep(0.6)
 
 def run_cron(cron_type):
     cron_types = [cron_type]
@@ -198,7 +198,7 @@ def run_cron(cron_type):
                                     error_notification(err, trace=error_trace)
                                     continue
                         del the_dict
-                    time.sleep(0.2)
+                    time.sleep(0.4)
 
 if __name__ == "__main__":
     with app.app_context():

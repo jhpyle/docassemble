@@ -862,6 +862,8 @@ def import_necessary():
             thefilename = os.path.join(root, the_file)
             with open(thefilename, 'r', encoding='utf-8') as fp:
                 for cnt, line in enumerate(fp):
+                    if line.startswith('# do not pre-load'):
+                        break
                     if line.startswith('class') or 'update_language_function' in line:
                         parts = thefilename.split(os.sep)[start_dir:]
                         parts[-1] = parts[-1][0:-3]

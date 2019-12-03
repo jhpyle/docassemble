@@ -1,7 +1,8 @@
+# do not pre-load
 # Import any DAObject classes that you will need
 from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject
+from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship
 # Import SQLAlchemy names
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
@@ -52,7 +53,7 @@ Base.metadata.create_all(engine)
 
 # Get SQLAlchemy ready
 Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
+DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
@@ -95,8 +96,7 @@ class Bank(Person, SQLObject):
         if not (self.ready() and customer.ready()):
             raise Exception("has_customer: cannot retrieve data")
         # this opens a connection to the SQL database
-        session = self.get_session()
-        db_entry = session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).first()
+        db_entry = self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).first()
         if db_entry is None:
             return False
         return True
@@ -105,27 +105,24 @@ class Bank(Person, SQLObject):
     # a duplicate record.
     def add_customer(self, customer):
         if not self.has_customer(customer):
-            session = self.get_session()
             db_entry = BankCustomerModel(bank_id=self.id, customer_id=customer.id)
-            session.add(db_entry)
-            session.commit()
+            self._session.add(db_entry)
+            self._session.commit()
     # This is an example of a method that uses SQLAlchemy to return a list of Customer objects.
     # It uses the by_id() class method to return a Customer object for the given id.
     def get_customers(self):
         if not self.ready():
             raise Exception("get_customers: cannot retrieve data")
         results = list()
-        session = self.get_session()
-        for db_entry in session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
+        for db_entry in self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
             results.append(Customer.by_id(db_entry.customer_id))
         return results                
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
             raise Exception("del_customer: cannot retrieve data")
-        session = self.get_session()
-        session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
-        session.commit()
+        self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
+        self._session.commit()
 
 class Customer(Individual, SQLObject):
     _model = CustomerModel
@@ -187,13 +184,14 @@ class Customer(Individual, SQLObject):
         elif column == 'zip':
             del self.address.zip
 
-class BankCustomer(DAObject, SQLObject):
+class BankCustomer(DAObject, SQLObjectRelationship):
     _model = BankCustomerModel
     _session = DBSession
-    _required = ['bank_id', 'customer_id']
+    _parent = [Bank, 'bank', 'bank_id']
+    _child = [Customer, 'customer', 'customer_id']
     def init(self, *pargs, **kwargs):
         super(BankCustomer, self).init(*pargs, **kwargs)
-        self.sql_init()
+        self.rel_init(*pargs, **kwargs)
     def db_get(self, column):
         if column == 'bank_id':
             return self.bank.id
@@ -211,8 +209,7 @@ class BankCustomer(DAObject, SQLObject):
     # column for the default db_find_existing() method to use.  But we can write our own method for
     # how to locate an existing record based on Python object attributes (.bank.id and .customer.id).
     def db_find_existing(self):
-        session = self.get_session()
         try:
-            return session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.bank.id, BankCustomerModel.customer_id == self.customer.id).first()
+            return self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.bank.id, BankCustomerModel.customer_id == self.customer.id).first()
         except:
             return None

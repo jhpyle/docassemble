@@ -541,7 +541,7 @@ class DAObject(object):
         """Redefines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
         of the new object that will be initialized.  E.g.,
-        client.initializeAttribute('mother', Individual) initializes client.mother as an
+        client.reInitializeAttribute('mother', Individual) initializes client.mother as an
         Individual with instanceName "client.mother"."""
         pargs = [x for x in pargs]
         name = pargs.pop(0)
@@ -935,6 +935,10 @@ class DAList(DAObject):
     def pop(self, *pargs):
         """Remove an item the list and return it."""
         #self._trigger_gather()
+        if len(pargs) == 1:
+            self.hook_on_remove(self.elements[pargs[0]])
+        elif len(self.elements) > 0:
+            self.hook_on_remove(self.elements[-1])
         result = self.elements.pop(*pargs)
         self._reset_instance_names()
         return result
@@ -1061,6 +1065,7 @@ class DAList(DAObject):
         something_removed = False
         for value in pargs:
             if value in self.elements:
+                self.hook_on_remove(value)
                 self.elements.remove(value)
                 something_removed = True
         self._reset_instance_names()
@@ -1537,7 +1542,7 @@ class DAList(DAObject):
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
+    def add_action(self, message=None, label=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a list"""
         if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
@@ -1562,6 +1567,10 @@ class DAList(DAObject):
             classname = ''
         else:
             classname = ' ' + text_type(classname)
+        if message is not None:
+            logmessage("add_action: note that the 'message' parameter has been renamed to 'label'.")
+        if message is None and label is not None:
+            message = label
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
@@ -1575,6 +1584,10 @@ class DAList(DAObject):
     def hook_on_gather(self):
         pass
     def hook_after_gather(self):
+        pass
+    def hook_on_item_complete(self, item):
+        pass
+    def hook_on_remove(self, elem):
         pass
 
 class DADict(DAObject):
@@ -2129,6 +2142,8 @@ class DADict(DAObject):
         self.elements.update(*pargs, **kwargs)
     def pop(self, *pargs):
         """Remove a given key from the dictionary and return its value"""
+        if pargs[0] in self.elements:
+            self.hook_on_remove(self.elements[pargs[0]])
         return self.elements.pop(*pargs)
     def popitem(self):
         """Remove an arbitrary key from the dictionary and return its value"""
@@ -2355,6 +2370,10 @@ class DADict(DAObject):
         pass
     def hook_after_gather(self):
         pass
+    def hook_on_item_complete(self, item):
+        pass
+    def hook_on_remove(self, elem):
+        pass
 
 class DAOrderedDict(DADict):
     """A base class for objects that behave like Python OrderedDicts."""
@@ -2489,13 +2508,17 @@ class DASet(DAObject):
         self.elements = set()
     def remove(self, elem):
         """Removes an element from the set."""
+        if elem in self.elements:
+            self.hook_on_remove(elem)
         self.elements.remove(elem)
     def discard(self, elem):
         """Removes an element from the set if it exists."""
+        if elem in self.elements:
+            self.hook_on_remove(elem)
         self.elements.discard(elem)
-    def pop(self, *pargs):
+    def pop(self):
         """Remove and return an arbitrary element from the set"""
-        return self.elements.pop(*pargs)
+        return self.elements.pop()
     def add(self, *pargs):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
@@ -2781,6 +2804,10 @@ class DASet(DAObject):
     def hook_on_gather(self):
         pass
     def hook_after_gather(self):
+        pass
+    def hook_on_item_complete(self, item):
+        pass
+    def hook_on_remove(self, elem):
         pass
 
 class DAFile(DAObject):
