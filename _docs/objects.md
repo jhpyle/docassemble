@@ -779,9 +779,9 @@ Other methods available on a `DAList` are:
   added and its elements gathered.  See the [groups] section for
   details of how [`DAList`] and [`DADict`] gathering works.  By
   default, the text of the button is "Add an item" if the list is
-  empty, and "Add another" if the list is non-empty.  The message can
-  be overridden with the optional keyword parameter `message`.  The
-  `message` passes through the [`word()`] function, so you can use the
+  empty, and "Add another" if the list is non-empty.  The label can
+  be overridden with the optional keyword parameter `label`.  The
+  `label` passes through the [`word()`] function, so you can use the
   translation system to handle different languages.  If you set the
   optional keyword parameter `url_only` to `True`, the method will
   return only the URL for the action, not the HTML for a button.
@@ -840,6 +840,11 @@ Other methods available on a `DAList` are:
   in a [`code`] block that defines the `.gathered` attribute.  You
   might want your logic to be applied after this code runs, not
   before.  For an example, see [using hooks].
+* <a name="DAList.hook_on_remove"></a><a
+  name="DADict.hook_on_remove"></a>`hook_on_remove()` - this method is
+  called immediately before an item is removed from the list.  The
+  item that is removed is passed to `hook_on_remove()` as a single
+  positional parameter.
 * <a name="DAList.filter"></a>`filter()` - returns a shallow copy of the list
   object where the elements of the list are filtered according to
   criteria specified in keyword arguments.  For example, if `person`
@@ -4408,17 +4413,18 @@ These tables are in a separate [SQL] database from the database where
 be any database capable of being accessed using [SQLAlchemy].  The
 database tables can be pre-existing (e.g., a database for a case
 management system) or created for the sole purpose of storing data from
-interviews.
+interviews.  If the tables do not exist, [SQLAlchemy] will create them
+when the module loads.
 
-The way this interview works is that the user is first asks for a
-unique identifier (SSN) about the `customer`.  If the the SSN matches
-the SSN of a record in the customer table in [SQL], the attributes of
-the `customer` object are populated with the values in [SQL], and then
-the interview doesn't need to ask the user for the customer's name and
+In the interview, the user is first asked for a unique identifier
+(SSN) about the `customer`.  If the the SSN matches the SSN of a
+record in the customer table in [SQL], the attributes of the
+`customer` object are populated with the values in [SQL], and then the
+interview doesn't need to ask the user for the customer's name and
 address.  If the SSN does not match the SSN of a record in the
-customer table, a new row is added to [SQL] table, and the user is asked
-for the customer's name and address.  After each screen, the [SQL] table
-is updated with the information that is acquired.
+customer table, a new row is added to [SQL] table, and the user is
+asked for the customer's name and address.  After each screen, the
+[SQL] table is updated with the information that is acquired.
 
 Then the interview performs a similar process with the `bank`.  The
 unique identifier for a `Bank` is a routing number.  The interview
@@ -4435,7 +4441,7 @@ Here is the code for `demodb.py`.
 # Import any DAObject classes that you will need
 from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject
+from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship
 # Import SQLAlchemy names
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
@@ -4486,7 +4492,7 @@ Base.metadata.create_all(engine)
 
 # Get SQLAlchemy ready
 Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
+DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
@@ -4529,8 +4535,7 @@ class Bank(Person, SQLObject):
         if not (self.ready() and customer.ready()):
             raise Exception("has_customer: cannot retrieve data")
         # this opens a connection to the SQL database
-        session = self.get_session()
-        db_entry = session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).first()
+        db_entry = self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).first()
         if db_entry is None:
             return False
         return True
@@ -4539,27 +4544,24 @@ class Bank(Person, SQLObject):
     # a duplicate record.
     def add_customer(self, customer):
         if not self.has_customer(customer):
-            session = self.get_session()
             db_entry = BankCustomerModel(bank_id=self.id, customer_id=customer.id)
-            session.add(db_entry)
-            session.commit()
+            self._session.add(db_entry)
+            self._session.commit()
     # This is an example of a method that uses SQLAlchemy to return a list of Customer objects.
     # It uses the by_id() class method to return a Customer object for the given id.
     def get_customers(self):
         if not self.ready():
             raise Exception("get_customers: cannot retrieve data")
         results = list()
-        session = self.get_session()
-        for db_entry in session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
+        for db_entry in self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
             results.append(Customer.by_id(db_entry.customer_id))
         return results                
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
             raise Exception("del_customer: cannot retrieve data")
-        session = self.get_session()
-        session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
-        session.commit()
+        self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
+        self._session.commit()
 
 class Customer(Individual, SQLObject):
     _model = CustomerModel
@@ -4621,13 +4623,14 @@ class Customer(Individual, SQLObject):
         elif column == 'zip':
             del self.address.zip
 
-class BankCustomer(DAObject, SQLObject):
+class BankCustomer(DAObject, SQLObjectRelationship):
     _model = BankCustomerModel
     _session = DBSession
-    _required = ['bank_id', 'customer_id']
+    _parent = [Bank, 'bank', 'bank_id']
+    _child = [Customer, 'customer', 'customer_id']
     def init(self, *pargs, **kwargs):
         super(BankCustomer, self).init(*pargs, **kwargs)
-        self.sql_init()
+        self.rel_init(*pargs, **kwargs)
     def db_get(self, column):
         if column == 'bank_id':
             return self.bank.id
@@ -4645,9 +4648,8 @@ class BankCustomer(DAObject, SQLObject):
     # column for the default db_find_existing() method to use.  But we can write our own method for
     # how to locate an existing record based on Python object attributes (.bank.id and .customer.id).
     def db_find_existing(self):
-        session = self.get_session()
         try:
-            return session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.bank.id, BankCustomerModel.customer_id == self.customer.id).first()
+            return self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.bank.id, BankCustomerModel.customer_id == self.customer.id).first()
         except:
             return None
 {% endhighlight %}
@@ -4665,9 +4667,24 @@ demo db:
   password: supersecret
 {% endhighlight %}
 
-While the tables can be created automatically by [SQLAlchemy], the
-database itself (which in this example is named `demo`) will need to
-be created beforehand.
+While the tables will be created automatically by [SQLAlchemy] if they
+do not exist, the database itself (which in this example is named
+`demo`) will need to be created beforehand.
+
+Note that while [SQLAlchemy] is capable of creating database tables,
+it is not capable of modifying them if you add or subtract columns,
+change the data types of columns, or make similar alterations.  If you
+need to make changes to database tables that have already been
+created, you need to use [Alembic], which is a version control system
+for [SQLAlchemy].  The code above will run [Alembic] if there is an
+[Alembic] directory structure in the package.  [Alembic] will perform
+whatever upgrades are necessary.  If you have not yet released your
+package to the world, using [Alembic] to alter your database tables is
+not really necessary; you can just make the alterations manually using
+SQL commands while updating your [SQLAlchemy] table definitions.  If
+your existing database tables do not contain anything of value, you
+can also just delete them manually and then when the module re-loads,
+the table will be reconstructed with the correct columns.
 
 Although you can use any [SQLAlchemy] URL to describe your database,
 using the `alchemy_url()` function from `docassemble.base.sql` is
@@ -4688,17 +4705,21 @@ when you declare `case.plaintiff = client`.
 
 In [SQL] land, there are database tables made up of rows and columns,
 where a row represents a single record and the columns are named data
-values, each of which has a specific data type.  [SQL] tables typically
-have a column that functions as a "key," which typically contains an
-auto-incrementing integer.  Columns in a [SQL] table often have
-"constraints."  In some columns, uniqueness is enforced; for example,
-it might be illegal for two rows to have the same value for a column
-representing an e-mail address.
+values, each of which has a specific data type.  [SQL] tables
+typically have a column that functions as a "key," which typically
+contains an auto-incrementing integer.  Columns in a [SQL] table often
+have "constraints."  In some columns, uniqueness is enforced; for
+example, it might be illegal for two rows in a table to have the same
+value for a column representing an e-mail address.
 
-In [Python] land, you can add attributes whenever you want.  In [SQL]
-land, columns cannot be changed except by a system administrator.  In
-[Python] land, you can nest objects arbitrarily.  In [SQL] land,
-creating relationships among objects requires using separate tables.
+In [Python] land, you can add attributes to an object whenever you
+want.  In [SQL] land, adding a column to a table is something you have
+to do in advance, and it has imporant implications for the future of
+your database.  In [Python] land, you can nest objects arbitrarily.
+In [SQL] land, creating relationships among objects requires using
+separate tables: one table for the first object type, a second table
+for the second object type, and a third table that holds a mapping
+between first table and the second table.
 
 There are many other differences between what is possible with
 **docassemble** interview answers represented as [Python] objects, and
@@ -4713,29 +4734,30 @@ translation to happen.
 The [`SQLObject`] system associates a particular [Python class] with a
 particular [SQL] table.  Any object of this class in the interview
 answers will have a corresponding row in the [SQL] table.  Each
-separate [Python class] gets its own separate [SQL] table.  Columns in
-the [SQL] table are associated with particular attributes of the
-object in [Python] land.
+separate [Python class] that inherits from [`SQLObject`] will get its
+own separate [SQL] table.  Columns in the [SQL] table are associated
+with particular attributes of the object in [Python] land.
 
 It is not a problem if the objects in [Python] land have attributes
 that do not map to columns in [SQL] land.  Likewise, it is not a
 problem if the tables in [SQL] land have columns that do not map to
 information in [Python] land.  The interview answers will still
-continue to save any "extra" attributes, and [SQL] database will not
-disturb and "extra" columns.
+continue to save any "extra" attributes, and any "extra" columns in
+the [SQL] database will not disturb [Python].
 
 The synchronization process is hooked into **docassemble**'s existing
 [pickling] system.  When a screen loads, **docassemble** reads the
 [pickled] interview answers from its database, un[pickles] them,
 applies the [interview logic] to the interview answers, figures out
-what [`question`] to ask, [pickles] the interview answers, and saves
-the [pickled] answers to the database again.  In the process of
-un[pickling], if a [`DAObject`] that is also a [`SQLObject`] is
-encountered, **docassemble** will find the row in the SQL table
-associated with the object type and use the values in each of the
-columns to change information about the [Python] object.  Likewise,
-when [pickling], **docassemble** will update the row in SQL if any
-changes to the relevant information have been made.
+what [`question`] to ask, [pickles] the interview answers, saves the
+[pickled] answers to the database again, and then shows the
+[`question`] to the user.  In the process of un[pickling], if a
+[`DAObject`] that is also a [`SQLObject`] is encountered,
+**docassemble** will find the row in the [SQL] table associated with the
+object type and use the values in each of the columns to change
+information about the [Python] object.  Likewise, when [pickling],
+**docassemble** will update the row in [SQL] if any changes to the
+relevant information have been made.
 
 When you first create a [`DAObject`], it might have no attributes
 except for an [`instanceName`].  This is enough for the object to be
@@ -4750,44 +4772,68 @@ the [SQL] database.
 Objects can also become non-nascent if information for the "unique ID"
 column is gathered, and a record exists for that unique ID.  The
 object will automatically become non-nascent when the columns of the
-record are read from the [SQL] database and used to populate attributes
-of the [`DAObject`].
+record are read from the [SQL] database and used to populate
+attributes of the [`DAObject`].  For example, in the interview above,
+if you create a "customer" with a particular SSN during one interview
+session, and then in a subsequent interview session you input the same
+SSN, the remaining attributes of the [`DAObject`] will be populated.
+In other words, all you have to do is create a "shell" object of type
+[`Individual`] with the `ssn` attribute defined, and then, as part of
+the automatic synchronization process, all of the other attributes of
+the [`Individual`] will be populated.
 
 For purposes of creating a new record in [SQL], the "unique ID" column
-is also treated as one of the "required" columns that must be defined
-before a new record can be created in the [SQL] database table.
+is treated as one of the "required" columns that must be defined
+before a new record can be created in the [SQL] database table.  Thus,
+if you want to use an object in your interview answers but you don't
+want it saved to [SQL], and the object uses a "unique ID" column, just
+refrain from defining the information for the "unique ID" column, and
+it will never synchronize with the [SQL] table.
 
-Thus, if you want to use an object in your interview answers but you
-don't want it saved to [SQL], just refrain from defining the
-information for the "unique ID" column, and it will never synchronize
-with the [SQL] table.
+The "nascent" stage of an object allows you to use several screens to
+collect information about an item before writing anything to the SQL
+database; the information is stored in the interview answers but not
+in the SQL database.  This allows you to use the interview answers as
+a kind of "staging area" for information before writing it to the SQL
+database.
 
-Non-nascent objects can become "zombies" if they continue exist in the
-interview answers of a session but the row of the [SQL] table with
-which the object had been associated is deleted.
+If an object is stored both in the interview answers and in Python,
+but then it changes inside the SQL server, then the next time the
+interview answers are retrieved, the attributes in the Python objects
+will be updated with the values in SQL.
+
+However, if the item is deleted from SQL, then when the corresponding
+Python object is retrieved, it will become a "zombie" object.  It will
+continue to have the attributes that were known the last time the
+object was synchronized with SQL, but it will be disconnected from the
+SQL database and will only exist as an ordinary Python object in the
+interview answers.
 
 The "nascent" quality of an object is tracked internally using the
 instance attribute [`_nascent`] (which will be `True` or `False`).
 The "zombie" quality of an object is tracked using the instance
 attribute [`_zombie`] (which will be `True` or `False`).
 
-The "required" attributes of a class are defined by setting the
-[`_required`] attribute of the class.  (Note that a class attribute is
-different from an instance attribute; a class attribute is read-only
-and is defined in the [Python module] file.)  The "unique ID" of a
+The "required" attributes are defined by setting the [`_required`]
+attribute of the class.  (Note that a class attribute is different
+from an instance attribute; a class attribute is read-only and is
+defined in the [Python module] file, whereas instance attributes can
+be added, deleted, or modified at any time.)  The "unique ID" of a
 class is defined by setting the [`_uid`] attribute of the class.  For
 example, in the above [Python module], the [`_required`] class
 attribute was set to `'first_name'` and the [`_uid`] attribute name
 was set to `'ssn'`.
 
 The mapping between the [`DAObject`] characteristics and the values of
-database columns are controlled by the [`db_get()`] and [`db_set()`]
-methods of the class.  The [`db_get()`] method takes a column name and
-tries to obtain a value for it from [Python] land.  The [`db_set()`]
-method takes a column name and a value from [SQL] land and saves that
-value in [Python] land. For example, in the above [Python module], the
-`first_name` column is associated with `.name.first` attribute of the
-`Customer` object.
+database columns is controlled by the [`db_get()`], [`db_set()`], and
+[`db_null()`] methods of the class.  The [`db_get()`] method takes a
+column name and tries to obtain a value for it from [Python] land.
+The [`db_set()`] method takes a column name and a value from [SQL]
+land and saves that value in [Python] land. For example, in the above
+[Python module], the `first_name` column is associated with
+`.name.first` attribute of the `Customer` object.  The [`db_null()`]
+method takes a column name and tries to delete the object attribute in
+[Python] land that is associated with the given column.
 
 When you initialize an object, you can give it the unique ID, and if
 a record exists in SQL with that unique ID, then the object will be
@@ -4862,9 +4908,10 @@ code: |
   # customer's first name is not yet known.
   # The customer is still nascent.
   customer.name.first = 'Jane'
-  customer.name.first = 'Smith'
+  customer.name.last = 'Smith'
   customer.db_save()
-  # customer is no longer nascent.  Record now exists in the database.
+  # Since the required columns are now defined, the customer 
+  # object is no longer nascent.  The record now exists in the database.
 {% endhighlight %}
 
 Note that [`db_read()`] is called every time the screen starts to
@@ -4897,10 +4944,16 @@ populating `customer` with additional attributes from [SQL] if there
 is a record in the [SQL] table where the `ssn` column is equal to
 `customer.ssn`.
 
-If you call the method [`ready()`] on an object, it will try to save
-the object to SQL if the object is nascent.  It will then return
-`False` if the object is still nascent (or if it is a zombie), and
-will return `True` otherwise.
+Instead of calling [`db_read()`], you could call [`db_save()`].  The
+difference is that if you set any [Python] attributes other than
+`ssn`, [`db_save()`] will overwrite the [SQL] values with the values
+that exist in [Python].  By contrast, [`db_read()`] will overwrite the
+[Python] values with the values that exist in [SQL].
+
+If you call the method [`ready()`] on an object, it will try to
+[`db_save()`] the object to SQL if the object is nascent.  It will
+then return `False` if the object is still nascent (or if it is a
+zombie), and will return `True` otherwise.
 
 If you want to test whether a record exists in the database for a
 particular `id` or unique ID, you can use the class methods
@@ -5091,6 +5144,10 @@ deleted.  You should probably avoid this.  Instead of deleting records
 from [SQL], you could use a boolean column called `active` that is set
 to `False` when the record should no longer be used.
 
+<a name="SQLObject._session"></a>When you need to run [SQLAlchemy]
+commands, use the `_session` attribute to access the [SQLAlchemy]
+session object.
+
 ### <a name="sqlobject instance methods"></a>Instance methods
 
 <a name="SQLObject.db_get"></a>The `db_get()` method is called by
@@ -5176,11 +5233,6 @@ the object is marked as a zombie.
 
 <a name="SQLObject.db_delete"></a>The `db_delete()` method deletes the
 underlying record from the database and marks the object as a zombie.
-
-<a name="SQLObject.get_session"></a>The `get_session()` method returns
-a [SQLAlchemy] object that can be used to run [SQL] operations.  It
-should be called from within [`SQLObject`] methods when [SQL] needs to
-be accessed.
 
 <a name="SQLObject.sql_init"></a>The `sql_init()` method needs to be
 called from the [`init()`] method of each class after the call to

@@ -537,6 +537,30 @@ three files, separately containing:
 This way, other people can take advantage of your work product in
 interviews that might have a very different purpose.
 
+# <a name="autoloading"></a>How **docassemble** loads modules
+
+During the **docassemble** web app startup process, the packages in
+the `docassemble` namespace are scanned and modules are `import`ed if
+they contain any class definitions or if the
+`update_language_function()` function is called.  The early loading of
+class definitions helps to prevent problems when unpickling data from
+the SQL database.  The `update_language_function()` has a global
+effect, and it is important that **docassemble**'s linguistic behavior
+is uniform over time and does not vary depending on which interviews
+the server has used.  This also means that you have to be careful
+about which packages you install on your server -- even a package you
+never use could have an effect on the way your server operates.
+
+If you want to disable the auto-loading of a module, put this line
+near the top of the .py file (before any class definitions or
+references to `update_language_function()`):
+
+{% highlight text %}
+# do not pre-load
+{% endhighlight %}
+
+If this line is present, then the server will not pre-load the module file.
+
 [Python for Windows]: https://www.python.org/downloads/windows/
 [git for Windows]: https://git-scm.com/download/win
 [how to submit a package to PyPI]: https://packaging.python.org/distributing/

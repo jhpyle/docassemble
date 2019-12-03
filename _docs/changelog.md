@@ -4,6 +4,27 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.53](https://github.com/jhpyle/docassemble/releases/tag/v0.5.53) - 2019-12-03
+
+### Added
+- The `hook_on_remove()` method.
+- The `SQLObjectList`, `SQLRelationshipList`,
+  `StandardRelationshipList`, and `SQLObjectRelationship` classes in
+  `docassemble.base.sql`.
+- The `.any()`, `all()`, and `.filter()` class methods of `SQLObject`.
+- The `.has_child()`, `.add_child()`, `.get_child()`, `.del_child()`,
+  `.has_parent()`, `.add_parent()`, `.get_parent()`, and `.del_parent()`
+  methods of `SQLObject`.
+- The `_session` attribute of `SQLObject`.
+- The option to opt out of module pre-loading by adding `# do not
+  pre-load` to a line at the top of the module file.
+
+### Changed
+- The `message` parameter of `.add_action()` has been renamed to
+  `label` (backwards-compatibility is maintained).
+- The `.get_session()` method of `SQLObject` has been removed in favor
+  of the `._session` attribute.
+
 ## [0.5.52](https://github.com/jhpyle/docassemble/releases/tag/v0.5.52) - 2019-11-29
 
 ### Fixed
