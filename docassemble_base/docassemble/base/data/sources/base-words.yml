@@ -2,6 +2,7 @@
 "Access shared repositories": Null
 "Account did not exist.": Null
 "A chat message has arrived.": Null
+"A confirmation email has been sent to %(email)s with instructions to complete your registration.": Null
 "Action": Null
 "Actions": Null
 "Activate chat": Null
@@ -9,6 +10,7 @@
 "Active": Null
 "Add an item": Null
 "Add another": Null
+"Add Email": Null
 "Add": Null
 "Add Privilege": Null
 "Add User": Null
@@ -26,6 +28,7 @@
 "App": Null
 "A QR code": Null
 ", are attached": Null
+"A reset password email has been sent to '%(email)s'. Open that email and follow the instructions to reset your password.": Null
 "are you": Null
 "Are you sure that you want to delete this file?": Null
 "Are you sure that you want to delete this package?": Null
@@ -56,7 +59,9 @@
 "Case No.": Null
 "Changed name of interview": Null
 "Change": Null
+"Change password": Null
 "Change Password": Null
+"Change username": Null
 "Chat message you want to send": Null
 "Check at least one option, or check “%s”": Null
 "Checkboxes:": Null
@@ -130,6 +135,7 @@
 "E.g., es, fr, it": Null
 "e.g., *example.com": Null
 "E-mail address is required": Null
+"Email address is required": Null
 "E-mail address": Null
 "E-mail is required": Null
 "Email is required": Null
@@ -208,6 +214,7 @@
 "her": Null
 "Hide context of example": Null
 "him": Null
+"Home Page": Null
 "How question came to be asked": Null
 "How this question came to be asked": Null
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
@@ -215,7 +222,11 @@
 "I don't know": Null
 "Import method": Null
 "Import": Null
+"Incorrect Email and/or Password": Null
+"Incorrect Password": Null
+"Incorrect %(username_or_email)s and/or Password": Null
 "Input box": Null
+"Input not processed because the page expired.  Please try again.": Null
 "Input not processed because the question changed.  Please continue.": Null
 "Insert": Null
 "Install": Null
@@ -226,7 +237,9 @@
 "Interview": Null
 "Interviews": Null
 "in the": Null
+"Invalid confirmation token.": Null
 "Invalid e-mail address": Null
+"Invalid Email address": Null
 "Invalid E-mail": Null
 "Invalid Email": Null
 "Invalid interview": Null
@@ -234,6 +247,7 @@
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invitations have been sent.": Null
+"Invite!": Null
 "Invite": Null
 "Invite User": Null
 ", is already in use by someone else": Null
@@ -294,7 +308,11 @@
 "New message above": Null
 "New message below": Null
 "New Name": Null
+"New Password and Retype Password did not match": Null
+"New Password is required": Null
+"New Password": Null
 "New project": Null
+"New Username": Null
 "Next will be": Null
 "Nickname": Null
 "n": Null
@@ -322,6 +340,9 @@
 "Office Add-in": Null
 "offline": Null
 "ok": Null
+"Old Password is incorrect": Null
+"Old Password is required": Null
+"Old Password": Null
 "OneDrive is not configured": Null
 "OneDrive is not linked.": Null
 "OneDrive": Null
@@ -344,6 +365,9 @@
 "Package on PyPI": Null
 "Packages": Null
 "pages": Null
+"Password and Retype Password did not match": Null
+"Password is required": Null
+"Password must have at least 6 characters with one lowercase letter, one uppercase letter and one number": Null
 "password": Null
 "Password": Null
 "PDF/DOCX File": Null
@@ -387,6 +411,7 @@
 "Privileges": Null
 "Problem detected.": Null
 "Profile": Null
+"Profile Page": Null
 "Project name cannot begin with a number": Null
 "Project name is required": Null
 "Projects": Null
@@ -409,15 +434,20 @@
 "Read this screen out loud": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
+"Register": Null
 "Registration is invite only": Null
+"Remember me": Null
 "Remove": Null
 "Rename": Null
 "Rename project": Null
 "Reorder by moving down": Null
 "Reorder by moving up": Null
+"Resend email confirmation email": Null
 "Restarting": Null
 "Restart": Null
 "Resume": Null
+"Retype New Password": Null
+"Retype Password": Null
 "Role": Null
 "Room": Null
 "Running in other tab.": Null
@@ -440,6 +470,7 @@
 "Select the folder from your OneDrive that you want to be synchronized with the Playground.": Null
 "Send confirmation email": Null
 "Send": Null
+"Send reset password email": Null
 "Server did not respond to request for update.": Null
 "she": Null
 "Show attributes": Null
@@ -470,6 +501,7 @@
 "Source files": Null
 "Source Files": Null
 "Source": Null
+"Special Page": Null
 "Special variable": Null
 "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
 "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
@@ -542,9 +574,11 @@
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null
 "This package was originally pulled from": Null
+"This Username is already in use. Please try another one.": Null
 "Thumbnail image of document": Null
 "Time Zone": Null
 "t": Null
+"Token": Null
 "to proceed.": Null
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
@@ -615,6 +649,13 @@
 "Used in": Null
 "Use Package": Null
 "User List": Null
+"Username/Email": Null
+"Username is required": Null
+"Username may only contain letters, numbers, '-', '.' and '_'": Null
+"Username must be at least 3 characters long": Null
+"Username": Null
+"Username or Email": Null
+"%(username_or_email)s does not exist": Null
 "user": Null
 "User": Null
 "User Profile": Null
@@ -661,11 +702,15 @@
 "You can type menu1 to select the menu item": Null
 "You can type question to read the question again.": Null
 "You can upload a file here": Null
+"You do not have permission to access '%(url)s'.": Null
 "You do not have permission to install this package.": Null
 "You have made too many login attempts.": Null
+"You have registered successfully.": Null
 "You have signed in successfully.": Null
 "You have signed out successfully.": Null
 "You must attach a file.": Null
+"You must be signed in to access '%(url)s'.": Null
+"You must confirm your email to access '%(url)s'.": Null
 "You must provide a file.": Null
 "You must provide a language": Null
 "You must provide an interview filename": Null
@@ -701,23 +746,32 @@
 "Your account has not been enabled.": Null
 "Your account no longer uses two-factor authentication.": Null
 "Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.": Null
+"Your confirmation token has expired.": Null
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null
 "Your documents, ": Null
 "Your documents will be e-mailed to": Null
+'Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.': Null
 "Your e-mail address": Null
+"Your email address": Null
+"Your email has been confirmed.": Null
 "Your GitHub integration has already been configured.": Null
 "Your GitHub settings were saved.": Null
 "Your information was saved.": Null
 "Your IP address is": Null
 "Your new API key, known internally as": Null
+"Your password has been changed successfully.": Null
+"Your password has been reset successfully.": Null
 "Your password is insecure and needs to be changed": Null
 "Your Playground is connected to your Google Drive.": Null
 "Your Playground is connected to your OneDrive.": Null
 "Your request was submitted.": Null
+"Your reset password token has expired.": Null
+"Your reset password token is invalid.": Null
 "Your screen is being controlled by an operator.": Null
 "yourself": Null
+"Your username has been changed to '%(username)s'.": Null
 "Your verification code is invalid or expired.  Please try again.": Null
 "Your verification code is": Null
 "Your verification code was invalid.": Null

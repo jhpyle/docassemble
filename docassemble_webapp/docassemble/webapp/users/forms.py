@@ -69,8 +69,14 @@ class MySignInForm(LoginForm):
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
             if user is None:
-                self.email.errors = list(self.email.errors)
-                self.email.errors.append(word("Account did not exist."))
+                if daconfig.get('confirm registration', False):
+                    self.email.errors = list()
+                    self.email.errors.append(word("Incorrect Email and/or Password"))
+                    self.password.errors = list()
+                    self.password.errors.append(word("Incorrect Email and/or Password"))
+                else:
+                    self.email.errors = list(self.email.errors)
+                    self.email.errors.append(word("Account did not exist."))
                 return False
             if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
                 self.email.errors = list(self.email.errors)
@@ -109,6 +115,8 @@ def da_unique_email_validator(form, field):
                 raise ValidationError(word("This Email is already in use. Please try another one."))
         except ldap.LDAPError:
             pass
+    if daconfig.get('confirm registration', False):
+        return True
     return unique_email_validator(form, field)
 
 class MyRegisterForm(RegisterForm):

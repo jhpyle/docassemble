@@ -274,7 +274,9 @@ def custom_resend_confirm_email():
         if user:
             flask_user.views._send_confirm_email(user, user_email)
         return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
-    return user_manager.render_function(user_manager.resend_confirm_email_template, form=form)
+    response = make_response(user_manager.render_function(user_manager.resend_confirm_email_template, form=form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 def as_int(val):
     try:
@@ -283,7 +285,7 @@ def as_int(val):
         return 0
 
 def custom_register():
-    """ Display registration form and create new User."""
+    """Display registration form and create new User."""
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
@@ -294,7 +296,6 @@ def custom_register():
 
     safe_next = _get_safe_next_param('next', user_manager.after_login_endpoint)
     safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
-
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
         if safe_next == url_for(user_manager.after_login_endpoint):
             url_parts = list(urlparse(safe_next))
@@ -333,6 +334,23 @@ def custom_register():
 
     # Process valid POST
     if request.method == 'POST' and register_form.validate():
+        email_taken = False
+        if daconfig.get('confirm registration', False):
+            try:
+                flask_user.forms.unique_email_validator(register_form, register_form.email)
+            except wtforms.ValidationError:
+                email_taken = True
+        if email_taken:
+            flash(word('A confirmation email has been sent to %(email)s with instructions to complete your registration.' % {'email': register_form.email.data}), 'success')
+            subject, html_message, text_message = flask_user.emails._render_email(
+                'flask_user/emails/reregistered',
+                app_name=app.config['APP_NAME'],
+                sign_in_link=url_for('user.login', _external=True))
+
+            # Send email message using Flask-Mail
+            user_manager.send_email_function(register_form.email.data, subject, html_message, text_message)
+            return redirect(url_for('user.login'))
+
         # Create a User object using Form fields that have a corresponding User field
         User = db_adapter.UserClass
         user_class_fields = User.__dict__
@@ -442,6 +460,7 @@ def custom_register():
             safe_reg_next = user_manager.make_safe_url_function(register_form.reg_next.data)
         else:
             safe_reg_next = _endpoint_url(user_manager.after_confirm_endpoint)
+
         if user_manager.auto_login_after_register:
             if app.config['USE_MFA']:
                 if user.otp_secret is None and len(app.config['MFA_REQUIRED_FOR_ROLE']) and user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
@@ -460,10 +479,12 @@ def custom_register():
     # Process GET or invalid POST
     if is_json:
         return jsonify(action='register', csrf_token=generate_csrf())
-    return user_manager.render_function(user_manager.register_template,
-            form=register_form,
-            login_form=login_form,
-            register_form=register_form)
+    respose = make_response(user_manager.render_function(user_manager.register_template,
+                                                         form=register_form,
+                                                         login_form=login_form,
+                                                         register_form=register_form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
@@ -566,10 +587,12 @@ def custom_login():
     #                            extra_css=Markup(extra_css),
     #                            extra_js=Markup(extra_js))
     # else:
-    return user_manager.render_function(user_manager.login_template,
-                                        form=login_form,
-                                        login_form=login_form,
-                                        register_form=register_form)
+    response = make_response(user_manager.render_function(user_manager.login_template,
+                                                          form=login_form,
+                                                          login_form=login_form,
+                                                          register_form=register_form), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 def add_secret_to(response):
     if 'newsecret' in session:
@@ -718,8 +741,17 @@ from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
+import flask_user.translations
+def word_with_format(string, **variables):
+    new_string = word(string)
+    if new_string == string:
+        return flask_user.translations.gettext(string, **variables)
+    return word(string) % variables
+flask_user.translations._ = word_with_format
+flask_user.translations.lazy_gettext = word_with_format
 from flask_user import UserManager, SQLAlchemyAdapter
 from flask_cors import cross_origin
+from flask_wtf.csrf import CSRFError
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
@@ -795,8 +827,13 @@ from flask_user import signals, user_logged_in, user_changed_password, user_regi
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, RenameProject, DeleteProject, NewProject
 
 import flask_user.signals
-import flask_user.translations
 import flask_user.views
+import flask_user.emails
+import flask_user.forms
+flask_user.views._ = word_with_format
+flask_user.forms._ = word_with_format
+
+import wtforms
 import werkzeug
 import werkzeug.exceptions
 from rauth import OAuth1Service, OAuth2Service
@@ -17794,7 +17831,7 @@ def server_error(the_error):
             the_trace = the_error.traceback
         else:
             the_trace = traceback.format_exc()
-        if 'current_field' in docassemble.base.functions.this_thread.misc:
+        if hasattr(docassemble.base.functions.this_thread, 'misc') and 'current_field' in docassemble.base.functions.this_thread.misc:
             errmess += "\nIn field index number " + text_type(docassemble.base.functions.this_thread.misc['current_field'])
         if hasattr(the_error, 'da_line_with_error'):
             errmess += "\nIn line: " + text_type(the_error.da_line_with_error)
@@ -19247,7 +19284,7 @@ def fix_secret(user=None, to_convert=None):
     else:
         logmessage("fix_secret: password not in request")
 
-def login_or_register(sender, user, **extra):
+def login_or_register(sender, user, source, **extra):
     #logmessage("login or register!")
     if 'i' in session: #TEMPORARY
         get_session(session['i'])
@@ -19294,14 +19331,15 @@ def login_or_register(sender, user, **extra):
             GlobalObjectStorage.query.filter_by(id=the_id).delete()
         db.session.commit()
         del session['tempuser']
-    session['user_id'] = user.id
+    if not (source == 'register' and daconfig.get('confirm registration', False)):
+        session['user_id'] = user.id
     if user.language:
         session['language'] = user.language
 
 @user_logged_in.connect_via(app)
 def _on_user_login(sender, user, **extra):
     #logmessage("on user login")
-    login_or_register(sender, user, **extra)
+    login_or_register(sender, user, 'login', **extra)
     #flash(word('You have signed in successfully.'), 'success')
 
 @user_changed_password.connect_via(app)
@@ -19331,7 +19369,7 @@ def on_register_hook(sender, user, **extra):
         user.roles.remove(role)
     user.roles.append(this_user_role)
     db.session.commit()
-    login_or_register(sender, user, **extra)
+    login_or_register(sender, user, 'register', **extra)
 
 @app.route("/fax_callback", methods=['POST'])
 @csrf.exempt
@@ -23018,6 +23056,13 @@ def applock(action, application):
         pipe.execute()
     elif action == 'release':
         r.delete(key)
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(the_error):
+    if request.method == 'POST':
+        flash(word("Input not processed because the page expired.  Please try again."), "success")
+        return redirect(request.full_path)
+    return server_error(the_error)
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):
     recipient_email = daconfig.get('error notification email', None)

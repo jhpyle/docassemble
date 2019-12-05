@@ -167,6 +167,13 @@ button.btn-da-custom {
     vertical-align: middle;
 }
 
+button.btn-da-custom svg {
+    width: 4em !important;
+    height: 4em !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
 button.btn-da-custom:focus {
     outline: 1px dotted !important;
 }

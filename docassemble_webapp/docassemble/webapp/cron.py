@@ -55,11 +55,11 @@ def clear_old_interviews():
             sys.stderr.write("Error in configuration for interview delete days by filename\n")
     nowtime = datetime.datetime.utcnow()
     #sys.stderr.write("clear_old_interviews: days is " + str(interview_delete_days) + "\n")
-    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).group_by(UserDict.filename, UserDict.key).subquery()
     for filename, days in days_by_filename.items():
         last_index = -1
         while True:
-            results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index, subq.c.filename == filename)).order_by(UserDict.indexno).limit(1000)
+            subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).filter(UserDict.indexno > last_index, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key).subquery()
+            results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000)
             if results.count() == 0:
                 break
             stale = list()
@@ -79,7 +79,8 @@ def clear_old_interviews():
         return
     last_index = -1
     while True:
-        results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index, subq.c.filename.notin_(days_by_filename.keys()))).order_by(UserDict.indexno).limit(1000)
+        subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).filter(UserDict.indexno > last_index, UserDict.filename.notin_(days_by_filename.keys())).group_by(UserDict.filename, UserDict.key).subquery()
+        results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000)
         if results.count() == 0:
             break
         stale = list()
@@ -127,7 +128,7 @@ def run_cron(cron_type):
                 last_index = -1
                 while True:
                     subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
-                    records = [(record.indexno, record.key, record.filename, record.dictionary, record.count) for record in db.session.query(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno, subq.c.key == UserDict.key, subq.c.filename == UserDict.filename, subq.c.indexno > last_index)).order_by(UserDict.indexno).limit(100)]
+                    records = [(record.indexno, record.key, record.filename, record.dictionary, record.count) for record in db.session.query(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200)]
                     if len(records) == 0:
                         break
                     to_do = list()
@@ -197,7 +198,6 @@ def run_cron(cron_type):
                                         error_trace = None
                                     error_notification(err, trace=error_trace)
                                     continue
-                        del the_dict
                     time.sleep(0.4)
 
 if __name__ == "__main__":

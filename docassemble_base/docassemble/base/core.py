@@ -1587,7 +1587,7 @@ class DAList(DAObject):
         pass
     def hook_on_item_complete(self, item):
         pass
-    def hook_on_remove(self, elem):
+    def hook_on_remove(self, item):
         pass
 
 class DADict(DAObject):
@@ -2372,7 +2372,7 @@ class DADict(DAObject):
         pass
     def hook_on_item_complete(self, item):
         pass
-    def hook_on_remove(self, elem):
+    def hook_on_remove(self, item):
         pass
 
 class DAOrderedDict(DADict):
@@ -2807,7 +2807,7 @@ class DASet(DAObject):
         pass
     def hook_on_item_complete(self, item):
         pass
-    def hook_on_remove(self, elem):
+    def hook_on_remove(self, item):
         pass
 
 class DAFile(DAObject):

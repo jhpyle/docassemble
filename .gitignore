@@ -53,3 +53,4 @@ tests/features/Screenshots.feature
 fix-seq.sql
 rtftest.py
 tests/.noseids
+Docker/config/extract_words_flask.sh
