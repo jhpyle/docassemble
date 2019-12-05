@@ -479,7 +479,7 @@ def custom_register():
     # Process GET or invalid POST
     if is_json:
         return jsonify(action='register', csrf_token=generate_csrf())
-    respose = make_response(user_manager.render_function(user_manager.register_template,
+    response = make_response(user_manager.render_function(user_manager.register_template,
                                                          form=register_form,
                                                          login_form=login_form,
                                                          register_form=register_form), 200)
