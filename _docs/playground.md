@@ -321,6 +321,9 @@ and Run."
 
 The area lists the following types of names (which are color-coded):
 
+* Undefined names: names that are mentioned in your interview, but do
+  not appear to have blocks that define them.  This is based on code
+  parsing, so sometimes there are false positives.
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
   [`modules`] block.  Variables in light blue are
