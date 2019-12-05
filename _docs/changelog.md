@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.54](https://github.com/jhpyle/docassemble/releases/tag/v0.5.54) - 2019-12-05
+
+### Added
+- The `confirm registration` Configuration directive.
+
+### Changed
+- CSRF errors pop up in a "flash" box.
+- Cron jobs run with nice 19 (system upgrade required for this
+  change).
+- Messages from Flask-User are now translated through the
+  **docassemble** system phrase translation system.
+
+### Fixed
+- Styling of Font Awesome icons inside buttons.
+
 ## [0.5.53](https://github.com/jhpyle/docassemble/releases/tag/v0.5.53) - 2019-12-03
 
 ### Added

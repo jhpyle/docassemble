@@ -845,6 +845,13 @@ Other methods available on a `DAList` are:
   called immediately before an item is removed from the list.  The
   item that is removed is passed to `hook_on_remove()` as a single
   positional parameter.
+* <a name="DAList.hook_on_item_complete"></a><a
+  name="DADict.hook_on_item_complete"></a>`hook_on_item_complete()` -
+  this method is not currently called by the **docassemble** code, but
+  it is available for your use in subclasses.  The intention is for
+  this method to be called immediately before the `complete_attribute`
+  is set.  If your class does not provide a `.hook_on_item_complete()`
+  method, this method does nothing.
 * <a name="DAList.filter"></a>`filter()` - returns a shallow copy of the list
   object where the elements of the list are filtered according to
   criteria specified in keyword arguments.  For example, if `person`
@@ -964,7 +971,8 @@ when the `.object_type` of the [`DADict`] is not set.
 
 `DADict`s use the same methods that [`DAList`]s use, except for
 `.appendObject()`, `.append()`, `.remove()`, `.discard()`,
-`.extend()`, `.first()`, and `.last()`.
+`.extend()`, `.filter()`, `.sort()`, `.sort_elements()`,
+`.current_index()`, `.first()`, and `.last()`.
 
 It also uses the following methods, which correspond with the same
 methods of the [Python dict].

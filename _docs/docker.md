@@ -713,23 +713,20 @@ indicated location, **docassemble** will create an initial
 * <a name="AZUREACCOUNTKEY"></a>`AZUREACCOUNTKEY`: If you are
   using [Azure blob storage], set this to the account key.
 
-The following options are "setup" parameters that are useful for
+The options listed below are "setup" parameters that are useful for
 pre-populating a fresh [configuration] with particular values.  These
 environment variables are effective only during an initial `run` of
 the [Docker] container, when a [configuration] file does not already
 exist.
 
-Note: if you are using [persistent volumes], or you have set the
-options above for 
-[S3](#persistent s3)/[Azure blob storage](#persistent azure) 
-and a [configuration] file exists in your cloud storage, the values 
-in that [configuration] file will take precedence over any values you 
-specify in `env.list`.
-
-If you are using [S3](#persistent s3)/[Azure blob storage](#persistent
-azure), you can edit these configuration files in the cloud and then
-stop and start your container for the new configuration to take
-effect.
+If you are using [persistent volumes], or you have set the options
+above for [S3](#persistent s3)/[Azure blob storage](#persistent azure)
+and a [configuration] file exists in your cloud storage, the values in
+that stored [configuration] file will, by default, take precedence
+over any values you specify in `env.list`.  If you are using
+[S3](#persistent s3)/[Azure blob storage](#persistent azure), you can
+edit these configuration files in the cloud and then stop and start
+your container for the new configuration to take effect.
 
 * <a name="DAWEBSERVER"></a>`DAWEBSERVER`: This can be set either to
   `nginx` (the default) or `apache`.  See the [`web server`]
@@ -906,6 +903,29 @@ effect.
   (which is the default unless `DAPYTHONVERSION` is set to `3`), you
   will not want to change this until you have done testing.  See
   [migration from Python 2.7 to Python 3.6] for more information.
+* <a
+  name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
+  It was noted above that once the [configuration] file is located in
+  the [persistent volume], [S3](#persistent s3), or [Azure blob
+  storage](#persistent azure), the values in that [configuration] file
+  will take precedence over any values specified in [Docker]
+  environment variables.  This is the default behavior; the [Docker]
+  environment variables are useful for 1) telling the server where to
+  find an existing [configuration] file; and 2) if no [configuration]
+  file exists already, pre-populating the initial [configuration]
+  file.  However, if you set `ENVIRONMENT_TAKES_PRECEDENCE` to `true`,
+  then **docassemble** will override values in the [configuration]
+  file with the values of [Docker] environment variables if they
+  conflict.  Note that the [YAML] of the [configuration] file will not
+  be altered; you will still see the same [YAML] when you go to edit
+  the [Configuration].  However, internally, **docassemble** will
+  override those values with the values of the [Docker] environment
+  variables.  Since it can be confusing to have dueling sources of
+  configuration values, it is encouraged that you update the [YAML] of
+  your [Configuration] to align with the values in your [Docker]
+  environment.  The `ENVIRONMENT_TAKES_PRECEDENCE` option is primarily
+  used in the [Kubernetes]/[Helm] environment, where there are some
+  [Docker] environment variables that cannot be known in advance.
 
 ## <a name="configuration"></a>Changing the configuration
 
@@ -2150,3 +2170,4 @@ line), as the containers depend on the images.
 [`use minio`]: {{ site.baseurl }}/docs/config.html#use minio
 [Kubernetes]: https://kubernetes.io/
 [`collect statistics`]: {{ site.baseurl }}/docs/config.html#collect statistics
+[Kubernetes]: https://kubernetes.io/

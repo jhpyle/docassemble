@@ -1931,7 +1931,21 @@ allow registration: False
 
 The default behavior is to allow any user to register.
 
-## <a name="email confirmation"></a>E-mail confirmation
+## <a name="confirm registration"></a>E-mail confirmation after registration
+
+By default, users who register can start using the site right away.
+To require e-mail validation first, set `confirm registration` to
+`True`:
+
+{% highlight yaml %}
+confirm registration: True
+{% endhighlight %}
+
+This feature enables enhanced privacy.  If someone tries to register
+using the e-mail of someone who has already registered, the fact that
+the e-mail address is already registered is not revealed.
+
+## <a name="email confirmation"></a>E-mail confirmation for certain privileges
 
 If you want to verify e-mail addresses of users, you can set the
 `email confirmation privileges` directive to a list of [privileges] for which

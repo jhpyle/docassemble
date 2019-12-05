@@ -20,14 +20,22 @@ cause your cluster not to function, and the reasons could be
 mysterious.  Unless you really understand the technologies, it might
 be difficult for you to debug issues with multi-server arrangements.
 
-# Multi-server configuration on EC2 Container Service
+If you want to run **docassemble** in a scalable [multi-server
+arrangement], there are a variety of ways to do so.  This section of
+the documentation discusses two possible methods, one that uses
+[Kubernetes] and [Helm], and the other that uses [Amazon Web Services]
+([AWS]).
 
-If you want to run **docassemble** in a scalable
-[multi-server arrangement], there are a variety of ways to do so, but
-the following is the recommended way to get started.  It takes
-advantage of the many features of [Amazon Web Services] ([AWS]).
+# <a name="kubernetes"></a>Multi-server configuration on Kubernetes
 
-## Overview
+The recommended method of deploying **docassemble** in a multi-server
+configuration is to use [Kubernetes] and [Helm].  This deployment
+method is documented separately in the [`jhpyle/charts`] repository on
+[GitHub].
+
+# <a name="ecs"></a>Multi-server configuration on EC2 Container Service
+
+## <a name="ecs overview"></a>Overview
 
 In this example, one server will perform central functions (SQL,
 [Redis], [RabbitMQ], and log message aggregation) and two separate
@@ -107,7 +115,7 @@ the "backend" service and set the "desired count" to 1.  Once that
 service is up and running, you would update the "app" service and set
 the "desired count" to 2.
 
-## Instructions
+## <a name="ecs instructions"></a>Instructions
 
 The following instructions will guide you through the process of using
 [AWS] to set up a **docassemble** installation.  [AWS] itself is
@@ -638,7 +646,7 @@ tab.  On the "Register and deregister instances" page that appears,
 select the instances you just noted and click the "Add to registered"
 button.  Then do the same with `http-redirect`.
 
-### Shutting down
+### <a name="ecs shutdown"></a>Shutting down
 
 To shut down a multi-server **docassemble** configuration:
 
@@ -677,7 +685,7 @@ Configurations," for example, are just configuration data; [AWS] does
 not need to reserve computing power or IP addresses to maintain them
 in your account.
 
-### Controlling AWS from the command line
+### <a name="awscli"></a>Controlling AWS from the command line
 
 In the **docassemble** [GitHub repository], there is a command-line
 utility called [`da-cli`] (which is short for "**docassemble** command
@@ -716,7 +724,7 @@ a simple [Python] module.  You might also want to extend the
 functionality of the script; anything that can be done in the [AWS]
 web interface can be done using the [boto3] library.
 
-# Single-server configuration on EC2 Container Service
+# <a name="singleserver"></a>Single-server configuration on EC2 Container Service
 
 If you want, you can use [EC2] to run **docassemble** in a
 single-server arrangement.  (It is not particularly "scalable" to do
@@ -863,7 +871,7 @@ redis: redis://redis.example.local
 rabbitmq: pyamqp://guest@rabbit.example.local//'
 {% endhighlight %}
 
-## Log file aggregation
+## <a name="log"></a>Log file aggregation
 
 In a multi-server configuration, log files can be centralized and
 aggregated by using [Syslog-ng] on the application servers to forward
@@ -902,7 +910,7 @@ The following files make this possible:
   listen to port 514 and copy messages to files in
   `/usr/share/docassemble/log/`.
 
-## Auto-discovery of services
+## <a name="autodiscovery"></a>Auto-discovery of services
 
 If you use [S3]/[Azure blob storage], you can can use **docassemble**
 in a multi-server configuration without manually specifying the
@@ -936,7 +944,7 @@ The [Docker] initialization script runs the
 hostname to the appropriate [S3] keys/[Azure blob storage] objects
 depending on the value of the environment variable `CONTAINERROLE`.
 
-## File sharing
+## <a name="fileshare"></a>File sharing
 
 Configuring a cluster of **docassemble** servers requires centralizing
 the location of uploaded files, by using an [Amazon S3] bucket (the
@@ -1235,3 +1243,7 @@ number of PostgreSQL connections will be 12.
 [start an EC2 instance using an ECS-optimized AMI]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [page on Amazon's web site]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+[Helm]: https://helm.sh/
+[Kubernetes]: https://kubernetes.io/
+[`jhpyle/charts`]: https://github.com/jhpyle/charts
+[GitHub]: https://github.com
