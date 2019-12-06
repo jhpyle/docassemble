@@ -795,9 +795,8 @@ class TextObject(object):
             else:
                 names_used = question.names_used
             self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
-            for x in self.template.names_used:
-                if x not in self.template.names_set:
-                    names_used.add(x)
+            for x in self.template.names_used - self.template.names_set:
+                names_used.add(x)
             self.uses_mako = True
         else:
             self.uses_mako = False

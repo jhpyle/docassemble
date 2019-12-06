@@ -654,6 +654,11 @@ button.btn-da-custom svg {
     vertical-align: middle;
 }
 
+button.btn-da-custom span:first-of-type::after {
+    content: "";
+    display: block;
+}
+
 button.btn-da-custom:focus {
     outline: 1px dotted !important;
 }

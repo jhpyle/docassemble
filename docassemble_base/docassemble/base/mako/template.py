@@ -213,6 +213,8 @@ class Template(object):
 
     :param names_used: a set of variable names used in the template
 
+    :param names_set: a set of variable names that are defined
+
     """
 
     lexer_cls = Lexer

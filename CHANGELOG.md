@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.55] - 2019-12-06
+### Fixed
+- Styling of Font Awesome icons inside buttons.
+- Some variables in Variables, etc. inappropriately flagged as undefined.
+
 ## [0.5.54] - 2019-12-05
 ### Added
 - The `confirm registration` Configuration directive.
