@@ -5547,13 +5547,13 @@ class Interview:
             if question.question_type == 'imports':
                 for module_name in question.module_list:
                     if module_name.startswith('.'):
-                        exec('import ' + str(self.source.package) + module_name, user_dict)
+                        exec('import ' + str(question.package) + module_name, user_dict)
                     else:
                         exec('import ' + module_name, user_dict)
             if question.question_type == 'modules':
                 for module_name in question.module_list:
                     if module_name.startswith('.'):
-                        exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
+                        exec('from ' + str(question.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
             if question.question_type == 'reset': #, 'template', 'table'
