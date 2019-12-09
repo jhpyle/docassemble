@@ -2030,7 +2030,7 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
         db.session.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None):
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None, max_indexno=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
     if REQUIRE_IDEMPOTENT:
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
@@ -2058,7 +2058,8 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         db.session.add(new_record)
         db.session.commit()
     else:
-        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
+        if max_indexno is None:
+            max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
         if max_indexno is None:
             if encrypt:
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -4620,12 +4621,12 @@ def github_configure():
     resp, content = http.request("https://api.github.com/user/emails", "GET")
     if int(resp['status']) == 200:
         user_info_list = json.loads(content.decode())
-        if len(user_info_list):
-            user_info = user_info_list[0]
-            if user_info.get('email', None) is None:
-                raise DAError("github_configure: could not get e-mail address")
-        else:
-            raise DAError("github_configure: could not get list of e-mail addresses")
+        user_info = None
+        for item in user_info_list:
+            if item.get('email', None) and item.get('visibility', None) != 'private':
+                user_info = item
+        if user_info is None:
+            raise DAError("github_configure: could not get e-mail address")
     else:
         raise DAError("github_configure: could not get information about user")
     resp, content = http.request("https://api.github.com/user/keys", "GET")
@@ -13026,8 +13027,9 @@ def create_playground_package():
             resp, content = http.request("https://api.github.com/user/emails", "GET")
             if int(resp['status']) == 200:
                 info = json.loads(content.decode())
-                if len(info) and 'email' in info[0]:
-                    github_email = info[0]['email']
+                for item in info:
+                    if item.get('email', None) and item.get('visibility', None) != 'private':
+                        github_email = item['email']
         if github_user_name is None or github_email is None:
             raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
         all_repositories = dict()
@@ -15936,8 +15938,9 @@ def playground_packages():
                 resp, content = http.request("https://api.github.com/user/emails", "GET")
                 if int(resp['status']) == 200:
                     info = json.loads(content.decode())
-                    if len(info) and 'email' in info[0]:
-                        github_email = info[0]['email']
+                    for item in info:
+                        if item.get('email', None) and item.get('visibility', None) != 'private':
+                            github_email = item['email']
             if github_user_name is None or github_email is None:
                 raise DAError("playground_packages: login not present in user info from GitHub")
             found = False

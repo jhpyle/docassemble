@@ -31,6 +31,19 @@ from sqlalchemy import or_, and_
 
 set_request_active(False)
 
+def get_filenames():
+    results = list()
+    for record in db.session.query(UserDict.filename).filter(UserDict.encrypted == False).group_by(UserDict.filename):
+        results.append(record.filename)
+    return results
+
+def get_records(filename, last_index):
+    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
+    results = list()
+    for record in db.session.query(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno, subq.c.count).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200):
+        results.append((record.indexno, record.key, record.filename, record.dictionary, record.count))
+    return results
+
 def get_cron_user():
     for user in UserModel.query.options(db.joinedload('roles')).all():
         for role in user.roles:
@@ -102,14 +115,15 @@ def run_cron(cron_type):
     if not re.search(r'_background$', cron_type):
         cron_types.append(str(cron_type) + "_background")
     cron_user = get_cron_user()
-    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
+    cron_user_id = cron_user.id
+    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
     with app.app_context():
         with app.test_request_context(base_url=base_url, path=path_url):
             login_user(cron_user, remember=False)
             filenames = list()
-            for filename in [record.filename for record in db.session.query(UserDict.filename).filter(UserDict.encrypted == False).group_by(UserDict.filename)]:
+            for filename in get_filenames():
                 try:
                     interview = docassemble.base.interview_cache.get_interview(filename)
                 except:
@@ -127,8 +141,7 @@ def run_cron(cron_type):
                     continue
                 last_index = -1
                 while True:
-                    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
-                    records = [(record.indexno, record.key, record.filename, record.dictionary, record.count) for record in db.session.query(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200)]
+                    records = get_records(filename, last_index)
                     if len(records) == 0:
                         break
                     to_do = list()
@@ -146,11 +159,10 @@ def run_cron(cron_type):
                             if re.search(r'_background$', cron_type_to_use):
                                 new_task = docassemble.webapp.worker.background_action.delay(filename, user_info, key, None, None, None, {'action': cron_type_to_use, 'arguments': dict()})
                             else:
-                                time.sleep(0.05)
                                 try:
                                     docassemble.base.functions.reset_local_variables()
                                     obtain_lock_patiently(key, filename)
-                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
+                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
                                     interview.assemble(the_dict, interview_status)
                                     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                                     if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
@@ -167,7 +179,7 @@ def run_cron(cron_type):
                                             pass
                                         save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                                         if save_status != 'ignore':
-                                            save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
+                                            save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user_id, steps=steps, max_indexno=indexno)
                                         release_lock(key, filename)
                                         interview_status.do_sleep()
                                     elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
@@ -175,7 +187,7 @@ def run_cron(cron_type):
                                         interview_status.do_sleep()
                                     else:
                                         if save_status != 'ignore':
-                                            save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user.id, steps=steps)
+                                            save_user_dict(key, the_dict, filename, encrypt=False, manual_user_id=cron_user_id, steps=steps, max_indexno=indexno)
                                         release_lock(key, filename)
                                         interview_status.do_sleep()
                                         if interview_status.question.question_type == "response":
@@ -187,7 +199,10 @@ def run_cron(cron_type):
                                                 sys.stdout.write(docassemble.webapp.backend.dict_as_json(the_dict, include_internal=include_internal).encode('utf8') + "\n")
                                             elif not hasattr(interview_status.question, 'binaryresponse'):
                                                 if interview_status.questionText != 'Empty Response':
-                                                    sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
+                                                    try:
+                                                        sys.stdout.write(interview_status.questionText.rstrip() + "\n")
+                                                    except:
+                                                        sys.stdout.write("Unable to write output to standard error\n")
                                 except Exception as err:
                                     release_lock(key, filename)
                                     sys.stderr.write("Cron error: " + text_type(key) + " " + text_type(filename) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")

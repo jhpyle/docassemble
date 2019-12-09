@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.57] - 2019-12-09
+### Changed
+- Different way of finding GitHub e-mail address.
+### Fixed
+- Cron issues.
+
 ## [0.5.56] - 2019-12-08
 ### Added
 - The `action buttons` specifier for `question`s.
