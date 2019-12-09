@@ -118,7 +118,7 @@ and [checkboxes].  There are a variety of ways you can insert text into
 the list of fields to help guide the user.  If you know [HTML], you
 can insert arbitrary [HTML]({{ site.baseurl }}/docs/fields.html#html), 
 [CSS]({{ site.baseurl }}/docs/modifiers.html#css), and 
-[Javascript]({{ site.baseurl }}/docs/modifiers.html#script).  Using the
+[JavaScript]({{ site.baseurl }}/docs/modifiers.html#script).  Using the
 [`show if`] feature, you can cause fields to appear or disappear
 depending on the values of other fields.
 
@@ -304,6 +304,55 @@ reach from the menu or from hyperlinks embedded in question text.  For
 more information, see [`event`], [`url_action()`],
 [`process_action()`], [`action_menu_item()`], and [`menu_items`].
 
+# <a name="action buttons"></a>Include additional buttons on the screen
+
+In many [`question`]s, the only button the user can click is
+"Continue."  You can set a variable using a [`buttons`] specifier with
+a `field`.  You can also use a [`buttons`](#buttons) screen that does
+not set a variable.  You can also use [`question back button`] to move
+the "Back" button to the buttons area, or [`question help button`] to
+move the interview help button to the buttons area.
+
+If you want to include additional button choices on a screen, you can
+use `action buttons`.  When the user clicks a button it will run an
+[action] in the interview.
+
+{% include side-by-side.html demo="action-buttons" %}
+
+For each button, the required items are `action` and `label`.  You can
+optionally include `color` to indicate the Bootstrap color of the
+button (`primary`, `secondary`, `success`, `danger`, `warning`,
+`info`, `light`, `link`, or `dark`).  The default color is `primary`.
+You can also optionally include `icon` to indicate a Font Awesome icon
+name to include in the button.  If your `action` requires arguments,
+you can indicate the arguments using `arguments`.  You can use [Mako]
+templating in any of these elements.
+
+If you want to define the buttons programmatically, you can set
+`action buttons` to a dictionary where the only item is `code`.
+
+{% include side-by-side.html demo="action-buttons-code" %}
+
+When you use `code` to define the `action buttons`, you need to
+provide a [Python] expression that evaluates to a list of
+dictionaries, where each dictionary has the items `action` and `label`
+at a minimum.
+
+By default, the buttons indicated by `action buttons` will be placed
+after the "Continue" button or any other buttons specified in the
+`question`, and before the [`question help button`] (if present).  If
+you want a button to appear before the standard buttons of the
+`question`, set `placement` to `before`.
+
+{% include side-by-side.html demo="action-buttons-before" %}
+
+If you set the `action` of an button to a web URL (beginning with
+`http://`, `https://`, `/`, or `?`) or a [JavaScript] URL (beginning
+with `javascript:`), then the button will act like a hyperlink with
+the value of the `action` as the `href`.
+
+{% include side-by-side.html demo="action-buttons-http" %}
+
 # <a name="screen parts"></a>Customizing screen parts
 
 When the user looks at a screen in an interview, there are many
@@ -421,7 +470,7 @@ For more information about each method, see its documentation.
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [CSS]: https://en.wikipedia.org/wiki/CSS
-[Javascript]: https://en.wikipedia.org/wiki/Javascript
+[JavaScript]: https://en.wikipedia.org/wiki/Javascript
 [next section]: {{ site.baseurl }}/docs/fields.html
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
@@ -444,6 +493,7 @@ For more information about each method, see its documentation.
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [configuration]: {{ site.baseurl }}/docs/config.html
+[action]: {{ site.baseurl }}/docs/functions.html#actions
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
 [multiple choice question]: #buttons
@@ -468,3 +518,5 @@ For more information about each method, see its documentation.
 [index variables]: {{ site.baseurl }}/docs/fields.html#index variables
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [`exit url`]: {{ site.baseurl }}/docs/initial.html#exit url
+[`question back button`]: {{ site.baseurl }}/docs/initial.html#question back button
+[`question help button`]: {{ site.baseurl }}/docs/initial.html#question help button

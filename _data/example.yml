@@ -4,6 +4,55 @@
     Need more information?
   subquestion: |
     ${ action_button_html("https://docassemble.org", label="Visit our web site", color="primary", size="md") }
+"action-buttons": "question: | \n  I will give you \n  ${ quantity_noun(num_apples,\
+  \ 'apple') }.\nfield: show_quantity\naction buttons:\n  - label: More\n    action:\
+  \ change_quantity\n    arguments:\n      amount: 1\n    color: success\n    icon:\
+  \ chevron-up\n  - label: Less\n    action: change_quantity\n    arguments:\n   \
+  \   amount: -1\n    color: danger\n    icon: chevron-down\n---\nevent: change_quantity\n\
+  code: |\n  num_apples += action_argument('amount')"
+"action-buttons-before": "question: | \n  I will give you \n  ${ quantity_noun(num_apples,\
+  \ 'apple') }.\nfield: show_quantity\naction buttons:\n  - label: More\n    action:\
+  \ change_quantity\n    arguments:\n      amount: 1\n    color: success\n    icon:\
+  \ chevron-up\n    placement: before\n  - label: Less\n    action: change_quantity\n\
+  \    arguments:\n      amount: -1\n    color: danger\n    icon: chevron-down\n \
+  \   placement: before\n---\nevent: change_quantity\ncode: |\n  num_apples += action_argument('amount')"
+"action-buttons-code": |-
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  question: |
+    Thank you for that information.
+  field: thank_user
+  action buttons:
+    code: |
+      [{'action': 'eat',
+        'arguments': {'fruit': favorite_fruit},
+        'label': 'Eat ' + favorite_fruit,
+        'color': 'secondary'}]
+  ---
+  event: eat
+  code: |
+    log('Nom nom nom.  That ' + action_argument('fruit') + ' was good.', "info")
+    set_save_status('ignore')
+"action-buttons-http": |-
+  question: |
+    You may wish to wait until
+    ${ today().plus(weeks=3) }
+    to file your complaint.
+  subquestion: |
+    It is up to you whether you wish
+    to continue with the interview.
+
+    If you leave, you will be directed
+    back to the web site.
+  field: wishes_to_continue
+  action buttons:
+    - label: Come back later
+      action: https://docassemble.org
+      color: warning
+      icon: sign-out-alt
 "actions": |-
   question: |
     Review your information.

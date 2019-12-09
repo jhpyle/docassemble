@@ -958,6 +958,11 @@ must be obtained and re-obtained if they are already obtained.  This
 specifier is explained in the [`reconsider`] subsection of the [Logic
 section].
 
+# <a name="action buttons"></a>Include additional buttons on the screen
+
+The [`action buttons`] modifier allows you to include additional
+buttons on the screen.
+
 # <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
@@ -966,6 +971,7 @@ by **docassemble**, so it can contain any valid [YAML].
 
 {% include side-by-side.html demo="comment-weather" %}
 
+[`action buttons`]: {{ site.baseurl }}/docs/questions.html#action buttons
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`sets`]: #sets
