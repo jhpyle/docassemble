@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.58] - 2019-12-09
+### Fixed
+- Modules included in YAML files with relative references were loading
+  from the main YAML file's package, not in the package of the YAML
+  file containing the `modules` or `imports` block.
+
 ## [0.5.57] - 2019-12-09
 ### Changed
 - Different way of finding GitHub e-mail address.
