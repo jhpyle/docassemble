@@ -90,6 +90,7 @@ Feature: Demonstration interview
     Then I should see the phrase "Please upload a picture of yourself."
     And I upload the file "testfile.png"
     And I click the button "Continue"
+    And I wait 1 second
     Then I should see the phrase "Is this the picture you uploaded?"
     And I click the button "Yes"
     Then I should see the phrase "Instructions for signing your name"

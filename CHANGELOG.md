@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.56] - 2019-12-08
+### Added
+- The `action buttons` specifier for `question`s.
+
 ## [0.5.55] - 2019-12-06
 ### Fixed
 - Styling of Font Awesome icons inside buttons.

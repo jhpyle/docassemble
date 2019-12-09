@@ -146,6 +146,7 @@ def run_cron(cron_type):
                             if re.search(r'_background$', cron_type_to_use):
                                 new_task = docassemble.webapp.worker.background_action.delay(filename, user_info, key, None, None, None, {'action': cron_type_to_use, 'arguments': dict()})
                             else:
+                                time.sleep(0.05)
                                 try:
                                     docassemble.base.functions.reset_local_variables()
                                     obtain_lock_patiently(key, filename)

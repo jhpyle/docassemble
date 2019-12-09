@@ -1152,6 +1152,7 @@ class Question:
         self.mako_names = set()
         self.reconsider = list()
         self.undefine = list()
+        self.action_buttons = list()
         self.validation_code = None
         num_directives = 0
         for directive in ('yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'combobox', 'signature', 'review'):
@@ -1916,6 +1917,51 @@ class Question:
                     self.interview.read_from(interview_source_from_string(questionPath, context_interview=self.interview))
             else:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
+        if 'action buttons' in data:
+            if isinstance(data['action buttons'], dict) and len(data['action buttons']) == 1 and 'code' in data['action buttons']:
+                self.action_buttons.append(compile(data['action buttons']['code'], '<action buttons code>', 'eval'))
+            else:
+                if not isinstance(data['action buttons'], list):
+                    raise DAError("An action buttons specifier must be a list." + self.idebug(data))
+                for item in data['action buttons']:
+                    if not isinstance(item, dict):
+                        raise DAError("An action buttons item must be a dictionary." + self.idebug(data))
+                    action = item.get('action', None)
+                    label = item.get('label', None)
+                    color = item.get('color', 'primary')
+                    icon = item.get('icon', None)
+                    placement = item.get('placement', None)
+                    given_arguments = item.get('arguments', dict())
+                    if not isinstance(action, string_types):
+                        raise DAError("An action buttons item must contain an action in plain text." + self.idebug(data))
+                    if not isinstance(given_arguments, dict):
+                        raise DAError("The arguments specifier in an action buttons item must refer to a dictionary." + self.idebug(data))
+                    if not isinstance(label, string_types):
+                        raise DAError("An action buttons item must contain a label in plain text." + self.idebug(data))
+                    if not isinstance(color, string_types):
+                        raise DAError("The color specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    if not isinstance(icon, (string_types, NoneType)):
+                        raise DAError("The icon specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    if not isinstance(placement, (string_types, NoneType)):
+                        raise DAError("The placement specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
+                    if icon is not None:
+                        button['icon'] = TextObject(definitions + icon, question=self)
+                    else:
+                        button['icon'] = None
+                    if placement is not None:
+                        button['placement'] = TextObject(definitions + placement, question=self)
+                    else:
+                        button['placement'] = None
+                    button['arguments'] = dict()
+                    for key, val in given_arguments.items():
+                        if isinstance(val, (list, dict)):
+                            raise DAError("The arguments specifier in an action buttons item must refer to plain items." + self.idebug(data))
+                        if isinstance(val, string_types):
+                            button['arguments'][key] = TextObject(definitions + val, question=self)
+                        else:
+                            button['arguments'][key] = val
+                    self.action_buttons.append(button)
         if 'if' in data:
             if isinstance(data['if'], string_types):
                 self.condition = [compile(data['if'], '<if code>', 'eval')]
@@ -3555,6 +3601,62 @@ class Question:
             if key not in the_default_titles:
                 the_default_titles[key] = val
         extras = dict()
+        if len(self.action_buttons) > 0:
+            extras['action_buttons'] = list()
+            for item in self.action_buttons:
+                if isinstance(item, dict):
+                    label = item['label'].text(user_dict).strip()
+                    given_arguments = item.get('arguments', dict())
+                    arguments = dict()
+                    for key, val in given_arguments.items():
+                        if isinstance(val, TextObject):
+                            arguments[key] = val.text(user_dict).strip()
+                        else:
+                            arguments[key] = val
+                    action = item['action'].text(user_dict).strip()
+                    if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                        action = docassemble.base.functions.url_action(action, **arguments)
+                    color = item['color'].text(user_dict).strip()
+                    if item['icon'] is not None:
+                        icon = item['icon'].text(user_dict).strip()
+                    else:
+                        icon = None
+                    if item['placement'] is not None:
+                        placement = item['placement'].text(user_dict).strip()
+                    else:
+                        placement = None
+                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
+                else:
+                    action_buttons = eval(item, user_dict)
+                    if hasattr(action_buttons, 'instanceName') and hasattr(action_buttons, 'elements'):
+                        action_buttons = action_buttons.elements
+                    if not isinstance(action_buttons, list):
+                        raise DAError("action buttons code did not evaluate to a list")
+                    for button in action_buttons:
+                        if not (isinstance(button, dict) and 'label' in button and 'action' in button and isinstance(button['label'], string_types) and isinstance(button['action'], string_types)):
+                            raise DAError("action buttons code did not evaluate to a list of dictionaries with label and action items")
+                        if 'color' in button and not isinstance(button['color'], (string_types, NoneType)):
+                            raise DAError("action buttons code included a color item that was not text or None")
+                        if 'icon' in button and not isinstance(button['icon'], (string_types, NoneType)):
+                            raise DAError("action buttons code included an icon item that was not text or None")
+                        color = button.get('color', 'primary')
+                        if color is None:
+                            color = 'primary'
+                        icon = button.get('icon', None)
+                        placement = button.get('placement', None)
+                        arguments = button.get('arguments', dict())
+                        if arguments is None:
+                            arguments = dict()
+                        if not isinstance(arguments, dict):
+                            raise DAError("action buttons code included an arguments item that was not a dictionary")
+                        action = button['action']
+                        if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                            action = docassemble.base.functions.url_action(action, **arguments)
+                        label = button['label']
+                        extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
+            for item in extras['action_buttons']:
+                if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
+                    raise DAError("color in action buttons not valid: " + repr(color))
         if hasattr(self, 'css_class') and self.css_class is not None:
             extras['cssClass'] = self.css_class.text(user_dict)
         elif 'css class' in user_dict['_internal'] and user_dict['_internal']['css class'] is not None:
@@ -4910,7 +5012,7 @@ class Question:
                     docassemble.base.functions.set_context('raw')
                     the_markdown = the_content.text(the_user_dict)
                     result['markdown'][doc_format] = the_markdown
-                    docassemble.base.functions.reset_context()                    
+                    docassemble.base.functions.reset_context()
                 else:
                     the_markdown = u""
                     if len(result['metadata']):
