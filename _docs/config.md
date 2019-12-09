@@ -2926,9 +2926,9 @@ using a [load balancer] or you are running [Docker] on machine that
 This variable is typically set using the [Docker] environment variable
 [`BEHINDHTTPSLOADBALANCER`].
 
-If you change this variable, you need to do a complete restart of the
-system for the change to take effect.  (That is,
-`docker stop -t 600 <container ID>` followed by `docker start <container ID>`.)
+Make sure that the load balancer you are using sets the
+`X-Forwarded-*` headers.  **docassemble** needs these headers in
+certain circumstances in order to form correct URLs.
 
 ## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
 
