@@ -5419,6 +5419,8 @@ class Interview:
                         new_list.append(self.questions_by_id[question_id].number)
                     else:
                         logmessage("warning: reference in an order directive to id " + question_id + " that does not exist in interview")
+            else:
+                new_list = list()
             self.orderings.append(new_list)
         for ordering in self.orderings:
             for question_a in ordering:

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.60] - 2019-12-09
+### Fixed
+- Issue with `supersedes`.
+
 ## [0.5.59] - 2019-12-09
 ### Fixed
 - Issue with `supersedes`.
