@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.60](https://github.com/jhpyle/docassemble/releases/tag/v0.5.60) - 2019-12-09
+
+### Fixed
+- Issue with `supersedes`.
+
+## [0.5.59](https://github.com/jhpyle/docassemble/releases/tag/v0.5.59) - 2019-12-09
+
+### Fixed
+- Issue with `supersedes`.
+
 ## [0.5.58](https://github.com/jhpyle/docassemble/releases/tag/v0.5.58) - 2019-12-09
 
 ### Fixed
