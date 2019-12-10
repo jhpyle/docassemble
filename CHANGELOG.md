@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.59] - 2019-12-09
+### Fixed
+- Issue with `supersedes`.
+
 ## [0.5.58] - 2019-12-09
 ### Fixed
 - Modules included in YAML files with relative references were loading

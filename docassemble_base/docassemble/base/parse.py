@@ -5405,7 +5405,7 @@ class Interview:
                         self.success = False
                         raise Exception("Syntax Error: " + text_type(qError) + "\n\nIn file " + text_type(source.path) + " from package " + text_type(source_package) + ":\n" + text_type(source_code))
         for ordering in self.id_orderings:
-            if ordering['type'] == 'supersedes':
+            if ordering['type'] == 'supersedes' and hasattr(ordering['question'], 'number'):
                 new_list = [ordering['question'].number]
                 for question_id in ordering['supersedes']:
                     if question_id in self.questions_by_id:
@@ -5415,7 +5415,7 @@ class Interview:
             elif ordering['type'] == 'order':
                 new_list = list()
                 for question_id in ordering['order']:
-                    if question_id in self.questions_by_id:
+                    if question_id in self.questions_by_id and hasattr(self.questions_by_id[question_id], 'number'):
                         new_list.append(self.questions_by_id[question_id].number)
                     else:
                         logmessage("warning: reference in an order directive to id " + question_id + " that does not exist in interview")
