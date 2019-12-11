@@ -4093,7 +4093,7 @@ def oauth_callback(provider):
 @app.route('/phone_login', methods=['POST', 'GET'])
 def phone_login():
     if not app.config['USE_PHONE_LOGIN']:
-        abort(404)
+        return ('File not found', 404)
     form = PhoneLoginForm(request.form)
     #next = request.args.get('next', url_for('interview_list'))
     if request.method == 'POST' and form.submit.data:
@@ -4155,10 +4155,10 @@ def phone_login():
 @app.route('/pv', methods=['POST', 'GET'])
 def phone_login_verify():
     if not app.config['USE_PHONE_LOGIN']:
-        abort(404)
+        return ('File not found', 404)
     phone_number = session.get('phone_number', request.args.get('p', None))
     if phone_number is None:
-        abort(404)
+        return ('File not found', 404)
     form = PhoneLoginVerifyForm(request.form)
     form.phone_number.data = phone_number
     if 'c' in request.args and 'p' in request.args:
@@ -4209,13 +4209,13 @@ def mfa_setup():
         in_login = True
         user = load_user(session['validated_user'])
     else:
-        abort(404)
+        return ('File not found', 404)
     if not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
-        abort(404)
+        return ('File not found', 404)
     form = MFASetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
         if 'otp_secret' not in session:
-            abort(404)
+            return ('File not found', 404)
         otp_secret = session['otp_secret']
         del session['otp_secret']
         supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
@@ -4266,7 +4266,7 @@ def mfa_setup():
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
     if not app.config['USE_MFA'] or not current_user.has_role(*app.config['MFA_ROLES']) or not current_user.social_id.startswith('local'):
-        abort(404)
+        return ('File not found', 404)
     user = load_user(current_user.id)
     if user.otp_secret is None:
         if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
@@ -4305,9 +4305,9 @@ def mfa_choose():
         in_login = True
         user = load_user(session['validated_user'])
     else:
-        abort(404)
+        return ('File not found', 404)
     if not app.config['USE_MFA'] or user.is_anonymous or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
-        abort(404)
+        return ('File not found', 404)
     if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
         return redirect(url_for('mfa_setup'))
     elif not app.config['MFA_ALLOW_APP']:
@@ -4337,9 +4337,9 @@ def mfa_sms_setup():
         in_login = True
         user = load_user(session['validated_user'])
     else:
-        abort(404)
+        return ('File not found', 404)
     if twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
-        abort(404)
+        return ('File not found', 404)
     form = MFASMSSetupForm(request.form)
     user = load_user(user.id)
     if request.method == 'GET' and user.otp_secret is not None and user.otp_secret.startswith(':phone:'):
@@ -4380,9 +4380,9 @@ def mfa_verify_sms_setup():
         in_login = True
         user = load_user(session['validated_user'])
     else:
-        abort(404)
+        return ('File not found', 404)
     if 'phone_number' not in session or twilio_config is None or not app.config['USE_MFA'] or not user.has_role(*app.config['MFA_ROLES']) or not user.social_id.startswith('local'):
-        abort(404)
+        return ('File not found', 404)
     form = MFAVerifySMSSetupForm(request.form)
     if request.method == 'POST' and form.submit.data:
         phone_number = session['phone_number']
@@ -4413,17 +4413,17 @@ def mfa_verify_sms_setup():
 def mfa_login():
     if not app.config['USE_MFA']:
         logmessage("mfa_login: two factor authentication not configured")
-        abort(404)
+        return ('File not found', 404)
     if 'validated_user' not in session:
         logmessage("mfa_login: validated_user not in session")
-        abort(404)
+        return ('File not found', 404)
     user = load_user(session['validated_user'])
     if current_user.is_authenticated and current_user.id != user.id:
         del session['validated_user']
-        abort(404)
+        return ('File not found', 404)
     if user is None or user.otp_secret is None or not user.social_id.startswith('local'):
         logmessage("mfa_login: user not setup for MFA where validated_user was " + str(session['validated_user']))
-        abort(404)
+        return ('File not found', 404)
     form = MFALoginForm(request.form)
     if not form.next.data:
         form.next.data = _get_safe_next_param('next', url_for('interview_list', from_login='1'))
@@ -4437,7 +4437,7 @@ def mfa_login():
         fail_key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(fail_key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
-            abort(404)
+            return ('File not found', 404)
         supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
         if user.otp_secret.startswith(':phone:'):
             phone_number = re.sub(r'^:phone:', '', user.otp_secret)
@@ -4483,7 +4483,7 @@ def manage_account():
     if current_user.is_anonymous:
         logged_in = False
         if 'tempuser' not in session:
-            abort(404)
+            return ('File not found', 404)
         temp_user_id = int(session['tempuser'])
     else:
         logged_in = True
@@ -4568,9 +4568,9 @@ def get_next_link(resp):
 @roles_required(['admin', 'developer'])
 def github_menu():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if not app.config['USE_GITHUB']:
-        abort(404)
+        return ('File not found', 404)
     form = GitHubForm(request.form)
     if request.method == 'POST':
         if form.configure.data:
@@ -4605,9 +4605,9 @@ def github_menu():
 @roles_required(['admin', 'developer'])
 def github_configure():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if not app.config['USE_GITHUB']:
-        abort(404)
+        return ('File not found', 404)
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -4669,9 +4669,9 @@ def github_configure():
 @roles_required(['admin', 'developer'])
 def github_unconfigure():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if not app.config['USE_GITHUB']:
-        abort(404)
+        return ('File not found', 404)
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -4718,7 +4718,7 @@ def github_unconfigure():
 @roles_required(['admin', 'developer'])
 def github_oauth_callback():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     failed = False
     if not app.config['USE_GITHUB']:
         logmessage('github_oauth_callback: server does not use github')
@@ -4738,7 +4738,7 @@ def github_oauth_callback():
     if failed:
         r.delete('da:github:userid:' + str(current_user.id))
         r.delete('da:using_github:userid:' + str(current_user.id))
-        abort(404)
+        return ('File not found', 404)
     flow = get_github_flow()
     credentials = flow.step2_exchange(request.args['code'])
     storage = RedisCredStorage(app='github')
@@ -6755,10 +6755,10 @@ def index(action_argument=None):
                 the_path = interview_status.question.response_file.path()
             else:
                 logmessage("index: could not send file because the response was None")
-                abort(404)
+                return ('File not found', 404)
             if not os.path.isfile(the_path):
                 logmessage("index: could not send file because file (" + the_path + ") not found")
-                abort(404)
+                return ('File not found', 404)
             response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
@@ -10212,11 +10212,11 @@ def speak_file():
         secret = str(secret)
     if file_format not in ('mp3', 'ogg') or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("speak_file: could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
-        abort(404)
+        return ('File not found', 404)
     entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
     if not entry:
         logmessage("speak_file: could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
-        abort(404)
+        return ('File not found', 404)
     if not entry.upload:
         existing_entry = SpeakList.query.filter(and_(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted)).first()
         if existing_entry:
@@ -10225,7 +10225,7 @@ def speak_file():
         else:
             if not VOICERSS_ENABLED:
                 logmessage("speak_file: could not serve speak file because voicerss not enabled")
-                abort(404)
+                return ('File not found', 404)
             new_file_number = get_new_file_number(key, 'speak.mp3', yaml_file_name=filename)
             #phrase = codecs.decode(entry.phrase, 'base64')
             if entry.encrypted:
@@ -10242,22 +10242,22 @@ def speak_file():
                 result = call(call_array)
                 if result != 0:
                     logmessage("speak_file: failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
-                    abort(404)
+                    return ('File not found', 404)
                 entry.upload = new_file_number
                 audio_file.finalize()
                 db.session.commit()
             else:
                 logmessage("speak_file: download from voicerss (" + url + ") failed")
-                abort(404)
+                return ('File not found', 404)
     if not entry.upload:
         logmessage("speak_file: upload file number was not set")
-        abort(404)
+        return ('File not found', 404)
     if not audio_file:
         audio_file = SavedFile(entry.upload, extension='mp3', fix=True)
     the_path = audio_file.path + '.' + file_format
     if not os.path.isfile(the_path):
         logmessage("speak_file: could not serve speak file because file (" + the_path + ") not found")
-        abort(404)
+        return ('File not found', 404)
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
 
@@ -10364,7 +10364,7 @@ def redirect_to_interview(dispatch):
     #logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
     if yaml_filename is None:
-        abort(404)
+        return ('File not found', 404)
     arguments = dict()
     for arg in request.args:
         arguments[arg] = request.args[arg]
@@ -10375,13 +10375,13 @@ def redirect_to_interview(dispatch):
 def serve_stored_file(uid, number, filename, extension):
     number = re.sub(r'[^0-9]', '', str(number))
     if not can_access_file_number(number, uids=[uid]):
-        abort(404)
+        return ('File not found', 404)
     try:
         file_info = get_info_from_file_number(number, privileged=True, uids=get_session_uids())
     except:
-        abort(404)
+        return ('File not found', 404)
     if 'path' not in file_info:
-        abort(404)
+        return ('File not found', 404)
     else:
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -10392,7 +10392,7 @@ def serve_temporary_file(code, filename, extension):
     file_info = r.get('da:tempfile:' + str(code))
     if file_info is None:
         logmessage("serve_temporary_file: file_info was none")
-        abort(404)
+        return ('File not found', 404)
     (section, file_number) = file_info.decode().split('^')
     the_file = SavedFile(file_number, fix=True, section=section)
     the_path = the_file.path
@@ -10408,16 +10408,16 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
         if not (privileged or can_access_file_number(number, uids=get_session_uids())):
-            abort(404)
+            return ('File not found', 404)
         the_file = SavedFile(number)
         return redirect(the_file.temp_url_for())
     else:
         try:
             file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
-            abort(404)
+            return ('File not found', 404)
         if 'path' not in file_info:
-            abort(404)
+            return ('File not found', 404)
         else:
             #logmessage("Filename is " + file_info['path'] + '.' + extension)
             if os.path.isfile(file_info['path'] + '.' + extension):
@@ -10433,7 +10433,7 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
-                abort(404)
+                return ('File not found', 404)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
@@ -10444,16 +10444,16 @@ def serve_uploaded_file_with_extension(number, extension):
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
         if not can_access_file_number(number, uids=get_session_uids()):
-            abort(404)
+            return ('File not found', 404)
         the_file = SavedFile(number)
         return redirect(the_file.temp_url_for())
     else:
         try:
             file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
-            abort(404)
+            return ('File not found', 404)
         if 'path' not in file_info:
-            abort(404)
+            return ('File not found', 404)
         else:
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
@@ -10461,8 +10461,8 @@ def serve_uploaded_file_with_extension(number, extension):
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
-                abort(404)
-    abort(404)
+                return ('File not found', 404)
+    return ('File not found', 404)
 
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
@@ -10474,17 +10474,17 @@ def serve_uploaded_file(number):
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
-        abort(404)
+        return ('File not found', 404)
     #file_info = get_info_from_file_reference(number)
     if 'path' not in file_info:
-        abort(404)
+        return ('File not found', 404)
     else:
         #block_size = 4096
         #status = '200 OK'
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
@@ -10497,9 +10497,9 @@ def serve_uploaded_page(number, page):
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
-        abort(404)
+        return ('File not found', 404)
     if 'path' not in file_info:
-        abort(404)
+        return ('File not found', 404)
     else:
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + str(len(str(max_pages))) + 'd'
@@ -10509,7 +10509,7 @@ def serve_uploaded_page(number, page):
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
         else:
-            abort(404)
+            return ('File not found', 404)
 
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):
@@ -10522,10 +10522,10 @@ def serve_uploaded_pagescreen(number, page):
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
-        abort(404)
+        return ('File not found', 404)
     if 'path' not in file_info:
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
-        abort(404)
+        return ('File not found', 404)
     else:
         try:
             the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
@@ -10544,7 +10544,7 @@ def serve_uploaded_pagescreen(number, page):
             return(response)
         else:
             logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
-            abort(404)
+            return ('File not found', 404)
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
 @login_required
@@ -10557,9 +10557,9 @@ def visit_interview():
     try:
         obj = fix_pickle_obj(r.get(key))
     except:
-        abort(404)
+        return ('Interview not found', 404)
     if 'secret' not in obj or 'encrypted' not in obj:
-        abort(404)
+        return ('Interview not found', 404)
     session_info = update_session(i, uid=uid, encrypted=obj['encrypted'])
     if 'user_id' not in session:
         session['user_id'] = current_user.id
@@ -12965,7 +12965,7 @@ def update_package():
 @roles_required(['admin', 'developer'])
 def create_playground_package():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     fix_package_folder()
     current_project = get_current_project()
     form = CreatePlaygroundPackageForm(request.form)
@@ -12990,13 +12990,13 @@ def create_playground_package():
         github_auth = None
     if do_github:
         if not app.config['USE_GITHUB']:
-            abort(404)
+            return ('File not found', 404)
         if current_package is None:
             logmessage('create_playground_package: package not specified')
-            abort(404)
+            return ('File not found', 404)
         if not github_auth:
             logmessage('create_playground_package: github button called when github auth not enabled.')
-            abort(404)
+            return ('File not found', 404)
         github_auth = github_auth.decode()
         if github_auth == '1':
             github_auth_info = dict(shared=True, orgs=True)
@@ -13005,7 +13005,7 @@ def create_playground_package():
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         #github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
         if github_package_name in ('docassemble-base', 'docassemble-webapp', 'docassemble-demo'):
-            abort(404)
+            return ('File not found', 404)
         commit_message = request.args.get('commit_message', 'a commit')
         storage = RedisCredStorage(app='github')
         credentials = storage.get()
@@ -13374,7 +13374,7 @@ def create_playground_package():
 @roles_required(['admin', 'developer'])
 def create_package():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
@@ -13688,7 +13688,7 @@ def restart_page():
 @roles_required(['admin', 'developer'])
 def playground_poll():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     script = """
     <script>
       function daPollCallback(data){
@@ -13806,7 +13806,7 @@ class RedisCredStorage(oauth2client.client.Storage):
 @roles_required(['admin', 'developer'])
 def google_drive_callback():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     for key in request.args:
         logmessage("google_drive_callback: argument " + str(key) + ": " + str(request.args[key]))
     if 'code' in request.args:
@@ -13987,7 +13987,7 @@ def trash_gd_file(section, filename, current_project):
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     next = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next = request.args.get('auto_next', None)
@@ -14012,7 +14012,7 @@ def sync_with_google_drive():
 @roles_required(['admin', 'developer'])
 def gd_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     next_url = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next_url = request.args.get('auto_next', None)
@@ -14118,7 +14118,7 @@ def gd_sync_wait():
 @roles_required(['admin', 'developer'])
 def onedrive_callback():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     for key in request.args:
         logmessage("onedrive_callback: argument " + str(key) + ": " + str(request.args[key]))
     if 'code' in request.args:
@@ -14396,7 +14396,7 @@ def trash_od_file(section, filename, current_project):
 @roles_required(['admin', 'developer'])
 def sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     next = request.args.get('next', url_for('playground_page', project=get_current_project()))
     auto_next = request.args.get('auto_next', None)
@@ -14421,7 +14421,7 @@ def sync_with_onedrive():
 @roles_required(['admin', 'developer'])
 def od_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     next_url = request.args.get('next', url_for('playground_page', project=current_project))
     auto_next_url = request.args.get('auto_next', None)
@@ -14545,7 +14545,7 @@ def add_br(text):
 @roles_required(['admin', 'developer'])
 def checkin_sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -14576,7 +14576,7 @@ def checkin_sync_with_google_drive():
 @roles_required(['admin', 'developer'])
 def checkin_sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -14607,7 +14607,7 @@ def checkin_sync_with_onedrive():
 @roles_required(['admin', 'developer'])
 def google_drive_page():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
         return redirect(url_for('user.profile'))
@@ -14734,7 +14734,7 @@ def gd_fix_subdirs(service, the_folder):
 @roles_required(['admin', 'developer'])
 def onedrive_page():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
         return redirect(url_for('user.profile'))
@@ -14899,7 +14899,7 @@ def config_page():
         with open(daconfig['config file'], 'rU', encoding='utf-8') as fp:
             content = fp.read()
     if content is None:
-        abort(404)
+        return ('File not found', 404)
     if PY2:
         disk_free = psutil.disk_usage('/').free
     else:
@@ -14928,7 +14928,7 @@ def view_source():
     current_project = get_current_project()
     if source_path is None:
         logmessage("view_source: no source path")
-        abort(404)
+        return ('File not found', 404)
     try:
         if re.search(r':', source_path):
             source = docassemble.base.parse.interview_source_from_string(source_path)
@@ -14939,7 +14939,7 @@ def view_source():
                 source = docassemble.base.parse.interview_source_from_string(source_path)
     except Exception as errmess:
         logmessage("view_source: no source: " + str(errmess))
-        abort(404)
+        return ('File not found', 404)
     header = source_path
     response = make_response(render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight dafullheight")))), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14948,7 +14948,7 @@ def view_source():
 @app.route('/playgroundstatic/<current_project>/<userid>/<filename>', methods=['GET'])
 def playground_static(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     the_directory = directory_for(area, current_project)
@@ -14957,14 +14957,14 @@ def playground_static(current_project, userid, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/playgroundmodules/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_modules(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundmodules')
     the_directory = directory_for(area, current_project)
@@ -14973,14 +14973,14 @@ def playground_modules(current_project, userid, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/playgroundsources/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_sources(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, current_project, filename)
@@ -14991,14 +14991,14 @@ def playground_sources(current_project, userid, filename):
         response = send_file(filename, mimetype=str(mimetype))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/playgroundtemplate/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_template(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     the_directory = directory_for(area, current_project)
@@ -15008,29 +15008,31 @@ def playground_template(current_project, userid, filename):
         response = send_file(filename, mimetype=str(mimetype))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/playgrounddownload/<current_project>/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_download(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     the_directory = directory_for(area, current_project)
-    filename = os.path.join(the_directory, filename)
-    if os.path.isfile(filename):
-        extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(filename, mimetype=str(mimetype))
+    path = os.path.join(the_directory, filename)
+    if os.path.isfile(path):
+        extension, mimetype = get_ext_and_mimetype(path)
+        response = send_file(path, mimetype=str(mimetype))
+        response.headers['Content-type'] = 'text/plain; charset=utf-8'
+        response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
-    abort(404)
+    return ('File not found', 404)
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
 def playground_office_functionfile():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     response = make_response(render_template('pages/officefunctionfile.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -15038,7 +15040,7 @@ def playground_office_functionfile():
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     defaultDaServer = url_for('rootindex', _external=True)
     response = make_response(render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -15049,7 +15051,7 @@ def playground_office_taskpane():
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     if request.args.get('fetchfiles', None):
         playground = SavedFile(current_user.id, fix=True, section='playground')
@@ -15130,7 +15132,7 @@ def cloud_trash(use_gd, use_od, section, the_file, current_project):
 @roles_required(['developer', 'admin'])
 def playground_files():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
         use_od = False
@@ -15585,7 +15587,7 @@ def playground_files():
 @roles_required(['developer', 'admin'])
 def pull_playground_package():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     form = PullPlaygroundPackage(request.form)
     if request.method == 'POST':
@@ -15652,9 +15654,9 @@ def pull_playground_package():
 @roles_required(['developer', 'admin'])
 def get_git_branches():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if 'url' not in request.args:
-        abort(404)
+        return ('File not found', 404)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -15787,7 +15789,7 @@ def fix_package_folder():
 @roles_required(['developer', 'admin'])
 def playground_packages():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     fix_package_folder()
     current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
@@ -16633,7 +16635,7 @@ def splitall(path):
 @roles_required(['developer', 'admin'])
 def playground_redirect_poll():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     key = 'da:runplayground:' + str(current_user.id)
     the_url = r.get(key)
     #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
@@ -16648,7 +16650,7 @@ def playground_redirect_poll():
 @roles_required(['developer', 'admin'])
 def playground_redirect():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     key = 'da:runplayground:' + str(current_user.id)
     counter = 0
     while counter < 15:
@@ -16660,7 +16662,7 @@ def playground_redirect():
             return redirect(the_url)
         time.sleep(1)
         counter += 1
-    abort(404)
+    return ('File not found', 404)
 
 def upload_js():
     return """
@@ -16937,13 +16939,16 @@ function activateVariables(){
 }
 
 var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+var shareBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
   if (currentProject == 'default'){
     $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', ':' + $("#daVariables").val()));
+    $("a.da-example-share").attr("href", shareBaseUrl.replace('%3A.yml', ':' + $("#daVariables").val()));
   }
   else{
     $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', currentProject + ':' + $("#daVariables").val()));
+    $("a.da-example-share").attr("href", shareBaseUrl.replace('%3A.yml', currentProject + ':' + $("#daVariables").val()));
   }
 }
 
@@ -16989,7 +16994,7 @@ function variablesReady(){
 def playground_variables():
     current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_directory = directory_for(playground, current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -17054,7 +17059,7 @@ def assign_opacity(files):
 @roles_required(['developer', 'admin'])
 def playground_page_run():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     current_project = get_current_project()
     the_file = request.args.get('file')
     if the_file:
@@ -17254,7 +17259,7 @@ def delete_variable_file(current_project):
 def playground_page():
     current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
         use_gd = False
@@ -18025,9 +18030,9 @@ def package_static(package, filename):
         filename = re.sub(r'\/\.+', '\/', filename)
         the_file = docassemble.base.functions.package_data_filename(str(package) + ':data/static/' + str(filename))
     except:
-        abort(404)
+        return ('File not found', 404)
     if the_file is None:
-        abort(404)
+        return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=str(mimetype))
     return(response)
@@ -18039,7 +18044,7 @@ def logfile(filename):
     if LOGSERVER is None:
         the_file = os.path.join(LOG_DIRECTORY, filename)
         if not os.path.isfile(the_file):
-            abort(404)
+            return ('File not found', 404)
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
@@ -18104,7 +18109,7 @@ def logs():
         if int(resp['status']) >= 200 and int(resp['status']) < 300:
             files = [f for f in content.decode().split("\n") if f != '' and f is not None]
         else:
-            abort(404)
+            return ('File not found', 404)
         if len(files):
             if the_file is None:
                 the_file = files[0]
@@ -18155,7 +18160,7 @@ def logs():
 @login_required
 def request_developer():
     if not app.config['ENABLE_PLAYGROUND']:
-        abort(404)
+        return ('File not found', 404)
     from docassemble.webapp.users.forms import RequestDeveloperForm
     form = RequestDeveloperForm(request.form)
     recipients = list()
@@ -19495,10 +19500,10 @@ def favicon_file(filename):
     the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
     if the_dir is None or not os.path.isdir(the_dir):
         logmessage("favicon_file: could not find favicon directory")
-        abort(404)
+        return('File not found', 404)
     the_file = os.path.join(the_dir, filename)
     if not os.path.isfile(the_file):
-        abort(404)
+        return('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=mimetype)
     return(response)
@@ -19538,7 +19543,7 @@ def favicon_browserconfig():
 def robots():
     the_file = docassemble.base.functions.package_data_filename(daconfig.get('robots', 'docassemble.webapp:data/static/robots.txt'))
     if the_file is None:
-        abort(404)
+        return('File not found', 404)
     response = send_file(the_file, mimetype='text/plain')
     return(response)
 
@@ -22416,7 +22421,7 @@ def api_playground():
 @login_required
 def manage_api():
     if not current_user.has_role(*daconfig.get('api privileges', ['admin', 'developer'])):
-        abort(404)
+        return ('File not found', 404)
     form = APIKey(request.form)
     action = request.args.get('action', None)
     api_key = request.args.get('key', None)

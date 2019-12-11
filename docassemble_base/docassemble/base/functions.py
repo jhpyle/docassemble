@@ -574,7 +574,7 @@ def set_parts(**kwargs):
     if 'tab' in kwargs:
         this_thread.internal['tab title'] = kwargs['tab']
     if 'subtitle' in kwargs:
-        this_thread.internal['sub'] = kwargs['subtitle']
+        this_thread.internal['subtitle'] = kwargs['subtitle']
     for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
         if key in ('title', 'logo', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label'):

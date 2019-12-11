@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.61] - 2019-12-11
+### Fixed
+- The `subtitle` screen part was not updated correctly by
+  `set_parts()`.
+- In the Playground, the "Share" link was not updated when the
+  "Variables, etc." file name changed.
+
 ## [0.5.60] - 2019-12-09
 ### Fixed
 - Issue with `supersedes`.
