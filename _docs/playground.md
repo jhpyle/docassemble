@@ -389,20 +389,24 @@ button and copy the URL to your clipboard.
 Note that users do not need to log in to be able to run interviews
 using these links.  If you want to protect your interviews during
 development, you can add an initial block like this, which will stop
-anyone other than a developer from using the interview:
+anyone other than a developer or administrator from using the
+interview:
 
 {% highlight yaml %}
----
-initial: True
-code: |
-  if not user_has_privilege('developer'):
-    message("Only developers can access this interview.", show_restart=False)
----
+metadata:
+  required privileges:
+    - admin
+    - developer
 {% endhighlight %}
 
 Note that the "Playground" is a development platform.  If you are
 going to put an interview into production, put it into a package.  You
-can create a package in the [packages area].
+can create a package in the [packages area].  If you share a link to a
+Playground interviews with someone, that person should understand that
+the interview might change at any moment, or produce an error.  The
+Playground is a development environment.  If you want to share a link
+that will be stable, install a package and share a link to the
+interview in that package.
 
 ## <a name="examples"></a>The examples area
 

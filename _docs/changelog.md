@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.61](https://github.com/jhpyle/docassemble/releases/tag/v0.5.61) - 2019-12-11
+
+### Fixed
+- The `subtitle` screen part was not updated correctly by
+  `set_parts()`.
+- In the Playground, the "Share" link was not updated when the
+  "Variables, etc." file name changed.
+
 ## [0.5.60](https://github.com/jhpyle/docassemble/releases/tag/v0.5.60) - 2019-12-09
 
 ### Fixed
