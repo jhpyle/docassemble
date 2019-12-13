@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.62](https://github.com/jhpyle/docassemble/releases/tag/v0.5.62) - 2019-12-12
+
+### Fixed
+- JavaScript error, introduced in 0.5.31, impeded embedded field
+  validation.
+- The `default interview` was ignored if a `dispatch` directive
+  existed.
+- Error in package listing when installing from GitHub.
+
 ## [0.5.61](https://github.com/jhpyle/docassemble/releases/tag/v0.5.61) - 2019-12-11
 
 ### Fixed

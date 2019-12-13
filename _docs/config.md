@@ -1374,7 +1374,7 @@ default interview: docassemble.base:data/questions/examples/attachment.yml
 If this directive is not set, **docassemble** will redirect to a page
 showing a [list of available interviews] determined by the
 [`dispatch`] directive.  However, if the [`dispatch`] directive is not
-defined, users will be directed to the demonstration interview,
+defined, users will be directed to a placeholder interview,
 `docassemble.base:data/questions/default-interview.yml`.
 
 ## <a name="log format"></a>Log format
