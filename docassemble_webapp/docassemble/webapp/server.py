@@ -2720,6 +2720,7 @@ def install_git_package(packagename, giturl, branch=None):
     return
 
 def install_pip_package(packagename, limitation):
+    #logmessage("install_pip_package: " + packagename + " " + str(limitation))
     existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
@@ -5287,7 +5288,7 @@ def rootindex():
         return redirect(url)
     yaml_filename = request.args.get('i', None)
     if yaml_filename is None:
-        if len(daconfig['dispatch']):
+        if 'default interview' not in daconfig and len(daconfig['dispatch']):
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
     the_args = dict()
@@ -7617,7 +7618,7 @@ def index(action_argument=None):
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
         var scrollTarget = null;
-        if (errors) {
+        if (errors && $(validator.errorList[0].element).parents('.form-group').length > 0) {
           if (daJsEmbed){
             scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
           }
@@ -10762,7 +10763,7 @@ def observer():
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
         var scrollTarget = null;
-        if (errors) {
+        if (errors && $(validator.errorList[0].element).parents('.form-group').length > 0) {
           if (daJsEmbed){
             scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
           }
@@ -12844,6 +12845,7 @@ def update_package():
                 packagename = re.sub(r'#.*', '', packagename)
                 packagename = re.sub(r'\.git$', '', packagename)
                 packagename = re.sub(r'.*/', '', packagename)
+                packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     if branch:
                         install_git_package(packagename, giturl, branch=branch)
@@ -22159,6 +22161,7 @@ def api_package():
             packagename = re.sub(r'#.*', '', packagename)
             packagename = re.sub(r'\.git$', '', packagename)
             packagename = re.sub(r'.*/', '', packagename)
+            packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
                 if branch:
                     install_git_package(packagename, github_url, branch=branch)

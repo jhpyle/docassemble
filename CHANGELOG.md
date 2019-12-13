@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.62] - 2019-12-12
+### Fixed
+- JavaScript error, introduced in 0.5.31, impeded embedded field
+  validation.
+- The `default interview` was ignored if a `dispatch` directive
+  existed.
+- Error in package listing when installing from GitHub.
+
 ## [0.5.61] - 2019-12-11
 ### Fixed
 - The `subtitle` screen part was not updated correctly by
