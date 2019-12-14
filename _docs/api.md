@@ -535,7 +535,7 @@ Responses on failure:
    have the extension `.pdf` or `.docx`.
  - [400] "No fields could be found." if the `format` is `yaml` and no
    fields could be detected in the file.
- 
+
 Response on success: [200]
 
 Body of response: a [JSON] list of field information, or a [YAML]
@@ -2037,6 +2037,247 @@ background task.  The keys are:
   the `error_message` will contain a [pip] log or other error message
   that may explain why the package update process did not succeed.
 
+## <a name="api_user_api_get"></a>Get information about the user's API keys
+
+Description: Provides information about the API keys of the user who
+is the owner of the API key.
+
+Path: `/api/user/api`
+
+Method: [GET]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `api_key` (optional): the API key for which information should be
+   retrieved.
+ - `name` (optional): the name of an API key for which information should be
+   retrieved.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Error accessing API information" if information about the
+   user's API keys could not be retrieved
+ - [404] "No such API key could be found." if `api_key` or `name` is
+   specified and no API key matching the description could be found.
+
+Response on success: [200]
+
+Body of response: if `api_key` or `name` was provided, the API will
+return a [JSON] object with the following keys:
+
+- `name`: the name of the API key.
+- `key`: the API key.
+- `method`: the method by which the API key controls access.  Can be
+  `ip` (accepting only requests from IP addresses specified in the
+  `constraints`), `referer` (accepting only requests for which the
+  `Referer` header matches one of the `constraints`), or `none` (all
+  requests accepted regardless of origin).
+- `constraints`: a list of allowed origins (applicable if `method` is
+  `ip` or `referer`).
+
+If neither `api_key` or `name` is provided, the API will return a
+[JSON] list of objects with the above keys, representing all of the
+API keys belonging to the user.
+
+## <a name="api_user_api_delete"></a>Delete an API key belonging to the user
+
+Description: Deletes an API key belonging to the user who is the owner
+of the API key used to access the API.
+
+Path: `/api/user/api`
+
+Method: [DELETE]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `api_key`: the API key that should be deleted.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "An API key must supplied" if no `api_key` is provided.
+ - [400] "Error deleting API key" if there was a problem deleting the
+   API key.
+
+Response on success: [204]
+
+Note that the API will return a success code even if the API key did
+not exist.
+
+Body of response: empty.
+
+## <a name="api_user_api_post"></a>Add a new API key for the user
+
+Description: Adds a new API key belonging to the user who
+is the owner of the API key that is used to access the API.
+
+Path: `/api/user/api`
+
+Method: [POST]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `name`: the name of the API key.  It cannot be longer than 255
+   characters and it must be unique for the user.
+ - `method` (optional): the method used to control access to the API
+   with the API key.  Can be `ip` (accepting only requests from IP
+   addresses specified in the `allowed`), `referer` (accepting only
+   requests for which the `Referer` header matches one of the
+   `allowed`), or `none` (all requests accepted).  The default is
+   `none`.
+ - `allowed` (optional): a [JSON] list of allowed IP addresses (where
+   `method` is `ip`) or URLs (if `method` is `referer`).  (If your
+   request has the `application/json` content type, you do not need to
+   convert the object to [JSON].)  If the `allowed` parameter is not
+   provided, it will default to an empty list.  This parameter is not
+   applicable if `method` is `none`.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "A name must be supplied" if a `name` was not provided.
+ - [400] "The name is invalid" is the `name` is longer than 255 characters.
+ - [400] "The given name already exists" if an API with the same name
+   as `name` already exists for the user.
+ - [400] "Invalid security method" if the `method` was not one of
+   `ip`, `referer`, or `none`.
+ - [400] "Allowed sites list not a valid list" if the `allowed` list
+   could not be parsed.
+ - [400] "Error creating API key" if there was an error creating the
+   API key.
+
+Response on success: [200]
+
+Body of response: a [JSON] string containing the new API key.
+
+## <a name="api_user_api_patch"></a>Update an API key for the user
+
+Description: Updates information about an API key belonging to the
+user who is the owner of the API key that is used to access the API.
+
+Path: `/api/user/api`
+
+Method: [PATCH]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `api_key` (optional): the name of the API key to modify.  The API
+   key must belong to the user who owns the API key that was used to
+   access the API.  If `api_key` is not provided, the API key that was
+   used to access the API key is used.
+ - `name` (optional): the new name of the API key.  It cannot be
+   longer than 255 characters and it must be unique for the user.
+ - `method` (optional): the new method that should be used to control
+   access to the API with the API key.  Can be `ip` (accepting only
+   requests from IP addresses specified in the `allowed`), `referer`
+   (accepting only requests for which the `Referer` header matches one
+   of the `allowed`), or `none` (all requests accepted).
+ - `allowed` (optional): a [JSON] list of allowed IP addresses (where
+   `method` is `ip`) or URLs (if `method` is `referer`).  This will
+   replace the existing list.
+ - `add_to_allowed` (optional): an item to be added to the list of origins from
+   which requests are allowed.  (Applicable if `method` is `ip` or
+   `referer`.)  This can also be expressed as a [JSON] list
+   of items.
+ - `remove_from_allowed` (optional): an item to be removed from the list of
+   origins from which requests are allowed.  (Applicable if `method`
+   is `ip` or `referer`.)  This can also be expressed as a [JSON] list
+   of items.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "No API key given" if the `api_key` parameter is missing.
+ - [400] "The given API key cannot be modified" if the API key given
+   by `api_key` does not exist, or does not belong to the user.
+ - [400] "The name is invalid" is the `name` is longer than 255 characters.
+ - [400] "Invalid security method" if the `method` was not one of
+   `ip`, `referer`, or `none`.
+ - [400] "add_to_allowed is not a valid list" if the `add_to_allowed`
+   parameter appeared to be a [JSON] list but could not be parsed as
+   one.
+ - [400] "remove_from_allowed is not a valid list" if the
+   `remove_from_allowed` parameter appeared to be a [JSON] list but
+   could not be parsed as one.
+ - [400] "Allowed sites list not a valid list" if the `allowed` list
+   could not be parsed.
+ - [400] "Error updating API key" if there was an error updating the
+   API key.
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="api_user_user_id_api_get"></a>Get information about a given user's API keys
+
+Description: Provides information about the API keys of a particular user.
+
+Path: `/api/user/<user_id>/api`
+
+Method: [GET]
+
+This behaves just like the [GET method of `/api/user/api`](#api_user_api_get),
+except it retrieves the API keys (or a single API key) of the user
+given by `user_id`.
+
+Required privileges: `admin`, or the API owner's user ID is the same
+as `user_id`.
+
+## <a name="api_user_user_id_api_delete"></a>Delete an API key belonging to a given user
+
+Description: Deletes an API key belonging to the user with the given
+user ID.
+
+Path: `/api/user/<user_id>/api`
+
+Method: [DELETE]
+
+This behaves just like the [DELETE method of `/api/user/api`](#api_user_api_delete),
+except it deletes an API key of the user given by `user_id`.
+
+Required privileges: `admin`, or the API owner's user ID is the same
+as `user_id`.
+
+## <a name="api_user_user_id_api_post"></a>Add a new API key for a given user
+
+Description: Adds a new API key belonging to a given user.
+
+Path: `/api/user/<user_id>/api`
+
+Method: [POST]
+
+This behaves just like the [POST method of `/api/user/api`](#api_user_api_post),
+except it adds an API key belonging to the user given by `user_id`.
+
+Required privileges: `admin`, or the API owner's user ID is the same
+as `user_id`.
+
+## <a name="api_user_user_id_api_patch"></a>Update an API key for a given user
+
+Description: Updates information about an API key belonging to the
+user with the given user ID.
+
+Path: `/api/user/<user_id>/api`
+
+Method: [PATCH]
+
+This behaves just like the [PATCH method of `/api/user/api`](#api_user_api_patch),
+except it modifies an API key belonging to the user given by
+`user_id`.  Another difference is that the `api_key` parameter is
+required rather than optional.
+
+Required privileges: `admin`, or the API owner's user ID is the same
+as `user_id`.
+
 # <a name="questionless"></a>Example of usage: questionless interview
 
 One way to use the API is to use **docassemble** as nothing more than
@@ -2135,6 +2376,7 @@ function.
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [DELETE]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE
+[PATCH]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PATCH
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`api privileges`]: {{ site.baseurl }}/docs/config.html#api privileges
 [Application Program Interface]: https://en.wikipedia.org/wiki/Application_programming_interface

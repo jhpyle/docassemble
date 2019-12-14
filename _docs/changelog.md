@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.63](https://github.com/jhpyle/docassemble/releases/tag/v0.5.63) - 2019-12-14
+
+### Added
+- API endpoints for managing API keys.
+
 ## [0.5.62](https://github.com/jhpyle/docassemble/releases/tag/v0.5.62) - 2019-12-12
 
 ### Fixed
