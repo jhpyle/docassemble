@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.63] - 2019-12-14
+### Added
+- API endpoints for managing API keys.
+
 ## [0.5.62] - 2019-12-12
 ### Fixed
 - JavaScript error, introduced in 0.5.31, impeded embedded field

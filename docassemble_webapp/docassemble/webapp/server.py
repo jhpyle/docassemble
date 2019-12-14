@@ -20298,7 +20298,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     #logmessage(str(form))
     return resp
 
-def api_verify(req, roles=None):
+def get_api_key():
     api_key = request.args.get('key', None)
     if api_key is None and request.method == 'POST':
         post_data = request.get_json(silent=True)
@@ -20310,6 +20310,10 @@ def api_verify(req, roles=None):
         api_key = request.cookies['X-API-Key']
     if api_key is None and 'X-API-Key' in request.headers:
         api_key = request.headers['X-API-Key']
+    return api_key
+
+def api_verify(req, roles=None):
+    api_key = get_api_key()
     if api_key is None:
         logmessage("api_verify: no API key provided")
         return False
@@ -22420,6 +22424,237 @@ def api_playground():
             restart_all()
         return ('', 204)
 
+def add_api_key(user_id, name, method, allowed):
+    info = dict(constraints=allowed, method=method, name=name)
+    success = False
+    for attempt in range(10):
+        api_key = random_alphanumeric(32)
+        if not len(r.keys('da:api:userid:*:key:' + api_key + ':info')):
+            r.set('da:api:userid:' + str(user_id) + ':key:' + api_key + ':info', json.dumps(info))
+            success = True
+            break
+    if not success:
+        return None
+    return api_key
+
+def api_key_exists(user_id, api_key):
+    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:' + str(api_key) + ':info')
+    if len(rkeys):
+        return True
+    return False
+
+def existing_api_names(user_id, except_for=None):
+    result = list()
+    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:*:info')
+    for key in rkeys:
+        key = key.decode()
+        if except_for is not None:
+            api_key = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
+            if api_key == except_for:
+                continue
+        try:
+            info = json.loads(r.get(key).decode())
+            result.append(info['name'])
+        except:
+            continue
+    return result
+
+def get_api_info(user_id, name=None, api_key=None):
+    result = list()
+    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:*:info')
+    for key in rkeys:
+        key = key.decode()
+        try:
+            info = json.loads(r.get(key).decode())
+        except:
+            logmessage("API information could not be unpacked.")
+            continue
+        info['key'] = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
+        if name is not None:
+            if info['name'] == name:
+                return info
+        if api_key is not None:
+            if info['key'] == api_key:
+                return info
+        if name is not None or api_key is not None:
+            continue
+        result.append(info)
+    if name is not None or api_key is not None:
+        return None
+    return result
+
+def delete_api_key(user_id, api_key):
+    key = 'da:api:userid:' + str(user_id) + ':key:' + api_key + ':info'
+    r.delete(key)
+
+def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed):
+    key = 'da:api:userid:' + str(user_id) + ':key:' + api_key + ':info'
+    try:
+        info = json.loads(r.get(key).decode())
+    except:
+        return False
+    if name is not None:
+        info['name'] = name
+    if method is not None:
+        if info['method'] != method:
+            info['constraints'] = list()
+        info['method'] = method
+    if allowed is not None:
+        info['constraints'] = allowed
+    if add_to_allowed is not None:
+        if isinstance(add_to_allowed, list):
+            info['constraints'].extend(add_to_allowed)
+        elif isinstance(add_to_allowed, string_types):
+            info['constraints'].append(add_to_allowed)
+    if remove_from_allowed is not None:
+        if isinstance(remove_from_allowed, list):
+            to_remove = remove_from_allowed
+        elif isinstance(remove_from_allowed, string_types):
+            to_remove = [remove_from_allowed]
+        else:
+            to_remove = list()
+        for item in to_remove:
+            if item in info['constraints']:
+                info['constraints'].remove(item)
+    r.set(key, json.dumps(info))
+    return True
+
+def do_api_user_api(user_id):
+    if request.method == 'GET':
+        name = request.args.get('name', None)
+        api_key = request.args.get('api_key', None)
+        try:
+            result = get_api_info(user_id, name=name, api_key=api_key)
+        except:
+            return jsonify_with_status("Error accessing API information", 400)
+        if (name is not None or api_key is not None) and result is None:
+            return jsonify_with_status("No such API key could be found.", 404)
+        return jsonify(result)
+    if request.method == 'DELETE':
+        api_key = request.args.get('api_key', None)
+        if api_key is None:
+            return jsonify_with_status("An API key must supplied", 400)
+        try:
+            delete_api_key(user_id, api_key)
+        except:
+            return jsonify_with_status("Error deleting API key", 400)
+        return ('', 204)
+    if request.method == 'POST':
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
+        name = post_data.get('name', None)
+        method = post_data.get('method', 'none')
+        if method not in ('ip', 'referer', 'none'):
+            return jsonify_with_status("Invalid security method", 400)
+        allowed = post_data.get('allowed', list())
+        if isinstance(allowed, string_types):
+            try:
+                allowed = json.loads(allowed)
+            except:
+                return jsonify_with_status("Allowed sites list not a valid list", 400)
+        if not isinstance(allowed, list):
+            return jsonify_with_status("Allowed sites list not a valid list", 400)
+        try:
+            for item in allowed:
+                assert isinstance(item, string_types)
+        except:
+            return jsonify_with_status("Allowed sites list not a valid list", 400)
+        if name is None:
+            return jsonify_with_status("A name must be supplied", 400)
+        if name in existing_api_names(user_id):
+            return jsonify_with_status("The given name already exists", 400)
+        if len(name) > 255:
+            return jsonify_with_status("The name is invalid", 400)
+        new_api_key = add_api_key(user_id, name, method, allowed)
+        if new_api_key is None:
+            return jsonify_with_status("Error creating API key", 400)
+        else:
+            return jsonify(new_api_key)
+    if request.method == 'PATCH':
+        if current_user.id == user_id:
+            api_key = request.args.get('api_key', get_api_key())
+        else:
+            api_key = request.args.get('api_key', None)
+            if api_key is None:
+                return jsonify_with_status("No API key given", 400)
+        if not api_key_exists(user_id, api_key):
+            return jsonify_with_status("The given API key cannot be modified", 400)
+        name = request.args.get('name', None)
+        if name is not None:
+            if name in existing_api_names(user_id, except_for=api_key):
+                return jsonify_with_status("The given name already exists", 400)
+            if len(name) > 255:
+                return jsonify_with_status("The name is invalid", 400)
+        method = request.args.get('method', None)
+        if method is not None:
+            if method not in ('ip', 'referer', 'none'):
+                return jsonify_with_status("Invalid security method", 400)
+        allowed = request.args.get('allowed', None)
+        add_to_allowed = request.args.get('add_to_allowed', None)
+        if add_to_allowed is not None:
+            if add_to_allowed.startswith('['):
+                try:
+                    add_to_allowed = json.loads(add_to_allowed)
+                    for item in add_to_allowed:
+                        assert isinstance(item, string_types)
+                except:
+                    return jsonify_with_status("add_to_allowed is not a valid list", 400)
+        remove_from_allowed = request.args.get('remove_from_allowed', None)
+        if remove_from_allowed is not None:
+            if remove_from_allowed.startswith('['):
+                try:
+                    remove_from_allowed = json.loads(remove_from_allowed)
+                    for item in remove_from_allowed:
+                        assert isinstance(item, string_types)
+                except:
+                    return jsonify_with_status("remove_from_allowed is not a valid list", 400)
+        if allowed is not None:
+            if isinstance(allowed, string_types):
+                try:
+                    allowed = json.loads(allowed)
+                except:
+                    return jsonify_with_status("Allowed sites list not a valid list", 400)
+            if not isinstance(allowed, list):
+                return jsonify_with_status("Allowed sites list not a valid list", 400)
+            try:
+                for item in allowed:
+                    assert isinstance(item, string_types)
+            except:
+                return jsonify_with_status("Allowed sites list not a valid list", 400)
+        result = update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed)
+        if not result:
+            return jsonify_with_status("Error updating API key", 400)
+        return ('', 204)
+
+@app.route('/api/user/api', methods=['GET', 'POST', 'DELETE', 'PATCH'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'PATCH', 'HEAD'], automatic_options=True)
+def api_user_api():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    return do_api_user_api(current_user.id)
+
+@app.route('/api/user/<int:user_id>/api', methods=['GET', 'POST', 'DELETE', 'PATCH'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'PATCH', 'HEAD'], automatic_options=True)
+def api_user_userid_api(user_id):
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_id = int(user_id)
+    except:
+        return jsonify_with_status("User ID must be an integer.", 400)
+    if not (current_user.id == user_id or current_user.has_role('admin')):
+        return jsonify_with_status("Access denied.", 403)
+    try:
+        user_info = get_user_info(user_id=user_id)
+    except Exception as err:
+        return jsonify_with_status("Error obtaining user information: " + str(err), 400)
+    if user_info is None:
+        return jsonify_with_status("User not found.", 404)
+    return do_api_user_api(user_id)
+
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
 def manage_api():
@@ -22560,7 +22795,7 @@ def manage_api():
             existing_key = existing_key.decode()
             if form.delete.data:
                 r.delete(rkey)
-                flash(word("The key was deleted"), 'error')
+                flash(word("The key was deleted"), 'info')
             else:
                 try:
                     info = json.loads(existing_key)
