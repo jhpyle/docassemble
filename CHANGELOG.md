@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.64] - 2019-12-15
+### Fixed
+- Back button after `url_args` are set repeated the setting of the
+  `url_args`.
+- The `resume interview after login` feature did not work correctly
+  with the default menu.
+
 ## [0.5.63] - 2019-12-14
 ### Added
 - API endpoints for managing API keys.

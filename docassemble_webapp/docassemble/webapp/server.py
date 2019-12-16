@@ -2392,7 +2392,7 @@ def release_lock(user_code, filename):
     #sys.stderr.write("obtain_lock: releasing " + key + "\n")
     r.delete(key)
 
-def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=None):
+def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
             inverse = 'navbar-dark bg-dark '
@@ -2415,11 +2415,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
 """
         else:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     navbar += """\
         <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
@@ -2482,7 +2482,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
     else:
         sign_in_text = word('Sign in to save answers')
     if daconfig.get('resume interview after login', False):
-        login_url = url_for('user.login', next=url_for('index', i=docassemble.base.functions.this_thread.current_info['yaml_filename']))
+        login_url = url_for('user.login', next=url_for('index', **index_params))
     else:
         login_url = url_for('user.login')
     if show_login:
@@ -2490,7 +2490,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, extra_class=No
             if custom_menu:
                 navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
-                navbar += '            <li class="nav-item"><a class="nav-link" href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>'
+                navbar += '            <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
                 navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
@@ -9918,9 +9918,9 @@ def index(action_argument=None):
             append_javascript += additional_css(interview_status, js_only=True)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     if interview_status.question.interview.options.get('hide navbar', False):
-        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, extra_class='dainvisible')
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
     else:
-        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode)
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         output += the_nav_bar
