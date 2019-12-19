@@ -40,9 +40,9 @@ else:
 
 redis_offset = daconfig.get('redis database offset', redis_db)
 
-r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
-r_store = redis.StrictRedis(host=redis_host, port=redis_port, db=1 + redis_offset)
-r_user = redis.StrictRedis(host=redis_host, port=redis_port, db=2 + redis_offset)
+r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password)
+r_store = redis.StrictRedis(host=redis_host, port=redis_port, db=1 + redis_offset, password=redis_password)
+r_user = redis.StrictRedis(host=redis_host, port=redis_port, db=2 + redis_offset, password=redis_password)
 
 # def clear_user_cache(user_id=None):
 #     if user_id is None:

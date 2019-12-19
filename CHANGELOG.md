@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.66] - 2019-12-19
+### Fixed
+- Issue with Redis and passwords.
+
 ## [0.5.65] - 2019-12-19
 ### Added
 - The `DAWeb` object.
