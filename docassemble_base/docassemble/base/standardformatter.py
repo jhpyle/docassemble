@@ -2348,9 +2348,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     the_step = ''
                 if 'scale' in field.extras and 'scale' in status.extras and field.number in status.extras['scale']:
-                    the_step = ' data-slider-scale="' + str(status.extras['scale'][field.number]) + '"'
-                else:
-                    the_step = ''
+                    the_step += ' data-slider-scale="' + str(status.extras['scale'][field.number]) + '"'
                 max_string = str(float(status.extras['max'][field.number]))
                 min_string = str(float(status.extras['min'][field.number]))
                 if embedded:

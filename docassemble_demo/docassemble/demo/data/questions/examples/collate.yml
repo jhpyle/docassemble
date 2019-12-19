@@ -1,0 +1,70 @@
+metadata:
+  title: Collating
+  short: Collate
+  documentation: "https://docassemble.org/docs/recipes.html#collate"
+  example start: 1
+  example end: 8
+---
+objects:
+  - favorite: DADict.using(object_type=DAObject, keys=['fruit', 'vegetable', 'fungus'], gathered=True)
+  - cover_page: DAList
+---
+question: |
+  What is your favorite ${ i }?
+fields:
+  - "${ capitalize(i) }": favorite[i].variety
+  - "Do you have documentation of this?": favorite[i].has_documentation
+    datatype: yesnoradio
+  - "Attach documentation": favorite[i].documentation
+    datatype: file
+    show if: favorite[i].has_documentation
+---
+attachment:
+  variable name: summary_document
+  content: |
+    [BOLDCENTER] Your Favorite Things
+    
+    % for key, val in favorite.items():
+    Your favorite ${ key } is
+    ${ val.variety }.
+    % if val.has_documentation:
+    See Exhibit
+    ${ alpha(val.documentation_reference) }.
+    % endif
+    
+    % endfor
+---
+attachment:
+  variable name: cover_page[i]
+  docx template file: exhibit_insert.docx
+---
+mandatory: True
+code: |
+  information_gathered
+  bundle
+  final_screen
+---
+code: |
+  indexno = 0
+  for item in favorite.values():
+    item.variety
+    if item.has_documentation:
+      item.documentation
+      item.documentation_reference = indexno
+      indexno += 1
+  information_gathered = True
+---
+code: |
+  document_list = list()
+  document_list.append(summary_document)
+  for item in favorite.values():
+    if item.has_documentation:
+      document_list.append(cover_page[item.documentation_reference])
+      document_list.append(item.documentation)
+  bundle = pdf_concatenate(document_list, filename="Favorites.pdf")
+---
+event: final_screen
+question: |
+  Your documents
+subquestion: |
+  ${ action_button_html(bundle.url_for(), color='link', label='Download bundle', icon='file-pdf') }

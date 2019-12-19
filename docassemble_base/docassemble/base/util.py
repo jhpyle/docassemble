@@ -21,7 +21,7 @@ if PY2:
 else:
     import pickle
 from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError, DAIndexError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
 from jinja2.runtime import UndefinedError
 
 import docassemble.base.pandoc
@@ -53,10 +53,13 @@ import subprocess
 from io import open
 from bs4 import BeautifulSoup
 import types
+import requests
+from requests.auth import HTTPDigestAuth, HTTPBasicAuth
+from requests.exceptions import RequestException
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status', 'verbatim']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status', 'verbatim', 'DAWeb', 'DAWebError']
 
 #knn_machine_learner = DummyObject
 
@@ -106,6 +109,242 @@ class DAStore(DAObject):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key
         server.server_sql_delete(the_key)
+
+class DAWeb(DAObject):
+    """A class used to call external APIs"""
+    def _get_base_url(self):
+        if hasattr(self, 'base_url'):
+            base_url = self.base_url
+            if not isinstance(self.base_url, string_types):
+                raise Exception("DAWeb.call: the base url must be a string")
+            if not base_url.endswith('/'):
+                base_url += '/'
+            return base_url
+        return self.base_url
+    def _get_on_failure(self, on_failure):
+        if on_failure is None and hasattr(self, 'on_failure'):
+            on_failure = self.on_failure
+        return on_failure
+    def _get_success_code(self, success_code):
+        if success_code is None and hasattr(self, 'success_code'):
+            success_code = self.success_code
+        return success_code
+    def _get_on_success(self, on_success):
+        if on_success is None and hasattr(self, 'on_success'):
+            on_success = self.on_success
+        return on_success
+    def _get_task(self, task):
+        if task is None and hasattr(self, 'task'):
+            task = self.task
+        if task is None:
+            return None
+        if not isinstance(task, string_types):
+            raise Exception("DAWeb.call: task must be a string")
+        return task
+    def _get_auth(self, auth):
+        if auth is None and hasattr(self, 'auth'):
+            auth = self.auth
+        if isinstance(auth, (dict, DADict)):
+            if auth.get('type', 'basic') == 'basic':
+                return HTTPBasicAuth(auth['username'], auth['password'])
+            elif auth['type'] == 'digest':
+                return HTTPDigestAuth(auth['username'], auth['password'])
+        return auth
+    def _get_headers(self, new_headers):
+        if hasattr(self, 'headers'):
+            headers = self.headers
+            if isinstance(headers, DADict):
+                headers = headers.elements
+            if not isinstance(headers, dict):
+                raise Exception("DAWeb.call: the headers must be a dictionary")
+            headers.update(new_headers)
+            return headers
+        return new_headers
+    def _get_cookies(self, new_cookies):
+        if hasattr(self, 'cookies'):
+            cookies = self.cookies
+            if isinstance(cookies, DADict):
+                cookies = cookies.elements
+            if not isinstance(cookies, dict):
+                raise Exception("DAWeb.call: the cookies must be a dictionary")
+            cookies.update(new_cookies)
+            return cookies
+        return new_cookies
+    def _get_json_body(self, json_body):
+        if json_body is not None:
+            return True if json_body else False
+        if hasattr(self, 'json_body'):
+            return True if self.json_body else False
+        return True
+    def _call(self, url, method=None, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, task=None, files=None, cookies=None, success_code=None):
+        task = self._get_task(task)
+        auth = self._get_auth(auth)
+        json_body = self._get_json_body(json_body)
+        on_failure = self._get_on_failure(on_failure)
+        on_success = self._get_on_success(on_success)
+        success_code = self._get_success_code(success_code)
+        if isinstance(success_code, (list, set, tuple, DASet, DAList)):
+            new_success_code = list()
+            for code in success_code:
+                if not isinstance(code, int):
+                    raise Exception("DAWeb.call: success codes must be integers")
+                new_success_code.append(code)
+            success_code = new_success_code
+        elif isinstance(success_code, int):
+            success_code = [success_code]
+        elif success_code is not None:
+            raise Exception("DAWeb.call: success_code must be an integer or a list of integers")
+        if method is None:
+            method = 'GET'
+        if not isinstance(method, string_types):
+            raise Exception("DAWeb.call: the method must be a string")
+        method = method.upper().strip()
+        if method not in ('POST', 'GET', 'PATCH', 'PUT', 'HEAD', 'DELETE', 'OPTIONS'):
+            raise Exception("DAWeb.call: invalid method")
+        if not isinstance(url, string_types):
+            raise Exception("DAWeb.call: the url must be a string")
+        if not re.search(r'^https?://', url):
+            url = self._get_base_url() + re.sub(r'^/*', '', url)
+        if data is None:
+            data = dict()
+        if isinstance(data, DADict):
+            data = data.elements
+        if json_body is False and not isinstance(data, dict):
+            raise Exception("DAWeb.call: data must be a dictionary")
+        if params is None:
+            params = dict()
+        if isinstance(params, DADict):
+            params = params.elements
+        if not isinstance(params, dict):
+            raise Exception("DAWeb.call: params must be a dictionary")
+        if headers is None:
+            headers = dict()
+        if isinstance(headers, DADict):
+            headers = headers.elements
+        if not isinstance(headers, dict):
+            raise Exception("DAWeb.call: the headers must be a dictionary")
+        headers = self._get_headers(headers)
+        if len(headers) == 0:
+            headers = None
+        if cookies is None:
+            cookies = dict()
+        if isinstance(cookies, DADict):
+            cookies = cookies.elements
+        if not isinstance(cookies, dict):
+            raise Exception("DAWeb.call: the cookies must be a dictionary")
+        cookies = self._get_cookies(cookies)
+        if len(cookies) == 0:
+            cookies = None
+        if isinstance(data, dict) and len(data) == 0:
+            data = None
+        if files is not None:
+            if not isinstance(files, dict):
+                raise Exception("DAWeb.call: files must be a dictionary")
+            new_files = dict()
+            for key, val in files.items():
+                if not isinstance(key, string_types):
+                    raise Exception("DAWeb.call: files must be a dictionary of string keys")
+                try:
+                    path = server.path_from_reference(val)
+                    logmessage("path is " + str(path))
+                    assert path is not None
+                except:
+                    raise Exception("DAWeb.call: could not load the file")
+                new_files[key] = open(path, 'rb')
+            files = new_files
+            if len(files):
+                json_body = False
+        try:
+            if method == 'POST':
+                if json_body:
+                    r = requests.post(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.post(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PUT':
+                if json_body:
+                    r = requests.put(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.put(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PATCH':
+                if json_body:
+                    r = requests.patch(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.patch(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'GET':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.get(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'DELETE':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.delete(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'OPTIONS':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.options(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'HEAD':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.head(url, params=params, headers=headers, auth=auth, cookies=cookies)
+        except RequestException as err:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=-1, response_text='', response_json=None, response_headers=dict(), exception_type=err.__class__.__name__, exception_text=text_type(err), cookies_before=cookies, cookies_after=None)
+            else:
+                return on_failure
+        if success_code is None:
+            if r.status_code >= 200 and r.status_code < 300:
+                success = True
+            else:
+                success = False
+        else:
+            if r.status_code in success_code:
+                success = True
+            else:
+                success = False
+        if hasattr(self, 'cookies'):
+            self.cookies = dict(r.cookies)
+        try:
+            json_response = r.json()
+        except:
+            json_response = None
+        if success and task is not None:
+            mark_task_as_performed(task)
+        if not success:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_failure
+        if success and on_success is not None:
+            if on_success == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_success
+        return(json_response if json_response is not None else r.text)
+    def get(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a GET request"""
+        return self._call(url, method='GET', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def post(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a POST request"""
+        return self._call(url, method='POST', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def put(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a PUT request"""
+        return self._call(url, method='PUT', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def patch(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a PATCH request"""
+        return self._call(url, method='PATCH', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def delete(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a DELETE request"""
+        return self._call(url, method='DELETE', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def options(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes an OPTIONS request"""
+        return self._call(url, method='OPTIONS', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def head(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a HEAD request"""
+        return self._call(url, method='HEAD', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
 
 class DARedis(DAObject):
     """A class used to interact with the redis server."""
@@ -2286,7 +2525,7 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or isinstance(target, list):
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or isinstance(target, list):
         for the_file in target:
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):

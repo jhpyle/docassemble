@@ -126,9 +126,9 @@ extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 #match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 #match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile('\[B?\'.*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[u?B?\'[^\]]+\'\])$')
-match_inside_brackets = re.compile('\[u?(B?)\'([^\]]+)\'\]')
+match_brackets = re.compile('\[u?B?\'[^\]]*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[u?B?\'[^\]]*\'\])$')
+match_inside_brackets = re.compile('\[u?(B?)\'([^\]]*)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]*')
 valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]*')
 
@@ -854,7 +854,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -5908,7 +5908,11 @@ def index(action_argument=None):
             try:
                 key = match.group(1)
             except:
-                raise DAError("index: invalid bracket name " + text_type(match.group(1)))
+                try:
+                    error_message = "index: invalid bracket name " + text_type(match.group(1)) + " in " + repr(key)
+                except:
+                    error_message = "index: invalid bracket name in " + repr(key)
+                raise DAError(error_message)
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
@@ -14918,7 +14922,7 @@ def config_page():
         version = word("Version ") + text_type(python_version)
     else:
         version = word("Version ") + text_type(python_version) + ' (Python); ' + text_type(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200)
+    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -20300,7 +20304,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
 
 def get_api_key():
     api_key = request.args.get('key', None)
-    if api_key is None and request.method == 'POST':
+    if api_key is None and request.method in ('POST', 'PUT', 'PATCH'):
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
@@ -22572,26 +22576,29 @@ def do_api_user_api(user_id):
         else:
             return jsonify(new_api_key)
     if request.method == 'PATCH':
+        patch_data = request.get_json(silent=True)
+        if patch_data is None:
+            patch_data = request.form.copy()
         if current_user.id == user_id:
-            api_key = request.args.get('api_key', get_api_key())
+            api_key = patch_data.get('api_key', get_api_key())
         else:
-            api_key = request.args.get('api_key', None)
+            api_key = patch_data.get('api_key', None)
             if api_key is None:
                 return jsonify_with_status("No API key given", 400)
         if not api_key_exists(user_id, api_key):
             return jsonify_with_status("The given API key cannot be modified", 400)
-        name = request.args.get('name', None)
+        name = patch_data.get('name', None)
         if name is not None:
             if name in existing_api_names(user_id, except_for=api_key):
                 return jsonify_with_status("The given name already exists", 400)
             if len(name) > 255:
                 return jsonify_with_status("The name is invalid", 400)
-        method = request.args.get('method', None)
+        method = patch_data.get('method', None)
         if method is not None:
             if method not in ('ip', 'referer', 'none'):
                 return jsonify_with_status("Invalid security method", 400)
-        allowed = request.args.get('allowed', None)
-        add_to_allowed = request.args.get('add_to_allowed', None)
+        allowed = patch_data.get('allowed', None)
+        add_to_allowed = patch_data.get('add_to_allowed', None)
         if add_to_allowed is not None:
             if add_to_allowed.startswith('['):
                 try:
@@ -22600,7 +22607,7 @@ def do_api_user_api(user_id):
                         assert isinstance(item, string_types)
                 except:
                     return jsonify_with_status("add_to_allowed is not a valid list", 400)
-        remove_from_allowed = request.args.get('remove_from_allowed', None)
+        remove_from_allowed = patch_data.get('remove_from_allowed', None)
         if remove_from_allowed is not None:
             if remove_from_allowed.startswith('['):
                 try:
@@ -23064,6 +23071,31 @@ def page_after_login():
                 return page
     return 'interview_list'
 
+def path_from_reference(file_reference):
+    if isinstance(file_reference, DAFileCollection):
+        file_reference = file_reference._first_file()
+    if isinstance(file_reference, DAFileList):
+        file_reference = file_reference[0]
+    if isinstance(file_reference, DAFile):
+        file_info = get_info_from_file_number_with_uids(file_reference.number)
+        if 'fullpath' not in file_info:
+            raise Exception("File not found")
+        path = file_info['fullpath']
+        friendly_path = os.path.join(tempfile.mkdtemp(prefix='SavedFile'), file_reference.filename)
+        try:
+            os.symlink(file_info['fullpath'], friendly_path)
+        except:
+            shutil.copyfile(file_info['fullpath'], friendly_path)
+        return friendly_path
+    if isinstance(file_reference, DAStaticFile):
+        return file_reference.path()
+    if file_reference is None:
+        return None
+    file_info = get_info_from_file_reference(file_reference)
+    if 'fullpath' not in file_info:
+        raise Exception("File not found")
+    return file_info['fullpath']
+
 def secure_filename(filename):
     filename = werkzeug.secure_filename(filename)
     extension, mimetype = get_ext_and_mimetype(filename)
@@ -23479,6 +23511,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          fix_pickle_obj=fix_pickle_obj,
                                          main_page_parts=main_page_parts,
                                          SavedFile=SavedFile,
+                                         path_from_reference=path_from_reference,
                                          button_class_prefix=app.config['BUTTON_STYLE'])
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)

@@ -5773,7 +5773,7 @@ class Interview:
                         missingVariable = extract_missing_name(the_exception)
                     variables_sought.add(missingVariable)
                     question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc, seeking_question=seeking_question)
-                    if question_result['type'] == 'continue':
+                    if question_result['type'] in ('continue', 're_run'):
                         continue
                     elif question_result['type'] == 'refresh':
                         pass
@@ -5790,7 +5790,7 @@ class Interview:
                     #logmessage("extracted " + missingVariable)
                     variables_sought.add(missingVariable)
                     question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
-                    if question_result['type'] == 'continue':
+                    if question_result['type'] in ('continue', 're_run'):
                         continue
                     elif question_result['type'] == 'refresh':
                         pass
@@ -6401,7 +6401,9 @@ class Interview:
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
                 #logmessage("forcedrerun")
-                continue
+                docassemble.base.functions.pop_current_variable()
+                docassemble.base.functions.pop_event_stack(origMissingVariable)
+                return({'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
             except (NameError, DAAttributeError, DAIndexError) as the_exception:
                 if 'pending_error' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['pending_error']

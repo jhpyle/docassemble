@@ -261,3 +261,8 @@ class CommandError(Exception):
         self.sleep = kwargs.get('sleep', None)
     def __str__(self):
         return str(self.return_type)
+
+class DAWebError(Exception):
+    def __init__(self, **kwargs):
+        for key, val in kwargs.items():
+            setattr(self, key, val)
