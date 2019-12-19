@@ -3054,7 +3054,12 @@ redis: redis://192.168.0.2
 
 The `redis` directive needs to be written in the form of a
 [redis URI].  To specify a non-standard port, use the form
-`redis://192.168.0.2:7000`.
+`redis://192.168.0.2:7000`.  To specify a password, use the form
+`redis://:xxsecretxx@192.168.0.2` or
+`redis://192.168.0.2?password=xxsecretxx`.  You can specify a
+username along with the password
+(`redis://jsmith:xxsecretxx@192.168.0.2`), but [Redis] does not use
+usernames, so it will be ignored.
 
 If you are using [Docker] with [S3] or [Azure blob storage], and you
 omit the `redis` directive or set it to `null`, then **docassemble**
@@ -3062,8 +3067,8 @@ will automatically find the hostname of the central redis server in
 cloud storage.
 
 **docassemble** uses three [Redis] "databases."  By default, it uses
-0, 1, and 2.  If you want it to use different database numbers, you
-can set `redis database offset` to a number.
+databases 0, 1, and 2.  If you want it to use different database
+numbers, you can set `redis database offset` to a number.
 
 {% highlight yaml %}
 redis database offset: 3
@@ -3071,6 +3076,13 @@ redis database offset: 3
 
 In this case, **docassemble** will use databases 3, 4, and 5 instead
 of 0, 1, and 2.
+
+If you reference a database number in your URI (e.g., using
+`redis://192.168.0.2?db=1` or `redis://192.168.0.2/1`), then the
+referenced database will be used as the `redis database offset`.
+However, if you also include `redis database offset` in your
+Configuration, the value of `redis database offset` will override
+whatever is specified in the URI.
 
 ## <a name="rabbitmq"></a>RabbitMQ server location
 

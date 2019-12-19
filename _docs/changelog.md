@@ -4,6 +4,30 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.65](https://github.com/jhpyle/docassemble/releases/tag/v0.5.65) - 2019-12-19
+
+### Added
+- The `DAWeb` object.
+- The Configuration page now reports the underlying Python version.
+
+### Fixed
+- The `PATCH` endpoints for API-related API calls only accepted URL
+  parameters.
+- The `step` specifier for `datatype: range` fields was not effective.
+- The `re_run_logic()` function did not re-run from the start of the
+  interview logic in all situations.
+- The `redis` directive in the Configuration did not support
+  passwords.
+- A checkbox with the empty string as the value triggered an error.
+
+## [0.5.64](https://github.com/jhpyle/docassemble/releases/tag/v0.5.64) - 2019-12-15
+
+### Fixed
+- Back button after `url_args` are set repeated the setting of the
+  `url_args`.
+- The `resume interview after login` feature did not work correctly
+  with the default menu.
+
 ## [0.5.63](https://github.com/jhpyle/docassemble/releases/tag/v0.5.63) - 2019-12-14
 
 ### Added

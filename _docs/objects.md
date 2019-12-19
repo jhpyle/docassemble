@@ -996,7 +996,7 @@ For most purposes, your code can treat a `DADict` object just like a
 
 {% highlight yaml %}
 objects:
-  things: DADict
+  - things: DADict
 ---
 code: |
   if 'abc' in things:
@@ -1078,6 +1078,13 @@ result, so `fruit.item('apple').seeds` or
 For more information about using [`DADict`] objects, see the section
 on [groups].
 
+## <a name="DAOrderedDict"></a>DAOrderedDict
+
+The `DAOrderedDict` is just like the `DADict`, except it is based on a
+[Python OrderedDict], rather than a [Python dict].  This means that
+the data structure remembers the order in which keys are added, and
+returns items in that order during iteration.
+
 ## <a name="DASet"></a>DASet
 
 A `DASet` is like a [`DADict`] and a [`DAList`], except it acts like a
@@ -1085,7 +1092,7 @@ A `DASet` is like a [`DADict`] and a [`DAList`], except it acts like a
 
 {% highlight yaml %}
 objects:
-  issues: DASet
+  - issues: DASet
 ---
 code: |
   if user_needs_to_apply:
@@ -2010,9 +2017,16 @@ interview answers), the user's favorite fruit will be retrieved from
 the `DAStore`, and it will not need to be asked of the user.  The
 object stored in the database is a [`DAObject`], and the favorite
 fruit is an attribute of that object.  In the database, the object is
-stored under key called `prefs`.  This key is specific to the user, so
-that each user will have their own personal `prefs` entry in the
-database.
+stored under a key containing the word `'prefs'`.  This key is
+specific to the user, so that each user will have their own personal
+`'prefs'` entry in the database.
+
+A user can have any number of unique keys in the database.  Typically,
+it makes sense to use a single key to store a number of different
+objects.  For example, you can store a [`DAObject`] and keep different
+pieces of information in the attributes, or you can store a [`DADict`]
+and keep different pieces of information in the values of the
+dictionary.
 
 By default, information stored in this database is encrypted, so that
 only the user who stored the information can retrieve it.  An
@@ -2060,13 +2074,18 @@ comes before it.  The `base` attribute determines what this prefix is,
 and also determines whether the object should be encrypted by default.
 For a storage object `mystore`, you can set `mystore.base` to:
 
-* `'user'` - The prefix will be based on the user's ID.
-  (If the user is not logged in, but then registers, the key will be
-  automatically re-assigned to the logged-in user's ID.)  By
-  default, the objects will be encrypted.
+* `'user'` - The prefix will be based on the user's ID.  (If the user
+  is not logged in, but then registers, the key will be automatically
+  re-assigned to the logged-in user's ID.)  By default, the objects
+  will be encrypted.
 * `'interview'` - The prefix will be based on the interview name
   (e.g., `docassemble.demo:data/questions/questions.yml`).  By
-  default, the objects will not be encrypted.
+  default, the objects will not be encrypted.  Using `'interview'` as
+  the prefix can be helpful if users on your server use interviews
+  created by multiple interview developers.  It will avoid a situation
+  where, for example, two developers both use `'prefs'` as the key for
+  a common data store, and there are conflicts between the way that
+  the objects are used.
 * `'global'` - Effectively, this means there is no prefix.  From any
   interview on your server, regardless of who the user is, calling
   `mystore.get('fruit')` will retrieve the same object.
@@ -2080,7 +2099,11 @@ For a storage object `mystore`, you can set `mystore.base` to:
   collections, but common within each collection.  By default,
   encryption is disabled when you use a string of your own choosing as
   the `base`.
-  
+
+If you do not specify a `.base`, the `'user'` method will be used.
+This is why, in the example above, the unique key was specific to the
+user.
+
 <a name="DAStore.encrypted"></a>If you want to override the defaults
 on whether the objects are encrypted, you can set the `encrypted`
 attribute to `True` if you want encryption, and `False` if you do not
@@ -2310,6 +2333,319 @@ add a menu item that allows the users to manage their credentials.
 
 {% include demo-side-by-side.html demo="oauth-test-2" %}
 
+## <a name="DAWeb"></a>DAWeb
+
+The `DAWeb` object facilitates making requests to APIs.
+
+{% include side-by-side.html demo="daweb" %}
+
+In this example, the `.get()` method makes [GET] requests to API
+that provides information about the [SpaceX] company.  The two API
+URLs that are called are:
+
+* [https://api.spacexdata.com/v3/launches/latest](https://api.spacexdata.com/v3/launches/latest)
+* [https://api.spacexdata.com/v3/ships?ship_type=Tug](https://api.spacexdata.com/v3/ships?ship_type=Tug)
+
+You could make these calls yourself in code using the [`requests`]
+module, which is very easy to use.  The `DAWeb` object is effectively
+a front end for [`requests`].  The purpose of `DAWeb` is to allow you
+to call APIs from within interviews while keeping your code readable.
+The `DAWeb` object lets you set default values for things like the
+base URL of the API and what headers or cookies to use, so that your
+calls to the APIs can be written in succinct code.
+
+A single `DAWeb` object can be re-used throughout your interview to
+call different API endpoints.  The object stores default values and
+provide methods that you can call.
+
+The following methods are supported:
+
+* `.get()` - makes a [GET] request
+* `.post()` - makes a [POST] request
+* `.delete()` - makes a [DELETE] request
+* `.put()` - makes a [PUT] request
+* `.patch()` - makes a [PATCH] request
+* `.options()` - makes a [OPTIONS] request
+* `.head()` - makes a [HEAD] request
+
+Each of these methods has a single required parameter, which is the
+URL.  You can give it a full URL:
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb
+---
+code: |
+  launch = web.get("https://api.spacexdata.com/v3/launches/latest")
+{% endhighlight %}
+
+If you set the `base_url` attribute of the object, you can call the
+`.get()` method with an easier-to-read URL fragment, and keep the
+`https://` part in your object initializer:
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url="https://api.spacexdata.com/v3")
+---
+code: |
+  launch = web.get("launches/latest")
+{% endhighlight %}
+
+You do not have to worry about putting a `/` at the end of the
+`base_url` or at the beginning of a relative URL; whether you include
+a `/` or not, it will figure out what the correct URL should be.
+
+The methods also accept a number of optional keyword parameters.  The
+most import optional keyword parameter is `data`.  Set this to a
+[`dict`] or [`DADict`] containing the URL parameters or form fields
+that you want to include in the request.
+
+{% highlight yaml %}
+code: |
+  launch = web.get('ships', data={'ship_type': 'Tug'})
+{% endhighlight %}
+
+This results in a [GET] request to the URL
+`https://api.spacexdata.com/v3/ships?ship_type=Tug`.  The URI encoding
+of the parameters is handled automatically.
+
+The `data` parameter is also used to pass data when making [POST]
+requests:
+
+{% highlight yaml %}
+code: |
+  result = web.post('https://api.example.com/new_user', data={'name': 'Fred'})
+{% endhighlight %}
+
+The `data` parameter will be converted to [JSON] and passed as the
+body of the POST request using `application/json` as the [content
+type].  If the API cannot accept data in this format, you can set
+`json_body` to `False`.  With `json_body` set to `False`, the more
+traditional method of sending form data is used, where the [content
+type] is `application/x-www-form-urlencoded`.  In this case, the
+`data` parameter must be a dictionary.
+
+{% highlight yaml %}
+code: |
+  result = web.post('https://api.example.com/new_user', data={'name': 'Fred'}, json_body=False)
+{% endhighlight %}
+
+To upload a file, set the `files` keyword parameter to a dictionary
+where the keys are the names of the fields the server is expecting and
+the values are references to files.  You can refer to **docassemble**
+file-like objects or references to files in a package (e.g.,
+`'picture_of_fred.png'` or
+`'docassemble.missouri:data/static/picture_of_fred.png'`).
+
+{% highlight yaml %}
+question: |
+  Please upload a picture of ${ user }.
+fields:
+  - Picture: user.portrait
+    datatype: file
+---
+code: |
+  result = web.post('https://api.example.com/image', 
+                    data={'name': user.name.full()},
+                    files={'portrait': user.portrait})
+{% endhighlight %}
+
+In this case, the API at the `/image` [POST] endpoint is expecting to
+receive a file upload using the field name `portrait`.
+
+When using [GET], [DELETE], [HEAD], and [OPTIONS], you can only pass
+information to the API using URL parameters, but when using [POST],
+[PUT], and [PATCH], you can use both URL parameters and form data to
+send information to the API.  If you need to set URL parameters when
+sending form data with `.post()`, `.patch()`, or `.put()`, you can set
+the `params` parameter to a dictionary of URL parameters, while
+setting the `data` parameter to a dictionary of information that you
+want to send in the body of the request.
+
+{% highlight yaml %}
+code: |
+  result = web.post('https://api.example.com/user', params={'action': 'new'}, data={'name': 'Fred'})
+{% endhighlight %}
+
+You can also use the keyword parameter `params` instead of `data` when
+using `.get()`, `.delete()`, `etc.`
+
+You can set a default value for the `json_body` keyword argument by
+setting the `json_body` attribute of the object:
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url="https://api.example.com", json_body=False)
+{% endhighlight %}
+
+All of the keyword parameters (except for `data`, `params`, and
+`files`) work the same way; if you want to set a default value for a
+parameter, you just set the attribute of the object, and then the
+value will be used in every method call you make.  Thus, the method
+calls you make in your interview can be succinct and free of
+repetition.  If you ever need to override the default value in a
+special case, you can just set the keyword parameter when calling the
+method.
+
+With the `headers` attribute (or keyword parameter), you can add
+special headers to a request.  For example, if you want to masquerade
+as a Firefox browser, you can set the `User-Agent` header.
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url='https://api.spacexdata.com/v3',
+                   headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'})
+{% endhighlight %}
+
+If your API uses [Basic Auth] or [Digest Auth], you can pass your
+credentials using the `auth` attribute (or keyword parameter).  It
+should refer to a dictionary with three keys: `type`, `username`, and
+`password`.
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url='https://api.example.com', auth={'type': 'basic', 'username': 'jsmith', 'password': 'xxsecret'})
+{% endhighlight %}
+
+To use [Basic Auth], set `type` to `'basic'`.  To use [Digest Auth],
+set `type` to `'digest'`.  If you don't specify a `type`, `'basic'` is
+assumed.
+
+It is generally a good idea not to put passwords in source codes.  You
+can store your credentials in the [Configuration] and use the
+`get_config()` function to retrieve them.  You can put this in your
+Configuration:
+
+{% highlight yaml %}
+example.com credentials:
+  type: basic
+  username: jsmith
+  password: xxsecret
+{% endhighlight %}
+
+This [YAML] specifies a dictionary.  When you call
+`get_config('example.com credentials')`, it will return the dictionary
+`{'type': 'basic', 'username': 'jsmith', 'password': 'xxsecret'}`.
+Thus, you can write:
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url='https://api.example.com', auth=get_config('example.com credentials'))
+{% endhighlight %}
+
+If the API you are calling relies on a cookie being set, you can set
+the `cookies` attribute to a dictionary containing your cookie values.
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url='https://api.example.com', cookies={'X-Auth-Secret': '5tTy34SfTeG3e'})
+{% endhighlight %}
+
+If you set a `cookies` attribute, then every time the API is called,
+any new cookies set by the server will be updated in the `cookies`
+attribute, so that the next time you use the `DAWeb` object to call
+the API, these cookies will be sent.  This can be useful if the server
+needs its own cookies in order to function correctly.  By contrast, if
+you only set the cookies in a keyword parameter when calling a method,
+then the `cookies` attribute will not be updated.
+
+The value returned by the method depends on whether the HTTP request
+succeeded and the format of the data returned by the server.  Most API
+servers return a [JSON] data structure.  The `DAWeb` methods will
+convert that [JSON] data structure into a [Python] data structure and
+return it.  If a request is not successful, `None` is returned.
+
+By default, a request will be considered successful if the status code
+returned by the server is between 200 and 299.  You can change this by
+setting `success_code` to a specific value, or a list (or tuple) of
+values:
+
+{% highlight yaml %}
+code: |
+  result = web.post('new_user', 
+                    data={'name': 'Fred'},
+                    success_code=204)
+{% endhighlight %}
+
+In this case, if the [POST] request results in a response with status
+code 200, it will be treated as unsuccessful.
+
+{% highlight yaml %}
+code: |
+  result = web.post('new_user', 
+                    data={'name': 'Fred'},
+                    success_code=[200, 204])
+{% endhighlight %}
+
+In this case, if the [POST] request results in a response with a status
+other than 200 or 204, it will be treated as unsuccessful.
+
+One of the dangers of calling APIs in interviews is that you might
+mistakenly call the API repeatedly.  Like the [`send_email()`]
+function, `DAWeb` methods can mark a task as successful if the request
+is successful.  You indicate the task by setting the `task` keyword
+parameter.
+
+{% highlight yaml %}
+code: |
+  if task_not_yet_performed('user_created'):
+    web.post('new_user', data={'name': 'Fred'}, task='user_created')
+{% endhighlight %}
+
+You can control what is returned if a request is unsuccessful by
+setting the `on_failure` attribute (or keyword parameter).  If you set
+`on_failure` to `{'success': False}`, then that dictionary will be
+returned in case of an error.  The default value is `None`, meaning
+that `None` is returned in case the request is not successful.
+
+There is a special value of `on_failure` that you might want to use:
+if you set `on_failure` to `'raise'`, then if the request is
+unsuccessful, an exception of type `DAWebError` is raised, which you
+can trap:
+
+{% highlight yaml %}
+objects:
+  - web: DAWeb.using(base_url='https://api.example.com', on_failure='raise')
+---
+code: |
+  try:
+    result = web.get('status')
+  except DAWebError as e:
+    log("Uh oh, the API returned status code " + text_type(e.status_code))
+    result = False
+{% endhighlight %}
+
+The `DAWebError` object has the following attributes:
+
+* `url`: the full URL to which the request was made
+* `method`: the HTTP method that was used for the request
+* `params`: the URL parameters that were sent in the request
+* `data`: the data that were were sent in the body of the request (if applicable)
+* `task`: the task that would have been marked as completed if the
+  request was successful
+* `headers`: the headers that were sent in the request
+* `status_code`: the status code of the response, or -1 if there no
+  response (e.g., because of a network error)
+* `response_text`: the raw text of the response
+* `response_json`: the data structure of the response, if it was in
+  JSON format
+* `response_headers`: a dictionary containing the response headers
+* `exception_type`: the name of the exception class, if a call to
+  [`requests`] returned an exception
+* `exception_text`: the text of the exception, if a call to [`requests`]
+  returned an exception
+* `cookies_before`: a dictionary containing the cookies that were sent
+  with the request`
+* `cookies_after`: the cookies that were returned in the response
+* `success`: `True` or `False` indicating whether the request was successful
+
+Similarly, you can also control what is returned when the request is
+successful by setting `on_success` to a value.  The `on_success`
+feature also supports the special `'raise'` result, in case you want
+to inspect the output of a successful call.  Although if you are this
+interested in inspecting the results of a successful call, you should
+probably be writing custom methods that call [`requests`] directly.
+
 ## <a name="DAGoogleAPI"></a>DAGoogleAPI
 
 The `DAGoogleAPI` object provides convenient access to Google's APIs
@@ -2346,7 +2682,7 @@ Suppose you define `api` to be a `DAGoogleAPI` object:
 
 {% highlight yaml %}
 objects:
-  api: DAGoogleAPI
+  - api: DAGoogleAPI
 {% endhighlight %}
 
 There are two categories of methods available.  The first is for the
@@ -4885,8 +5221,8 @@ For example, assume there is a customer in the [SQL] database with SSN
 122-23-2322, whose first name is John and whose last name is John Smith.
 
 {% highlight yaml %}
-objects: |
-  customer: Customer
+objects:
+  - customer: Customer
 ---
 mandatory: True
 code: |
@@ -5571,3 +5907,17 @@ the `_uid` of the table rather than the `id`.
 [`DALazyTemplate`]: #DALazyTemplate
 [decorator]: https://realpython.com/primer-on-python-decorators/
 [`Exception`]: https://docs.python.org/3.6/library/exceptions.html#Exception
+[Python OrderedDict]: https://docs.python.org/3.6/library/collections.html#collections.OrderedDict
+[Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
+[GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
+[POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+[DELETE]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE
+[PATCH]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PATCH
+[PUT]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PUT
+[OPTIONS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
+[HEAD]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/HEAD
+[`requests`]: https://pypi.python.org/pypi/requests
+[`dict`]: https://docs.python.org/3/library/stdtypes.html#dict
+[content type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+[Basic Auth]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#Basic_authentication_scheme
+[Digest Auth]: https://en.wikipedia.org/wiki/Digest_access_authentication

@@ -163,7 +163,7 @@ Path: `/api/user/new`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -341,7 +341,7 @@ Path: `/api/user`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -462,7 +462,7 @@ Example: `/api/user/22`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -508,7 +508,7 @@ Path: `/api/fields`
 
 Method: [POST]
 
-Form data:
+Data:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
  - `format` (optional): the desired output format.  The default is
@@ -706,7 +706,7 @@ Path: `/api/privileges`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -736,7 +736,7 @@ Example: `/api/user/22/privileges`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -769,7 +769,7 @@ Example: `/api/user/22/privileges`
 
 Method: [DELETE]
 
-Form data:
+Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -1059,7 +1059,7 @@ Path: `/api/login_url`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1126,7 +1126,7 @@ Path: `/api/resume_url`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1305,7 +1305,7 @@ Path: `/api/session`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1526,7 +1526,7 @@ Path: `/api/session/action`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1577,7 +1577,7 @@ Path: `/api/session/back`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1694,7 +1694,7 @@ Parameters:
    owner of the API key.
  - `folder` (optional): the folder in the [Playground] from which to
    obtain the list of files.  Must be one of `questions`, `sources`,
-   `static`, `templates`, or `modules`.
+   `static`, `templates`, or `modules`.  The default is `static`.
  - `project` (optional): the project in the [Playground] from which to
    obtain the list of files.  The default is `default`, which is the
    "Default Playground" project.
@@ -1767,7 +1767,7 @@ Path: `/api/playground`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1840,7 +1840,7 @@ Path: `/api/config`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -1911,7 +1911,7 @@ Path: `/api/package`
 
 Method: [POST]
 
-Form data:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
@@ -2166,7 +2166,7 @@ Path: `/api/user/api`
 
 Method: [PATCH]
 
-Parameters:
+Data:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `api_key` (optional): the name of the API key to modify.  The API

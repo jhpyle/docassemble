@@ -2027,6 +2027,13 @@
   fields:
     - Date and time: target_variable
       datatype: datetime
+"daweb": "objects:\n  - web: DAWeb.using(base_url='https://api.spacexdata.com/v3')\n\
+  ---\ncode: |\n  launch_info = web.get('launches/latest')\n---\ncode: |\n  ship_info\
+  \ = web.get('ships',\n                      data={'ship_type': 'Tug'})\n---\nmandatory:\
+  \ True\nquestion: |\n  SpaceX information\nsubquestion: |\n  The latest SpaceX launch\
+  \ involved a\n  ${ launch_info['rocket']['rocket_name'] }.\n\n  [FILE ${ launch_info['links']['flickr_images'][0]\
+  \ }]\n  \n  SpaceX operates the following tug boats:\n  \n  % for item in ship_info:\n\
+  \  * ${ item['ship_name'] }\n  % endfor"
 "dead-end": |-
   mandatory: True
   code: |
@@ -10975,6 +10982,27 @@
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
+"collate": "objects:\n  - favorite: DADict.using(object_type=DAObject, keys=['fruit',\
+  \ 'vegetable', 'fungus'], gathered=True)\n  - cover_page: DAList\n---\nquestion:\
+  \ |\n  What is your favorite ${ i }?\nfields:\n  - \"${ capitalize(i) }\": favorite[i].variety\n\
+  \  - \"Do you have documentation of this?\": favorite[i].has_documentation\n   \
+  \ datatype: yesnoradio\n  - \"Attach documentation\": favorite[i].documentation\n\
+  \    datatype: file\n    show if: favorite[i].has_documentation\n---\nattachment:\n\
+  \  variable name: summary_document\n  content: |\n    [BOLDCENTER] Your Favorite\
+  \ Things\n    \n    % for key, val in favorite.items():\n    Your favorite ${ key\
+  \ } is\n    ${ val.variety }.\n    % if val.has_documentation:\n    See Exhibit\n\
+  \    ${ alpha(val.documentation_reference) }.\n    % endif\n    \n    % endfor\n\
+  ---\nattachment:\n  variable name: cover_page[i]\n  docx template file: exhibit_insert.docx\n\
+  ---\nmandatory: True\ncode: |\n  information_gathered\n  bundle\n  final_screen\n\
+  ---\ncode: |\n  indexno = 0\n  for item in favorite.values():\n    item.variety\n\
+  \    if item.has_documentation:\n      item.documentation\n      item.documentation_reference\
+  \ = indexno\n      indexno += 1\n  information_gathered = True\n---\ncode: |\n \
+  \ document_list = list()\n  document_list.append(summary_document)\n  for item in\
+  \ favorite.values():\n    if item.has_documentation:\n      document_list.append(cover_page[item.documentation_reference])\n\
+  \      document_list.append(item.documentation)\n  bundle = pdf_concatenate(document_list,\
+  \ filename=\"Favorites.pdf\")\n---\nevent: final_screen\nquestion: |\n  Your documents\n\
+  subquestion: |\n  ${ action_button_html(bundle.url_for(), color='link', label='Download\
+  \ bundle', icon='file-pdf') }"
 "companies": |-
   modules:
     - .companydb
