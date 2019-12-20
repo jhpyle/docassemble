@@ -1,0 +1,36 @@
+metadata:
+  title: Generators
+  example start: 1
+  example end: 3
+---
+objects:
+  - bus: Thing
+  - car: Thing
+---
+code: |
+  bus.name.text = 'bus'
+  car.name.text = 'car'
+  bus.help_text = 'An inexpensive form of public transportation.'
+  car.help_text = 'A vehicle you can have all to yourself.'
+  bus.image = 'bus-alt'
+  car.image = 'car-side'
+---
+question: |
+  How would you prefer to travel?
+fields:
+  - no label: transportation_method
+    datatype: object_radio
+    choices:
+      - bus
+      - car
+    object labeler: |
+      lambda y: capitalize(y)
+    help generator: |
+      lambda y: y.help_text
+    image generator: |
+      lambda y: y.image
+---
+mandatory: True
+question: |
+  You will travel by
+  ${ transportation_method }.

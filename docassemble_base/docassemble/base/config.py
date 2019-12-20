@@ -542,3 +542,46 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 """
     return config
+
+def parse_redis_uri():
+    redis_host = daconfig.get('redis', None)
+    if redis_host is None:
+        redis_host = 'redis://localhost'
+    redis_host = redis_host.strip()
+    if not redis_host.startswith('redis://'):
+        redis_host = 'redis://' + redis_host
+    m = re.search(r'redis://([^:@\?]*):([^:@\?]*)@(.*)', redis_host)
+    if m:
+        redis_password = m.group(2)
+        redis_host = 'redis://' + m.group(3)
+    else:
+        redis_password = None
+    m = re.search(r'[?\&]password=([^&]+)', redis_host)
+    if m:
+        redis_password = m.group(1)
+    m = re.search(r'[?\&]db=([0-9]+)', redis_host)
+    if m:
+        redis_db = int(m.group(1))
+    else:
+        redis_db = 0
+
+    redis_host = re.sub(r'\?.*', '', redis_host)
+    redis_host = re.sub(r'^redis://', r'', redis_host)
+    m = re.search(r'/([0-9]+)', redis_host)
+    if m:
+        redis_db = int(m.group(1))
+    redis_host = re.sub(r'/.*', r'', redis_host)
+    m = re.search(r':([0-9]+)$', redis_host)
+    if m:
+        redis_port = m.group(1)
+        redis_host = re.sub(r':([0-9]+)$', '', redis_host)
+    else:
+        redis_port = '6379'
+
+    redis_offset = daconfig.get('redis database offset', redis_db)
+    redis_cli = 'redis-cli'
+    if redis_host != 'localhost' or redis_port != '6379':
+        redis_cli += ' -h ' + redis_host + ' -p ' + redis_port
+    if redis_password is not None:
+        redis_cli += ' -a ' + redis_password
+    return (redis_host, redis_port, redis_password, redis_offset, redis_cli)

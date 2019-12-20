@@ -3770,6 +3770,14 @@ def selections(*pargs, **kwargs):
         object_labeler = lambda x: text_type(kwargs['object_labeler'](x))
     else:
         object_labeler = text_type
+    if 'help_generator' in kwargs:
+        help_generator = lambda x: text_type(kwargs['help_generator'](x))
+    else:
+        help_generator = None
+    if 'image_generator' in kwargs:
+        image_generator = lambda x: text_type(kwargs['image_generator'](x))
+    else:
+        image_generator = None
     to_exclude = set()
     if 'exclude' in kwargs:
         setify(kwargs['exclude'], to_exclude)
@@ -3793,7 +3801,16 @@ def selections(*pargs, **kwargs):
                     default_value = True
                 else:
                     default_value = False
-                output.append({myb64quote(subarg.instanceName): object_labeler(subarg), 'default': default_value})
+                output_dict = {myb64quote(subarg.instanceName): object_labeler(subarg), 'default': default_value}
+                if help_generator is not None:
+                    the_help = help_generator(subarg)
+                    if the_help is not None:
+                        output_dict['help'] = the_help
+                if image_generator is not None:
+                    the_image = image_generator(subarg)
+                    if the_image is not None:
+                        output_dict['image'] = the_image
+                output.append(output_dict)
                 seen.add(subarg)
     return output
 

@@ -7,7 +7,7 @@ separator = re.compile(r' *[,;] *')
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-    from docassemble.base.config import daconfig
+    from docassemble.base.config import daconfig, parse_redis_uri
     if 'timezone' in daconfig and daconfig['timezone'] is not None:
         print('export TIMEZONE="' + str(daconfig['timezone']) + '"')
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
@@ -114,6 +114,8 @@ if __name__ == "__main__":
         print('export DAWEBSOCKETSPORT=5000')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
+        (redis_host, redis_port, redis_password, redis_offset, redis_cli) = parse_redis_uri()
+        print('export REDISCLI="' + str(redis_cli) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:
         print('export RABBITMQ="' + str(daconfig['rabbitmq']) + '"')
     if 'backup days' in daconfig:

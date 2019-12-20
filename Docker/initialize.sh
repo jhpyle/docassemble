@@ -66,7 +66,7 @@ fi
 
 echo "3" >&2
 
-if redis-cli ping &> /dev/null; then
+if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && redis-cli ping &> /dev/null; then
     REDISRUNNING=true
 else
     REDISRUNNING=false

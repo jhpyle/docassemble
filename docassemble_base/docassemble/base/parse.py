@@ -885,6 +885,10 @@ class Field:
             self.rows = data['rows']
         if 'object_labeler' in data:
             self.object_labeler = data['object_labeler']
+        if 'help_generator' in data:
+            self.help_generator = data['help_generator']
+        if 'image_generator' in data:
+            self.image_generator = data['image_generator']
         if 'extras' in data:
             self.extras = data['extras']
         if 'selections' in data:
@@ -2611,6 +2615,12 @@ class Question:
                             elif key == 'object labeler':
                                 field_info['object_labeler'] = {'compute': compile(text_type(field[key]), '<object labeler code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
+                            elif key == 'help generator':
+                                field_info['help_generator'] = {'compute': compile(text_type(field[key]), '<help generator code>', 'eval'), 'sourcecode': text_type(field[key])}
+                                self.find_fields_in(field[key])
+                            elif key == 'image generator':
+                                field_info['image_generator'] = {'compute': compile(text_type(field[key]), '<image generator code>', 'eval'), 'sourcecode': text_type(field[key])}
+                                self.find_fields_in(field[key])
                             elif key == 'required':
                                 if isinstance(field[key], bool):
                                     field_info['required'] = field[key]
@@ -2835,10 +2845,14 @@ class Question:
                                 default_list.append('_DAOBJECTDEFAULTDA')
                             if len(default_list):
                                 select_list.append('default=[' + ", ".join(default_list) + ']')
+                            additional_parameters = ''
                             if 'object_labeler' in field_info:
-                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ", object_labeler=_DAOBJECTLABELER)"
-                            else:
-                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
+                                additional_parameters += ", object_labeler=_DAOBJECTLABELER"
+                            if 'help_generator' in field_info:
+                                additional_parameters += ", help_generator=_DAHELPGENERATOR"
+                            if 'image_generator' in field_info:
+                                additional_parameters += ", image_generator=_DAIMAGEGENERATOR"
+                            source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + additional_parameters + ")"
                             #logmessage("source_code is " + source_code)
                             field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
@@ -4065,6 +4079,20 @@ class Question:
                             user_dict['_DAOBJECTLABELER'] = labeler_func
                         else:
                             labeler_func = None
+                        if hasattr(field, 'help_generator'):
+                            help_generator_func = eval(field.help_generator['compute'], user_dict)
+                            if not isinstance(help_generator_func, types.FunctionType):
+                                raise DAError("The help generator was not a function")
+                            user_dict['_DAHELPGENERATOR'] = help_generator_func
+                        else:
+                            help_generator_func = None
+                        if hasattr(field, 'image_generator'):
+                            image_generator_func = eval(field.image_generator['compute'], user_dict)
+                            if not isinstance(image_generator_func, types.FunctionType):
+                                raise DAError("The image generator was not a function")
+                            user_dict['_DAIMAGEGENERATOR'] = image_generator_func
+                        else:
+                            image_generator_func = None
                         to_compute = field.selections['compute']
                         if field.datatype == 'object_checkboxes':
                             default_exists = False
@@ -4088,6 +4116,10 @@ class Question:
                             del user_dict['_DAOBJECTDEFAULTDA']
                         if labeler_func is not None:
                             del user_dict['_DAOBJECTLABELER']
+                        if help_generator_func is not None:
+                            del user_dict['_DAHELPGENERATOR']
+                        if image_generator_func is not None:
+                            del user_dict['_DAIMAGEGENERATOR']
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
@@ -4751,26 +4783,34 @@ class Question:
             the_filename = docassemble.base.functions.space_to_underscore(the_name)
         result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
         if attachment['content'] is None and 'content file code' in attachment['options']:
-            the_filename = eval(attachment['options']['content file code'], the_user_dict)
-            the_orig_filename = the_filename
-            if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
-                the_filename = the_filename.path()
-            elif isinstance(the_filename, string_types):
-                if re.search(r'^https?://', str(the_filename)):
-                    temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
-                    try:
-                        urlretrieve(str(the_filename), temp_template_file.name)
-                    except Exception as err:
-                        raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
-                    the_filename = temp_template_file.name
+            raw_content = ''
+            the_filenames = eval(attachment['options']['content file code'], the_user_dict)
+            if not isinstance(the_filenames, list):
+                if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
+                    the_filenames = the_filenames.elements
                 else:
-                    the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
-            else:
-                the_filename = None
-            if the_filename is None or not os.path.isfile(the_filename):
-                raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
-            with open(the_filename, 'rU', encoding='utf-8') as the_file:
-                the_content = TextObject(the_file.read(), question=self)
+                    the_filenames = [the_filenames]
+            for the_filename in the_filenames:
+                the_orig_filename = the_filename
+                if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                    the_filename = the_filename.path()
+                elif isinstance(the_filename, string_types):
+                    if re.search(r'^https?://', str(the_filename)):
+                        temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                        try:
+                            urlretrieve(str(the_filename), temp_template_file.name)
+                        except Exception as err:
+                            raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
+                        the_filename = temp_template_file.name
+                    else:
+                        the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
+                else:
+                    the_filename = None
+                if the_filename is None or not os.path.isfile(the_filename):
+                    raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
+                with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                    raw_content += the_file.read()
+            the_content = TextObject(raw_content, question=self)
         else:
             the_content = attachment['content']
         if 'redact' in attachment['options']:
@@ -6238,24 +6278,33 @@ class Interview:
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "template_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        the_filename = eval(question.compute, user_dict)
-                        the_orig_filename = the_filename
-                        if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
-                            the_filename = the_filename.path()
-                        elif isinstance(the_filename, string_types):
-                            if re.search(r'^https?://', str(the_filename)):
-                                temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
-                                try:
-                                    urlretrieve(str(the_filename), temp_template_file.name)
-                                except Exception as err:
-                                    raise DAError("askfor: error downloading " + str(the_filename) + ": " + str(err))
-                                the_filename = temp_template_file.name
+                        the_filenames = eval(question.compute, user_dict)
+                        if not isinstance(the_filenames, list):
+                            if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
+                                the_filenames = the_filenames.elements
                             else:
-                                the_filename = docassemble.base.functions.package_template_filename(the_filename, package=question.package)
-                        else:
-                            the_filename = None
-                        if the_filename is None or not os.path.isfile(the_filename):
-                            raise DAError("askfor: error obtaining template file from code: " + repr(the_orig_filename))
+                                the_filenames = [the_filenames]
+                        raw_content = ''
+                        for the_filename in the_filenames:
+                            the_orig_filename = the_filename
+                            if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                                the_filename = the_filename.path()
+                            elif isinstance(the_filename, string_types):
+                                if re.search(r'^https?://', str(the_filename)):
+                                    temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                                    try:
+                                        urlretrieve(str(the_filename), temp_template_file.name)
+                                    except Exception as err:
+                                        raise DAError("askfor: error downloading " + str(the_filename) + ": " + str(err))
+                                    the_filename = temp_template_file.name
+                                else:
+                                    the_filename = docassemble.base.functions.package_template_filename(the_filename, package=question.package)
+                            else:
+                                the_filename = None
+                            if the_filename is None or not os.path.isfile(the_filename):
+                                raise DAError("askfor: error obtaining template file from code: " + repr(the_orig_filename))
+                            with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                                raw_content += the_file.read()
                         temp_vars = dict()
                         if is_generic:
                             if the_x != 'None':
@@ -6283,8 +6332,7 @@ class Interview:
                             the_object = eval(actual_saveas, user_dict)
                             if the_object.__class__.__name__ != 'DALazyTemplate':
                                 raise DAError("askfor: failure to define template object")
-                        with open(the_filename, 'rU', encoding='utf-8') as the_file:
-                            the_object.source_content = TextObject(the_file.read(), question=question)
+                        the_object.source_content = TextObject(raw_content, question=question)
                         the_object.source_subject = question.subcontent
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
                         the_object.userdict = user_dict
