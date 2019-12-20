@@ -1631,6 +1631,20 @@ Suppose also that you imported this function into your interview using
 a [`modules`] block.  Then, in your `fields` item you could simply
 write `object labeler: my_labeling_function`.
 
+Here is an example that uses `object labeler` to label a `datatype:
+object` list of addresses.
+
+{% include side-by-side.html demo="object-radio-address" %}
+
+<a name="help generator"></a><a name="image generator"></a>Similar to
+the way `object labeler` works, you can specify a `help generator`
+lambda function that takes the object as its argument and returns help
+text associated with a choice.  You can also specify an `image
+generator` lambda function that generates the image that should be
+associated with the choice.
+
+{% include side-by-side.html demo="object-radio-fruit" %}
+
 ## <a name="embed"></a>Embedding fields within a paragraph
 
 Within a [`fields`] question, you can include fill-in fields within

@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.67](https://github.com/jhpyle/docassemble/releases/tag/v0.5.67) - 2019-12-19
+
+### Added
+- The `help generator` and `image generator` field modifiers.
+
+### Fixed
+- Error when `code` was used with `content file` and the code 
+  returned a list.
+- Backup of Redis database when password is used.
+
+## [0.5.66](https://github.com/jhpyle/docassemble/releases/tag/v0.5.66) - 2019-12-19
+
+### Fixed
+- Issue with Redis and passwords.
+
 ## [0.5.65](https://github.com/jhpyle/docassemble/releases/tag/v0.5.65) - 2019-12-19
 
 ### Added
