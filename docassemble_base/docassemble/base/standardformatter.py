@@ -1124,6 +1124,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][the_saveas]['number'] = True
                     validation_rules['messages'][the_saveas]['number'] = field.validation_message('number', status, word("You need to enter a number."))
+                    if field.datatype == 'integer':
+                        validation_rules['messages'][the_saveas]['step'] = field.validation_message('integer', status, word("Please enter a whole number."))
+                    elif 'step' in status.extras and field.number in status.extras['step']:
+                        validation_rules['messages'][the_saveas]['step'] = field.validation_message('step', status, word("Please enter a multiple of {0}."))
                     #sys.stderr.write("Considering adding validation rule\n")
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:

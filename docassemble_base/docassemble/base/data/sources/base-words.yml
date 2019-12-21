@@ -384,8 +384,10 @@
 "Playground Packages": Null
 "Playground YAML": Null
 "Please choose a different e-mail address.": Null
+"Please enter a multiple of {0}.": Null
 "Please enter a valid phone number": Null
 "Please enter a valid value.": Null
+"Please enter a whole number.": Null
 "Please enter the four digit code, followed by the pound sign.": Null
 "Please enter the verification code from the text message we just sent you.": Null
 "Please enter the verification code from your authentication app.": Null

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.68] - 2019-12-21
+### Fixed
+- JQuery Validation Plugin message for integer and step input
+  validation was not customizable.
+- Dependency was incompatible with Python 3.5.
+
 ## [0.5.67] - 2019-12-19
 ### Added
 - The `help generator` and `image generator` field modifiers.
