@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.68](https://github.com/jhpyle/docassemble/releases/tag/v0.5.68) - 2019-12-21
+
+### Fixed
+- JQuery Validation Plugin message for integer and step input
+  validation was not customizable.
+- Dependency was incompatible with Python 3.5.
+
 ## [0.5.67](https://github.com/jhpyle/docassemble/releases/tag/v0.5.67) - 2019-12-19
 
 ### Added

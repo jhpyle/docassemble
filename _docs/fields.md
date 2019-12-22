@@ -1636,6 +1636,45 @@ object` list of addresses.
 
 {% include side-by-side.html demo="object-radio-address" %}
 
+Instead of writing:
+
+{% highlight yaml %}
+    object labeler: |
+      lambda y: y.on_one_line()
+{% endhighlight %}
+
+you could instead write:
+
+{% highlight yaml %}
+    object labeler: Address.on_one_line
+{% endhighlight %}
+
+`Address.on_one_line` (note the lack of parentheses at the end) is a
+reference to the `.on_one_line()` method of the `Address` class.  In
+Python, a method is like a function where the first parameter is the
+object.  So you can call `Address.on_one_line` like a function,
+passing it the object instance as a parameter.
+
+Using a reference to a method in place of a lambda function only works
+if the method has no other required parameters.  For example, if your
+objects were [`Individual`]s and you wanted the the choices to
+display as "John Smith's house," "Jane Doe's house," and "Harry
+Morgan's house," you could write:
+
+{% highlight yaml %}
+    object labeler: |
+      lambda y: y.possessive('house')
+{% endhighlight %}
+
+but there would be no way to call this method successfully using a
+mere method reference like
+
+{% highlight yaml %}
+    object labeler: Individual.possessive
+{% endhighlight %}
+
+because there is no place to put the `'house'` parameter.
+
 <a name="help generator"></a><a name="image generator"></a>Similar to
 the way `object labeler` works, you can specify a `help generator`
 lambda function that takes the object as its argument and returns help
