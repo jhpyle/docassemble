@@ -854,7 +854,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -1387,16 +1387,6 @@ def decrypt_session(secret, user_code=None, filename=None):
         record.phrase = pack_phrase(phrase)
         record.encrypted = False
     db.session.commit()
-    # changed = False
-    # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-    #     if record.dictionary:
-    #         the_dict = decrypt_dictionary(record.dictionary, secret)
-    #         record.dictionary = pack_dictionary(the_dict)
-    #         record.encrypted = False
-    #         record.modtime = nowtime
-    #         changed = True
-    # if changed:
-    #     db.session.commit()
     for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
         the_dict = decrypt_dictionary(record.dictionary, secret)
         record.dictionary = pack_dictionary(the_dict)
@@ -1422,14 +1412,6 @@ def encrypt_session(secret, user_code=None, filename=None):
         record.phrase = encrypt_phrase(phrase, secret)
         record.encrypted = True
     db.session.commit()
-    # changed = False
-    # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
-    #     if record.dictionary:
-    #         the_dict = unpack_dictionary(record.dictionary)
-    #         record.dictionary = encrypt_dictionary(the_dict, secret)
-    #         record.encrypted = True
-    #         record.modtime = nowtime
-    #         changed = True
     for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update().all():
         the_dict = unpack_dictionary(record.dictionary)
         record.dictionary = encrypt_dictionary(the_dict, secret)
@@ -1485,14 +1467,6 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             except:
                 pass
         db.session.commit()
-        # changed = False
-        # for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
-        #     if record.dictionary:
-        #         the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-        #         record.dictionary = encrypt_dictionary(the_dict, newsecret)
-        #         changed = True
-        # if changed:
-        #     db.session.commit()
         for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
             #logmessage("substitute_secret: record was encrypted")
             try:
@@ -1994,6 +1968,57 @@ def sub_temp_user_dict_key(temp_user_id, user_id):
     db.session.commit()
     return temp_interviews
 
+def sub_temp_other(user):
+    if 'tempuser' in session:
+        something_changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+            chat_entry.user_id = user.id
+            chat_entry.temp_user_id = None
+            something_changed = True
+        if something_changed:
+            db.session.commit()
+        something_changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).with_for_update().all():
+            chat_entry.owner_id = user.id
+            chat_entry.temp_owner_id = None
+            something_changed = True
+        if something_changed:
+            db.session.commit()
+        keys_in_use = dict()
+        for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).all():
+            if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
+                if object_entry.key not in keys_in_use:
+                    keys_in_use[object_entry.key] = list()
+                keys_in_use[object_entry.key].append(object_entry.id)
+        ids_to_delete = list()
+        something_changed = False
+        for object_entry in GlobalObjectStorage.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+            something_changed = True
+            object_entry.user_id = user.id
+            object_entry.temp_user_id = None
+            if object_entry.key.startswith('da:userid:t{:d}:'.format(session['tempuser'])):
+                new_key = re.sub(r'^da:userid:t{:d}:'.format(session['tempuser']), 'da:userid:{:d}:'.format(user.id), object_entry.key)
+                object_entry.key = new_key
+                if new_key in keys_in_use:
+                    ids_to_delete.extend(keys_in_use[new_key])
+            if object_entry.encrypted and 'newsecret' in session:
+                try:
+                    object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
+                except Exception as err:
+                    logmessage("Failure to change encryption of object " + object_entry.key + ": " + text_type(err))
+        for the_id in ids_to_delete:
+            GlobalObjectStorage.query.filter_by(id=the_id).delete()
+        if something_changed:
+            db.session.commit()
+        something_changed = False
+        for auth_entry in UploadsUserAuth.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+            auth_entry.user_id = user.id
+            auth_entry.temp_user_id = None
+            something_changed = True
+        if something_changed:
+            db.session.commit()
+        del session['tempuser']
+
 def save_user_dict_key(session_id, filename, priors=False, user=None):
     if user is not None:
         user_id = user.id
@@ -2319,27 +2344,6 @@ def get_unique_name(filename, secret):
         db.session.add(new_user_dict)
         db.session.commit()
         return newname
-
-# def get_attachment_info(the_user_code, question_number, filename, secret):
-#     the_user_dict = None
-#     existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
-#     if existing_entry and existing_entry.dictionary:
-#         if existing_entry.encrypted:
-#             the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
-#         else:
-#             the_user_dict = unpack_dictionary(existing_entry.dictionary)
-#     return the_user_dict, existing_entry.encrypted
-
-# def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
-#     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
-#     db.session.commit()
-#     if encrypt:
-#         new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
-#     else:
-#         new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
-#     db.session.add(new_attachment)
-#     db.session.commit()
-#     return
 
 def obtain_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
@@ -4087,6 +4091,7 @@ def oauth_callback(provider):
                 update_session(filename, key_logged=True)
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
+    sub_temp_other(user)
     response = redirect(url_for('interview_list', from_login='1'))
     response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
     return response
@@ -5846,7 +5851,11 @@ def index(action_argument=None):
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
         if not (should_assemble or something_changed):
-            if the_question.validation_code is not None:
+            uses_permissions = False
+            for the_field in the_question.fields:
+                if hasattr(the_field, 'permissions'):
+                    uses_permissions = True
+            if uses_permissions or the_question.validation_code is not None:
                 interview.assemble(user_dict, interview_status)
             else:
                 for the_field in the_question.fields:
@@ -6389,19 +6398,22 @@ def index(action_argument=None):
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
-                                    the_key = orig_file_field
-                                    the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
-                                    try:
-                                        the_result = the_func(eval(the_file_list))
-                                        if not the_result:
-                                            field_error[the_key] = word("Please enter a valid value.")
+                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
+                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                    add_permissions_for_field(the_field, interview_status, files_to_process)
+                                    if hasattr(the_field, 'validate'):
+                                        the_key = orig_file_field
+                                        the_func = eval(the_field.validate['compute'], user_dict)
+                                        try:
+                                            the_result = the_func(eval(the_file_list))
+                                            if not the_result:
+                                                field_error[the_key] = word("Please enter a valid value.")
+                                                validated = False
+                                                break
+                                        except Exception as errstr:
+                                            field_error[the_key] = text_type(errstr)
                                             validated = False
                                             break
-                                    except Exception as errstr:
-                                        field_error[the_key] = text_type(errstr)
-                                        validated = False
-                                        break
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
@@ -6503,19 +6515,22 @@ def index(action_argument=None):
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field] and hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
-                                    the_key = orig_file_field
-                                    the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
-                                    try:
-                                        the_result = the_func(eval(the_file_list))
-                                        if not the_result:
-                                            field_error[the_key] = word("Please enter a valid value.")
+                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
+                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                    add_permissions_for_field(the_field, interview_status, files_to_process)
+                                    if hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
+                                        the_key = orig_file_field
+                                        the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
+                                        try:
+                                            the_result = the_func(eval(the_file_list))
+                                            if not the_result:
+                                                field_error[the_key] = word("Please enter a valid value.")
+                                                validated = False
+                                                break
+                                        except Exception as errstr:
+                                            field_error[the_key] = text_type(errstr)
                                             validated = False
                                             break
-                                    except Exception as errstr:
-                                        field_error[the_key] = text_type(errstr)
-                                        validated = False
-                                        break
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
@@ -10067,6 +10082,32 @@ def index(action_argument=None):
     if 'in error' in session:
         del session['in error']
     return response
+
+def add_permissions_for_field(the_field, interview_status, files_to_process):
+    if hasattr(the_field, 'permissions'):
+        if the_field.number in interview_status.extras['permissions']:
+            permissions = interview_status.extras['permissions'][the_field.number]
+            if 'private' in permissions or 'persistent' in permissions:
+                for (filename, file_number, mimetype, extension) in files_to_process:
+                    attribute_args = dict()
+                    if 'private' in permissions:
+                        attribute_args['private'] = permissions['private']
+                    if 'persistent' in permissions:
+                        attribute_args['persistent'] = permissions['persistent']
+                    file_set_attributes(file_number, **attribute_args)
+            if 'allow_users' in permissions:
+                for (filename, file_number, mimetype, extension) in files_to_process:
+                    allow_user_id = list()
+                    allow_email = list()
+                    for item in permissions['allow_users']:
+                        if isinstance(item, int):
+                            allow_user_id.append(item)
+                        else:
+                            allow_email.append(item)
+                    file_user_access(file_number, allow_user_id=allow_user_id, allow_email=allow_email)
+            if 'allow_privileges' in permissions:
+                for (filename, file_number, mimetype, extension) in files_to_process:
+                    file_privilege_access(file_number, allow=permissions['allow_privileges'])
 
 def fake_up(response):
     response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
@@ -19312,39 +19353,7 @@ def login_or_register(sender, user, source, **extra):
                 save_user_dict_key(info['uid'], filename, priors=True, user=user)
                 update_session(filename, key_logged=True)
     fix_secret(user=user, to_convert=to_convert)
-    if 'tempuser' in session:
-        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
-            chat_entry.user_id = user.id
-            chat_entry.temp_user_id = None
-        db.session.commit()
-        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).with_for_update().all():
-            chat_entry.owner_id = user.id
-            chat_entry.temp_owner_id = None
-        db.session.commit()
-        keys_in_use = dict()
-        for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).all():
-            if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
-                if object_entry.key not in keys_in_use:
-                    keys_in_use[object_entry.key] = list()
-                keys_in_use[object_entry.key].append(object_entry.id)
-        ids_to_delete = list()
-        for object_entry in GlobalObjectStorage.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
-            object_entry.user_id = user.id
-            object_entry.temp_user_id = None
-            if object_entry.key.startswith('da:userid:t{:d}:'.format(session['tempuser'])):
-                new_key = re.sub(r'^da:userid:t{:d}:'.format(session['tempuser']), 'da:userid:{:d}:'.format(user.id), object_entry.key)
-                object_entry.key = new_key
-                if new_key in keys_in_use:
-                    ids_to_delete.extend(keys_in_use[new_key])
-            if object_entry.encrypted and 'newsecret' in session:
-                try:
-                    object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
-                except Exception as err:
-                    logmessage("Failure to change encryption of object " + object_entry.key + ": " + text_type(err))
-        for the_id in ids_to_delete:
-            GlobalObjectStorage.query.filter_by(id=the_id).delete()
-        db.session.commit()
-        del session['tempuser']
+    sub_temp_other(user)
     if not (source == 'register' and daconfig.get('confirm registration', False)):
         session['user_id'] = user.id
     if user.language:
@@ -23504,6 +23513,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          remove_user_privilege=remove_user_privilege,
                                          create_user=create_user,
                                          file_set_attributes=file_set_attributes,
+                                         file_user_access=file_user_access,
+                                         file_privilege_access=file_privilege_access,
                                          fg_make_png_for_pdf=fg_make_png_for_pdf,
                                          fg_make_png_for_pdf_path=fg_make_png_for_pdf_path,
                                          fg_make_pdf_for_word_path=fg_make_pdf_for_word_path,
@@ -23717,7 +23728,7 @@ docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machi
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
-from docassemble.webapp.core.models import Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage #Attachments
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
 
 def random_social():
     while True:

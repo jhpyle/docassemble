@@ -10,9 +10,9 @@ from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role
+import docassemble.webapp.core.models
+from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import get_installed_distributions, add_dependencies
 from sqlalchemy import create_engine, MetaData
 #import random
@@ -105,19 +105,6 @@ def populate_tables():
             package.gitsubdir = None
             package.type = 'pip'
             db.session.commit()
-    # docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
-    # installed_packages = get_installed_distributions()
-    # existing_packages = [package.name for package in Package.query.all()]
-    # for package in installed_packages:
-    #     if package.key in existing_packages:
-    #         continue
-    #     package_auth = PackageAuth(user_id=admin.id)
-    #     if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-    #         package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
-    #     else:
-    #         package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
-    #     db.session.add(package_auth)
-    #     db.session.add(package_entry)
     return
 
 def main():

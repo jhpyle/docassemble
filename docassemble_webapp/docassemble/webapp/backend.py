@@ -4,8 +4,8 @@ from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
-from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage #Attachments
+from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage
 from docassemble.webapp.packages.models import PackageAuth
 from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
 from sqlalchemy import or_, and_
@@ -387,8 +387,13 @@ def can_access_file_number(file_number, uids=None):
             uids = []
     if upload.key in uids:
         return True
-    if current_user and current_user.is_authenticated and UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first():
-        return True
+    if current_user and current_user.is_authenticated:
+        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+            return True
+    elif session and 'tempuser' in session:
+        temp_user_id = int(session['tempuser'])
+        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+            return True
     return False
 
 if in_celery:
@@ -619,6 +624,8 @@ def advance_progress(user_dict, interview):
 def delete_temp_user_data(temp_user_id, r):
     UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
     db.session.commit()
+    UploadsUserAuth.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
     ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
     db.session.commit()
     ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
@@ -647,6 +654,8 @@ def delete_user_data(user_id, r, r_user):
     UserDict.query.filter_by(user_id=user_id).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UploadsUserAuth.query.filter_by(user_id=user_id).delete()
     db.session.commit()
     ChatLog.query.filter_by(owner_id=user_id).delete()
     db.session.commit()
@@ -743,6 +752,27 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             do_delete = True
         else:
             do_delete = False
+    files_to_save = list()
+    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
+        files_to_save.append(upload.indexno)
+    if len(files_to_save):
+        something_added = False
+        if user_type == 'user':
+            for uploads_indexno in files_to_save:
+                existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                if not existing_auth:
+                    new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
+                    db.session.add(new_auth_record)
+                    something_added = True
+        else:
+            for uploads_indexno in files_to_save:
+                existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                if not existing_auth:
+                    new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
+                    db.session.add(new_auth_record)
+                    something_added = True
+        if something_added:
+            db.session.commit()
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
@@ -886,6 +916,91 @@ def file_set_attributes(file_number, **kwargs):
     if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
         upload.filename = kwargs['filename']
     db.session.commit()
+
+def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow_user_id=None, disallow_email=None, disallow_all=False):
+    something_added = False
+    if allow_user_id:
+        for user_id in set(allow_user_id):
+            existing_user = UserModel.query.filter_by(id=user_id).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid user ID " + repr(user_id))
+                continue
+            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).first():
+                continue
+            new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=user_id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    something_added = False
+    if allow_email:
+        for email in set(allow_email):
+            existing_user = UserModel.query.filter_by(email=email).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid email " + repr(email))
+                continue
+            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).first():
+                continue
+            new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=existing_user.id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    if disallow_user_id:
+        for user_id in set(disallow_user_id):
+            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).delete()
+        db.session.commit()
+    if disallow_email:
+        for email in set(disallow_email):
+            existing_user = UserModel.query.filter_by(email=email).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid email " + repr(email))
+                continue
+            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).delete()
+        db.session.commit()
+    if disallow_all:
+        UploadsUserAuth.query.filter_by(uploads_indexno=file_number).delete()
+    if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
+        result = dict(user_ids=list(), emails=list(), temp_user_ids=list())
+        for auth in db.session.query(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).filter(UploadsUserAuth.uploads_indexno == file_number).all():
+            if auth.user_id is not None:
+                result['user_ids'].append(auth.user_id)
+            if auth.temp_user_id is not None:
+                result['temp_user_ids'].append(auth.temp_user_id)
+            if auth.email:
+                result['emails'].append(auth.email)
+        return result
+
+def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=False):
+    something_added = False
+    if allow:
+        for privilege in set(allow):
+            existing_role = Role.query.filter_by(name=privilege).first()
+            if not existing_role:
+                logmessage("file_privilege_access: invalid privilege " + repr(privilege))
+                continue
+            if UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).first():
+                continue
+            new_auth_record = UploadsRoleAuth(uploads_indexno=file_number, role_id=existing_role.id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    if disallow:
+        for privilege in set(disallow):
+            existing_role = Role.query.filter_by(name=privilege).first()
+            if not existing_role:
+                logmessage("file_privilege_access: invalid privilege " + repr(privilege))
+                continue
+            UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).delete()
+        db.session.commit()
+    if disallow_all:
+        UploadsRoleAuth.query.filter_by(uploads_indexno=file_number).delete()
+    if not (allow or disallow or disallow_all):
+        result = list()
+        for auth in db.session.query(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).filter(UploadsRoleAuth.uploads_indexno == file_number).all():
+            result.append(auth.name)
+        return result
 
 def clear_session(i):
     if 'sessions' in session and i in session['sessions']:

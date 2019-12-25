@@ -3143,6 +3143,63 @@ class DAFile(DAObject):
         if 'persistent' in kwargs and kwargs['persistent'] in [True, False]:
             self.persistent = kwargs['persistent']
         return server.file_set_attributes(self.number, **kwargs)
+    def user_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file for a given user."""
+        allow_user_id = list()
+        allow_email = list()
+        disallow_user_id = list()
+        disallow_email = list()
+        disallow_all = False
+        for item in pargs:
+            if isinstance(item, string_types):
+                m = re.search('^[0-9]+$', item)
+                if m:
+                    item = int(item)
+            if isinstance(item, int):
+                allow_user_id.append(item)
+            elif isinstance(item, string_types):
+                allow_email.append(item)
+        if 'disallow' in kwargs:
+            disallow = kwargs['disallow']
+            if disallow == 'all':
+                allow_user_id = list()
+                allow_email = list()
+                disallow_all = True
+            else:
+                if isinstance(disallow, (int, string_types)):
+                    disallow = [disallow]
+                if isinstance(disallow, list) or isinstance(disallow, DAList):
+                    for item in disallow:
+                        if isinstance(item, string_types):
+                            m = re.search('^[0-9]+$', item)
+                            if m:
+                                item = int(item)
+                        if isinstance(item, int):
+                            disallow_user_id.append(item)
+                        elif isinstance(item, string_types):
+                            disallow_email.append(item)
+        return server.file_user_access(self.number, allow_user_id=allow_user_id, allow_email=allow_email, disallow_user_id=disallow_user_id, disallow_email=disallow_email, disallow_all=disallow_all)
+    def privilege_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file for a given privilege."""
+        allow = list()
+        disallow = list()
+        disallow_all = False
+        for item in pargs:
+            if isinstance(item, string_types):
+                allow.append(item)
+        if 'disallow' in kwargs:
+            disallow_arg = kwargs['disallow']
+            if disallow_arg == 'all':
+                allow = list()
+                disallow_all = True
+            else:
+                if isinstance(disallow_arg, string_types):
+                    disallow_arg = [disallow_arg]
+                if isinstance(disallow_arg, list) or isinstance(disallow_arg, DAList):
+                    for item in disallow_arg:
+                        if isinstance(item, string_types):
+                            disallow.append(item)
+        return server.file_privilege_access(self.number, allow=allow, disallow=disallow, disallow_all=disallow_all)
 
 class DAFileCollection(DAObject):
     """Used internally by docassemble to refer to a collection of DAFile
@@ -3212,6 +3269,18 @@ class DAFileCollection(DAObject):
         for ext in self._extension_list():
             if hasattr(self, ext):
                 return getattr(self, ext).set_attributes(**kwargs)
+    def user_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file(s) for a given user."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                if getattr(self, ext).ok:
+                    getattr(self, ext).user_access(*pargs, **kwargs)
+    def privilege_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file(s) for a given privilege."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                if getattr(self, ext).ok:
+                    getattr(self, ext).privilege_access(*pargs, **kwargs)
     def show(self, **kwargs):
         """Inserts markup that displays each part of the file collection as an
         image or link.
@@ -3310,6 +3379,16 @@ class DAFileList(DAList):
         for element in sorted(self.elements):
             if element.ok:
                 element.set_attributes(**kwargs)
+    def user_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file(s) for a given user."""
+        for element in sorted(self.elements):
+            if element.ok:
+                element.user_access(*pargs, **kwargs)
+    def privilege_access(self, *pargs, **kwargs):
+        """Allows or disallows access to the file(s) for a given privilege."""
+        for element in sorted(self.elements):
+            if element.ok:
+                element.privilege_access(*pargs, **kwargs)
 
 class DAStaticFile(DAObject):
     def init(self, *pargs, **kwargs):

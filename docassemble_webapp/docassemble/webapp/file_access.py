@@ -13,7 +13,8 @@ import mimetypes
 from PIL import Image
 import xml.etree.ElementTree as ET
 import docassemble.base.functions
-from docassemble.webapp.core.models import Uploads
+from docassemble.webapp.users.models import UserDictKeys, UserRoles
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask_login import current_user
 from sqlalchemy import or_, and_
@@ -22,6 +23,7 @@ from io import open
 from six import text_type
 import sys
 from docassemble.base.generate_key import random_lower_string
+
 
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
@@ -264,7 +266,16 @@ def get_info_from_file_number(file_number, privileged=False, filename=None, uids
     result = dict()
     upload = Uploads.query.filter_by(indexno=file_number).first()
     if not privileged and upload is not None and upload.private and upload.key not in uids:
-        upload = None
+        has_access = False
+        if current_user and current_user.is_authenticated:
+            if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+                has_access = True
+        elif session and 'tempuser' in session:
+            temp_user_id = int(session['tempuser'])
+            if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+                has_access = True
+        if not has_access:
+            upload = None
     if upload:
         if filename is None:
             result['filename'] = upload.filename

@@ -420,11 +420,14 @@ class InterviewStatus(object):
                         if 'show_if_var' in the_field.extras:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
                         if 'show_if_js' in the_field.extras:
-                            the_field.extras['show_if_js']['expression'].original_text = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'].original_text)
+                            the_field.extras['show_if_js']['expression'].original_text = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'].original_text)
+                            self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
                             if the_field.extras['show_if_js']['expression'].uses_mako:
                                 the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
-                                the_field.extras['show_if_js']['vars'][ii] = re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
+                                the_field.extras['show_if_js']['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
+                            for ii in range(len(self.extras['show_if_js'][the_field.number]['vars'])):
+                                self.extras['show_if_js'][the_field.number]['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['vars'][ii])
                     if list_indexno >= list_len:
                         the_field.collect_type = 'extra'
                     else:
@@ -597,6 +600,8 @@ class InterviewStatus(object):
                 the_field['required'] = self.extras['required'][field.number]
             if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
                 the_field['validation_messages'] = self.extras['validation messages'][field.number]
+            if 'permissions' in self.extras:
+                the_field['permissions'] = self.extras['permissions'][field.number]
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'image_type' in self.extras and self.extras['image_type']:
@@ -881,6 +886,8 @@ class Field:
             self.image_type = data['image_type']
         if 'accept' in data:
             self.accept = data['accept']
+        if 'persistent' in data or 'private' in data or 'allow_users' in data or 'allow_privileges' in data:
+            self.permissions = dict(persistent=data.get('persistent', None), private=data.get('private', None), allow_users=data.get('allow_users', None), allow_privileges=data.get('allow_privileges', None))
         if 'rows' in data:
             self.rows = data['rows']
         if 'object_labeler' in data:
@@ -2612,6 +2619,44 @@ class Question:
                             elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                                 field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
+                            elif key == 'allow privileges' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if isinstance(field[key], list):
+                                    for item in field[key]:
+                                        if not isinstance(item, string_types):
+                                            raise DAError("An allow privileges specifier must be a list of plain text items or code." + self.idebug(data))
+                                    field_info['allow_privileges'] = field[key]
+                                elif isinstance(field[key], string_types):
+                                    field_info['allow_privileges'] = [field[key]]
+                                elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
+                                    field_info['allow_privileges'] = {'compute': compile(field[key]['code'], '<allow privileges code>', 'eval'), 'sourcecode': field[key]['code']}
+                                    self.find_fields_in(field[key]['code'])
+                                else:
+                                    raise DAError("An allow privileges specifier must be a list of plain text items or code." + self.idebug(data))
+                            elif key == 'allow users' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if isinstance(field[key], list):
+                                    for item in field[key]:
+                                        if not isinstance(item, (string_types, int)):
+                                            raise DAError("An allow users specifier must be a list of integers and plain text items or code." + self.idebug(data))
+                                    field_info['allow_users'] = field[key]
+                                elif isinstance(field[key], string_types):
+                                    field_info['allow_users'] = [field[key]]
+                                elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
+                                    field_info['allow_users'] = {'compute': compile(field[key]['code'], '<allow users code>', 'eval'), 'sourcecode': field[key]['code']}
+                                    self.find_fields_in(field[key]['code'])
+                                else:
+                                    raise DAError("An allow users specifier must be a list of integers and plain text items or code." + self.idebug(data))
+                            elif key == 'persistent' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if isinstance(field[key], bool):
+                                    field_info['persistent'] = field[key]
+                                else:
+                                    field_info['persistent'] = {'compute': compile(field[key], '<persistent code>', 'eval'), 'sourcecode': field[key]}
+                                    self.find_fields_in(field[key])
+                            elif key == 'private' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                                if isinstance(field[key], bool):
+                                    field_info['private'] = field[key]
+                                else:
+                                    field_info['private'] = {'compute': compile(field[key], '<public code>', 'eval'), 'sourcecode': field[key]}
+                                    self.find_fields_in(field[key])
                             elif key == 'object labeler':
                                 field_info['object_labeler'] = {'compute': compile(text_type(field[key]), '<object labeler code>', 'eval'), 'sourcecode': text_type(field[key])}
                                 self.find_fields_in(field[key])
@@ -3541,6 +3586,42 @@ class Question:
                 options['password'] = TextObject(target['password'])
             if 'template password' in target:
                 options['template_password'] = TextObject(target['template password'])
+            if 'persistent' in target:
+                if isinstance(target['persistent'], bool):
+                    options['persistent'] = target['persistent']
+                elif isinstance(target['persistent'], string_types):
+                    options['persistent'] = compile(target['persistent'], '<persistent expression>', 'eval')
+                    self.find_fields_in(target['persistent'])
+                else:
+                    raise DAError('Unknown data type in attachment persistent.' + self.idebug(target))
+            if 'private' in target:
+                if isinstance(target['private'], bool):
+                    options['private'] = target['private']
+                elif isinstance(target['private'], string_types):
+                    options['private'] = compile(target['private'], '<public expression>', 'eval')
+                    self.find_fields_in(target['private'])
+                else:
+                    raise DAError('Unknown data type in attachment public.' + self.idebug(target))
+            if 'allow privileges' in target:
+                if isinstance(target['allow privileges'], dict) and len(target['allow privileges']) == 1 and 'code' in target['allow privileges'] and isinstance(target['allow privileges']['code'], string_types):
+                    options['allow privileges'] = compile(target['allow privileges']['code'], '<allow privileges expression>', 'eval')
+                elif isinstance(target['allow privileges'], string_types):
+                    options['allow privileges'] = [target['allow privileges']]
+                elif isinstance(target['allow privileges'], list):
+                    for item in target['allow privileges']:
+                        if not isinstance(item, string_types):
+                            raise DAError('Unknown data type in attachment allow privileges.' + self.idebug(target))
+                    options['allow privileges'] = target['allow privileges']
+            if 'allow users' in target:
+                if isinstance(target['allow users'], dict) and len(target['allow users']) == 1 and 'code' in target['allow users'] and isinstance(target['allow users']['code'], string_types):
+                    options['allow users'] = compile(target['allow users']['code'], '<allow users expression>', 'eval')
+                elif isinstance(target['allow users'], (string_types, int)):
+                    options['allow users'] = [target['allow users']]
+                elif isinstance(target['allow users'], list):
+                    for item in target['allow users']:
+                        if not isinstance(item, (string_types, int)):
+                            raise DAError('Unknown data type in attachment allow users.' + self.idebug(target))
+                    options['allow users'] = target['allow users']
             if 'pdf/a' in target:
                 if isinstance(target['pdf/a'], bool):
                     options['pdf_a'] = target['pdf/a']
@@ -4244,6 +4325,28 @@ class Question:
                             extras['nota'][field.number] = field.nota
                         else:
                             extras['nota'][field.number] = field.nota.text(user_dict)
+                    if hasattr(field, 'permissions'):
+                        if 'permissions' not in extras:
+                            extras['permissions'] = dict()
+                        extras['permissions'][field.number] = dict()
+                        if isinstance(field.permissions['private'], bool):
+                            extras['permissions'][field.number]['private'] = field.permissions['private']
+                        elif field.permissions['private'] is not None:
+                            extras['permissions'][field.number]['private'] = True if eval(field.permissions['private']['compute'], user_dict) else False
+                        if isinstance(field.permissions['persistent'], bool):
+                            extras['permissions'][field.number]['persistent'] = field.permissions['persistent']
+                        elif field.permissions['persistent'] is not None:
+                            extras['permissions'][field.number]['persistent'] = True if eval(field.permissions['persistent']['compute'], user_dict) else False
+                        if field.permissions['allow_users'] is not None:
+                            if isinstance(field.permissions['allow_users'], list):
+                                extras['permissions'][field.number]['allow_users'] = allow_users_list(field.permissions['allow_users'])
+                            else:
+                                extras['permissions'][field.number]['allow_users'] = allow_users_list(eval(field.permissions['allow_users']['compute'], user_dict))
+                        if field.permissions['allow_privileges'] is not None:
+                            if isinstance(field.permissions['allow_privileges'], list):
+                                extras['permissions'][field.number]['allow_privileges'] = allow_privileges_list(field.permissions['allow_privileges'])
+                            else:
+                                extras['permissions'][field.number]['allow_privileges'] = allow_privileges_list(eval(field.permissions['allow_privileges']['compute'], user_dict))
                     if isinstance(field.required, bool):
                         extras['required'][field.number] = field.required
                     else:
@@ -4617,7 +4720,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 #logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
                     if key in result:
                         del result[key]
                 return result
@@ -4640,7 +4743,7 @@ class Question:
                         docassemble.base.functions.set_context('pdf')
                         the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references'):
+                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
                             if key in result:
                                 del result[key]
                         docassemble.base.functions.reset_context()
@@ -4682,7 +4785,7 @@ class Question:
                             pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
                             docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'])
                             result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references']:
+                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
                             if key in result:
                                 del result[key]
                 else:
@@ -4736,7 +4839,7 @@ class Question:
             the_filename = attachment['filename'].text(the_user_dict).strip()
             if the_filename == '':
                 the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'])
+            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
             exec(variable_name + '.info = _attachment_info', the_user_dict)
             del the_user_dict['_attachment_info']
             for doc_format in result['file']:
@@ -4769,6 +4872,21 @@ class Question:
                     variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                     # logmessage("Setting " + variable_string)
                     string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                    exec(string, the_user_dict)
+            if 'permissions' in result:
+                if result['permissions']['private'] is not None or result['permissions']['persistent'] is not None:
+                    params = list()
+                    if 'private' in result['permissions']:
+                        params.append('private=' + repr(result['permissions']['private']))
+                    if 'persistent' in result['permissions']:
+                        params.append('persistent=' + repr(result['permissions']['persistent']))
+                    string = variable_name + '.set_attributes(' + ','.join(params) + ')'
+                    exec(string, the_user_dict)
+                if len(result['permissions']['allow users']):
+                    string = variable_name + '.user_access(' + ', '.join([repr(y) for y in result['permissions']['allow users']]) + ')'
+                    exec(string, the_user_dict)
+                if len(result['permissions']['allow privileges']):
+                    string = variable_name + '.privilege_access(' + ', '.join([repr(y) for y in result['permissions']['allow privileges']]) + ')'
                     exec(string, the_user_dict)
         return(result)
     def prepare_attachment(self, attachment, the_user_dict, **kwargs):
@@ -4856,6 +4974,36 @@ class Question:
                 result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
+        result['permissions'] = dict()
+        if 'persistent' in attachment['options']:
+            if isinstance(attachment['options']['persistent'], bool):
+                result['permissions']['persistent'] = attachment['options']['persistent']
+            else:
+                result['permissions']['persistent'] = eval(attachment['options']['persistent'], the_user_dict)
+        else:
+            result['permissions']['persistent'] = None
+        if 'private' in attachment['options']:
+            if isinstance(attachment['options']['private'], bool):
+                result['permissions']['private'] = attachment['options']['private']
+            else:
+                result['permissions']['private'] = eval(attachment['options']['private'], the_user_dict)
+        else:
+            result['permissions']['private'] = None
+        if 'allow users' in attachment['options']:
+            if isinstance(attachment['options']['allow users'], list):
+                result['permissions']['allow users'] = allow_users_list(attachment['options']['allow users'])
+            else:
+                result['permissions']['allow users'] = eval(attachment['options']['allow users'], the_user_dict)
+            result['permissions']['allow users'] = allow_users_list(result['permissions']['allow users'])
+        else:
+            result['permissions']['allow users'] = []
+        if 'allow privileges' in attachment['options']:
+            if isinstance(attachment['options']['allow privileges'], list):
+                result['permissions']['allow privileges'] = allow_privileges_list(attachment['options']['allow privileges'])
+            else:
+                result['permissions']['allow privileges'] = allow_privileges_list(eval(attachment['options']['allow privileges'], the_user_dict))
+        else:
+            result['permissions']['allow privileges'] = []
         if 'tagged_pdf' in attachment['options']:
             if isinstance(attachment['options']['tagged_pdf'], bool):
                 result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
@@ -7211,3 +7359,29 @@ def get_docx_variables(the_path):
         if name in names:
             names.remove(name)
     return sorted(list(names))
+
+def allow_users_list(obj):
+    if not (isinstance(obj, list) or (hasattr(obj, 'instanceName') and hasattr(obj, 'elements') and isinstance(obj.elements, list))):
+        obj = [obj]
+    new_list = list()
+    for item in obj:
+        if isinstance(item, string_types) and re.search(r'^[0-9]+$', item):
+            item = int(item)
+        if isinstance(item, (int, string_types)):
+            new_list.append(item)
+        else:
+            email_address_method = getattr(item, 'email_address', None)
+            if callable(email_address_method):
+                new_list.append(item.email)
+            else:
+                new_list.append(text_type(item))
+    return new_list
+
+def allow_privileges_list(obj):
+    if not (isinstance(obj, list) or (hasattr(obj, 'instanceName') and hasattr(obj, 'elements') and isinstance(obj.elements, list))):
+        obj = [obj]
+    new_list = list()
+    for item in obj:
+        if isinstance(item, string_types):
+            new_list.append(item)
+    return new_list
