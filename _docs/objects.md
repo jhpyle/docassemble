@@ -1326,6 +1326,86 @@ To read the values of the attributes for a variable like
 [`.retrieve()`](#DAFile.retrieve).  Setting these attributes directly
 has no effect; you need to use [`.set_attributes()`] to set them.
 
+When allowing users to upload files using [`datatype: file`], you can
+use field modifiers to set initial values for `private` and
+`persistent`.
+
+<a name="DAFile.user_access"></a>You can use the `.user_access()`
+method to grant or deny access to particular users.  Suppose you have
+a `DAFile` called `my_file`.  You can call:
+
+{% highlight python %}
+my_file.user_access('jsmith@example.com', 'sjones@example.com')
+{% endhighlight %}
+
+This will grant access to the users on the system with those
+usernames.  You can also reference user IDs:
+
+{% highlight python %}
+my_file.user_access(21, 43, 54)
+{% endhighlight %}
+
+To deny access, you can set the optional keyword parameter `disallow`:
+
+{% highlight python %}
+my_file.user_access(disallow='jsmith@example.com')
+{% endhighlight %}
+
+{% highlight python %}
+my_file.user_access(disallow=['jsmith@example.com', 'sjones@example.com'])
+{% endhighlight %}
+
+To disallow access completely, set `disallow` to `'all'`:
+
+{% highlight python %}
+my_file.user_access(disallow='all')
+{% endhighlight %}
+
+To find out which users have been assigned privileges, call
+`user_access()` on a `DAFile` (not a [`DAFileList`] or
+[`DAFileCollection`]) without any arguments.  The result will be a
+dictionary with the following keys:
+
+* `user_ids`: a list of user IDs;
+* `emails`: a list of e-mail addresses of users with access; and
+* `temp_user_ids`: a list of temporary user IDs for non-logged in
+  users who have access (such users cannot be assigned).
+
+Note that the `user_access()` function only reports users who have
+been given explicit access; users who have joined the interview also
+have access; to take away their access, you would need to delete their
+session.
+
+<a name="DAFile.privilege_access"></a>You can use the
+`.privilege_access()` method to manage access to a file based on the
+privileges of users.  Suppose you have a `DAFile` called `my_file`.
+You can call:
+
+{% highlight python %}
+my_file.privilege_access('developer', 'advocate')
+{% endhighlight %}
+
+You can also take privileges away:
+
+{% highlight python %}
+my_file.privilege_access(disallow=['developer', 'advocate'])
+{% endhighlight %}
+
+To take all privileges away, use the special code `'all'`:
+
+{% highlight python %}
+my_file.privilege_access(disallow='all')
+{% endhighlight %}
+
+To see what privileges have access to a file, call
+`.privilege_access()` on a `DAFile` without any parameters:
+
+{% highlight python %}
+privileges_list = my_file.privilege_access()
+{% endhighlight %}
+
+This will return a list of privileges (e.g., `['developer', 'user']`).
+
 <a name="DAFile.size_in_bytes"></a>The `.size_in_bytes()` method
 returns the number of bytes in the file.
 
@@ -1532,6 +1612,24 @@ the files in the collection.  If you run `get_alt_text()` on a
 `DAFileCollection`, it is like calling [`get_alt_text()`] on the first
 document type in the collection.
 
+<a name="DAFileCollection.set_attributes"></a>The `.set_attributes()`
+method calls [`.set_attributes()`] on each of the [`DAFile`]s in the
+collection, applying the same attributes to each file.  For an
+explanation of how this method works, see [its
+documentation](#DAFile.set_attributes).
+
+<a name="DAFileCollection.user_access"></a>The `.user_access()` method
+calls [`.user_access()`] on each of the [`DAFile`]s in the list.  If
+called with no parameters, it returns `None`; if you want to inspect
+information about a file, call the method on a specific item in the
+list.
+
+<a name="DAFileCollection.privilege_access"></a>The
+`.privilege_access()` method calls [`.privilege_access()`] on each of
+the [`DAFile`]s in the list.  If called with no parameters, it returns
+`None`; if you want to inspect information about a file, call the
+method on a specific item in the list.
+
 <a name="DAFileCollection.is_encrypted"></a>The `.is_encrypted()`
 method returns `True` if there is a PDF version of the
 `DAFileCollection` object and that PDF file is encrypted.  Otherwise
@@ -1610,6 +1708,18 @@ mandatory: True
 code: |
   the_upload.set_attributes(private=False)
 {% endhighlight %}
+
+<a name="DAFileList.user_access"></a>The `.user_access()` method calls
+[`.user_access()`] on each of the [`DAFile`]s in the list.  If called
+with no parameters, it returns `None`; if you want to inspect
+information about a file, call the method on a specific item in the
+list.
+
+<a name="DAFileList.privilege_access"></a>The `.privilege_access()`
+method calls [`.privilege_access()`] on each of the [`DAFile`]s in the
+list.  If called with no parameters, it returns `None`; if you want to
+inspect information about a file, call the method on a specific item
+in the list.
 
 <a name="DAFileList.set_alt_text"></a><a
 name="DAFileList.set_alt_text"></a>The `DAFileList` object supports
@@ -2598,10 +2708,10 @@ setting the `on_failure` attribute (or keyword parameter).  If you set
 returned in case of an error.  The default value is `None`, meaning
 that `None` is returned in case the request is not successful.
 
-There is a special value of `on_failure` that you might want to use:
-if you set `on_failure` to `'raise'`, then if the request is
-unsuccessful, an exception of type `DAWebError` is raised, which you
-can trap:
+<a name="DAWebError"></a>There is a special value of `on_failure` that
+you might want to use: if you set `on_failure` to `'raise'`, then if
+the request is unsuccessful, an exception of type `DAWebError` is
+raised, which you can trap:
 
 {% highlight yaml %}
 objects:
@@ -5921,3 +6031,5 @@ the `_uid` of the table rather than the `id`.
 [content type]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
 [Basic Auth]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#Basic_authentication_scheme
 [Digest Auth]: https://en.wikipedia.org/wiki/Digest_access_authentication
+[`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
+[`.user_access()`]: #DAFile.user_access

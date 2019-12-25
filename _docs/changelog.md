@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.69](https://github.com/jhpyle/docassemble/releases/tag/v0.5.69) - 2019-12-24
+
+### Added
+- The `.user_access()` and `.privilege_access()` methods of `DAFile`.
+- The `persistent`, `private`, `allow users`, and `allow privileges`
+  specifiers for `attachments` and field modifiers for `datatype:
+  file` fields.
+
+### Fixed
+- User could not access a private and persistent file after the
+  deletion of the session in which the file was created.
+- Issue with `js show if` and `list collect`.
+
 ## [0.5.68](https://github.com/jhpyle/docassemble/releases/tag/v0.5.68) - 2019-12-21
 
 ### Fixed

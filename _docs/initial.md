@@ -1164,12 +1164,11 @@ is processed, as if it was marked as `initial`.  For this reason, any
 in the interview file than and `mandatory` questions or [`code` blocks].
 
 In the example above, the interview has two roles: "client" and
-"advocate".  The special variables `user` and `role` are set in the
-`code` block, which is executed every time the interview logic is
-processed.
+"advocate".  The special variable `role` is set in the `code` block,
+which is executed every time the interview logic is processed.
 
 In addition, the [`set_info()`] function is called.  This lets the
-linguistic functions know who the user is, so that questions can ask
+linguistic functions know who the `user` is, so that questions can ask
 "What is your date of birth?" or "What is John Smith's date of birth"
 depending on whether the current user is John Smith or not.
 

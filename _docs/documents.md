@@ -1530,6 +1530,60 @@ If you use [`variable name`], the result will be a
 [`DAFileCollection`] object with the attribute `raw` set to a
 [`DAFile`] object representing the assembled text file.
 
+## <a name="permissions"></a>Controlling file permissions
+
+By default, access to documents is limited to the user who created it
+and to any other users who have joined the interview session.  Access
+to files can be managed using the methods [`.set_attributes()`],
+[`.user_access()`], and [`.privilege_access()`] if you set a
+[`variable name`].  You can also control the permissions on files
+using specifiers under `attachment`.
+
+<a name="persistent"></a>By default, any file that a user uploads
+during a session will be deleted when that session is deleted.  If you
+want the file to continue to exist after the session is deleted, you
+can set the `persistent` specifier to `True`.  The modifier also
+accepts [Python] code; if the code evaluates to a true value, the file
+will persist.  This has the same effect as calling the
+[`.set_attributes()`] method on the file variable using the keyword
+attribute `persistent`.
+
+<a name="private"></a>By default, any file that a user uploads will
+only be downloadable by a session user or by an administrator.  If you
+want the file to be accessible to anyone, set the field modifier
+`private` to `False`.  The modifier also accepts [Python] code; if the
+code evaluates to a false value, the file will be available to anyone.
+This has the same effect as calling the [`.set_attributes()`] method
+on the file variable using the keyword attribute `persistent`.
+
+<a name="allow users"></a>If you set `private: False`, then the file
+is available to anyone, including non-logged in users.  Even a bot
+that guesses URLs could download the file.  If you want to share with
+particular users, you can indicate specific users using the `allow
+users` specifier.  If `allowed users` refers to a [YAML] list, the list
+is expected to be a list of e-mail addresses of users or integers
+indicating the numeric user IDs of users.  If `allow users` refers
+to text, the text is treated as a single item.  If `allow users`
+refers to a [YAML] dictionary, the single key of which is `code`, you
+can define the list with [Python] code.  The code is expected to
+evalute to an e-mail address, an integer user ID, an [`Individual`]
+with the `email` attribute set, or a list or [`DAList`] of any of the
+above.  You can also use the [`.user_access()`] method to control
+which users have access to a file.
+
+<a name="allow privileges"></a>Instead of granting access to specific
+other users, you can grant access to categories of users by
+referencing [privileges] by name, such as `user`, `developer`, or
+`advocate`.  If the `allow privileges` specifier refers to a [YAML]
+list, the list items are expected to be text items like `user` or
+`developer`.  If `allow privileges` refers to a string, it is treated
+as a single item.  If it refers to a [YAML] dictionary, the single key
+of which is `code`, you can define the privileges using [Python] code,
+which is expected to evaluate to text (e.g., `'user'`) or a list of
+text strings (e.g., `['user', 'developer']`).  You can also use the
+[`.privilege_access()`] method to control which users have access to a
+file.
+
 ## <a name="redact"></a>Redacting information from documents
 
 If you want to assemble a document but redact certain pieces of
@@ -1756,3 +1810,8 @@ interview, see the [`cache documents` feature].
 [macros]: https://jinja.palletsprojects.com/en/2.10.x/templates/#macros
 [`team.docx`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/templates/team.docx
 [Markdown-formatted text]: #markdown to docx
+[`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
+[`.user_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.user_access
+[`.privilege_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.privilege_access
+[privileges]: {{ site.baseurl }}/docs/users.html
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
