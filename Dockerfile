@@ -93,6 +93,8 @@ bash -c \
 && pip3 install --upgrade mod_wsgi \
 && pip3 install --upgrade \
    3to2==1.1.1 \
+   cython \
+   numpy==1.17.3 \
    bcrypt==3.1.7 \
    flask==1.1.1 \
    flask-login==0.4.1 \
