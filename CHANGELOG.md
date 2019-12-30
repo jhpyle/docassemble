@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.70] - 2019-12-30
+### Added
+- The `phone_number_formatted()` function.
+- The `fr-words.yml` translation file in `docassemble.base`.
+### Fixed
+- Errors when building the Dockerfile on the ARM architecture.
+
 ## [0.5.69] - 2019-12-24
 ### Added
 - The `.user_access()` and `.privilege_access()` methods of `DAFile`.
