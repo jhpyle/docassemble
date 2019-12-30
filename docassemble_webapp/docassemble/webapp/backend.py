@@ -4,9 +4,10 @@ from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Uploads, SpeakList, ObjectStorage, Shortener, MachineLearning #Attachments
-from docassemble.base.generate_key import random_string, random_bytes
+from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage
+from docassemble.webapp.packages.models import PackageAuth
+from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
@@ -85,10 +86,11 @@ def delete_record(key, id):
 #@elapsed('save_numbered_file')
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
-        if has_request_context() and 'uid' in session:
-            uid = session.get('uid', None)
-        else:
+        try:
             uid = docassemble.base.functions.get_uid()
+            assert uid is not None
+        except:
+            uid = unattached_uid()
     if uid is None:
         raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
@@ -98,14 +100,14 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
-def fix_ml_files(playground_number):
+def fix_ml_files(playground_number, current_project):
     playground = SavedFile(playground_number, section='playgroundsources', fix=False)
     changed = False
     for filename in playground.list_of_files():
         if re.match(r'^ml-.*\.json', filename):
             playground.fix()
             try:
-                if write_ml_source(playground, playground_number, filename, finalize=False):
+                if write_ml_source(playground, playground_number, current_project, filename, finalize=False):
                     changed = True
             except:
                 logmessage("Error writing machine learning source file " + str(filename))
@@ -117,50 +119,71 @@ def is_package_ml(parts):
         return True
     return False
 
-def write_ml_source(playground, playground_number, filename, finalize=True):
+def project_name(name):
+    return '' if name == 'default' else name
+
+def add_project(filename, current_project):
+    if current_project == 'default':
+        return filename
+    else:
+        return os.path.join(current_project, filename)
+
+def directory_for(area, current_project):
+    if current_project == 'default':
+        return area.directory
+    else:
+        return os.path.join(area.directory, current_project)
+
+def write_ml_source(playground, playground_number, current_project, filename, finalize=True):
     if re.match(r'ml-.*\.json', filename):
         output = dict()
-        prefix = 'docassemble.playground' + str(playground_number) + ':data/sources/' + str(filename)
-        for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+        prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
+        for record in [record for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%'))]:
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
             if parts[2] not in output:
                 output[parts[2]] = list()
-            the_entry = dict(independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
+            the_independent = record.independent
+            if the_independent is not None:
+                the_independent = fix_pickle_obj(codecs.decode(bytearray(the_independent, encoding='utf-8'), 'base64'))
+            the_dependent = record.dependent
+            if the_dependent is not None:
+                the_dependent = fix_pickle_obj(codecs.decode(bytearray(the_dependent, encoding='utf-8'), 'base64'))
+            the_entry = dict(independent=the_independent, dependent=the_dependent)
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
         if len(output):
-            playground.write_as_json(output, filename=filename)
+            playground.write_as_json(output, filename=os.path.join(directory_for(playground, current_project), filename))
             if finalize:
                 playground.finalize()
             return True
     return False
 
 def absolute_filename(the_file):
-    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
+    match = re.match(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        #logmessage("absolute_filename: filename is " + filename)
-        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        #logmessage("absolute_filename: filename is " + filename + " and subdir is " + match.group(2))
+        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundtemplate/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundstatic/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundstatic/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename, subdir=match.group(2))
         return playground
-    match = re.match(r'^/playgroundsources/([0-9]+)/(.*)', the_file)
+    match = re.match(r'^/playgroundsources/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
     if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename)
-        write_ml_source(playground, match.group(1), filename)
+        filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename, subdir=match.group(2))
+        write_ml_source(playground, match.group(1), match.group(2), filename)
         return playground
     return(None)
 
@@ -168,12 +191,13 @@ if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail'
     mail = MailgunMail(app)
 else:
     mail = FlaskMail(app)
-    
+
 def da_send_mail(the_message):
     mail.send(the_message)
 
 import docassemble.webapp.machinelearning
 import docassemble.base.functions
+import docassemble.webapp.user_database
 from docassemble.base.functions import dict_as_json
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
@@ -193,6 +217,61 @@ def url_for(*pargs, **kwargs):
             kwargs['js_target'] = docassemble.base.functions.this_thread.misc['jsembed']
     return base_url_for(*pargs, **kwargs)
 
+def sql_get(key, secret=None):
+    for record in GlobalObjectStorage.query.filter_by(key=key):
+        if record.encrypted:
+            try:
+                result = decrypt_object(record.value, secret)
+            except:
+                raise Exception("Unable to decrypt stored object.")
+        else:
+            try:
+                result = unpack_object(record.value)
+            except:
+                raise Exception("Unable to unpack stored object.")
+        return result
+    return None
+
+def sql_defined(key):
+    record = GlobalObjectStorage.query.filter_by(key=key).with_entities(GlobalObjectStorage.id).first()
+    if record is None:
+        return False
+    return True
+
+def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
+    user_id, temp_user_id = parse_the_user_id(the_user_id)
+    updated = False
+    for record in GlobalObjectStorage.query.filter_by(key=key).with_for_update():
+        record.user_id = user_id
+        record.temp_user_id = temp_user_id
+        record.encrypted = encrypted
+        if encrypted:
+            record.value = encrypt_object(val, secret)
+        else:
+            record.value = pack_object(val)
+        updated = True
+    if not updated:
+        if encrypted:
+            record = GlobalObjectStorage(key=key, value=encrypt_object(val, secret), encrypted=True, user_id=user_id, temp_user_id=temp_user_id)
+        else:
+            record = GlobalObjectStorage(key=key, value=pack_object(val), encrypted=False, user_id=user_id, temp_user_id=temp_user_id)
+        db.session.add(record)
+    db.session.commit()
+
+def sql_delete(key):
+    GlobalObjectStorage.query.filter_by(key=key).delete()
+    db.session.commit()
+
+def get_info_from_file_reference_with_uids(*pargs, **kwargs):
+    if 'uids' not in kwargs:
+        kwargs['uids'] = get_session_uids()
+    return get_info_from_file_reference(*pargs, **kwargs)
+
+def get_info_from_file_number_with_uids(*pargs, **kwargs):
+    if 'uids' not in kwargs:
+        kwargs['uids'] = get_session_uids()
+    return get_info_from_file_number(*pargs, **kwargs)
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
@@ -211,8 +290,13 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          url_for=url_for,
                                          get_new_file_number=get_new_file_number,
                                          get_ext_and_mimetype=get_ext_and_mimetype,
-                                         file_finder=get_info_from_file_reference,
-                                         file_number_finder=get_info_from_file_number)
+                                         file_finder=get_info_from_file_reference_with_uids,
+                                         file_number_finder=get_info_from_file_number_with_uids,
+                                         server_sql_get=sql_get,
+                                         server_sql_defined=sql_defined,
+                                         server_sql_set=sql_set,
+                                         server_sql_delete=sql_delete,
+                                         alchemy_url=docassemble.webapp.user_database.alchemy_url)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
@@ -269,7 +353,7 @@ docassemble.base.functions.update_server(cloud=cloud,
                                          cloud_custom=cloud_custom,
                                          google_api=docassemble.webapp.google_api)
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -287,19 +371,29 @@ from docassemble.base.functions import pickleable_objects
 #logmessage("Server started")
 
 #@elapsed('can_access_file_number')
-def can_access_file_number(file_number, uid=None):
+def can_access_file_number(file_number, uids=None):
+    upload = Uploads.query.filter(Uploads.indexno == file_number).first()
+    if upload is None:
+        return False
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         return True
-    if uid is None:
-        if has_request_context() and 'uid' in session:
-            uid = session.get('uid', None)
-        else:
-            uid = docassemble.base.functions.get_uid()
-    if uid is None:
-        raise Exception("can_access_file_number: uid not defined")
-    upload = Uploads.query.filter(and_(Uploads.indexno == file_number, or_(Uploads.key == uid, Uploads.private == False))).first()
-    if upload:
+    if not upload.private:
         return True
+    if uids is None or len(uids) == 0:
+        new_uid = docassemble.base.functions.get_uid()
+        if new_uid is not None:
+            uids = [new_uid]
+        else:
+            uids = []
+    if upload.key in uids:
+        return True
+    if current_user and current_user.is_authenticated:
+        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+            return True
+    elif session and 'tempuser' in session:
+        temp_user_id = int(session['tempuser'])
+        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+            return True
     return False
 
 if in_celery:
@@ -365,6 +459,25 @@ def pack_object(the_object):
 def unpack_object(the_string):
     the_string = bytearray(the_string, encoding='utf-8')
     return fix_pickle_dict(codecs.decode(the_string, 'base64'))
+
+def encrypt_object(obj, secret):
+    iv = random_bytes(16)
+    encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
+    return (iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(safe_pickle(obj)))), 'base64')).decode()
+
+def decrypt_object(obj_string, secret):
+    obj_string = bytearray(obj_string, encoding='utf-8')
+    decrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, obj_string[:16])
+    return fix_pickle_obj(unpad(decrypter.decrypt(codecs.decode(obj_string[16:], 'base64'))))
+
+def parse_the_user_id(the_user_id):
+    m = re.match(r'(t?)([0-9]+)', text_type(the_user_id))
+    if m:
+        if m.group(1) == 't':
+            return None, int(m.group(2))
+        else:
+            return int(m.group(2)), None
+    raise Exception("Invalid user ID")
 
 def safe_pickle(the_object):
     if type(the_object) is list:
@@ -457,7 +570,7 @@ def fetch_user_dict(user_code, filename, secret=None):
     steps = 1
     encrypted = True
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    results = [d for d in db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)]
     #logmessage("fetch_user_dict: 01 query is " + str(results))
     for d in results:
         #logmessage("fetch_user_dict: indexno is " + str(d.indexno))
@@ -508,6 +621,103 @@ def advance_progress(user_dict, interview):
         user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
     return
 
+def delete_temp_user_data(temp_user_id, r):
+    UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    UploadsUserAuth.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(temp_user_id=temp_user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
+    Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:t' + text_type(temp_user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:t' + text_type(temp_user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
+
+def delete_user_data(user_id, r, r_user):
+    UserDict.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UploadsUserAuth.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(owner_id=user_id).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    GlobalObjectStorage.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
+        package_auth.user_id = 1
+    db.session.commit()
+    files_to_delete = list()
+    for short_code_item in Shortener.query.filter_by(user_id=user_id).all():
+        for email in Email.query.filter_by(short=short_code_item.short).all():
+            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                files_to_delete.append(attachment.upload)
+    for file_number in files_to_delete:
+        the_file = SavedFile(file_number)
+        the_file.delete()
+    Shortener.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    UserRoles.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    for user_auth in UserAuthModel.query.filter_by(user_id=user_id):
+        user_auth.password = ''
+        user_auth.reset_password_token = ''
+    db.session.commit()
+    for section in ('playground', 'playgroundmodules', 'playgroundpackages', 'playgroundsources', 'playgroundstatic', 'playgroundtemplate'):
+        the_section = SavedFile(user_id, section=section)
+        the_section.delete()
+    old_email = None
+    for user_object in UserModel.query.filter_by(id=user_id):
+        old_email = user_object.email
+        user_object.active = False
+        user_object.first_name = ''
+        user_object.last_name = ''
+        user_object.nickname = ''
+        user_object.email = None
+        user_object.country = ''
+        user_object.subdivisionfirst = ''
+        user_object.subdivisionsecond = ''
+        user_object.subdivisionthird = ''
+        user_object.organization = ''
+        user_object.timezone = None
+        user_object.language = None
+        user_object.pypi_username = None
+        user_object.pypi_password = None
+        user_object.otp_secret = None
+        user_object.social_id = 'disabled$' + text_type(user_id)
+    db.session.commit()
+    keys_to_delete = set()
+    for key in r.keys('*userid:' + text_type(user_id)):
+        keys_to_delete.add(key)
+    for key in r.keys('*userid:' + text_type(user_id) + ':*'):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r.delete(key)
+    keys_to_delete = set()
+    for key in r_user.keys('*:user:' + text_type(old_email)):
+        keys_to_delete.add(key)
+    for key in keys_to_delete:
+        r_user.delete(key)
+
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
@@ -542,23 +752,51 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             do_delete = True
         else:
             do_delete = False
+    files_to_save = list()
+    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
+        files_to_save.append(upload.indexno)
+    if len(files_to_save):
+        something_added = False
+        if user_type == 'user':
+            for uploads_indexno in files_to_save:
+                existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                if not existing_auth:
+                    new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
+                    db.session.add(new_auth_record)
+                    something_added = True
+        else:
+            for uploads_indexno in files_to_save:
+                existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                if not existing_auth:
+                    new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
+                    db.session.add(new_auth_record)
+                    something_added = True
+        if something_added:
+            db.session.commit()
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
-            old_file = SavedFile(upload.indexno)
-            old_file.delete()
-        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
-        db.session.commit()
-        # Attachments.query.filter_by(key=user_code, filename=filename).delete()
-        # db.session.commit()
+        files_to_delete = list()
+        for speaklist in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+            if speaklist.upload is not None:
+                files_to_delete.append(speaklist.upload)
         SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.commit()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+            files_to_delete.append(upload.indexno)
+        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
         db.session.commit()
         ChatLog.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
+        for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
+            for email in Email.query.filter_by(short=short_code_item.short).all():
+                for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+                    files_to_delete.append(attachment.upload)
         Shortener.query.filter_by(uid=user_code, filename=filename).delete()
         db.session.commit()
-    #logmessage("reset_user_dict: done")
+        for file_number in files_to_delete:
+            the_file = SavedFile(file_number)
+            the_file.delete()
     return
 
 #@elapsed('get_person')
@@ -678,3 +916,172 @@ def file_set_attributes(file_number, **kwargs):
     if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
         upload.filename = kwargs['filename']
     db.session.commit()
+
+def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow_user_id=None, disallow_email=None, disallow_all=False):
+    something_added = False
+    if allow_user_id:
+        for user_id in set(allow_user_id):
+            existing_user = UserModel.query.filter_by(id=user_id).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid user ID " + repr(user_id))
+                continue
+            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).first():
+                continue
+            new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=user_id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    something_added = False
+    if allow_email:
+        for email in set(allow_email):
+            existing_user = UserModel.query.filter_by(email=email).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid email " + repr(email))
+                continue
+            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).first():
+                continue
+            new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=existing_user.id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    if disallow_user_id:
+        for user_id in set(disallow_user_id):
+            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).delete()
+        db.session.commit()
+    if disallow_email:
+        for email in set(disallow_email):
+            existing_user = UserModel.query.filter_by(email=email).first()
+            if not existing_user:
+                logmessage("file_user_access: invalid email " + repr(email))
+                continue
+            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).delete()
+        db.session.commit()
+    if disallow_all:
+        UploadsUserAuth.query.filter_by(uploads_indexno=file_number).delete()
+    if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
+        result = dict(user_ids=list(), emails=list(), temp_user_ids=list())
+        for auth in db.session.query(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).filter(UploadsUserAuth.uploads_indexno == file_number).all():
+            if auth.user_id is not None:
+                result['user_ids'].append(auth.user_id)
+            if auth.temp_user_id is not None:
+                result['temp_user_ids'].append(auth.temp_user_id)
+            if auth.email:
+                result['emails'].append(auth.email)
+        return result
+
+def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=False):
+    something_added = False
+    if allow:
+        for privilege in set(allow):
+            existing_role = Role.query.filter_by(name=privilege).first()
+            if not existing_role:
+                logmessage("file_privilege_access: invalid privilege " + repr(privilege))
+                continue
+            if UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).first():
+                continue
+            new_auth_record = UploadsRoleAuth(uploads_indexno=file_number, role_id=existing_role.id)
+            db.session.add(new_auth_record)
+            something_added = True
+    if something_added:
+        db.session.commit()
+    if disallow:
+        for privilege in set(disallow):
+            existing_role = Role.query.filter_by(name=privilege).first()
+            if not existing_role:
+                logmessage("file_privilege_access: invalid privilege " + repr(privilege))
+                continue
+            UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).delete()
+        db.session.commit()
+    if disallow_all:
+        UploadsRoleAuth.query.filter_by(uploads_indexno=file_number).delete()
+    if not (allow or disallow or disallow_all):
+        result = list()
+        for auth in db.session.query(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).filter(UploadsRoleAuth.uploads_indexno == file_number).all():
+            result.append(auth.name)
+        return result
+
+def clear_session(i):
+    if 'sessions' in session and i in session['sessions']:
+        del session['sessions'][i]
+
+def clear_specific_session(i, uid):
+    if 'sessions' in session and i in session['sessions']:
+        if session['sessions'][i]['uid'] == uid:
+            del session['sessions'][i]
+
+def guess_yaml_filename():
+    yaml_filename = None
+    if 'i' in session and 'uid' in session: #TEMPORARY
+        yaml_filename = session['i']
+    if 'sessions' in session:
+        for item in session['sessions']:
+            yaml_filename = item
+            break
+    return yaml_filename
+
+def delete_obsolete():
+    for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
+        if name in session:
+            del session[name]
+
+def get_session(i):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i in session['sessions']:
+        return session['sessions'][i]
+    if 'i' in session and 'uid' in session: #TEMPORARY
+        session['sessions'][session['i']] = dict(uid=session['uid'], encrypted=session.get('encrypted', True), key_logged=session.get('key_logged', False), chatstatus=session.get('chatstatus', 'off'))
+        if i == session['i']:
+            delete_obsolete()
+            return session['sessions'][i]
+        delete_obsolete()
+    return None
+
+def unattached_uid():
+    while True:
+        newname = random_alphanumeric(32)
+        existing_key = UserDict.query.filter_by(key=newname).first()
+        if existing_key:
+            continue
+        return newname
+
+def get_uid_for_filename(i):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i not in session['sessions']:
+        return None
+    return session['sessions'][i]['uid']
+
+def update_session(i, uid=None, encrypted=None, key_logged=None, chatstatus=None):
+    if 'sessions' not in session:
+        session['sessions'] = dict()
+    if i not in session['sessions'] or uid is not None:
+        if uid is None:
+            raise Exception("update_session: cannot create new session without a uid")
+        if encrypted is None:
+            encrypted = True
+        if key_logged is None:
+            key_logged = False
+        if chatstatus is None:
+            chatstatus = 'off'
+        session['sessions'][i] = dict(uid=uid, encrypted=encrypted, key_logged=key_logged, chatstatus=chatstatus)
+    else:
+        if uid is not None:
+            session['sessions'][i]['uid'] = uid
+        if encrypted is not None:
+            session['sessions'][i]['encrypted'] = encrypted
+        if key_logged is not None:
+            session['sessions'][i]['key_logged'] = key_logged
+        if chatstatus is not None:
+            session['sessions'][i]['chatstatus'] = chatstatus
+    session.modified = True
+    return session['sessions'][i]
+
+def get_session_uids():
+    if 'i' in session: #TEMPORARY
+        get_session(session['i'])
+    if 'sessions' in session:
+        return [item['uid'] for item in session['sessions'].values()]
+    return []

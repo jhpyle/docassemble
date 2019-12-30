@@ -28,6 +28,53 @@ AZURE_ENABLED = False
 hostname = None
 loaded = False
 in_celery = False
+errors = list()
+env_messages = list()
+
+def env_true_false(var):
+    value = text_type(os.getenv(var, 'false')).lower().strip()
+    return value == 'true'
+
+def env_exists(var):
+    value = os.getenv(var)
+    return value is not None
+
+def env_translate(var):
+    value = text_type(os.getenv(var)).strip()
+    if value in ('true', 'True'):
+        return True
+    if value in ('false', 'False'):
+        return False
+    if value in ('null', 'None'):
+        return None
+    if re.match(r'^\-?[0-9]+$', value):
+        return int(value)
+    return value
+
+def override_config(the_config, messages, key, var, pre_key=None):
+    value = env_translate(var)
+    if value == '':
+        return
+    if value is None and (key in ('redis', 'rabbitmq', 'log server') or (pre_key == 'db' and key == 'host')):
+        return
+    if pre_key is None:
+        if key in the_config and text_type(the_config[key]) != text_type(value):
+            messages.append("The value of configuration key %s has been replaced with %s based on the value of environment variable %s" % (key, value, var))
+        elif key not in the_config:
+            messages.append("The value of configuration key %s has been set to %s based on the value of environment variable %s" % (key, value, var))
+        the_config[key] = value
+    else:
+        if pre_key not in the_config:
+            the_config[pre_key] = dict()
+        if key in the_config[pre_key] and text_type(the_config[pre_key][key]) != text_type(value):
+            messages.append("The value of configuration key %s in %s has been replaced with %s based on the value of environment variable %s" % (key, pre_key, value, var))
+        elif key not in the_config[pre_key]:
+            messages.append("The value of configuration key %s in %s has been set to %s based on the value of environment variable %s" % (key, pre_key, value, var))
+        the_config[pre_key][key] = value
+
+def config_error(error):
+    errors.append(error)
+    sys.stderr.write(error + "\n")
 
 def load(**kwargs):
     global daconfig
@@ -41,8 +88,9 @@ def load(**kwargs):
     global hostname
     global loaded
     global in_celery
+    global env_messages
     # changed = False
-    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
+    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1 and kwargs['arguments'][1] != '':
         filename = kwargs['arguments'][1]
     else:
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
@@ -56,7 +104,11 @@ def load(**kwargs):
             config_file.write(default_config())
             sys.stderr.write("Wrote configuration file to " + str(filename) + "\n")
     if not os.path.isfile(filename):
-        sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
+        sys.stderr.write("Configuration file " + str(filename) + " does not exist.  Trying default instead.\n")
+        filename = '/usr/share/docassemble/config/config.yml'
+    if not os.path.isfile(filename):
+        sys.stderr.write("Configuration file " + str(filename) + " does not exist.\n")
+        sys.exit(1)
     with open(filename, 'rU', encoding='utf-8') as stream:
         raw_daconfig = yaml.load(stream, Loader=yaml.FullLoader)
     if raw_daconfig is None:
@@ -67,7 +119,7 @@ def load(**kwargs):
     daconfig.clear()
     for key, val in raw_daconfig.items():
         if re.search(r'_', key):
-            sys.stderr.write("WARNING!  Configuration keys should not contain underscores.  Your configuration key " + str(key) + " has been converted.\n")
+            config_error("Configuration keys may not contain underscores.  Your configuration key " + str(key) + " has been converted.")
             daconfig[re.sub(r'_', r' ', key)] = val
         else:
             daconfig[key] = val
@@ -76,7 +128,7 @@ def load(**kwargs):
         if PY2:
             daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local')
         else:
-            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local3.5')
+            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
     daconfig['python version'] = text_type(pkg_resources.get_distribution("docassemble.base").version)
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
@@ -90,6 +142,38 @@ def load(**kwargs):
     #         if key[1] not in daconfig or daconfig[key[1]] != val:
     #             daconfig[key[1]] = val
     #             changed = True
+    if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
+        null_messages = list()
+        for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='s3')
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+            if env_exists(env_var):
+                override_config(daconfig, null_messages, key, env_var, pre_key='azure')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
+    if 'maximum content length' in daconfig:
+        if isinstance(daconfig['maximum content length'], (int, type(None))):
+            if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
+                daconfig['maximum content length'] = None
+        else:
+            config_error("The maximum content length must be an integer number of bytes, or null.")
+            del daconfig['maximum content length']
+    if 'administrative interviews' in daconfig:
+        new_admin_interviews = list()
+        for item in daconfig['administrative interviews']:
+            if isinstance(item, string_types):
+                new_admin_interviews.append(dict(interview=item))
+            else:
+                new_admin_interviews.append(item)
+        daconfig['administrative interviews'] = new_admin_interviews
+    if 'session lifetime seconds' in daconfig:
+        try:
+            daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
+            assert daconfig['session lifetime seconds'] > 0
+        except:
+            config_error("Invalid session lifetime seconds.")
+            del daconfig['session lifetime seconds']
     if 'page after login' in daconfig:
         if isinstance(daconfig['page after login'], string_types):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]
@@ -102,14 +186,43 @@ def load(**kwargs):
                     for key, val in item.items():
                         if isinstance(key, string_types) and isinstance(val, string_types):
                             page_after_login.append((key, val))
+                        else:
+                            config_error('page after login keys and values must be strings')
+                else:
+                    config_error('page after login items must be dictionaries')
+        else:
+            config_error('page after login must be a string, a list, or a dict')
         daconfig['page after login'] = page_after_login
     else:
         daconfig['page after login'] = []
     if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
-        sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
+        config_error("You used a keymap that is not supported.  Available values are vim, emacs, and sublime.")
         del daconfig['keymap']
+    if 'voicerss' in daconfig:
+        if isinstance(daconfig['voicerss'], dict):
+            if 'languages' in daconfig['voicerss']:
+                daconfig['voicerss']['dialects'] = daconfig['voicerss']['languages']
+                del daconfig['voicerss']['languages']
+        else:
+            config_error('voicerss must be a dict')
+            del daconfig['voicerss']
+    if 'cross site domain' in daconfig and 'cross site domains' not in daconfig:
+        daconfig['cross site domains'] = [daconfig['cross site domain'].strip()]
+        del daconfig['cross site domain']
+    if 'cross site domains' in daconfig:
+        if isinstance(daconfig['cross site domains'], list):
+            for item in daconfig['cross site domains']:
+                if not isinstance(item, string_types):
+                    config_error("The configuration directive cross site domains must be a list of strings.")
+                    del daconfig['cross site domains']
+                    break
+            if len(daconfig['cross site domains']) == 1 and daconfig['cross site domains'] == '*':
+                daconfig['cross site domains'] = '*'
+        else:
+            config_error("The configuration directive cross site domains must be a list.")
+            del daconfig['cross site domains']
     if 'vim' in daconfig:
-        sys.stderr.write("WARNING!  The configuration directive vim is deprecated.  Please use keymap instead.\n")
+        config_error("The configuration directive vim is deprecated.  Please use keymap instead.")
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
     # for key in [['S3BUCKET', 'bucket'], ['S3SECRETACCESSKEY', 'secret access key'], ['S3ACCESSKEY', 'access key id'], ['S3ENABLE', 'enable']]:
@@ -138,8 +251,10 @@ def load(**kwargs):
     #         if key[1] not in daconfig['azure'] or daconfig['azure'][key[1]] != val:
     #             daconfig['azure'][key[1]] = val
     #             changed = True
+    if 'azure' in daconfig and not isinstance(daconfig['azure'], dict):
+        config_error('azure must be a dict')
     azure_config = daconfig.get('azure', None)
-    if type(azure_config) is not dict or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
+    if not isinstance(azure_config, dict) or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
         AZURE_ENABLED = False
     else:
         AZURE_ENABLED = True
@@ -148,14 +263,16 @@ def load(**kwargs):
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    if daconfig.get('ec2', False):
+    if daconfig.get('ec2', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('EC2')):
         h = httplib2.Http()
         resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
             hostname = content.decode()
         else:
-            sys.stderr.write("Could not get hostname from ec2\n")
+            config_error("Could not get hostname from ec2")
             sys.exit(1)
+    elif daconfig.get('kubernetes', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('KUBERNETES')):
+        hostname = socket.gethostbyname(socket.gethostname())
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
@@ -212,47 +329,75 @@ def load(**kwargs):
             daconfig['db']['port'] = '3306'
         elif daconfig['db']['prefix'].startswith('oracle'):
             daconfig['db']['port'] = '1521'
-    if 'ocr languages' not in daconfig or type(daconfig['ocr languages']) is not dict:
+    if 'ocr languages' not in daconfig:
+        daconfig['ocr languages'] = dict()
+    if not isinstance(daconfig['ocr languages'], dict):
+        config_error('ocr languages must be a dict')
         daconfig['ocr languages'] = dict()
     if 'zh' not in daconfig['ocr languages']:
         daconfig['ocr languages']['zh'] = 'chi-tra'
-    if 'attempt limit' not in daconfig or type(daconfig['attempt limit']) not in [int, float] or daconfig['attempt limit'] < 2:
+    if 'attempt limit' not in daconfig:
         daconfig['attempt limit'] = 10
-    if 'ban period' not in daconfig or type(daconfig['ban period']) not in [int, float] or daconfig['ban period'] < 2:
+    if not isinstance(daconfig['attempt limit'], (int, float)):
+        config_error('attempt limit must be a number')
+        daconfig['attempt limit'] = 10
+    if daconfig['attempt limit'] < 2:
+        config_error('attempt limit cannot be less than 2')
+        daconfig['attempt limit'] = 10
+    if 'ban period' not in daconfig:
         daconfig['ban period'] = 86400
-    if 'verification code digits' not in daconfig or type(daconfig['verification code digits']) not in [int, float] or daconfig['verification code digits'] < 1 or daconfig['verification code digits'] > 32:
+    if not isinstance(daconfig['ban period'], (int, float)):
+        config_error('ban period must be a number')
+        daconfig['ban period'] = 86400
+    if daconfig['ban period'] < 2:
+        config_error('ban period cannot be less than 2')
+        daconfig['ban period'] = 86400
+    if 'verification code digits' not in daconfig:
         daconfig['verification code digits'] = 6
-    if 'verification code timeout' not in daconfig or type(daconfig['verification code timeout']) not in [int, float] or daconfig['verification code timeout'] < 1:
+    if not isinstance(daconfig['verification code digits'], (int, float)):
+        config_error('verification code digits must be a number')
+        daconfig['verification code digits'] = 6
+    if daconfig['verification code digits'] < 1 or daconfig['verification code digits'] > 32:
+        config_error('verification code digits must be between 1 and 32')
+        daconfig['verification code digits'] = 6
+    if 'verification code timeout' not in daconfig:
+        daconfig['verification code timeout'] = 180
+    if not isinstance(daconfig['verification code timeout'], (int, float)):
+        config_error('verification code timeout must be a number')
+        daconfig['verification code timeout'] = 180
+    if daconfig['verification code timeout'] < 1:
+        config_error('verification code timeout must be one or greater')
         daconfig['verification code timeout'] = 180
     if 'api privileges' in daconfig:
-        if type(daconfig['api privileges']) is not list:
-            sys.stderr.write("api privileges must be in the form of a list\n")
+        if not isinstance(daconfig['api privileges'], list):
+            config_error("api privileges must be in the form of a list")
             daconfig['api privileges'] = ['admin', 'developer']
     else:
         daconfig['api privileges'] = ['admin', 'developer']
     if 'two factor authentication' in daconfig:
-        if type(daconfig['two factor authentication']) is bool:
+        if isinstance(daconfig['two factor authentication'], bool):
             daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
-        if type(daconfig['two factor authentication']) is not dict:
+        if not isinstance(daconfig['two factor authentication'], dict):
+            config_error('two factor authentication must be boolean or a dict')
             daconfig['two factor authentication'] = dict()
     else:
         daconfig['two factor authentication'] = dict(enable=False)
     if 'allowed for' in daconfig['two factor authentication']:
-        if type(daconfig['two factor authentication']['allowed for']) is not list:
-            sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+        if not isinstance(daconfig['two factor authentication']['allowed for'], list):
+            config_error("two factor authentication allowed for must be in the form of a list")
             daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     else:
         if 'two factor authentication privileges' in daconfig:
-            if type(daconfig['two factor authentication privileges']) is list:
+            if isinstance(daconfig['two factor authentication privileges'], list):
                 daconfig['two factor authentication']['allowed for'] = daconfig['two factor authentication privileges']
             else:
-                sys.stderr.write("two factor authentication privileges must be in the form of a list\n")
+                config_error("two factor authentication privileges must be in the form of a list")
                 daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
         else:
             daconfig['two factor authentication']['allowed for'] = ['admin', 'developer']
     if 'email confirmation privileges' in daconfig:
-        if type(daconfig['email confirmation privileges']) is not list:
-            sys.stderr.write("email confirmation privileges must be in the form of a list\n")
+        if not isinstance(daconfig['email confirmation privileges'], list):
+            config_error("email confirmation privileges must be in the form of a list")
             daconfig['email confirmation privileges'] = []
     else:
         daconfig['email confirmation privileges'] = []
@@ -261,23 +406,23 @@ def load(**kwargs):
         if key in daconfig:
             if daconfig[key] is None:
                 del daconfig[key]
-            elif type(daconfig[key]) is not list:
+            elif not isinstance(daconfig[key], list):
                 daconfig[key] = [daconfig[key]]
     if 'password complexity' in daconfig:
-        if type(daconfig['password complexity']) is dict:
+        if isinstance(daconfig['password complexity'], dict):
             for key in ('length', 'lowercase', 'uppercase', 'digits', 'punctuation'):
-                if key in daconfig['password complexity'] and type(daconfig['password complexity'][key]) is not int:
-                    sys.stderr.write("password complexity key " + key + " must be an integer.\n")
+                if key in daconfig['password complexity'] and not isinstance(daconfig['password complexity'][key], int):
+                    config_error("password complexity key " + key + " must be an integer.")
                     del daconfig['password complexity'][key]
         else:
-            sys.stderr.write("password complexity must be in the form of a dict.\n")
+            config_error("password complexity must be in the form of a dict.")
             del daconfig['password complexity']
     if 'checkin interval' in daconfig:
-        if type(daconfig['checkin interval']) is not int:
-            sys.stderr.write("checkin interval must be an integer.\n")
+        if not isinstance(daconfig['checkin interval'], int):
+            config_error("checkin interval must be an integer.")
             del daconfig['checkin interval']
         elif daconfig['checkin interval'] > 0 and daconfig['checkin interval'] < 1000:
-            sys.stderr.write("checkin interval must be at least 1000, if not 0.\n")
+            config_error("checkin interval must be at least 1000, if not 0.")
             del daconfig['checkin interval']
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
@@ -285,16 +430,109 @@ def load(**kwargs):
         try:
             daconfig['websockets port'] = int(daconfig['websockets port'])
         except:
-            sys.stderr.write("websockets port must be an integer\n")
+            config_error("websockets port must be an integer")
             del daconfig['websockets port']
     if 'mail' not in daconfig:
         daconfig['mail'] = dict()
-    if 'dispatch' not in daconfig or type(daconfig['dispatch']) is not dict:
+    if 'dispatch' not in daconfig:
         daconfig['dispatch'] = dict()
-    if 'ldap login' not in daconfig or type(daconfig['ldap login']) is not dict:
+    if not isinstance(daconfig['dispatch'], dict):
+        config_error("dispatch must be structured as a dictionary")
+        daconfig['dispatch'] = dict()
+    if 'ldap login' not in daconfig:
+        daconfig['ldap login'] = dict()
+    if not isinstance(daconfig['ldap login'], dict):
+        config_error("ldap login must be structured as a dictionary")
         daconfig['ldap login'] = dict()
     if daconfig.get('auto resume interview', None) is not None:
         daconfig['show interviews link'] = False
+    if 'use minio' not in daconfig:
+        daconfig['use minio'] = False
+    if 'server administrator email' not in daconfig or not daconfig['server administrator email']:
+        daconfig['server administrator email'] = 'webmaster@localhost'
+    if 'use cloud urls' not in daconfig:
+        daconfig['use cloud urls'] = False
+    else:
+        daconfig['use cloud urls'] = True if daconfig['use cloud urls'] else False
+    if 'use https' not in daconfig or not daconfig['use https']:
+        daconfig['use https'] = False
+    if 'use lets encrypt' not in daconfig or not daconfig['use lets encrypt']:
+        daconfig['use lets encrypt'] = False
+    if 'behind https load balancer' not in daconfig or not daconfig['behind https load balancer']:
+        daconfig['behind https load balancer'] = False
+    if 'websockets ip' in daconfig and not daconfig['websockets ip']:
+        del daconfig['websockets ip']
+    if 'websockets port' not in daconfig or not daconfig['websockets port']:
+        daconfig['websockets port'] = 5000
+    if 'root' not in daconfig or not daconfig['root']:
+        daconfig['root'] = '/'
+    if 'web server' not in daconfig or not daconfig['web server']:
+        daconfig['web server'] = 'nginx'
+    if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
+        messages = list()
+        for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='db')
+        if env_exists('DASECRETKEY'):
+            override_config(daconfig, messages, 'secretkey', 'DASECRETKEY')
+            daconfig['secretkey'] = env_translate('DASECRETKEY')
+        if env_exists('DABACKUPDAYS'):
+            override_config(daconfig, messages, 'backup days', 'DABACKUPDAYS')
+        if env_exists('SERVERADMIN'):
+            override_config(daconfig, messages, 'server administrator email', 'SERVERADMIN')
+        if env_exists('LOCALE'):
+            override_config(daconfig, messages, 'os locale', 'LOCALE')
+        if env_exists('TIMEZONE'):
+            override_config(daconfig, messages, 'timezone', 'TIMEZONE')
+        if env_exists('REDIS'):
+            override_config(daconfig, messages, 'redis', 'REDIS')
+        if env_exists('RABBITMQ'):
+            override_config(daconfig, messages, 'rabbitmq', 'RABBITMQ')
+        for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='s3')
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+            if env_exists(env_var):
+                override_config(daconfig, messages, key, env_var, pre_key='azure')
+        if env_exists('EC2'):
+            override_config(daconfig, messages, 'ec2', 'EC2')
+        if env_exists('COLLECTSTATISTICS'):
+            override_config(daconfig, messages, 'collect statistics', 'COLLECTSTATISTICS')
+        if env_exists('KUBERNETES'):
+            override_config(daconfig, messages, 'kubernetes', 'KUBERNETES')
+        if env_exists('LOGSERVER'):
+            override_config(daconfig, messages, 'log server', 'LOGSERVER')
+        if env_exists('USECLOUDURLS'):
+            override_config(daconfig, messages, 'use cloud urls', 'USECLOUDURLS')
+        if env_exists('USEMINIO'):
+            override_config(daconfig, messages, 'use minio', 'USEMINIO')
+        if env_exists('USEHTTPS'):
+            override_config(daconfig, messages, 'use https', 'USEHTTPS')
+        if env_exists('USELETSENCRYPT'):
+            override_config(daconfig, messages, 'use lets encrypt', 'USELETSENCRYPT')
+        if env_exists('LETSENCRYPTEMAIL'):
+            override_config(daconfig, messages, 'lets encrypt email', 'LETSENCRYPTEMAIL')
+        if env_exists('BEHINDHTTPSLOADBALANCER'):
+            override_config(daconfig, messages, 'behind https load balancer', 'BEHINDHTTPSLOADBALANCER')
+        if env_exists('XSENDFILE'):
+            override_config(daconfig, messages, 'xsendfile', 'XSENDFILE')
+        if env_exists('DAUPDATEONSTART'):
+            override_config(daconfig, messages, 'update on start', 'DAUPDATEONSTART')
+        if env_exists('URLROOT'):
+            override_config(daconfig, messages, 'url root', 'URLROOT')
+        if env_exists('DAHOSTNAME'):
+            override_config(daconfig, messages, 'external hostname', 'DAHOSTNAME')
+        if env_exists('DAEXPOSEWEBSOCKETS'):
+            override_config(daconfig, messages, 'expose websockets', 'DAEXPOSEWEBSOCKETS')
+        if env_exists('DAWEBSOCKETSIP'):
+            override_config(daconfig, messages, 'websockets ip', 'DAWEBSOCKETSIP')
+        if env_exists('DAWEBSOCKETSPORT'):
+            override_config(daconfig, messages, 'websockets port', 'DAWEBSOCKETSPORT')
+        if env_exists('POSTURLROOT'):
+            override_config(daconfig, messages, 'root', 'POSTURLROOT')
+        if env_exists('DAWEBSERVER'):
+            override_config(daconfig, messages, 'web server', 'DAWEBSERVER')
+        env_messages = messages
     return
 
 def default_config():
@@ -304,3 +542,46 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 """
     return config
+
+def parse_redis_uri():
+    redis_host = daconfig.get('redis', None)
+    if redis_host is None:
+        redis_host = 'redis://localhost'
+    redis_host = redis_host.strip()
+    if not redis_host.startswith('redis://'):
+        redis_host = 'redis://' + redis_host
+    m = re.search(r'redis://([^:@\?]*):([^:@\?]*)@(.*)', redis_host)
+    if m:
+        redis_password = m.group(2)
+        redis_host = 'redis://' + m.group(3)
+    else:
+        redis_password = None
+    m = re.search(r'[?\&]password=([^&]+)', redis_host)
+    if m:
+        redis_password = m.group(1)
+    m = re.search(r'[?\&]db=([0-9]+)', redis_host)
+    if m:
+        redis_db = int(m.group(1))
+    else:
+        redis_db = 0
+
+    redis_host = re.sub(r'\?.*', '', redis_host)
+    redis_host = re.sub(r'^redis://', r'', redis_host)
+    m = re.search(r'/([0-9]+)', redis_host)
+    if m:
+        redis_db = int(m.group(1))
+    redis_host = re.sub(r'/.*', r'', redis_host)
+    m = re.search(r':([0-9]+)$', redis_host)
+    if m:
+        redis_port = m.group(1)
+        redis_host = re.sub(r':([0-9]+)$', '', redis_host)
+    else:
+        redis_port = '6379'
+
+    redis_offset = daconfig.get('redis database offset', redis_db)
+    redis_cli = 'redis-cli'
+    if redis_host != 'localhost' or redis_port != '6379':
+        redis_cli += ' -h ' + redis_host + ' -p ' + redis_port
+    if redis_password is not None:
+        redis_cli += ' -a ' + redis_password
+    return (redis_host, redis_port, redis_password, redis_offset, redis_cli)

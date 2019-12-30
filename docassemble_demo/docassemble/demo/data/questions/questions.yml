@@ -471,7 +471,7 @@ comment: |
 question: |
   Why do you think you deserve to win this case?
 fields:
-  - no label: explanation
+  - no label: explanation_of_merits
     datatype: area
     hint: |
       I should win because . . .
@@ -604,6 +604,8 @@ decoration: picture
 fields:
   - A test file: x.picture
     datatype: camera
+    accept: |
+      "image/jpeg, image/png"
 comment: |
   You can accept file uploads from users by using the datatypes "file"
   (for a single file) or "files" (for one or more files).  The "camera"
@@ -840,7 +842,7 @@ attachments:
       % endfor
       
       This petition should be granted.
-      ${ fix_punctuation(explanation) }
+      ${ fix_punctuation(explanation_of_merits) }
       % if client.picture_verified:
       Look how cute I am:
 

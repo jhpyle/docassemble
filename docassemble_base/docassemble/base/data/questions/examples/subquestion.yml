@@ -3,7 +3,8 @@ metadata:
   documentation: "https://docassemble.org/docs/questions.html#subquestion"
 ---
 question: |
-  What is the airspeed velocity of an unladen swallow?
+  What is the airspeed velocity of an
+  unladen swallow?
 subquestion: Be careful how you answer.
 fields:
   - Velocity: swallow_velocity

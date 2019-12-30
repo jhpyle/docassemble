@@ -4,11 +4,13 @@ metadata:
   documentation: "https://docassemble.org/docs/groups.html#custom editing"
 ---
 objects:
-  - income: DADict.using(object_type=DAObject,
-                         keys=['employment', 'benefits', 'interest'],
-                         complete_attribute='complete',
-                         minimum_number=3,
-                         there_is_another=False)
+  - income: |
+      DADict.using(
+        object_type=DAObject,
+        keys=['employment', 'benefits', 'interest'],
+        complete_attribute='complete',
+        minimum_number=3,
+        there_is_another=False)
 ---
 code: |
   if income[i].receives:

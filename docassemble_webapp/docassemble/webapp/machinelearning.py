@@ -157,7 +157,7 @@ class MachineLearner(object):
         else:
             existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
         if existing_entry is not None:
-            logmessage("entry is already there")
+            #logmessage("entry is already there")
             return existing_entry.id
         new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(indep), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
         db.session.add(new_entry)
@@ -426,7 +426,7 @@ class SVMMachineLearner(SimpleTextMachineLearner):
 
 class RandomForestMachineLearner(MachineLearner):
     def _learner(self):
-        return RandomForestClassifier(n_jobs=2)
+        return RandomForestClassifier()
     def feature_importances(self):
         """Returns the importances of each of the features"""
         if not self._train_from_db():

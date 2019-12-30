@@ -10,7 +10,7 @@
   </div>
 </div>
 
-<form action="" method="POST" role="form" class="form">
+<form action="{{ url_for('pull_playground_package', project=current_project) }}" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
   <div class="form-actions">
     {{ render_field(form.github_url, tabindex=100, placeholder='https://github.com/username/docassemble-packagename') }}
@@ -19,9 +19,9 @@
 
     {{ render_field(form.pypi, tabindex=108, prelabel='docassemble.') }}
 
-    {{ render_submit_field(form.pull, tabindex=110, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.pull, tabindex=110, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
     
-    {{ render_submit_field(form.cancel, tabindex=110, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, tabindex=110, class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 

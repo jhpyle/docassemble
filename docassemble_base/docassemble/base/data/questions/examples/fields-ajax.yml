@@ -1,0 +1,30 @@
+metadata:
+  title: Ajax Combobox
+  short: Ajax
+  documentation: "https://docassemble.org/docs/fields.html#ajax"
+  example start: 1
+  example end: 2
+---
+question: |
+  What is your favorite word?
+fields:
+  - Word: favorite_word
+    input type: ajax
+    action: wordlist
+---
+event: wordlist
+code: |
+  set_save_status('ignore')
+  wordstart = action_argument('wordstart').lower()
+  results = list()
+  import codecs
+  with codecs.open('/usr/share/dict/words', mode='rU', encoding='utf-8') as words_file:
+    for line in words_file:
+      lower_line = line.lower()
+      if lower_line.startswith(wordstart):
+        results.append(line.rstrip())
+  json_response(results)
+---
+mandatory: True
+question: |
+  Your favorite word is ${ favorite_word }.

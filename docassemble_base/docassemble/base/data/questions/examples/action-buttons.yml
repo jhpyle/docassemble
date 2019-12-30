@@ -1,0 +1,41 @@
+metadata:
+  title: Action buttons
+  short: Action
+  documentation: "https://docassemble.org/docs/questions.html#action buttons"
+  example start: 2
+  example end: 3
+---
+code: |
+  num_apples = 4
+---
+question: | 
+  I will give you 
+  ${ quantity_noun(num_apples, 'apple') }.
+field: show_quantity
+action buttons:
+  - label: More
+    action: change_quantity
+    arguments:
+      amount: 1
+    color: success
+    icon: chevron-up
+  - label: Less
+    action: change_quantity
+    arguments:
+      amount: -1
+    color: danger
+    icon: chevron-down
+---
+event: change_quantity
+code: |
+  num_apples += action_argument('amount')
+---
+event: final_screen
+question: |
+  Enjoy eating your
+  ${ quantity_noun(num_apples, 'apple') }!
+---
+mandatory: True
+code: |
+  show_quantity
+  final_screen

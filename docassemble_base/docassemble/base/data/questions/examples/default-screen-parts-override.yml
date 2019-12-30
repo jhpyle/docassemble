@@ -14,7 +14,7 @@ default screen parts:
 mandatory: True
 code: |
   counter = 0
-  set_title(under="Forget you, I am the under!")
+  set_parts(under="Forget you, I am the under!")
 ---
 initial: True
 code: |

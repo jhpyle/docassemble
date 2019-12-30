@@ -1,15 +1,7 @@
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, dbtableprefix
 from sqlalchemy import true, false
-
-class Attachments(db.Model):
-    __tablename__ = dbtableprefix + "attachments"
-    id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.String(250), index=True)
-    dictionary = db.Column(db.Text())
-    question = db.Column(db.Integer())
-    filename = db.Column(db.Text(), index=True)
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
+import docassemble.webapp.users.models
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
@@ -19,6 +11,19 @@ class Uploads(db.Model):
     yamlfile = db.Column(db.Text())
     private = db.Column(db.Boolean(), nullable=False, server_default=true())
     persistent = db.Column(db.Boolean(), nullable=False, server_default=false())
+
+class UploadsUserAuth(db.Model):
+    __tablename__ = dbtableprefix + "uploadsuserauth"
+    id = db.Column(db.Integer(), primary_key=True)
+    uploads_indexno = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
+
+class UploadsRoleAuth(db.Model):
+    __tablename__ = dbtableprefix + "uploadsroleauth"
+    id = db.Column(db.Integer(), primary_key=True)
+    uploads_indexno = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'), nullable=False, index=True)
+    role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'), nullable=False, index=True)
 
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
@@ -99,3 +104,12 @@ class EmailAttachment(db.Model):
 #     __tablename__ = dbtableprefix + "dbinfo"
 #     key = db.Column(db.Text(), primary_key=True)
 #     value = db.Column(db.Text())
+
+class GlobalObjectStorage(db.Model):
+    __tablename__ = dbtableprefix + "globalobjectstorage"
+    id = db.Column(db.Integer(), primary_key=True)
+    key = db.Column(db.Text(), index=True)
+    value = db.Column(db.Text())
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))

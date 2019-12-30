@@ -82,7 +82,7 @@
           {%- endif %}
           {%- if config['USE_GOOGLE_LOGIN'] %}
           <div class="row danomargin">
-            <div class="daiconbox col-md-7"><a role="button" class="danohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/google-logo.png', v=config['DA_VERSION']) }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></tbody></table></a></div>
+              <div class="daiconbox col-md-7"><a role="button" class="danohover" href="{{ url_for('google_page') }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/google-logo.png', v=config['DA_VERSION']) }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_FACEBOOK_LOGIN'] %}

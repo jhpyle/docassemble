@@ -801,6 +801,9 @@ class _GenerateRenderMethod(object):
         if hasattr(node.code, 'names_used'):
             for x in node.code.names_used:
                 self.compiler.names_used.add(x)
+        if hasattr(node.code, 'names_set'):
+            for x in node.code.names_set:
+                self.compiler.names_set.add(x)
         self.printer.start_source(node.lineno)
         if len(node.escapes) or \
                 (

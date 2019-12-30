@@ -38,6 +38,7 @@ noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
+#amp_match = re.compile(r'&(?!#?[0-9A-Za-z]+;)')
 emoji_match = re.compile(r':([A-Za-z][A-Za-z0-9\_\-]+):')
 extension_match = re.compile(r'\.[a-z]+$')
 map_match = re.compile(r'\[MAP ([^\]]+)\]', flags=re.DOTALL)
@@ -123,7 +124,7 @@ def get_max_width_points():
 #     url_for = func
 #     return
 
-rtf_spacing = {'tight': '\\sl0 ', 'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
+rtf_spacing = {'tight': r'\\sl0 ', 'single': r'\\sl0 ', 'oneandahalf': r'\\sl360\\slmult1 ', 'double': r'\\sl480\\slmult1 ', 'triple': r'\\sl720\\slmult1 '}
 
 rtf_after_space = {'tight': 0, 'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0, 'triple': 0}
 
@@ -411,10 +412,10 @@ def docx_template_filter(text, question=None):
     elif text == 'None':
         return None
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx_template(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx_template(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx_template, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx_template, text)
@@ -453,7 +454,7 @@ def docx_template_filter(text, question=None):
     text = re.sub(r'\[SKIPLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[VERTICALSPACE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
-    text = re.sub(r'\n *\n', '[NEWPAR]', text)
+    #text = re.sub(r'\n *\n', '[NEWPAR]', text)
     text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\[NEWPAR\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[TAB\] *', '\t', text)
@@ -512,8 +513,8 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[TIGHTSPACING\]\s*', r'\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\parindent}{0pt}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[SINGLESPACING\]\s*', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize}\\setlength{\\parindent}{0pt}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[DOUBLESPACING\]\s*', r'\\doublespacing\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
-    text = re.sub(r'\[ONEANDAHALFSPACING\]\s*', '\\onehalfspacing\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
-    text = re.sub(r'\[TRIPLESPACING\]\s*', '\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
+    text = re.sub(r'\[ONEANDAHALFSPACING\]\s*', r'\\onehalfspacing\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
+    text = re.sub(r'\[TRIPLESPACING\]\s*', r'\\setlength{\\parindent}{\\myindentamount}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
     text = re.sub(r'\[REDACTION_SPACE\]', r'\\redactword{~}\\hspace{0pt}', text)
     text = re.sub(r'\[REDACTION_WORD ([^\]]+)\]', redact_latex, text)
@@ -525,7 +526,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[BLANKFILL\]', r'\\leavevmode{\\xrfill[-2pt]{0.4pt}}', text)
     text = re.sub(r'\[PAGEBREAK\]\s*', r'\\clearpage ', text)
     text = re.sub(r'\[PAGENUM\]', r'\\myshow{\\thepage\\xspace}', text)
-    text = re.sub(r'\[TOTALPAGES\]', '\\myshow{\\pageref*{LastPage}\\xspace}', text)
+    text = re.sub(r'\[TOTALPAGES\]', r'\\myshow{\\pageref*{LastPage}\\xspace}', text)
     text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection\\xspace}', text)
     text = re.sub(r'\s*\[SKIPLINE\]\s*', r'\\par\\myskipline ', text)
     text = re.sub(r'\[VERTICALSPACE\] *', r'\\rule[-24pt]{0pt}{0pt}', text)
@@ -947,8 +948,12 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
         the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'])
         if the_url is None:
             return ('[ERROR: File reference ' + text_type(file_reference) + ' cannot be displayed]')
+        if width_string == 'width:100%':
+            extra_class = ' dawideimage'
+        else:
+            extra_class = ''
         if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
-            return('<img ' + alt_text + 'class="daicon daimageref" style="' + width_string + '" src="' + the_url + '"/>')
+            return('<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" style="' + width_string + '" src="' + the_url + '"/>')
         elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -970,7 +975,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
                 the_alt_text = 'alt=' + json.dumps(word("Thumbnail image of document")) + ' '
             else:
                 the_alt_text = alt_text
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen" style="' + width_string + '" src="' + image_url + '"/></a>'
+            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '" src="' + image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + text_type(file_info['pages']) + " " + word('pages') + ")"
             return(output)
@@ -1273,14 +1278,16 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
-            result = result[3:-4]
+            result = re.sub(r'</p>\s*<p>', ' ', result[3:-4])
     elif pclass:
         result = re.sub('<p>', '<p class="' + pclass + '">', result)
     if escape:
-        result = noquote_match.sub('&quot;', result)
+        if escape is True:
+            result = noquote_match.sub('&quot;', result)
         result = lt_match.sub('&lt;', result)
         result = gt_match.sub('&gt;', result)
-        result = amp_match.sub('&amp;', result)
+        if escape is True:
+            result = amp_match.sub('&amp;', result)
     #logmessage("after: " + result)
     #result = result.replace('\n', ' ')
     if result:
@@ -1307,17 +1314,15 @@ def add_terms_mako(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
-    else:
-        #logmessage(lower_termname + " is not in terms dictionary\n")
-        return '[[' + termname + ']]'
+    #logmessage(lower_termname + " is not in terms dictionary\n")
+    return '[[' + termname + ']]'
 
 def add_terms(termname, terms, status=None, question=None):
     lower_termname = termname.lower()
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + text_type(termname) + '</a>')
-    else:
-        #logmessage(lower_termname + " is not in terms dictionary\n")
-        return '[[' + termname + ']]'
+    #logmessage(lower_termname + " is not in terms dictionary\n")
+    return '[[' + termname + ']]'
 
 def audio_control(files, preload="metadata", title_text=None):
     for d in files:
@@ -1496,8 +1501,6 @@ def get_video_urls(the_video, question=None):
     return output
 
 def to_text(html_doc, terms, links, status):
-    #url = status.current_info.get('url', 'http://localhost')
-    #logmessage("url is " + text_type(url))
     output = ""
     #logmessage("to_text: html doc is " + text_type(html_doc))
     soup = BeautifulSoup(html_doc, 'html.parser')
@@ -1623,7 +1626,7 @@ def image_include_docx_template(match, question=None):
                 if file_info['mimetype'] == 'text/plain':
                     return contents
                 else:
-                    return docassemble.base.file_docx.markdown_to_docx(contents, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+                    return docassemble.base.file_docx.markdown_to_docx(contents, question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
             if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return text_type(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
             else:

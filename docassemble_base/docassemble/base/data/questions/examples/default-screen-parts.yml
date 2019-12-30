@@ -38,6 +38,7 @@ default screen parts:
   post: |
     This interview was generously
     sponsored by Example, Inc.
+  css class: normalquestion
 ---
 question: |
   What is your favorite fruit?

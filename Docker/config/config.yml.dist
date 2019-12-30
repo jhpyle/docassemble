@@ -1,4 +1,6 @@
 debug: True
+enable playground: True
+allow demo: True
 exitpage: https://docassemble.org
 db:
   prefix: {{DBPREFIX}}
@@ -8,6 +10,7 @@ db:
   host: {{DBHOST}}
   port: {{DBPORT}}
   table prefix: {{DBTABLEPREFIX}}
+  backup: {{DBBACKUP}}
 oauth:
   facebook:
     enable: False
@@ -64,13 +67,18 @@ s3:
   secret access key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
   region: {{S3REGION}}
+  endpoint url: {{S3ENDPOINTURL}}
 azure:
   enable: {{AZUREENABLE}}
   account name: {{AZUREACCOUNTNAME}}
   account key: {{AZUREACCOUNTKEY}}
   container: {{AZURECONTAINER}}
+collect statistics: {{COLLECTSTATISTICS}}
+kubernetes: {{KUBERNETES}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
+use cloud urls: {{USECLOUDURLS}}
+use minio: {{USEMINIO}}
 use https: {{USEHTTPS}}
 use lets encrypt: {{USELETSENCRYPT}}
 lets encrypt email: {{LETSENCRYPTEMAIL}}
@@ -86,3 +94,5 @@ root: {{POSTURLROOT}}
 words:
   - docassemble.base:data/sources/us-words.yml
 allow non-idempotent questions: False
+web server: {{DAWEBSERVER}}
+new markdown to docx: True

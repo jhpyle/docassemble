@@ -1,5 +1,6 @@
 from docassemble.base.config import daconfig
 
+broker_heartbeat = 30
 task_serializer = 'pickle'
 accept_content = ['pickle']
 result_serializer = 'pickle'

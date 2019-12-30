@@ -1,0 +1,32 @@
+metadata:
+  title: Action buttons
+  short: Action
+  documentation: "https://docassemble.org/docs/questions.html#action buttons"
+  example start: 1
+  example end: 1
+---
+question: |
+  You may wish to wait until
+  ${ today().plus(weeks=3) }
+  to file your complaint.
+subquestion: |
+  It is up to you whether you wish
+  to continue with the interview.
+
+  If you leave, you will be directed
+  back to the web site.
+field: wishes_to_continue
+action buttons:
+  - label: Come back later
+    action: https://docassemble.org
+    color: warning
+    icon: sign-out-alt
+---
+event: final_screen
+question: |
+  Ok, let's proceed.
+---
+mandatory: True
+code: |
+  wishes_to_continue
+  final_screen

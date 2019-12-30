@@ -1,0 +1,48 @@
+metadata:
+  title: Table for dictionary
+  short title: Table
+  documentation: "https://docassemble.org/docs/initial.html#table"
+  example start: 3
+  example end: 5
+---
+objects:
+  - income: DADict
+---
+scan for variables: False
+mandatory: True
+code: |
+  income['employment'] = 237
+  income['benefits'] = 0
+  income['interest'] = 23
+  income.there_is_another = False
+---
+question: |
+  Income from ${ i }
+fields:
+  - "How much income do you get from ${ i }?": income[i]
+    datatype: currency
+---
+question: |
+  What type of income would you
+  like to add?
+fields:
+  - "Type of income": income.new_item_name
+---
+table: income.table
+rows: income
+columns:
+  - Type: |
+      row_index
+  - Receives: |
+      'Yes' if row_item > 0 else 'No'
+  - Amount: |
+      currency(row_item) if row_item > 0 else ''
+edit: True
+---
+mandatory: True
+question: |
+  Summary of income
+subquestion: |
+  ${ income.table }
+
+  ${ income.add_action() }

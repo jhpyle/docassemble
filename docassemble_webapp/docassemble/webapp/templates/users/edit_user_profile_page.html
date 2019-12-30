@@ -5,18 +5,25 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
-{%- if form.uses_mfa.data %}
+{%- if form.uses_mfa.data or ((not is_self) and form.confirmed_at.data is not none) or ((not is_self) and config['ENABLE_DELETE_ACCOUNT']) %}
 <div class="row">
-  <div class="col text-right mb-1">
-    <a class="btn btn-secondary" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
-  </div>
-</div>
+    <div class="col text-right">
+        <div class="dropdown">
+            <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cogs"></i> {{ word('Other settings') }}</button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+{%- if form.uses_mfa.data %}
+                <a class="dropdown-item" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
 {%- endif %}
 {%- if (not is_self) and form.confirmed_at.data is not none %}
-<div class="row">
-  <div class="col text-right">
-    <a class="btn btn-secondary" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
-  </div>
+                <a class="dropdown-item" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
+{%- endif %}
+{%- if (not is_self) and config['ENABLE_DELETE_ACCOUNT'] %}
+                <a class="dropdown-item dadeleteaccount" href="?delete_account=1">{{ word('Delete account but keep shared sessions') }}</a>
+                <a class="dropdown-item dadeleteaccount" href="?delete_account_complete=1">{{ word('Delete account and shared sessions') }}</a>
+{%- endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {%- endif %}
 
@@ -52,7 +59,7 @@
     <br>
     <div class="form-actions">
       {{ render_submit_field(form.submit) }}
-      {{ render_submit_field(form.cancel, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+      {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
     </div>
 </form>
 

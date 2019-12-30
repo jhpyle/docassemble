@@ -45,6 +45,6 @@ buttons:
     url: ${ url_of('dispatch') }
 ---
 code: |
-  set_title(title=capitalize(side_of_bed) + " side of the bed")
+  set_parts(title=capitalize(side_of_bed) + " side of the bed")
   session_tags().add(side_of_bed)
   interview_tagged = True

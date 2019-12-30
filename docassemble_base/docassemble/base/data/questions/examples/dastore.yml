@@ -1,0 +1,31 @@
+metadata:
+  title: DAStore
+  example start: 1
+  example end: 6
+  documentation: "https://docassemble.org/docs/objects.html#DAStore"
+---
+objects:
+  - userdata: DAStore
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: preferences.favorite_fruit
+---
+code: |
+  preferences = userdata.get("prefs") or DAObject('preferences')
+---
+mandatory: True
+code: |
+  preferences.favorite_fruit
+  if not userdata.defined("prefs"):
+    userdata.set("prefs", preferences)
+---
+mandatory: True
+code: |
+  final_screen
+---
+event: final_screen
+question: All done
+subquestion: |
+  ${ userdata.get("prefs").favorite_fruit }

@@ -1,0 +1,38 @@
+metadata:
+  title: Collect
+  documentation: "https://docassemble.org/docs/groups.html#list collect"
+  example start: 3
+  example end: 3
+---
+objects:
+  fruit: DAList.using(there_are_any=True)
+---
+scan for variables: False
+mandatory: True
+code: |
+  fruit[0] = "apple"
+  fruit.there_is_another = True
+---
+question: |
+  Tell me about the fruit.
+fields:
+  - Fruit name: fruit[i]
+list collect: True
+---
+question: |
+  Are there any more fruit?
+yesno: fruit.there_is_another
+---
+table: fruit.table
+rows: fruit
+columns:
+  - Fruit Name: row_item
+edit: True
+---
+mandatory: True
+question: |
+  Summary of fruit
+subquestion: |
+  ${ fruit.table }
+
+  ${ fruit.add_action() }

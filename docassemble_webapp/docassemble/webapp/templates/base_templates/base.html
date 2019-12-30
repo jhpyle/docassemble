@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_language }}">
   <head>
     <meta charset="utf-8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
+{%- if (request.path == "/user/google-sign-in" or request.path == "/user/sign-in") and config['USE_GOOGLE_LOGIN'] %}
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
@@ -23,7 +23,7 @@
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">
       <div class="{% if userclass %}container danavcontainer{% else %}container{% endif %}">
-        {% if back_button %}{{ back_button }}{% endif %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>
+        {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
         <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#danavbar-collapse">
           <span class="navbar-toggler-icon"></span>
@@ -44,7 +44,9 @@
                 {%- if current_user.has_roles(['admin', 'developer']) %}
                 <a class="dropdown-item" href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a>
                 <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
+                {%- if config['ENABLE_PLAYGROUND'] %}
                 <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>
+                {%- endif %}
                 <a class="dropdown-item" href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a>
                   {%- if current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>
@@ -54,6 +56,11 @@
                 {%- if config['SHOW_DISPATCH'] %}
                 <a class="dropdown-item" href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a>
                 {%- endif %}
+                {%- for item in config['ADMIN_INTERVIEWS'] %}
+                  {%- if item.can_use() %}
+                <a class="dropdown-item" href="{{ url_for('index', i=item.interview, new_session='1') }}">{{ item.get_title(current_language) }}</a>
+                  {%- endif %}
+                {%- endfor %}
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
                 {%- endif %}
@@ -126,12 +133,12 @@
               $(the_button).prop("disabled", true);
             }, 1);
             if (this != daWhichButton){
-              $(this).removeClass("btn-primary btn-info btn-warning btn-error btn-success");
-              $(this).addClass("btn-secondary");
+              $(this).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}success");
+              $(this).addClass("{{ config['BUTTON_STYLE'] }}secondary");
             }
             else{
-              $(daWhichButton).removeClass("btn-primary btn-info btn-warning btn-error btn-secondary");
-              $(daWhichButton).addClass("btn-success");
+              $(daWhichButton).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}secondary");
+              $(daWhichButton).addClass("{{ config['BUTTON_STYLE'] }}success");
             }
           });
         });

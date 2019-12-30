@@ -1,0 +1,87 @@
+metadata:
+  title: Custom review button
+  short title: Custom
+  documentation: "https://docassemble.org/docs/initial.html#review button color"
+  example start: 1
+  example end: 1
+---
+features:
+  review button color: secondary
+  review button icon: pencil-alt
+---
+objects:
+  - person: DAList.using(object_type=Individual,
+                         there_are_any=True,
+                         complete_attribute='complete')
+---
+mandatory: True
+code: |
+  favorite_fruit = "peach"
+  person.clear()
+  person.appendObject()
+  person[-1].name.first = "John"
+  person[-1].name.last = "Smith"
+  person[-1].favorite_fruit = "apples"
+  person.appendObject()
+  person[-1].name.first = "Jane"
+  person[-1].name.last = "Doe"
+  person[-1].favorite_fruit = "apricots"
+  person.there_is_another = False
+---
+mandatory: True
+code: |
+  review_screen
+  final_screen
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+field: review_screen
+skip undefined: False
+question: |
+  Edit your answers
+review:
+  - Edit: favorite_fruit
+    button: |
+      Your favorite fruit is ${ favorite_fruit }.
+  - note: |
+      ${ person.table }
+  
+      ${ person.add_action() }
+---
+event: final_screen
+question: Thank you
+---
+table: person.table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+edit:
+  - name.first
+  - favorite_fruit

@@ -1,0 +1,16 @@
+metadata:
+  title: "From .md file from code"
+  documentation: "https://docassemble.org/docs/documents.html#content file"
+  example start: 1
+  example end: 2
+---
+code: |
+  template_file_to_use = 'hello.md'
+---
+question: Your document is ready.
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    content file:
+      code: template_file_to_use
+mandatory: True

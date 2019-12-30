@@ -1,0 +1,25 @@
+metadata:
+  title: Raw assembly
+  short title: Raw
+  documentation: "https://docassemble.org/docs/documents.html#raw"
+  example start: 3
+  example end: 3
+---
+question: |
+  Should we say hello?
+yesno: say_hello
+---
+question: |
+  To what planet shall we say
+  hello?
+fields:
+  - Planet: planet
+---
+mandatory: True
+question: |
+  Here is the source code.
+attachment:
+  name: Hello, world program
+  filename: hello_world
+  raw: True
+  content file: sample.cpp

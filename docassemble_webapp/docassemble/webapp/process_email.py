@@ -128,7 +128,7 @@ def main():
         user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=list())
     else:
         user_info = dict(email=user.email, roles=[role.name for role in user.roles], the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
-    result = docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, 'http://localhost', 'http://localhost', dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
+    result = docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
 
 def save_attachment(uid, yaml_filename, filename, email_id, index, content_type, extension, content):
     att_file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_filename)

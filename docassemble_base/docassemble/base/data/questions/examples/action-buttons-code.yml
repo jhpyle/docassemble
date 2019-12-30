@@ -1,0 +1,36 @@
+metadata:
+  title: Action buttons code
+  short: Action
+  documentation: "https://docassemble.org/docs/questions.html#action buttons"
+  example start: 1
+  example end: 3
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  Thank you for that information.
+field: thank_user
+action buttons:
+  code: |
+    [{'action': 'eat',
+      'arguments': {'fruit': favorite_fruit},
+      'label': 'Eat ' + favorite_fruit,
+      'color': 'secondary'}]
+---
+event: eat
+code: |
+  log('Nom nom nom.  That ' + action_argument('fruit') + ' was good.', "info")
+  set_save_status('ignore')
+---
+event: final_screen
+question: |
+  This concludes the interview.
+---
+mandatory: True
+code: |
+  favorite_fruit
+  thank_user
+  final_screen

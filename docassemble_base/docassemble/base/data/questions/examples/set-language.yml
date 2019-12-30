@@ -1,5 +1,7 @@
 metadata:
-  title: Set language
+  title:
+    en: Set language
+    es: Definir lenguaje
   example start: 1
   example end: 2
   documentation: "https://docassemble.org/docs/functions.html#set_language"

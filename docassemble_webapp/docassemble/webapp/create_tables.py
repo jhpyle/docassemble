@@ -10,9 +10,9 @@ from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role
+import docassemble.webapp.core.models
+from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import get_installed_distributions, add_dependencies
 from sqlalchemy import create_engine, MetaData
 #import random
@@ -68,13 +68,15 @@ def populate_tables():
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
     admin_defaults = daconfig.get('default admin account', dict())
     if 'email' not in admin_defaults:
-        admin_defaults['email'] = 'admin@admin.com'
+        admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@admin.com')
     if 'nickname' not in admin_defaults:
         admin_defaults['nickname'] = 'admin'
     if 'first_name' not in admin_defaults:
         admin_defaults['first_name'] = word('System')
     if 'last_name' not in admin_defaults:
         admin_defaults['last_name'] = word('Administrator')
+    if 'password' not in admin_defaults:
+        admin_defaults['password'] = os.getenv('DA_ADMIN_PASSWORD', 'password')
     cron_defaults = daconfig.get('default cron account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
     user_role = get_role(db, 'user')
@@ -103,19 +105,6 @@ def populate_tables():
             package.gitsubdir = None
             package.type = 'pip'
             db.session.commit()
-    # docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
-    # installed_packages = get_installed_distributions()
-    # existing_packages = [package.name for package in Package.query.all()]
-    # for package in installed_packages:
-    #     if package.key in existing_packages:
-    #         continue
-    #     package_auth = PackageAuth(user_id=admin.id)
-    #     if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-    #         package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
-    #     else:
-    #         package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
-    #     db.session.add(package_auth)
-    #     db.session.add(package_entry)
     return
 
 def main():
@@ -130,11 +119,22 @@ def main():
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if not db.engine.has_table(dbtableprefix + 'alembic_version'):
+                sys.stderr.write("Creating alembic stamp\n")
                 command.stamp(alembic_cfg, "head")
             if db.engine.has_table(dbtableprefix + 'user'):
+                sys.stderr.write("Running alembic upgrade\n")
                 command.upgrade(alembic_cfg, "head")
         #db.drop_all()
-        db.create_all()
+        try:
+            sys.stderr.write("Trying to create tables\n")
+            db.create_all()
+        except:
+            sys.stderr.write("Error trying to create tables; trying a second time.\n")
+            try:
+                db.create_all()
+            except:
+                sys.stderr.write("Error trying to create tables; trying a third time.\n")
+                db.create_all()
         populate_tables()
         db.engine.dispose()
 

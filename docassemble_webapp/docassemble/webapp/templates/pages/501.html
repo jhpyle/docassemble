@@ -11,16 +11,18 @@
 {%- if verbose %}
 {{ error|safe }}
 
-{%- if historytext != 'None' %}
+{%- if show_debug and historytext != 'None' %}
 
 <h3>{{ word('History') }}</h3>
 
 {{ historytext | safe }}
 
-<p><a target="_blank" href="{{ url_for('get_variables') }}">{{ word('Show variables and values') }}</a></p>
+  {%- if yaml_filename %}
+<p><a target="_blank" href="{{ url_for('get_variables', i=yaml_filename) }}">{{ word('Show variables and values') }}</a></p>
+  {%- endif %}
 {%- endif %}
 
-{%- if logtext != 'None' %}
+{%- if show_debug and logtext != 'None' %}
 
 <h3>{{ word('Log') }}</h3>
 

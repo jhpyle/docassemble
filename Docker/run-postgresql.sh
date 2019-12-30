@@ -5,11 +5,11 @@ export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
 if [ "${DAPYTHONVERSION}" == "2" ]; then
     export DA_DEFAULT_LOCAL="local"
 else
-    export DA_DEFAULT_LOCAL="local3.5"
+    export DA_DEFAULT_LOCAL="local3.6"
 fi
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 
 source "${DA_ACTIVATE}"
 
@@ -36,8 +36,12 @@ if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
 fi
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
-    export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
+    export S3_ACCESS_KEY="$S3ACCESSKEY"
+    export S3_SECRET_KEY="$S3SECRETACCESSKEY"
+fi
+
+if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+    export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
 fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
@@ -54,13 +58,13 @@ function stopfunc {
     if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
     else
-	PGBACKUPDIR=${DA_ROOT}/backup/postgres
-	mkdir -p $PGBACKUPDIR
+	PGBACKUPDIR="${DA_ROOT}/backup/postgres"
+	mkdir -p "$PGBACKUPDIR"
     fi
     chown postgres.postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+	s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
 	rm -rf "$PGBACKUPDIR"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(find "$PGBACKUPDIR" -type f); do
@@ -84,8 +88,8 @@ else
     install -d -m 2775 -o postgres -g postgres /var/run/postgresql
 fi
 
-mkdir -p /var/run/postgresql/$PGVERSION-main.pg_stat_tmp
-chown -R postgres.postgres /var/run/postgresql/$PGVERSION-main.pg_stat_tmp
+mkdir -p "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
+chown -R postgres.postgres "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
 
-su postgres -c "/usr/lib/postgresql/$PGVERSION/bin/postgres -D /var/lib/postgresql/$PGVERSION/main -c config_file=/etc/postgresql/$PGVERSION/main/postgresql.conf" &
+su postgres -c "/usr/lib/postgresql/${PGVERSION}/bin/postgres -D /var/lib/postgresql/${PGVERSION}/main -c config_file=/etc/postgresql/${PGVERSION}/main/postgresql.conf" &
 wait %1

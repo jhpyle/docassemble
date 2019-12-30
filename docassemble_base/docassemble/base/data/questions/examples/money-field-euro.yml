@@ -1,0 +1,19 @@
+metadata:
+  title: Euros
+  documentation: "https://docassemble.org/docs/fields.html#currency"
+  example start: 1
+  example end: 2
+---
+question: |
+  How much is your house worth?
+fields:
+  - Value: house_value
+    datatype: currency
+    min: 0
+    currency symbol: €
+---
+question: Your home value
+subquestion: |
+  Your house is worth
+  ${ currency(house_value, symbol=u'€') }.
+mandatory: True

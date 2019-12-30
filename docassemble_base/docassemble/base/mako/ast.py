@@ -23,6 +23,9 @@ class PythonCode(object):
         self.names_used = set()
         for item in myvisitor.names.keys():
             self.names_used.add(item)
+        self.names_set = set()
+        for item in myvisitor.targets.keys():
+            self.names_set.add(item)
 
         self.code = code
 

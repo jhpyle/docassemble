@@ -2,12 +2,13 @@ import sys
 import re
 from flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators
+from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from docassemble.base.functions import word
 from docassemble.base.config import daconfig
 from flask_login import current_user
+import email.utils
 
 try:
     import ldap
@@ -32,30 +33,35 @@ class MySignInForm(LoginForm):
             ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
             username = self.email.data
             password = self.password.data
-            connect = ldap.open(ldap_server)
+            connect = ldap.initialize('ldap://' + ldap_server)
+            connect.set_option(ldap.OPT_REFERRALS, 0)
             try:
                 connect.simple_bind_s(username, password)
-                connect.unbind_s()
-                from flask import current_app
-                user_manager = current_app.user_manager
-                user, user_email = user_manager.find_user_by_email(self.email.data)
-                if not user:
-                    from docassemble.base.generate_key import random_alphanumeric
-                    from docassemble.webapp.db_object import db
-                    from docassemble.webapp.users.models import UserModel, Role
-                    while True:
-                        new_social = 'ldap$' + random_alphanumeric(32)
-                        existing_user = UserModel.query.filter_by(social_id=new_social).first()
-                        if existing_user:
-                            continue
-                        break
-                    user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
-                    user_role = Role.query.filter_by(name='user').first()
-                    user.roles.append(user_role)
-                    db.session.add(user)
-                    db.session.commit()
-                result = True
-            except ldap.LDAPError:
+                if not (connect.whoami_s() is None):
+                    connect.unbind_s()
+                    from flask import current_app
+                    user_manager = current_app.user_manager
+                    user, user_email = user_manager.find_user_by_email(self.email.data)
+                    if not user:
+                        from docassemble.base.generate_key import random_alphanumeric
+                        from docassemble.webapp.db_object import db
+                        from docassemble.webapp.users.models import UserModel, Role
+                        while True:
+                            new_social = 'ldap$' + random_alphanumeric(32)
+                            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+                            if existing_user:
+                                continue
+                            break
+                        user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
+                        user_role = Role.query.filter_by(name='user').first()
+                        user.roles.append(user_role)
+                        db.session.add(user)
+                        db.session.commit()
+                    result = True
+                else:
+                    connect.unbind_s()
+                    result = super(MySignInForm, self).validate()
+            except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
                 result = super(MySignInForm, self).validate()
         else:
@@ -63,6 +69,14 @@ class MySignInForm(LoginForm):
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
             if user is None:
+                if daconfig.get('confirm registration', False):
+                    self.email.errors = list()
+                    self.email.errors.append(word("Incorrect Email and/or Password"))
+                    self.password.errors = list()
+                    self.password.errors.append(word("Incorrect Email and/or Password"))
+                else:
+                    self.email.errors = list(self.email.errors)
+                    self.email.errors.append(word("Account did not exist."))
                 return False
             if user and (user.password is None or (user.social_id is not None and not user.social_id.startswith('local$'))):
                 self.email.errors = list(self.email.errors)
@@ -94,13 +108,15 @@ def da_unique_email_validator(form, field):
         ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
         base_dn = daconfig['ldap login']['base dn'].strip()
         search_filter = daconfig['ldap login'].get('search pattern', "mail=%s") % (form.email.data,)
-        connect = ldap.open(ldap_server)
+        connect = ldap.initialize('ldap://' + ldap_server)
         try:
             connect.simple_bind_s(daconfig['ldap login']['bind email'], daconfig['ldap login']['bind password'])
             if len(connect.search_s(base_dn, ldap.SCOPE_SUBTREE, search_filter)) > 0:
                 raise ValidationError(word("This Email is already in use. Please try another one."))
         except ldap.LDAPError:
             pass
+    if daconfig.get('confirm registration', False):
+        return True
     return unique_email_validator(form, field)
 
 class MyRegisterForm(RegisterForm):
@@ -173,9 +189,23 @@ class RequestDeveloperForm(FlaskForm):
     submit = SubmitField(word('Submit'))
 
 class MyInviteForm(FlaskForm):
-    email = StringField(word('E-mail'), validators=[
-        validators.Required(word('E-mail is required')),
-        validators.Email(word('Invalid E-mail'))])
+    def validate(self):
+        has_error = False
+        from flask import flash
+        if self.email.data:
+            for email_address in re.split(r'[\n\r]+', self.email.data.strip()):
+                (part_one, part_two) = email.utils.parseaddr(email_address)
+                if part_two == '':
+                    the_errors = list(self.email.errors)
+                    the_errors.append(word("Invalid e-mail address: " + email_address))
+                    self.email.errors = tuple(the_errors)
+                    has_error = True
+        if has_error:
+            return False
+        return super(MyInviteForm, self).validate()
+    email = TextAreaField(word('One or more e-mail addresses (separated by newlines)'), validators=[
+        validators.Required(word('At least one e-mail address must be listed'))
+    ])
     role_id = SelectField(word('Role'))
     next = HiddenField()
     submit = SubmitField(word('Invite'))
@@ -261,3 +291,7 @@ class MyResendConfirmEmailForm(FlaskForm):
         validators.Email(word('Invalid e-mail address')),
         ])
     submit = SubmitField(word('Send confirmation email'))
+
+class ManageAccountForm(FlaskForm):
+    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf([word("delete my account")], message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
+    delete = SubmitField(word('Delete Account'))

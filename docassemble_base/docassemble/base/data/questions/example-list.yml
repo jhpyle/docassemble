@@ -170,7 +170,7 @@
     - gather-set
     - gather-set-object
     - mako-06
-    - nested-for-loop
+    - nested-loop
     - madlibs
 - Utility functions:
     - defined
@@ -209,7 +209,7 @@
     - html
     - external_files
     - js_url_action
-    - js_url_action_call
+    - js_action_call
     - js_variables
 - Dates:
     - timezone-list

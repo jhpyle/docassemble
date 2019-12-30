@@ -1,0 +1,36 @@
+metadata:
+  title: log
+  documentation: "https://docassemble.org/docs/recipes.html#python to javascript"
+  example start: 1
+  example end: 5
+---
+imports:
+  - json
+---
+question: |
+  What is your favorite color?
+fields:
+  - Color: favorite_color
+---
+initial: True
+code: |
+  log("var myColor = " + json.dumps(favorite_color) + ";", "javascript")
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+script: |
+  <script>
+    console.log("I know that your favorite color is " + myColor);
+  </script>
+---
+mandatory: True
+question: |
+  Your favorites
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+
+  Your favorite color is
+  ${ favorite_color }.

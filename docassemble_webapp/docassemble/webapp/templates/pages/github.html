@@ -8,13 +8,26 @@
 
 <form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
+  {% if uses_github %}
+  <div class="form-check">
+    {{ form.shared(type='checkbox', class='form-check-input') }}
+    <!--<input type="checkbox" class="form-check-input" id="{{ form.shared.id }}" name="{{ form.shared.id }}">-->
+    <label class="form-check-label" for="{{ form.shared.id }}">{{ form.shared.label }}</label>
+  </div>
+  <div class="form-check">
+    {{ form.orgs(type='checkbox', class='form-check-input') }}
+    <!--<input type="checkbox" class="form-check-input" id="{{ form.orgs.id }}" name="{{ form.orgs.id }}">-->
+    <label class="form-check-label" for="{{ form.orgs.id }}">{{ form.orgs.label }}</label>
+  </div>
+  {% endif %}
   <div>
     {% if uses_github %}
-    {{ render_submit_field(form.unconfigure, class="btn btn-danger " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.save, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.unconfigure, class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}
     {% else %}
-    {{ render_submit_field(form.configure, class="btn btn-success " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.configure, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS']) }}
     {% endif %}
-    {{ render_submit_field(form.cancel, class="btn btn-warning " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>
 </form>
 

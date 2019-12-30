@@ -21,12 +21,14 @@ if PY2:
 else:
     import pickle
 from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
+from jinja2.runtime import UndefinedError
+
 import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim
 from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext
 from decimal import Decimal
 import sys
@@ -51,15 +53,298 @@ import subprocess
 from io import open
 from bs4 import BeautifulSoup
 import types
+import requests
+from requests.auth import HTTPDigestAuth, HTTPBasicAuth
+from requests.exceptions import RequestException
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status', 'verbatim', 'DAWeb', 'DAWebError']
 
 #knn_machine_learner = DummyObject
 
 # def TheSimpleTextMachineLearner(*pargs, **kwargs):
 #     return knn_machine_learner(*pargs, **kwargs)
+
+class DAStore(DAObject):
+    """A class used to save objects to SQL."""
+    def init(self, *pargs, **kwargs):
+        super(DAStore, self).init(*pargs, **kwargs)
+    def is_encrypted(self):
+        """Returns True if the storage object is using encryption, otherwise returns False."""
+        if hasattr(self, 'encrypted'):
+            return self.encrypted
+        if hasattr(self, 'base'):
+            if self.base == 'interview':
+                return False
+            if self.base == 'user':
+                return True
+            if self.base == 'global':
+                return False
+            return False
+        return True
+    def _get_base_key(self):
+        if hasattr(self, 'base'):
+            if self.base == 'interview':
+                return 'da:i:' + this_thread.current_info.get('yaml_filename', '')
+            if self.base == 'user':
+                return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
+            if self.base == 'global':
+                return 'da:global'
+            return text_type(self.base)
+        return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
+    def defined(self, key):
+        """Returns True if the key exists in the data store, otherwise returns False."""
+        the_key = self._get_base_key() + ':' + key
+        return server.server_sql_defined(the_key)
+    def get(self, key):
+        """Reads an object from the data store for the given key."""
+        the_key = self._get_base_key() + ':' + key
+        return server.server_sql_get(the_key, secret=this_thread.current_info.get('secret', None))
+    def set(self, key, value):
+        """Writes an object to the data store under the given key."""
+        the_key = self._get_base_key() + ':' + key
+        server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
+    def delete(self, key):
+        """Deletes an object from the data store"""
+        the_key = self._get_base_key() + ':' + key
+        server.server_sql_delete(the_key)
+
+class DAWeb(DAObject):
+    """A class used to call external APIs"""
+    def _get_base_url(self):
+        if hasattr(self, 'base_url'):
+            base_url = self.base_url
+            if not isinstance(self.base_url, string_types):
+                raise Exception("DAWeb.call: the base url must be a string")
+            if not base_url.endswith('/'):
+                base_url += '/'
+            return base_url
+        return self.base_url
+    def _get_on_failure(self, on_failure):
+        if on_failure is None and hasattr(self, 'on_failure'):
+            on_failure = self.on_failure
+        return on_failure
+    def _get_success_code(self, success_code):
+        if success_code is None and hasattr(self, 'success_code'):
+            success_code = self.success_code
+        return success_code
+    def _get_on_success(self, on_success):
+        if on_success is None and hasattr(self, 'on_success'):
+            on_success = self.on_success
+        return on_success
+    def _get_task(self, task):
+        if task is None and hasattr(self, 'task'):
+            task = self.task
+        if task is None:
+            return None
+        if not isinstance(task, string_types):
+            raise Exception("DAWeb.call: task must be a string")
+        return task
+    def _get_auth(self, auth):
+        if auth is None and hasattr(self, 'auth'):
+            auth = self.auth
+        if isinstance(auth, (dict, DADict)):
+            if auth.get('type', 'basic') == 'basic':
+                return HTTPBasicAuth(auth['username'], auth['password'])
+            elif auth['type'] == 'digest':
+                return HTTPDigestAuth(auth['username'], auth['password'])
+        return auth
+    def _get_headers(self, new_headers):
+        if hasattr(self, 'headers'):
+            headers = self.headers
+            if isinstance(headers, DADict):
+                headers = headers.elements
+            if not isinstance(headers, dict):
+                raise Exception("DAWeb.call: the headers must be a dictionary")
+            headers.update(new_headers)
+            return headers
+        return new_headers
+    def _get_cookies(self, new_cookies):
+        if hasattr(self, 'cookies'):
+            cookies = self.cookies
+            if isinstance(cookies, DADict):
+                cookies = cookies.elements
+            if not isinstance(cookies, dict):
+                raise Exception("DAWeb.call: the cookies must be a dictionary")
+            cookies.update(new_cookies)
+            return cookies
+        return new_cookies
+    def _get_json_body(self, json_body):
+        if json_body is not None:
+            return True if json_body else False
+        if hasattr(self, 'json_body'):
+            return True if self.json_body else False
+        return True
+    def _call(self, url, method=None, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, task=None, files=None, cookies=None, success_code=None):
+        task = self._get_task(task)
+        auth = self._get_auth(auth)
+        json_body = self._get_json_body(json_body)
+        on_failure = self._get_on_failure(on_failure)
+        on_success = self._get_on_success(on_success)
+        success_code = self._get_success_code(success_code)
+        if isinstance(success_code, (list, set, tuple, DASet, DAList)):
+            new_success_code = list()
+            for code in success_code:
+                if not isinstance(code, int):
+                    raise Exception("DAWeb.call: success codes must be integers")
+                new_success_code.append(code)
+            success_code = new_success_code
+        elif isinstance(success_code, int):
+            success_code = [success_code]
+        elif success_code is not None:
+            raise Exception("DAWeb.call: success_code must be an integer or a list of integers")
+        if method is None:
+            method = 'GET'
+        if not isinstance(method, string_types):
+            raise Exception("DAWeb.call: the method must be a string")
+        method = method.upper().strip()
+        if method not in ('POST', 'GET', 'PATCH', 'PUT', 'HEAD', 'DELETE', 'OPTIONS'):
+            raise Exception("DAWeb.call: invalid method")
+        if not isinstance(url, string_types):
+            raise Exception("DAWeb.call: the url must be a string")
+        if not re.search(r'^https?://', url):
+            url = self._get_base_url() + re.sub(r'^/*', '', url)
+        if data is None:
+            data = dict()
+        if isinstance(data, DADict):
+            data = data.elements
+        if json_body is False and not isinstance(data, dict):
+            raise Exception("DAWeb.call: data must be a dictionary")
+        if params is None:
+            params = dict()
+        if isinstance(params, DADict):
+            params = params.elements
+        if not isinstance(params, dict):
+            raise Exception("DAWeb.call: params must be a dictionary")
+        if headers is None:
+            headers = dict()
+        if isinstance(headers, DADict):
+            headers = headers.elements
+        if not isinstance(headers, dict):
+            raise Exception("DAWeb.call: the headers must be a dictionary")
+        headers = self._get_headers(headers)
+        if len(headers) == 0:
+            headers = None
+        if cookies is None:
+            cookies = dict()
+        if isinstance(cookies, DADict):
+            cookies = cookies.elements
+        if not isinstance(cookies, dict):
+            raise Exception("DAWeb.call: the cookies must be a dictionary")
+        cookies = self._get_cookies(cookies)
+        if len(cookies) == 0:
+            cookies = None
+        if isinstance(data, dict) and len(data) == 0:
+            data = None
+        if files is not None:
+            if not isinstance(files, dict):
+                raise Exception("DAWeb.call: files must be a dictionary")
+            new_files = dict()
+            for key, val in files.items():
+                if not isinstance(key, string_types):
+                    raise Exception("DAWeb.call: files must be a dictionary of string keys")
+                try:
+                    path = server.path_from_reference(val)
+                    logmessage("path is " + str(path))
+                    assert path is not None
+                except:
+                    raise Exception("DAWeb.call: could not load the file")
+                new_files[key] = open(path, 'rb')
+            files = new_files
+            if len(files):
+                json_body = False
+        try:
+            if method == 'POST':
+                if json_body:
+                    r = requests.post(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.post(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PUT':
+                if json_body:
+                    r = requests.put(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.put(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PATCH':
+                if json_body:
+                    r = requests.patch(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.patch(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'GET':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.get(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'DELETE':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.delete(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'OPTIONS':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.options(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'HEAD':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.head(url, params=params, headers=headers, auth=auth, cookies=cookies)
+        except RequestException as err:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=-1, response_text='', response_json=None, response_headers=dict(), exception_type=err.__class__.__name__, exception_text=text_type(err), cookies_before=cookies, cookies_after=None)
+            else:
+                return on_failure
+        if success_code is None:
+            if r.status_code >= 200 and r.status_code < 300:
+                success = True
+            else:
+                success = False
+        else:
+            if r.status_code in success_code:
+                success = True
+            else:
+                success = False
+        if hasattr(self, 'cookies'):
+            self.cookies = dict(r.cookies)
+        try:
+            json_response = r.json()
+        except:
+            json_response = None
+        if success and task is not None:
+            mark_task_as_performed(task)
+        if not success:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_failure
+        if success and on_success is not None:
+            if on_success == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_success
+        return(json_response if json_response is not None else r.text)
+    def get(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a GET request"""
+        return self._call(url, method='GET', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def post(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a POST request"""
+        return self._call(url, method='POST', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def put(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a PUT request"""
+        return self._call(url, method='PUT', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def patch(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, files=None):
+        """Makes a PATCH request"""
+        return self._call(url, method='PATCH', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, files=files)
+    def delete(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a DELETE request"""
+        return self._call(url, method='DELETE', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def options(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes an OPTIONS request"""
+        return self._call(url, method='OPTIONS', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
+    def head(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None):
+        """Makes a HEAD request"""
+        return self._call(url, method='HEAD', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task)
 
 class DARedis(DAObject):
     """A class used to interact with the redis server."""
@@ -160,7 +445,7 @@ class DAGoogleAPI(DAObject):
     def google_cloud_storage_client(self, scope=None):
         """Returns a google.cloud.storage.Client object."""
         return server.google_api.google_cloud_storage_client(scope)
-        
+
 def run_python_module(module, arguments=None):
     """Runs a python module, as though from the command line, and returns the output."""
     if re.search(r'\.py$', module):
@@ -195,8 +480,13 @@ def today(timezone=None, format=None):
     else:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
+def babel_language(language):
+    if 'babel dates map' not in server.daconfig:
+        return language
+    return server.daconfig['babel dates map'].get(language, language)
+
 def month_of(the_date, as_word=False, language=None):
-    """Interprets the_date as a date and returns the month.  
+    """Interprets the_date as a date and returns the month.
     Set as_word to True if you want the month as a word."""
     ensure_definition(the_date, as_word, language)
     if language is None:
@@ -207,7 +497,7 @@ def month_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='MMMM', locale=language))
+            return(babel.dates.format_date(date, format='MMMM', locale=babel_language(language)))
         return(int(date.strftime('%m')))
     except:
         return word("Bad date")
@@ -235,7 +525,7 @@ def dow_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='EEEE', locale=language))
+            return(babel.dates.format_date(date, format='EEEE', locale=babel_language(language)))
         else:
             return(int(date.strftime('%u')))
     except:
@@ -265,7 +555,7 @@ def format_date(the_date, format='long', language=None):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_date(date, format=format, locale=language)
+        return babel.dates.format_date(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
@@ -281,7 +571,7 @@ def format_datetime(the_date, format='long', language=None):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=language)
+        return babel.dates.format_datetime(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
@@ -297,7 +587,7 @@ def format_time(the_time, format='short', language=None):
             time = the_time
         else:
             time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(time, format=format, locale=language)
+        return babel.dates.format_time(time, format=format, locale=babel_language(language))
     except Exception as errmess:
         return word("Bad date: " + text_type(errmess))
 
@@ -412,14 +702,14 @@ def dt(obj):
     return datetime.datetime(obj.year, obj.month, obj.day, obj.hour, obj.minute, obj.second, obj.microsecond, obj.tzinfo)
 
 def date_interval(**kwargs):
-    """Expresses a date and time interval.  Passes through all arguments 
+    """Expresses a date and time interval.  Passes through all arguments
     to dateutil.relativedelta.relativedelta."""
     ensure_definition(**kwargs)
     return dateutil.relativedelta.relativedelta(**kwargs)
 
 def date_difference(starting=None, ending=None, timezone=None):
-    """Calculates the difference between the date indicated by "starting" 
-    and the date indicated by "ending."  Returns an object with attributes weeks, 
+    """Calculates the difference between the date indicated by "starting"
+    and the date indicated by "ending."  Returns an object with attributes weeks,
     days, hours, minutes, seconds, and delta."""
     ensure_definition(starting, ending, timezone)
     if starting is None:
@@ -535,7 +825,7 @@ def returning_user(minutes=None, hours=None, days=None):
     return False
 
 def last_access_delta(*pargs, **kwargs):
-    """Returns a datatime.timedelta object expressing the length of
+    """Returns a datetime.timedelta object expressing the length of
     time that has passed since the last time the interview was accessed."""
     last_time = last_access_time(*pargs, **kwargs)
     if last_time is None:
@@ -543,19 +833,19 @@ def last_access_delta(*pargs, **kwargs):
     return current_datetime() - last_time
 
 def last_access_days(*pargs, **kwargs):
-    """Returns the number of days since the last time the interview 
+    """Returns the number of days since the last time the interview
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return delta.days + (delta.seconds / 86400.0)
 
 def last_access_hours(*pargs, **kwargs):
-    """Returns the number of hours since the last time the interview 
+    """Returns the number of hours since the last time the interview
     was accessed."""
-    delta = last_access_delta(*pargs, **kwargs) 
+    delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 24.0) + (delta.seconds / 3600.0)
 
 def last_access_minutes(*pargs, **kwargs):
-    """Returns the number of minutes since the last time the interview 
+    """Returns the number of minutes since the last time the interview
     was accessed."""
     delta = last_access_delta(*pargs, **kwargs)
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
@@ -743,7 +1033,7 @@ class IndividualName(Name):
             return super(IndividualName, self).defined()
         return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
-        """Returns the full name.  Has optional keyword arguments middle 
+        """Returns the full name.  Has optional keyword arguments middle
         and use_suffix."""
         if not self.uses_parts:
             return super(IndividualName, self).full()
@@ -771,7 +1061,7 @@ class IndividualName(Name):
             return super(IndividualName, self).firstlast()
         return(self.first + " " + self.last)
     def lastfirst(self):
-        """Returns the last name followed by a comma, followed by the 
+        """Returns the last name followed by a comma, followed by the
         last name, followed by the suffix (if a suffix exists)."""
         if not self.uses_parts:
             return super(IndividualName, self).lastfirst()
@@ -1068,7 +1358,7 @@ class Address(DAObject):
             return word("Room", language=language) + " " + text_type(self.room)
         return ''
     def line_one(self, language=None):
-        """Returns the first line of the address, including the unit 
+        """Returns the first line of the address, including the unit
         number if there is one."""
         if self.city_only:
             return ''
@@ -1139,7 +1429,7 @@ class Event(DAObject):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         return text_type(self.address)
-    
+
 class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, *pargs, **kwargs):
@@ -1196,9 +1486,9 @@ class Person(DAObject):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def possessive(self, target, **kwargs):
-        """Given a word like "fish," returns "your fish" or 
+        """Given a word like "fish," returns "your fish" or
         "John Smith's fish," depending on whether the person is the user."""
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
@@ -1267,7 +1557,7 @@ class Person(DAObject):
     #         return self.age_in_years
     #     today = date.today()
     #     born = self.birthdate
-    #     try: 
+    #     try:
     #         birthday = born.replace(year=today.year)
     #     except ValueError:
     #         birthday = born.replace(year=today.year, month=born.month+1, day=1)
@@ -1309,7 +1599,7 @@ class Person(DAObject):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
-            tense = '1sg'
+            tense = '2sg'
         else:
             tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
@@ -1325,7 +1615,7 @@ class Person(DAObject):
         #logmessage(the_verb + " " + tense)
         output = verb_past(the_verb, tense, **kwargs)
     def subject(self, **kwargs):
-        """Returns "you" or the person's name, depending on whether the 
+        """Returns "you" or the person's name, depending on whether the
         person is the user."""
         if self == this_thread.global_vars.user:
             output = word('you', **kwargs)
@@ -1387,15 +1677,15 @@ class Individual(Person):
         else:
             return int(rd.years)
     def first_name_hint(self):
-        """If the individual is the user and the user is logged in and 
-        the user has set up a name in the user profile, this returns 
+        """If the individual is the user and the user is logged in and
+        the user has set up a name in the user profile, this returns
         the user's first name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
             return this_thread.current_info['user']['firstname'];
         return ''
     def last_name_hint(self):
-        """If the individual is the user and the user is logged in and 
-        the user has set up a name in the user profile, this returns 
+        """If the individual is the user and the user is logged in and
+        the user has set up a name in the user profile, this returns
         the user's last name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
             return this_thread.current_info['user']['lastname'];
@@ -1416,7 +1706,7 @@ class Individual(Person):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
-            return(output)            
+            return(output)
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
         if self == this_thread.global_vars.user:
@@ -1449,7 +1739,7 @@ class Individual(Person):
         else:
             return(output)
     def yourself_or_name(self, **kwargs):
-        """Returns a "yourself" if the individual is the user, otherwise 
+        """Returns a "yourself" if the individual is the user, otherwise
         returns the individual's name."""
         if self == this_thread.global_vars.user:
             output = word('yourself', **kwargs)
@@ -1500,7 +1790,7 @@ class FinancialList(DADict):
         return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
     def __unicode__(self):
         return text_type(self.total())
-    
+
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
     def init(self, *pargs, **kwargs):
@@ -1563,11 +1853,13 @@ class Value(DAObject):
         return self.value == (other.value if isinstance(other, Value) else other)
     def __ne__(self, other):
         return self.value != (other.value if isinstance(other, Value) else other)
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
     def amount(self, period_to_use=1):
-        """Returns the periodic value's amount for a full period, 
+        """Returns the periodic value's amount for a full period,
         or 0 if the value does not exist."""
         if not self.exists:
             return 0
@@ -1593,7 +1885,7 @@ class Organization(Person):
             del kwargs['offices']
         return super(Organization, self).init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
-        """Returns True or False depending on whether the organization 
+        """Returns True or False depending on whether the organization
         serves the given county and/or handles the given problem."""
         ensure_definition(problem, county)
         if problem:
@@ -1625,7 +1917,7 @@ class Organization(Person):
         return None
 
 # twilio_config = None
-    
+
 # def set_twilio_config(the_config):
 #     global twilio_config
 #     twilio_config = the_config
@@ -1692,7 +1984,6 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")
-    url_start = docassemble.base.functions.get_url_start()
     success = True
     media = list()
     for attachment in attachments:
@@ -1782,7 +2073,7 @@ class FaxStatus(object):
             return True
         else:
             return False
-        
+
 def send_fax(fax_number, file_object, config='default', country=None):
     if server.twilio_config is None:
         logmessage("send_fax: ignoring because Twilio not enabled")
@@ -1856,7 +2147,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                 if failed:
                     success = False
             else:
-                success = False    
+                success = False
             continue
         else:
             success = False
@@ -1936,7 +2227,7 @@ def map_of(*pargs, **kwargs):
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
-        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+        return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
 def ocr_file_in_background(*pargs, **kwargs):
@@ -2142,7 +2433,7 @@ def path_and_mimetype(file_ref):
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):
         pass
-    
+
 SimpleTextMachineLearner = DummyObject
 
 def set_knn_machine_learner(target):
@@ -2160,7 +2451,7 @@ RandomForestMachineLearner = DummyObject
 def set_random_forest_machine_learner(target):
     global RandomForestMachineLearner
     RandomForestMachineLearner = target
-    
+
 MachineLearningEntry = DummyObject
 
 def set_machine_learning_entry(target):
@@ -2213,7 +2504,7 @@ class DAModel(DAObject):
         else:
             self.prediction = None
             self.probability = 1.0
-            
+
 def pdf_concatenate(*pargs, **kwargs):
     """Concatenates PDF files together and returns a DAFile representing
     the new PDF.
@@ -2234,7 +2525,7 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or isinstance(target, list):
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or isinstance(target, list):
         for the_file in target:
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
@@ -2263,7 +2554,7 @@ def recurse_zip_params(param, root, files):
         file_info = server.file_finder(param)
         files.append((root + file_info['filename'], file_info['fullpath']))
     return files
-    
+
 def zip_file(*pargs, **kwargs):
     """Returns a ZIP file as a DAFile containing the files provided as arguments."""
     files = list()
@@ -2295,7 +2586,7 @@ def invalid_variable_name(varname):
         return True
     varname = re.sub(r'[\.\[].*', '', varname)
     if not valid_variable_match.match(varname):
-        return True 
+        return True
     return False
 
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
@@ -2409,7 +2700,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
@@ -2436,5 +2727,56 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     outfile.commit()
     outfile.retrieve()
     return outfile
+
+def explain(explanation, category='default'):
+    """Add a line to the explanations history."""
+    if 'explanations' not in this_thread.internal:
+        this_thread.internal['explanations'] = dict()
+    if category not in this_thread.internal['explanations']:
+        this_thread.internal['explanations'][category] = list()
+    if explanation not in this_thread.internal['explanations'][category]:
+        this_thread.internal['explanations'][category].append(explanation)
+
+def clear_explanations(category='default'):
+    """Erases the history of explanations."""
+    if 'explanations' not in this_thread.internal:
+        return
+    if category == 'all':
+        this_thread.internal['explanations'] = dict()
+    if category not in this_thread.internal['explanations']:
+        return
+    this_thread.internal['explanations'][category] = list()
+
+def explanation(category='default'):
+    """Returns the list of explanations."""
+    if 'explanations' not in this_thread.internal:
+        return []
+    return this_thread.internal['explanations'].get(category, [])
+
+def set_status(**kwargs):
+    """Sets various settings in the interview session."""
+    if 'misc' not in this_thread.internal:
+        this_thread.internal['misc'] = dict()
+    for key, val in kwargs.items():
+        this_thread.internal['misc'][key] = val
+
+def get_status(setting):
+    """Retrieves a setting of the interview session."""
+    if 'misc' not in this_thread.internal:
+        return None
+    return this_thread.internal['misc'].get(setting, None)
+
+def prevent_dependency_satisfaction(f):
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+            raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed")
+        # Python 3 version:
+        # try:
+        #     return f(*args, **kwargs)
+        # except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+        #     raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+    return wrapper
 
 from docassemble.base.oauth import DAOAuth

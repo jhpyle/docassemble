@@ -10,6 +10,7 @@ import re
 import sys
 import shutil
 import time
+import fcntl
 from io import open
 
 from distutils.version import LooseVersion
@@ -28,6 +29,20 @@ if supervisor_url:
     USING_SUPERVISOR = True
 else:
     USING_SUPERVISOR = False
+
+def fix_fnctl():
+    try:
+        flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stdout\n")
+    except:
+        pass
+    try:
+        flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
+        fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        sys.stderr.write("fix_fnctl: updated stderr\n")
+    except:
+        pass
 
 def remove_inactive_hosts():
     from docassemble.base.config import hostname
@@ -53,7 +68,7 @@ class DummyPackage(object):
         self.name = name
         self.type = 'pip'
         self.limitation = None
-            
+
 def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
@@ -145,7 +160,7 @@ def check_for_updates(doing_startup=False):
             sys.stderr.write("check_for_updates: installing pdfminer\n")
             pdfminer = DummyPackage('pdfminer')
             pdfminer.type = 'git'
-            pdfminer.giturl = 'https://github.com/euske/pdfminer'
+            pdfminer.giturl = 'https://github.com/jhpyle/pdfminer'
             pdfminer.gitsubdir = None
             pdfminer.gitbranch = None
             install_package(pdfminer)
@@ -169,7 +184,7 @@ def check_for_updates(doing_startup=False):
             changed = True
         if 'pycryptodome' not in here_already:
             sys.stderr.write("check_for_updates: installing pycryptodome\n")
-            install_package(DummyPackage('pycryptodome'))            
+            install_package(DummyPackage('pycryptodome'))
             changed = True
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
@@ -208,20 +223,24 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: 2\n")
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
+        sys.stderr.write("check_for_updates: database includes a package called " + package.name + ".\n")
     # packages is what is supposed to be installed
     sys.stderr.write("check_for_updates: 3\n")
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
+            sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type.\n")
             #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
+            sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled.\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     sys.stderr.write("check_for_updates: 5\n")
     for install in Install.query.filter_by(hostname=hostname).all():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
+            sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled.\n")
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
@@ -231,7 +250,7 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: 7\n")
     for package in packages.values():
         if package.id not in installs and package.name in here_already:
-            sys.stderr.write("check_for_updates: package " + package.name + " here already\n")
+            sys.stderr.write("check_for_updates: package " + package.name + " here already.  Writing an Install record for it.\n")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
             db.session.add(install)
             installs[package.id] = install
@@ -243,16 +262,25 @@ def check_for_updates(doing_startup=False):
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
+            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + text_type(package.packageversion) + ", is ahead of the installed version, " + text_type(installs[package.id].packageversion) + "\n")
             new_version_needed = True
         else:
             new_version_needed = False
         #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
         # Check for missing local packages
         if (package.name not in here_already) and (package.id in installs):
+            sys.stderr.write("check_for_updates: the package " + package.name + " is supposed to be installed on this server, but was not detected.\n")
             package_missing = True
         else:
             package_missing = False
-        if package.id not in installs or package.version > installs[package.id].version or new_version_needed or package_missing:
+        if package.id in installs and package.version > installs[package.id].version:
+            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + text_type(package.version) + " but the installed version has version " + text_type(installs[package.id].version) + ".\n")
+            package_version_greater = True
+        else:
+            package_version_greater = False
+        if package.id not in installs:
+            sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server.\n")
+        if package.id not in installs or package_version_greater or new_version_needed or package_missing:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9\n")
@@ -263,6 +291,8 @@ def check_for_updates(doing_startup=False):
             continue
         if package.name not in here_already:
             sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + "\n")
+            returnval = 1
+            newlog = ''
         else:
             returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
@@ -270,6 +300,9 @@ def check_for_updates(doing_startup=False):
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
             results[package.name] = 'pip uninstall command returned success code.  See log for details.'
+        elif returnval == 1:
+            Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            results[package.name] = 'pip uninstall was not run because the package was not installed.'
         else:
             results[package.name] = 'pip uninstall command returned failure code'
             ok = False
@@ -368,6 +401,8 @@ def add_dependencies(user_id):
     for package in installed_packages:
         if package.key in package_by_name:
             continue
+        if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
+            continue
         pip_info = get_pip_info(package.key)
         #sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
         Package.query.filter_by(name=package.key).delete()
@@ -426,17 +461,18 @@ def install_package(package):
     if PY2:
         PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     else:
-        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local3.5')
+        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
-    use_pip_cache = r.get('da:updatepackage:use_pip_cache')
-    if use_pip_cache is None:
-        disable_pip_cache = False
-    elif int(use_pip_cache):
-        disable_pip_cache = False
-    else:
-        disable_pip_cache = True
+    #use_pip_cache = r.get('da:updatepackage:use_pip_cache')
+    #if use_pip_cache is None:
+    #    disable_pip_cache = False
+    #elif int(use_pip_cache):
+    #    disable_pip_cache = False
+    #else:
+    #    disable_pip_cache = True
+    disable_pip_cache = True
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
         commands = ['pip', 'install']
@@ -478,6 +514,7 @@ def install_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
@@ -510,6 +547,7 @@ def uninstall_package(package):
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
+    fix_fnctl()
     sys.stderr.flush()
     sys.stdout.flush()
     time.sleep(4)
@@ -590,6 +628,7 @@ if __name__ == "__main__":
         from docassemble.webapp.daredis import r
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
+            sys.stderr.write("updating with mode initialize\n")
             update_versions()
             any_package = Package.query.filter_by(active=True).first()
             if any_package is None:
@@ -598,14 +637,18 @@ if __name__ == "__main__":
             check_for_updates(doing_startup=True)
             remove_inactive_hosts()
         else:
+            sys.stderr.write("updating with mode check_for_updates\n")
             check_for_updates()
             from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
+                    sys.stderr.write("Sending reset signal\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
                     result = subprocess.call(args)
+                else:
+                    sys.stderr.write("Not sending reset signal because not web or celery\n")
             else:
                 sys.stderr.write("update: touched wsgi file" + "\n")
                 wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')

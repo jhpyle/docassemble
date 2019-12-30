@@ -2,13 +2,31 @@
 
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
-          <p>{{ version }}</p>
+          <p>{{ version }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ word("Python version %s" % (underlying_python_version,)) }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ free_disk_space + ' ' + word('remaining on disk') }}</p>
+          {%- if config_errors %}
+          <h3>{{ word("Errors") }}</h3>
+          <p>{{ word("The following errors were detected in your Configuration.") }}</p>
+          <ul>
+              {%- for error_message in config_errors %}
+              <li>{{ error_message }}</li>
+              {%- endfor %}
+          </ul>
+          {%- endif %}
+          {%- if config_messages %}
+          <h3>{{ word("Overrides") }}</h3>
+          <p>{{ word("The following overrides were applied.") }}</p>
+          <ul>
+              {%- for config_message in config_messages %}
+              <li>{{ config_message }}</li>
+              {%- endfor %}
+          </ul>
+          {%- endif %}
           <form action="" method="POST" role="form" class="daconfigform">
             {{ form.hidden_tag() }}
             <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
             <div class="form-actions mt-2">
-              {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-              {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
             </div>
           </form>
 {% endblock %}

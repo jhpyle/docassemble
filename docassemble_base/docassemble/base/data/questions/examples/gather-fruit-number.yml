@@ -3,14 +3,10 @@ metadata:
   short title: "List: gather by number"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 5
+  example end: 4
 ---
 objects:
-  - fruit: DAList
----
-mandatory: True
-code: |
-  fruit.ask_number = True
+  - fruit: DAList.using(ask_number=True)
 ---
 question: |
   How many fruits are there?

@@ -19,7 +19,7 @@
     <br>
     <div class="form-actions">
       {{ render_submit_field(form.submit) }}
-      <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
+      <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
     </div>
 </form>
 

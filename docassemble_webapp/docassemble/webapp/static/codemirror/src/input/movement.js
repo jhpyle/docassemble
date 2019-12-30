@@ -1,7 +1,7 @@
-import { Pos } from "../line/pos"
-import { prepareMeasureForLine, measureCharPrepared, wrappedLineExtentChar } from "../measurement/position_measurement"
-import { getBidiPartAt, getOrder } from "../util/bidi"
-import { findFirst, lst, skipExtendingChars } from "../util/misc"
+import { Pos } from "../line/pos.js"
+import { prepareMeasureForLine, measureCharPrepared, wrappedLineExtentChar } from "../measurement/position_measurement.js"
+import { getBidiPartAt, getOrder } from "../util/bidi.js"
+import { findFirst, lst, skipExtendingChars } from "../util/misc.js"
 
 function moveCharLogically(line, ch, dir) {
   let target = skipExtendingChars(line.text, ch + dir, dir)
@@ -27,12 +27,12 @@ export function endOfLine(visually, cm, lineObj, lineNo, dir) {
       // Thus, in rtl, we are looking for the first (content-order) character
       // in the rtl chunk that is on the last line (that is, the same line
       // as the last (content-order) character).
-      if (part.level > 0) {
+      if (part.level > 0 || cm.doc.direction == "rtl") {
         let prep = prepareMeasureForLine(cm, lineObj)
         ch = dir < 0 ? lineObj.text.length - 1 : 0
         let targetTop = measureCharPrepared(cm, prep, ch).top
         ch = findFirst(ch => measureCharPrepared(cm, prep, ch).top == targetTop, (dir < 0) == (part.level == 1) ? part.from : part.to - 1, ch)
-        if (sticky == "before") ch = moveCharLogically(lineObj, ch, 1, true)
+        if (sticky == "before") ch = moveCharLogically(lineObj, ch, 1)
       } else ch = dir < 0 ? part.to : part.from
       return new Pos(lineNo, ch, sticky)
     }

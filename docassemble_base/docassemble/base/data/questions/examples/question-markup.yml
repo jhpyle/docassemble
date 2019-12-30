@@ -3,7 +3,8 @@ metadata:
   documentation: "https://docassemble.org/docs/questions.html#question"
 ---
 question: |
-  What is the *airspeed* velocity of an unladen ${ african_or_european }
+  What is the *airspeed* velocity of an
+  unladen ${ african_or_european }
   swallow?
 fields:
   - Velocity: swallow_velocity

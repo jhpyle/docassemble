@@ -71,7 +71,11 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         fields = resolve1(fields)
     for i in fields:
         field = resolve1(i)
-        name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
+        try:
+            name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
+        except:
+            logmessage("Skipping field " + repr(field))
+            continue
         if name is not None:
             if PY2:
                 name = remove_nonprintable_limited(str(name))

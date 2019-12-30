@@ -32,8 +32,8 @@ subquestion: |
   If you have already uploaded a template but you want to upload a new
   version of it, answer "No" here.
 
-  [Playground]: ${ url_of('playground') }
-  [Templates section]: ${ url_of('playgroundtemplate') }
+  [Playground]: ${ url_of('playground', project=current_project) }
+  [Templates section]: ${ url_of('playgroundtemplate', project=current_project) }
 yesno: templates_already_uploaded
 ---
 question: |
@@ -66,11 +66,11 @@ fields:
     datatype: checkboxes
     none of the above: False
     code: |
-      PlaygroundSection('template').reduced_file_list()
+      PlaygroundSection('template', project=current_project).reduced_file_list()
 ---
 code: |
   attachments.clear()
-  templates = PlaygroundSection('template')
+  templates = PlaygroundSection('template', project=current_project)
   if templates_already_uploaded:
     chosen_templates = [file for file in template_choices if template_choices[file] is True]
   else:
@@ -123,8 +123,8 @@ subquestion: |
   If you have not already uploaded your decoration files, you can
   upload them with this wizard.
 
-  [Playground]: ${ url_of('playground') }
-  [Static files section]: ${ url_of('playgroundstatic') }
+  [Playground]: ${ url_of('playground', project=current_project) }
+  [Static files section]: ${ url_of('playgroundstatic', project=current_project) }
 yesno: decorations_already_uploaded
 ---
 question: |
@@ -140,11 +140,11 @@ fields:
     datatype: checkboxes
     none of the above: False
     code: |
-      PlaygroundSection('static').image_file_list()
+      PlaygroundSection('static', project=current_project).image_file_list()
 ---
 code: |
   if using_decorations:
-    static = PlaygroundSection('static')
+    static = PlaygroundSection('static', project=current_project)
     if len(static.image_file_list()) and decorations_already_uploaded:
       chosen_decorations = [file for file in decoration_choices if decoration_choices[file] is True]
     else:
@@ -156,7 +156,10 @@ code: |
       decoration_key = oneline(base_name(decoration_filename))
       new_decoration = interview.decorations.initializeObject(decoration_key)
       new_decoration.filename = decoration_filename
-      new_decoration.fileref = 'docassemble.playground' + str(static.user_id) + ':' + decoration_filename
+      if current_project == 'default':
+        new_decoration.fileref = 'docassemble.playground' + str(static.user_id) + ':' + decoration_filename
+      else:
+        new_decoration.fileref = 'docassemble.playground' + str(static.user_id) + current_project + ':' + decoration_filename
   interview.decorations.gathered = True
 ---
 mandatory: True
@@ -216,7 +219,7 @@ code: |
   interview_url = pg.interview_url(yaml_file)
   package_name = to_package_name(interview.file_name)
   pg.write_package(package_name, interview.package_info())
-  zip_url = url_of('create_playground_package', package=package_name)
+  zip_url = url_of('create_playground_package', package=package_name, project=current_project)
   all_done
 ---
 sets: all_done
@@ -229,17 +232,17 @@ subquestion: |
   You can also [download it as a package].
 
   To make changes to your interview, go to the [Playground] and edit
-  [`${ yaml_file }`](${ url_of('playground', file=yaml_file) }).
+  [`${ yaml_file }`](${ url_of('playground', file=yaml_file, project=current_project) }).
   % if len(attachments):
   To edit the ${ attachments.as_noun('template') }, go to the
-  [Templates section] and edit ${ attachments.url_list() }.
+  [Templates section] and edit ${ attachments.url_list(current_project) }.
   % endif
 
   ${ indent_by(interview.source(), 4) }
 
   [download it as a package]: ${ zip_url }
-  [Playground]: ${ url_of('playground') }
-  [Templates section]: ${ url_of('playgroundtemplate') }
+  [Playground]: ${ url_of('playground', project=current_project) }
+  [Templates section]: ${ url_of('playgroundtemplate', project=current_project) }
 buttons:
   - Exit: exit
 ---
@@ -386,7 +389,7 @@ fields:
       is: text
   - File: x.template_file
     code: |
-      PlaygroundSection('template').reduced_file_list()
+      PlaygroundSection('template', project=current_project).reduced_file_list()
     show if:
       variable: x.template_type
       is: file
@@ -484,8 +487,8 @@ subquestion: |
   The **Short title** is the name that mobile users will see in the
   upper-left corner of the screen.  It should be very short.
 
-  [Playground]: ${ url_of('playground') }
-  [Interview List]: ${ url_of('interviews') }
+  [Playground]: ${ url_of('playground', project=current_project) }
+  [Interview List]: ${ url_of('interviews', project=current_project) }
 fields:
   - File name: x.file_name
     default: appeal_petition
@@ -545,11 +548,11 @@ subquestion: |
 
   [Jinja2 syntax]: http://jinja.pocoo.org/docs
   [Mako syntax]: https://docassemble.org/docs/markup.html#mako
-  [Playground]: ${ url_of('playground') }
+  [Playground]: ${ url_of('playground', project=current_project) }
   [sample Word file]: ${ url_of('docassemble.webapp:data/static/test-document.docx') }
   [Markdown]: https://daringfireball.net/projects/markdown/syntax
   [Documents]: https://docassemble.org/docs/documents.html
-  [Templates section]: ${ url_of('playgroundtemplate') }
+  [Templates section]: ${ url_of('playgroundtemplate', project=current_project) }
 field: splash_screen
 ---
 event: problem_with_attachment
@@ -564,3 +567,6 @@ subquestion: |
 
   Please fix the errors, click the Back button, and
   try uploading it again.
+---
+code: |
+  current_project = url_args.get('project', 'default')

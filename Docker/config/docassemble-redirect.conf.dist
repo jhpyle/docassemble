@@ -4,12 +4,6 @@
     DocumentRoot /var/www/html
     RewriteEngine On
     RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-    <IfDefine DACROSSSITEDOMAIN>
-        Header set Access-Control-Allow-Origin "${DACROSSSITEDOMAINVALUE}"
-        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-        Header set Access-Control-Allow-Headers "Content-Type, origin"
-        Header set Access-Control-Allow-Credentials "true"
-    </IfDefine>
     ErrorLog /var/log/apache2/error.log
     CustomLog /var/log/apache2/access.log combined
 </VirtualHost>

@@ -35,6 +35,7 @@
               </thead>
               <tbody>
               {%- for interview in interviews %}
+              {%- if not interview['metadata'].get('hidden', False) %}
                 <tr>
                   <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] | safe }}</a>{% else %}{{ interview['title'] | safe }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] | safe}}</span>{% endif %}</td>
                   {%- if tags_used %}
@@ -43,8 +44,9 @@
                   </td>
                   {%- endif %}
                   <td>{{ interview['starttime'] }}</td>
-                  <td><a class="btn btn-sm btn-warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
+                  <td><a class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
                 </tr>
+              {%- endif %}
               {%- endfor %}
               {%- if numinterviews > 0 %}  
                 <tr>
@@ -53,7 +55,7 @@
                   <td>&nbsp;</td>
                   {%- endif %}
                   <td>&nbsp;</td>
-                  <td><a id="delete_all" class="btn btn-sm btn-danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
+                  <td><a id="delete_all" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
                 </tr>
               {%- endif %}
               </tbody>

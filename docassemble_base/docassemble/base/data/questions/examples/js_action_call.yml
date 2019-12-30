@@ -1,0 +1,27 @@
+metadata:
+  title: Calling actions
+  documentation: "https://docassemble.org/docs/functions.html#js_action_call"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  The pie
+subquestion: |
+  <button id="run" class="btn btn-primary">Run</button>
+
+  <span id="resultsArea"></span>
+script: |
+  <script>
+    $("#run").click(function(){
+      action_call('myaction', {fruit: 'apple'}, function(data){
+        $("#resultsArea").html("The pie is called " + data.pie + ".")
+      });
+    });
+  </script>
+---
+event: myaction
+code: |
+  fruit = action_argument('fruit')
+  dessert = fruit + " pie"
+  json_response(dict(pie=dessert))

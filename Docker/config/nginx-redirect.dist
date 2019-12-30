@@ -1,0 +1,5 @@
+server {
+    listen 8081;
+    server_name {{DAHOSTNAME}};
+    return 301 https://$host$request_uri;
+}

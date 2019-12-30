@@ -1,0 +1,64 @@
+metadata:
+  title: Billing and shipping
+  example start: 1
+  example end: 4
+---
+objects:
+  - shipping: Address
+  - billing: Address
+---
+question: |
+  What is your shipping address?
+fields:
+  - no label: shipping
+    datatype: object_radio
+    choices:
+      - billing
+    object labeler: |
+      lambda y: y.on_one_line()
+    none of the above: A new address
+  - show if:
+      variable: shipping
+      is: null
+    Address: shipping.address
+  - show if:
+      variable: shipping
+      is: null
+    Unit: shipping.unit
+    required: False
+  - show if:
+      variable: shipping
+      is: null
+    City: shipping.city
+  - show if:
+      variable: shipping
+      is: null
+    State: shipping.state
+    code:
+      states_list()
+  - show if:
+      variable: shipping
+      is: null
+    Zip: shipping.zip
+---
+question: |
+  What is your billing address?
+fields:
+  - Address: billing.address
+  - Unit: billing.unit
+    required: False
+  - City: billing.city
+  - State: billing.state
+    code:
+      states_list()
+  - Zip: billing.zip
+---
+mandatory: True
+question: |
+  Your order
+subquestion: |
+  I will send your bill to
+  ${ billing.on_one_line() }.
+
+  I will ship your order to
+  ${ shipping.on_one_line() }.

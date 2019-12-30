@@ -88,8 +88,9 @@ Feature: Demonstration interview
     And I set the text area to "¿Because I am so cutë?"
     And I click the button "Continue"
     Then I should see the phrase "Please upload a picture of yourself."
-    I upload the file "testfile.png"
+    And I upload the file "testfile.png"
     And I click the button "Continue"
+    And I wait 1 second
     Then I should see the phrase "Is this the picture you uploaded?"
     And I click the button "Yes"
     Then I should see the phrase "Instructions for signing your name"

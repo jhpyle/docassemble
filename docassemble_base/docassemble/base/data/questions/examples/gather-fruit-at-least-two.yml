@@ -2,15 +2,11 @@ metadata:
   title: "List: gather with minimum number"
   short title: "List: minimum number"
   documentation: "https://docassemble.org/docs/groups.html#gathering"
-  example start: 2
-  example end: 2
+  example start: 1
+  example end: 1
 ---
 objects:
-  - fruit: DAList
----
-mandatory: True
-code: |
-  fruit.minimum_number = 2
+  - fruit: DAList.using(minimum_number=2)
 ---
 question: |
   What is the ${ ordinal(i) } fruit?

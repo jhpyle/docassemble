@@ -1,0 +1,27 @@
+server {
+    listen 80;
+    server_tokens off;
+    server_name {{DAHOSTNAME}};
+    client_max_body_size {{DAMAXCONTENTLENGTH}};
+    {{DAREALIP}}
+    {{DALOCATIONREWRITE}}
+    location {{DAWSGIROOT}} { try_files $uri @docassemble; }
+    location @docassemble {
+        include uwsgi_params;
+        uwsgi_pass unix:/var/run/uwsgi/docassemble.sock;
+    }
+
+    location {{DAPOSTURLROOT}}ws {
+        include proxy_params;
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};    
+    }
+
+    location {{DAPOSTURLROOT}}ws/socket.io {
+        include proxy_params;
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}}/socket.io;
+    }
+}
