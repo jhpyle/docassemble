@@ -3640,6 +3640,23 @@ def phone_number_part(number, part, country=None):
     else:
         return ''
 
+def phone_number_formatted(number, country=None):
+    ensure_definition(number, country)
+    if country is None:
+        country = get_country()
+    if isinstance(number, string_types):
+        m = re.search(r'^whatsapp:(.*)', number)
+        if m:
+            number = m.group(1)
+    try:
+        pn = phonenumbers.parse(number, country)
+    except:
+        return number
+    formatted_number = phonenumbers.format_number(pn, phonenumbers.PhoneNumberFormat.NATIONAL)
+    return formatted_number
+    else:
+        return number
+    
 def dict_as_json(user_dict, include_internal=False):
     return json.dumps(serializable_dict(user_dict, include_internal=include_internal), sort_keys=True, indent=2)
 
