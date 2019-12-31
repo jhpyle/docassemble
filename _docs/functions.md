@@ -2844,6 +2844,15 @@ according to the national conventions.  If `country` is not provided,
 the [`get_country()`] function is used to determine the applicable
 country.
 
+## <a name="phone_number_formatted"></a>phone_number_formatted()
+
+The `phone_number_formatted()` function is use to rewrite a number in 
+a standard phone number format according to national conventions.
+The function takes an optional keyword argument `country`, a [ISO
+3166-1 alpha-2] country code, that is used to identify the national 
+conventions.  If `country` is not provided, the [`get_country()`] 
+function is used to determine the applicable country.
+
 # <a name="tasks"></a>Functions for tracking tasks
 
 These are helpful functions for keeping track of whether certain tasks
