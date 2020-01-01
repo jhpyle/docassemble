@@ -2818,6 +2818,12 @@ determine the country code for the phone number.  If `country` is not
 provided, the [`get_country()`] function is used to determine the
 applicable country.
 
+## <a name="phone_number_formatted"></a>phone_number_formatted()
+
+The `phone_number_formatted()` function is like
+`phone_number_in_e164()`, except that it uses the national format for
+the country, rather than [E.164].
+
 ## <a name="phone_number_is_valid"></a>phone_number_is_valid()
 
 The `phone_number_is_valid()` function takes a phone number and
@@ -5476,9 +5482,9 @@ database.
 
 For more information, see the [`DAStore`] documentation.
 
-### <a name="sql">write_record(), read_record(), and delete_record()</a>
+### <a name="sql">write_record(), read_records(), and delete_record()</a>
 
-There are also three functions, `write_record()`, `read_record()`, and
+There are also three functions, `write_record()`, `read_records()`, and
 `delete_record()`, for managing data in SQL.  These functions are
 useful when you want to store a list of one or more "records" under a
 single "key."  Encryption is not used.
