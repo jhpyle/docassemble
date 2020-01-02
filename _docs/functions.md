@@ -1328,7 +1328,7 @@ It accepts the following optional keyword arguments:
   manipulate it with [JavaScript], set `id_tag` to the `id` you want
   to use.  For example, if you don't want the button to actually visit
   a link, you can do `action_button_html('#', label="Click me",
-  id="mybutton")` and then write [JavaScript] code that does something
+  id_tag="mybutton")` and then write [JavaScript] code that does something
   like `$("#mybutton").click(function(e){e.preventDefault();
   console.log("Hello"); return false;})`.
 
