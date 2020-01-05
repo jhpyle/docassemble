@@ -2820,9 +2820,10 @@ applicable country.
 
 ## <a name="phone_number_formatted"></a>phone_number_formatted()
 
-The `phone_number_formatted()` function is like
-`phone_number_in_e164()`, except that it uses the national format for
-the country, rather than [E.164].
+The `phone_number_formatted()` function is use to rewrite a number in
+a standard phone number format according to national conventions.  It
+works like `phone_number_in_e164()`, except that it returns the format
+in the national format for the country, rather than [E.164].
 
 ## <a name="phone_number_is_valid"></a>phone_number_is_valid()
 
@@ -2849,15 +2850,6 @@ The function takes an optional keyword argument `country`, a [ISO
 according to the national conventions.  If `country` is not provided,
 the [`get_country()`] function is used to determine the applicable
 country.
-
-## <a name="phone_number_formatted"></a>phone_number_formatted()
-
-The `phone_number_formatted()` function is use to rewrite a number in 
-a standard phone number format according to national conventions.
-The function takes an optional keyword argument `country`, a [ISO
-3166-1 alpha-2] country code, that is used to identify the national 
-conventions.  If `country` is not provided, the [`get_country()`] 
-function is used to determine the applicable country.
 
 # <a name="tasks"></a>Functions for tracking tasks
 
