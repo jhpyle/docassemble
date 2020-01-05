@@ -176,7 +176,7 @@ provider's instructions for using [SSH] to connect to your machine.
 From the command line, simply type in:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 jhpyle/docassemble
+docker run -d -p 80:80 -p 443:443 --stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 The [`docker run`] command will download and run **docassemble**,
@@ -580,7 +580,7 @@ Then, you can pass these environment variables to the container using
 the [`docker run`] command:
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 80:80 -p 443:443 jhpyle/docassemble
+docker run --env-file=env.list -d -p 80:80 -p 443:443 --stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 These configuration options will cause [NGINX] to use
@@ -1135,7 +1135,8 @@ updated, run the image as follows:
 {% highlight bash %}
 docker run --env-file=env.list \
 -v dabackup:/usr/share/docassemble/backup \
--d -p 80:80 -p 443:443 jhpyle/docassemble
+-d -p 80:80 -p 443:443 --stop-timeout 600 \
+jhpyle/docassemble
 {% endhighlight %}
 
 where `--env-file=env.list` is an optional parameter that refers to a
@@ -1414,7 +1415,7 @@ docker run \
 --env CONTAINERROLE=sql:redis \
 ...
 -d -p 5432:5432 -p 6379:6379 -p 9001:9001 \
-jhpyle/docassemble
+--stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 {% highlight bash %}
@@ -1422,7 +1423,7 @@ docker run \
 --env CONTAINERROLE=web:celery \
 ...
 -d -p 80:80 -p 443:443 -p 9001:9001 \
-jhpyle/docassemble
+--stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 Note that [Docker] will fail if any of these ports is already in use.
@@ -1476,7 +1477,7 @@ docker run \
 -d -p 80:8080 -p 25:25 -p 5432:5432 -p 514:514 \
 -p 6379:6379 -p 4369:4369 -p 5671:5671 \
 -p 5672:5672 -p 25672:25672 -p 9001:9001 \
-jhpyle/docassemble
+--stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 To run an application server, you can do:
@@ -1488,7 +1489,7 @@ docker run \
 --env S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 --env S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
 -d -p 80:80 -p 443:443 -p 9001:9001 \
-jhpyle/docassemble
+--stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 # <a name="Encryption"></a>Encrypting communications
@@ -1764,7 +1765,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 --stop-timeout 600 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:
@@ -1853,7 +1854,7 @@ cd docassemble
 git checkout v0.3.21
 docker build -t yourname/mydocassemble .
 cd ..
-docker run -d -p 80:80 -p 443:443 yourname/mydocassemble
+docker run -d -p 80:80 -p 443:443 --stop-timeout 600 yourname/mydocassemble
 {% endhighlight %}
 
 The [`docker run`] command that you use may have other options; this

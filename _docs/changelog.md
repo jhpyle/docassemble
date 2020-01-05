@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.73](https://github.com/jhpyle/docassemble/releases/tag/v0.5.73) - 2020-01-05
+
+### Fixed
+- Error in watchdog process launch.
+- UI bug in list collect.
+
 ## [0.5.72](https://github.com/jhpyle/docassemble/releases/tag/v0.5.72) - 2020-01-05
 
 ### Added
