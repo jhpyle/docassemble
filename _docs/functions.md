@@ -3037,27 +3037,43 @@ If, among the key/value pairs listed under the language in question,
 there is a key matching the word `'fish'`, the corresponding value is
 returned.
 
+<a name="update_word_collection"></a>In addition to using the
+[`words`] directive in the [Configuration], you can a [Python module]
+to change the translations.  The function
+`docassemble.base.util.update_word_collection()` takes a language and
+a [Python dictionary] as parameters and updates the translation
+tables, which are kept in memory.
+
+{% highlight python %}
+import docassemble.base.util
+definitions = {'Continue': 'Continuar', 'Help': 'Ayuda'}
+docassemble.base.util.update_word_collection('es', definitions)
+{% endhighlight %}
+
+Since this function is not thread-safe, you should only run it from
+code that runs when the module loads.
+
 # <a name="linguistic"></a>Language-specific functions
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
 the default functions, by
-using `import docassemble.base.functions` and
+using `import docassemble.base.util` and
 then running
-`docassemble.base.functions.update_language_function()`.
+`docassemble.base.util.update_language_function()`.
 
 For example, suppose you had a Spanish linguistic package that you
 wanted to use for writing possessives.  You could include the
 following in a [Python module] that you include in your interview:
 
 {% highlight python %}
-import docassemble.base.functions
+import docassemble.base.util
 from special.spanish.package import spanish_possessify
 
 def possessify_es(a, b, **kwargs):
     return spanish_possessify(a, b)
 
-docassemble.base.functions.update_language_function('es', 'possessify', possessify_es)
+docassemble.base.util.update_language_function('es', 'possessify', possessify_es)
 {% endhighlight %}
 
 This means that whenever the current language is Spanish, the function
@@ -3072,14 +3088,14 @@ language.  This will be used if no language-specific function exists.
 If you want to create a new language function that does not already
 exist in **docassemble**, you can use the
 `language_function_constructor()` function from
-`docassemble.base.functions`.
+`docassemble.base.util`.
 
 {% highlight python %}
-import docassemble.base.functions
+import docassemble.base.util
 
 __all__ = ['closing']
 
-closing = docassemble.base.functions.language_function_constructor('closing')
+closing = docassemble.base.util.language_function_constructor('closing')
 
 def closing_default(indiv, **kwargs):
     return "Goodbye, " + indiv.name.first + "!"
@@ -3087,8 +3103,8 @@ def closing_default(indiv, **kwargs):
 def closing_fr(indiv, **kwargs):
     return "Au revoir, " + indiv.name.first + "."
 
-docassemble.base.functions.update_language_function('*', 'closing', closing_default)
-docassemble.base.functions.update_language_function('fr', 'closing', closing_fr)
+docassemble.base.util.update_language_function('*', 'closing', closing_default)
+docassemble.base.util.update_language_function('fr', 'closing', closing_fr)
 {% endhighlight %}
 
 When writing a language function, do not use named keyword parameters.
@@ -3104,7 +3120,7 @@ things like `closing(client, formal=False)` or `closing(judge,
 formal=True)` to use these different forms.  The developer would
 create a module that imports your module.  Then they would write a
 function called `closing_ja` and call
-`docassemble.base.functions.update_language_function('ja', 'closing',
+`docassemble.base.util.update_language_function('ja', 'closing',
 closing_ja)`.  Unless `**kwargs` is used, the keyword parameter
 `formal` would trigger an error when used outside of a Japanese context.
 
@@ -3213,9 +3229,11 @@ function of [pattern.en].
 * `nice_number(12873818.27774)` returns `12,873,818.28` (this depends on the [locale])
 
 This function can be customized by calling
-`docassemble.base.functions.update_nice_numbers()` with a [language] as
-the first parameter and a [dictionary] as the second parameter, where
-the dictionary maps numbers to their textual representation.
+`docassemble.base.util.update_nice_numbers()` with a [language] as the
+first parameter and a [dictionary] as the second parameter, where the
+dictionary maps numbers to their textual representation. Since this
+function is not thread-safe, you should only run it from a [Python
+module] in code that runs when the module loads.
 
 ## <a name="noun_plural"></a>noun_plural()
 
@@ -3277,6 +3295,32 @@ This function can be customized with
 `docassemble.base.util.update_ordinal_numbers()` and
 `docassemble.base.util.update_ordinal_function()`.
 
+{% highlight python %}
+import docassemble.base.util
+
+es_ordinal_nums = {
+  '0': 'zeroth',
+  '1': 'primero',
+  '2': 'segundo',
+  '3': 'tercero',
+  '4': 'cuarto',
+  '5': 'quinto',
+  '6': 'sexto',
+  '7': 'séptimo',
+  '8': 'octavo',
+  '9': 'noveno',
+  '10': 'décimo'
+}
+
+docassemble.base.util.update_ordinal_numbers('es', es_ordinal_nums)
+docassemble.base.util.update_ordinal_function()
+{% endhighlight %}
+
+
+
+Since these functions are not thread-safe, you should only run them
+from a [Python module] in code that runs when the module loads.
+
 ## <a name="ordinal"></a>ordinal()
 
 `ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
@@ -3337,7 +3381,7 @@ amounts.
 
 The text in the default `period_list()` function can be translated to
 different languages using the
-`docassemble.base.util.update_word_collection()` function.  If you
+[`docassemble.base.util.update_word_collection()`] function.  If you
 want to customizes the choices available, you can override the default
 function by including something like the following in your
 [Python module]:
@@ -3346,7 +3390,7 @@ function by including something like the following in your
 def my_period_list():
   return [[365, word("Per Day")], [52, word("Per Week")]]
 
-docassemble.base.functions.update_language_function('*', 'period_list', my_period_list)
+docassemble.base.util.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
 ## <a name="name_suffix"></a>name_suffix()
@@ -3448,14 +3492,14 @@ def her_fr(word, capitalize=False):
     return 'Sa ' + word
   else:
     return 'sa ' + word
-docassemble.base.functions.update_language_function('fr', 'her', her_fr)
+docassemble.base.util.update_language_function('fr', 'her', her_fr)
 {% endhighlight %}
 
 Or, you can accomplish the same result with a handy function generator
 from [`docassemble.base.util`]:
 
 {% highlight python %}
-docassemble.base.functions.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
+docassemble.base.util.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
 {% endhighlight %}
 
 # <a name="formfilling"></a>Helper functions for form filling
@@ -4087,9 +4131,9 @@ For an [API] version of this function, see [`/api/privileges`].
 ## <a name="text_type"></a>text_type()
 
 The `text_type()` function is equivalent to `unicode()` in Python 2
-and `str()` in Python 3.  It comes from the [six] package.  You should
-use this instead of `unicode()` in order to be ready to [upgrade to
-Python 3].
+and `str()` in Python 3.  It comes from the [six] package.  This will
+be removed in the future, as it was only useful when Python 2.7 was
+supported.
 
 ## <a name="validation_error"></a>validation_error()
 
@@ -6137,7 +6181,7 @@ To get around this problem, you can include the following in your
 module file:
 
 {% highlight python %}
-from docassemble.base.functions import ensure_definition
+from docassemble.base.util import ensure_definition
 {% endhighlight %}
 
 Then at the start of every function that might be called from
@@ -6924,3 +6968,4 @@ $(document).on('daPageLoad', function(){
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
 [`locale`]: https://docs.python.org/3.6/library/locale.html
 [language-specific functions]: #linguistic
+[`docassemble.base.util.update_word_collection()`]: #update_word_collection

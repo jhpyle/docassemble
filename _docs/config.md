@@ -3764,6 +3764,29 @@ the web server, but should not be readable by other users of the
 system because it may contain sensitive information, such as Google
 and Facebook API keys.
 
+# <a name="admin full width"></a>Wide-screen appearance of administrative screens
+
+By default, **docassemble** uses the [Bootstrap] `container` class for
+administrative screens, which is responsive but fixed-width at
+particular breakpoints.  If you want to use the [Bootstrap]
+`container-fluid` class instead, set:
+
+{% highlight yaml %}
+admin full width: True
+{% endhighlight %}
+
+This will result in full width screens.
+
+# <a name="wrap lines in playground"></a>Line wrapping in the Playground
+
+By default, the editor in the Playground will wrap long lines.  To see
+whether a line is wrapped, you can look at the line number.  To
+turn off line wrapping, set:
+
+{% highlight yaml %}
+wrap lines in playground: False
+{% endhighlight %}
+
 [VoiceRSS]: http://www.voicerss.org/
 [Flask]: http://flask.pocoo.org/
 [YAML]: https://en.wikipedia.org/wiki/YAML

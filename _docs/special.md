@@ -1067,7 +1067,7 @@ internal names include:
 [`state_name`]: {{ site.baseurl }}/docs/functions.html#state_name
 [`states_list`]: {{ site.baseurl }}/docs/functions.html#states_list
 [`static_image`]: {{ site.baseurl }}/docs/functions.html#static_image
-[`string_types`]: {{ site.baseurl }}/docs/functions.html#string_types
+[`string_types`]: https://six.readthedocs.io/#six.string_types
 [`subdivision_type`]: {{ site.baseurl }}/docs/functions.html#subdivision_type
 [`task_not_yet_performed`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
 [`task_performed`]: {{ site.baseurl }}/docs/functions.html#task_performed

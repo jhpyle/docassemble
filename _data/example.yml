@@ -249,7 +249,7 @@
   code: |
     if action_argument('var_a') != '' and action_argument('var_b') != '':
       answer = float(action_argument('var_a')) * float(action_argument('var_b'))
-      background_response('flash("Hint: C should be " + ' + text_type(answer) + ', "success")', 'javascript')
+      background_response('flash("Hint: C should be " + ' + str(answer) + ', "success")', 'javascript')
     background_response()
 "ajax-flash": |-
   question: |
@@ -852,7 +852,7 @@
   ---
   event: bg_task
   code: |
-    the_answer = text_type(553 + action_argument('additional'))
+    the_answer = str(553 + action_argument('additional'))
     background_response("The answer is " + the_answer + ".")
 "background_action_javascript": |-
   code: |
@@ -866,7 +866,7 @@
   ---
   event: bg_task
   code: |
-    the_answer = text_type(553 + action_argument('additional'))
+    the_answer = str(553 + action_argument('additional'))
     background_response("alert('The answer is " + the_answer + ".');")
 "background_action_refresh": |-
   code: |
@@ -960,7 +960,7 @@
   event: bg_resp
   code: |
     answer = action_argument('ans')
-    background_response("The answer is " + text_type(answer) + ".")
+    background_response("The answer is " + str(answer) + ".")
 "blank-label-field": |-
   question: |
     What is your Zodiac sign?
@@ -1939,9 +1939,9 @@
     code: fruits
 "database_storage": "mandatory: True\ncode: |\n  write_record('fruit', favorite_fruit)\n\
   ---\nreconsider: True\ncode: |\n  fruit_summary = ''\n  records = read_records('fruit')\n\
-  \  for id in records:\n    fruit_summary += \"* \" + text_type(records[id]) + \"\
-  \\n\"\n---\nmandatory: True\nquestion: |\n  Contents of database\nsubquestion: |\n\
-  \  The following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
+  \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
+  ---\nmandatory: True\nquestion: |\n  Contents of database\nsubquestion: |\n  The\
+  \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
 "date-and-time-fields": |-
   question: |
     When is your appointment?
@@ -3781,11 +3781,11 @@
   question: |\n  What are the peoples' names?\nfields:\n  code: name_list\n---\ncode:\
   \ |\n  name_list = list()\n  for index in range(people.number()):\n    name_list.append(\n\
   \      {\"label\": ordinal(index, capitalize=True) + \" person's given name\",\n\
-  \       \"field\": \"people[\" + text_type(index) + \"].name.first\"\n      })\n\
-  \    name_list.append(\n      {\"label\": ordinal(index, capitalize=True) + \" person's\
-  \ surname\",\n       \"field\": \"people[\" + text_type(index) + \"].name.last\"\
-  \n      })\n---\nmandatory: True\nquestion: |\n  List of people\nsubquestion: |\n\
-  \  The people include:\n  \n  % for person in people:\n  * ${ person }\n  % endfor"
+  \       \"field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
+  \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
+  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n---\nmandatory:\
+  \ True\nquestion: |\n  List of people\nsubquestion: |\n  The people include:\n \
+  \ \n  % for person in people:\n  * ${ person }\n  % endfor"
 "fields-code-embed": "objects:\n  - people: DAList.using(object_type=Individual, ask_number=True)\n\
   ---\nquestion: |\n  How many people are there?\nfields:\n  - Number: people.target_number\n\
   \    datatype: integer\n    min: 1\n    max: 10\n---\nsets:\n  - people[i].name.first\n\
@@ -3793,14 +3793,14 @@
   fields:\n  code: name_list\n---\ncode: |\n  name_list = list()\n  name_display =\
   \ \"\"\n  for index in range(people.number()):\n    name_list.append(\n      {\"\
   label\": ordinal(index, capitalize=True) + \" person's given name\",\n       \"\
-  field\": \"people[\" + text_type(index) + \"].name.first\"\n      })\n    name_list.append(\n\
+  field\": \"people[\" + str(index) + \"].name.first\"\n      })\n    name_list.append(\n\
   \      {\"label\": ordinal(index, capitalize=True) + \" person's surname\",\n  \
-  \     \"field\": \"people[\" + text_type(index) + \"].name.last\"\n      })\n  \
-  \  name_display += \"The \" + ordinal(index) + \" person's name is \"\\\n      \
-  \            + \"[FIELD people[\" + text_type(index) + \"].name.first] \"\\\n  \
-  \                + \"[FIELD people[\" + text_type(index) + \"].name.last].\\n\\\
-  n\"\n---\nmandatory: True\nquestion: |\n  List of people\nsubquestion: |\n  The\
-  \ people include:\n  \n  % for person in people:\n  * ${ person }\n  % endfor"
+  \     \"field\": \"people[\" + str(index) + \"].name.last\"\n      })\n    name_display\
+  \ += \"The \" + ordinal(index) + \" person's name is \"\\\n                  + \"\
+  [FIELD people[\" + str(index) + \"].name.first] \"\\\n                  + \"[FIELD\
+  \ people[\" + str(index) + \"].name.last].\\n\\n\"\n---\nmandatory: True\nquestion:\
+  \ |\n  List of people\nsubquestion: |\n  The people include:\n  \n  % for person\
+  \ in people:\n  * ${ person }\n  % endfor"
 "fields-mc": |-
   question: |
     What is your favorite fruit?
@@ -6383,7 +6383,7 @@
   ---
   reconsider: True
   code: |
-    current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + text_type(x) + '</a>', ml.dependent_in_use()))
+    current_keys = " ".join(map(lambda x: '<a class="mysug btn btn-primary">' + str(x) + '</a>', ml.dependent_in_use()))
   ---
   question: |
     How should this be classified?

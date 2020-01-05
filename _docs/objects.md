@@ -2366,7 +2366,7 @@ __all__ = ['GoogleAuth']
 
 class GoogleAuth(DAOAuth):
     def init(self, *pargs, **kwargs):
-        super(GoogleAuth, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.appname = 'mygoogle'
         self.token_uri = "https://www.googleapis.com/oauth2/v4/token"
         self.auth_uri = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -2721,7 +2721,7 @@ code: |
   try:
     result = web.get('status')
   except DAWebError as e:
-    log("Uh oh, the API returned status code " + text_type(e.status_code))
+    log("Uh oh, the API returned status code " + str(e.status_code))
     result = False
 {% endhighlight %}
 
@@ -4362,7 +4362,7 @@ class definition itself:
 class Recipe(DAObject):
     def init(self, *pargs, **kwargs):
         self.initializeAttribute('ingredients', DAList)
-        super(Recipe, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
 {% endhighlight %}
 
 Then, you would only need to write this in your interview file:
@@ -4379,7 +4379,7 @@ function, which is built in to [Python]; you should use `init()`, not
 `__init__()`.
 
 When you write your own `init()` function for a class, you should (but
-are not required to) include the `super(Recipe, self).init(*pargs,
+are not required to) include the `super().init(*pargs,
 **kwargs)` line.  This will ensure that `Recipe` objects are
 initialized properly.  For example, if you wrote:
 
@@ -4389,8 +4389,8 @@ dinner.initializeAttribute('recipe', Recipe, oven_temperature=300)
 
 then `dinner.recipe` would be a `Recipe` object and
 `dinner.recipe.oven_temperature` would be `300`.  However, if you
-included an `init()` function and failed to include `super(Recipe,
-self).init(*pargs, **kwargs)`, then the `oven_temperature` variable
+included an `init()` function and failed to include
+`super().init(*pargs, **kwargs)`, then the `oven_temperature` variable
 would not be set.  Therefore, it is a good practice to always write
 your `init()` methods in this way.
 
@@ -4963,7 +4963,7 @@ class Bank(Person, SQLObject):
     # This indicates that the human-readable unique identifier for the table is the column "routing"
     _uid = 'routing'
     def init(self, *pargs, **kwargs):
-        super(Bank, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         # This runs necessary SQLObject initialization code for the instance
         self.sql_init()
     # The db_get function specifies how to get attributes from the DAObject for purposes of setting SQL column values
@@ -5023,7 +5023,7 @@ class Customer(Individual, SQLObject):
     _required = ['first_name']
     _uid = 'ssn'
     def init(self, *pargs, **kwargs):
-        super(Customer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.sql_init()
     def db_get(self, column):
         if column == 'ssn':
@@ -5083,7 +5083,7 @@ class BankCustomer(DAObject, SQLObjectRelationship):
     _parent = [Bank, 'bank', 'bank_id']
     _child = [Customer, 'customer', 'customer_id']
     def init(self, *pargs, **kwargs):
-        super(BankCustomer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
     def db_get(self, column):
         if column == 'bank_id':
@@ -5489,17 +5489,7 @@ columns have definitions (as obtained from [`db_get()`]), the object
 will remain nascent.  The default value is an empty list.
 
 Always include an [`init()`] method that calls [`init()`] on the
-parent class and then calls `sql_init()`.  If you are using Python
-2.7, you have to mention the name of the class in the reference to
-`super()`.
-
-{% highlight python %}
-def init(self, *pargs, **kwargs):
-    super(Customer, self).init(*pargs, **kwargs)
-    self.sql_init()
-{% endhighlight %}
-
-In Python 3.6, you can do this:
+parent class and then calls `sql_init()`.
 
 {% highlight python %}
 def init(self, *pargs, **kwargs):

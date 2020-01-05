@@ -176,7 +176,7 @@ provider's instructions for using [SSH] to connect to your machine.
 From the command line, simply type in:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 jhpyle/docassemble
+docker run -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
 The [`docker run`] command will download and run **docassemble**,
@@ -484,23 +484,12 @@ restart your container by doing [`docker stop -t 600`] followed by
 If you need to make manual changes to the installation of [Python]
 packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
-and writable by the `www-data` user.  If you are using Python 2.7, the
-virtual environment is located at `/usr/share/docassemble/local/`, and
-if you are using Python 3.6, it is located at
-`/usr/share/docassemble/local3.6/`.  Thus, installing [Python]
-packages through Debian's `apt-get` utility will not actually make
-that [Python] code available to **docassemble**.  Before using [pip],
-you need to first change the user to `www-data`, and then switch into
-the appropriate [Python virtual environment].
-
-If using Python 2.7, do:
-
-{% highlight bash %}
-su www-data
-source /usr/share/docassemble/local/bin/activate
-{% endhighlight %}
-
-If using Python 3.6, do:
+and writable by the `www-data` user.  The virtual environment is
+located at `/usr/share/docassemble/local3.6/`.  Thus, installing
+[Python] packages through Debian's `apt-get` utility will not actually
+make that [Python] code available to **docassemble**.  Before using
+[pip], you need to first change the user to `www-data`, and then
+switch into the appropriate [Python virtual environment].
 
 {% highlight bash %}
 su www-data
@@ -571,7 +560,7 @@ the [debugging subsection] of the [installation] section.
 # <a name="configuration options"></a>Configuration options
 
 In the example [above](#single server arrangement), we started
-**docassemble** with `docker run -d -p 80:80 --env DAPYTHONVERSION=3 jhpyle/docassemble`.
+**docassemble** with `docker run -d -p 80:80 jhpyle/docassemble`.
 This command will cause **docassemble** to use default values for all
 configuration options.  You can also communicate specific
 configuration options to the container.
@@ -585,7 +574,6 @@ DAHOSTNAME=docassemble.example.com
 USEHTTPS=true
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=admin@example.com
-DAPYTHONVERSION=3
 {% endhighlight %}
 
 Then, you can pass these environment variables to the container using
@@ -896,13 +884,6 @@ your container for the new configuration to take effect.
   you are using cloud storage but you do not want URLs for files to
   point directly to the cloud storage provider.  See the [`use cloud
   urls`] configuration directive.
-* <a name="DAPYTHONVERSION"></a>`DAPYTHONVERSION`: Set this to `3` in
-  order to run **docassemble** using Python 3.6.  If `DAPYTHONVERSION`
-  is not set, **docassemble** will be run using Python 2.7.  If you
-  have an existing **docassemble** instance that uses Python 2.7
-  (which is the default unless `DAPYTHONVERSION` is set to `3`), you
-  will not want to change this until you have done testing.  See
-  [migration from Python 2.7 to Python 3.6] for more information.
 * <a
   name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
   It was noted above that once the [configuration] file is located in
@@ -1065,7 +1046,6 @@ USEHTTPS=true
 EC2=true
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=dev@example.com
-DAPYTHONVERSION=3
 {% endhighlight %}
 
 Note that if you run **docassemble** on [EC2], you can launch your
@@ -1140,7 +1120,6 @@ TIMEZONE=America/New_York
 USEHTTPS=true
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=dev@example.com
-DAPYTHONVERSION=3
 {% endhighlight %}
 
 If you enable both [S3](#persistent s3) and
@@ -1785,7 +1764,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:
@@ -1874,7 +1853,7 @@ cd docassemble
 git checkout v0.3.21
 docker build -t yourname/mydocassemble .
 cd ..
-docker run -d -p 80:80 -p 443:443 --env DAPYTHONVERSION=3 yourname/mydocassemble
+docker run -d -p 80:80 -p 443:443 yourname/mydocassemble
 {% endhighlight %}
 
 The [`docker run`] command that you use may have other options; this
@@ -2139,7 +2118,6 @@ line), as the containers depend on the images.
 [Traefik]: https://traefik.io/
 [Flask]: http://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
-[migration from Python 2.7 to Python 3.6]: {{ site.baseurl }}/docs/twotothree.html
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
 [`python packages`]: {{ site.baseurl }}/docs/config.html#python packages

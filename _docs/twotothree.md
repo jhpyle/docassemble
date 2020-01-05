@@ -5,7 +5,7 @@ short_title: Python 2.7 to 3.6
 ---
 
 **docassemble** started out as an application based on Python 2.7.
-However, Python 2.7 [will not be maintained] after January 1, 2020.
+However, Python 2.7 [is no longer maintained] as of January 1, 2020.
 As the [pip] command reports:
 
 {% highlight text %} 
@@ -15,24 +15,19 @@ maintained after that date. A future version of pip will drop support
 for Python 2.7.
 {% endhighlight %}
 
-Starting with [version 0.4.0], **docassemble** is compatible with both
-Python 3.6 and Python 2.7.  By default, **docassemble** will continue
-to use Python 2.7, but if you wish to run **docassemble** using Python
-3.6, you can set the [Docker] environment variable
-[`DAPYTHONVERSION`] to `3`.
-
-Users who are getting started for the first time with **docassemble**
-should launch their instances with [`DAPYTHONVERSION`] set to `3`.
-
-On or around January 1, 2020, the default in **docassemble** will
-switch from Python 2.7 to Python 3.6.
-
-If you are currently running a **docassemble** instance on [Docker]
-using Python 2.7, you can upgrade now by doing `docker stop`, `docker
-rm`, `docker pull`, and then `docker run` with [`DAPYTHONVERSION`] set
+Between [version 0.4.0] and [version 0.5.70], **docassemble** was
+compatible with both Python 3.6 and Python 2.7.  Running Python 3.6
+required setting the [Docker] environment variable `DAPYTHONVERSION`
 to `3`.
 
-However, there are a few things you should be aware of:
+Starting with [version 0.5.71], **docassemble** only supports Python
+3.6.  Python 2.7 is no longer supported.
+
+If you are currently running a **docassemble** instance on [Docker]
+using Python 2.7, you can upgrade by doing `docker stop`, `docker rm`,
+`docker pull`, and then `docker run`.
+
+There are a few things you should be aware of when upgrading:
 
 * Interview answers created using Python 3.6 will not be readable by
   Python 2.7.  This is because the way the [pickle] library works
@@ -48,10 +43,6 @@ However, there are a few things you should be aware of:
 * This applies not just to interview answers, but also to any objects
   that are [pickled], such as machine learning data and objects stored in
   Redis or SQL.
-* You can go back and forth between Python 2.7 and 3.6 by changing the
-  value of [`DAPYTHONVERSION`] to `3` and doing `docker pull` and a
-  new `docker run`.  However, you may get errors in Python 2.7 if you
-  try to access Python objects created using Python 3.6.
 * If you have written Python code in your interviews, or you have
   written Python modules, the code that you wrote that worked in
   Python 2.7 might not work in Python 3.6.  The way text is encoded
@@ -63,9 +54,8 @@ However, there are a few things you should be aware of:
   much more.
   
 If you do not have any active users, you could simply do a `docker
-stop`, `docker rm`, `docker pull`, and `docker run` with
-[`DAPYTHONVERSION`] to 3, and then test out your interviews and fix
-any errors that appear.
+stop`, `docker rm`, `docker pull`, and `docker run`, and then test out
+your interviews and fix any errors that appear.
 
 If you have active users, however, an immediate upgrade might result
 in downtime if you find that your interview doesn't work in Python
@@ -74,10 +64,9 @@ in downtime if you find that your interview doesn't work in Python
 have active sessions at the time you upgrade the server may lose their
 data.  The following procedure will avoid these problems:
 
-1. Continue to operate your production server with Python 2.7 (the
-   default).
+1. Continue to operate your production server with Python 2.7.
 2. Run two development servers: one that runs Python 2.7 (the default)
-   and one that runs Python 3.6 (setting [`DAPYTHONVERSION`] to 3).
+   and one that runs Python 3.6.
    Both should be running **docassemble** version 0.4.0 or above, and
    both should use some form of [data storage].
 3. Using your two development servers, rewrite your interview code so
@@ -140,8 +129,7 @@ data.  The following procedure will avoid these problems:
 
 6. Once all the tests pass, you can upgrade your production server
    in-place by installing the latest versions of your interviews, then
-   doing `docker stop`, `docker rm`, `docker pull`, and `docker run`
-   with [`DAPYTHONVERSION`] to `3`.
+   doing `docker stop`, `docker rm`, `docker pull`, and `docker run`.
 
 [`recursive_fix_pickle()`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fixpickle.py
 [Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
@@ -155,9 +143,9 @@ data.  The following procedure will avoid these problems:
 [pickled]: https://docs.python.org/3/library/pickle.html
 [`pickle`]: https://docs.python.org/3/library/pickle.html
 [writing Python 2-3 compatible code]: https://python-future.org/compatible_idioms.html
-[`DAPYTHONVERSION`]: {{ site.baseurl }}/docs/docker.html#DAPYTHONVERSION
 [version 0.4.0]: https://github.com/jhpyle/docassemble/releases/tag/v0.4.0
-[will not be maintained]: https://www.python.org/dev/peps/pep-0373/
+[version 0.5.70]: https://github.com/jhpyle/docassemble/releases/tag/v0.5.70
+[is no longer maintained]: https://www.python.org/dev/peps/pep-0373/
 [pip]: https://pip.pypa.io/en/stable/
 [`text_type()`]: {{ site.baseurl }}/docs/functions.html#text_type
 [Docker]: {{ site.baseurl }}/docs/docker.html

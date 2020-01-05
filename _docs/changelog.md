@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.72](https://github.com/jhpyle/docassemble/releases/tag/v0.5.72) - 2020-01-05
+
+### Added
+- The `admin full width` Configuration directive.
+- The `wrap lines in playground` Configuration directive.
+
+### Changed
+- Moved Download button to below the editor in the Playground.
+
+### Fixed
+- Bug in `legal.py`.
+- Not safe to concatenate a `DAList` and a `DAEmpty`.
+
+## [0.5.71](https://github.com/jhpyle/docassemble/releases/tag/v0.5.71) - 2020-01-05
+
+### Changed
+- Discontinued support for Python 2.7.
+
 ## [0.5.70](https://github.com/jhpyle/docassemble/releases/tag/v0.5.70) - 2019-12-30
 
 ### Added
