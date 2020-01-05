@@ -3,7 +3,7 @@ import re
 re._MAXCACHE = 10000
 from six import string_types, text_type, PY2, PY3
 if PY2:
-    min_system_version = '0.5.71'
+    min_system_version = '0.5.72'
 import os
 import sys
 import tempfile
