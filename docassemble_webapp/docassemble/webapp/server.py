@@ -8858,6 +8858,7 @@ def index(action_argument=None):
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
           $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
           $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
+          $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
           $(this).parent().find("span.dacollectremoved").addClass("dainvisible");
           $(this).addClass("dainvisible");
           rationalizeListCollect();
