@@ -6,7 +6,6 @@ bash -c \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \
-&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local/ \
 && cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.6/ \
 && cp /tmp/docassemble/Docker/config/* /usr/share/docassemble/config/ \
 && cp /tmp/docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/ \
@@ -38,7 +37,6 @@ bash -c \
    /usr/share/docassemble/webapp/docassemble.wsgi \
 && chown -R www-data.www-data \
    /tmp/docassemble \
-   /usr/share/docassemble/local \
    /usr/share/docassemble/local3.6 \
    /usr/share/docassemble/log \
    /usr/share/docassemble/files \
@@ -52,36 +50,6 @@ bash -c \
 && echo \"en_US.UTF-8 UTF-8\" >> /etc/locale.gen \
 && locale-gen \
 && update-locale"
-
-USER www-data
-RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
-bash -c \
-"cd /tmp \
-&& virtualenv /usr/share/docassemble/local \
-&& source /usr/share/docassemble/local/bin/activate \
-&& pip install --upgrade pip \
-&& pip install \
-   3to2==1.1.1 \
-   bcrypt==3.1.7 \
-   flask==1.1.1 \
-   flask-login==0.4.1 \
-   flask-mail==0.9.1 \
-   flask-sqlalchemy==2.4.0 \
-   flask-wtf==0.14.2 \
-   s4cmd==2.1.0 \
-   uwsgi==2.0.18 \
-   distutils2==1.0a4 \
-   passlib==1.7.1 \
-   pycrypto==2.6.1 \
-   six==1.12.0 \
-&& pip install --upgrade \
-   'git+https://github.com/jhpyle/pdfminer.git' \
-   simplekv==0.10.0 \
-   /tmp/docassemble/docassemble \
-   /tmp/docassemble/docassemble_base \
-   /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp \
-&& pip uninstall --yes mysqlclient MySQL-python &> /dev/null"
 
 USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \

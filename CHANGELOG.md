@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.71] - 2020-01-04
+### Changed
+- Discontinued support for Python 2.7.
+
 ## [0.5.70] - 2019-12-30
 ### Added
 - The `phone_number_formatted()` function.
