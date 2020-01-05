@@ -4,6 +4,8 @@
 ### Added
 - The `admin full width` Configuration directive.
 - The `wrap lines in playground` Configuration directive.
+### Changed
+- Moved Download button to below the editor in the Playground.
 ### Fixed
 - Bug in `legal.py`.
 - Not safe to concatenate a `DAList` and a `DAEmpty`.
