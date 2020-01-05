@@ -1,4 +1,3 @@
-from six import string_types, text_type, PY2
 import sys
 import copy
 import datetime
@@ -22,10 +21,7 @@ import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
 import docassemble.base.functions
-if PY2:
-    import cPickle as pickle
-else:
-    import pickle
+import pickle
 import codecs
 from sqlalchemy import or_, and_
 
@@ -62,7 +58,7 @@ def clear_old_interviews():
     if 'interview delete days by filename' in docassemble.base.config.daconfig:
         try:
             for filename, days in docassemble.base.config.daconfig['interview delete days by filename'].items():
-                assert isinstance(filename, string_types)
+                assert isinstance(filename, str)
                 days_by_filename[filename] = int(days)
         except:
             sys.stderr.write("Error in configuration for interview delete days by filename\n")
@@ -205,11 +201,11 @@ def run_cron(cron_type):
                                                         sys.stdout.write("Unable to write output to standard error\n")
                                 except Exception as err:
                                     release_lock(key, filename)
-                                    sys.stderr.write("Cron error: " + text_type(key) + " " + text_type(filename) + " " + text_type(err.__class__.__name__) + ": " + text_type(err) + "\n")
+                                    sys.stderr.write("Cron error: " + str(key) + " " + str(filename) + " " + str(err.__class__.__name__) + ": " + str(err) + "\n")
                                     if hasattr(err, 'traceback'):
-                                        error_trace = text_type(err.traceback)
+                                        error_trace = str(err.traceback)
                                         if hasattr(err, 'da_line_with_error'):
-                                            error_trace += "\nIn line: " + text_type(err.da_line_with_error)
+                                            error_trace += "\nIn line: " + str(err.da_line_with_error)
                                     else:
                                         error_trace = None
                                     error_notification(err, trace=error_trace)

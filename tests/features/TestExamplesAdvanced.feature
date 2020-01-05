@@ -2,6 +2,10 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Test URL args" with argument
+    Given I start the interview "docassemble.demo:data/questions/testurlarg.yml&from=moon"
+    Then I should see the phrase "You came from the moon."
+
   Scenario: Test the interview "Geolocate from address"
     Given I start the interview "docassemble.base:data/questions/examples/geolocate-from-address.yml"
     Then I should see the phrase "Enter an address"

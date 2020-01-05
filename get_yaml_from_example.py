@@ -5,7 +5,6 @@ import os
 import codecs
 import re
 import yaml
-from io import open
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')

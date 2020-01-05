@@ -1,7 +1,6 @@
 import sys
 import os
 import re
-from six import string_types, text_type, PY2
 separator = re.compile(r' *[,;] *')
 
 if __name__ == "__main__":
@@ -12,11 +11,8 @@ if __name__ == "__main__":
         print('export TIMEZONE="' + str(daconfig['timezone']) + '"')
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
-    if PY2:
-        print('export DAPYTHONVERSION="2"')
-    else:
-        print('export DAPYTHONVERSION="3"')
-    if 'web server' in daconfig and isinstance(daconfig['web server'], string_types):
+    print('export DAPYTHONVERSION="3"')
+    if 'web server' in daconfig and isinstance(daconfig['web server'], str):
         print('export DAWEBSERVER="' + daconfig['web server'] + '"')
     else:
         print('export DAWEBSERVER="nginx"')
@@ -41,9 +37,9 @@ if __name__ == "__main__":
         if max_content_length is None or max_content_length <= 0:
             print('DAMAXCONTENTLENGTH=0')
         else:
-            print('DAMAXCONTENTLENGTH=' + text_type(max_content_length))
+            print('DAMAXCONTENTLENGTH=' + str(max_content_length))
     else:
-        print('DAMAXCONTENTLENGTH=' + text_type(16 * 1024 * 1024))
+        print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
     if 'debian packages' in daconfig and type(daconfig['debian packages']) is list:
         print('declare -a PACKAGES')
         print('export PACKAGES')

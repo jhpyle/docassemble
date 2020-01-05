@@ -1,7 +1,5 @@
 from docassemble.base.util import DAGoogleAPI, DAFile
 import apiclient
-from six import string_types, text_type
-from io import open
 
 api = DAGoogleAPI()
 
@@ -21,7 +19,7 @@ def get_folder_names():
 
 def get_folder_id(folder_name):
     service = api.drive_service()
-    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + text_type(folder_name) + "'").execute()
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + str(folder_name) + "'").execute()
     folder_id = None
     for item in response.get('files', []):
         folder_id = item['id']
@@ -33,7 +31,7 @@ def get_file_id(filename, folder_name):
         raise Exception("The folder was not found")
     service = api.drive_service()
     file_id = None
-    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(folder_id) + "' in parents and name='" + text_type(filename) + "'").execute()
+    response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(folder_id) + "' in parents and name='" + str(filename) + "'").execute()
     for item in response.get('files', []):
         file_id = item['id']
     return file_id

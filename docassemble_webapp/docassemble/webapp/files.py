@@ -1,17 +1,12 @@
 import sys
-from six import string_types, text_type, PY2
 import os
 import re
 import json
 import pytz
 import shutil
 import requests
-from io import open
-if PY2:
-    from urllib import urlencode, urlretrieve
-else:
-    from urllib.request import urlretrieve
-    from urllib.parse import urlencode
+from urllib.request import urlretrieve
+from urllib.parse import urlencode
 import pycurl
 import tempfile
 import mimetypes
@@ -504,16 +499,16 @@ def make_package_dir(pkgname, info, author_info, tz_name, directory=None, curren
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
-    initpy = u"""\
+    initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 """
-    licensetext = text_type(info['license'])
+    licensetext = str(info['license'])
     if re.search(r'MIT License', licensetext):
-        licensetext += u'\n\nCopyright (c) ' + text_type(datetime.datetime.now().year) + ' ' + text_type(author_info['first name']) + u" " + text_type(author_info['last name']) + u"""
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(author_info['first name']) + " " + str(author_info['last name']) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -534,17 +529,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
     if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
-        readme = text_type(info['readme'])
+        readme = str(info['readme'])
     else:
-        readme = u'# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + u"\n\n"
-    manifestin = u"""\
+        readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+    manifestin = """\
 include README.md
 """
-    setupcfg = u"""\
+    setupcfg = """\
 [metadata]
 description-file = README.md
 """
-    setuppy = u"""\
+    setuppy = """\
 import os
 import sys
 from setuptools import setup, find_packages
@@ -590,7 +585,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 """
-    setuppy += u"setup(name='docassemble." + str(pkgname) + "',\n" + """\
+    setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version=""" + repr(info.get('version', '')) + """,
       description=(""" + repr(info.get('description', '')) + """),
       long_description=""" + repr(readme) + """,
@@ -607,18 +602,18 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
      )
 
 """
-    templatereadme = u"""\
+    templatereadme = """\
 # Template directory
 
 If you want to use templates for document assembly, put them in this directory.
 """
-    staticreadme = u"""\
+    staticreadme = """\
 # Static file directory
 
 If you want to make files available in the web app, put them in
 this directory.
 """
-    sourcesreadme = u"""\
+    sourcesreadme = """\
 # Sources directory
 
 This directory is used to store word translation files,
@@ -695,7 +690,7 @@ machine learning training files, and other source files.
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-        the_file.write(u"__version__ = " + repr(info.get('version', '')) + "\n")
+        the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(templatereadme)

@@ -2,7 +2,6 @@ import sys
 import os
 import re
 import docassemble.base.config
-from io import open
 
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)

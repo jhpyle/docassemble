@@ -3,7 +3,6 @@ import sys
 import socket
 import tempfile
 import subprocess
-from six import text_type, PY2
 import xmlrpc.client
 import re
 #from io import StringIO
@@ -11,7 +10,6 @@ import sys
 import shutil
 import time
 import fcntl
-from io import open
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -83,29 +81,21 @@ def check_for_updates(doing_startup=False):
     num_deleted = Package.query.filter_by(name='psycopg2').delete()
     if num_deleted > 0:
         db.session.commit()
-    if PY2:
-        num_deleted = Package.query.filter_by(name='pycryptodome').delete()
-        if num_deleted > 0:
-            db.session.commit()
-        num_deleted = Package.query.filter_by(name='pdfminer3k').delete()
-        if num_deleted > 0:
-            db.session.commit()
-    else:
-        num_deleted = Package.query.filter_by(name='pdfminer').delete()
-        if num_deleted > 0:
-            db.session.commit()
-        num_deleted = Package.query.filter_by(name='py-bcrypt').delete()
-        if num_deleted > 0:
-            db.session.commit()
-        num_deleted = Package.query.filter_by(name='pycrypto').delete()
-        if num_deleted > 0:
-            db.session.commit()
-        num_deleted = Package.query.filter_by(name='constraint').delete()
-        if num_deleted > 0:
-            db.session.commit()
-        num_deleted = Package.query.filter_by(name='distutils2').delete()
-        if num_deleted > 0:
-            db.session.commit()
+    num_deleted = Package.query.filter_by(name='pdfminer').delete()
+    if num_deleted > 0:
+        db.session.commit()
+    num_deleted = Package.query.filter_by(name='py-bcrypt').delete()
+    if num_deleted > 0:
+        db.session.commit()
+    num_deleted = Package.query.filter_by(name='pycrypto').delete()
+    if num_deleted > 0:
+        db.session.commit()
+    num_deleted = Package.query.filter_by(name='constraint').delete()
+    if num_deleted > 0:
+        db.session.commit()
+    num_deleted = Package.query.filter_by(name='distutils2').delete()
+    if num_deleted > 0:
+        db.session.commit()
     sys.stderr.write("check_for_updates: 1\n")
     installed_packages = get_installed_distributions()
     for package in installed_packages:
@@ -127,86 +117,47 @@ def check_for_updates(doing_startup=False):
         sys.stderr.write("check_for_updates: installing psycopg2-binary\n")
         install_package(DummyPackage('psycopg2-binary'))
         change = True
-    if PY2:
+    if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
+        sys.stderr.write("check_for_updates: installing new kombu version\n")
+        install_package(DummyPackage('kombu'))
+        changed = True
+    if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
+        sys.stderr.write("check_for_updates: installing new celery version\n")
+        install_package(DummyPackage('celery'))
+        changed = True
+    if 'pycrypto' in here_already:
+        sys.stderr.write("check_for_updates: uninstalling pycrypto\n")
+        uninstall_package(DummyPackage('pycrypto'))
         if 'pycryptodome' in here_already:
-            sys.stderr.write("check_for_updates: uninstalling pycryptodome\n")
+            sys.stderr.write("check_for_updates: reinstalling pycryptodome\n")
             uninstall_package(DummyPackage('pycryptodome'))
-            if 'pycrypto' in here_already:
-                sys.stderr.write("check_for_updates: reinstalling pycrypto\n")
-                uninstall_package(DummyPackage('pycrypto'))
-                install_package(DummyPackage('pycrypto'))
-            changed = True
-        if 'pathlib' not in here_already:
-            sys.stderr.write("check_for_updates: installing pathlib\n")
-            install_package(DummyPackage('pathlib'))
-            changed = True
-        if 'pycrypto' not in here_already:
-            sys.stderr.write("check_for_updates: installing pycrypto\n")
-            install_package(DummyPackage('pycrypto'))
-            changed = True
-        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) > LooseVersion('4.1.0'):
-            sys.stderr.write("check_for_updates: installing older kombu version\n")
-            kombu = DummyPackage('kombu')
-            kombu.limitation = '==4.1.0'
-            install_package(kombu)
-            changed = True
-        if 'celery' not in here_already or LooseVersion(here_already['celery']) > LooseVersion('4.1.0'):
-            sys.stderr.write("check_for_updates: installing older celery version\n")
-            celery = DummyPackage('celery')
-            celery.limitation = '[redis]==4.1.0'
-            install_package(celery)
-            changed = True
-        if 'pdfminer' not in here_already:
-            sys.stderr.write("check_for_updates: installing pdfminer\n")
-            pdfminer = DummyPackage('pdfminer')
-            pdfminer.type = 'git'
-            pdfminer.giturl = 'https://github.com/jhpyle/pdfminer'
-            pdfminer.gitsubdir = None
-            pdfminer.gitbranch = None
-            install_package(pdfminer)
-            changed = True
-    else:
-        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
-            sys.stderr.write("check_for_updates: installing new kombu version\n")
-            install_package(DummyPackage('kombu'))
-            changed = True
-        if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
-            sys.stderr.write("check_for_updates: installing new celery version\n")
-            install_package(DummyPackage('celery'))
-            changed = True
-        if 'pycrypto' in here_already:
-            sys.stderr.write("check_for_updates: uninstalling pycrypto\n")
-            uninstall_package(DummyPackage('pycrypto'))
-            if 'pycryptodome' in here_already:
-                sys.stderr.write("check_for_updates: reinstalling pycryptodome\n")
-                uninstall_package(DummyPackage('pycryptodome'))
-                install_package(DummyPackage('pycryptodome'))
-            changed = True
-        if 'pycryptodome' not in here_already:
-            sys.stderr.write("check_for_updates: installing pycryptodome\n")
             install_package(DummyPackage('pycryptodome'))
-            changed = True
-        if 'pdfminer' in here_already:
-            sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
-            uninstall_package(DummyPackage('pdfminer'))
-            changed = True
-        if 'pdfminer3k' not in here_already:
-            sys.stderr.write("check_for_updates: installing pdfminer3k\n")
-            install_package(DummyPackage('pdfminer3k'))
-            changed = True
-        if 'py-bcrypt' in here_already:
-            sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
-            uninstall_package(DummyPackage('py-bcrypt'))
-            changed = True
-            if 'bcrypt' in here_already:
-                sys.stderr.write("check_for_updates: reinstalling bcrypt\n")
-                uninstall_package(DummyPackage('bcrypt'))
-                install_package(DummyPackage('bcrypt'))
-                changed = True
-        if 'bcrypt' not in here_already:
-            sys.stderr.write("check_for_updates: installing bcrypt\n")
+        changed = True
+    if 'pycryptodome' not in here_already:
+        sys.stderr.write("check_for_updates: installing pycryptodome\n")
+        install_package(DummyPackage('pycryptodome'))
+        changed = True
+    if 'pdfminer' in here_already:
+        sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
+        uninstall_package(DummyPackage('pdfminer'))
+        changed = True
+    if 'pdfminer3k' not in here_already:
+        sys.stderr.write("check_for_updates: installing pdfminer3k\n")
+        install_package(DummyPackage('pdfminer3k'))
+        changed = True
+    if 'py-bcrypt' in here_already:
+        sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
+        uninstall_package(DummyPackage('py-bcrypt'))
+        changed = True
+        if 'bcrypt' in here_already:
+            sys.stderr.write("check_for_updates: reinstalling bcrypt\n")
+            uninstall_package(DummyPackage('bcrypt'))
             install_package(DummyPackage('bcrypt'))
             changed = True
+    if 'bcrypt' not in here_already:
+        sys.stderr.write("check_for_updates: installing bcrypt\n")
+        install_package(DummyPackage('bcrypt'))
+        changed = True
     if changed:
         installed_packages = get_installed_distributions()
         here_already = dict()
@@ -262,7 +213,7 @@ def check_for_updates(doing_startup=False):
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
-            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + text_type(package.packageversion) + ", is ahead of the installed version, " + text_type(installs[package.id].packageversion) + "\n")
+            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + str(package.packageversion) + ", is ahead of the installed version, " + str(installs[package.id].packageversion) + "\n")
             new_version_needed = True
         else:
             new_version_needed = False
@@ -274,7 +225,7 @@ def check_for_updates(doing_startup=False):
         else:
             package_missing = False
         if package.id in installs and package.version > installs[package.id].version:
-            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + text_type(package.version) + " but the installed version has version " + text_type(installs[package.id].version) + ".\n")
+            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + str(package.version) + " but the installed version has version " + str(installs[package.id].version) + ".\n")
             package_version_greater = True
         else:
             package_version_greater = False
@@ -458,10 +409,7 @@ def install_package(package):
     from docassemble.base.config import daconfig
     from docassemble.webapp.daredis import r
     from docassemble.webapp.files import SavedFile
-    if PY2:
-        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
-    else:
-        PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
     temp_dir = tempfile.mkdtemp()
@@ -578,13 +526,13 @@ def get_installed_distributions():
         output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = err.output.decode('utf-8', 'ignore')
-    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
+    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + str(output) + "\n")
     sys.stderr.write("get_installed_distributions: pip version:\n" + output)
     try:
         output = subprocess.check_output(['pip', 'freeze']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = err.output.decode('utf-8', 'ignore')
-    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + text_type(output) + "\n")
+    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + str(output) + "\n")
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
@@ -606,7 +554,7 @@ def get_pip_info(package_name):
     # sys.stdout = old_stdout
     # output = saved_stdout.getvalue()
     results = dict()
-    if not isinstance(output, text_type):
+    if not isinstance(output, str):
         output = output.decode('utf-8', 'ignore')
     for line in output.split('\n'):
         #sys.stderr.write("Found line " + str(line) + "\n")

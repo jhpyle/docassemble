@@ -5,7 +5,6 @@ import string
 import random
 import httplib2
 import re
-from six import text_type
 
 __all__ = ['DAOAuth']
 
@@ -20,7 +19,7 @@ class DAOAuth(DAObject):
             raise Exception("DAOAuth: you must pass the url_args as a keyword parameter")
         self.url_args = kwargs['url_args']
         del kwargs['url_args']
-        super(DAOAuth, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def _get_flow(self):
         app_credentials = get_config('oauth', dict()).get(self.appname, dict())
         client_id = app_credentials.get('id', None)

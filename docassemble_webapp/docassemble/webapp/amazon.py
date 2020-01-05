@@ -6,7 +6,6 @@ import mimetypes
 import sys
 import datetime
 import pytz
-from six import text_type, PY2
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
 class s3object(object):
@@ -82,15 +81,9 @@ class s3key(object):
         os.utime(filename, (secs, secs))        
     def set_contents_from_string(self, text):
         if hasattr(self, 'content_type') and self.content_type is not None:
-            if PY2:
-                self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
-            else:
-                self.key_obj.put(Body=bytes(text, encoding='utf-8'), ContentType=self.content_type)
+            self.key_obj.put(Body=bytes(text, encoding='utf-8'), ContentType=self.content_type)
         else:
-            if PY2:
-                self.key_obj.put(Body=bytes(text))
-            else:
-                self.key_obj.put(Body=bytes(text, encoding='utf-8'))
+            self.key_obj.put(Body=bytes(text, encoding='utf-8'))
     def generate_url(self, expires, content_type=None, display_filename=None, inline=False):
         params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         if content_type is not None:

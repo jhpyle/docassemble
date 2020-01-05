@@ -60,10 +60,10 @@ class MySignInForm(LoginForm):
                     result = True
                 else:
                     connect.unbind_s()
-                    result = super(MySignInForm, self).validate()
+                    result = super().validate()
             except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
-                result = super(MySignInForm, self).validate()
+                result = super().validate()
         else:
             from flask import current_app
             user_manager = current_app.user_manager
@@ -94,7 +94,7 @@ class MySignInForm(LoginForm):
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
             #sys.stderr.write("Trying super validate\n")
-            result = super(MySignInForm, self).validate()
+            result = super().validate()
             #sys.stderr.write("Super validate response was " + repr(result) + "\n")
         if result is False:
             r.incr(key)
@@ -181,7 +181,7 @@ class PhoneUserProfileForm(UserProfileForm):
                 if existing_user is not None and existing_user.id != current_user.id:
                     flash(word("Please choose a different e-mail address."), 'error')
                     return False
-        return super(PhoneUserProfileForm, self).validate()
+        return super().validate()
     email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address'))])
 
 class RequestDeveloperForm(FlaskForm):
@@ -202,7 +202,7 @@ class MyInviteForm(FlaskForm):
                     has_error = True
         if has_error:
             return False
-        return super(MyInviteForm, self).validate()
+        return super().validate()
     email = TextAreaField(word('One or more e-mail addresses (separated by newlines)'), validators=[
         validators.Required(word('At least one e-mail address must be listed'))
     ])

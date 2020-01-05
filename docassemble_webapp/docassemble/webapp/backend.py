@@ -1,4 +1,3 @@
-from six import string_types, text_type, PY2
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, hostname, in_celery
@@ -11,12 +10,8 @@ from docassemble.base.generate_key import random_string, random_bytes, random_al
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
-if PY2:
-    import cPickle as pickle
-    FileType = file
-else:
-    import pickle
-    from io import IOBase as FileType
+import pickle
+from io import IOBase as FileType
 import codecs
 #import string
 #import random
@@ -32,7 +27,6 @@ import ruamel.yaml
 TypeType = type(type(None))
 NoneType = type(None)
 
-from io import open
 import docassemble.base.parse
 import re
 import os
@@ -62,7 +56,7 @@ def elapsed(name_of_function):
         def time_func(*pargs, **kwargs):
             time_start = time.time()
             result = func(*pargs, **kwargs)
-            sys.stderr.write(name_of_function + ': ' + text_type(time.time() - time_start) + "\n")
+            sys.stderr.write(name_of_function + ': ' + str(time.time() - time_start) + "\n")
             return result
         return time_func
     return elapse_decorator
@@ -306,7 +300,7 @@ if type(word_file_list) is not list:
     word_file_list = [word_file_list]
 for word_file in word_file_list:
     #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    if not isinstance(word_file, string_types):
+    if not isinstance(word_file, str):
         sys.stderr.write("Error reading words: file references must be plain text.\n")
         continue
     filename = docassemble.base.functions.static_filename_path(word_file)
@@ -413,7 +407,7 @@ app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
     #app.logger.warning(message)
-    sys.stderr.write(text_type(message) + "\n")
+    sys.stderr.write(str(message) + "\n")
     return
 
 def pad(the_string):
@@ -428,12 +422,8 @@ def unpad(the_string):
 def encrypt_phrase(phrase, secret):
     iv = random_bytes(16)
     encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
-    if PY2:
-        if isinstance(phrase, unicode):
-            phrase = phrase.encode('utf-8')
-    else:
-        if isinstance(phrase, text_type):
-            phrase = bytearray(phrase, 'utf-8')
+    if isinstance(phrase, str):
+        phrase = bytearray(phrase, 'utf-8')
     return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode('utf-8')
 
 def pack_phrase(phrase):
@@ -471,7 +461,7 @@ def decrypt_object(obj_string, secret):
     return fix_pickle_obj(unpad(decrypter.decrypt(codecs.decode(obj_string[16:], 'base64'))))
 
 def parse_the_user_id(the_user_id):
-    m = re.match(r'(t?)([0-9]+)', text_type(the_user_id))
+    m = re.match(r'(t?)([0-9]+)', str(the_user_id))
     if m:
         if m.group(1) == 't':
             return None, int(m.group(2))
@@ -512,7 +502,7 @@ def unpack_dictionary(dict_string):
 def safe_json(the_object, level=0):
     if level > 20:
         return None
-    if isinstance(the_object, (string_types, bool, int, float)):
+    if isinstance(the_object, (str, bool, int, float)):
         return the_object
     if isinstance(the_object, list):
         return [safe_json(x, level=level+1) for x in the_object]
@@ -643,9 +633,9 @@ def delete_temp_user_data(temp_user_id, r):
     Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
     db.session.commit()
     keys_to_delete = set()
-    for key in r.keys('*userid:t' + text_type(temp_user_id)):
+    for key in r.keys('*userid:t' + str(temp_user_id)):
         keys_to_delete.add(key)
-    for key in r.keys('*userid:t' + text_type(temp_user_id) + ':*'):
+    for key in r.keys('*userid:t' + str(temp_user_id) + ':*'):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r.delete(key)
@@ -703,17 +693,17 @@ def delete_user_data(user_id, r, r_user):
         user_object.pypi_username = None
         user_object.pypi_password = None
         user_object.otp_secret = None
-        user_object.social_id = 'disabled$' + text_type(user_id)
+        user_object.social_id = 'disabled$' + str(user_id)
     db.session.commit()
     keys_to_delete = set()
-    for key in r.keys('*userid:' + text_type(user_id)):
+    for key in r.keys('*userid:' + str(user_id)):
         keys_to_delete.add(key)
-    for key in r.keys('*userid:' + text_type(user_id) + ':*'):
+    for key in r.keys('*userid:' + str(user_id) + ':*'):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r.delete(key)
     keys_to_delete = set()
-    for key in r_user.keys('*:user:' + text_type(old_email)):
+    for key in r_user.keys('*:user:' + str(old_email)):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r_user.delete(key)
@@ -911,9 +901,9 @@ def file_set_attributes(file_number, **kwargs):
         upload.private = kwargs['private']
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
         upload.persistent = kwargs['persistent']
-    if 'session' in kwargs and isinstance(kwargs['session'], string_types):
+    if 'session' in kwargs and isinstance(kwargs['session'], str):
         upload.key = kwargs['session']
-    if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
+    if 'filename' in kwargs and isinstance(kwargs['filename'], str):
         upload.filename = kwargs['filename']
     db.session.commit()
 

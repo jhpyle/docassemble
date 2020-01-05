@@ -543,7 +543,7 @@ fields:
   - Amenities: x.address.amenities
     datatype: checkboxes
     code: |
-      {u'chimney': u'Chimney', 'stove': 'Stove'}
+      {'chimney': 'Chimney', 'stove': 'Stove'}
   - note: |
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
   - no label: x.address.milieu

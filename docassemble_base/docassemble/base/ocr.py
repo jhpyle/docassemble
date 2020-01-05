@@ -8,8 +8,6 @@ from docassemble.base.logger import logmessage
 import pycountry
 import sys
 import os
-from six import string_types, text_type, PY2
-from io import open
 
 def ocr_finalize(*pargs, **kwargs):
     #sys.stderr.write("ocr_finalize started")

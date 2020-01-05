@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import os
 import os.path
-from six import string_types, text_type, PY2
 import subprocess
 import mimetypes
 import tempfile
@@ -13,7 +11,6 @@ import PyPDF2 as pypdf
 import pypdftk
 import string
 import codecs
-from io import open
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
@@ -77,30 +74,24 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             logmessage("Skipping field " + repr(field))
             continue
         if name is not None:
-            if PY2:
-                name = remove_nonprintable_limited(str(name))
-            else:
-                if not isinstance(name, bytes):
-                    name = bytes(str(name), encoding='utf-8')
-                name = remove_nonprintable_bytes_limited(name)
+            if not isinstance(name, bytes):
+                name = bytes(str(name), encoding='utf-8')
+            name = remove_nonprintable_bytes_limited(name)
         if value is not None:
-            if PY2:
-                value = remove_nonprintable_limited(str(value))
-            else:
-                if not isinstance(value, bytes):
-                    value = bytes(str(value), encoding='utf-8')
-                value = remove_nonprintable_bytes_limited(value)
+            if not isinstance(value, bytes):
+                value = bytes(str(value), encoding='utf-8')
+            value = remove_nonprintable_bytes_limited(value)
         #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
         if page is not None:
             pageno = id_to_page[page.objid]
         else:
             pageno = 1
-        if str(field_type) in ('/Btn', "/u'Btn'", "/'Btn'"):
+        if str(field_type) in ('/Btn', "/'Btn'"):
             if value == '/Yes':
                 default = "Yes"
             else:
                 default = "No"
-        elif str(field_type) in ('/Sig', "/u'Sig'", "/'Sig'"):
+        elif str(field_type) in ('/Sig', "/'Sig'"):
             default = '${ user.signature }'
         else:
             if value is not None:
@@ -235,7 +226,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if len(images):
         fields = dict()
         for field, default, pageno, rect, field_type in read_fields(template):
-            if str(field_type) in ('/Sig', "/u'Sig'", "/'Sig'"):
+            if str(field_type) in ('/Sig', "/'Sig'"):
                 fields[field] = {'pageno': pageno, 'rect': rect}
         image_todo = list()
         for field, file_info in images:
@@ -311,14 +302,14 @@ def get_passwords(password):
     if password is None:
         return (None, None)
     if type(password) in (str, unicode, bool, int, float):
-        owner_password = text_type(password).strip()
-        user_password = text_type(password).strip()
+        owner_password = str(password).strip()
+        user_password = str(password).strip()
     elif type(password) is list:
-        owner_password = text_type(password[0]).strip()
-        user_password = text_type(password[1]).strip()
+        owner_password = str(password[0]).strip()
+        user_password = str(password[1]).strip()
     elif type(password) is dict:
-        owner_password = text_type(password.get('owner', 'password')).strip()
-        user_password = text_type(password.get('user', 'password')).strip()
+        owner_password = str(password.get('owner', 'password')).strip()
+        user_password = str(password.get('user', 'password')).strip()
     else:
         raise DAError("get_passwords: invalid password")
     return (owner_password, user_password)
@@ -440,14 +431,14 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         return bookmarkRef
 
 def remove_nonprintable(text):
-    final = text_type()
+    final = str()
     for char in text:
         if char in string.printable:
             final += char
     return final
 
 def remove_nonprintable_bytes(byte_list):
-    final = text_type()
+    final = str()
     for the_int in byte_list:
         if chr(the_int) in string.printable:
             final += chr(the_int)
@@ -500,15 +491,9 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                 js_obj = obj.getObject()
                 if '/S' in js_obj and js_obj['/S'] == '/JavaScript' and '/JS' in js_obj:
                     if isinstance(js_obj['/JS'], pypdf.generic.ByteStringObject) or isinstance(js_obj['/JS'], pypdf.generic.TextStringObject):
-                        if PY2:
-                            js_to_write.append((name, remove_nonprintable(js_obj['/JS'])))
-                        else:
-                            js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'])))
+                        js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'])))
                     elif isinstance(js_obj['/JS'], pypdf.generic.EncodedStreamObject) or isinstance(js_obj['/JS'], pypdf.generic.DecodedStreamObject):
-                        if PY2:
-                            js_to_write.append((name, remove_nonprintable(js_obj['/JS'].getData())))
-                        else:
-                            js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'].getData())))
+                        js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'].getData())))
 
     if len(js_to_write) == 0 and len(co_field_names) == 0:
         #logmessage("Nothing to do here")

@@ -4,7 +4,6 @@ import sys
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.core import DAList, DAObjectPlusParameters
-from six import text_type
 
 __all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'upgrade_db']
 
@@ -48,7 +47,7 @@ class SQLObject(object):
         try:
             self.db_save()
         except Exception as err:
-            sys.stderr.write("On SQLObject write, " + err.__class__.__name__ + ": " + text_type(err) + "\n")
+            sys.stderr.write("On SQLObject write, " + err.__class__.__name__ + ": " + str(err) + "\n")
         dict_to_save = copy.copy(self.__dict__)
         if '_orig' in dict_to_save:
             del dict_to_save['_orig']
@@ -58,7 +57,7 @@ class SQLObject(object):
         try:
             self.db_read()
         except Exception as err:
-            sys.stderr.write("On SQLObject read, " + err.__class__.__name__ + ": " + text_type(err) + "\n")
+            sys.stderr.write("On SQLObject read, " + err.__class__.__name__ + ": " + str(err) + "\n")
     @classmethod
     def filter(cls, instance_name, **kwargs):
         if 'dbcache' not in this_thread.misc:
@@ -502,7 +501,7 @@ class SQLObjectList(DAList):
         all_arg = kwargs.get('all', False)
         if 'all' in kwargs:
             del kwargs['all']
-        super(SQLObjectList, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         if all_arg:
             self.elements = self.object_type.all(self.instanceName)
 
@@ -527,7 +526,7 @@ class SQLRelationshipList(DAList):
             del kwargs['parent']
         if 'child' in kwargs:
             del kwargs['child']
-        super(SQLRelationshipList, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         if parent_arg and not child_arg:
             self.elements = self.object_type.filter_by_parent(self.instanceName, parent_arg)
         elif child_arg and not parent_arg:
@@ -541,7 +540,7 @@ class SQLRelationshipList(DAList):
 
 class StandardRelationshipList(SQLRelationshipList):
     def init(self, *pargs, **kwargs):
-        super(StandardRelationshipList, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.there_is_another = False
         self.gathered = True
         self.complete_attribute = 'complete'
