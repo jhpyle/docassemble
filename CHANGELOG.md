@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.5.71] - 2020-01-04
+## [0.5.71] - 2020-01-05
 ### Changed
 - Discontinued support for Python 2.7.
 
