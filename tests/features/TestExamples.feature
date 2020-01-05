@@ -5982,10 +5982,6 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/testurlarg.yml"
     Then I should see the phrase "You came from the unknown."
 
-  Scenario: Test the interview "Test URL args" with argument
-    Given I start the interview "docassemble.demo:data/questions/testurlarg.yml&from=moon"
-    Then I should see the phrase "You came from the moon."
-
   Scenario: Test the interview "Test URL args version 2"
     Given I start the interview "docassemble.demo:data/questions/testurlarg2.yml"
     Then I should see the phrase "You came from the unknown."

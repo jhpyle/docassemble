@@ -5,15 +5,11 @@
 
 {%- if allowed_to_upgrade %}
 <h2>{{ word('Upgrade docassemble') }}</h2>
-{%- if using_py2 %}
-<p class="h6">You cannot upgrade docassemble because you are running Python 2.7.  You need to perform a system upgrade.</p>
-{%- else %}
 <p class="h6">{{ version }}</p>
 
 <div>
   <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
 </div>
-{%- endif %}
 {%- endif %}
 
 <h2>{{ word('Install or update a package') }}</h2>

@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-from six import string_types, text_type, PY2
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
-if PY2:
-    import collections as abc
-else:
-    import collections.abc as abc
+import collections.abc as abc
 from collections import OrderedDict
 from functools import reduce
-from io import open
 import re
 import os
 import codecs
@@ -76,8 +70,6 @@ class DAEmpty(object):
             return DAEmpty()
     def __str__(self):
         return ''
-    def __unicode__(self):
-        return text_type('')
     def __dir__(self):
         return list()
     def __contains__(self, item):
@@ -212,7 +204,7 @@ class DAObject(object):
     #                 new_args[key] = val
     #             for key, val in kwargs.items():
     #                 new_args[key] = val
-    #             return super(constructor, self).init(*pargs, **new_args)
+    #             return super().init(*pargs, **new_args)
     #     return constructor
     def __init__(self, *pargs, **kwargs):
         thename = None
@@ -236,7 +228,7 @@ class DAObject(object):
                 thename = get_unique_name()
                 self.has_nonrandom_instance_name = False
             del frame
-        self.instanceName = text_type(thename)
+        self.instanceName = str(thename)
         self.attrList = list()
         self.init(*pargs, **kwargs)
     def _set_instance_name_for_function(self):
@@ -355,7 +347,7 @@ class DAObject(object):
                 if complete_attribute:
                     getattr(self.new_relation[relationship_type], complete_attribute)
                 else:
-                    text_type(self.new_relation[relationship_type])
+                    str(self.new_relation[relationship_type])
                 new_item = self.new_relation[relationship_type]
                 if new_item not in tree.leaf.elements:
                     tree.leaf.append(new_item, set_instance_name=True)
@@ -401,7 +393,7 @@ class DAObject(object):
                 if complete_attribute:
                     getattr(self.new_peer_relation[relationship_type], complete_attribute)
                 else:
-                    text_type(self.new_peer_relation[relationship_type])
+                    str(self.new_peer_relation[relationship_type])
                 new_item = self.new_peer_relation[relationship_type]
                 if new_item not in tree.leaf.elements:
                     tree.leaf.append(new_item, set_instance_name=True)
@@ -451,7 +443,7 @@ class DAObject(object):
         return
     def set_random_instance_name(self):
         """Sets the instanceName attribute to a random value."""
-        self.instanceName = text_type(get_unique_name())
+        self.instanceName = str(get_unique_name())
         self.has_nonrandom_instance_name = False
     def copy_shallow(self, thename):
         """Returns a copy of the object, giving the new object the intrinsic name 'thename'; does not change intrinsic names of sub-objects"""
@@ -568,11 +560,9 @@ class DAObject(object):
             return getattr(self, name)
         return None
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         if hasattr(self, 'name'):
-            return text_type(self.name)
-        return text_type(self.object_name())
+            return str(self.name)
+        return str(self.object_name())
     def __dir__(self):
         return self.attrList
     def pronoun_possessive(self, target, **kwargs):
@@ -608,15 +598,15 @@ class DAObject(object):
         if isinstance(value, DAObject) and not value.has_nonrandom_instance_name:
             value.has_nonrandom_instance_name = True
             value.instanceName = self.instanceName + '.' + str(key)
-        return super(DAObject, self).__setattr__(key, value)
+        return super().__setattr__(key, value)
     def __le__(self, other):
-        return text_type(self) <= (text_type(other) if isinstance(other, DAObject) else other)
+        return str(self) <= (str(other) if isinstance(other, DAObject) else other)
     def __ge__(self, other):
-        return text_type(self) >= (text_type(other) if isinstance(other, DAObject) else other)
+        return str(self) >= (str(other) if isinstance(other, DAObject) else other)
     def __gt__(self, other):
-        return text_type(self) > (text_type(other) if isinstance(other, DAObject) else other)
+        return str(self) > (str(other) if isinstance(other, DAObject) else other)
     def __lt__(self, other):
-        return text_type(self) < (text_type(other) if isinstance(other, DAObject) else other)
+        return str(self) < (str(other) if isinstance(other, DAObject) else other)
     def __eq__(self, other):
         return self is other
     def __ne__(self, other):
@@ -627,7 +617,7 @@ class DAObject(object):
 class RelationshipDir(DAObject):
     """A data structure representing a relationships among people."""
     def init(self, *pargs, **kwargs):
-        return super(RelationshipDir, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def involves(self, target):
         #sys.stderr.write("RelationshipDir: involves " + repr(target) + "\n")
         if self.parent is target or self.child is target:
@@ -637,7 +627,7 @@ class RelationshipDir(DAObject):
 class RelationshipPeer(DAObject):
     """A data structure representing a relationships among people."""
     def init(self, *pargs, **kwargs):
-        return super(RelationshipPeer, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def involves(self, target):
         #sys.stderr.write("RelationshipPeer: involves " + repr(target) + "\n")
         if target in self.peers:
@@ -656,7 +646,7 @@ def generator_equals(the_key, the_val):
 class RelationshipTree(DAObject):
     """A data structure that maps the relationships among people."""
     def init(self, *pargs, **kwargs):
-        super(RelationshipTree, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.initializeAttribute('leaf', DAList)
         self.leaf.auto_gather = False
         self.leaf.gathered = True
@@ -820,7 +810,7 @@ class DAList(DAObject):
             self.ask_object_type = True
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
-        return super(DAList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the list for it.
         The first argument is the index to set.
@@ -950,6 +940,8 @@ class DAList(DAObject):
         return DAEmpty()
     def __add__(self, other):
         self._trigger_gather()
+        if isinstance(other, DAEmpty):
+            return self
         if isinstance(other, DAList):
             other._trigger_gather()
             the_list = DAList(elements=self.elements + other.elements, gathered=True, auto_gather=False)
@@ -983,7 +975,7 @@ class DAList(DAObject):
         for item in self.elements:
             if isinstance(item, DAObject):
                 item.fix_instance_name(old_instance_name, new_instance_name)
-        return super(DAList, self).fix_instance_name(old_instance_name, new_instance_name)
+        return super().fix_instance_name(old_instance_name, new_instance_name)
     def _set_instance_name_recursively(self, thename, matching=None):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
@@ -991,18 +983,18 @@ class DAList(DAObject):
             if isinstance(item, DAObject):
                 item._set_instance_name_recursively(thename + '[' + str(indexno) + ']', matching=matching)
             indexno += 1
-        return super(DAList, self)._set_instance_name_recursively(thename, matching=matching)
+        return super()._set_instance_name_recursively(thename, matching=matching)
     def _mark_as_gathered_recursively(self):
         for item in self.elements:
             if isinstance(item, DAObject):
                 item._mark_as_gathered_recursively()
-        return super(DAList, self)._mark_as_gathered_recursively()
+        return super()._mark_as_gathered_recursively()
     def _reset_gathered_recursively(self):
         self.reset_gathered()
         for item in self.elements:
             if isinstance(item, DAObject):
                 item._reset_gathered_recursively()
-        return super(DAList, self)._reset_gathered_recursively()
+        return super()._reset_gathered_recursively()
     def _reset_instance_names(self):
         indexno = 0
         for item in self.elements:
@@ -1207,7 +1199,7 @@ class DAList(DAObject):
                     continue
             else:
                 try:
-                    text_type(item)
+                    str(item)
                 except:
                     continue
             items.append(item)
@@ -1228,14 +1220,14 @@ class DAList(DAObject):
                 if complete_attribute is not None:
                     getattr(self.elements[indexno], complete_attribute)
                 else:
-                    text_type(self.elements[indexno])
+                    str(self.elements[indexno])
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in self.elements:
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
             else:
-                text_type(elem)
+                str(elem)
     def _allow_appending(self):
         self._appending_allowed = True
     def _disallow_appending(self):
@@ -1363,7 +1355,7 @@ class DAList(DAObject):
         self._trigger_gather()
         return self.elements.__reversed__()
     def _fill_up_to(self, index):
-        if isinstance(index, string_types):
+        if isinstance(index, str):
             raise Exception("Attempt to fill up " + self.instanceName + " with index " + index)
         if index < 0 and len(self.elements) + index < 0:
             num_to_add = (-1 * index) - len(self.elements)
@@ -1392,7 +1384,7 @@ class DAList(DAObject):
         except:
             if self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed):
                 try:
-                    logmessage("list index " + text_type(index) + " out of range on " + text_type(self.instanceName))
+                    logmessage("list index " + str(index) + " out of range on " + str(self.instanceName))
                 except:
                     pass
                 raise IndexError("list index out of range")
@@ -1406,10 +1398,8 @@ class DAList(DAObject):
             #sys.stderr.write("Assuming it is there!\n")
             return self.elements[index]
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         self._trigger_gather()
-        return text_type(self.comma_and_list())
+        return str(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -1503,7 +1493,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += '<a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + text_type(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a> '
+            output += '<a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a> '
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -1556,7 +1546,7 @@ class DAList(DAObject):
             block = ' btn-block'
         else:
             block = ''
-        if isinstance(icon, string_types):
+        if isinstance(icon, str):
             icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
             if not re.search(r'^fa[a-z] fa-', icon):
                 icon = 'fas fa-' + icon
@@ -1566,7 +1556,7 @@ class DAList(DAObject):
         if classname is None:
             classname = ''
         else:
-            classname = ' ' + text_type(classname)
+            classname = ' ' + str(classname)
         if message is not None:
             logmessage("add_action: note that the 'message' parameter has been renamed to 'label'.")
         if message is None and label is not None:
@@ -1577,10 +1567,10 @@ class DAList(DAObject):
             else:
                 message = word("Add an item")
         else:
-            message = word(text_type(message))
+            message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + text_type(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def hook_on_gather(self):
         pass
     def hook_after_gather(self):
@@ -1626,10 +1616,10 @@ class DADict(DAObject):
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         if 'keys' in kwargs:
-            if isinstance(kwargs['keys'], (DAList, DASet, abc.Iterable)) and not isinstance(kwargs['keys'], string_types):
+            if isinstance(kwargs['keys'], (DAList, DASet, abc.Iterable)) and not isinstance(kwargs['keys'], str):
                 self.new(kwargs['keys'])
             del kwargs['keys']
-        return super(DADict, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
@@ -1643,24 +1633,24 @@ class DADict(DAObject):
         for key, value in self.elements.items():
             if isinstance(value, DAObject):
                 value.fix_instance_name(old_instance_name, new_instance_name)
-        return super(DADict, self).fix_instance_name(old_instance_name, new_instance_name)
+        return super().fix_instance_name(old_instance_name, new_instance_name)
     def _set_instance_name_recursively(self, thename, matching=None):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         for key, value in self.elements.items():
             if isinstance(value, DAObject):
                 value._set_instance_name_recursively(thename + '[' + repr(key) + ']', matching=matching)
-        return super(DADict, self)._set_instance_name_recursively(thename, matching=matching)
+        return super()._set_instance_name_recursively(thename, matching=matching)
     def _mark_as_gathered_recursively(self):
         for key, value in self.elements.items():
             if isinstance(value, DAObject):
                 value._mark_as_gathered_recursively()
-        return super(DADict, self)._mark_as_gathered_recursively()
+        return super()._mark_as_gathered_recursively()
     def _reset_gathered_recursively(self):
         self.reset_gathered()
         for key, value in self.elements.items():
             if isinstance(value, DAObject):
                 value._reset_gathered_recursively()
-        return super(DADict, self)._reset_gathered_recursively()
+        return super()._reset_gathered_recursively()
     def all_false(self, *pargs, **kwargs):
         """Returns True if the values of all keys are False.  If one or more
         keys are provided as arguments, returns True if all of the
@@ -1672,7 +1662,7 @@ class DADict(DAObject):
         the_list = list()
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
-            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, str):
                 the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
@@ -1711,7 +1701,7 @@ class DADict(DAObject):
         the_list = list()
         exclusive = kwargs.get('exclusive', False)
         for parg in pargs:
-            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, str):
                 the_list.extend([x for x in parg])
             else:
                 the_list.append(parg)
@@ -1787,7 +1777,7 @@ class DADict(DAObject):
         the object positions['file clerk'].  The type of object is given by
         the object_type attribute, or DAObject if object_type is not set."""
         for parg in pargs:
-            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, str):
                 for item in parg:
                     self.new(item, **kwargs)
             else:
@@ -1948,7 +1938,7 @@ class DADict(DAObject):
                     continue
             else:
                 try:
-                    text_type(val)
+                    str(val)
                 except:
                     continue
             items[key] = val
@@ -1982,7 +1972,7 @@ class DADict(DAObject):
             if item_object_type is not None and complete_attribute is not None:
                 getattr(elem, complete_attribute)
             else:
-                text_type(elem)
+                str(elem)
     def gathered_and_complete(self):
         """Ensures all items in the dictionary are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
@@ -2103,7 +2093,7 @@ class DADict(DAObject):
             if self.object_type is not None and self.complete_attribute is not None:
                 getattr(elem, self.complete_attribute)
             else:
-                text_type(elem)
+                str(elem)
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with
@@ -2213,9 +2203,7 @@ class DADict(DAObject):
     #    self._trigger_gather()
     #    return self.elements.__hash__()
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.comma_and_list())
+        return str(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -2343,7 +2331,7 @@ class DADict(DAObject):
             block = ' btn-block'
         else:
             block = ''
-        if isinstance(icon, string_types):
+        if isinstance(icon, str):
             icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
             if not re.search(r'^fa[a-z] fa-', icon):
                 icon = 'fas fa-' + icon
@@ -2353,17 +2341,17 @@ class DADict(DAObject):
         if classname is None:
             classname = ''
         else:
-            classname = ' ' + text_type(classname)
+            classname = ' ' + str(classname)
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
             else:
                 message = word("Add an item")
         else:
-            message = word(text_type(message))
+            message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_dict_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + text_type(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def _new_elements(self):
         return dict()
     def hook_on_gather(self):
@@ -2408,7 +2396,7 @@ class DASet(DAObject):
             self.gathered = True
             self.revisit = True
             del kwargs['elements']
-        return super(DASet, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def gathered_and_complete(self):
         """Ensures all items in the set are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
@@ -2441,7 +2429,7 @@ class DASet(DAObject):
                     continue
             else:
                 try:
-                    text_type(item)
+                    str(item)
                 except:
                     continue
             items.add(item)
@@ -2523,7 +2511,7 @@ class DASet(DAObject):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
         for parg in pargs:
-            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, string_types):
+            if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, str):
                 for item in parg:
                     self.add(item)
             else:
@@ -2637,7 +2625,7 @@ class DASet(DAObject):
             return self.gathered
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements):
-            text_type(elem)
+            str(elem)
         if number is None and self.ask_number:
             if hasattr(self, 'there_are_any') and self.there_are_any == 0:
                 number = 0
@@ -2657,7 +2645,7 @@ class DASet(DAObject):
             self.add(self.new_item)
             del self.new_item
             for elem in sorted(self.elements):
-                text_type(elem)
+                str(elem)
             if hasattr(self, 'there_is_one_other'):
                 del self.there_is_one_other
             elif hasattr(self, 'there_is_another'):
@@ -2674,7 +2662,7 @@ class DASet(DAObject):
         """Returns the items in the set, separated by commas, with
         "and" before the last item."""
         self._trigger_gather()
-        return comma_and_list(sorted(map(text_type, self.elements)), **kwargs)
+        return comma_and_list(sorted(map(str, self.elements)), **kwargs)
     def __contains__(self, item):
         self._trigger_gather()
         return self.elements.__contains__(item)
@@ -2723,6 +2711,8 @@ class DASet(DAObject):
         self._trigger_gather()
         return self.elements.__hash__()
     def __add__(self, other):
+        if isinstance(other, DAEmpty):
+            return self
         if isinstance(other, DASet):
             return self.elements + other.elements
         return self.elements + other
@@ -2731,10 +2721,8 @@ class DASet(DAObject):
             return self.elements - other.elements
         return self.elements - other
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         self._trigger_gather()
-        return text_type(self.comma_and_list())
+        return str(self.comma_and_list())
     def __repr__(self):
         self._trigger_gather()
         return repr(self.elements)
@@ -2845,7 +2833,7 @@ class DAFile(DAObject):
     def get_alt_text(self):
         """Returns the alt text for the file.  If no alt text is defined, None is returned."""
         if hasattr(self, 'alt_text'):
-            return text_type(self.alt_text)
+            return str(self.alt_text)
         return None
     def set_mimetype(self, mimetype):
         """Sets the MIME type of the file"""
@@ -2855,9 +2843,7 @@ class DAFile(DAObject):
         else:
             self.extension = re.sub(r'^\.', '', mimetypes.guess_extension(mimetype))
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.show())
+        return str(self.show())
     def initialize(self, **kwargs):
         """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
         #logmessage("initialize")
@@ -2969,7 +2955,7 @@ class DAFile(DAObject):
         results = list()
         import docassemble.base.pdftk
         for item in docassemble.base.pdftk.read_fields(self.path()):
-            the_type = re.sub(r'[^/A-Za-z]', '', text_type(item[4]))
+            the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
             if the_type == 'None':
                 the_type = None
             result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
@@ -3095,12 +3081,12 @@ class DAFile(DAObject):
 
         """
         if not self.ok:
-            return(u'')
+            return('')
         if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf' and wait:
             self.page_path(1, 'page')
         if self.mimetype == 'text/markdown':
             the_template = DATemplate(content=self.slurp())
-            return text_type(the_template)
+            return str(the_template)
         elif self.mimetype == 'text/plain':
             the_content = self.slurp()
             return the_content
@@ -3113,16 +3099,16 @@ class DAFile(DAObject):
                 return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
         else:
             if width is not None:
-                the_width = text_type(width)
+                the_width = str(width)
             else:
-                the_width = u'None'
+                the_width = 'None'
             if alt_text is None:
                 alt_text = self.get_alt_text()
             if alt_text is not None:
-                the_alt_text = re.sub(r'\]', '', text_type(alt_text))
+                the_alt_text = re.sub(r'\]', '', str(alt_text))
             else:
-                the_alt_text = u'None'
-            return(u'[FILE ' + text_type(self.number) + u', ' + the_width + u', ' + the_alt_text + u']')
+                the_alt_text = 'None'
+            return('[FILE ' + str(self.number) + ', ' + the_width + ', ' + the_alt_text + ']')
     def _pdf_pages(self, width):
         file_info = server.file_finder(self.number, question=docassemble.base.functions.this_thread.current_question)
         if 'path' not in file_info:
@@ -3151,13 +3137,13 @@ class DAFile(DAObject):
         disallow_email = list()
         disallow_all = False
         for item in pargs:
-            if isinstance(item, string_types):
+            if isinstance(item, str):
                 m = re.search('^[0-9]+$', item)
                 if m:
                     item = int(item)
             if isinstance(item, int):
                 allow_user_id.append(item)
-            elif isinstance(item, string_types):
+            elif isinstance(item, str):
                 allow_email.append(item)
         if 'disallow' in kwargs:
             disallow = kwargs['disallow']
@@ -3166,17 +3152,17 @@ class DAFile(DAObject):
                 allow_email = list()
                 disallow_all = True
             else:
-                if isinstance(disallow, (int, string_types)):
+                if isinstance(disallow, (int, str)):
                     disallow = [disallow]
                 if isinstance(disallow, list) or isinstance(disallow, DAList):
                     for item in disallow:
-                        if isinstance(item, string_types):
+                        if isinstance(item, str):
                             m = re.search('^[0-9]+$', item)
                             if m:
                                 item = int(item)
                         if isinstance(item, int):
                             disallow_user_id.append(item)
-                        elif isinstance(item, string_types):
+                        elif isinstance(item, str):
                             disallow_email.append(item)
         return server.file_user_access(self.number, allow_user_id=allow_user_id, allow_email=allow_email, disallow_user_id=disallow_user_id, disallow_email=disallow_email, disallow_all=disallow_all)
     def privilege_access(self, *pargs, **kwargs):
@@ -3185,7 +3171,7 @@ class DAFile(DAObject):
         disallow = list()
         disallow_all = False
         for item in pargs:
-            if isinstance(item, string_types):
+            if isinstance(item, str):
                 allow.append(item)
         if 'disallow' in kwargs:
             disallow_arg = kwargs['disallow']
@@ -3193,11 +3179,11 @@ class DAFile(DAObject):
                 allow = list()
                 disallow_all = True
             else:
-                if isinstance(disallow_arg, string_types):
+                if isinstance(disallow_arg, str):
                     disallow_arg = [disallow_arg]
                 if isinstance(disallow_arg, list) or isinstance(disallow_arg, DAList):
                     for item in disallow_arg:
-                        if isinstance(item, string_types):
+                        if isinstance(item, str):
                             disallow.append(item)
         return server.file_privilege_access(self.number, allow=allow, disallow=disallow, disallow_all=disallow_all)
 
@@ -3289,11 +3275,9 @@ class DAFileCollection(DAObject):
         for the_file in the_files:
             if isinstance(the_file, InlineImage) or isinstance(the_file, Subdoc):
                 return the_file
-        return u' '.join(the_files)
+        return ' '.join(the_files)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self._first_file())
+        return str(self._first_file())
 
 class DAFileList(DAList):
     """Used internally by docassemble to refer to a list of files, such as
@@ -3301,9 +3285,7 @@ class DAFileList(DAList):
 
     """
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.show())
+        return str(self.show())
     def set_alt_text(self, alt_text):
         """Sets the alt text of each of the files in the list."""
         for item in self:
@@ -3394,14 +3376,14 @@ class DAStaticFile(DAObject):
     def init(self, *pargs, **kwargs):
         if 'filename' in kwargs and 'mimetype' not in kwargs and 'extension' not in kwargs:
             self.extension, self.mimetype = server.get_ext_and_mimetype(kwargs['filename'])
-        return super(DAStaticFile, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def get_alt_text(self):
         """Returns the alt text for the file.  If no alt text is defined, None
         is returned.
 
         """
         if hasattr(self, 'alt_text'):
-            return text_type(self.alt_text)
+            return str(self.alt_text)
         return None
     def set_alt_text(self, alt_text):
         """Sets the alt text for the file."""
@@ -3421,16 +3403,16 @@ class DAStaticFile(DAObject):
                 return the_text
         else:
             if width is not None:
-                the_width = text_type(width)
+                the_width = str(width)
             else:
-                the_width = u'None'
+                the_width = 'None'
             if alt_text is None:
                 alt_text = self.get_alt_text()
             if alt_text is not None:
-                the_alt_text = the_alt_text = re.sub(r'\]', '', text_type(alt_text))
+                the_alt_text = the_alt_text = re.sub(r'\]', '', str(alt_text))
             else:
-                the_alt_text = u'None'
-            return(u'[FILE ' + text_type(self.filename) + u', ' + the_width + u', ' + the_alt_text + u']')
+                the_alt_text = 'None'
+            return('[FILE ' + str(self.filename) + ', ' + the_width + ', ' + the_alt_text + ']')
     def _pdf_pages(self, width):
         file_info = dict()
         pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
@@ -3473,7 +3455,7 @@ class DAStaticFile(DAObject):
         results = list()
         import docassemble.base.pdftk
         for item in docassemble.base.pdftk.read_fields(self.path()):
-            the_type = re.sub(r'[^/A-Za-z]', '', text_type(item[4]))
+            the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
             if the_type == 'None':
                 the_type = None
             result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
@@ -3487,16 +3469,14 @@ class DAStaticFile(DAObject):
         the_args['_question'] = docassemble.base.functions.this_thread.current_question
         return server.url_finder(self.filename, **the_args)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.show())
+        return str(self.show())
 
 class DAEmailRecipientList(DAList):
     """Represents a list of DAEmailRecipient objects."""
     def init(self, *pargs, **kwargs):
         #logmessage("DAEmailRecipientList: pargs is " + str(pargs) + " and kwargs is " + str(kwargs))
         self.object_type = DAEmailRecipient
-        super(DAEmailRecipientList, self).init(**kwargs)
+        super().init(**kwargs)
         for parg in pargs:
             if type(parg) is list:
                 #logmessage("DAEmailRecipientList: parg type is list")
@@ -3519,34 +3499,32 @@ class DAEmailRecipient(DAObject):
         if 'name' in kwargs:
             self.name = kwargs['name']
             del kwargs['name']
-        return super(DAEmailRecipient, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def email_address(self, include_name=None):
         """Returns a properly formatted e-mail address for the recipient."""
         if hasattr(self, 'empty') and self.empty:
             return ''
         if include_name is True or (include_name is not False and self.name is not None and self.name != ''):
             return('"' + nodoublequote(self.name) + '" <' + str(self.address) + '>')
-        return(text_type(self.address))
+        return(str(self.address))
     def exists(self):
         return hasattr(self, 'address')
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         if hasattr(self, 'name'):
-            name = text_type(self.name)
+            name = str(self.name)
         else:
-            name = u''
+            name = ''
         if hasattr(self, 'empty') and self.empty:
-            return u''
+            return ''
         if self.address == '' and name == '':
-            return u'EMAIL NOT DEFINED'
+            return 'EMAIL NOT DEFINED'
         if self.address == '' and name != '':
             return name
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return text_type(self.address)
+            return str(self.address)
         if name == '' and self.address != '':
-            return '[' + text_type(self.address) + '](mailto:' + text_type(self.address) + ')'
-        return '[' + text_type(name) + '](mailto:' + text_type(self.address) + ')'
+            return '[' + str(self.address) + '](mailto:' + str(self.address) + ')'
+        return '[' + str(name) + '](mailto:' + str(self.address) + ')'
 
 class DAEmail(DAObject):
     """An object type used to represent an e-mail that has been received
@@ -3554,9 +3532,7 @@ class DAEmail(DAObject):
 
     """
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return(u'This is an e-mail')
+        return('This is an e-mail')
 
 class DATemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
@@ -3578,18 +3554,16 @@ class DATemplate(DAObject):
                     self.decorations.append(decoration)
     def show(self, **kwargs):
         """Displays the contents of the template."""
-        return text_type(self)
-    def __unicode__(self):
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            #return text_type(self.content)
-            #return text_type(docassemble.base.filter.docx_template_filter(self.content))
-            return text_type(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc('docx_template', None)))
-        return(text_type(self.content))
+        return str(self)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+            #return str(self.content)
+            #return str(docassemble.base.filter.docx_template_filter(self.content))
+            return str(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc('docx_template', None)))
+        return(str(self.content))
 
 def table_safe(text):
-    text = text_type(text)
+    text = str(text)
     text = re.sub(r'[\n\r\|]', ' ', text)
     if re.match(r'[\-:]+', text):
         text = '  ' + text + '  '
@@ -3597,7 +3571,7 @@ def table_safe(text):
 
 def export_safe(text):
     if isinstance(text, DAObject):
-        text = text_type(text)
+        text = str(text)
     if isinstance(text, DAEmpty):
         text = None
     if isinstance(text, datetime.datetime):
@@ -3608,7 +3582,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     table_content = "\n"
     user_dict_copy = copy.copy(orig_user_dict)
     user_dict_copy.update(temp_vars)
-    #logmessage("i is " + text_type(user_dict_copy['i']))
+    #logmessage("i is " + str(user_dict_copy['i']))
     header_output = [table_safe(x.text(user_dict_copy)) for x in table_info.header]
     if table_info.is_editable and not editable:
         header_output.pop()
@@ -3713,46 +3687,44 @@ class DALazyTemplate(DAObject):
     @property
     def subject(self):
         if not hasattr(self, 'source_subject'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
         return self.source_subject.text(user_dict_copy).rstrip()
     @property
     def content(self):
         if not hasattr(self, 'source_content'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
         return self.source_content.text(user_dict_copy).rstrip()
     @property
     def decorations(self):
         if not hasattr(self, 'source_decorations'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
         return [dec.text(user_dict_copy).rstrip for dec in self.source_decorations]
     def show(self, **kwargs):
         """Displays the contents of the template."""
         if not hasattr(self, 'source_content'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
         user_dict_copy.update(kwargs)
         content = self.source_content.text(user_dict_copy).rstrip()
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             content = re.sub(r'\\_', r'\\\\_', content)
-            return text_type(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+            return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return content
-    def __unicode__(self):
+    def __str__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             content = self.content
             content = re.sub(r'\\_', r'\\\\_', content)
-            #return text_type(self.content)
-            #return text_type(docassemble.base.filter.docx_template_filter(self.content))
-            return text_type(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
-        return(text_type(self.content))
-    def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+            #return str(self.content)
+            #return str(docassemble.base.filter.docx_template_filter(self.content))
+            return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+        return(str(self.content))
 
 class DALazyTableTemplate(DALazyTemplate):
     """The class used for tables."""
@@ -3761,14 +3733,14 @@ class DALazyTableTemplate(DALazyTemplate):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return word("ERROR: you cannot insert a table into a .docx document")
         if kwargs.get('editable', True):
-            return text_type(self.content)
+            return str(self.content)
         if not hasattr(self, 'table_info'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         return text_of_table(self.table_info, self.userdict, self.tempvars, editable=False)
     @property
     def content(self):
         if not hasattr(self, 'table_info'):
-            raise LazyNameError("name '" + text_type(self.instanceName) + "' is not defined")
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         return text_of_table(self.table_info, self.userdict, self.tempvars)
     def export(self, filename=None, file_format=None, title=None, freeze_panes=True):
         if file_format is None:
@@ -3846,15 +3818,15 @@ def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including
     as code in a multiple-choice field."""
     if 'object_labeler' in kwargs:
-        object_labeler = lambda x: text_type(kwargs['object_labeler'](x))
+        object_labeler = lambda x: str(kwargs['object_labeler'](x))
     else:
-        object_labeler = text_type
+        object_labeler = str
     if 'help_generator' in kwargs:
-        help_generator = lambda x: text_type(kwargs['help_generator'](x))
+        help_generator = lambda x: str(kwargs['help_generator'](x))
     else:
         help_generator = None
     if 'image_generator' in kwargs:
-        image_generator = lambda x: text_type(kwargs['image_generator'](x))
+        image_generator = lambda x: str(kwargs['image_generator'](x))
     else:
         image_generator = None
     to_exclude = set()
@@ -3899,7 +3871,7 @@ def myb64quote(text):
 def setify(item, output=set()):
     if isinstance(item, DAObject) and hasattr(item, 'elements'):
         setify(item.elements, output)
-    elif isinstance(item, abc.Iterable) and not isinstance(item, string_types):
+    elif isinstance(item, abc.Iterable) and not isinstance(item, str):
         for subitem in item:
             setify(subitem, output)
     else:
@@ -3970,7 +3942,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
 
 def recurse_obj(the_object, recursive=True, use_objects=False):
     constructor = None
-    if isinstance(the_object, (string_types, bool, int, float)):
+    if isinstance(the_object, (str, bool, int, float)):
         return the_object
     if isinstance(the_object, list):
         if recursive:
@@ -4009,10 +3981,7 @@ def recurse_obj(the_object, recursive=True, use_objects=False):
                         module_name = docassemble.base.functions.this_thread.current_package + the_object['module']
                     else:
                         module_name = the_object['module']
-                    if PY2:
-                        new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
-                    else:
-                        new_module = __import__(module_name, globals(), locals(), [the_object['object']], 0)
+                    new_module = __import__(module_name, globals(), locals(), [the_object['object']], 0)
                     constructor = getattr(new_module, the_object['object'], None)
             if not constructor:
                 raise SystemError('recurse_obj: found an object for which the object declaration, ' + str(the_object['object']) + ' could not be found')
@@ -4063,9 +4032,7 @@ def recurse_obj(the_object, recursive=True, use_objects=False):
 class DALink(DAObject):
     """An object type Represents a hyperlink to a URL."""
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.show())
+        return str(self.show())
     def show(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.misc.get('docx_template', None))
@@ -4074,7 +4041,7 @@ class DALink(DAObject):
 
 class DAContext(DADict):
     def init(self, *pargs, **kwargs):
-        super(DAContext, self).init()
+        super().init()
         self.pargs = pargs
         self.kwargs = kwargs
         if len(pargs) == 1:
@@ -4086,19 +4053,17 @@ class DAContext(DADict):
         for key, val in kwargs.items():
             self.elements[key] = val
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         if docassemble.base.functions.this_thread.evaluation_context in ('docx', 'pdf', 'pandoc'):
             if docassemble.base.functions.this_thread.evaluation_context in self.elements:
-                return text_type(self.elements[docassemble.base.functions.this_thread.evaluation_context])
-            return text_type(self.elements['document'])
+                return str(self.elements[docassemble.base.functions.this_thread.evaluation_context])
+            return str(self.elements['document'])
         else:
-            return text_type(self.elements['question'])
+            return str(self.elements['question'])
     def __repr__(self):
-        output = text_type('DAContext(' + repr(self.instanceName) + ', ')
+        output = str('DAContext(' + repr(self.instanceName) + ', ')
         if len(self.elements):
             output += ', '.join(key + '=' + repr(val) for key, val in self.elements.items())
-        output += text_type(')')
+        output += str(')')
 
 def objects_from_structure(target, root=None):
     if isinstance(target, dict):
@@ -4124,7 +4089,7 @@ def objects_from_structure(target, root=None):
         if root:
             new_list._set_instance_name_recursively(root)
         return new_list
-    if isinstance(target, (bool, float, int, NoneType, string_types)):
+    if isinstance(target, (bool, float, int, NoneType, str)):
         return target
     else:
         raise DAError("objects_from_structure: expected a standard type, but found a " + str(type(target)))

@@ -1,4 +1,3 @@
-from six import text_type
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from flask import make_response, redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
@@ -38,9 +37,9 @@ def privilege_list():
 """
     for role in db.session.query(Role).order_by(Role.name):
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + text_type(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + 'danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + 'danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
-            output += '        <tr><td>' + text_type(role.name) + '</td><td>&nbsp;</td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
 
     output += """\
       </tbody>
@@ -71,11 +70,11 @@ def user_list():
             high_priv = 'user'
         name_string = ''
         if user.first_name:
-            name_string += text_type(user.first_name) + " "
+            name_string += str(user.first_name) + " "
         if user.last_name:
-            name_string += text_type(user.last_name)
+            name_string += str(user.last_name)
         if name_string:
-            name_string = text_type(name_string)
+            name_string = str(name_string)
         active_string = ''
         if user.email is None:
             user_indicator = user.nickname
@@ -153,9 +152,9 @@ def edit_user_profile_page(id):
             return redirect(url_for('user_list'))
     the_role_id = list()
     for role in user.roles:
-        the_role_id.append(text_type(role.id))
+        the_role_id.append(str(role.id))
     if len(the_role_id) == 0:
-        the_role_id = [text_type(Role.query.filter_by(name='user').first().id)]
+        the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, obj=user, role_id=the_role_id)
     if request.method == 'POST' and form.cancel.data:
         flash(word('The user profile was not changed.'), 'success')
@@ -168,7 +167,7 @@ def edit_user_profile_page(id):
         privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
-    if text_type(form.timezone.data) == 'None' or text_type(form.timezone.data) == '':
+    if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
     if user.otp_secret is None:
         form.uses_mfa.data = False
@@ -237,7 +236,7 @@ def user_profile_page():
         form = UserProfileForm(request.form, obj=current_user)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
-    if text_type(form.timezone.data) == 'None' or text_type(form.timezone.data) == '':
+    if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
     if request.method == 'POST' and form.validate():
         form.populate_obj(current_user)
@@ -267,10 +266,10 @@ def invite():
 
     user_role = Role.query.filter_by(name='user').first()
     invite_form = MyInviteForm(request.form)
-    invite_form.role_id.choices = [(text_type(r.id), text_type(r.name)) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
-    invite_form.role_id.default = text_type(user_role.id)
-    if text_type(invite_form.role_id.data) == 'None':
-        invite_form.role_id.data = text_type(user_role.id)
+    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
+    invite_form.role_id.default = str(user_role.id)
+    if str(invite_form.role_id.data) == 'None':
+        invite_form.role_id.data = str(user_role.id)
     if request.method=='POST' and invite_form.validate():
         email_addresses = list()
         for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
@@ -306,17 +305,17 @@ def invite():
             db.session.commit()
             #docassemble.webapp.daredis.clear_user_cache()
             try:
-                logmessage("Trying to send e-mail to " + text_type(user_invite.email))
+                logmessage("Trying to send e-mail to " + str(user_invite.email))
                 emails.send_invite_email(user_invite, accept_invite_link)
             except Exception as e:
                 try:
-                    logmessage("Failed to send e-mail: " + text_type(e))
+                    logmessage("Failed to send e-mail: " + str(e))
                 except:
                     logmessage("Failed to send e-mail")
                 db.session.delete(user_invite)
                 db.session.commit()
                 #docassemble.webapp.daredis.clear_user_cache()
-                flash(word('Unable to send e-mail.  Error was: ') + text_type(e), 'error')
+                flash(word('Unable to send e-mail.  Error was: ') + str(e), 'error')
                 has_error = True
         if has_error:
             return redirect(url_for('invite'))
@@ -335,10 +334,10 @@ def invite():
 @roles_required('admin')
 def user_add():
     user_role = Role.query.filter_by(name='user').first()
-    add_form = UserAddForm(request.form, role_id=[text_type(user_role.id)])
+    add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
     add_form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
     add_form.role_id.default = user_role.id
-    if text_type(add_form.role_id.data) == 'None':
+    if str(add_form.role_id.data) == 'None':
         add_form.role_id.data = user_role.id
     if request.method == 'POST' and add_form.validate():
         user, user_email = app.user_manager.find_user_by_email(add_form.email.data)

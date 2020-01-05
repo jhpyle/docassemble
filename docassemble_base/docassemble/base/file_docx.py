@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 import re
 import os
 from copy import deepcopy
-from six import string_types, text_type, PY2
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
 from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
@@ -16,7 +14,6 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
 import PyPDF2
 import codecs
-from io import open
 import time
 import stat
 
@@ -57,7 +54,7 @@ def image_for_docx(fileref, question, tpl, width=None):
 def transform_for_docx(text, question, tpl, width=None):
     if type(text) in (int, float, bool, NoneType):
         return text
-    text = text_type(text)
+    text = str(text)
     # m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
     # if m:
     #     amount = m.group(2)
@@ -98,8 +95,6 @@ class InlineHyperlink(object):
     def _insert_link(self):
         ref = self.tpl.docx._part.relate_to(self.url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
         return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, html_escape(self.anchor_text))
-    def __unicode__(self):
-        return self._insert_link()
     def __str__(self):
         return self._insert_link()
 
@@ -212,35 +207,33 @@ class SoupParser(object):
         self.tpl = tpl
     def new_paragraph(self):
         if self.still_new:
-            # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
+            # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + str(self.indentation))
             self.current_paragraph['params']['style'] = self.style
             self.current_paragraph['params']['indentation'] = self.indentation
             return
-        # logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
+        # logmessage("new_paragraph where style is " + self.style + " and indentation is " + str(self.indentation))
         self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation), runs=[RichText('')])
         self.paragraphs.append(self.current_paragraph)
         self.run = self.current_paragraph['runs'][-1]
         self.still_new = True
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         output = ''
         list_number = 1
         for para in self.paragraphs:
-            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
+            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + str(para['params']['indentation']))
             output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
             if para['params']['style'] in ('ul', 'ol', 'blockquote'):
-                output += '<w:ind w:left="' + text_type(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
+                output += '<w:ind w:left="' + str(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
             output += '<w:rPr></w:rPr></w:pPr>'
             if para['params']['style'] == 'ul':
-                output += text_type(RichText("•\t"))
+                output += str(RichText("•\t"))
             if para['params']['style'] == 'ol':
-                output += text_type(RichText(text_type(list_number) + ".\t"))
+                output += str(RichText(str(list_number) + ".\t"))
                 list_number += 1
             else:
                 list_number = 1
             for run in para['runs']:
-                output += text_type(run)
+                output += str(run)
             output += '</w:p>'
         return output
     def start_link(self, url):
@@ -258,10 +251,10 @@ class SoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
                 self.still_new = False
             elif isinstance(part, Tag):
-                # logmessage("Part name is " + text_type(part.name))
+                # logmessage("Part name is " + str(part.name))
                 if part.name == 'p':
                     self.new_paragraph()
                     self.traverse(part)
@@ -353,16 +346,14 @@ class InlineSoupParser(object):
         if self.style == 'ul':
             self.run.add("•\t")
         if self.style == 'ol':
-            self.run.add(text_type(self.list_number) + ".\t")
+            self.run.add(str(self.list_number) + ".\t")
             self.list_number += 1
         else:
             self.list_number = 1
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         output = ''
         for run in self.runs:
-            output += text_type(run)
+            output += str(run)
         return output
     def start_link(self, url):
         ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
@@ -377,7 +368,7 @@ class InlineSoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
             elif isinstance(part, Tag):
                 if part.name in ('p', 'blockquote'):
                     self.new_paragraph()
@@ -441,7 +432,7 @@ def inline_markdown_to_docx(text, question, tpl):
     parser = InlineSoupParser(tpl)
     for elem in soup.find_all(recursive=False):
         parser.traverse(elem)
-    output = text_type(parser)
+    output = str(parser)
     # logmessage(output)
     return docassemble.base.filter.docx_template_filter(output, question=question)
 
@@ -454,7 +445,7 @@ def markdown_to_docx(text, question, tpl):
         parser = SoupParser(tpl)
         for elem in soup.find_all(recursive=False):
             parser.traverse(elem)
-        output = text_type(parser)
+        output = str(parser)
         # logmessage(output)
         return docassemble.base.filter.docx_template_filter(output, question=question)
     else:
@@ -474,7 +465,7 @@ def pdf_pages(file_info, width):
         except:
             file_info['pages'] = 1
     max_pages = 1 + int(file_info['pages'])
-    formatter = '%0' + text_type(len(text_type(max_pages))) + 'd'
+    formatter = '%0' + str(len(str(max_pages))) + 'd'
     for page in range(1, max_pages):
         page_file = dict()
         test_path = file_info['path'] + 'page-in-progress'
@@ -489,7 +480,7 @@ def pdf_pages(file_info, width):
         if not os.path.isfile(page_file['fullpath']):
             server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
         if os.path.isfile(page_file['fullpath']):
-            output += text_type(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+            output += str(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
         else:
             output += "[Error including page image]"
         output += ' '

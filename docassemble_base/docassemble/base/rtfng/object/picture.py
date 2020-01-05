@@ -1,5 +1,4 @@
 from binascii import hexlify
-from six import text_type, PY2
 
 from docassemble.base.rtfng.document.base import RawCode
 
@@ -84,12 +83,8 @@ _PNG_HEADER = b'\x89\x50\x4e'
 def _get_png_dimensions( data ) :
     if data[0:3] != _PNG_HEADER :
         raise Exception( 'Invalid PNG image' )
-    if PY2:
-        width  = (ord(data[18]) * 256) + (ord(data[19]))
-        height = (ord(data[22]) * 256) + (ord(data[23]))
-    else:
-        width  = (data[18] * 256) + (data[19])
-        height = (data[22] * 256) + (data[23])
+    width  = (data[18] * 256) + (data[19])
+    height = (data[22] * 256) + (data[23])
     return width, height
 
 

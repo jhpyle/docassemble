@@ -70,7 +70,7 @@ class Bank(Person, SQLObject):
     # This indicates that the human-readable unique identifier for the table is the column "routing"
     _uid = 'routing'
     def init(self, *pargs, **kwargs):
-        super(Bank, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         # This runs necessary SQLObject initialization code for the instance
         self.sql_init()
     # The db_get function specifies how to get attributes from the DAObject for purposes of setting SQL column values
@@ -130,7 +130,7 @@ class Customer(Individual, SQLObject):
     _required = ['first_name']
     _uid = 'ssn'
     def init(self, *pargs, **kwargs):
-        super(Customer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.sql_init()
     def db_get(self, column):
         if column == 'ssn':
@@ -190,7 +190,7 @@ class BankCustomer(DAObject, SQLObjectRelationship):
     _parent = [Bank, 'bank', 'bank_id']
     _child = [Customer, 'customer', 'customer_id']
     def init(self, *pargs, **kwargs):
-        super(BankCustomer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
     def db_get(self, column):
         if column == 'bank_id':

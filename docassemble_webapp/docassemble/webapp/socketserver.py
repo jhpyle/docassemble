@@ -6,7 +6,6 @@ eventlet.sleep()
 sys.stderr.write("3\n")
 eventlet.monkey_patch()
 sys.stderr.write("4\n")
-from six import string_types, text_type, PY2
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
@@ -23,10 +22,7 @@ import redis
 import json
 import datetime
 import pytz
-if PY2:
-    import cPickle as pickle
-else:
-    import pickle
+import pickle
 import re
 import time
 import random
@@ -434,7 +430,7 @@ def get_dict(yaml_filename):
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + text_type(err) + '\n')
+        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + str(err) + '\n')
         return None
     #release_lock(session_id, yaml_filename)
     return user_dict
@@ -456,7 +452,7 @@ def get_dict_encrypt(yaml_filename):
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + text_type(err) + '\n')
+        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + str(err) + '\n')
         return None, None
     #release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
@@ -830,7 +826,7 @@ def monitor_chat_message(data):
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
             #release_lock(session_id, yaml_filename)
-            sys.stderr.write("monitor_chat_message: could not get dictionary: " + text_type(err) + "\n")
+            sys.stderr.write("monitor_chat_message: could not get dictionary: " + str(err) + "\n")
             return
         #release_lock(session_id, yaml_filename)
         nowtime = datetime.datetime.utcnow()
@@ -895,7 +891,7 @@ def monitor_chat_log(data):
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
             #release_lock(session_id, yaml_filename)
-            sys.stderr.write("monitor_chat_log: could not get dictionary: " + text_type(err) + "\n")
+            sys.stderr.write("monitor_chat_log: could not get dictionary: " + str(err) + "\n")
             return
         #release_lock(session_id, yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']

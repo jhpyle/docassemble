@@ -1,5 +1,4 @@
 import yaml
-from six import string_types, text_type, PY2
 import os
 import re
 import sys
@@ -7,7 +6,6 @@ import httplib2
 import socket
 import pkg_resources
 from docassemble.base.generate_key import random_string
-from io import open
 # def trenv(key):
 #     if os.environ[key] == 'null':
 #         return None
@@ -32,7 +30,7 @@ errors = list()
 env_messages = list()
 
 def env_true_false(var):
-    value = text_type(os.getenv(var, 'false')).lower().strip()
+    value = str(os.getenv(var, 'false')).lower().strip()
     return value == 'true'
 
 def env_exists(var):
@@ -40,7 +38,7 @@ def env_exists(var):
     return value is not None
 
 def env_translate(var):
-    value = text_type(os.getenv(var)).strip()
+    value = str(os.getenv(var)).strip()
     if value in ('true', 'True'):
         return True
     if value in ('false', 'False'):
@@ -58,7 +56,7 @@ def override_config(the_config, messages, key, var, pre_key=None):
     if value is None and (key in ('redis', 'rabbitmq', 'log server') or (pre_key == 'db' and key == 'host')):
         return
     if pre_key is None:
-        if key in the_config and text_type(the_config[key]) != text_type(value):
+        if key in the_config and str(the_config[key]) != str(value):
             messages.append("The value of configuration key %s has been replaced with %s based on the value of environment variable %s" % (key, value, var))
         elif key not in the_config:
             messages.append("The value of configuration key %s has been set to %s based on the value of environment variable %s" % (key, value, var))
@@ -66,7 +64,7 @@ def override_config(the_config, messages, key, var, pre_key=None):
     else:
         if pre_key not in the_config:
             the_config[pre_key] = dict()
-        if key in the_config[pre_key] and text_type(the_config[pre_key][key]) != text_type(value):
+        if key in the_config[pre_key] and str(the_config[pre_key][key]) != str(value):
             messages.append("The value of configuration key %s in %s has been replaced with %s based on the value of environment variable %s" % (key, pre_key, value, var))
         elif key not in the_config[pre_key]:
             messages.append("The value of configuration key %s in %s has been set to %s based on the value of environment variable %s" % (key, pre_key, value, var))
@@ -125,11 +123,8 @@ def load(**kwargs):
             daconfig[key] = val
     daconfig['config file'] = filename
     if 'modules' not in daconfig:
-        if PY2:
-            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local')
-        else:
-            daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + text_type(sys.version_info.major) + '.' + text_type(sys.version_info.minor))
-    daconfig['python version'] = text_type(pkg_resources.get_distribution("docassemble.base").version)
+        daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
+    daconfig['python version'] = str(pkg_resources.get_distribution("docassemble.base").version)
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
         with open(version_file, 'rU', encoding='utf-8') as fp:
@@ -162,7 +157,7 @@ def load(**kwargs):
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
         for item in daconfig['administrative interviews']:
-            if isinstance(item, string_types):
+            if isinstance(item, str):
                 new_admin_interviews.append(dict(interview=item))
             else:
                 new_admin_interviews.append(item)
@@ -175,7 +170,7 @@ def load(**kwargs):
             config_error("Invalid session lifetime seconds.")
             del daconfig['session lifetime seconds']
     if 'page after login' in daconfig:
-        if isinstance(daconfig['page after login'], string_types):
+        if isinstance(daconfig['page after login'], str):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]
         if isinstance(daconfig['page after login'], dict):
             daconfig['page after login'] = [daconfig['page after login']]
@@ -184,7 +179,7 @@ def load(**kwargs):
             for item in daconfig['page after login']:
                 if isinstance(item, dict):
                     for key, val in item.items():
-                        if isinstance(key, string_types) and isinstance(val, string_types):
+                        if isinstance(key, str) and isinstance(val, str):
                             page_after_login.append((key, val))
                         else:
                             config_error('page after login keys and values must be strings')
@@ -212,7 +207,7 @@ def load(**kwargs):
     if 'cross site domains' in daconfig:
         if isinstance(daconfig['cross site domains'], list):
             for item in daconfig['cross site domains']:
-                if not isinstance(item, string_types):
+                if not isinstance(item, str):
                     config_error("The configuration directive cross site domains must be a list of strings.")
                     del daconfig['cross site domains']
                     break

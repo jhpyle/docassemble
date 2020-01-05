@@ -19,8 +19,6 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask_login import current_user
 from sqlalchemy import or_, and_
 import docassemble.base.config
-from io import open
-from six import text_type
 import sys
 from docassemble.base.generate_key import random_lower_string
 
@@ -62,7 +60,7 @@ def url_if_exists(file_reference, **kwargs):
 
 def get_version_parameter(package):
     try:
-        return '?v=' + text_type(importlib.import_module(package).__version__)
+        return '?v=' + str(importlib.import_module(package).__version__)
     except:
         if package.startswith('docassemble.playground'):
             return '?v=' + random_lower_string(6)

@@ -42,11 +42,9 @@ class Court(DAObject):
     def init(self, *pargs, **kwargs):
         if 'jurisdiction' not in kwargs:
             self.jurisdiction = list()
-        return super(Court, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return(text_type(self.name))
+        return(str(self.name))
     def in_the_court(self, **kwargs):
         """Returns the top line of the first page of a pleading filed in the
         court.
@@ -76,11 +74,9 @@ class Case(DAObject):
         self.is_solo_action = False
         self.state = None
         self.action_type = 'plaintiff defendant'
-        return super(Case, self).init(*pargs, **kwargs)
-    def __unicode__(self):
-        return text_type(self.case_id)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+        return str(self.case_id)
     def set_action_type(self, the_value):
         """Initializes attributes for the different types of parties in the
         case.
@@ -153,7 +149,7 @@ class Case(DAObject):
         result = run_hook('case', self, 'case_id_in_caption', self.court.jurisdiction, **kwargs)
         if result is None:
             if hasattr(self, 'case_id'):
-                return word('Case No.') + " " + self.case.case_id
+                return word('Case No.') + " " + self.case_id
             else:
                 return word('Case No.')
         return result
@@ -211,11 +207,9 @@ class Case(DAObject):
 class Document(DAObject):
     """This is a base class for different types of documents."""
     def init(self, *pargs, **kwargs):
-        return super(Document, self).init(*pargs, **kwargs)
-    def __unicode__(self):
-        return text_type(self.title)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+        return str(self.title)
 
 class LegalFiling(Document):
     """Represents a document filed in court."""
@@ -255,7 +249,7 @@ class PartyList(DAList):
     type for items in the list is Individual."""
     def init(self, *pargs, **kwargs):
         self.object_type = Individual
-        return super(PartyList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
 
 def us_districts(bankruptcy=False):
     if bankruptcy:

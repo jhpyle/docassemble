@@ -1,5 +1,4 @@
 from docassemble.base.config import daconfig
-from six import string_types, text_type
 
 def alchemy_url(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
@@ -25,7 +24,7 @@ def alchemy_url(db_config):
     if dbhost is not None:
         alchemy_connect_string += '@' + dbhost
         if dbport is not None:
-            alchemy_connect_string += ':' + text_type(dbport)
+            alchemy_connect_string += ':' + str(dbport)
     else:
         alchemy_connect_string += '@'
     if not dbprefix.startswith('oracle'):

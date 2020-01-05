@@ -1,5 +1,4 @@
 import re
-from six import string_types, text_type
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
@@ -14,7 +13,7 @@ class DAError(Exception):
         self.value = value
         self.error_code = code
     def __str__(self):
-        return text_type(self.value)
+        return str(self.value)
 
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
@@ -35,7 +34,7 @@ class LazyNameError(NameError):
     pass
 
 def invalid_variable_name(varname):
-    if not isinstance(varname, string_types):
+    if not isinstance(varname, str):
         return True
     if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
         return True
@@ -81,7 +80,7 @@ class ForcedNameError(NameError):
                             if type(the_dict) is not dict:
                                 raise DAError("force_ask: a set command must refer to a list of dicts.")
                             for the_var, the_val in the_dict.items():
-                                if not isinstance(the_var, string_types):
+                                if not isinstance(the_var, str):
                                     raise DAError("force_ask: a set command must refer to a list of dicts with keys as variable names.  ")
                                 the_var_stripped = the_var.strip()
                             if invalid_variable_name(the_var_stripped):
@@ -92,7 +91,7 @@ class ForcedNameError(NameError):
                         if type(arg['follow up']) is not list:
                             raise DAError("force_ask: the follow up statement must refer to a list.")
                         for var in arg['follow up']:
-                            if not isinstance(var, string_types):
+                            if not isinstance(var, str):
                                 raise DAError("force_ask: invalid variable name " + repr(var) + " in follow up.")
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
@@ -105,7 +104,7 @@ class ForcedNameError(NameError):
                             raise DAError("force_ask: the " + command + " statement must refer to a list.  " + repr(data))
                         clean_list = []
                         for undef_var in arg[command]:
-                            if not isinstance(undef_var, string_types):
+                            if not isinstance(undef_var, str):
                                 raise DAError("force_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
                             undef_saveas = undef_var.strip()
                             if invalid_variable_name(undef_saveas):
@@ -144,7 +143,7 @@ class MandatoryQuestion(Exception):
     def __init__(self):
         self.value = 'Mandatory Question'
     def __str__(self):
-        return text_type(self.value)
+        return str(self.value)
 
 class QuestionError(Exception):
     def __init__(self, *pargs, **kwargs):

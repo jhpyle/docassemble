@@ -50,13 +50,6 @@
       </form>
     </a>
   </li>
-  {%- if current_file != '' %}
-  <li class="nav-item" role="presentation">
-    <a class="nav-link" tabindex="6" href="{{ url_for('playground_download', current_project=current_project, userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
-      <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
-    </a>
-  </li>
-  {%- endif %}
   {%- if use_gd %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', project=current_project, next=url_for('playground_page', project=current_project)) }}" title="{{ word('Sync with Google Drive') }}">
@@ -83,7 +76,7 @@
   <div class="row mb-1 mt-1">
     <div class="col-lg-6">
       {{ render_addon_field(form.playground_name, tabindex=20) }}
-    </div>
+    </div>        
     <div class="col-lg-6">
       {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
     </div>
@@ -98,8 +91,11 @@
     {%- if use_od %}
     <a tabindex="101" id="daRunSyncOD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }}" ><i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
     {%- endif %}
+
+    <a tabindex="102" target="_blank" href="{{ url_for('playground_download', current_project=current_project, userid=userid, filename=current_file) }}" class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" >{{ word("Download") }}</a>
     
     {{ render_submit_field(form.delete, id='daDelete', class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], tabindex="110") }}
+
     {% if interview_path %}
     <a tabindex="120" title="Right-click to copy link" class="badge badge-secondary da-example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
     {% endif %}

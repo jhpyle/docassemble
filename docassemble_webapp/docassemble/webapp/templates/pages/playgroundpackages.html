@@ -40,13 +40,6 @@
                   {%- endif %}
                 </div>
               </li>
-              {%- if current_file != '' %}
-              <li class="nav-item">
-                <a tabindex="6" class="nav-link" href="{{ url_for('create_playground_package', project=current_project, package=current_file) }}" title="{{ word('Download the current package') }}">
-                  <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
-                </a>
-              </li>
-              {%- endif %}
               <li class="nav-item">
                 <a tabindex="5" class="nav-link" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
                   <form action="{{ url_for('playground_packages', project=current_project) }}" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
@@ -165,6 +158,7 @@
                 {{ render_submit_field(form.github, id="daGitHub", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
                 {{ render_submit_field(form.cancel, id="daCancelGitHub", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
+                <a class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" href="{{ url_for('create_playground_package', project=current_project, package=current_file) }}" title="{{ word('Download the current package') }}">{{ word('Download') }}</a>
                 {{ render_submit_field(form.delete, id="daDelete", class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
                 <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages', project=current_project) }}">{{ word('Cancel') }}</a>

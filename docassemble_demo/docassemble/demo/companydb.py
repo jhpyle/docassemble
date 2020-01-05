@@ -105,7 +105,7 @@ class Company(Person, SQLObject):
     _required = ['name']
     _uid = 'name'
     def init(self, *pargs, **kwargs):
-        super(Company, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.sql_init()
     def db_get(self, column):
         if column == 'name':
@@ -124,7 +124,7 @@ class Shareholder(Individual, SQLObject):
     _required = ['first_name', 'ssn']
     _uid = 'ssn'
     def init(self, *pargs, **kwargs):
-        super(Shareholder, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         # The attribute "active" is not stored in SQL.  The default is True but it is
         # set to False by the db_set() function if the value in SQL is null.
         self.active = True
@@ -209,7 +209,7 @@ class CompanyShareholder(DAObject, SQLObjectRelationship):
     _parent = [Company, 'company', 'company_id']
     _child = [Shareholder, 'shareholder', 'shareholder_id']
     def init(self, *pargs, **kwargs):
-        super(CompanyShareholder, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
 
 # Python class for a lawsuit
@@ -218,7 +218,7 @@ class Lawsuit(Individual, SQLObject):
     _session = DBSession
     _required = ['docket_number', 'court']
     def init(self, *pargs, **kwargs):
-        super(Lawsuit, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         # A lawsuit needs a plaintiff, so the "plaintiff" attribute is
         # initialized when the object itself is initialized.
         self.initializeAttribute('plaintiff', Individual)
@@ -271,7 +271,7 @@ class CompanyLawsuit(DAObject, SQLObjectRelationship):
     _parent = [Company, 'company', 'company_id']
     _child = [Lawsuit, 'lawsuit', 'lawsuit_id']
     def init(self, *pargs, **kwargs):
-        super(CompanyLawsuit, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
 
 # Python class for a document in a lawsuit
@@ -281,7 +281,7 @@ class Document(Thing, SQLObject):
     _required = ['name', 'upload_id', 'filename', 'extension', 'mimetype', 'upload_id']
     _uid = 'upload_id'
     def init(self, *pargs, **kwargs):
-        super(Document, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.sql_init()
     def db_get(self, column):
         if column == 'name':
@@ -351,5 +351,5 @@ class LawsuitDocument(DAObject, SQLObjectRelationship):
     _parent = [Lawsuit, 'lawsuit', 'lawsuit_id']
     _child = [Document, 'document', 'document_id']
     def init(self, *pargs, **kwargs):
-        super(LawsuitDocument, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)

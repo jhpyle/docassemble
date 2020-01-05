@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.72] - 2020-01-05
+### Added
+- The `admin full width` Configuration directive.
+- The `wrap lines in playground` Configuration directive.
+### Fixed
+- Bug in `legal.py`.
+- Not safe to concatenate a `DAList` and a `DAEmpty`.
+
 ## [0.5.71] - 2020-01-05
 ### Changed
 - Discontinued support for Python 2.7.

@@ -1,10 +1,6 @@
 import os
 import os.path
-from six import string_types, text_type, PY2, PY3
-if PY2:
-    import subprocess32 as subprocess
-else:
-    import subprocess
+import subprocess
 import docassemble.base.filter
 import docassemble.base.functions
 import tempfile
@@ -18,7 +14,6 @@ from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_calculations
-from io import open
 import mimetypes
 from subprocess import call, check_output
 import convertapi
@@ -152,14 +147,9 @@ class MyPandoc(object):
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
         if not re.search(r'[^\s]', self.input_content):
-            self.input_content = u"\\textbf{}\n"
-        if PY3:
-            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".md", delete=False, encoding='utf-8')
-            temp_file.write(self.input_content)
-        else:
-            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".md", delete=False)
-            with open(temp_file.name, 'w', encoding='utf-8') as fp:
-                fp.write(self.input_content)
+            self.input_content = "\\textbf{}\n"
+        temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".md", delete=False, encoding='utf-8')
+        temp_file.write(self.input_content)
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_extension), delete=False)
         temp_outfile.close()

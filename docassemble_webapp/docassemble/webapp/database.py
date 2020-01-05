@@ -3,7 +3,6 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 from docassemble.base.config import daconfig
-from six import string_types, text_type
 
 if 'db' not in daconfig:
     daconfig['db'] = dict()
@@ -41,7 +40,7 @@ else:
 if dbhost is not None:
     alchemy_connect_string += '@' + dbhost
     if dbport is not None:
-        alchemy_connect_string += ':' + text_type(dbport)
+        alchemy_connect_string += ':' + str(dbport)
 else:
     alchemy_connect_string += '@'
 if not dbprefix.startswith('oracle'):
