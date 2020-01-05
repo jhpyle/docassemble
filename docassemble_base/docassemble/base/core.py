@@ -950,6 +950,8 @@ class DAList(DAObject):
         return DAEmpty()
     def __add__(self, other):
         self._trigger_gather()
+        if isinstance(other, DAEmpty):
+            return self
         if isinstance(other, DAList):
             other._trigger_gather()
             the_list = DAList(elements=self.elements + other.elements, gathered=True, auto_gather=False)
@@ -2723,6 +2725,8 @@ class DASet(DAObject):
         self._trigger_gather()
         return self.elements.__hash__()
     def __add__(self, other):
+        if isinstance(other, DAEmpty):
+            return self
         if isinstance(other, DASet):
             return self.elements + other.elements
         return self.elements + other

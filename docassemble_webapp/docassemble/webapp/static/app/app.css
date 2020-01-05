@@ -2224,3 +2224,13 @@ tr:first-child .datableup, tr:last-child .databledown {
 .navbar .dropdown .dropdown-toggle {
     cursor: pointer;
 }
+
+button.da-wrap-toggle {
+    float: right;
+}
+
+.da-wrap-toggle svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+}

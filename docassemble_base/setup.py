@@ -55,6 +55,7 @@ else:
 
 setup(name='docassemble.base',
       version='0.5.70',
+      python_requires='>=3.5',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),
       long_description_content_type='text/markdown',

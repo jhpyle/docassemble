@@ -153,7 +153,7 @@ class Case(DAObject):
         result = run_hook('case', self, 'case_id_in_caption', self.court.jurisdiction, **kwargs)
         if result is None:
             if hasattr(self, 'case_id'):
-                return word('Case No.') + " " + self.case.case_id
+                return word('Case No.') + " " + self.case_id
             else:
                 return word('Case No.')
         return result
