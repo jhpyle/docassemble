@@ -608,6 +608,8 @@ stripe secret key: sk_test_YW41CYyivW0Vo7EN0mFD5i4P01ZLeQAPS8
 The `stripe public key` is the "publishable key."  The `stripe secret
 key` is the "secret key."
 
+Confirm that you have the Stripe package installed by checking the list of packages under "Package Management". If Stripe is not listed, follow the directions for [installing a package].
+
 Create a module file called `dastripe.py` with the following contents:
 
 {% highlight python %}
@@ -898,6 +900,7 @@ should only be considered a starting point.  The advantage of this
 design is that it keeps a lot of the complexity of payment processing
 out of the interview [YAML] and hides it in the module.
 
+[installing a package]: {{ site.baseurl }}/docs/packages.html#installing
 [Stripe]: https://stripe.com/
 [testing card number]: https://stripe.com/docs/testing#cards
 [supported accounts and settlement currencies]: https://stripe.com/docs/payouts#supported-accounts-and-settlement-currencies
