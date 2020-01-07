@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.74] - 2020-01-06
+### Fixed
+- Error when checkbox values are not strings.
+
 ## [0.5.73] - 2020-01-05
 ### Fixed
 - Error in watchdog process launch.

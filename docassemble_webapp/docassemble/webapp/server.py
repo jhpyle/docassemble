@@ -117,9 +117,9 @@ extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 #match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 #match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile('\[B?\'[^\]]*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[B?\'[^\]]*\'\])$')
-match_inside_brackets = re.compile('\[(B?)\'([^\]]*)\'\]')
+match_brackets = re.compile('\[[BR]?\'[^\]]*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[[BR]?\'[^\]]*\'\])$')
+match_inside_brackets = re.compile('\[([BR]?)\'([^\]]*)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]*')
 valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]*')
 
@@ -2088,7 +2088,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
     return
 
 def process_bracket_expression(match):
-    if match.group(1) == 'B':
+    if match.group(1) in ('B', 'R'):
         try:
             inner = codecs.decode(repad(bytearray(match.group(2), encoding='utf-8')), 'base64').decode('utf-8')
         except:
@@ -5902,7 +5902,7 @@ def index(action_argument=None):
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
-                if b_match.group(1) == 'B':
+                if b_match.group(1) in ('B', 'R'):
                     try:
                         bracket_expression = from_safeid(b_match.group(2))
                     except:
@@ -9195,6 +9195,7 @@ def index(action_argument=None):
         }
         if ($("input[name='_checkboxes']").length){
           var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
+          var pattRaw = new RegExp(/\[R['"][^\]]*['"]\]$/);
           the_hash = $.parseJSON(atob($("input[name='_checkboxes']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
@@ -9218,6 +9219,24 @@ def index(action_argument=None):
                 daVarLookupRev[btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '')] = btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
                 daVarLookup[btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
                 daVarLookup[btoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+              }
+              else if (pattRaw.test(baseName)){
+                bracketPart = checkboxName.replace(/^.*(\[R?['"][^\]]*['"]\])$/, "$1");
+                checkboxName = checkboxName.replace(/^.*\[R?['"]([^\]]*)['"]\]$/, "$1");
+                baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                var transBaseName = baseName;
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
+                   transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
+                }
+                var convertedName;
+                try {
+                  convertedName = atob(checkboxName);
+                }
+                catch (e) {
+                  continue;
+                }
+                daVarLookupRev[btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '')] = btoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '');
+                daVarLookup[btoa(baseName + '[' + convertedName + ']').replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
               }
             }
           }
