@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.74](https://github.com/jhpyle/docassemble/releases/tag/v0.5.74) - 2020-01-06
+
+### Fixed
+- Error when checkbox values are not strings.
+
 ## [0.5.73](https://github.com/jhpyle/docassemble/releases/tag/v0.5.73) - 2020-01-05
 
 ### Fixed

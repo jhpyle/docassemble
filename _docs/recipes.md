@@ -608,7 +608,7 @@ stripe secret key: sk_test_YW41CYyivW0Vo7EN0mFD5i4P01ZLeQAPS8
 The `stripe public key` is the "publishable key."  The `stripe secret
 key` is the "secret key."
 
-Create a module file called `dastripe.py` with the following contents:
+Create a Python module called `dastripe.py` with the following contents:
 
 {% highlight python %}
 import stripe
@@ -742,7 +742,8 @@ class DAStripe(DAObject):
     prevent_going_back()
 {% endhighlight %}
 
-Create a [YAML] file with the following contents:
+Create an interview [YAML] file (called, e.g., `teststripe.yml`) with
+the following contents:
 
 {% highlight yaml %}
 modules:
@@ -829,9 +830,8 @@ subquestion: |
   ${ favorite_fruit }.
 {% endhighlight %}
 
-Test the interview with a [testing card number].  When you are
-satisfied that it works, you can set your `stripe public key` and
-`stripe secret key` to your "live" [Stripe] API keys.
+Test the interview with a [testing card number] and adapt it to your
+particular use case.
 
 The attributes of the `DAStripe` object (known as `payment` in this
 example) that can be set are:
@@ -879,24 +879,45 @@ passed through `word()`, so you can use the `words` translation system
 to translate it.
 
 If the payment is not successful, the user will see the error message
-reported by [Stripe], followed by the value of `request.error_message`.
-The value of `request.error_message` is passed through `word()`, so
-you can use the `words` translation system to translate it.
+reported by [Stripe], followed by the value of
+`request.error_message`, which is `'Please try another payment
+method.'` by default.  The value of `request.error_message` is passed
+through `word()`, so you can use the `words` translation system to
+translate it.
 
 If the payment is successful, the JavaScript on the page performs the
 `request.success` "action" in the interview.  Your interview needs to
-provide a code block that handles this action.  The action needs to
-call `payment.process()`.  This will save the data returned by [Stripe]
-and will also call the [Stripe] API to verify that payment was actually
-made.
+provide a `code` block that handles this action.  The action needs to
+call `payment.process()`.  This will save the data returned by
+[Stripe] and will also call the [Stripe] API to verify that payment
+was actually made.  The `code` block for the "action" will run to the
+end, so the next thing it will do is evaluate the normal interview
+logic.  When `request.paid` is encountered, it will evaluate to `True`.
 
-The next time `request.paid` is evaluated, the [Stripe] API is not
-called again.
+The [Stripe] API is only called once to verify that the payment was
+actually made.  Subsequent evaluations of `request.paid` will return
+`True` immediately without calling the API again.
+
+Thus, the interview logic for the process of requiring a payment is
+just two lines of code:
+
+{% highlight python %}
+if not payment.paid:
+  payment_screen
+{% endhighlight %}
 
 Payment processing is a very complicated subject, so this recipe
 should only be considered a starting point.  The advantage of this
 design is that it keeps a lot of the complexity of payment processing
 out of the interview [YAML] and hides it in the module.
+
+If you want to have the billing address on the same screen where the
+credit card number is entered, you could use custom HTML forms, or a
+`fields` block in which the `Continue` button is hidden.
+
+When you are satisfied that your payment process work correctly, you
+can set your `stripe public key` and `stripe secret key` to your
+"live" [Stripe] API keys on your production server.
 
 [Stripe]: https://stripe.com/
 [testing card number]: https://stripe.com/docs/testing#cards
