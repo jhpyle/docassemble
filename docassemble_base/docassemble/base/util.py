@@ -532,13 +532,26 @@ def year_of(the_date, language=None):
     except:
         return word("Bad date")
 
-def format_date(the_date, format='long', language=None):
+def interview_default(the_part, default_value, language):
+    result = None
+    if the_part in this_thread.internal and this_thread.internal[the_part] is not None:
+         return this_thread.internal[the_part]
+    for lang in (language, get_language(), '*'):
+        if lang is not None:
+            if lang in this_thread.interview.default_title:
+                if the_part in this_thread.interview.default_title[lang]:
+                    return this_thread.interview.default_title[lang][the_part]
+    return default_value
+
+def format_date(the_date, format=None, language=None):
     """Interprets the_date as a date and returns the date formatted for the current locale."""
     ensure_definition(the_date, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('date format', 'long', language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -548,13 +561,15 @@ def format_date(the_date, format='long', language=None):
     except:
         return word("Bad date")
 
-def format_datetime(the_date, format='long', language=None):
+def format_datetime(the_date, format=None, language=None):
     """Interprets the_date as a date/time and returns the date/time formatted for the current locale."""
     ensure_definition(the_date, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('datetime format', 'long', language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
@@ -564,13 +579,15 @@ def format_datetime(the_date, format='long', language=None):
     except:
         return word("Bad date")
 
-def format_time(the_time, format='short', language=None):
+def format_time(the_time, format=None, language=None):
     """Interprets the_time as a date/time and returns the time formatted for the current locale."""
     ensure_definition(the_time, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_time, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('time format', 'short', language)
     try:
         if isinstance(the_time, datetime.datetime) or isinstance(the_time, datetime.date) or isinstance(the_time, datetime.time):
             time = the_time
@@ -603,13 +620,13 @@ class DateTimeDelta(object):
             return comma_and_list(["%d %s" % y for y in output])
 
 class DADateTime(datetime.datetime):
-    def format(self, format='long', language=None):
+    def format(self, format=None, language=None):
         return format_date(self, format=format, language=language)
-    def format_date(self, format='long', language=None):
+    def format_date(self, format=None, language=None):
         return format_date(self, format=format, language=language)
-    def format_datetime(self, format='long', language=None):
+    def format_datetime(self, format=None, language=None):
         return format_datetime(self, format=format, language=language)
-    def format_time(self, format='short', language=None):
+    def format_time(self, format=None, language=None):
         return format_time(self, format=format, language=language)
     def replace_time(self, time):
         return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
@@ -2108,7 +2125,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             attachment_list.extend(attachment.elements)
         elif isinstance(attachment, str):
             file_info = server.file_finder(attachment)
-            if 'fullpath' in file_info:
+            if 'fullpath' in file_info and file_info['fullpath'] is not None:
                 failed = True
                 with open(file_info['fullpath'], 'rb') as fp:
                     msg.attach(attachment_name(file_info['filename'], filenames_used), file_info['mimetype'], fp.read())
@@ -2134,7 +2151,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                         file_info = server.file_finder(str(the_attachment.number), filename=the_attachment.filename)
                     else:
                         file_info = server.file_finder(str(the_attachment.number))
-                    if 'fullpath' in file_info:
+                    if 'fullpath' in file_info and file_info['fullpath'] is not None:
                         failed = True
                         with open(file_info['fullpath'], 'rb') as fp:
                             msg.attach(attachment_name(the_attachment.filename, filenames_used), file_info['mimetype'], fp.read())

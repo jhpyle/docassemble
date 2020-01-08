@@ -572,7 +572,7 @@ def set_parts(**kwargs):
         this_thread.internal['subtitle'] = kwargs['subtitle']
     for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
-        if key in ('title', 'logo', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label'):
+        if key in ('title', 'logo', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label', 'date format', 'time format', 'datetime format'):
             this_thread.internal[key] = val
 
 def set_title(**kwargs):
@@ -3290,7 +3290,7 @@ def dispatch(var):
 def define(var, val):
     """Sets the given variable, expressed as a string, to the given value."""
     ensure_definition(var, val)
-    if not isinstance(var, str):
+    if not isinstance(var, str) or not re.search(r'^[A-Za-z]', var):
         raise Exception("define() must be given a string as the variable name")
     user_dict = get_user_dict()
     if user_dict is None:

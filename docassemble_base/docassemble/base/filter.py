@@ -30,7 +30,7 @@ import PIL
 DEFAULT_PAGE_WIDTH = '6.5in'
 
 term_start = re.compile(r'\[\[')
-term_match = re.compile(r'\[\[([^\]]*)\]\]')
+term_match = re.compile(r'\[\[([^\]]*)\]\]', re.DOTALL)
 noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
@@ -1308,14 +1308,14 @@ def noquote(string):
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
 def add_terms_mako(termname, terms, status=None, question=None):
-    lower_termname = termname.lower()
+    lower_termname = re.sub(r'\s+', ' ', termname.lower())
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
 def add_terms(termname, terms, status=None, question=None):
-    lower_termname = termname.lower()
+    lower_termname = re.sub(r'\s+', ' ', termname.lower())
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
