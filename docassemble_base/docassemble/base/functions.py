@@ -3290,7 +3290,7 @@ def dispatch(var):
 def define(var, val):
     """Sets the given variable, expressed as a string, to the given value."""
     ensure_definition(var, val)
-    if not isinstance(var, str) or not re.search(r'^[A-Za-z]', var):
+    if not isinstance(var, str) or not re.search(r'^[A-Za-z_]', var):
         raise Exception("define() must be given a string as the variable name")
     user_dict = get_user_dict()
     if user_dict is None:

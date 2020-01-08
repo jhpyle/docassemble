@@ -3521,7 +3521,7 @@ def trigger_update(except_for=None):
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
                 result = call(args)
                 if result == 0:
-                    logmessage("trigger_update: sent update to " + str(host.hostname))
+                    logmessage("trigger_update: sent update to " + str(host.hostname) + " using " + the_url)
                 else:
                     logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
     return
@@ -17441,6 +17441,9 @@ def playground_page():
             if should_save:
                 with open(filename, 'w', encoding='utf-8') as fp:
                     fp.write(the_content)
+            if not form.submit.data and active_file != the_file:
+                active_file = the_file
+                set_variable_file(current_project, active_file)
             this_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
             active_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file
             r.incr('da:interviewsource:' + this_interview_string)
@@ -17477,7 +17480,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages)
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -17599,6 +17602,7 @@ function saveCallback(data){
     currentProject = data.current_project;
   }
   history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
+  $("#daVariables").val(data.active_file);
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);
     activateVariables();

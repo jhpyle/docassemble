@@ -846,7 +846,11 @@ def reset_server(result):
         return result
     if USING_SUPERVISOR:
         if re.search(r':(web|celery|all):', container_role):
-            args = [SUPERVISORCTL, '-s', 'http://' + result.hostname + ':9001', 'start', 'reset']
+            if result.hostname == hostname:
+                hostname_to_use = 'localhost'
+            else:
+                hostname_to_use = result.hostname
+            args = [SUPERVISORCTL, '-s', 'http://' + hostname_to_use + ':9001', 'start', 'reset']
             result = call(args)
             sys.stderr.write("reset_server in worker: called " + ' '.join(args) + "\n")
         else:
