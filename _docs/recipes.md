@@ -608,6 +608,11 @@ stripe secret key: sk_test_YW41CYyivW0Vo7EN0mFD5i4P01ZLeQAPS8
 The `stripe public key` is the "publishable key."  The `stripe secret
 key` is the "secret key."
 
+Confirm that you have the `stripe` package installed by checking the
+list of packages under "Package Management".  If `stripe` is not
+listed, follow the directions for [installing a package].  `stripe` is
+available on [PyPI].
+
 Create a Python module called `dastripe.py` with the following contents:
 
 {% highlight python %}
@@ -919,6 +924,8 @@ When you are satisfied that your payment process work correctly, you
 can set your `stripe public key` and `stripe secret key` to your
 "live" [Stripe] API keys on your production server.
 
+[installing a package]: {{ site.baseurl }}/docs/packages.html#installing
+[PyPI]: https://pypi.python.org/pypi
 [Stripe]: https://stripe.com/
 [testing card number]: https://stripe.com/docs/testing#cards
 [supported accounts and settlement currencies]: https://stripe.com/docs/payouts#supported-accounts-and-settlement-currencies
