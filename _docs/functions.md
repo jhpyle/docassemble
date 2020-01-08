@@ -2091,7 +2091,8 @@ The function takes one of three parameters:
 
 The `set_parts()` function allows you to configure text on various
 parts of the screen, which is displayed in the "My Interviews" list
-and in the navigation bar.
+and in the navigation bar.  It is also used to set certain
+interview-level default values.
 
 It accepts any of the following optional keyword arguments:
 
@@ -2134,6 +2135,16 @@ It accepts any of the following optional keyword arguments:
   the question, or below the `under` content on small screens.
 * `post` - can be set to HTML that will be inserted at the bottom of
   the screen, after the buttons.
+* `date format` - this can be set to a default date format string used
+  by the [`format_date()`] function and the [`.format_date()`] method
+  of the [`DADateTime`] object (which is called when a [`DADateTime`]
+  object is reduced to text).
+* `datetime format` - this can be set to a default date/time format
+  string used by the [`format_datetime()`] function and the
+  [`.format_datetime()`] method of the [`DADateTime`] object.
+* `time format` - this can be set to a default time format string used
+  by the [`format_time()`] function and the [`.format_time()`]
+  method of the [`DADateTime`] object.
 
 In the following interview, note that the screen parts that were
 initially set by [`metadata`] are overridden when `set_parts()` is
@@ -2584,16 +2595,21 @@ For example:
 The date formatting is provided by the
 [babel.dates](http://babel.pocoo.org/en/latest/api/dates.html#date-fields)
 package, which has good support for language and locale variation.
-The `format` argument, which defaults to `long`, is passed directly to
-the `babel.dates.format_date()` function.
+The `format` argument, is passed directly to the
+`babel.dates.format_date()` function.
 
 The
 [patterns](http://babel.pocoo.org/en/latest/dates.html#date-fields)
 used in date formatting by `babel.dates.format_date()` are based on
 [Unicode Technical Standard #35].
 
-The result will be different depending on the current language.  For
-example, if you run `set_language('es')`, then
+If you do not provide a `format` argument, the default `date format`
+will be used.  This default can be set in the interview [`metadata`]
+or overridden using [`set_parts()`].  If no default is set, `'long'`
+is used.
+
+The date formatting will be different depending on the current
+language.  For example, if you run `set_language('es')`, then
 `format_date('4/5/2014')` returns `5 de abril de 2014`.  If you run
 `set_language('fr')`, then `format_date('4/5/2014')` returns `5 avril
 2014`.
@@ -2624,12 +2640,17 @@ For example:
 
 The time formatting is provided by the
 [babel.dates](http://babel.pocoo.org/en/latest/api/dates.html#time-fields)
-package.  The `format` argument, which defaults to `short`, is passed
-directly to the `babel.dates.format_time()` function.
+package.
 
-The
+The `format` argument is passed directly
+to the `babel.dates.format_time()` function.  The
 [patterns](http://babel.pocoo.org/en/latest/dates.html#time-fields)
 used in time formatting are based on [Unicode Technical Standard #35].
+
+If you do not provide a `format` argument, the default `time format`
+will be used.  This default can be set in the interview [`metadata`]
+or overridden using [`set_parts()`].  If no default is set, `'short'`
+is used.
 
 ## <a name="format_datetime"></a>format_datetime()
 
@@ -2641,6 +2662,11 @@ it allows date and time to be joined in the same output.
   07:30:00 AM EST`.
 * `format_datetime('4/5/2014 07:30', 'h:mm in MMMM')` returns `'7:30 in
   April'`.
+
+If you do not provide a `format` argument, the default `datetime
+format` will be used.  This default can be set in the interview
+[`metadata`] or overridden using [`set_parts()`].  If no default is
+set, `'long'` is used.
 
 ## <a name="today"></a>today()
 
@@ -6676,6 +6702,7 @@ $(document).on('daPageLoad', function(){
 [task]: #tasks
 [actions]: #actions
 [`format_date()`]: #format_date
+[`format_datetime()`]: #format_datetime
 [`format_time()`]: #format_time
 [`user_info()`]: #user_info
 [`user_logged_in()`]: #user_logged_in
@@ -6821,6 +6848,9 @@ $(document).on('daPageLoad', function(){
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
 [`.time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.time
+[`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
+[`.format_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_time
+[`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
 [locale]: #langlocale
 [`metadata` initial block]: {{ site.baseurl }}/docs/initial.html#metadata
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata

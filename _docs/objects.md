@@ -4804,8 +4804,11 @@ doing `birthday + date_interval(weeks=1)`.
 These functions have the same effect as the [`format_date()`],
 [`format_time()`], and [`format_datetime()`] functions.  In fact,
 `birthday.format_date('long')` simply calls `format_date(birthday,
-format='long')`.  See the documentation for the [date functions] for
-details.
+format='long')`.  The `.format()` method is the same as
+`.format_date()`.  See the documentation for the [date functions] for
+details.  An interview-wide date/time format string can be set in the
+interview [`metadata`] or through the [`set_parts()`]
+function.
 
 When a [`DADateTime`] is converted to text, for example when it is
 included in a [Mako] template with `${ birthday }`, the text
@@ -4813,7 +4816,7 @@ conversion is done using [`format_date()`].
 
 <a name="DADateTime.replace"></a>The `.replace()` method returns a new
 [`DADateTime`] object that is the same as the original object, except
-with edited components.  For example, `birthdate.replace(year=2018)`
+with altered components.  For example, `birthdate.replace(year=2018)`
 will return the date of a person's birthday in 2018.  The available
 parameters are `year`, `month`, `day`, `hour` (0 to 23), `minute`,
 `second`, and `microsecond`.  See [`datetime.datetime.replace()`].
@@ -6023,3 +6026,5 @@ the `_uid` of the table rather than the `id`.
 [Digest Auth]: https://en.wikipedia.org/wiki/Digest_access_authentication
 [`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
 [`.user_access()`]: #DAFile.user_access
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts

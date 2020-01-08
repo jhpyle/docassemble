@@ -49,7 +49,21 @@ If a `subtitle` is provided, it will be displayed as the subtitle of
 the interview in the "Interviews" list available to a logged-in
 user at `/interviews`.
 
-These titles can be overridden using the [`set_parts()` function].
+If a `date format` is provided, this will be used as the default
+date format when the [`format_date()`] function is called, or the
+[`.format_date()`] method of the [`DADateTime`] object is called
+(which is used when [`DADateTime`] objects are reduced to text).
+
+If a `datetime format` is provided, this will be used as the default
+date/time format when the [`format_datetime()`] function is called, or
+the [`.format_datetime()`] method of the [`DADateTime`] object is
+called.
+
+If a `time format` is provided, this will be used as the default
+time format when the [`format_time()`] function is called, or the
+[`.format_time()`] method of the [`DADateTime`] object is called.
+
+These values can be overridden using the [`set_parts()` function].
 
 The `metadata` block and the [`set_parts()` function] can be used to
 modify other aspects of the navigation bar.
@@ -2110,6 +2124,10 @@ tables.
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [`new markdown to docx`]: {{ site.baseurl}}/docs/config.html#new markdown to docx
 [`DAContext`]: {{ site.baseurl }}/docs/objects.html#DAContext
+[`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
+[`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
+[`.format_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_time
+[`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
 [`use objects`]: #use objects
 [`session_tags()`]: {{ site.baseurl}}/docs/functions.html#session_tags
 [interview]: {{ site.baseurl }}/docs/interviews.html
@@ -2119,6 +2137,9 @@ tables.
 [`exitpage`]: {{ site.baseurl}}/docs/config.html#exitpage
 [special pages]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`command()`]: {{ site.baseurl}}/docs/functions.html#command
+[`format_date()`]: {{ site.baseurl}}/docs/functions.html#format_date
+[`format_datetime()`]: {{ site.baseurl}}/docs/functions.html#format_datetime
+[`format_time()`]: {{ site.baseurl}}/docs/functions.html#format_time
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Google Analytics]: https://analytics.google.com
 [Segment]: https://segment.com/

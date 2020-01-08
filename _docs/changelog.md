@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.75](https://github.com/jhpyle/docassemble/releases/tag/v0.5.75) - 2020-01-07
+
+### Added
+- The `date format`, `datetime format`, and `time format`
+  interview-wide defaults.
+
+### Fixed
+- Line breaking issue with `terms` and `auto terms`.
+
 ## [0.5.74](https://github.com/jhpyle/docassemble/releases/tag/v0.5.74) - 2020-01-06
 
 ### Fixed
