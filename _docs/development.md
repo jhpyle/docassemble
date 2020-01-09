@@ -1040,8 +1040,8 @@ the non-developers who request features may not be aware of what the
 standards are.
 
 Other skills sets that are necessary for a guided interview project
-are user experience design.  User experience is more than a matter of
-[CSS]; it's about making sure the flow through the interview is
+include user experience design.  User experience is more than a matter
+of [CSS]; it's about making sure the flow through the interview is
 intuitive.
 
 A related skill set is plain language communication.  How do you ask a
