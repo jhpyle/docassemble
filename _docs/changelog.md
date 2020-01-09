@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.76](https://github.com/jhpyle/docassemble/releases/tag/v0.5.76) - 2020-01-08
+
+### Fixed
+- Playground variables sidebar did not always switch to the most
+  recently-run interview.
+- Restart process used IP address and port that may not be available
+  internally.
+
 ## [0.5.75](https://github.com/jhpyle/docassemble/releases/tag/v0.5.75) - 2020-01-07
 
 ### Added

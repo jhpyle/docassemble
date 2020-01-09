@@ -472,7 +472,7 @@
   ---
   question: What is your favorite vegetable?
   fields:
-    - Animal: favorite_vegetable
+    - Vegetable: favorite_vegetable
   ---
   mandatory: True
   question: What a coincidence!
@@ -10025,19 +10025,9 @@
 "table-markdown": "mandatory: true\nquestion: |\n  Your fruit inventory\nsubquestion:\
   \ |\n  This describes your fruit\n  collection.\n  \n  Fruit  | How many\n  -------|---------\n\
   \  Apple  | 4\n  Orange | 3\n  Pear   | 6"
-"table-markdown-noheader": |-
-  mandatory: true
-  question: |
-    Your vegetable inventory
-  subquestion: |
-    This describes your vegetable
-    collection.
-
-    |&nbsp;   |&nbsp;|
-    |---------|------|
-    |Potato   |4     |
-    |Brocolli |3     |
-    |Beet     |6     |
+"table-markdown-noheader": "mandatory: true\nquestion: |\n  Your vegetable inventory\n\
+  subquestion: |\n  This describes your vegetable\n  collection.\n\n  &nbsp;   |&nbsp;\n\
+  \  ---------|------\n  Potato   |4     \n  Brocolli |3     \n  Beet     |6"
 "table-markdown-unaligned": |-
   mandatory: true
   question: |
