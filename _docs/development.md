@@ -804,7 +804,7 @@ briefs for 20 years may understand the law as well as lawyer B who has
 tried cases in court for 20 years, but that doesn't mean that lawyer A
 is capable of standing up in court and persuading the jury to favor
 his or her client.  One lawyer may be very good at litigating contract
-disputes, but not good at drafting contracts so that they are concise,
+disputes, but not good at drafting contracts so that they are concise
 and anticipate every possible scenario that may develop.
 
 What **processes** should be used to ensure that an interview is
@@ -875,9 +875,8 @@ robust than it was yesterday.  Did your code break because a
 dependency changed?  Great, make changes to adapt; now your code is
 more up-to-date.  If you concentrate all your energy on preventing,
 insuring against, or hiding from low-probability events, rather being
-resilient when those events happen, your software will will stop
-evolving.  When your software stops evolving, it will start being
-"legacy."
+resilient when those events happen, your software will stop evolving.
+When your software stops evolving, it will start being "legacy."
 
 You might think, "I don't have the resources to pay developers to
 continually improve a product."  First, maybe the resources necessary
