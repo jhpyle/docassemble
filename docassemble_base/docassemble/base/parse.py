@@ -1582,6 +1582,13 @@ class Question:
                     if not isinstance(val, (str, int, float, bool)):
                         raise DAError("Each item under 'arguments' in a 'segment' must be plain text." + self.idebug(data))
                     self.segment['arguments'][key] = TextObject(definitions + str(val), question=self)
+        if 'depends on' in data:
+            if not isinstance(data['depends on'], list):
+                depends_list = [str(data['depends on'])]
+            else:
+                depends_list = [str(x) for x in data['depends on']]
+        else:
+            depends_list = []
         if 'supersedes' in data:
             if not isinstance(data['supersedes'], list):
                 supersedes_list = [str(data['supersedes'])]
@@ -3221,6 +3228,10 @@ class Question:
                 if self.language not in self.interview.generic_questions[self.generic_object][field_name]:
                     self.interview.generic_questions[self.generic_object][field_name][self.language] = list()
                 self.interview.generic_questions[self.generic_object][field_name][self.language].append(register_target)
+            for variable in depends_list:
+                if variable not in self.invalidation:
+                    self.invalidation[variable] = set()
+                self.invalidation[variable].add(field_name)
         if len(self.attachments):
             indexno = 0
             for att in self.attachments:
@@ -3228,6 +3239,23 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
+    def invalidate_dependencies(self, the_user_dict):
+        for field_name in self.fields_used:
+            if field_name not in self.invalidation:
+                continue
+            try:
+                exec(field_name, the_user_dict)
+            except:
+                continue
+            for variable in self.invalidation[field_name]:
+                try:
+                    exec("_internal['dirty'][" + repr(variable) + "] = " + variable, the_user_dict)
+                except:
+                    pass
+                try:
+                    exec("del " + variable, the_user_dict)
+                except:
+                    pass
     def exec_setup(self, is_generic, the_x, iterators, the_user_dict):
         if is_generic:
             if the_x != 'None':
@@ -5340,6 +5368,7 @@ class Interview:
         self.progress_points = set()
         self.ids_in_use = set()
         self.id_orderings = list()
+        self.invalidation = dict()
         self.orderings = list()
         self.orderings_by_question = dict()
         self.images = dict()
@@ -6548,6 +6577,7 @@ class Interview:
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            question.invalidate_dependencies()
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)
@@ -6558,6 +6588,7 @@ class Interview:
                             #question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            question.invalidate_dependencies()
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             if was_defined:
