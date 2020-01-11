@@ -26,29 +26,31 @@ and offer "no code" tools for deployment and development.
 
 # Tutorials
 
-Sam Harden developed a tutorial on how to install **docassemble** on
-Amazon Web Services.
+[Quinten Steenhuis] has written a number of tutorials on
+[his blog](https://www.nonprofittechy.com/blog/),
+including articles on
+[how to get started](https://www.nonprofittechy.com/2019/01/12/get-started-with-docassemble/) with **docassemble** (1/12/2019),
+[using groups](https://www.nonprofittechy.com/2018/11/26/gathering-repeated-information-working-with-docassemble-groups/) (11/26/2018),
+and [object oriented programming](https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/) (9/12/2018).
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tPHptgIMZyc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[Richard Batstone](https://richardbatstone.github.io/about/) wrote a
+[tutorial](https://richardbatstone.github.io/other/2020/01/11/DocAssembleInGCP.html)
+(1/11/2020) on how to install **docassemble** on [Google Cloud Platform](https://cloud.google.com).
 
-[![flowchart](https://gblsma.github.io/docassemble-MotionTutorial/images/docassemble-workflow.png){: .maybe-full-width }](https://gblsma.github.io/docassemble-MotionTutorial/)
+[Sam Harden](https://samharden.github.io/), who operates the
+[LegalTech School](https://www.youtube.com/channel/UCCFR4rpeXQIv2KwcvaPwweQ]) YouTube channel,
+has created tutorials on
+[How to Install Docassemble on Amazon Web Services](https://law.mit.edu/pub/howtoinstalldocassembleonaws) (12/6/2019),
+[How to Create a Simple Docassemble Interview](https://law.mit.edu/pub/howtocreateasimpledocassembleinterview) (12/6/2019),
+[Using Conditional Logic](https://law.mit.edu/pub/usingconditionallogicindocassembleinterviews) (12/6/2019),
+and [How to Use Datatypes](https://www.youtube.com/watch?v=49TiZfMkCtc) (11/12/2019).
 
-[Quinten Steenhuis] and Rina Padua of [Greater Boston Legal Services]
-developed [a tutorial on developing an interview that automates a Word
-document to create a motion to
-dismiss](https://gblsma.github.io/docassemble-MotionTutorial/).
-Quinten has also written an article on [Object-oriented Programming
-for Document Assembly Developers].
+[John Gibson](https://www.youtube.com/channel/UC8iZ3ft6Ipg4IYdQtEUtiZw)
+created a [tutorial video](https://www.youtube.com/watch?v=1lfufLU5N7w) (3/10/2018)
+that walks through the process of installing **docassemble** on [Microsoft Azure]
+and running an interview that accesses a SQL server.
 
-# Video guides
-
-This video by [John Gibson](https://www.youtube.com/channel/UC8iZ3ft6Ipg4IYdQtEUtiZw)
-walks through the process of installing **docassemble** on [Microsoft
-Azure] and running an interview that accesses a SQL server.
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/1lfufLU5N7w" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
-# Bugs 
+# Bugs
 
 If you find a bug, please [submit an issue on GitHub].  Keep in mind
 that not all error messages represent bugs; it might be the case that
