@@ -3145,7 +3145,7 @@ If you have [ffmpeg] instead of [avconv], you can do:
 avconv: ffmpeg
 {% endhighlight %}
 
-## <a name="libreoffice"></a><a name="pandoc"></a><a name="convertapi secret"></a>Document conversion
+## <a name="libreoffice"></a><a name="pandoc"></a><a name="convertapi secret"></a><a name="cloudconvert secret"></a>Document conversion
 
 **docassemble** requires that you have [Pandoc] installed on your
 system.  It assumes that it can be run using the command `pandoc`.
