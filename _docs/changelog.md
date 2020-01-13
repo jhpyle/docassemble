@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.77](https://github.com/jhpyle/docassemble/releases/tag/v0.5.77) - 2020-01-12
+
+### Added
+- Ability to convert DOCX to PDF using CloudConvert.
+- The `cloudconvert secret` Configuration directive.
+
 ## [0.5.76](https://github.com/jhpyle/docassemble/releases/tag/v0.5.76) - 2020-01-08
 
 ### Fixed

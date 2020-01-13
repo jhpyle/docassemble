@@ -3182,10 +3182,19 @@ web service for file conversion.  To enable this, sign up with
 convertapi secret: SrWh4XfuOje5jYx1
 {% endhighlight %}
 
-Enabling [ConvertAPI] can be useful if you are using [`docx template
-file`] to generate PDF files, but the standard [LibreOffice]
-conversion does not work properly due to incompatibilities between
-[Microsoft Word] and [LibreOffice].
+You can use [CloudConvert] instead.  Sign up with [CloudConvert], go
+to the Dashboard, go to Authorization, API keys under "API V2," and
+click "Create New API key."  Copy the API key into your Configuration
+as the `cloudconvert secret`:
+
+{% highlight yaml %}
+cloudconvert secret: afwefhwfperowewERQWrasfASEf234Frthe33t4ge4rgf3evn3480w9ejfornv9n40923nvqiniQWeeorgmkbwyeghgpojrgbu
+{% endhighlight %}
+
+Enabling [ConvertAPI] or [CloudConvert] can be useful if you are using
+[`docx template file`] to generate PDF files, but the standard
+[LibreOffice] conversion does not work properly due to
+incompatibilities between [Microsoft Word] and [LibreOffice].
 
 ## <a name="pandoc engine"></a>Pandoc's LaTeX engine
 
@@ -4042,6 +4051,7 @@ wrap lines in playground: False
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [ConvertAPI]: https://www.convertapi.com
+[CloudConvert]: https://cloudconvert.com
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [WhatsApp]: https://www.twilio.com/whatsapp
