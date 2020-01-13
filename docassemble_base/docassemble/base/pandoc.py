@@ -17,6 +17,8 @@ from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_cal
 import mimetypes
 from subprocess import call, check_output
 import convertapi
+import requests
+import urllib.request
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -24,6 +26,63 @@ PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
 def copy_if_different(source, destination):
     if (not os.path.isfile(destination)) or filecmp.cmp(source, destination) is False:
         shutil.copyfile(source, destination)
+
+def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
+    headers = {"Authorization": "Bearer " + daconfig.get('cloudconvert secret').strip()}
+    data = {
+        "tasks": {
+            "import-1": {
+                "operation": "import/upload"
+            },
+            "task-1": {
+                "operation": "convert",
+                "input_format": in_format,
+                "output_format": "pdf",
+                "engine": "office",
+                "input": [
+                    "import-1"
+                ],
+                "optimize_print": True,
+                "pdf_a": pdfa,
+                "filename": "myoutput.docx"
+            },
+            "export-1": {
+                "operation": "export/url",
+                "input": [
+                    "task-1"
+                ],
+                "inline": False,
+                "archive_multiple_files": False
+            }
+        }
+    }
+    if password:
+        data['tasks']['task-1']['password'] = password
+    r = requests.post("https://api.cloudconvert.com/v2/jobs", json=data, headers=headers)
+    resp = r.json()
+    if 'data' not in resp:
+        logmessage("cloudconvert_to_pdf: create job returned " + repr(r.text))
+        raise Exception("cloudconvert_to_pdf: failed to create job")
+    uploaded = False
+    for task in resp['data']['tasks']:
+        if task['name'] == 'import-1':
+            r = requests.post(task['result']['form']['url'], data=task['result']['form']['parameters'], files={'file': open(from_file, 'rb')})
+            uploaded = True
+    if not uploaded:
+        raise Exception("cloudconvert_to_pdf: failed to upload")
+    r = requests.get("https://api.cloudconvert.com/v2/jobs/%s/wait" % (resp['data']['id'],), headers=headers, timeout=60)
+    wait_resp = r.json()
+    if 'data' not in wait_resp:
+        logmessage("cloudconvert_to_pdf: wait returned " + repr(r.text))
+        raise Exception("Failed to wait on job")
+    ok = False
+    for task in wait_resp['data']['tasks']:
+        if task['operation'] == "export/url":
+            for file_result in task['result']['files']:
+                urllib.request.urlretrieve(file_result['url'], to_file)
+                ok = True
+    if not ok:
+        raise Exception("cloudconvert failed")
 
 def convertapi_to_pdf(from_file, to_file):
     convertapi.api_secret = daconfig.get('convertapi secret')
@@ -272,6 +331,16 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     logmessage("Call to convertapi failed")
                     result = 1
                 use_libreoffice = False
+            elif daconfig.get('cloudconvert secret', None) is not None:
+                try:
+                    cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password)
+                    result = 0
+                except Exception as err:
+                    logmessage("Call to cloudconvert failed")
+                    logmessage(err.__class__.__name__ + ": " + str(err))
+                    result = 1
+                use_libreoffice = False
+                password = False
             else:
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
         elif daconfig.get('convertapi secret', None) is not None:
@@ -282,6 +351,16 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 logmessage("Call to convertapi failed")
                 result = 1
             use_libreoffice = False
+        elif daconfig.get('cloudconvert secret', None) is not None:
+            try:
+                cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password)
+                result = 0
+            except Exception as err:
+                logmessage("Call to cloudconvert failed")
+                logmessage(err.__class__.__name__ + ": " + str(err))
+                result = 1
+            use_libreoffice = False
+            password = False
         else:
             if method == 'default':
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
@@ -301,8 +380,10 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         time.sleep(0.5 + tries*random.random())
         if use_libreoffice:
             logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
-        else:
+        elif daconfig.get('convertapi secret', None) is not None:
             logmessage("Retrying convertapi")
+        else:
+            logmessage("Retrying cloudconvert")
         continue
     if result == 0:
         if password:
