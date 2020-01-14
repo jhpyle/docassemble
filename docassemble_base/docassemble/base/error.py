@@ -71,7 +71,7 @@ class ForcedNameError(NameError):
             if type(arg) is dict:
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
                     self.set_action(arg)
-                elif len(arg) == 1 and ('undefine' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
+                elif len(arg) == 1 and ('undefine' in arg or 'invalidate' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:
                         if type(arg['set']) is not list:
                             raise DAError("force_ask: the set statement must refer to a list.")
@@ -97,7 +97,7 @@ class ForcedNameError(NameError):
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
                             self.set_action(dict(action=var, arguments=dict(), context=the_context))
-                    for command in ('undefine', 'recompute'):
+                    for command in ('undefine', 'invalidate', 'recompute'):
                         if command not in arg:
                             continue
                         if type(arg[command]) is not list:
@@ -110,7 +110,10 @@ class ForcedNameError(NameError):
                             if invalid_variable_name(undef_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
                             clean_list.append(undef_saveas)
-                        self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
+                        if command == 'invalidate':
+                            self.next_action.append(dict(action='_da_invalidate', arguments=dict(variables=clean_list), context=the_context))
+                        else:
+                            self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
                         if command == 'recompute':
                             self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list), context=the_context))
                 else:

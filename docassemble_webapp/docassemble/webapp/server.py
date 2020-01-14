@@ -5691,6 +5691,7 @@ def index(action_argument=None):
     debug_mode = interview.debug
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
     vars_set = set()
+    old_values = dict()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     error_messages = list()
@@ -5807,7 +5808,7 @@ def index(action_argument=None):
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ")"
-            vars_set.add(file_field)
+            process_set_variable(file_field, user_dict, vars_set, old_values)
             try:
                 exec(the_string, user_dict)
                 if not changed:
@@ -5957,7 +5958,7 @@ def index(action_argument=None):
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
-                    vars_set.add(core_key_name + '.' + attribute_name)
+                    process_set_variable(core_key_name + '.' + attribute_name, user_dict, vars_set, old_values)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
                     orig_index_name = index_name
@@ -5967,14 +5968,14 @@ def index(action_argument=None):
                         commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
                     elif datatype == 'object_checkboxes':
                         commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
-                    vars_set.add(core_key_name + '[' + orig_index_name + ']')
+                    process_set_variable(core_key_name + '[' + orig_index_name + ']', user_dict, vars_set, old_values)
                 else:
                     whole_key_tr = sub_indices(whole_key, user_dict)
                     if datatype == 'checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     elif datatype == 'object_checkboxes':
                         commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
-                    vars_set.add(whole_key)
+                    process_set_variable(whole_key, user_dict, vars_set, old_values)
                 for command in commands:
                     exec(command, user_dict)
         else:
@@ -6221,7 +6222,7 @@ def index(action_argument=None):
             else:
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
-            vars_set.add(key)
+            process_set_variable(key, user_dict, vars_set, old_values)
             the_string = key + ' = ' + data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
                 field_name = safeid('_field_' + str(field_numbers[orig_key]))
@@ -6252,7 +6253,7 @@ def index(action_argument=None):
     if validated and special_question is None:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
-            vars_set.add(key + '.gathered')
+            process_set_variable(key + '.gathered', user_dict, vars_set, old_values)
             if illegal_variable_name(key):
                 logmessage("Received illegal variable name " + str(key))
                 continue
@@ -6261,7 +6262,7 @@ def index(action_argument=None):
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
-                vars_set.add(key)
+                process_set_variable(key, user_dict, vars_set, old_values)
                 try:
                     eval(key, user_dict)
                 except:
@@ -6394,7 +6395,7 @@ def index(action_argument=None):
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
-                            vars_set.add(file_field)
+                            process_set_variable(file_field, user_dict, vars_set, old_values)
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
@@ -6411,7 +6412,7 @@ def index(action_argument=None):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
                         the_string = file_field + " = None"
-                        vars_set.add(file_field)
+                        process_set_variable(file_field, user_dict, vars_set, old_values)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -6511,7 +6512,7 @@ def index(action_argument=None):
                                 the_string = file_field + " = " + the_file_list
                             else:
                                 the_string = file_field + " = None"
-                            vars_set.add(file_field)
+                            process_set_variable(file_field, user_dict, vars_set, old_values)
                             if validated:
                                 try:
                                     exec(the_string, user_dict)
@@ -6529,7 +6530,7 @@ def index(action_argument=None):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
                         the_string = file_field + " = None"
-                        vars_set.add(file_field)
+                        process_set_variable(file_field, user_dict, vars_set, old_values)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -6609,6 +6610,14 @@ def index(action_argument=None):
                 error_messages.append(("error", the_error_message))
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+    if validated:
+        for var_name in vars_set:
+            if var_name in interview.invalidation or var_name in interview.onchange:
+                interview.invalidate_dependencies(var_name, user_dict, old_values)
+            try:
+                del user_dict['_internal']['dirty'][var_name]
+            except:
+                pass
     interview.assemble(user_dict, interview_status, old_user_dict, force_question=special_question)
     current_language = docassemble.base.functions.get_language()
     session['language'] = current_language
@@ -10078,6 +10087,13 @@ def index(action_argument=None):
     if 'in error' in session:
         del session['in error']
     return response
+
+def process_set_variable(field_name, user_dict, vars_set, old_values):
+    vars_set.add(field_name)
+    try:
+        old_values[field_name] = eval(field_name, user_dict)
+    except:
+        pass
 
 def add_permissions_for_field(the_field, interview_status, files_to_process):
     if hasattr(the_field, 'permissions'):
@@ -21529,6 +21545,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
     vars_set = set()
+    old_values = dict()
     if user_dict is None:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
@@ -21542,7 +21559,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 del user_dict['_internal']['_tempvar']
             else:
                 exec(str(key) + ' = ' + repr(val), user_dict)
-            vars_set.add(key)
+            process_set_variable(str(key), user_dict, vars_set, old_values)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
         raise Exception("Problem setting variables:" + str(the_err))
@@ -21552,7 +21569,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             if illegal_variable_name(key):
                 raise Exception("Illegal value as variable name.")
             exec(str(key) + ' = ' + val, user_dict)
-            vars_set.add(key)
+            process_set_variable(str(key), user_dict, vars_set, old_values)
     if question_name is not None:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         if question_name in interview.questions_by_name:
@@ -21587,6 +21604,14 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 #logmessage("Popped " + str(var_name))
             if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
                 break
+    if question_name is not None:
+        for var_name in vars_set:
+            if var_name in interview.invalidation or var_name in interview.onchange:
+                interview.invalidate_dependencies(var_name, user_dict, old_values)
+            try:
+                del user_dict['_internal']['dirty'][var_name]
+            except:
+                pass
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
     steps += 1
