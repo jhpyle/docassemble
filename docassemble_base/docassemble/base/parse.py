@@ -110,7 +110,7 @@ def textify(data, the_user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -1301,6 +1301,20 @@ class Question:
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
+        if 'on change' in data:
+            should_append = False
+            self.scan_for_variables = False
+            if not isinstance(data['on change'], dict):
+                raise DAError("An on change block must be a dictionary." + self.idebug(data))
+            if len(data) > 1:
+                raise DAError("An on change block must not contain any other keys." + self.idebug(data))
+            for key, val in data['on change'].items():
+                if not (isinstance(key, str) and isinstance(val, str)):
+                    raise DAError("An on change block must be a dictionary where the keys are field names and the values are Python code." + self.idebug(data))
+                if key not in self.interview.onchange:
+                    self.interview.onchange[key] = list()
+                self.interview.onchange[key].append(compile(val, '<on change code>', 'exec'))
+                self.find_fields_in(val)
         if 'sections' in data:
             should_append = False
             if not isinstance(data['sections'], list):
@@ -1582,13 +1596,6 @@ class Question:
                     if not isinstance(val, (str, int, float, bool)):
                         raise DAError("Each item under 'arguments' in a 'segment' must be plain text." + self.idebug(data))
                     self.segment['arguments'][key] = TextObject(definitions + str(val), question=self)
-        if 'depends on' in data:
-            if not isinstance(data['depends on'], list):
-                depends_list = [str(data['depends on'])]
-            else:
-                depends_list = [str(x) for x in data['depends on']]
-        else:
-            depends_list = []
         if 'supersedes' in data:
             if not isinstance(data['supersedes'], list):
                 supersedes_list = [str(data['supersedes'])]
@@ -2321,6 +2328,17 @@ class Question:
             except:
                 logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
+        if 'depends on' in data:
+            if not isinstance(data['depends on'], list):
+                depends_list = [str(data['depends on'])]
+            else:
+                depends_list = [str(x) for x in data['depends on']]
+            if len(depends_list):
+                if self.need is None:
+                    self.need = list()
+                self.need += list(map((lambda x: compile(x, '<depends expression>', 'exec')), depends_list))
+        else:
+            depends_list = []
         if 'target' in data:
             self.interview.uses_action = True
             if isinstance(data['target'], (list, dict, set, bool, int, float)):
@@ -3034,7 +3052,7 @@ class Question:
                                         self.find_fields_in(var_saveas)
                                         #field_info['data'].append(dict(action="_da_follow_up", arguments=dict(action=var)))
                                         field_info['data'].append(dict(action=var, arguments=dict()))
-                                for command in ('undefine', 'recompute'):
+                                for command in ('undefine', 'invalidate', 'recompute'):
                                     if command not in the_saveas:
                                         continue
                                     if not isinstance(the_saveas[command], list):
@@ -3048,7 +3066,10 @@ class Question:
                                             raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
                                         self.find_fields_in(undef_saveas)
                                         clean_list.append(undef_saveas)
-                                    field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                                    if command == 'invalidate':
+                                        field_info['data'].append(dict(action='_da_invalidate', arguments=dict(variables=clean_list)))
+                                    else:
+                                        field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
                                     if command == 'recompute':
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
@@ -3109,7 +3130,10 @@ class Question:
                                             raise DAError("Missing or invalid variable name " + repr(undef_saveas) + " ." + self.idebug(data))
                                         self.find_fields_in(undef_saveas)
                                         clean_list.append(undef_saveas)
-                                    field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                                    if command == 'invalidate':
+                                        field_info['data'].append(dict(action='_da_invalidate', arguments=dict(variables=clean_list)))
+                                    else:
+                                        field_info['data'].append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
                                     if command == 'recompute':
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
@@ -3229,9 +3253,9 @@ class Question:
                     self.interview.generic_questions[self.generic_object][field_name][self.language] = list()
                 self.interview.generic_questions[self.generic_object][field_name][self.language].append(register_target)
             for variable in depends_list:
-                if variable not in self.invalidation:
-                    self.invalidation[variable] = set()
-                self.invalidation[variable].add(field_name)
+                if variable not in self.interview.invalidation:
+                    self.interview.invalidation[variable] = set()
+                self.interview.invalidation[variable].add(field_name)
         if len(self.attachments):
             indexno = 0
             for att in self.attachments:
@@ -3239,23 +3263,15 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
-    def invalidate_dependencies(self, the_user_dict):
+    def invalidate_dependencies(self, the_user_dict, old_values):
         for field_name in self.fields_used:
-            if field_name not in self.invalidation:
-                continue
+            #logmessage("Question.invalidate_dependencies: invalidating for " + field_name)
+            if field_name in self.interview.invalidation or field_name in self.interview.onchange:
+                self.interview.invalidate_dependencies(field_name, the_user_dict, old_values)
             try:
-                exec(field_name, the_user_dict)
+                del the_user_dict['_internal']['dirty'][field_name]
             except:
-                continue
-            for variable in self.invalidation[field_name]:
-                try:
-                    exec("_internal['dirty'][" + repr(variable) + "] = " + variable, the_user_dict)
-                except:
-                    pass
-                try:
-                    exec("del " + variable, the_user_dict)
-                except:
-                    pass
+                pass
     def exec_setup(self, is_generic, the_x, iterators, the_user_dict):
         if is_generic:
             if the_x != 'None':
@@ -4495,13 +4511,20 @@ class Question:
                             else:
                                 defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                         except:
-                            if hasattr(field, 'default'):
-                                if isinstance(field.default, TextObject):
-                                    defaults[field.number] = field.default.text(user_dict).strip()
-                                else:
-                                    defaults[field.number] = field.default
-                            elif hasattr(field, 'extras') and 'default' in field.extras:
-                                defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
+                            try:
+                                #logmessage("Checking if " + from_safeid(field.saveas) + " is in dirty")
+                                defaults[field.number] = user_dict['_internal']['dirty'][from_safeid(field.saveas)]
+                            except:
+                                try:
+                                    defaults[field.number] = user_dict['_internal']['dirty'][substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators)]
+                                except:
+                                    if hasattr(field, 'default'):
+                                        if isinstance(field.default, TextObject):
+                                            defaults[field.number] = field.default.text(user_dict).strip()
+                                        else:
+                                            defaults[field.number] = field.default
+                                    elif hasattr(field, 'extras') and 'default' in field.extras:
+                                        defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
                         if hasattr(field, 'helptext'):
                             helptexts[field.number] = field.helptext.text(user_dict)
                         if hasattr(field, 'hint'):
@@ -5369,6 +5392,7 @@ class Interview:
         self.ids_in_use = set()
         self.id_orderings = list()
         self.invalidation = dict()
+        self.onchange = dict()
         self.orderings = list()
         self.orderings_by_question = dict()
         self.images = dict()
@@ -5425,6 +5449,48 @@ class Interview:
     def ordered(self, the_list):
         if len(the_list) <= 1:
             return the_list
+    def invalidate_dependencies(self, field_name, the_user_dict, old_values):
+        #logmessage("Interview.invalidate_dependencies: invalidating for " + field_name)
+        #logmessage("Interview.invalidate_dependencies: invalidation is " + repr(self.invalidation))
+        try:
+            current_value = eval(field_name, the_user_dict)
+        except:
+            return
+        try:
+            if current_value == old_values[field_name]:
+                #logmessage("Interview.invalidate_dependencies: no need to dirty for " + field_name + " because unchanged")
+                return
+        except:
+            pass
+        if field_name in self.invalidation:
+            for variable in self.invalidation[field_name]:
+                if re.search(r'^x[\.\]]', variable) and not re.search(r'^x[\.\]]', field_name):
+                    continue
+                if '[' in variable:
+                    ok = True
+                    for iterator in ['[i]', '[j]', '[k]', '[l]', '[m]', '[n]']:
+                        if iterator in variable and iterator not in field_name:
+                            ok = False
+                            break
+                    if not ok:
+                        continue
+                try:
+                    exec("_internal['dirty'][" + repr(variable) + "] = " + variable, the_user_dict)
+                except:
+                    continue
+                try:
+                    exec("del " + variable, the_user_dict)
+                    #logmessage("Interview.invalidate_dependencies: deleted " + variable)
+                except:
+                    pass
+        if field_name in self.onchange:
+            if 'alpha' not in the_user_dict:
+                self.load_util(the_user_dict)
+            for the_code in self.onchange[field_name]:
+                try:
+                    exec(the_code, the_user_dict)
+                except Exception as err:
+                    logmessage("Exception raised by on change code: " + err.__class__.__name__ + ": " + str(err))
     def get_ml_store(self):
         if hasattr(self, 'ml_store'):
             return self.ml_store
@@ -5811,7 +5877,7 @@ class Interview:
                     if not self.imports_util:
                         if self.consolidated_metadata.get('suppress loading util', False):
                             exec(import_process_action, user_dict)
-                        else:
+                        elif 'alpha' not in user_dict:
                             exec(import_util, user_dict)
                     if force_question is not None:
                         if self.debug:
@@ -6191,6 +6257,10 @@ class Interview:
         if self.debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
         #return(pickleable_objects(user_dict))
+    def load_util(self, the_user_dict):
+        if not self.imports_util:
+            if not self.consolidated_metadata.get('suppress loading util', False):
+                exec(import_util, the_user_dict)
     def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
         seeking_question = kwargs.get('seeking_question', False)
         variable_stack = kwargs.get('variable_stack', set())
@@ -6561,6 +6631,14 @@ class Interview:
                     if question.question_type in ["code", "event_code"]:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         was_defined = False
+                        old_values = dict()
+                        if question.question_type != 'event_code':
+                            for field_name in question.fields_used:
+                                if field_name in self.invalidation:
+                                    try:
+                                        old_values[field_name] = eval(field_name, user_dict)
+                                    except:
+                                        pass
                         try:
                             exec("__oldvariable__ = " + str(missing_var), user_dict)
                             exec("del " + str(missing_var), user_dict)
@@ -6577,7 +6655,6 @@ class Interview:
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
-                            question.invalidate_dependencies()
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)
@@ -6588,7 +6665,7 @@ class Interview:
                             #question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
-                            question.invalidate_dependencies()
+                            question.invalidate_dependencies(user_dict, old_values)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             if was_defined:

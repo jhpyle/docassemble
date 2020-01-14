@@ -16,7 +16,7 @@ import json
 import types
 import mimetypes
 import datetime
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun, invalidate
 import docassemble.base.functions
 import docassemble.base.filter
 import docassemble.base.file_docx
@@ -262,6 +262,11 @@ class DAObject(object):
         for attr in pargs:
             if hasattr(self, attr):
                 delattr(self, attr)
+    def invalidate_attr(self, *pargs):
+        """Invalidate attributes."""
+        for attr in pargs:
+            if hasattr(self, attr):
+                invalidate(self.instanceName + '.' + attr)
     def is_peer_relation(self, target, relationship_type, tree):
         for item in tree.query_peer(tree._and(involves=[self, target], relationship_type=relationship_type)):
             return True
@@ -896,7 +901,7 @@ class DAList(DAObject):
             else:
                 self.gathered
         return
-    def reset_gathered(self, recursive=False, only_if_empty=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False, mark_incomplete=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered on " + self.instanceName)
         if only_if_empty and len(self.elements) > 0:
@@ -913,6 +918,10 @@ class DAList(DAObject):
             delattr(self, 'revisit')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
+        if mark_incomplete and self.complete_attribute is not None:
+            for item in self.elements:
+                if hasattr(item, self.complete_attribute):
+                    delattr(item, self.complete_attribute)
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
@@ -1792,7 +1801,7 @@ class DADict(DAObject):
                     new_obj_parameters[key] = val
                 if parg not in self.elements:
                     self.initializeObject(parg, item_object_type, **new_obj_parameters)
-    def reset_gathered(self, recursive=False, only_if_empty=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False, mark_incomplete=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered on " + self.instanceName)
         if only_if_empty and len(self.elements) > 0:
@@ -1809,6 +1818,10 @@ class DADict(DAObject):
             delattr(self, 'revisit')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
+        if mark_incomplete and self.complete_attribute is not None:
+            for item in list(self.elements.values()):
+                if hasattr(item, self.complete_attribute):
+                    delattr(item, self.complete_attribute)
         if recursive:
             self._reset_gathered_recursively()
     def slice(self, *pargs):
@@ -2464,7 +2477,7 @@ class DASet(DAObject):
             else:
                 self.gathered
         return
-    def reset_gathered(self, recursive=False, only_if_empty=False):
+    def reset_gathered(self, recursive=False, only_if_empty=False, mark_incomplete=False):
         """Indicates that there is more to be gathered"""
         #logmessage("reset_gathered: " + self.instanceName + ": del on there_is_another")
         if only_if_empty and len(self.elements) > 0:
@@ -2479,6 +2492,10 @@ class DASet(DAObject):
             delattr(self, 'gathered')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
+        if mark_incomplete and self.complete_attribute is not None:
+            for item in list(self.elements):
+                if hasattr(item, self.complete_attribute):
+                    delattr(item, self.complete_attribute)
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
