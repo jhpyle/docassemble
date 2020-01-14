@@ -477,6 +477,11 @@ You can also give it multiple attribute names.
 client.delattr('birthdate', 'sibling_count')
 {% endhighlight %}
 
+<a name="DAObject.invalidate_attr"></a>The `invalidate_attr()` method
+is like the `delattr()` method, except it remembers the values of the
+attributes in order to present them as default values to the user when
+the [`question`] that defines the attribute is asked again.
+
 <a name="DAObject.pronoun"></a><a
 name="DAObject.pronoun_objective"></a><a
 name="DAObject.pronoun_subjective"></a><a
@@ -767,7 +772,12 @@ Other methods available on a `DAList` are:
   the user to add items to a list that may already be considered
   complete.  If called with the optional keyword argument `recursive`
   set to `True` (the default is `False`), the lists inside the list
-  are also marked as not-yet-gathered.
+  are also marked as not-yet-gathered.  If the `only_if_empty` keyword
+  argument is `True`, then the list will be marked not-yet-gathered
+  only if it is empty.  If the `mark_incomplete` keyword argument is
+  `True`, and the list has a `complete_attribute`, then the
+  `complete_attribute` of each item in the list will be undefined if
+  it is defined.
 * <a name="DAList.has_been_gathered"></a><a name="DADict.has_been_gathered"></a>
   <a name="DASet.has_been_gathered"></a>`has_been_gathered()` - returns
   `True` if the group has been gathered yet.  Does not trigger the

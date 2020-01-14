@@ -466,6 +466,59 @@ used by the question.  Also, if your question uses variables that are
 not mentioned in the `need` list, **docassemble** will still pursue
 definitions of those variables.
 
+## <a name="depends on"></a>`depends on`
+
+The `depends on` specifier does what `need` does, but also indicates
+that if the listed variables change, the results of the [`question`] or
+[`code`] block should be invalidated.
+
+{% include side-by-side.html demo="depends-on" %}
+
+In this example, if the user goes through the interview to the end,
+but then edits `a`, then if and when `a` is changed to a different
+value, `c` and `b` will be undefined.  The original value of `b` will
+be remembered, so that when the interview logic asks the question to
+define `b`, the original value will be presented as a default.  When
+`a` is set, `c` is also undefined, so that when the interview logic
+requires a definition of `c`, the [`code`] block will be run to
+recompute the value of `c`.
+
+If the user goes through the interview and then edits `b`, a change in
+`b` will trigger the invalidation of `c`.
+
+The `depends on` specifier will also cause variables to be invalidated
+when they are changed by a [`code`] block.
+
+{% include side-by-side.html demo="depends-on-code" %}
+
+In this interview, the variable `b` is set by a [`code`] block.  If
+the user edits `a` to a different value, the `depends on` specifier on
+the [`code`] block causes the [`code`] block to be re-run.  The change
+in `b` causes the value of `c` to be invalidated.  As a result, `c` is
+automatically updated when `a` changes.
+
+Note that the `depends on` specifier results in invalidation when a
+variable is changed, not when it is defined.  If a variable is
+undefined and is then defined, this is not considered a change for
+purposes of the `depends on` specifier.  If a user presses Continue on
+a screen but does not change the value of a variable, the `depends on`
+logic is not triggered.
+
+The `depends on` specifier can be used with iterator variables as long
+as the `depends on` variables and the variables set by the block all
+use the same iterator variables.
+
+{% include side-by-side.html demo="depends-on-iterator" %}
+
+In this interview, the "Edit" button on the table only triggers the
+asking of the `.pay_period` question, but the `depends on` logic will
+cause the `.income` question to be re-asked, and the `.annual_income`
+amount to be re-calculated, if the `.pay_period` answer changes.
+
+In situations where variables that are part of a list need to be
+invalidated when a variable that is not part of the same list item
+changes, the [`on change`] block can be used.
+
 ## <a name="reconsider"></a>`reconsider`
 
 The `reconsider` modifier can be used in two ways: it can be set to a
@@ -1203,3 +1256,4 @@ forget others.
 [Redis]: {{ site.baseurl }}/docs/functions.html#redis
 [Google Analytics feature]: {{ site.baseurl }}/docs/config.html#google analytics
 [`generic object` modifier]: {{ site.baseurl }}/docs/fields.html#generic
+[`on change`]: {{ site.baseurl }}/docs/initial.html#on change

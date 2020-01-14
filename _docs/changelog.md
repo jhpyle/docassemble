@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.78](https://github.com/jhpyle/docassemble/releases/tag/v0.5.78) - 2020-01-14
+
+### Added
+- The `depends on` modifier.
+- The `on change` block.
+- The `invalidate()` function.
+- The `.invalidate_attr()` method of `DAObject`.
+- The `invalidate` option in a `review` block.
+
 ## [0.5.77](https://github.com/jhpyle/docassemble/releases/tag/v0.5.77) - 2020-01-12
 
 ### Added

@@ -579,6 +579,57 @@ inefficient because they cause extra code to be run every time a new
 screen loads.  For a more computationally efficient alternative, see
 the [`reconsider()`] function
 
+# <a name="on change"></a>Running code when a variable changes: `on change`
+
+If you allow users to go back and change their answers, you may
+find situations where using [`depends on`] is not sufficient to
+invalidate variables that depend on a variable that has been altered.
+
+In this situation, you can write a block of [Python] code in an `on
+change` block that will be executed when a variable is changed.
+
+{% include side-by-side.html demo="on-change" %}
+
+If the user finishes this interview and then changes his mind about
+whether he is married (indicated by the variable `married`), this will
+invalidate the answers to the questions about income.  If he had said
+at the outset that he was married, the questions would have asked
+about the income of both himself and his spouse.
+
+Tagging the `income[i].amount` question with `depends on: married`
+would not work because in the context of a change to `married`, the
+variable `i` is not defined.
+
+The `on change` block states explicitly what should be done if the
+variable `married` changes: the `.amount` attributes should be
+invalidated and the `income` list should be reopened for gathering.
+Calling `income.reset_gathered()` with `mark_incomplete=True` will
+undefine the `.complete` attributes on each of the income items.  This
+is important because otherwise the existing items would still be
+considered "complete," and thus the `.amount` attributes would not be
+re-defined by the interview logic.
+
+The `on change` specifier needs to point to a [YAML] dictionary in
+which the keys are variable names and the values are [Python] code
+that will be run when the given variable changes value.
+
+The code is only run when the variable exists and is altered, not when
+the variable is undefined and is then defined.
+
+It is important that `on change` code runs to completion without
+encountering any undefined variables.  It runs during a different part
+of the screen loading process than other code.  The code runs before
+[`modules`] and [`imports`] blocks have loaded (although the standard
+**docassemble** functions from `docassemble.base.util`, such as
+[`undefine()`] and [`invalidate()`], are available).  If you need to refer
+to names from custom modules, bring them into the namespace manually
+with a line like `from docassemble.missouri import MyObject`.
+
+You can have more than one `on change` block in your interview.  If
+more than one block refers to the same variable, all of the code
+blocks will be run.  The code blocks will be run in the order in which
+the blocks appear in the [YAML] file.
+
 # <a name="order"></a>Changing order of precedence
 
 As explained in [how **docassemble** finds questions for variables],
@@ -2085,6 +2136,7 @@ tables.
 [`verbose error messages`]: {{ site.baseurl}}/docs/config.html#verbose error messages
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`modules`]: #modules
+[`imports`]: #imports
 [`process_action`]: {{ site.baseurl}}/docs/functions.html#process_action
 [`template`]: #template
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
@@ -2147,3 +2199,6 @@ tables.
 [`analytics id`]: {{ site.baseurl}}/docs/config.html#analytics id
 [`google`]: {{ site.baseurl}}/docs/config.html#google
 [Font Awesome]: https://fontawesome.com
+[`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
+[`undefine()`]: {{ site.baseurl}}/docs/functions.html#undefine
+[`invalidate()`]: {{ site.baseurl}}/docs/functions.html#invalidate

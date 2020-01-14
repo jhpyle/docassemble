@@ -2130,6 +2130,164 @@
     if user_is_communist and user_reconsidering_communism:
       user_reconsidering_communism = False
       del user_is_communist
+"depends-on": |-
+  question: |
+    What is A?
+  fields:
+    - A: a
+      datatype: number
+  ---
+  question: |
+    What is the square of ${ a }?
+  fields:
+    - B: b
+      datatype: number
+  depends on:
+    - a
+  ---
+  code: |
+    c = a + b
+  depends on:
+    - a
+    - b
+  ---
+  event: review_screen
+  question: |
+    Review your answers.
+  review:
+    - label: Edit A
+      field: a
+      button: |
+        A is ${ a }.
+    - label: Edit B
+      field: b
+      button: |
+        B is ${ b }.
+    - note: |
+        C is ${ c }.
+  ---
+  mandatory: True
+  code: |
+    need(a, b, c)
+    review_screen
+"depends-on-code": |-
+  question: |
+    What is A?
+  fields:
+    - A: a
+      datatype: number
+  ---
+  code: |
+    b = a * a
+  depends on:
+    - a
+  ---
+  code: |
+    c = a + b
+  depends on:
+    - a
+    - b
+  ---
+  event: review_screen
+  question: |
+    Review your answers.
+  review:
+    - label: Edit A
+      field: a
+      button: |
+        A is ${ a }.
+    - note: |
+        B is ${ b }.
+    - note: |
+        C is ${ c }.
+  ---
+  mandatory: True
+  code: |
+    need(a, b, c)
+    review_screen
+"depends-on-iterator": |-
+  objects:
+    - people: DAList.using(object_type=Individual, there_are_any=True, complete_attribute='complete')
+  ---
+  question: |
+    How much does ${ people[i] }
+    get paid per pay period?
+  fields:
+    - Amount: people[i].income
+      datatype: currency
+  depends on:
+    - people[i].pay_period
+  ---
+  question: |
+    How frequently does
+    ${ people[i] } get paid?
+  fields:
+    - no label: people[i].pay_period
+      datatype: number
+      choices:
+        - Monthly: 12.0
+        - Biweekly: 26.0
+        - Semi-monthly: 24.0
+        - Weekly: 52.0
+  ---
+  code: |
+    people[i].annual_income = people[i].income * people[i].pay_period
+  depends on:
+    - people[i].pay_period
+    - people[i].income
+  ---
+  question: |
+    What is the name of the
+    ${ ordinal(i) } person?
+  fields:
+    - First name: people[i].name.first
+    - Last name: people[i].name.last
+  ---
+  code: |
+    people[i].name.first
+    people[i].annual_income
+    people[i].complete = True
+  ---
+  question: |
+    Is there another person?
+  yesno: people.there_is_another
+  ---
+  field: review_screen
+  question: Review
+  subquestion: |
+    ${ people.table }
+
+    ${ people.add_action() }
+  ---
+  table: people.table
+  rows: people
+  columns:
+    - Name: row_item.name
+    - Annual income: currency(row_item.annual_income)
+  edit:
+    - name.first
+    - pay_period
+  ---
+  event: final_screen
+  question: Summary
+  subquestion: |
+    % for person in people:
+    ${ person }
+    makes
+    ${ currency(person.income) }
+    ${ nice_number(person.pay_period) }
+    times per year, for an annual income of
+    ${ currency(person.annual_income) }.
+
+    % endfor
+
+    [Review](${ url_action('review_screen') })
+  ---
+  mandatory: True
+  code: |
+    people.gather()
+    people.table
+    final_screen
 "device": |-
   question: |
     % if device().is_mobile:
@@ -7448,6 +7606,28 @@
     % endif
   buttons:
     - Restart: restart
+"on-change": |-
+  on change:
+    married: |
+      for item in income.complete_elements():
+        item.invalidate_attr('amount')
+      income.reset_gathered(mark_incomplete=True)
+  ---
+  question: |
+    Are you married?
+  yesno: married
+  ---
+  question: |
+    % if married:
+    What is the ${ ordinal(i) } income item
+    that you and your spouse earn?
+    % else:
+    What is your ${ ordinal(i) } income source?
+    % endif
+  fields:
+    - Name: income[i].name.text
+    - Amount per year: income[i].amount
+      datatype: currency
 "only-sets": |-
   question: |
     What is the best color?

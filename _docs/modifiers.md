@@ -943,6 +943,15 @@ block is used, the definitions of one or more variables must be
 obtained.  This specifier is explained in the [`need`] subsection of
 the [Logic section].
 
+# <a name="depends on"></a>Indicate prerequisite variables that invalidate a block
+
+You can add a [`depends on`] specifier to a block to indicate a list
+of variables that, when changed, should invalidate the variables set
+by the block.  It also indicates that the listed variables should be
+asked first (the functionality of the [`need`] modifier).  This
+specifier is explained in the [`depends on`] subsection of the [Logic
+section].
+
 # <a name="undefine"></a>Undefine variables when a `question` is asked
 
 You can add an `undefine` specifier to a block to indicate that before
@@ -1048,5 +1057,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [Segment]: https://segment.com/
 [Logic section]: {{ site.baseurl }}/docs/logic.html
 [`need`]: {{ site.baseurl }}/docs/logic.html#need
+[`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`undefine`]: {{ site.baseurl }}/docs/logic.html#undefine

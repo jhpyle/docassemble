@@ -123,6 +123,12 @@ undefine('favorite_fruit', 'favorite_vegetable')
 Calling undefine in this way is faster than calling `undefine()`
 multiple times.
 
+## <a name="invalidate"></a>invalidate()
+
+The `invalidate()` function does what `undefine()` does, but it also
+remembers the previous value and offers it as a default when a
+[`question`] is asked again.
+
 ## <a name="forget_result_of"></a>forget_result_of()
 
 If you want a [`question`] with [embedded blocks] to be asked again,

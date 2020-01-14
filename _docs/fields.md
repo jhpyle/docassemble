@@ -2238,9 +2238,9 @@ returned back to the same page again, and when that happens they may
 assume that clicking the link didn't do anything, and the app is
 broken.
 
-There are two other special commands that you can use in a list of
-variables in a `review` item: `set` and `undefine`.  The following
-example illustrates `set`:
+There are three other special commands that you can use in a list of
+variables in a `review` item: `set`, `undefine`, and `invalidate`.
+The following example illustrates `set`:
 
 {% include side-by-side.html demo="review-8" %}
 
@@ -2260,6 +2260,11 @@ In the above interview, the `set` command sets `address.geolocated` to
 `False`, which means that when the `address.county` is recomputed, and
 the [`.geolocate()`] method is run again by the `code` block, then the
 [`.geolocate()`] method will actually geolocate the new address.
+
+The `undefine` specifier causes the values to be undefined.  The
+`invalidate` specifier works like `undefine`, except that the original
+values (if any) will be remembered and offered up as default values
+when a [`question`] defining the variable is asked again.
 
 ### <a name="review field"></a>Placing a `review` screen within the interview logic
 
