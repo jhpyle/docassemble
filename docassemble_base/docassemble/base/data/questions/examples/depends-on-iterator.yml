@@ -54,7 +54,7 @@ field: review_screen
 question: Review
 subquestion: |
   ${ people.table }
-  
+
   ${ people.add_action() }
 ---
 table: people.table
@@ -70,15 +70,15 @@ event: final_screen
 question: Summary
 subquestion: |
   % for person in people:
-  ${ person } 
-  makes 
+  ${ person }
+  makes
   ${ currency(person.income) }
   ${ nice_number(person.pay_period) }
   times per year, for an annual income of
   ${ currency(person.annual_income) }.
-  
+
   % endfor
-  
+
   [Review](${ url_action('review_screen') })
 ---
 mandatory: True

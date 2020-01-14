@@ -52,7 +52,7 @@ subquestion: |
   You said you are not married.
   % endif
   [Change this](${ url_action('married') })
-  
+
   ${ income.table }
 
   ${ income.add_action() }
