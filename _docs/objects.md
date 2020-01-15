@@ -764,8 +764,16 @@ Other methods available on a `DAList` are:
   `True` if the `other_set` is a subset of the current list,
   considered as a set.  Otherwise, returns `False`.
 * <a name="DAList.gather"></a><a name="DADict.gather"></a><a
-  name="DASet.gather"></a>`gather()` - causes the items of the list
-  to be gathered and named.  Returns `True`.
+  name="DASet.gather"></a>`gather()` - causes the items of the list to
+  be gathered and named.  Returns `True`.  Optional keyword parameters
+  include `item_object_type`, which overrides the default
+  `.object_type` attribute; `number`, which indicates a list length
+  (overriding any `.target_number` attribute), `minimum`, which
+  indicates a minimum number of items to gather (overriding the
+  `.minimum_number` attribute), and `complete_attribute`, which
+  indicates the attribute of an item that will be sought before an
+  item is considered complete (overriding the `.complete_attribute`
+  attribute).
 * <a name="DAList.reset_gathered"></a><a name="DADict.reset_gathered"></a><a
   name="DASet.reset_gathered"></a>`reset_gathered()` - causes the
   list to be considered not-yet-gathered.  This can be used to query
