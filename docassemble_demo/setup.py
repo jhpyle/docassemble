@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.demo',
-      version='0.5.78',
+      version='0.5.79',
       python_requires='>=3.5',
       description=('A demonstration package for docassemble.'),
       long_description=read("README.md"),
@@ -58,7 +58,7 @@ setup(name='docassemble.demo',
       download_url='https://download.docassemble.org/docassemble-demo.tar.gz',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
-      install_requires = ['docassemble==0.5.78', 'docassemble.base==0.5.78', "python-dateutil==2.8.0"],
+      install_requires = ['docassemble==0.5.79', 'docassemble.base==0.5.79', "python-dateutil==2.8.0"],
       zip_safe = False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo'),
   )
