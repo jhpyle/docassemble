@@ -30,6 +30,7 @@ and offer "no code" tools for deployment and development.
 [his blog](https://www.nonprofittechy.com/blog/),
 including articles on
 [how to get started](https://www.nonprofittechy.com/2019/01/12/get-started-with-docassemble/) with **docassemble** (1/12/2019),
+[the YAML interview format](https://www.nonprofittechy.com/2020/01/17/understanding-docassembles-yaml-interview-format/) (1/17/2020),
 [using groups](https://www.nonprofittechy.com/2018/11/26/gathering-repeated-information-working-with-docassemble-groups/) (11/26/2018),
 and [object oriented programming](https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/) (9/12/2018).
 

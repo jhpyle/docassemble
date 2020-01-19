@@ -2278,6 +2278,35 @@ required rather than optional.
 Required privileges: `admin`, or the API owner's user ID is the same
 as `user_id`.
 
+## <a name="convert_file"></a>Convert a file to Markdown
+
+Description: Converts an uploaded file to Markdown.
+
+Path: `/api/convert_file`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+
+File data:
+ - `file`: a file upload.
+
+Required privileges: None
+
+Responses on failure:
+ - [400] "Invalid input file format." if the input file format could
+   not be converted to Markdown.  Valid formats include .docx, .doc,
+   .rtf, and .odt.
+ - [400] "Unable to convert file." if an error occurred while
+   attempting to convert the file.
+
+Response on success: [200]
+
+Body of response: Markdown-formatted text.
+
 # <a name="questionless"></a>Example of usage: questionless interview
 
 One way to use the API is to use **docassemble** as nothing more than
