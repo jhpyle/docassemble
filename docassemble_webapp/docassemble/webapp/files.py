@@ -508,7 +508,7 @@ except ImportError:
 """
     licensetext = str(info['license'])
     if re.search(r'MIT License', licensetext):
-        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(author_info['first name']) + " " + str(author_info['last name']) + """
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

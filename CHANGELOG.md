@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.79] - 2020-01-18
+### Added
+- The `convert_file` API endpoint.
+### Fixed
+- Incorrect tab order in Playground Pull.
+
 ## [0.5.78] - 2020-01-14
 ### Added
 - The `depends on` modifier.

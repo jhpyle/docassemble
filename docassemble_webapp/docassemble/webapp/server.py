@@ -13448,7 +13448,7 @@ except ImportError:
 The MIT License (MIT)
 
 """
-            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(current_user.first_name) + " " + str(current_user.last_name) + """
+            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(name_of_user(current_user)) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -15421,7 +15421,10 @@ def playground_files():
     if filename is not None:
         area.finalize()
         with open(filename, 'rU', encoding='utf-8') as fp:
-            content = fp.read()
+            try:
+                content = fp.read()
+            except:
+                filename = None
     elif formtwo.file_content.data:
         content = re.sub(r'\r\n', r'\n', formtwo.file_content.data)
     else:
@@ -22422,6 +22425,39 @@ def api_playground():
         if section == 'modules':
             restart_all()
         return ('', 204)
+
+@app.route('/api/convert_file', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_convert_file():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.form.copy()
+    to_format = post_data.get('format', 'md')
+    if to_format not in 'md':
+        return jsonify_with_status("Invalid output file format.", 400)
+    for filekey in request.files:
+        the_files = request.files.getlist(filekey)
+        if the_files:
+            for the_file in the_files:
+                filename = werkzeug.secure_filename(the_file.filename)
+                extension, mimetype = get_ext_and_mimetype(filename)
+                if (mimetype and mimetype in convertible_mimetypes):
+                    the_format = convertible_mimetypes[mimetype]
+                elif extension and extension in convertible_extensions:
+                    the_format = convertible_extensions[extension]
+                else:
+                    return jsonify_with_status("Invalid input file format.", 400)
+                with tempfile.NamedTemporaryFile() as temp_file:
+                    the_file.save(temp_file.name)
+                    result = word_to_markdown(temp_file.name, the_format)
+                    if result is None:
+                        return jsonify_with_status("Unable to convert file.", 400)
+                    with open(result.name, 'rU', encoding='utf-8') as fp:
+                        contents = fp.read()
+                response = make_response(contents, 200)
+                response.headers['Content-Type'] = 'text/plain'
+                return response
 
 def add_api_key(user_id, name, method, allowed):
     info = dict(constraints=allowed, method=method, name=name)
