@@ -21552,9 +21552,32 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if user_dict is None:
         #release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
+    pre_assembly_necessary = False
+    for key, val in variables.items():
+        if contains_volatile.search(key):
+            pre_assembly_necessary = True
+            break
+    if pre_assembly_necessary is False and literal_variables is not None:
+        for key, val in literal_variables.items():
+            if contains_volatile.search(key):
+                pre_assembly_necessary = True
+                break
+    if pre_assembly_necessary is False and del_variables is not None:
+        for key in del_variables:
+            if contains_volatile.search(key):
+                pre_assembly_necessary = True
+                break
+    if pre_assembly_necessary:
+        interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        ci = current_info(yaml=yaml_filename, req=request)
+        ci['session'] = session_id
+        ci['encrypted'] = is_encrypted
+        ci['secret'] = secret
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
+        interview.assemble(user_dict, interview_status)
     try:
         for key, val in variables.items():
-            if illegal_variable_name(key) or contains_volatile.search(key):
+            if illegal_variable_name(key):
                 raise Exception("Illegal value as variable name.")
             if isinstance(val, (docassemble.base.util.DADateTime, docassemble.base.util.DAObject)):
                 user_dict['_internal']['_tempvar'] = val

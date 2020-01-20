@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.80] - 2020-01-20
+### Fixed
+- Variables with iterators or generic object references could not be
+  set through the API or `set_session_variables()`.
+
 ## [0.5.79] - 2020-01-18
 ### Added
 - The `convert_file` API endpoint.
