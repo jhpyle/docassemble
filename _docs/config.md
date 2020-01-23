@@ -2995,6 +2995,17 @@ will run as root upon startup that will copy files from the [`certs`]
 directory to the `cert install directory` and set appropriate file
 permissions on the certificates.
 
+## <a name="allow updates"></a>Whether software updating is allowed
+
+By default, a user with privileges of administrator or developer can
+install Python packages on the server, or update existing Python
+packages.  To disable updating of packages through the user interface,
+set `allow updates` to `false`.
+
+{% highlight yaml %}
+allow updates: false
+{% endhighlight %}
+
 ## <a name="update on start"></a>Whether software is updated on start
 
 By default, when a [Docker] container starts, whether it is starting

@@ -827,11 +827,15 @@ your container for the new configuration to take effect.
 * <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
   X-Sendfile header is not functional in your configuration for
   whatever reason.  See the [`xsendfile`] configuration directive.
+* <a name="DAALLOWUPDATES"></a>`DAALLOWUPDATES`: Set this to `false`
+  if you want to disable the updating of software through the user
+  interface.  See the [`allow updates`] configuration directive.
 * <a name="DAUPDATEONSTART"></a>`DAUPDATEONSTART`: Set this to `false`
   if you do not want the container to update its software using `pip`
   when it starts up.  Set `DAUPDATEONSTART` to `initial` if you want
   the container to update its software during the first `docker run`,
-  but not on every `docker start`.
+  but not on every `docker start`.  See the [`update on start`]
+  configuration directive.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
@@ -2150,3 +2154,5 @@ line), as the containers depend on the images.
 [Kubernetes]: https://kubernetes.io/
 [`collect statistics`]: {{ site.baseurl }}/docs/config.html#collect statistics
 [Kubernetes]: https://kubernetes.io/
+[`update on start`]: {{ site.baseurl }}/docs/config.html#update on start
+[`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
