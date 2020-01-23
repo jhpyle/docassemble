@@ -2490,7 +2490,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                     if current_user.has_role('admin', 'developer', 'trainer'):
                         navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                     if current_user.has_role('admin', 'developer'):
-                        navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
+                        if app.config['ALLOW_UPDATES']:
+                            navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
                         if app.config['ENABLE_PLAYGROUND']:
                             navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
@@ -12828,6 +12829,8 @@ def get_package_name_from_zip(zippath):
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
+    if not app.config['ALLOW_UPDATES']:
+        return ('File not found', 404)
     if 'taskwait' in session:
         del session['taskwait']
     #pip.utils.logging._log_state = threading.local()
@@ -23797,6 +23800,7 @@ with app.app_context():
     app.config['PARTS'] = page_parts
     app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
     app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
+    app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
     interviews_to_load = daconfig.get('preloaded interviews', None)
     if isinstance(interviews_to_load, list):
         for yaml_filename in daconfig['preloaded interviews']:

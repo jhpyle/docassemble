@@ -20,14 +20,15 @@ echo "config.yml is at " $DA_CONFIG_FILE >&2
 echo "1" >&2
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get clean &> /dev/null
-apt-get -q -y update &> /dev/null
-
-pandoc --help &> /dev/null || apt-get -q -y install pandoc
+if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+    apt-get clean &> /dev/null
+    apt-get -q -y update &> /dev/null
+    pandoc --help &> /dev/null || apt-get -q -y install pandoc
+fi
 
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
    cd /tmp \
    && wget -q https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb \
    && dpkg -i pandoc-2.7.3-1-amd64.deb \
@@ -403,6 +404,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAWEBSOCKETSIP}}/'"${DAWEBSOCKETSIP:-null}"'/' \
         -e 's/{{DAWEBSOCKETSPORT}}/'"${DAWEBSOCKETSPORT:-null}"'/' \
         -e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
+	-e 's/{{DAALLOWUPDATES}}/'"${DAALLOWUPDATES:-true}"'/' \
         -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
@@ -801,13 +803,13 @@ fi
 
 echo "37" >&2
 
-if [ "${DAUPDATEONSTART:-true}" = "true" ]; then
+if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing upgrading of packages" >&2
     su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
-if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ]; then
+if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing initial upgrading of packages" >&2
     su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"

@@ -1173,7 +1173,7 @@ class Question:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
             if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
                 self.interview.show_progress_bar_percentage = True
-            if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], text_type):
+            if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], str):
                 self.interview.progress_bar_method = data['features']['progress bar method']
             if 'progress bar multiplier' in data['features'] and isinstance(data['features']['progress bar multiplier'], (int, float)):
                 if data['features']['progress bar multiplier'] <= 0.0 or data['features']['progress bar multiplier'] >= 1.0:
@@ -6006,7 +6006,7 @@ class Interview:
                     if 'pending_error' in docassemble.base.functions.this_thread.misc:
                         del docassemble.base.functions.this_thread.misc['pending_error']
                     #logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
-                    if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                    if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                         logmessage("NameError exception during document assembly: " + str(the_exception))
                     docassemble.base.functions.reset_context()
                     seeking_question = False
@@ -6053,7 +6053,7 @@ class Interview:
                         break
                 except UndefinedError as the_exception:
                     #logmessage("UndefinedError")
-                    if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                    if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                         #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
                         logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n")
                     docassemble.base.functions.reset_context()
@@ -6698,7 +6698,7 @@ class Interview:
                 if 'pending_error' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['pending_error']
                 #logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
-                if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                     logmessage("NameError exception during document assembly: " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 seeking_question = False
@@ -6754,7 +6754,7 @@ class Interview:
                 return(question_result)
             except UndefinedError as the_exception:
                 #logmessage("UndefinedError")
-                if self.debug and docassemble.base.functions.this_thread.evaluation_context is not None:
+                if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                     #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
                     logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n")
                 docassemble.base.functions.reset_context()

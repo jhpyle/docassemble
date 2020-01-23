@@ -513,6 +513,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'xsendfile', 'XSENDFILE')
         if env_exists('DAUPDATEONSTART'):
             override_config(daconfig, messages, 'update on start', 'DAUPDATEONSTART')
+        if env_exists('DAALLOWUPDATES'):
+            override_config(daconfig, messages, 'allow updates', 'DAALLOWUPDATES')
         if env_exists('URLROOT'):
             override_config(daconfig, messages, 'url root', 'URLROOT')
         if env_exists('DAHOSTNAME'):

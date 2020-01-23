@@ -42,7 +42,9 @@
                 <a class="dropdown-item" href="{{ url_for('train') }}">{{ word('Train') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer']) %}
+                {%- if config['ALLOW_UPDATES'] %}
                 <a class="dropdown-item" href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a>
+                {%- endif %}
                 <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
                 {%- if config['ENABLE_PLAYGROUND'] %}
                 <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>

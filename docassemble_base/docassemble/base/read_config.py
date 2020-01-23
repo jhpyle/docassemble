@@ -100,6 +100,8 @@ if __name__ == "__main__":
             print('export DAUPDATEONSTART=false')
         elif daconfig['update on start'] == 'initial':
             print('export DAUPDATEONSTART=initial')
+    if 'allow updates' in daconfig and daconfig['allow updates'] is False:
+        print('export DAALLOWUPDATES=false')
     if 'expose websockets' in daconfig and daconfig['expose websockets']:
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:

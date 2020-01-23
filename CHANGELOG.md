@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.81] - 2020-01-22
+### Added
+- The `allow updates` Configuration directive and `DAALLOWUPDATES`
+  Docker environment variable.
+### Fixed
+- Google Drive issue with files reporting no size.
+- Erroneous reference to text_type.
+
 ## [0.5.80] - 2020-01-20
 ### Fixed
 - Variables with iterators or generic object references could not be

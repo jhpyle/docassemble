@@ -85,6 +85,7 @@ lets encrypt email: {{LETSENCRYPTEMAIL}}
 behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
 xsendfile: {{XSENDFILE}}
 update on start: {{DAUPDATEONSTART}}
+allow updates: {{DAALLOWUPDATES}}
 url root: {{URLROOT}}
 external hostname: {{DAHOSTNAME}}
 expose websockets: {{DAEXPOSEWEBSOCKETS}}

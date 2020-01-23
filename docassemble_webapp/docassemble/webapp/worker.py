@@ -221,6 +221,8 @@ def sync_with_google_drive(user_id):
                             continue
                         if re.search(r'^(\~)', the_file['name']):
                             continue
+                        if 'size' not in the_file:
+                            continue
                         gd_ids[section][the_file['name']] = the_file['id']
                         gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
                         if int(the_file['size']) == 0:
@@ -245,6 +247,8 @@ def sync_with_google_drive(user_id):
                             if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                                 continue
                             if re.search(r'^(\~)', the_file['name']):
+                                continue
+                            if 'size' not in the_file:
                                 continue
                             path_name = os.path.join(subdir_name, the_file['name'])
                             gd_ids[section][path_name] = the_file['id']
