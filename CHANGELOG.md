@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.82] - 2020-01-23
+### Added
+- Warnings in the logs if unrecognized keys used in interview YAML
+  dictionaries.
+### Fixed
+- The `disable others` feature interfered with the `show if` feature.
+
 ## [0.5.81] - 2020-01-22
 ### Added
 - The `allow updates` Configuration directive and `DAALLOWUPDATES`

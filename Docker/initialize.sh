@@ -15,7 +15,7 @@ export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-${DA_ROOT}/config/config.yml.
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
-echo "config.yml is at " $DA_CONFIG_FILE >&2
+echo "config.yml is at" $DA_CONFIG_FILE >&2
 
 echo "1" >&2
 

@@ -8604,6 +8604,14 @@ def index(action_argument=None):
           return false;
         }
       }
+      function daDisableIfNotHidden(query){
+        $(query).each(function(){
+          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
+          if (!(showIfParent.length && !$(showIfParent[0]).is(":visible"))){
+            $(this).prop("disabled", false);
+          }
+        });
+      }
       function daShowIfCompare(theVal, showIfVal){
         if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
           theVal = parseFloat(theVal);
@@ -10681,6 +10689,67 @@ def observer():
         $("#daSpinner").remove();
         daShowingSpinner = false;
         daSpinnerTimeout = null;
+      }
+      function daDisableIfNotHidden(query){
+        $(query).each(function(){
+          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
+          if (!(showIfParent.length && !$(showIfParent[0]).is(":visible"))){
+            $(this).prop("disabled", false);
+          }
+        });
+      }
+      function daShowIfCompare(theVal, showIfVal){
+        if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
+          theVal = parseFloat(theVal);
+        }
+        else if (typeof theVal == 'string' && theVal.match(/^-?\d+$/)){
+          theVal = parseInt(theVal);
+        }
+        if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+\.\d+$/)){
+          showIfVal = parseFloat(showIfVal);
+        }
+        else if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+$/)){
+          showIfVal = parseInt(showIfVal);
+        }
+        if (typeof theVal == 'string' || typeof showIfVal == 'string'){
+          if (String(showIfVal) == 'None' && String(theVal) == ''){
+            return true;
+          }
+          return (String(theVal) == String(showIfVal));
+        }
+        return (theVal == showIfVal);
+      }
+      function rationalizeListCollect(){
+        var finalNum = $(".dacollectextraheader").last().data('collectnum');
+        var num = $(".dacollectextraheader:visible").last().data('collectnum');
+        if (parseInt(num) < parseInt(finalNum)){
+          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('dainvisible')){
+            $('div.dacollectextraheader[data-collectnum="' + (num + 1) + '"]').show('fast');
+          }
+        }
+        var n = parseInt(finalNum);
+        var firstNum = parseInt($(".dacollectextraheader").first().data('collectnum'));
+        while (n-- > firstNum){
+          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('dainvisible')){
+              $('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').hide();
+            }
+          }
+        }
+        var n = parseInt(finalNum);
+        var seenAddAnother = false;
+        while (n-- > firstNum){
+          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
+            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible')){
+              seenAddAnother = true;
+            }
+            var current = $('div.dacollectextraheader[data-collectnum="' + n + '"]');
+            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('dainvisible')){
+              $(current).find(".dacollectadd").addClass('dainvisible');
+              $(current).find(".dacollectunremove").removeClass('dainvisible');
+            }
+          }
+        }
       }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
