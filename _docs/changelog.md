@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.82](https://github.com/jhpyle/docassemble/releases/tag/v0.5.82) - 2020-01-23
+
+### Added
+- Warnings in the logs if unrecognized keys used in interview YAML
+  dictionaries.
+
+### Fixed
+- The `disable others` feature interfered with the `show if` feature.
+
 ## [0.5.81](https://github.com/jhpyle/docassemble/releases/tag/v0.5.81) - 2020-01-22
 
 ### Added
