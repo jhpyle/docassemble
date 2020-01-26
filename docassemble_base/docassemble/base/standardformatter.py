@@ -1137,6 +1137,31 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['messages'][the_saveas]['required'] = field.validation_message('file required', status, word("You must provide a file."))
                     if 'accept' in status.extras and field.number in status.extras['accept']:
                         validation_rules['messages'][the_saveas]['accept'] = field.validation_message('accept', status, word("Please upload a file with a valid file format."))
+                if field.datatype in custom_types:
+                    if custom_types[field.datatype]['jq_rule'] is not None:
+                        if not isinstance(custom_types[field.datatype]['jq_rule'], list):
+                            to_enable = [custom_types[field.datatype]['jq_rule']]
+                        else:
+                            to_enable = custom_types[field.datatype]['jq_rule']
+                        for rule_name in to_enable:
+                            validation_rules['rules'][the_saveas][rule_name] = True
+                        if custom_types[field.datatype]['jq_message'] is not None:
+                            if isinstance(custom_types[field.datatype]['jq_rule'], list):
+                                if not isinstance(custom_types[field.datatype]['jq_message'], dict):
+                                    raise Exception("jq_message must be a dictionary if jq_rule is list")
+                                the_messages = custom_types[field.datatype]['jq_message']
+                            else:
+                                if isinstance(custom_types[field.datatype]['jq_message'], dict):
+                                    the_messages = custom_types[field.datatype]['jq_message']
+                                elif isinstance(custom_types[field.datatype]['jq_message'], str):
+                                    the_messages = {custom_types[field.datatype]['jq_rule']: custom_types[field.datatype]['jq_message']}
+                                else:
+                                    raise Exception("jq_message must be a dictionary or a string")
+                            for rule_name, the_message in the_messages.items():
+                                validation_rules['messages'][the_saveas][rule_name] = field.validation_message(rule_name, status, word(the_message))
+                        for rule_name in to_enable:
+                            if rule_name != 'required' and rule_name not in validation_rules['messages'][the_saveas]:
+                                validation_rules['messages'][the_saveas][rule_name] = field.validation_message(rule_name, status, word('You need to enter a valid value.'))
                 if field.datatype == 'boolean':
                     if field.sign > 0:
                         checkboxes[field.saveas] = 'False'

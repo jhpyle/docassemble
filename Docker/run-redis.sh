@@ -13,6 +13,26 @@ source "${DA_ACTIVATE}"
 set -- $LOCALE
 export LANG=$1
 
+function cmd_retry() {
+    local -r cmd="$@"
+    local -r -i max_attempts=4
+    local -i attempt_num=1
+    until $cmd
+    do
+        if ((attempt_num==max_attempts))
+        then
+            echo "Attempt $attempt_num failed.  Not trying again"
+            return 1
+        else
+            if ((attempt_num==1)); then
+                echo $cmd
+            fi
+            echo "Attempt $attempt_num failed."
+            sleep $(((attempt_num++)**2))
+        fi
+    done
+}
+
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
@@ -31,7 +51,7 @@ if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "nul
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
-    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 function stopfunc {
@@ -40,7 +60,7 @@ function stopfunc {
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s4cmd -f put "/var/lib/redis/dump.rdb" "s3://${S3BUCKET}/redis.rdb"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
+	cmd_retry blob-cmd -f cp "/var/lib/redis/dump.rdb" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb"
     else
 	cp /var/lib/redis/dump.rdb "${DA_ROOT}/backup/redis.rdb"
     fi

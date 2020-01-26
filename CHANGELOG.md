@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.83] - 2020-01-26
+### Added
+- Input validation features for `CustomDataType` classes.
+- Ability to use `DAOAuth` without being logged in.
+### Fixed
+- JavaScript failure on error screens during interviews.
+
 ## [0.5.82] - 2020-01-23
 ### Added
 - Warnings in the logs if unrecognized keys used in interview YAML

@@ -835,7 +835,7 @@ import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb, is_empty_mc
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
@@ -5402,7 +5402,13 @@ def index(action_argument=None):
     steps = 1
     need_to_reset = False
     need_to_resave = False
-    yaml_filename = request.args.get('i', guess_yaml_filename())
+    if 'i' not in request.args and 'state' in request.args:
+        try:
+            yaml_filename = re.sub(r'\^.*', '', from_safeid(request.args['state']))
+        except:
+            yaml_filename = guess_yaml_filename()
+    else:
+        yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is None:
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             sys.stderr.write("Redirecting to login because no YAML filename provided and no anonymous access is allowed.\n")
@@ -6077,6 +6083,24 @@ def index(action_argument=None):
                 continue
             elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
                 continue
+            elif known_datatypes[real_key] in docassemble.base.functions.custom_types:
+                info = docassemble.base.functions.custom_types[known_datatypes[real_key]]
+                if set_to_empty:
+                    if info['skip_if_empty']:
+                        continue
+                    else:
+                        test_data = info['class'].empty()
+                        data = repr(test_data)
+                else:
+                    try:
+                        if not info['class'].validate(data):
+                            raise DAValidationError(word("You need to enter a valid value."))
+                    except DAValidationError as err:
+                        validated = False
+                        field_error[orig_key] = word(err)
+                        continue
+                    test_data = info['class'].transform(data)
+                    data = repr(test_data)
             else:
                 if isinstance(data, str):
                     data = data.strip()
@@ -6165,6 +6189,24 @@ def index(action_argument=None):
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
                 continue
+            elif known_datatypes[orig_key] in docassemble.base.functions.custom_types:
+                info = docassemble.base.functions.custom_types[known_datatypes[orig_key]]
+                if set_to_empty:
+                    if info['skip_if_empty']:
+                        continue
+                    else:
+                        test_data = info['class'].empty()
+                        data = repr(test_data)
+                else:
+                    try:
+                        if not info['class'].validate(data):
+                            raise DAValidationError(word("You need to enter a valid value."))
+                    except DAValidationError as err:
+                        validated = False
+                        field_error[orig_key] = word(str(err))
+                        continue
+                    test_data = info['class'].transform(data)
+                    data = repr(test_data)
             else:
                 if isinstance(data, str):
                     data = data.strip()
@@ -8019,7 +8061,9 @@ def index(action_argument=None):
         return true;
       }
       function daProcessAjaxError(xhr, status, error){
-        $(daTargetDiv).html(xhr.responseText);
+        var theHtml = xhr.responseText;
+        theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+        $(daTargetDiv).html(theHtml);
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -9768,6 +9812,9 @@ def index(action_argument=None):
         } catch (e) {}
         return false;
       });"""
+        for info in docassemble.base.functions.custom_types.values():
+            if isinstance(info['javascript'], str):
+                the_js += "\n" + indent_by(info['javascript'].strip(), 6).rstrip()
         scripts += """
     <script type="text/javascript" charset="utf-8">
 """ + the_js + """
@@ -10938,7 +10985,9 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
-        $(daTargetDiv).html(xhr.responseText);
+        var theHtml = xhr.responseText;
+        theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+        $(daTargetDiv).html(theHtml);
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];

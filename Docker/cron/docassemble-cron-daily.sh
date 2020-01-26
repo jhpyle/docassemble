@@ -14,6 +14,26 @@ export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
 set -- $LOCALE
 export LANG=$1
 
+function cmd_retry() {
+    local -r cmd="$@"
+    local -r -i max_attempts=4
+    local -i attempt_num=1
+    until $cmd
+    do
+        if ((attempt_num==max_attempts))
+        then
+            echo "Attempt $attempt_num failed.  Not trying again"
+            return 1
+        else
+            if ((attempt_num==1)); then
+                echo $cmd
+            fi
+            echo "Attempt $attempt_num failed."
+            sleep $(((attempt_num++)**2))
+        fi
+    done
+}
+
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
@@ -29,7 +49,7 @@ fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
     export AZUREENABLE=true
-    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
@@ -62,17 +82,17 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    fi
 		fi
 		if [ "${AZUREENABLE:-false}" == "true" ]; then
-		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+		    cmd_retry blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 		    cd /
 		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 			rm -f /tmp/letsencrypt.tar.gz
 			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+			cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
 		    fi
 		    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 			for the_file in $( find /etc/apache2/sites-available/ -type f ); do
 			    target_file=`basename ${the_file}`
-			    blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
+			    cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
 			done
 		    fi
 		fi
@@ -135,7 +155,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	if [ "${AZUREENABLE:-false}" == "true" ]; then
 	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
 		target_file=`basename ${the_file}`
-		blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+		cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
 	    done
 	fi
 	rm -rf "${PGBACKUPDIR}"
@@ -175,11 +195,11 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	    BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}"
 	fi
 	for the_file in $( find "${DA_ROOT}/backup/" -type f | cut -c 31- ); do
-	    blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "${BACKUPTARGET}/${the_file}"
+	    cmd_retry blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "${BACKUPTARGET}/${the_file}"
 	done
 	for the_dir in $( find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print | cut -c 31- ); do
 	    for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
-		blob-cmd -f rm "${BACKUPTARGET}/${the_file}"
+		cmd_retry blob-cmd -f rm "${BACKUPTARGET}/${the_file}"
 	    done
 	    rm -rf "${DA_ROOT}/backup/$the_dir"
 	done

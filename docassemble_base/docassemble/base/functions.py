@@ -4165,11 +4165,24 @@ class CustomDataTypeRegister(type):
                 new_type['container_class'] = clsdict.get('container_class', 'da-field-container-datatype-' + dataname)
                 new_type['input_class'] = clsdict.get('input_class', 'da' + dataname)
                 new_type['input_type'] = clsdict.get('input_type', 'text')
+                new_type['javascript'] = clsdict.get('javascript', None)
+                new_type['jq_rule'] = clsdict.get('jq_rule', None)
+                new_type['jq_message'] = clsdict.get('jq_message', None)
+                new_type['skip_if_empty'] = clsdict.get('skip_if_empty', True)
+                new_type['class'] = cls
                 custom_types[dataname] = new_type
         super().__init__(name, bases, clsdict)
 
 class CustomDataType(object, metaclass=CustomDataTypeRegister):
-    pass
+    @classmethod
+    def validate(cls, item):
+        return True
+    @classmethod
+    def transform(cls, item):
+        return item
+    @classmethod
+    def empty(cls):
+        return None
 
 class ServerContext(object):
     pass

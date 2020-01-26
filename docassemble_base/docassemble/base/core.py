@@ -1962,7 +1962,10 @@ class DADict(DAObject):
         return sorted(self.elements.keys())
     def _validate(self, item_object_type, complete_attribute, keys=None):
         if keys is None:
-            keys = self._sorted_elements_keys()
+            try:
+                keys = self._sorted_elements_keys()
+            except TypeError:
+                keys = list(self.elements.keys())
         else:
             keys = [key for key in keys if key in self.elements]
         if self.ask_object_type:
@@ -2112,7 +2115,10 @@ class DADict(DAObject):
         """Returns the keys of the list, separated by commas, with
         "and" before the last key."""
         self._trigger_gather()
-        return comma_and_list(self._sorted_elements_keys(), **kwargs)
+        try:
+            return comma_and_list(self._sorted_elements_keys(), **kwargs)
+        except TypeError:
+            return comma_and_list(self.elements.keys(), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
             if self.object_type is None:
@@ -2131,7 +2137,10 @@ class DADict(DAObject):
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
         self._trigger_gather()
-        return self._sorted_elements_keys()
+        try:
+            return self._sorted_elements_keys()
+        except TypeError:
+            return list(self.elements.keys())
     def values(self):
         """Returns the values of the dictionary as a Python list."""
         self._trigger_gather()

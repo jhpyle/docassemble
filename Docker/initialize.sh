@@ -15,6 +15,26 @@ export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-${DA_ROOT}/config/config.yml.
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
+function cmd_retry() {
+    local -r cmd="$@"
+    local -r -i max_attempts=4
+    local -i attempt_num=1
+    until $cmd
+    do
+        if ((attempt_num==max_attempts))
+        then
+            echo "Attempt $attempt_num failed.  Not trying again"
+            return 1
+        else
+            if ((attempt_num==1)); then
+                echo $cmd
+            fi
+            echo "Attempt $attempt_num failed."
+            sleep $(((attempt_num++)**2))
+        fi
+    done
+}
+
 echo "config.yml is at" $DA_CONFIG_FILE >&2
 
 echo "1" >&2
@@ -155,7 +175,7 @@ echo "11" >&2
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
-    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 echo "12" >&2
@@ -163,10 +183,10 @@ echo "12" >&2
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
     echo "Copying hostname-rabbitmq" >&2
-    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/hostname-rabbitmq" "${TEMPKEYFILE}"
+    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/hostname-rabbitmq" "${TEMPKEYFILE}"
     HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
     echo "Copying ip-rabbitmq" >&2
-    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/ip-rabbitmq" "${TEMPKEYFILE}"
+    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/ip-rabbitmq" "${TEMPKEYFILE}"
     IPRABBITMQ=$(<$TEMPKEYFILE)
     rm -f "${TEMPKEYFILE}"
     if [ -n "$(grep $HOSTNAMERABBITMQ /etc/hosts)" ]; then
@@ -232,7 +252,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
         rm -f /tmp/letsencrypt.tar.gz
         echo "Copying let's encrypt" >&2
-        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
+        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
         cd /
         tar -xf /tmp/letsencrypt.tar.gz
         rm -f /tmp/letsencrypt.tar.gz
@@ -247,7 +267,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
             if ! [[ $the_file =~ /$ ]]; then
                 if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
                    echo "Copying backup file" $the_file >&2
-                   blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}" "${DA_ROOT}/backup/${the_file}"
+                   cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}" "${DA_ROOT}/backup/${the_file}"
                 fi
             fi
         done
@@ -258,7 +278,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
             echo "Found $the_file on Azure" >&2
             if ! [[ $the_file =~ /$ ]]; then
                 echo "Copying apache file" $the_file >&2
-                blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
+                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
             fi
         done
     else
@@ -271,7 +291,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
                 echo "Found $the_file on Azure" >&2
                 if ! [[ $the_file =~ /$ ]]; then
                     echo "Copying log file $the_file" >&2
-                    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}" "/var/log/apache2/${the_file}"
+                    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}" "/var/log/apache2/${the_file}"
                 fi
             done
             chown root.adm /var/log/apache2/*
@@ -283,7 +303,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
                 echo "Found $the_file on Azure" >&2
                 if ! [[ $the_file =~ /$ ]]; then
                     echo "Copying log file $the_file" >&2
-                    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}" "/var/log/nginx/${the_file}"
+                    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}" "/var/log/nginx/${the_file}"
                 fi
             done
             chown www-data.adm /var/log/nginx/*
@@ -296,7 +316,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
             echo "Found $the_file on Azure" >&2
             if ! [[ $the_file =~ /$ ]]; then
                 echo "Copying log file $the_file" >&2
-                blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}" "${LOGDIRECTORY:-${DA_ROOT}/log}/${the_file}"
+                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}" "${LOGDIRECTORY:-${DA_ROOT}/log}/${the_file}"
             fi
         done
         chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
@@ -304,13 +324,13 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
         rm -f "$DA_CONFIG_FILE"
         echo "Copying config.yml" >&2
-        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" "${DA_CONFIG_FILE}"
+        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" "${DA_CONFIG_FILE}"
         chown www-data.www-data "${DA_CONFIG_FILE}"
         ls -l "${DA_CONFIG_FILE}" >&2
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
         echo "Copying redis" >&2
-        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
+        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
         chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 else
@@ -404,7 +424,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAWEBSOCKETSIP}}/'"${DAWEBSOCKETSIP:-null}"'/' \
         -e 's/{{DAWEBSOCKETSPORT}}/'"${DAWEBSOCKETSPORT:-null}"'/' \
         -e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
-	-e 's/{{DAALLOWUPDATES}}/'"${DAALLOWUPDATES:-true}"'/' \
+        -e 's/{{DAALLOWUPDATES}}/'"${DAALLOWUPDATES:-true}"'/' \
         -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
@@ -458,14 +478,14 @@ echo "18" >&2
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
-    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 echo "19" >&2
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
     echo "Saving config" >&2
-    blob-cmd -f cp "${DA_CONFIG_FILE}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
+    cmd_retry blob-cmd -f cp "${DA_CONFIG_FILE}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
 fi
 
 echo "19.5" >&2
@@ -481,12 +501,12 @@ if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.
                     target_file="${sub_file#${file_directory}}"
                     file_number="${file_number//\//}"
                     file_number=$((16#$file_number))
-                    echo blob-cmd -f cp "${sub_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/${file_number}/${target_file}"
+                    cmd_retry blob-cmd -f cp "${sub_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/files/${file_number}/${target_file}"
                 done
             else
                 for sub_file in $(find "${DA_ROOT}/files/$the_file" -type f); do
                     target_file="${sub_file#${DA_ROOT}/files/}"
-                    echo blob-cmd -f cp "${sub_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${target_file}"
+                    cmd_retry blob-cmd -f cp "${sub_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${target_file}"
                 done
             fi
         done
@@ -712,7 +732,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
             if ! [[ $the_file =~ /$ ]]; then
                 target_file=`basename "${the_file}"`
                 echo "Copying $the_file to $target_file" >&2
-                blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
+                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
             fi
         done
     else
@@ -901,7 +921,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 if [ -d etc/letsencrypt ]; then
                     tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
                     echo "Saving lets encrypt" >&2
-                    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+                    cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
             fi
@@ -909,7 +929,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             #    for the_file in $(find /etc/nginx/sites-available/ -type f); do
             #        target_file=`basename "${the_file}"`
             #        echo "Saving nginx" >&2
-            #        blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginx/${target_file}"
+            #        cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginx/${target_file}"
             #    done
             #fi
         else
@@ -1016,7 +1036,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 if [ -d etc/letsencrypt ]; then
                     tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
                     echo "Saving lets encrypt" >&2
-                    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+                    cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
             fi
@@ -1024,7 +1044,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 for the_file in $(find /etc/apache2/sites-available/ -type f); do
                     target_file=`basename "${the_file}"`
                     echo "Saving apache" >&2
-                    blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
+                    cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
                 done
             fi
         else
@@ -1278,20 +1298,20 @@ function deregister {
             let LOGDIRECTORYLENGTH=${#LOGDIRECTORY}+2
             for the_file in $(find "${LOGDIRECTORY}" -type f | cut -c ${LOGDIRECTORYLENGTH}-); do
                 echo "Saving log file $the_file" >&2
-                blob-cmd -f cp "${LOGDIRECTORY}/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}"
+                cmd_retry blob-cmd -f cp "${LOGDIRECTORY}/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}"
             done
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
             if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 for the_file in $(find /var/log/apache2 -type f | cut -c 18-); do
                     echo "Saving log file $the_file" >&2
-                    blob-cmd -f cp "/var/log/apache2/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}"
+                    cmd_retry blob-cmd -f cp "/var/log/apache2/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}"
                 done
             fi
             if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 for the_file in $(find /var/log/nginx -type f | cut -c 16-); do
                     echo "Saving log file $the_file" >&2
-                    blob-cmd -f cp "/var/log/nginx/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}"
+                    cmd_retry blob-cmd -f cp "/var/log/nginx/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}"
                 done
             fi
         fi

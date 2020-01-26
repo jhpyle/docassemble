@@ -13,6 +13,26 @@ source "${DA_ACTIVATE}"
 set -- $LOCALE
 export LANG=$1
 
+function cmd_retry() {
+    local -r cmd="$@"
+    local -r -i max_attempts=4
+    local -i attempt_num=1
+    until $cmd
+    do
+        if ((attempt_num==max_attempts))
+        then
+            echo "Attempt $attempt_num failed.  Not trying again"
+            return 1
+        else
+            if ((attempt_num==1)); then
+                echo $cmd
+            fi
+            echo "Attempt $attempt_num failed."
+            sleep $(((attempt_num++)**2))
+        fi
+    done
+}
+
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
 
 if [[ $PGVERSION == 10* ]]; then
@@ -46,7 +66,7 @@ if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "nul
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
-    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 function stopfunc {
@@ -66,7 +86,7 @@ function stopfunc {
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(find "$PGBACKUPDIR" -type f); do
 	    target_file=`basename $the_file`
-	    blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+	    cmd_retry blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
 	done
 	rm -rf "$PGBACKUPDIR"
     fi
