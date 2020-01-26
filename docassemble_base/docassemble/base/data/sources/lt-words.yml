@@ -1,4 +1,4 @@
-"lt":
+lt:
   "%(username_or_email)s does not exist": "%(username_or_email) neegzistuoja"
   "(Deleted)": "(Ištrintas)"
   "(New branch)": "(Nauja šaka)"
@@ -23,7 +23,7 @@
   "API Keys": "API raktai"
   "Access organizational repositories": "Prieiti prie organizacinių saugyklų"
   "Access shared repositories": "Prieiti prie bendrųjų saugyklų"
-  "Account did not exist.": "Paskyra neegzistavo".
+  "Account did not exist.": "Paskyra neegzistavo"
   "Action": "Veiksmas"
   "Actions": "Veiksmai"
   "Activate chat": "Aktyvuoti pokalbį"
@@ -134,7 +134,7 @@
   "E-mail was sent to": "El. laiškas buvo išsiųstas"
   "E.g., docassemble.demo:data/questions/questions.yml": "Pvz., docassemble.demo:data/questions/questions.yml"
   "E.g., es, fr, it": "Pvz., es, fr, it"
-  "ERROR: you cannot insert a table into a .docx document": "KLAIDA: jūs negalite įterpti lentelės į .docx dokumentą": 
+  "ERROR: you cannot insert a table into a .docx document": "KLAIDA: jūs negalite įterpti lentelės į .docx dokumentą"
   "Edit": "Redaguoti"
   "Edit API Key": "Redaguoti API raktą"
   "Edit User Profile": "Redaguoti naudotojo profilį"
@@ -209,7 +209,7 @@
   "Import": "Importuoti"
   "Import method": "Importuoti metodą"
   "Incorrect %(username_or_email)s and/or Password": "Neteisingas %(username_or_email)s ir/ar slaptažodis"
-  "Incorrect Email and/or Password": Neteisingas el. pašto adresas ir/ar slaptažodis"
+  "Incorrect Email and/or Password": "Neteisingas el. pašto adresas ir/ar slaptažodis"
   "Incorrect Password": "Neteisingas slaptažodis"
   "Input box": "Įvesties langelis"
   "Input not processed because the page expired.  Please try again.": "Įvestis neapdorota nes puslapis nebegalioja. Prašome bandyti dar kartą."
@@ -299,7 +299,7 @@
   "Old Password": "Senas slaptažodis"
   "Old Password is incorrect": "Senas slaptažodis yra neteisingas"
   "Old Password is required": "Reikalingas senasis slaptažodis"
-  "One or more e-mail addresses (separated by newlines)": "Vienas arba daugiau el. pašto adresų (atskirose eilutėse)
+  "One or more e-mail addresses (separated by newlines)": "Vienas arba daugiau el. pašto adresų (atskirose eilutėse)"
   "OneDrive": "OneDrive"
   "OneDrive is not configured": "OneDrive nesukonfigūruotas"
   "OneDrive is not linked.": "OneDrive nesusietas"
@@ -332,7 +332,7 @@
   "Playground YAML": "Playground YAML"
   "Playground not saved.  There was an error.": "Playground neišsaugotas. Įvyko klaida."
   "Please choose a different e-mail address.": "Prašome pasirinkti kitokį el. pašto adresą."
-  "Please enter a multiple of {0}.": "Prašome įvesti kelis {0}." 
+  "Please enter a multiple of {0}.": "Prašome įvesti kelis {0}."
   "Please enter a valid phone number": "Prašome įvesti tinkamą telefono numerį"
   "Please enter a valid value.": "Prašome įvesti tinkamą reikšmę."
   "Please enter a whole number.": "Prašome įvesti sveikąjį skaičių."
@@ -344,13 +344,13 @@
   "Please select exactly %s.": "Prašome pasirinkti lygiai %s."
   "Please select no more than %s.": "Prašome pasirinkti ne daugiau nei %s."
   "Please select one.": "Prašome pasirinkti vieną."
-  "Please send a video, or type skip.": "Prašome išsiųsti vaizdo įrašą, arba įrašyti "praleisti"."
+  "Please send a video, or type skip.": 'Prašome išsiųsti vaizdo įrašą, arba įrašyti "praleisti".'
   "Please send a video.": "Prašome išsiųsti vaizdo įrašą."
-  "Please send an audio clip, or type skip.": "Prašome išsiųsti garso failą, arba įrašyti "praleisti"."
+  "Please send an audio clip, or type skip.": 'Prašome išsiųsti garso failą, arba įrašyti "praleisti".'
   "Please send an audio clip.": "Prašome išsiųsti garso įrašą."
-  "Please send an image or file, or type skip.": "Prašome išsiųsti paveikslėlį arba failą, arba įrašyti "praleisti"."
+  "Please send an image or file, or type skip.": 'Prašome išsiųsti paveikslėlį arba failą, arba įrašyti "praleisti".'
   "Please send an image or file.": "Prašome išsiųsti paveikslėlį arba failą."
-  "Please send one or more images, or type skip.": "Prašome išsiųsti vieną ar daugiau paveikslėlių, arba įrašyti "praleisti"."
+  "Please send one or more images, or type skip.": 'Prašome išsiųsti vieną ar daugiau paveikslėlių, arba įrašyti "praleisti".'
   "Please send one or more images.": "Prašome išsiųsti vieną arba daugiau paveikslėlių."
   "Please upload a file with a valid file format.": "Prašome įkelti failą tinkamu formatu."
   "Possibly not defined": "Tikėtina neapibrėžtas"
@@ -387,7 +387,7 @@
   "Rename project": "Pervadinti projektą"
   "Reorder by moving down": "Pertvarkyti žemyn"
   "Reorder by moving up": "Pertvarkyti aukštyn"
-  "Resend email confirmation email": "Persių
+  "Resend email confirmation email": "Persių"
   "Restart": "Perkrauti"
   "Restarting": "Perkraunamas"
   "Resume": "Tęsti"
@@ -429,7 +429,7 @@
   "Sign in to save answers": "Norėdami išsaugoti atsakymus, prisijunkite"
   "Sign in with your mobile phone": "Prisijunkite savo mobiliuoju telefonu"
   "Since you changed a Python module, the server needs to restart in order to load your module.": "Kadangi pakeitėte Phyton modulį, būtina perkrauti serverį, kad paleisti jūsų modulį."
-  "Since you did not type \"delete my account\" I did not delete your account.": "Kadangi jūs neįrašėte \"ištrinti mano paskyrą"\, aš neištryniau jūsų paskyros."
+  "Since you did not type \"delete my account\" I did not delete your account.": 'Kadangi jūs neįrašėte "ištrinti mano paskyrą", aš neištryniau jūsų paskyros.'
   "Since you renamed a project, the server needs to restart in order to reload any modules.": "Kadangi jūs pervadinote projektą, būtina perkrauti serverį, kad paleisti jūsų modulį."
   "Since you uploaded a Python module, the server needs to restart in order to load your module.": "Kadangi jūs įkėlėte Phyton module, būtina perkrauti serverį, kad paleisti jūsų modulį."
   "Social ID": "Socialinio draudimo ID"
@@ -478,7 +478,7 @@
   "The operator is no longer controlling your screen.": "Operatorius nebekontroliuoja jūsų ekrano."
   "The package information was saved.": "Paketo informacija buvo išsaugota."
   "The package update did not report an error.  The logs are below.": "Paketo atnaujinimas nepranešė apie klaidą. Žurnalai yra pateikiami žemiau."
-  "The package update reported an error.  The logs are below.": "Paketo atnaujinimas pranešė apie klaidą. Žurnalo paketai yra pateikiami žemiau.
+  "The package update reported an error.  The logs are below.": "Paketo atnaujinimas pranešė apie klaidą. Žurnalo paketai yra pateikiami žemiau."
   "The package was unpacked into the Playground.": "Paketas buvo išpakuotas į Playground."
   "The package you specified could not be downloaded from PyPI as a tar.gz file.": "Jūsų nurodytas paketas negalėjo būti atsiųstas iš PyPI, kaip tar.gz failas."
   "The package you specified could not be downloaded from PyPI.": "Jūsų nurodytas paketas negalėjo būti atsiųstas iš PyPI."
@@ -492,7 +492,7 @@
   "The synchronization was not successful.": "Sinchronizacija nebuvo sėkminga."
   "The synchronization was successful.": "Sinchronizacija buvo sėkminga."
   "The user account was deleted.": "Naudotojo paskyra buvo ištrinta."
-  "The user can call you.  Click to cancel.": "Naudotojas gali jums paskambinti. Paspauskite, kad atsisakytumėte.
+  "The user can call you.  Click to cancel.": "Naudotojas gali jums paskambinti. Paspauskite, kad atsisakytumėte."
   "The user profile was not changed.": "Naudotojo profilis nebuvo pakeistas."
   "The version on PyPI is": "Versija PyPI yra"
   "There are unsaved changes.  Are you sure you wish to leave this page?": "Yra neišsaugotų pakeitimų. Ar esate įsitikinę, kad norite išeiti iš šio puslapio?"
@@ -694,7 +694,7 @@
   "Your reset password token has expired.": "Jūsų slaptažodžio atkūrimo žetono galiojimo laikas pasibaigė." 
   "Your reset password token is invalid.": "Jūsų slaptažodžio atkūrimo žetonas yra negaliojantis."
   "Your screen is being controlled by an operator.": "Jūsų ekraną kontroliuoja operatorius."
-  "Your username has been changed to '%(username)s'.": "Jūsų naudotojo vardas buvo pakeistas į "%(username)s'."
+  "Your username has been changed to '%(username)s'.": 'Jūsų naudotojo vardas buvo pakeistas į "%(username)s".'
   "Your verification code is": "Jūsų verifikacijos kodas yra"
   "Your verification code is invalid or expired.  Please try again.": "Jūsų verifikavimo kodas yra negaliojantis arba jo galiojimo laikas yra pasibaigęs. Prašome bandyti iš naujo."
   "Your verification code was invalid or expired.": "Jūsų verifikavimo kodas buvo negaliojantis arba jo galiojimo laikas buvo pasibaigęs."
@@ -721,7 +721,7 @@
   "false": "netiesa"
   "for debugging PDF output": "PDF rezultatų derinimui"
   "for downloading": "atsisiuntimui"
-  "for editing; requires Microsoft Word or compatible application": "redagavimui; reikalinga Microsoft Word arba kita suderinama programinė įranga".
+  "for editing; requires Microsoft Word or compatible application": "redagavimui; reikalinga Microsoft Word arba kita suderinama programinė įranga"
   "for editing; requires Microsoft Word, Wordpad, or similar application": "redagavimui; reikalinga Microsoft Word, Wordpad, arba panaši programa"
   "for printing; requires Adobe Reader or similar application": "spausdinimui; reikalinga Adobe Reader arba panaši programa"
   "from": "iš"
