@@ -11888,6 +11888,9 @@
     Otherwise, you can go back to the interview.
   continue button label: Resume
   field: manage_credentials
+"oauth-test-3": |-
+  objects:
+    - google: GoogleAuth.using(url_args=url_args, use_random_unique_id=True)
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
   ---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
   \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\
@@ -12642,6 +12645,10 @@
   question: Map of you and your enemy
   subquestion: |
     ${ map_of(user, enemy) }
+"testssn": |-
+  mandatory: True
+  question: |
+    Your SSN is ${ user_ssn }.
 "turnips-worms": |-
   question: Do you like turnips?
   yesno: likes_turnips

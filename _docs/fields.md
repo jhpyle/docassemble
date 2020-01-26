@@ -973,15 +973,36 @@ the [machine learning section].
 
 You can use custom data types by declaring a subclass of
 `CustomDataType` in a Python module with class attributes that
-describe the data type.  For example:
+describe the data type.  For example, here is an example that defines
+a Social Security number (SSN) as a data type:
 
 {% highlight python %}
-from docassemble.base.util import CustomDataType
+from docassemble.base.util import CustomDataType, DAValidationError, word
+import re
 
 class SSN(CustomDataType):
     name = 'ssn'
     container_class = 'da-ssn-container'
     input_class = 'da-ssn'
+    javascript = """\
+$.validator.addMethod('ssn', function(value, element, params){
+  return /^[0-9]{3}\-?[0-9]{2}\-?[0-9]{4}$/.test(value);
+});
+"""
+    jq_rule = 'ssn'
+    jq_message = 'You need to enter a valid SSN.'
+    @classmethod
+    def validate(cls, item):
+        item = str(item).strip()
+        m = re.search(r'^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$', item)
+        if m:
+            return True
+        raise DAValidationError("A SSN needs to be in the form xxx-xx-xxxx")
+    @classmethod
+    def transform(cls, item):
+        item = str(item).strip()
+        m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
+        return m.group(1) + '-' + m.group(2) + '-' + m.group(3)
 {% endhighlight %}
 
 This will allow you to write:
@@ -994,6 +1015,10 @@ fields:
     datatype: ssn
 {% endhighlight %}
 
+The user will not be able to proceed without entering a valid SSN, and
+if the user enters an SSN without hyphens, the input will be accepted,
+but hyphens will be added to the variable `user.ssn`.
+
 The available class attributes are:
 
 * `name` (required) - the `datatype` name.  The only valid characters
@@ -1005,6 +1030,73 @@ The available class attributes are:
   default, this will be set to `da` followed by the `name`.
 * `input_type` - the `type` for the `<input>` element.  By default,
   this will be set to `text`.
+* `javascript` - [JavaScript] code related to the data type.  By
+  default, this will be `None`.  If not `None`, the attribute is
+  treated as [JavaScript] code that is run when every interview on
+  your server first loads.  This is typically used to extend the
+  capabilities of the [jQuery Validation Plugin].  In the example
+  above, the `javascript` defines a new validation rule.  For more
+  information on how to extend the [jQuery Validation Plugin], see the
+  documentation for [jQuery.validator.addMethod()].
+* `jq_rule` - the name of the [jQuery Validation Plugin] rule to
+  enable on the field, if any.  This is typically used to refer to a
+  rule you define in the `javascript` attribute.  If you want to
+  enable multiple [jQuery Validation Plugin] rules, you can set this
+  to a list of rule names.
+* `jq_message` - the message to display to the user when the `jq_rule`
+  is not satisfied.  The message will pass through the [`word()`]
+  function to support multiple languages, and it can be overridden
+  with [`validation messages`].  Instead of setting `jq_message` to a
+  string, you can set it to a dictionary in which the keys are [jQuery
+  Validation Plugin] rule names and the values are error messages.
+  For example, if you want a custom message to display when the user
+  leaves the field blank, you can set `jq_message` to something like
+  `jq_message = {'ssn': 'You need to enter a valid SSN.', 'required':
+  'We really need your SSN.'}`.  If no message is provided for a rule,
+  a generic message is used.  If `jq_rule` is a list of rules,
+  `jq_message` must be expressed in dictionary format.
+* `skip_if_empty` - the default is `True`.  This is rarely used, so
+  you can probably ignore it.  This is relevant when the `datatype` is
+  used on a multiple-choice question and there are zero choices to
+  present to the user.  If `skip_if_empty` is `True`, then the
+  variable is not set to any value.  If `skip_if_empty` is `False`,
+  then the variable will be set to the output of the `.empty()` class
+  method.
+
+The available class methods are:
+
+* `validate()` - the `validate()` class method is used for server-side
+  input validation.  The raw value from the POST request is passed to
+  this method as the first positional parameter.  The method should
+  return `True` if the value is valid.  If the value is invalid, the
+  method should raise a `DAValidationError` exception with a message.
+  The message given to `DAValidationError` will pass through the
+  [`word()`] function before it is presented to the user, so you can
+  use the [`words`] directive in the [Configuration] to support
+  multiple languages.  If the method returns a false value, the error
+  message will be "You need to enter a valid value."  If a
+  `validate()` class method is not provided, no input validation will
+  be performed.
+- `transform` - the `transform()` class method is used to perform any
+  necessary transformations on the data received from the browser.
+  The raw value from the POST request is passed to this method as the
+  first positional parameter.  The method should return the
+  transformed value.  In the example above, the `transform()` class
+  method ensures that Social Security numbers that are entered without
+  hyphens (which are accepted) will contain hyphens when the variable
+  `user.ssn` is actually defined.  If a `transform()` class method is
+  not provided, the variable will be set to the raw value from the
+  POST request (a string).
+- `empty` - this is rarely used, so you can probably ignore it.  The
+  `empty` class method is used when `skip_if_empty` is
+  `False`.  Instead of not defining the variable, **docassemble** will
+  set the value of the variable to the output of this method.  If no
+  `empty()` method is provided, the value `None` is used.
+
+If you provide client-side input validation, it is also a good idea to
+provide server-side validation, even though it might never be
+triggered.  There are ways that users might accidentally or
+deliberately bypass client-side input validation.
 
 # <a name="fields options"></a>Options for items in `fields`
 
@@ -1408,7 +1500,7 @@ an empty [`DAList`] (a type of [list] specific to **docassemble**).
 Some datatypes, such as numbers, dates, and e-mail addresses, have
 validation features that prevent the user from moving to the next page
 if the input value does not meet the requirements of the data type.
-The [jQuery Validation Plugin](http://jqueryvalidation.org) is used.
+The [jQuery Validation Plugin] is used.
 
 For some field types, you can require additional input validation by
 adding the following to the definition of a field:
@@ -2524,3 +2616,7 @@ why this needs to be done manually as opposed to automatically:
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 [`.user_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.user_access
 [`.privilege_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.privilege_access
+[`word()`]: {{ site.baseurl }}/docs/functions.html#word
+[jQuery Validation Plugin]: http://jqueryvalidation.org
+[jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
+[`validation messages`]: #validation messages

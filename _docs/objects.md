@@ -2361,8 +2361,20 @@ context of an interview.
 
 {% include demo-side-by-side.html demo="oauth-test" %}
 
-The user needs to be logged in because [OAuth2] credentials are stored
-globally using [Redis] and they are tied to the user's e-mail address.
+Although [OAuth2] is fairly complicated, the way that **docassemble**
+handles it is fairly simple.  There are two main things that the
+`DAOAuth` object does: first, it uses the [`response()`] function to
+trigger a browser redirect to the third-party [OAuth2] process if the
+user has missing or invalid credientials; second, the [OAuth2] site
+redirects the user back to the interview (at `/interview` on the
+**docassemble** site) and the `url_args` dictionary is used to
+retrieve the access token obtained during the [OAuth2] process.
+
+In the above example, the user needs to be logged in because the
+[OAuth2] credentials are stored globally using [Redis] using the
+user's e-mail address as part of the key.  However, a later example
+will demonstrate how to use identifiers other than the user's e-mail
+address.
 
 To use a `DAOAuth` object to connect to Google, you need to use the
 [Google Developers Console] and enable the "Google Sheets API."  Under
@@ -2399,6 +2411,9 @@ class GoogleAuth(DAOAuth):
         values = result.get('values', [])
         return values
 {% endhighlight %}
+
+This example connects to Google, but note that [OAuth2] is a general
+protocol used by a number of authentication providers.
 
 The `GoogleAuth` class is a subclass of `DAOAuth`.  The following four
 attributes must be defined:
@@ -2460,6 +2475,99 @@ Here is a longer version of the interview above, demonstrating how to
 add a menu item that allows the users to manage their credentials.
 
 {% include demo-side-by-side.html demo="oauth-test-2" %}
+
+By default, the `DAOAuth` object will remember the user's credentials
+for six months.  To set a different period, you can set the `expires`
+attribute to an integer number of seconds or to `None` if the
+credentials should be remembered forever.  Here is an example of
+storing credentials for one week:
+
+{% highlight yaml %}
+objects:
+  - google: GoogleAuth.using(url_args=url_args, expires=60*60*24*7)
+{% endhighlight %}
+
+The examples above have demonstrated using the logged-in user's e-mail
+address as the identifier for storing the credentials.  This is the
+default behavior.  The advantage is that a given user only needs to go
+through the oauth process once and then they will connect
+automatically in the future, even in different sessions and
+interviews.
+
+However, you might want to use an [OAuth2] process for a non-logged-in
+user, or you might want a different unique ID than the user's e-mail
+address.  You can set a custom `unique_id` to be used instead.
+
+{% highlight yaml %}
+objects:
+  - google: GoogleAuth.using(url_args=url_args, unique_id=process_number)
+---
+code: |
+  process_number = some_custom_api_call()
+{% endhighlight %}
+
+You might use this in a situation where an external server initializes
+the session using the [API] and populates the unique ID as a variable
+in the interview answers.  In this situation, you would need to
+prevent users from initiating a session if that unique ID was not
+defined.  Here is one way to do it.
+
+{% highlight python %}
+# get the session ID of a new session
+r = requests.get(server + '/api/session/new', params={'key': api_key, 'i': interviewname})
+session_id = r.json()['session']
+
+# pre-populate the user_id variable in the interview answers of the session
+r = requests.post(server + '/api/session', data={'key': api_key, 'i': interviewname, 'session': session_id, 'variables': json.dumps({'initialized': true, 'user_id': user_id})})
+
+# obtain a URL for directing the user to the session
+r = requests.post(root + '/api/resume_url', data={'key': key, 'i': interviewname, 'session': session_id})
+url = r.json()
+{% endhighlight %}
+
+The interview would then use the `initialized` variable to control
+whether a user can have access.
+
+{% highlight yaml %}
+objects:
+  - google: GoogleAuth.using(url_args=url_args, unique_id=user_id)
+---
+mandatory: True
+code: |
+  multi_user = True
+  if not initialized:
+    kick_out
+---
+code: |
+  initialized = False
+---
+event: kick_out
+question: Go away
+---
+mandatory: True
+code: |
+  intro_screen
+---
+question: |
+  You need to connect with Google Sheets.
+subquestion: |
+  Press Continue to connect.
+field: intro_screen
+---
+code: |
+  if google.active():
+    intro_screen = True
+{% endhighlight %}
+
+If you only need the [OAuth2] connection to survive for the duration
+of the session, you can set `use_random_unique_id=True` in the
+configuration, and a randomly-generated `unique_id` will be set.
+
+{% include demo-side-by-side.html demo="oauth-test-3" %}
+
+If you set a custom `unique_id` or you set `use_random_unique_id` to
+true, then the default expiration time for the credentials is 24 hours
+rather than six months.
 
 ## <a name="DAWeb"></a>DAWeb
 
@@ -6046,3 +6154,5 @@ the `_uid` of the table rather than the `id`.
 [`.user_access()`]: #DAFile.user_access
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
+[API]: {{ site.baseurl }}/docs/api.html
+[`response()`]: {{ site.baseurl }}/docs/functions.html#response

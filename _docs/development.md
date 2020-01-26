@@ -483,10 +483,10 @@ This way, you can use a text editor to edit your [Playground] files.
 
 ## <a name="editingwithdocker"></a>Using Docker
 
-If you are running **docassemble** [Docker] on a local machine, and
-you are not using S3 or Azure Blob Storage, you can use
-[Docker volume]s to access your [Playground] files using a text editor
-running on your local machine.
+If you are running **docassemble** using [Docker] on a local machine,
+and you are not using S3 or Azure Blob Storage, you can use [Docker
+volume]s to access your [Playground] files using a text editor running
+on your local machine.
 
 This requires running [`docker run`], so if you already have a running
 **docassemble** [Docker] container, you will have to delete it and
@@ -507,11 +507,12 @@ docker run \
 {% endhighlight %}
 
 The `WWWUID` and `WWWGID` options are important because they ensure
-that you will be able to read and write the files in `da`.  This
-command also creates a [Docker volume] called `dabackup` so that you
-can use [`docker stop`] to stop the container, [`docker rm`] to remove
-the container, and then you can re-run the [`docker run`] command
-above, and you will not lose your work.
+that the user who runs the `docker run` command will be able to
+read and write the files in `da`.  This command also creates a [Docker
+volume] called `dabackup` so that you can use [`docker stop`] to stop
+the container, [`docker rm`] to remove the container, and then you can
+re-run the [`docker run`] command above, and you will not lose your
+work.
 
 The contents of `da` will include:
 
@@ -524,6 +525,12 @@ The contents of `da` will include:
 * `playgroundsources` - This is where "sources" files are stored.
 * `playgroundstatic` - This is where "static" files are stored.
 * `playgroundtemplate` - This is where "template" files are stored.
+
+Within each of these folders there are sub-folders with integer
+names.  These integers correspond with user IDs.  Your user ID is
+probably `1` unless you create a new user for yourself.  Within that
+folder, you will find the files for the default "project."  Other
+projects are located in subfolders bearing the name of the project.
 
 ## <a name="editingwithplayground"></a>Editing locally and running interviews in the Playground
 
