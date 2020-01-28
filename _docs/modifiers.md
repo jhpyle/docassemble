@@ -214,13 +214,13 @@ defined with [`image sets`] or [`images`] will be treated as the name of a
 
 This method also works with [inline icons].
 
-# <a name="script"></a>Adding [Javascript]: `script`
+# <a name="script"></a>Adding [JavaScript]: `script`
 
-If you know how to write [Javascript] and [CSS], you can add
-[Javascript] code and [CSS] formatting to a question.
+If you know how to write [JavaScript] and [CSS], you can add
+[JavaScript] code and [CSS] formatting to a question.
 
-To add [Javascript] or [CSS] to all questions, you can use a
-[`features`] block to include [Javascript] and [CSS] files on the web
+To add [JavaScript] or [CSS] to all questions, you can use a
+[`features`] block to include [JavaScript] and [CSS] files on the web
 page.
 
 The `script` modifier contains raw HTML to be appended to the bottom
@@ -742,6 +742,18 @@ code: |
   property_assessed = True
 {% endhighlight %}
 
+# <a name="allowed to set"></a>Indicating that a block is permitted to set a variable
+
+If you have enabled [`restrict input variables`] in your
+[Configuration], then you will not be able to use custom [JavaScript]
+to cause [`question`] blocks to set variables other than the variables
+specified in the [YAML] of the [`question`] blocks.  The `allowed to
+set` modifier allows you to get around this limitation by listing
+specific variable names that the [`question`] block should be allowed
+to set.  You can set `allowed to set` to a [YAML] list of variable
+names or to a [Python expression] that evaluates to a list of
+variable names.
+
 # <a name="precedence"></a>Changing order of precedence
 
 As explained in [how **docassemble** finds questions for variables],
@@ -1016,7 +1028,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`field` without `buttons` or `choices`]: {{ site.baseurl }}/docs/fields.html#field
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
-[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fallback]: {{ site.baseurl }}/docs/logic.html#fallback
@@ -1060,3 +1072,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`undefine`]: {{ site.baseurl }}/docs/logic.html#undefine
+[`restrict input variables`]: {{ site.baseurl }}/docs/config.html#restrict input variables

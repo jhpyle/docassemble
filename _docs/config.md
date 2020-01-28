@@ -1579,7 +1579,7 @@ debian packages:
 
 These packages will be installed when the [Docker] container starts.
 
-## <a name="allow non-idempotent questions"></a> Non-idempotent question check
+## <a name="allow non-idempotent questions"></a>Non-idempotent question check
 
 You can set `allow non-idempotent questions: False` in order to
 enforce strict idempotency of [`question`]s with generic objects,
@@ -1633,6 +1633,48 @@ prevents the user from proceeding, there is a flaw in the interview
 logic that needs to be fixed; an immediate solution would be to set
 `allow non-idempotent questions` to `True`, but the long-term solution
 is to fix the logic in the interview.
+
+## <a name="restrict input variables"></a>Restricting the browser from setting arbitrary variables
+
+By default, the **docassemble** [front end] is designed to be flexible
+for [JavaScript] developers.  A POST request to `/interview` is
+capable of setting arbitrary variable names in the interview answers;
+the field names are simply base64-encoded variable names.  This allows
+[JavaScript] developers to build their own front ends or heavily
+customize the standard front end.
+
+However, when this kind of flexibility exists on the [JavaScript] side
+of the application, you need to trust that your users will not try to
+manipulate their interview answers.  For example, if you have a
+variable in your interview called `user_has_paid`, you wouldn't want
+users to manipulate their web browser and set `user_has_paid` to
+`True`.
+
+If you enable `restrict input variables`, then the web browser will
+only be able to set variables that are present on the current
+question.  What question counts as the current question depends on the
+interview logic.  When the browser submits input, then before any
+variables are set, the interview logic is evaluated and the current
+question is determined.  If the incoming variables are not part of the
+current question, then the input is rejected.
+
+{% highlight yaml %}
+restrict input variables: True
+{% endhighlight %}
+
+If you enable `restrict input variables`, then your interview logic
+must be idempotent for all questions.  Note that the `allow
+non-idempotent questions` directive (despite its general-sounding
+name) only enforces idempotency for questions with generic objects,
+iterators, or multiple choice selections.  The `restrict input
+variables` is more strict; it enforces idempotency for all questions
+and also prevents the browser from altering the variable names or data
+types.
+
+Enabling `restrict input variables: True` is generally a good
+practice.  If you want to add additional fields to a [`question`]
+using [JavaScript], you can use the [`allowed to set`] modifier to
+enable those field names.
 
 ## <a name="python packages"></a>Python packages to install
 
@@ -4117,3 +4159,5 @@ wrap lines in playground: False
 [MinIO]: https://min.io/
 [`USEMINIO`]: {{ site.baseurl }}/docs/docker.html#USEMINIO
 [Kubernetes]: https://kubernetes.io/
+[front end]: {{ site.baseurl }}/docs/frontend.html
+[`allowed to set`]: {{ site.baseurl }}/docs/modifiers.html#allowed to set
