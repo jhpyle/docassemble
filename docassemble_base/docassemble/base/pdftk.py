@@ -235,7 +235,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 continue
             #logmessage("Need to put image on page " + str(fields[field]['pageno']))
             temp_png = tempfile.NamedTemporaryFile(mode="wb", suffix=".png")
-            args = ["convert", file_info['fullpath'], "-trim", "+repage", temp_png.name]
+            args = ["convert", file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
             result = call(args)
             if result == 1:
                 logmessage("failed to trim file: " + " ".join(args))

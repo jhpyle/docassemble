@@ -359,6 +359,160 @@ class InterviewStatus(object):
         self.followed_mc = False
         self.tentatively_answered = set()
         self.checkin = False
+    def get_fields_and_sub_fields_and_collect_fields(self, user_dict):
+        all_fields = self.question.get_fields_and_sub_fields(user_dict)
+        if 'list_collect' in self.extras:
+            allow_append = self.extras['list_collect_allow_append']
+            iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
+            if 'sub_fields' in self.extras:
+                field_list = list()
+                for field in self.question.fields:
+                    if field.number in self.extras['sub_fields']:
+                        field_list.extend(self.extras['sub_fields'][field.number])
+                    else:
+                        field_list.append(field)
+            else:
+                field_list = self.question.fields
+            list_len = len(self.extras['list_collect'].elements)
+            if list_len == 0:
+                list_len = 1
+            if self.extras['list_collect'].ask_object_type or not allow_append:
+                extra_amount = 0
+            else:
+                extra_amount = get_config('list collect extra count', 15)
+            for list_indexno in range(list_len + extra_amount):
+                for field in field_list:
+                    the_field = copy.deepcopy(field)
+                    the_field.number = str(list_indexno) + '_' + str(the_field.number)
+                    if hasattr(the_field, 'saveas'):
+                        the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(field.saveas)))
+                        all_fields.append(the_field)
+        return all_fields
+    def is_empty_mc(self, field):
+        if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+            if field.choicetype in ['compute', 'manual']:
+                if field.number not in self.selectcompute:
+                    return False
+                pairlist = list(self.selectcompute[field.number])
+            else:
+                logmessage("is_empty_mc: unknown choicetype " + str(field.choicetype))
+                return False
+            if len(pairlist) == 0:
+                return True
+        return False
+    def get_field_info(self):
+        datatypes = dict()
+        hiddens = dict()
+        files = list()
+        ml_info = dict()
+        checkboxes = dict()
+        saveas_by_number = dict()
+        saveas_to_use = dict()
+        if self.extras.get('list_collect', False) is not False:
+            list_collect_list = self.extras['list_collect'].instanceName
+        else:
+            list_collect_list = None
+        if self.orig_sought is not None:
+            orig_sought = self.orig_sought
+        else:
+            orig_sought = None
+        if self.question.question_type == "signature":
+            signature_saveas = self.question.fields[0].saveas
+        else:
+            signature_saveas = None
+        if hasattr(self.question, 'fields_saveas'):
+            datatypes[safeid(self.question.fields_saveas)] = "boolean"
+            fields_saveas = self.question.fields_saveas
+        else:
+            fields_saveas = None
+        if self.question.question_type in ["yesno", "yesnomaybe"]:
+            datatypes[self.question.fields[0].saveas] = self.question.fields[0].datatype
+        elif self.question.question_type in ["noyes", "noyesmaybe"]:
+            datatypes[self.question.fields[0].saveas] = self.question.fields[0].datatype
+        elif self.question.question_type == "review" and hasattr(self.question, 'review_saveas'):
+            datatypes[safeid(self.question.review_saveas)] = "boolean"
+        elif self.question.question_type == "fields":
+            the_field_list = self.get_field_list()
+            for field in the_field_list:
+                if hasattr(field, 'saveas'):
+                    if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in self.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
+                        the_saveas = safeid('_field_' + str(field.number))
+                    else:
+                        the_saveas = field.saveas
+                    saveas_to_use[field.saveas] = the_saveas
+                    saveas_by_number[field.number] = the_saveas
+            for field in the_field_list:
+                if self.is_empty_mc(field):
+                    if hasattr(field, 'datatype'):
+                        hiddens[field.saveas] = field.datatype
+                    else:
+                        hiddens[field.saveas] = True
+                    if hasattr(field, 'datatype'):
+                        datatypes[field.saveas] = field.datatype
+                        if field.datatype == 'object_checkboxes':
+                            datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
+                    continue
+                if not self.extras['ok'][field.number]:
+                    continue
+                if hasattr(field, 'extras'):
+                    if 'ml_group' in field.extras or 'ml_train' in field.extras:
+                        ml_info[field.saveas] = dict()
+                        if 'ml_group' in field.extras:
+                            ml_info[field.saveas]['group_id'] = self.extras['ml_group'][field.number]
+                        if 'ml_train' in field.extras:
+                            ml_info[field.saveas]['train'] = self.extras['ml_train'][field.number]
+                if hasattr(field, 'choicetype'):
+                    vals = set([str(x['key']) for x in self.selectcompute[field.number]])
+                    if len(vals) == 1 and ('True' in vals or 'False' in vals):
+                        datatypes[field.saveas] = 'boolean'
+                    elif len(vals) == 1 and 'None' in vals:
+                        datatypes[field.saveas] = 'threestate'
+                    elif len(vals) == 2 and ('True' in vals and 'False' in vals):
+                        datatypes[field.saveas] = 'boolean'
+                    elif len(vals) == 2 and (('True' in vals and 'None' in vals) or ('False' in vals and 'None' in vals)):
+                        datatypes[field.saveas] = 'threestate'
+                    elif len(vals) == 3 and ('True' in vals and 'False' in vals and 'None' in vals):
+                        datatypes[field.saveas] = 'threestate'
+                    else:
+                        datatypes[field.saveas] = field.datatype
+                elif hasattr(field, 'datatype') and hasattr(field, 'saveas'):
+                    datatypes[field.saveas] = field.datatype
+                if hasattr(field, 'datatype') and hasattr(field, 'saveas'):
+                    if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
+                        files.append(saveas_by_number[field.number])
+                    if not hasattr(field, 'choicetype'):
+                        datatypes[field.saveas] = field.datatype
+                    if field.datatype == 'boolean':
+                        if field.sign > 0:
+                            checkboxes[field.saveas] = 'False'
+                        else:
+                            checkboxes[field.saveas] = 'True'
+                    elif field.datatype == 'threestate':
+                        checkboxes[field.saveas] = 'None'
+                    elif field.datatype in ['checkboxes', 'object_checkboxes']:
+                        if field.choicetype in ['compute', 'manual']:
+                            pairlist = list(self.selectcompute[field.number])
+                        else:
+                            pairlist = list()
+                        for pair in pairlist:
+                            if isinstance(pair['key'], str):
+                                checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
+                            else:
+                                checkboxes[safeid(from_safeid(field.saveas) + "[R" + myb64quote(repr(pair['key'])) + "]")] = 'False'
+                    elif not self.extras['required'][field.number]:
+                        checkboxes[field.saveas] = 'None'
+            if field.datatype == 'object_checkboxes':
+                datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
+            if self.extras.get('list_collect_is_final', False):
+                if self.extras['list_collect'].ask_number:
+                    datatypes[safeid(self.extras['list_collect'].instanceName + ".target_number")] = 'integer'
+                else:
+                    datatypes[safeid(self.extras['list_collect'].instanceName + ".there_is_another")] = 'boolean'
+        elif self.question.question_type == "settrue":
+            datatypes[self.question.fields[0].saveas] = "boolean"
+        elif self.question.question_type == "multiple_choice" and hasattr(self.question.fields[0], 'datatype'):
+            datatypes[self.question.fields[0].saveas] = self.question.fields[0].datatype
+        return {'datatypes': datatypes, 'hiddens': hiddens, 'files': files, 'ml_info': ml_info, 'checkboxes': checkboxes, 'list_collect_list': list_collect_list, 'orig_sought': orig_sought, 'fields_saveas': fields_saveas, 'signature_saveas': signature_saveas}
     def do_sleep(self):
         if hasattr(self.question, 'sleep'):
             try:
@@ -819,6 +973,9 @@ class TextObject(object):
         else:
             return(self.original_text)
 
+def myb64quote(text):
+    return "'" + re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode()) + "'"
+
 def safeid(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf8'), 'base64').decode())
 
@@ -917,7 +1074,6 @@ class Field:
             self.required = data['required']
         else:
             self.required = True
-
     def validation_message(self, validation_type, status, default_message, parameters=None):
         message = None
         if 'validation messages' in status.extras and self.number in status.extras['validation messages']:
@@ -1163,7 +1319,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set'):
                     logmessage("Ignoring unknown dictionary key " + key + "." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -1367,6 +1523,17 @@ class Question:
                 self.back_button = compile(data['back button'], '<back button>', 'eval')
         else:
             self.back_button = None
+        if 'allowed to set' in data:
+            if isinstance(data['allowed to set'], list):
+                for item in data['allowed to set']:
+                    if not isinstance(item, str):
+                        raise DAError("When allowed to set is a list, it must be a list of text items." + self.idebug(data))
+                self.allowed_to_set = data['allowed to set']
+            elif isinstance(data['allowed to set'], str):
+                self.allowed_to_set = compile(data['allowed to set'], '<allowed to set>', 'eval')
+                self.find_fields_in(data['allowed to set'])
+            else:
+                raise DAError("When allowed to set is not a list, it must be plain text." + self.idebug(data))
         if 'usedefs' in data:
             defs = list()
             if isinstance(data['usedefs'], list):
@@ -3932,6 +4099,16 @@ class Question:
                 extras['back_button'] = self.back_button
             else:
                 extras['back_button'] = eval(self.back_button, user_dict)
+        if hasattr(self, 'allowed_to_set'):
+            if isinstance(self.allowed_to_set, list):
+                extras['allowed_to_set'] = self.allowed_to_set
+            else:
+                extras['allowed_to_set'] = eval(self.allowed_to_set, user_dict)
+                if not isinstance(extras['allowed_to_set'], list):
+                    raise DAError("allowed to set code did not evaluate to a list")
+                for item in extras['allowed_to_set']:
+                    if not isinstance(item, str):
+                        raise DAError("allowed to set code did not evaluate to a list of text items")
         if self.reload_after is not None:
             number = str(self.reload_after.text(user_dict))
             if number not in ("False", "false", "Null", "None", "none", "null"):

@@ -15,6 +15,7 @@ import sys
 import codecs
 import datetime
 
+STRICT_MODE = daconfig.get('restrict input variables', False)
 DECORATION_SIZE = daconfig.get('decoration size', 2.0)
 DECORATION_UNITS = daconfig.get('decoration units', 'em')
 BUTTON_ICON_SIZE = daconfig.get('button icon size', 4.0)
@@ -41,7 +42,7 @@ def tracker_tag(status):
     #restore this, maybe
     #if len(status.next_action):
     #    output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
-    if status.orig_sought is not None:
+    if status.orig_sought is not None and not STRICT_MODE:
         output += '                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps([status.orig_sought])) + ' />\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name) + '/>\n'
@@ -55,9 +56,11 @@ def tracker_tag(status):
     return output
 
 def datatype_tag(datatypes):
-    if len(datatypes):
-        return('                <input type="hidden" name="_datatypes" value=' + myb64doublequote(json.dumps(datatypes)) + '/>\n                <input type="hidden" name="_visible" value=""/>\n')
-    return ('')
+    output = ''
+    if len(datatypes) and not STRICT_MODE:
+        output +='                <input type="hidden" name="_datatypes" value=' + myb64doublequote(json.dumps(datatypes)) + '/>\n'
+    output += '                <input type="hidden" name="_visible" value=""/>\n'
+    return output
 
 def varname_tag(varnames):
     if len(varnames):
@@ -215,7 +218,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
         info_message = None
         field_list = status.get_field_list()
         for the_field in field_list:
-            if is_empty_mc(status, the_field):
+            if status.is_empty_mc(the_field):
                 logmessage("as_sms: skipping field because choice list is empty.")
                 continue
             if hasattr(the_field, 'datatype'):
@@ -498,22 +501,6 @@ def embed_input(status, variable):
             return input_for(status, field, embedded=True)
     return 'ERROR: field not found'
 
-def is_empty_mc(status, field):
-    if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
-        if field.choicetype in ['compute', 'manual']:
-            if field.number not in status.selectcompute:
-                #logmessage("selectcompute had nothing for field " + str(field.number))
-                return False
-            #logmessage("Using selectcompute")
-            pairlist = list(status.selectcompute[field.number])
-        else:
-            logmessage("is_empty_mc: unknown choicetype " + str(field.choicetype))
-            return False
-        #logmessage("Pairlist was " + str(pairlist))
-        if len(pairlist) == 0:
-            return True
-    return False
-
 def help_wrap(content, helptext, status):
     if helptext is None:
         return content
@@ -674,7 +661,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 <a href="#" role="button" class="btn """ + BUTTON_STYLE + """warning """ + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>""" + additional_buttons_after + help_button + """
               </div>
 """
-        output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
+        if not STRICT_MODE:
+            saveas_part = '<input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/>'
+        else:
+            saveas_part = ''
+        output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST">' + saveas_part + '<input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
         output += '            <div class="d-block d-md-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
@@ -876,7 +867,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         if the_field is not field and hasattr(the_field, 'saveas') and from_safeid(the_field.saveas) == orig_var:
                             status.extras['disableothers'][field.number].append(status.saveas_by_number[the_field.number])
                             break
-            if is_empty_mc(status, field):
+            if status.is_empty_mc(field):
                 if hasattr(field, 'datatype'):
                     hiddens[field.saveas] = field.datatype
                 else:
@@ -1220,7 +1211,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         #else:
         #    output += "                <p>Error: no fields</p>\n"
         #output += '</div>\n'
-        if status.extras.get('list_collect', False) is not False:
+        if status.extras.get('list_collect', False) is not False and not STRICT_MODE:
             output += '                <input type="hidden" name="_list_collect_list" value=' + myb64doublequote(json.dumps(status.extras['list_collect'].instanceName)) + '/>\n'
         if status.extras.get('list_collect_is_final', False) and status.extras['list_collect'].auto_gather:
             if status.extras['list_collect'].ask_number:
@@ -1229,9 +1220,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '                <input type="hidden" name="' + escape_id(safeid(status.extras['list_collect'].instanceName + ".there_is_another"))  + '" value="False"/>\n'
         if len(checkboxes):
             output += '                <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '/>\n'
-        if len(hiddens):
+        if len(hiddens) and not STRICT_MODE:
             output += '                <input type="hidden" name="_empties" value=' + myb64doublequote(json.dumps(hiddens)) + '/>\n'
-        if len(ml_info):
+        if len(ml_info) and not STRICT_MODE:
             output += '                <input type="hidden" name="_ml_info" value=' + myb64doublequote(json.dumps(ml_info)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
@@ -1812,7 +1803,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
           if (theVal == null || theVal == ""){
             daDisableIfNotHidden("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])");
             daDisableIfNotHidden("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])");
-            daDisableIfNotHidden$("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])");
+            daDisableIfNotHidden("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])");
             $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
             $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
             $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");

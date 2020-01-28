@@ -35,6 +35,7 @@ else:
     PREVENT_DEMO = True
 
 REQUIRE_IDEMPOTENT = not daconfig.get('allow non-idempotent questions', True)
+STRICT_MODE = daconfig.get('restrict input variables', False)
 
 PACKAGE_PROTECTION = daconfig.get('package protection', True)
 
@@ -832,7 +833,7 @@ import docassemble.base.astparser
 import ast
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
-from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb, is_empty_mc
+from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
@@ -5346,6 +5347,16 @@ def resume():
             return jsonify(action='redirect', url=url_for('index', **post_data), csrf_token=generate_csrf())
     return redirect(url_for('index', **post_data))
 
+def tidy_action(action):
+    result = dict()
+    if not isinstance(action, dict):
+        return result
+    if 'action' in action:
+        result['action'] = action['action']
+    if 'arguments' in action:
+        result['arguments'] = action['arguments']
+    return result
+
 @app.route("/interview", methods=['POST', 'GET'])
 def index(action_argument=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
@@ -5545,11 +5556,16 @@ def index(action_argument=None):
         save_user_dict_key(user_code, yaml_filename)
         update_session(yaml_filename, key_logged=True)
     if '_action' in request.form and 'in error' not in session:
-        action = json.loads(myb64unquote(request.form['_action']))
+        action = tidy_action(json.loads(myb64unquote(request.form['_action'])))
+        no_defs = True
     elif 'action' in request.args and 'in error' not in session:
-        action = json.loads(myb64unquote(request.args['action']))
+        action = tidy_action(json.loads(myb64unquote(request.args['action'])))
+        no_defs = True
     elif action_argument:
-        action = action_argument
+        action = tidy_action(action_argument)
+        no_defs = False
+    else:
+        no_defs = False
     url_args_changed = False
     if len(request.args):
         for argname in request.args:
@@ -5577,18 +5593,40 @@ def index(action_argument=None):
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
         return response
-    post_data = request.form.copy()
+    if request.method == 'POST' and not no_defs:
+        disregard_input = False
+    else:
+        disregard_input = True
+    if disregard_input:
+        post_data = dict()
+    else:
+        post_data = request.form.copy()
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
     else:
         the_user_id = current_user.id
+    if '_track_location' in post_data and post_data['_track_location']:
+        the_location = json.loads(post_data['_track_location'])
+    else:
+        the_location = None
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
     if '_back_one' in post_data and steps > 1:
-        old_user_dict = user_dict
-        steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
-        if encrypted != is_encrypted:
-            encrypted = is_encrypted
-            update_session(yaml_filename, encrypted=encrypted)
-        action = None
+        ok_to_go_back = True
+        if STRICT_MODE:
+            interview.assemble(user_dict, interview_status=interview_status)
+            if not interview_status.question.can_go_back:
+                ok_to_go_back = False
+        if ok_to_go_back:
+            old_user_dict = user_dict
+            steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
+            if encrypted != is_encrypted:
+                encrypted = is_encrypted
+                update_session(yaml_filename, encrypted=encrypted)
+            action = None
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
+            post_data = dict()
+            disregard_input = True
     else:
         old_user_dict = None
     known_varnames = dict()
@@ -5623,27 +5661,28 @@ def index(action_argument=None):
         else:
             visible_fields.add(field_name)
     list_collect_list = None
-    if '_list_collect_list' in post_data:
-        the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
-        if not illegal_variable_name(the_list):
-            list_collect_list = the_list
-            exec(list_collect_list + '._allow_appending()' , user_dict)
-    if '_checkboxes' in post_data:
-        checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
-        for checkbox_field, checkbox_value in checkbox_fields.items():
-            if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
-                post_data.add(checkbox_field, checkbox_value)
-    if '_empties' in post_data:
-        empty_fields = json.loads(myb64unquote(post_data['_empties']))
-        for empty_field in empty_fields:
-            if empty_field not in post_data:
-                post_data.add(empty_field, 'None')
-    else:
-        empty_fields = dict()
-    if '_ml_info' in post_data:
-        ml_info = json.loads(myb64unquote(post_data['_ml_info']))
-    else:
-        ml_info = dict()
+    if not STRICT_MODE:
+        if '_list_collect_list' in post_data:
+            the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
+            if not illegal_variable_name(the_list):
+                list_collect_list = the_list
+                exec(list_collect_list + '._allow_appending()', user_dict)
+        if '_checkboxes' in post_data:
+            checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
+            for checkbox_field, checkbox_value in checkbox_fields.items():
+                if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
+                    post_data.add(checkbox_field, checkbox_value)
+        if '_empties' in post_data:
+            empty_fields = json.loads(myb64unquote(post_data['_empties']))
+            for empty_field in empty_fields:
+                if empty_field not in post_data:
+                    post_data.add(empty_field, 'None')
+        else:
+            empty_fields = dict()
+        if '_ml_info' in post_data:
+            ml_info = json.loads(myb64unquote(post_data['_ml_info']))
+        else:
+            ml_info = dict()
     something_changed = False
     if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         if user_dict['_internal']['tracker'] > int(post_data['_tracker']):
@@ -5652,18 +5691,15 @@ def index(action_argument=None):
             logmessage("index: the tracker in the dictionary is behind the tracker in the question.")
         something_changed = True
         user_dict['_internal']['tracker'] = max(int(post_data['_tracker']), user_dict['_internal']['tracker'])
-    if '_track_location' in post_data and post_data['_track_location']:
-        the_location = json.loads(post_data['_track_location'])
-    else:
-        the_location = None
+        interview_status.tracker = user_dict['_internal']['tracker']
     should_assemble = False
     known_datatypes = dict()
-    if '_datatypes' in post_data:
-        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
-        for data_type in known_datatypes.values():
-            if data_type.startswith('object'):
-                should_assemble = True
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    if not STRICT_MODE:
+        if '_datatypes' in post_data:
+            known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
+            for data_type in known_datatypes.values():
+                if data_type.startswith('object'):
+                    should_assemble = True
     if not should_assemble:
         for key in post_data:
             if key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'):
@@ -5696,19 +5732,55 @@ def index(action_argument=None):
     if not interview.from_cache and len(interview.mlfields):
         ensure_training_loaded(interview)
     debug_mode = interview.debug
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
     vars_set = set()
     old_values = dict()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     error_messages = list()
-    if should_assemble or something_changed:
+    already_assembled = False
+    if (STRICT_MODE and not disregard_input) or should_assemble or something_changed:
         interview.assemble(user_dict, interview_status=interview_status)
-        if should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
+        already_assembled = True
+        if STRICT_MODE and ('_question_name' not in post_data or post_data['_question_name'] != interview_status.question.name):
+            if action is None and len([key for key in post_data if not (key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'))]) > 0:
+                error_messages.append(("success", word("Input not processed.  Please try again.")))
+            post_data = dict()
+            disregard_input = True
+        elif should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + str(post_data['_question_name']) + " versus " + str(interview_status.question.name))
             if REQUIRE_IDEMPOTENT:
                 error_messages.append(("success", word("Input not processed because the question changed.  Please continue.")))
                 post_data = dict()
+                disregard_input = True
+    if STRICT_MODE and not disregard_input:
+        field_info = interview_status.get_field_info()
+        known_datatypes = field_info['datatypes']
+        list_collect_list = field_info['list_collect_list']
+        if list_collect_list is not None:
+            exec(list_collect_list + '._allow_appending()' , user_dict)
+        for checkbox_field, checkbox_value in field_info['checkboxes'].items():
+            if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
+                post_data.add(checkbox_field, checkbox_value)
+        empty_fields = field_info['hiddens']
+        for empty_field in empty_fields:
+            if empty_field not in post_data:
+                post_data.add(empty_field, 'None')
+        ml_info = field_info['ml_info']
+        authorized_fields = [from_safeid(field.saveas) for field in interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict) if hasattr(field, 'saveas')]
+        if 'allowed_to_set' in interview_status.extras:
+            authorized_fields.extend(interview_status.extras['allowed_to_set'])
+        if interview_status.question.question_type == "multiple_choice":
+            authorized_fields.append('_multiple_choice')
+        authorized_fields = set(authorized_fields).union(interview_status.question.fields_used)
+        if interview_status.extras.get('list_collect_is_final', False) and interview_status.extras['list_collect'].auto_gather:
+            if interview_status.extras['list_collect'].ask_number:
+                authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".target_number")
+            else:
+                authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".there_is_another")
+    else:
+        if STRICT_MODE:
+            empty_fields = list()
+        authorized_fields = set()
     changed = False
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False
@@ -5792,12 +5864,17 @@ def index(action_argument=None):
             response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
-    if '_the_image' in post_data:
-        file_field = from_safeid(post_data['_save_as']);
+    if '_the_image' in post_data and (STRICT_MODE is False or interview_status.question.question_type == 'signature'):
+        if STRICT_MODE:
+            file_field = from_safeid(field_info['signature_saveas'])
+        else:
+            file_field = from_safeid(post_data['_save_as']);
         if illegal_variable_name(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
         else:
-            interview.assemble(user_dict, interview_status)
+            if not already_assembled:
+                interview.assemble(user_dict, interview_status)
+                already_assembled = True
             initial_string = 'import docassemble.base.core'
             try:
                 exec(initial_string, user_dict)
@@ -5835,7 +5912,7 @@ def index(action_argument=None):
         next_action = None
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         the_question = interview.questions_by_name[post_data['_question_name']]
-        if not (should_assemble or something_changed):
+        if not already_assembled:
             uses_permissions = False
             for the_field in the_question.fields:
                 if hasattr(the_field, 'permissions'):
@@ -5922,10 +5999,13 @@ def index(action_argument=None):
             if not parse_result['valid']:
                 error_messages.append(("error", "Error: Invalid key " + key + ": " + parse_result['reason']))
                 break
+            pre_bracket_key = key
             key = key + bracket
             core_key_name = parse_result['final_parts'][0]
             whole_key = core_key_name + parse_result['final_parts'][1]
             real_key = safeid(whole_key)
+            if STRICT_MODE and (pre_bracket_key not in authorized_fields or pre_bracket_key + '.gathered' not in authorized_fields) and (key not in authorized_fields):
+                raise DAError("The variables " + repr(pre_bracket_key) + " and " + repr(key) + " were not in the allowed fields, which were " + repr(authorized_fields))
             if illegal_variable_name(whole_key):
                 error_messages.append(("error", "Error: Invalid key " + whole_key))
                 break
@@ -5991,6 +6071,8 @@ def index(action_argument=None):
             if not parse_result['valid']:
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
+            if STRICT_MODE and key not in authorized_fields:
+                raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
         if illegal_variable_name(key):
             error_messages.append(("error", "Error: Invalid key " + key))
             break
@@ -6293,9 +6375,11 @@ def index(action_argument=None):
                 logmessage("Error: " + str(errMess))
             except:
                 pass
-    if validated and special_question is None:
+    if validated and special_question is None and not disregard_input:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
+            if STRICT_MODE and key not in authorized_fields:
+                raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
             process_set_variable(key + '.gathered', user_dict, vars_set, old_values)
             if illegal_variable_name(key):
                 logmessage("Received illegal variable name " + str(key))
@@ -6315,6 +6399,8 @@ def index(action_argument=None):
             orderChanges = json.loads(post_data['_order_changes'])
             for tableName, changes in orderChanges.items():
                 tableName = myb64unquote(tableName)
+                if STRICT_MODE and tableName not in authorized_fields:
+                    raise DAError("The variable " + repr(tableName) + " was not in the allowed fields, which were " + repr(authorized_fields))
                 if illegal_variable_name(tableName):
                     error_messages.append(("error", "Error: Invalid character in table reorder: " + str(tableName)))
                     continue
@@ -6341,6 +6427,8 @@ def index(action_argument=None):
                 except:
                     error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
                     break
+                if STRICT_MODE and file_field not in authorized_fields:
+                    raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                 if illegal_variable_name(file_field):
                     has_invalid_fields = True
                     error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
@@ -6353,7 +6441,7 @@ def index(action_argument=None):
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
-                if (not something_changed) and (not should_assemble) and should_assemble_now:
+                if should_assemble_now and not already_assembled:
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
@@ -6408,6 +6496,8 @@ def index(action_argument=None):
                             except:
                                 error_messages.append(("error", "Error: Invalid file_field: " + str(var_to_store)))
                                 break
+                            if STRICT_MODE and file_field not in authorized_fields:
+                                raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                             if illegal_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                                 break
@@ -6451,6 +6541,8 @@ def index(action_argument=None):
                         except:
                             error_messages.append(("error", "Error: Invalid file_field: " + str(var_to_store)))
                             break
+                        if STRICT_MODE and file_field not in authorized_fields:
+                            raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                         if illegal_variable_name(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
@@ -6462,8 +6554,11 @@ def index(action_argument=None):
                         except Exception as errMess:
                             sys.stderr.write("Error: " + str(errMess) + "\n")
                             error_messages.append(("error", "Error: " + str(errMess)))
-        if '_files' in post_data:
-            file_fields = json.loads(myb64unquote(post_data['_files']))
+        if '_files' in post_data or (STRICT_MODE and (not disregard_input) and len(field_info['files']) > 0):
+            if STRICT_MODE:
+                file_fields = field_info['files']
+            else:
+                file_fields = json.loads(myb64unquote(post_data['_files']))
             has_invalid_fields = False
             should_assemble_now = False
             empty_file_vars = set()
@@ -6477,6 +6572,8 @@ def index(action_argument=None):
                 except:
                     error_messages.append(("error", "Error: Invalid file_field: " + str(orig_file_field)))
                     break
+                if STRICT_MODE and file_field not in authorized_fields:
+                    raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                 if illegal_variable_name(file_field):
                     has_invalid_fields = True
                     error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
@@ -6489,7 +6586,8 @@ def index(action_argument=None):
                     exec(initial_string, user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
-                interview.assemble(user_dict, interview_status)
+                if not already_assembled:
+                    interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
@@ -6525,6 +6623,8 @@ def index(action_argument=None):
                             except:
                                 error_messages.append(("error", "Error: Invalid file_field: " + str(var_to_store)))
                                 break
+                            if STRICT_MODE and file_field not in authorized_fields:
+                                raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                             if illegal_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                                 break
@@ -6569,6 +6669,8 @@ def index(action_argument=None):
                         except:
                             error_messages.append(("error", "Error: Invalid file_field: " + str(var_to_store)))
                             break
+                        if STRICT_MODE and file_field not in authorized_fields:
+                            raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                         if illegal_variable_name(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
@@ -6590,8 +6692,11 @@ def index(action_argument=None):
                     interview.questions_by_name[post_data['_question_name']].mark_as_answered(user_dict)
                 except:
                     logmessage("index: question name could not be found")
-            if '_event' in post_data and 'event_stack' in user_dict['_internal']:
-                events_list = json.loads(myb64unquote(post_data['_event']))
+            if ('_event' in post_data or (STRICT_MODE and (not disregard_input) and field_info['orig_sought'] is not None)) and 'event_stack' in user_dict['_internal']:
+                if STRICT_MODE:
+                    events_list = [field_info['orig_sought']]
+                else:
+                    events_list = json.loads(myb64unquote(post_data['_event']))
                 if len(events_list):
                     session_uid = interview_status.current_info['user']['session_uid']
                     if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
@@ -6624,22 +6729,23 @@ def index(action_argument=None):
     else:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated and special_question is None:
-        if '_collect_delete' in post_data and '_list_collect_list' in post_data:
+        if '_collect_delete' in post_data and list_collect_list is not None:
             to_delete = json.loads(post_data['_collect_delete'])
             is_ok = True
             for item in to_delete:
                 if not isinstance(item, int):
                     is_ok = False
             if is_ok:
-                the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
-                if not illegal_variable_name(the_list):
-                    exec(the_list + ' ._remove_items_by_number(' + ', '.join(map(lambda y: str(y), to_delete)) + ')' , user_dict)
+                if not illegal_variable_name(list_collect_list):
+                    exec(list_collect_list + ' ._remove_items_by_number(' + ', '.join(map(lambda y: str(y), to_delete)) + ')' , user_dict)
                     changed = True
-        if '_collect' in post_data:
+        if '_collect' in post_data and list_collect_list is not None:
             collect = json.loads(myb64unquote(post_data['_collect']))
-            if not illegal_variable_name(collect['list']):
-                if collect['function'] == 'add':
-                    add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': collect['list']})
+            # if STRICT_MODE and collect['list'] not in authorized_fields:
+            #     raise DAError("The variable " + repr(collect['list']) + " was not in the allowed fields, which were " + repr(authorized_fields))
+            #if not illegal_variable_name(collect['list']):
+            if collect['function'] == 'add':
+                add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': list_collect_list})
         if list_collect_list is not None:
             exec(list_collect_list + '._disallow_appending()' , user_dict)
         if the_question is not None and the_question.validation_code:
@@ -6661,6 +6767,8 @@ def index(action_argument=None):
                 del user_dict['_internal']['dirty'][var_name]
             except:
                 pass
+    if action is not None:
+        interview_status.current_info.update(action)
     interview.assemble(user_dict, interview_status, old_user_dict, force_question=special_question)
     current_language = docassemble.base.functions.get_language()
     session['language'] = current_language
@@ -6668,6 +6776,7 @@ def index(action_argument=None):
         user_dict['_internal']['steps_offset'] = steps
     if not changed and url_args_changed:
         changed = True
+        validated = True
     if interview_status.question.question_type == "restart":
         manual_checkout(manual_filename=yaml_filename)
         url_args = user_dict['url_args']
@@ -19888,7 +19997,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 for the_field in interview_status.get_field_list():
                     if hasattr(the_field, 'datatype') and the_field.datatype in ('html', 'note', 'script', 'css'):
                         continue
-                    if is_empty_mc(interview_status, the_field):
+                    if interview_status.is_empty_mc(the_field):
                         continue
                     if the_field.number in user_dict['_internal']['skip']:
                         continue
@@ -20259,7 +20368,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         logmessage("do_sms: storing in command cache: " + str(the_string))
                     else:
                         for the_field in interview_status.get_field_list():
-                            if is_empty_mc(interview_status, the_field):
+                            if interview_status.is_empty_mc(the_field):
                                 logmessage("do_sms: a field is empty")
                                 the_saveas = myb64unquote(the_field.saveas)
                                 if 'command_cache' not in user_dict['_internal']:

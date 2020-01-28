@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.84] - 2020-01-27
+### Added
+- The `restrict input variables` Configuration directive.
+- The `allowed to set` question modifier.
+### Fixed
+- PDF image overlays failed with any image that contained a density in
+  the metadata.
+
 ## [0.5.83] - 2020-01-26
 ### Added
 - Input validation features for `CustomDataType` classes.
