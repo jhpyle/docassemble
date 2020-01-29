@@ -1507,10 +1507,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '            <br/>\n'
         if len(status.attachments) > 1:
             output += '            <h2 class="sr-only">' + word('Attachments') + "</h2>\n"
-            output += '            <div class="alert alert-success" role="alert">' + word('The following documents have been created for you.') + '</div>\n'
+            output += '            <div class="da-attachment-alert da-attachment-alert-multiple alert alert-success" role="alert">' + word('The following documents have been created for you.') + '</div>\n'
         else:
             output += '            <h2 class="sr-only">' + word('Attachment') + "</h2>\n"
-            output += '            <div class="alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
+            output += '            <div class="da-attachment-alert da-attachment-alert-single alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
         attachment_index = 0
         editable_included = False
         if len(status.attachments) > 1:
@@ -1560,44 +1560,44 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 show_markdown = False
                 show_download = True
                 multiple_formats = False
-            output += '            <div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
+            output += '            <div class="da-attachment-title-wrapper"><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
             if attachment['description']:
-                output += '            <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
-            output += '            <div>\n'
+                output += '            <div class="da-attachment-title-description">' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
+            output += '            <div class="da-attachment-download-wrapper">\n'
             if True or show_preview or show_markdown:
-                output += '              <ul role="tablist" class="nav nav-tabs" role="tablist">\n'
+                output += '              <ul role="tablist" class="nav nav-tabs da-attachment-tablist" role="tablist">\n'
                 if show_download:
-                    output += '                <li class="nav-item"><a class="nav-link active" id="dadownload-tab' + str(attachment_index) + '" href="#dadownload' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dadownload' + str(attachment_index) + '" aria-selected="true">' + word('Download') + '</a></li>\n'
+                    output += '                <li class="nav-item da-attachment-tab-download-header"><a class="nav-link active" id="dadownload-tab' + str(attachment_index) + '" href="#dadownload' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dadownload' + str(attachment_index) + '" aria-selected="true">' + word('Download') + '</a></li>\n'
                 if show_preview:
-                    output += '                <li class="nav-item"><a class="nav-link" id="dapreview-tab' + str(attachment_index) + '" href="#dapreview' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dapreview' + str(attachment_index) + '" aria-selected="false">' + word('Preview') + '</a></li>\n'
+                    output += '                <li class="nav-item da-attachment-tab-preview-header"><a class="nav-link" id="dapreview-tab' + str(attachment_index) + '" href="#dapreview' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dapreview' + str(attachment_index) + '" aria-selected="false">' + word('Preview') + '</a></li>\n'
                 if show_markdown:
-                    output += '                <li class="nav-item"><a class="nav-link" id="damarkdown-tab' + str(attachment_index) + '" href="#damarkdown' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="damarkdown' + str(attachment_index) + '" aria-selected="false">' + word('Markdown') + '</a></li>\n'
+                    output += '                <li class="nav-item da-attachment-tab-markdown-header"><a class="nav-link" id="damarkdown-tab' + str(attachment_index) + '" href="#damarkdown' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="damarkdown' + str(attachment_index) + '" aria-selected="false">' + word('Markdown') + '</a></li>\n'
                 output += '              </ul>\n'
             output += '              <div class="tab-content" id="databcontent' + str(attachment_index) + '">\n'
             if show_download:
-                output += '                <div class="tab-pane show active" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
+                output += '                <div class="tab-pane show active da-attachment-tab-download" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
                 if multiple_formats:
-                    output += '                  <p>' + word('The document is available in the following formats:') + '</p>\n'
+                    output += '                  <p class="da-attachment-tab-download-intro">' + word('The document is available in the following formats:') + '</p>\n'
                 if attachment.get('raw', False):
-                    output += '                  <p><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fas fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
+                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fas fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
                 else:
                     if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
                     if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
                     if 'docx' in attachment['valid_formats']:
-                        output += '                  <p><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                     if 'rtf to docx' in attachment['valid_formats']:
-                        output += '                  <p><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                     if 'tex' in attachment['valid_formats']:
-                        output += '                  <p><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
                 output += '                </div>\n'
             if show_preview:
-                output += '                <div class="tab-pane" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
+                output += '                <div class="tab-pane da-attachment-tab-preview" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
                 output += '                  <blockquote class="blockquote">' + str(attachment['content']['html']) + '</blockquote>\n'
                 output += '                </div>\n'
             if show_markdown:
-                output += '                <div class="tab-pane" id="damarkdown' + str(attachment_index) + '" role="tabpanel" aria-labelledby="damarkdown-tab' + str(attachment_index) + '">\n'
+                output += '                <div class="tab-pane da-attachment-tab-markdown" id="damarkdown' + str(attachment_index) + '" role="tabpanel" aria-labelledby="damarkdown-tab' + str(attachment_index) + '">\n'
                 output += '                  <pre class="mb-2 mt-2">' + safe_html(attachment['markdown'][md_format]) + '</pre>\n'
                 output += '                </div>\n'
             output += '              </div>\n            </div>\n'
@@ -1615,7 +1615,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     default_email = ''
                 output += """\
-            <div id="daaccordionOne">
+            <div id="daaccordionOne" class="da-attachment-email-all">
               <div class="card mb-2">
                 <div class="card-header" id="daheadingOne">
                   <a role="button" data-toggle="collapse" data-parent="#daaccordionOne" href="#dacollapseOne" aria-expanded="true" aria-controls="dacollapseOne">""" + email_header + """</a>
@@ -1639,7 +1639,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 """
             if status.extras.get('allow_downloading', False):
                 output += """
-            <div id="daaccordionTwo">
+            <div id="daaccordionTwo" class="da-attachment-download-all">
               <div class="card">
                 <div class="card-header" id="daheadingTwo">
                   <a role="button" data-toggle="collapse" data-parent="#daaccordionTwo" href="#dacollapseTwo" aria-expanded="true" aria-controls="dacollapseTwo">""" + download_header + """</a>

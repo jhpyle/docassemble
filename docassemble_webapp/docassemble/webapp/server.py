@@ -10606,6 +10606,8 @@ def serve_stored_file(uid, number, filename, extension):
     if 'path' not in file_info:
         return ('File not found', 404)
     else:
+        if not os.path.isfile(file_info['path']):
+            return ('File not found', 404)
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
@@ -10619,6 +10621,8 @@ def serve_temporary_file(code, filename, extension):
     (section, file_number) = file_info.decode().split('^')
     the_file = SavedFile(file_number, fix=True, section=section)
     the_path = the_file.path
+    if not os.path.isfile(the_path):
+        return ('File not found', 404)
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
     return send_file(the_path, mimetype=mimetype)
 
@@ -10704,6 +10708,8 @@ def serve_uploaded_file(number):
     else:
         #block_size = 4096
         #status = '200 OK'
+        if not os.path.isfile(file_info['path']):
+            return ('File not found', 404)
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
@@ -18304,6 +18310,8 @@ def package_static(package, filename):
         return ('File not found', 404)
     if the_file is None:
         return ('File not found', 404)
+    if not os.path.isfile(the_file):
+        return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=str(mimetype))
     return(response)
@@ -18319,7 +18327,10 @@ def logfile(filename):
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
-        the_file, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
+        try:
+            the_file, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
+        except:
+            return ('File not found', 404)
     response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return(response)
@@ -19769,6 +19780,8 @@ def robots():
     the_file = docassemble.base.functions.package_data_filename(daconfig.get('robots', 'docassemble.webapp:data/static/robots.txt'))
     if the_file is None:
         return('File not found', 404)
+    if not os.path.isfile(the_file):
+        return ('File not found', 404)
     response = send_file(the_file, mimetype='text/plain')
     return(response)
 
@@ -21715,6 +21728,8 @@ def api_file(file_number):
             else:
                 the_path = file_info['path']
                 mimetype = file_info['mimetype']
+            if not os.path.isfile(the_file):
+                return ('File not found', 404)
             response = send_file(the_path, mimetype=mimetype)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)

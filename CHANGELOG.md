@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.85] - 2020-01-28
+### Added
+- CSS classes on HTML elements related to attachments.
+### Fixed
+- Missing static file in existing package generated exception instead
+  of a 404 error.
+
 ## [0.5.84] - 2020-01-27
 ### Added
 - The `restrict input variables` Configuration directive.
