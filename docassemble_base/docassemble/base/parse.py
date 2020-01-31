@@ -120,7 +120,7 @@ def set_initial_dict(the_dict):
 def get_initial_dict():
     return copy.deepcopy(initial_dict);
 
-class PackageImage(object):
+class PackageImage:
     def __init__(self, **kwargs):
         self.filename = kwargs.get('filename', None)
         self.attribution = kwargs.get('attribution', None)
@@ -132,7 +132,7 @@ class PackageImage(object):
         #logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
         return str(self.package) + ':' + str(self.filename)
 
-class InterviewSource(object):
+class InterviewSource:
     def __init__(self, **kwargs):
         if not hasattr(self, 'package'):
             self.package = kwargs.get('package', None)
@@ -339,7 +339,7 @@ class InterviewSourceURL(InterviewSource):
                 return(new_source)
         return None
 
-class InterviewStatus(object):
+class InterviewStatus:
     def __init__(self, current_info=dict(), **kwargs):
         self.current_info = current_info
         self.attributions = set()
@@ -925,7 +925,7 @@ class InterviewStatus(object):
 
 # increment_question_counter = new_counter()
 
-class TextObject(object):
+class TextObject:
     def __deepcopy__(self, memo):
         return TextObject(self.original_text)
     def __init__(self, x, question=None, translate=True):
@@ -2744,9 +2744,16 @@ class Question:
                     if isinstance(field, dict):
                         manual_keys = set()
                         field_info = {'type': 'text', 'number': field_number}
-                        if 'datatype' in field and field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
-                            field['input type'] = field['datatype']
-                            field['datatype'] = 'text'
+                        if 'datatype' in field:
+                            if field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
+                                field['input type'] = field['datatype']
+                                field['datatype'] = 'text'
+                            if field['datatype'] == 'mlarea':
+                                field['input type'] = 'area'
+                                field['datatype'] = 'ml'
+                            if field['datatype'] == 'area':
+                                field['input type'] = 'area'
+                                field['datatype'] = 'text'
                         if 'input type' in field and field['input type'] == 'ajax':
                             if 'action' not in field:
                                 raise DAError("An ajax field must have an associated action." + self.idebug(data))
@@ -2795,7 +2802,7 @@ class Question:
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
-                            elif 'datatype' in field and field['datatype'] == 'area' and key == 'rows':
+                            elif 'input type' in field and field['input type'] == 'area' and key == 'rows':
                                 field_info['rows'] = {'compute': compile(str(field[key]), '<rows code>', 'eval'), 'sourcecode': str(field[key])}
                                 self.find_fields_in(field[key])
                             elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -3102,7 +3109,7 @@ class Question:
                                         if field_info['type'] == 'checkboxes':
                                             for the_key in manual_keys:
                                                 self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
-                                elif field_info['type'] in ('ml', 'mlarea'):
+                                elif field_info['type'] == 'ml':
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
                                     self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
@@ -4578,7 +4585,7 @@ class Question:
                         if 'accept' not in extras:
                             extras['accept'] = dict()
                         extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
-                    if hasattr(field, 'rows') and hasattr(field, 'datatype') and field.datatype == 'area':
+                    if hasattr(field, 'rows') and hasattr(field, 'inputtype') and field.inputtype == 'area':
                         if 'rows' not in extras:
                             extras['rows'] = dict()
                         extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
@@ -4594,7 +4601,7 @@ class Question:
                             if hasattr(field, 'datatype'):
                                 if field.datatype in ('number', 'integer', 'currency', 'range'):
                                     the_func(0)
-                                elif field.datatype in ('text', 'area', 'password', 'email'):
+                                elif field.datatype in ('text', 'password', 'email'):
                                     the_func('')
                                 elif field.datatype == 'date':
                                     the_func('01/01/1970')
@@ -5557,7 +5564,7 @@ def is_threestate(field_data):
                     return False
     return True
 
-class TableInfo(object):
+class TableInfo:
     pass
 
 class Interview:
@@ -5913,7 +5920,7 @@ class Interview:
                     self.default_title[lang][title_abb] = parts['main page ' + title_name]
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
-        class K(object):
+        class K:
             def __init__(self, obj, *args):
                 self.obj = obj.number
                 self.lookup = lookup_dict

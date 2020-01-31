@@ -46,7 +46,7 @@ def listdirs(directory):
 def path_to_key(path):
     return '/'.join(str(path).split(os.sep))
 
-class SavedFile(object):
+class SavedFile:
     def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', project=None, subdir=None):
         file_number = int(file_number)
         section = str(section)

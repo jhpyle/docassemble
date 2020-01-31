@@ -71,7 +71,7 @@ dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
 
-class RawValue(object):
+class RawValue:
     def __init__(self, value):
         self.value = value
 
@@ -84,7 +84,7 @@ def raw(val):
     """
     return RawValue(val)
 
-class ReturnValue(object):
+class ReturnValue:
     def __init__(self, **kwargs):
         self.extra = kwargs.get('extra', None)
         self.value = kwargs.get('value', None)
@@ -792,7 +792,7 @@ def set_save_status(status):
     if status in ('new', 'overwrite', 'ignore'):
         this_thread.misc['save_status'] = status
 
-class DANav(object):
+class DANav:
     def __init__(self):
         self.past = set()
         self.sections = None
@@ -1032,7 +1032,7 @@ nice_numbers = {
 # def basic_write_record(key, data):
 #     return None
 
-class WebFunc(object):
+class WebFunc:
     pass
 server = WebFunc()
 
@@ -1073,7 +1073,7 @@ try:
 except:
     server.default_timezone = 'America/New_York'
 
-# class NullWebFunc(object):
+# class NullWebFunc:
 #     def write_record(*pargs, **kwargs):
 #         return None
 #     def read_records(*pargs, **kwargs):
@@ -1283,7 +1283,7 @@ def update_server(*pargs, **kwargs):
 
 # worker_convert = null_worker
 
-class GenericObject(object):
+class GenericObject:
     def __init__(self):
         self.user = None
         self.role = 'user'
@@ -1383,7 +1383,7 @@ def background_action(*pargs, **kwargs):
         ui_notification = None
     return(server.bg_action(action, ui_notification, **kwargs))
 
-class BackgroundResult(object):
+class BackgroundResult:
     def __init__(self, result):
         for attr in ('value', 'error_type', 'error_trace', 'error_message', 'variables'):
             if hasattr(result, attr):
@@ -1391,7 +1391,7 @@ class BackgroundResult(object):
             else:
                 setattr(self, attr, None)
 
-class MyAsyncResult(object):
+class MyAsyncResult:
     def wait(self):
         if not hasattr(self, '_cached_result'):
             self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
@@ -4113,7 +4113,7 @@ def verbatim(text):
         return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', str(text))))
     return text
 
-class DALocalFile(object):
+class DALocalFile:
     def __init__(self, local_path):
         self.local_path = local_path
     def path(self):
@@ -4168,12 +4168,13 @@ class CustomDataTypeRegister(type):
                 new_type['javascript'] = clsdict.get('javascript', None)
                 new_type['jq_rule'] = clsdict.get('jq_rule', None)
                 new_type['jq_message'] = clsdict.get('jq_message', None)
-                new_type['skip_if_empty'] = clsdict.get('skip_if_empty', True)
+                new_type['skip_if_empty'] = True if clsdict.get('skip_if_empty', True) else False
+                new_type['is_object'] = True if clsdict.get('is_object', False) else False
                 new_type['class'] = cls
                 custom_types[dataname] = new_type
         super().__init__(name, bases, clsdict)
 
-class CustomDataType(object, metaclass=CustomDataTypeRegister):
+class CustomDataType(metaclass=CustomDataTypeRegister):
     @classmethod
     def validate(cls, item):
         return True
@@ -4181,10 +4182,13 @@ class CustomDataType(object, metaclass=CustomDataTypeRegister):
     def transform(cls, item):
         return item
     @classmethod
+    def default_for(cls, item):
+        return str(item)
+    @classmethod
     def empty(cls):
         return None
 
-class ServerContext(object):
+class ServerContext:
     pass
 
 server_context = ServerContext()

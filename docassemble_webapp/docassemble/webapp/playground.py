@@ -219,7 +219,7 @@ class DAQuestion(DAObject):
                     elif field.field_type == 'yesnomaybe':
                         content += "    datatype: yesnomaybe\n"
                     elif field.field_type == 'area':
-                        content += "    datatype: area\n"
+                        content += "    input type: area\n"
                     elif field.field_type == 'file':
                         content += "    datatype: file\n"
                     elif field.field_data_type == 'integer':

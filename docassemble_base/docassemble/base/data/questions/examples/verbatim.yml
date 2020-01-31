@@ -10,7 +10,7 @@ subquestion: |
   Try inserting Markdown or HTML characters.
 fields:
   no label: user_input
-  datatype: area    
+  input type: area
 ---
 mandatory: True
 question: |

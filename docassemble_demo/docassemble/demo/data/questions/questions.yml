@@ -472,7 +472,7 @@ question: |
   Why do you think you deserve to win this case?
 fields:
   - no label: explanation_of_merits
-    datatype: area
+    input type: area
     hint: |
       I should win because . . .
 ---

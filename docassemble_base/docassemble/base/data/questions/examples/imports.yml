@@ -9,7 +9,7 @@ question: |
   Please write a sentence.
 fields:
   - no label: sentence
-    datatype: area
+    input type: area
 ---
 mandatory: True
 question: |

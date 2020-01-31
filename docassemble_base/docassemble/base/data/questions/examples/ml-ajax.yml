@@ -14,7 +14,7 @@ question: |
   Describe your legal problem.
 fields:
   - no label: phrase
-    datatype: area
+    input type: area
   - html: '<div id="fromserver"></div>'
 ---
 mandatory: True

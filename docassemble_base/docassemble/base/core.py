@@ -61,7 +61,7 @@ def get_unique_name():
     #     unique_names.add(newname)
     #     return newname
 
-class DAEmpty(object):
+class DAEmpty:
     """An object that does nothing except avoid triggering errors about missing information."""
     def __getattr__(self, thename):
         if thename.startswith('_'):
@@ -178,10 +178,10 @@ class DAEmpty(object):
     def __hash__(self):
         return hash(('',))
 
-class DAObjectPlusParameters(object):
+class DAObjectPlusParameters:
     pass
 
-class DAObject(object):
+class DAObject:
     """The base class for all docassemble objects."""
     def init(self, *pargs, **kwargs):
         for key, value in kwargs.items():

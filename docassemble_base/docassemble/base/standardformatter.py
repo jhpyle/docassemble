@@ -1906,7 +1906,13 @@ def input_for(status, field, wide=False, embedded=False):
     output = str()
     if field.number in status.defaults:
         defaultvalue_set = True
-        if isinstance(status.defaults[field.number], (str, int, float)):
+        if hasattr(field, 'datatype') and field.datatype in custom_types:
+            try:
+                defaultvalue = custom_types[field.datatype]['class'].default_for(status.defaults[field.number])
+            except:
+                defaultvalue_set = False
+                defaultvalue = None
+        elif isinstance(status.defaults[field.number], (str, int, float)):
             defaultvalue = str(status.defaults[field.number])
         else:
             defaultvalue = status.defaults[field.number]
@@ -2376,7 +2382,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + ' data-slider-id="' + escape_id(saveas_string) + '_slider">'
                 status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
-        elif field.datatype in ['area', 'mlarea']:
+        elif hasattr(field, 'inputtype') and field.inputtype == 'area':
             if embedded:
                 output += '<span class="da-embed-area-wrapper">'
             if 'rows' in status.extras and field.number in status.extras['rows']:

@@ -6080,6 +6080,7 @@ def index(action_argument=None):
         do_opposite = False
         is_ml = False
         is_date = False
+        is_object = False
         test_data = data
         if real_key in known_datatypes:
             if known_datatypes[real_key] in ('boolean', 'checkboxes'):
@@ -6167,12 +6168,18 @@ def index(action_argument=None):
                 continue
             elif known_datatypes[real_key] in docassemble.base.functions.custom_types:
                 info = docassemble.base.functions.custom_types[known_datatypes[real_key]]
+                if info['is_object']:
+                    is_object = True
                 if set_to_empty:
                     if info['skip_if_empty']:
                         continue
                     else:
                         test_data = info['class'].empty()
-                        data = repr(test_data)
+                        if is_object:
+                            user_dict['__DANEWOBJECT'] = data
+                            data = '__DANEWOBJECT'
+                        else:
+                            data = repr(test_data)
                 else:
                     try:
                         if not info['class'].validate(data):
@@ -6182,7 +6189,11 @@ def index(action_argument=None):
                         field_error[orig_key] = word(err)
                         continue
                     test_data = info['class'].transform(data)
-                    data = repr(test_data)
+                    if is_object:
+                        user_dict['__DANEWOBJECT'] = test_data
+                        data = '__DANEWOBJECT'
+                    else:
+                        data = repr(test_data)
             else:
                 if isinstance(data, str):
                     data = data.strip()
@@ -6375,6 +6386,9 @@ def index(action_argument=None):
                 logmessage("Error: " + str(errMess))
             except:
                 pass
+        if is_object:
+            if '__DANEWOBJECT' in user_dict:
+                del user_dict['__DANEWOBJECT']
     if validated and special_question is None and not disregard_input:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
@@ -21728,7 +21742,7 @@ def api_file(file_number):
             else:
                 the_path = file_info['path']
                 mimetype = file_info['mimetype']
-            if not os.path.isfile(the_file):
+            if not os.path.isfile(the_path):
                 return ('File not found', 404)
             response = send_file(the_path, mimetype=mimetype)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'

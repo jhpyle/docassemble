@@ -322,7 +322,7 @@ fields:
       code: |
         'Your document is ready.' if x.field_list[0].field_type == 'end_attachment' else ''
   - Body: x.subquestion_text
-    datatype: area
+    input type: area
     required: False
     default:
       code: |
@@ -367,7 +367,7 @@ subquestion: |
   You can use any valid Python source code to define the variable.
 fields:
   - no label: x.code
-    datatype: area
+    input type: area
     default: "${ x.field_list[0].variable } = "
 ---
 generic object: DAQuestion
@@ -383,7 +383,7 @@ fields:
       - From text: text
       - From a file: file
   - Body: x.template_body
-    datatype: area
+    input type: area
     show if:
       variable: x.template_type
       is: text

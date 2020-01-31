@@ -597,7 +597,7 @@ def format_time(the_time, format=None, language=None):
     except Exception as errmess:
         return word("Bad date: " + str(errmess))
 
-class DateTimeDelta(object):
+class DateTimeDelta:
     def __str__(self):
         return str(self.describe())
     def describe(self, **kwargs):
@@ -2032,7 +2032,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
     return True
 
 
-class FaxStatus(object):
+class FaxStatus:
     def __init__(self, sid):
         self.sid = sid
     def status(self):
@@ -2413,7 +2413,7 @@ def path_and_mimetype(file_ref):
     file_info = server.file_finder(file_ref)
     return file_info.get('fullpath', None), file_info.get('mimetype', None)
 
-class DummyObject(object):
+class DummyObject:
     def __init__(self, *pargs, **kwargs):
         pass
 
