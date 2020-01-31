@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.86](https://github.com/jhpyle/docassemble/releases/tag/v0.5.86) - 2020-01-31
+
+### Added
+- The `default_for` class method and `is_object` attribute of
+  `CustomDataType`.
+
+### Changed
+- The `datatype` of `area` should now be expressed as `input type:
+  area`.  For backwards compatibility, `datatype: area` still works.
+
+### Fixed
+- Bug in `/api/file` introduced in 0.5.85.
+
 ## [0.5.85](https://github.com/jhpyle/docassemble/releases/tag/v0.5.85) - 2020-01-28
 
 ### Added

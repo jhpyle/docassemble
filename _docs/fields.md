@@ -334,7 +334,6 @@ input is stored in a variable.
 
 The possible values of [`datatype`] are:
 
-* [`area`](#area)
 * [`user`](#user)
 * [`camera`](#camera)
 * [`environment`](#environment)
@@ -372,6 +371,7 @@ questions, you can use [`datatype`] to indicate how you want the data
 stored, and use [`input type`] to indicate the type of user interface
 to use. The possible values of [`input type`] are:
 
+* [`area`](#area)
 * [`dropdown`](#select) (the default)
 * [`radio`](#radio)
 * [`combobox`](#combobox)
@@ -388,7 +388,7 @@ specify it unless you want to.
 
 {% include side-by-side.html demo="text-field" %}
 
-<a name="area"></a>`datatype: area` provides a multi-line text area.
+<a name="area"></a>`input type: area` provides a multi-line text area.
 
 {% include side-by-side.html demo="text-box-field" %}
 
@@ -1062,6 +1062,9 @@ The available class attributes are:
   variable is not set to any value.  If `skip_if_empty` is `False`,
   then the variable will be set to the output of the `.empty()` class
   method.
+* `is_object` - the default is `False`.  If you have a `transform()`
+  class method that returns something that cannot be defined with with
+  `repr()`, set this to `True`.
 
 The available class methods are:
 
@@ -1087,6 +1090,19 @@ The available class methods are:
   `user.ssn` is actually defined.  If a `transform()` class method is
   not provided, the variable will be set to the raw value from the
   POST request (a string).
+- `default_for` - the `default_for()` method is used when the user
+  visits a `question` when the variable is already defined.  If the
+  output of your `transform` method is not suitable for placing into
+  the field as the default value, you can define a `default_for()`
+  class method that returns the text that should be inserted into the
+  field.  The `default_for()` class method takes a single positional
+  parameter, which is the value of the variable.  For example, if your
+  `transform()` method returns a [Python object], you can write a
+  `default_for()` class method that takes the object as its parameter
+  and returns plain text (an `str`) that is a suitable default value
+  to insert into the field.  If you do not define a `default_for()`
+  class method, an attempt will be made to obtain a default value by
+  running `str()` on the variable.
 - `empty` - this is rarely used, so you can probably ignore it.  The
   `empty` class method is used when `skip_if_empty` is
   `False`.  Instead of not defining the variable, **docassemble** will
@@ -1096,7 +1112,9 @@ The available class methods are:
 If you provide client-side input validation, it is also a good idea to
 provide server-side validation, even though it might never be
 triggered.  There are ways that users might accidentally or
-deliberately bypass client-side input validation.
+deliberately bypass client-side input validation.  So even if you
+have a [jQuery Validation Plugin] rule that works, it is a good idea
+to include a `validate()` class method.
 
 # <a name="fields options"></a>Options for items in `fields`
 
@@ -2620,3 +2638,4 @@ why this needs to be done manually as opposed to automatically:
 [jQuery Validation Plugin]: http://jqueryvalidation.org
 [jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
 [`validation messages`]: #validation messages
+[Python object]: https://docs.python.org/3.6/tutorial/classes.html

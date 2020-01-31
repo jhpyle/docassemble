@@ -2366,7 +2366,7 @@
     - Other: favorite_color
     - Second favorite color: second_favorite_color
     - Explain your reasoning: reason
-      datatype: area
+      input type: area
   ---
   question: |
     Your favorite color is
@@ -3660,7 +3660,7 @@
         done.
     - Favorite tree: tree
 "fields": "question: Tell me more about yourself\nfields:\n  - Description: user_description\n\
-  \    datatype: area\n    hint: |\n      E.g., you can describe your\n      hair\
+  \    input type: area\n    hint: |\n      E.g., you can describe your\n      hair\
   \ color, eye color, \n      favorite movies, etc.\n  - Annual income: user_annual_income\n\
   \    datatype: currency\n    min: 100\n  - E-mail address: user_email_address\n\
   \    datatype: email\n  - Been vaccinated: user_vaccinated\n    datatype: yesno\n\
@@ -4237,7 +4237,7 @@
     Please be brief.
   fields:
     - no label: rationale
-      datatype: area
+      input type: area
       hint: |
         The teapot was not broken
         and it was broken before he
@@ -7444,7 +7444,7 @@
     How do you describe what happened?
   fields:
     - no label: user_testimonial
-      datatype: area
+      input type: area
   ---
   event: waiting_screen
   reload: 5
@@ -10582,13 +10582,13 @@
     Tell me the story of your life.
   fields:
     - Life Story: target_variable
-      datatype: area
+      input type: area
 "text-box-field-rows": |-
   question: |
     Tell me the story of your life.
   fields:
     - Life Story: target_variable
-      datatype: area
+      input type: area
       rows: 10
 "text-default": |-
   question: |
@@ -10617,7 +10617,7 @@
   fields:
     - Favorite color: user_favorite_color
     - Description of your ideal vacation: user_ideal_vacation
-      datatype: area
+      input type: area
       required: False
 "text-help": |-
   question: |
@@ -10964,7 +10964,7 @@
     Try inserting Markdown or HTML characters.
   fields:
     no label: user_input
-    datatype: area
+    input type: area
   ---
   mandatory: True
   question: |
@@ -11891,6 +11891,14 @@
 "oauth-test-3": |-
   objects:
     - google: GoogleAuth.using(url_args=url_args, use_random_unique_id=True)
+"oauth-test-4": |-
+  objects:
+    - google: GoogleAuth.using(url_args=url_args, unique_id=user_code)
+  ---
+  question: |
+    What is your user code?
+  fields:
+    - Code: user_code
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
   ---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
   \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\
@@ -12553,7 +12561,7 @@
     ${ x.name }?
   fields:
     - no label: x.ingredients
-      datatype: area
+      input type: area
   ---
   generic object: Recipe
   question: |
@@ -12561,7 +12569,7 @@
     for cooking ${ x.name }?
   fields:
     - no label: x.instructions
-      datatype: area
+      input type: area
 "testdatabase": |-
   modules:
     - .demodb
