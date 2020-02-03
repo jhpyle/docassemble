@@ -2886,16 +2886,19 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 if isinstance(field[key], dict):
+                                    showif_valid = False
                                     if 'variable' in field[key] and 'is' in field[key]:
                                         if 'js show if' in field or 'js hide if' in field:
                                             raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
                                         field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
-                                    elif 'code' in field[key]:
+                                        showif_valid = True
+                                    if 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
                                         self.find_fields_in(field[key]['code'])
-                                    else:
-                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
+                                        showif_valid = True
+                                    if not showif_valid:
+                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
                                 elif isinstance(field[key], list):
                                     raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
                                 elif isinstance(field[key], str):
@@ -4726,6 +4729,8 @@ class Question:
         if test_for_objects:
             assumed_objects = set()
             for field in self.fields:
+                if field.number in extras['ok'] and not extras['ok'][field.number]:
+                    continue
                 docassemble.base.functions.this_thread.misc['current_field'] = field.number
                 if hasattr(field, 'saveas'):
                     # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
@@ -6568,6 +6573,27 @@ class Interview:
                                     break
                             if not condition_success:
                                 continue
+                    if question.question_type == 'fields':
+                        field_id = safeid(missing_var)
+                        skip_question = None
+                        for field in question.fields:
+                            if hasattr(field, 'showif_code') and hasattr(field, 'saveas') and field.saveas == field_id:
+                                docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                                result = eval(field.showif_code, user_dict)
+                                if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                                    if result:
+                                        if skip_question is not False:
+                                            skip_question = True
+                                    else:
+                                        skip_question = False
+                                else:
+                                    if not result:
+                                        if skip_question is not False:
+                                            skip_question = True
+                                    else:
+                                        skip_question = False
+                        if skip_question:
+                            continue
                     if self.debug:
                         seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":

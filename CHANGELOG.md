@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.87] - 2020-02-02
+### Fixed
+- Overwriting of README in Playground Packages when README.md is in
+  a first level subfolder.
+- Fields hidden by `show if` that uses `code` could prevent the
+  display of a `question`.
+
 ## [0.5.86] - 2020-01-31
 ### Added
 - The `default_for` class method and `is_object` attribute of

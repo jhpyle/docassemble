@@ -16333,6 +16333,26 @@ def playground_packages():
                         setup_py = ''
                         extracted = dict()
                         data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+                        has_docassemble_dir = set()
+                        has_setup_file = set()
+                        for zinfo in zf.infolist():
+                            if zinfo.is_dir():
+                                if zinfo.filename.endswith('/docassemble/'):
+                                    has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
+                                if zinfo.filename == 'docassemble/':
+                                    has_docassemble_dir.add('')
+                            elif zinfo.filename.endswith('/setup.py'):
+                                (directory, filename) = os.path.split(zinfo.filename)
+                                has_setup_file.add(directory)
+                            elif zinfo.filename == 'setup.py':
+                                has_setup_file.add('')
+                        root_dir = None
+                        for directory in has_docassemble_dir.union(has_setup_file):
+                            if root_dir is None or len(directory) < len(root_dir):
+                                root_dir = directory
+                        if root_dir is None:
+                            flash(word("The zip file did not contain a docassemble add-on package."), 'error')
+                            return redirect(url_for('playground_packages', project=current_project, file=the_file))
                         for zinfo in zf.infolist():
                             #logmessage("Found a " + zinfo.filename)
                             if zinfo.filename.endswith('/'):
@@ -16353,11 +16373,11 @@ def playground_packages():
                                     with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                         shutil.copyfileobj(source_fp, target_fp)
                                     os.utime(target_filename, (the_time, the_time))
-                            if filename == 'README.md' and len(levels) == 0:
+                            if filename == 'README.md' and directory == root_dir:
                                 with zf.open(zinfo) as f:
                                     the_file_obj = TextIOWrapper(f, encoding='utf8')
                                     readme_text = the_file_obj.read()
-                            if filename == 'setup.py' and len(levels) == 0:
+                            if filename == 'setup.py' and directory == root_dir:
                                 with zf.open(zinfo) as f:
                                     the_file_obj = TextIOWrapper(f, encoding='utf8')
                                     setup_py = the_file_obj.read()
@@ -16512,6 +16532,10 @@ def playground_packages():
             package_file.close()
         initial_directories = len(splitall(directory)) + 1
         for root, dirs, files in os.walk(directory):
+            if 'setup.py' in files and 'docassemble' in dirs:
+                at_top_level = True
+            else:
+                at_top_level = False
             for a_file in files:
                 orig_file = os.path.join(root, a_file)
                 #output += "Original file is " + orig_file + "\n"
@@ -16529,10 +16553,10 @@ def playground_packages():
                         target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
                         #output += "Copying " + orig_file + "\n"
                         copy_if_different(orig_file, target_filename)
-                if filename == 'README.md' and len(levels) == 0:
+                if filename == 'README.md' and at_top_level:
                     with open(orig_file, 'rU', encoding='utf-8') as fp:
                         readme_text = fp.read()
-                if filename == 'setup.py' and len(levels) == 0:
+                if filename == 'setup.py' and at_top_level:
                     with open(orig_file, 'rU', encoding='utf-8') as fp:
                         setup_py = fp.read()
                 elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
