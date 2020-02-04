@@ -238,6 +238,8 @@ class ResponseError(Exception):
             self.url = kwargs['url'];
         elif 'null' in kwargs:
             self.nullresponse = kwargs['null'];
+        if 'response_code' in kwargs and kwargs['response_code'] is not None:
+            self.response_code = kwargs['response_code']
         if 'sleep' in kwargs:
             self.sleep = kwargs['sleep'];
         if 'all_variables' in kwargs:

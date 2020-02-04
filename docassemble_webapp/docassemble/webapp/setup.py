@@ -86,6 +86,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
 app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
+app.config['SENDGRID_API_KEY'] = daconfig['mail'].get('sendgrid api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', True)
 app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)

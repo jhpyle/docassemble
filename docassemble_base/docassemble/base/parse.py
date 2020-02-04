@@ -1401,6 +1401,9 @@ class Question:
                         if key not in self.interview.external_files:
                             self.interview.external_files[key] = list()
                         self.interview.external_files[key].append((self.from_source.get_package(), the_file))
+        if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):
+            data['continue button field'] = data['field']
+            del data['field']
         if 'scan for variables' in data:
             if data['scan for variables']:
                 self.scan_for_variables = True
@@ -2277,6 +2280,8 @@ class Question:
                 self.content_type = TextObject(definitions + str(data['content type']), question=self)
             else:
                 self.content_type = TextObject('text/plain; charset=utf-8')
+            if 'response code' in data:
+                self.response_code = data['response code']
         if 'css class' in data:
             if 'question' not in data:
                 raise DAError("A css class can only accompany a question." + self.idebug(data))
@@ -2474,15 +2479,15 @@ class Question:
                     field_data['type'] = 'threestate'
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
-        elif 'field' in data:
-            if not isinstance(data['field'], str):
-                raise DAError("A field must be plain text." + self.idebug(data))
+        elif 'continue button field' in data and 'fields' not in data and 'yesno' not in data and 'noyes' not in data and 'yesnomaybe' not in data and 'noyesmaybe' not in data:
+            if not isinstance(data['continue button field'], str):
+                raise DAError("A continue button field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
-                self.fields_used.add(data['field'])
+                self.fields_used.add(data['continue button field'])
             if 'review' in data:
-                self.review_saveas = data['field']
+                self.review_saveas = data['continue button field']
             else:
-                field_data = {'saveas': data['field']}
+                field_data = {'saveas': data['continue button field']}
                 self.fields.append(Field(field_data))
                 self.question_type = 'settrue'
         if 'need' in data:
@@ -2722,15 +2727,12 @@ class Question:
                     raise DAError("A undefine directive must refer to variable names expressed as text." + self.idebug(data))
                 self.find_fields_in(the_field)
                 self.undefine.append(the_field)
-        if 'continue button field' in data:
-            if 'question' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data):
-                if not isinstance(data['continue button field'], str):
-                    raise DAError("A continue button field must be plain text." + self.idebug(data))
-                if self.scan_for_variables:
-                    self.fields_used.add(data['continue button field'])
-                self.fields_saveas = data['continue button field']
-            else:
-                raise DAError("A continue button field directive can only be used with a question that sets one or more variables." + self.idebug(data))
+        if 'continue button field' in data and 'question' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data):
+            if not isinstance(data['continue button field'], str):
+                raise DAError("A continue button field must be plain text." + self.idebug(data))
+            if self.scan_for_variables:
+                self.fields_used.add(data['continue button field'])
+            self.fields_saveas = data['continue button field']
         if 'fields' in data:
             self.question_type = 'fields'
             if isinstance(data['fields'], dict):
@@ -6295,6 +6297,8 @@ class Interview:
                         question_data['sleep'] = qError.sleep
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
+                    if hasattr(qError, 'response_code') and qError.response_code:
+                        question_data['response code'] = qError.response_code
                     # new_interview = copy.deepcopy(self)
                     # if self.source is None:
                     #     new_interview_source = InterviewSourceString(content='')
@@ -7017,6 +7021,8 @@ class Interview:
                     question_data['sleep'] = qError.sleep
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
+                if hasattr(qError, 'response_code') and qError.response_code:
+                    question_data['response code'] = qError.response_code
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)

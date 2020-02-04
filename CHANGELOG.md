@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.5.88] - 2020-02-03
+### Added
+- The `response_code` option for `response()` and `json_response()`.
+- The `sendgrid api key` Configuration directive for sending e-mail
+  using the SendGrid API.
+### Changed
+- A `question` with a Continue button that sets a variable to `True`,
+  or a `review` screen with a Continue button instead of a Resume
+  button, can be indicated with `continue button field` instead of
+  `field`.
+
 ## [0.5.87] - 2020-02-02
 ### Fixed
 - Overwriting of README in Playground Packages when README.md is in

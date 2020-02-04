@@ -35,7 +35,7 @@ review:
     button: |
       You said your favorite fungus 
       was ${ fungi }.
-field: answers_reviewed
+continue button field: answers_reviewed
 ---
 mandatory: True
 code: |

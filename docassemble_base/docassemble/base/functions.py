@@ -2654,9 +2654,9 @@ def response(*pargs, **kwargs):
     """Sends a custom HTTP response."""
     raise ResponseError(*pargs, **kwargs)
 
-def json_response(data):
+def json_response(data, response_code=None):
     """Sends data in JSON format as an HTTP response."""
-    raise ResponseError(json.dumps(data, sort_keys=True, indent=2) + "\n", content_type="application/json")
+    raise ResponseError(json.dumps(data, sort_keys=True, indent=2) + "\n", content_type="application/json", response_code=response_code)
 
 def variables_as_json(include_internal=False):
     """Sends an HTTP response with all variables in JSON format."""

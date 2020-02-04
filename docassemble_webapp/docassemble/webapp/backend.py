@@ -37,6 +37,7 @@ from flask_wtf.csrf import generate_csrf
 from flask_login import current_user
 import docassemble.webapp.worker
 from docassemble.webapp.mailgun_mail import Mail as MailgunMail
+from docassemble.webapp.sendgrid_mail import Mail as SendgridMail
 from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict
 
 #sys.stderr.write("I am in backend\n")
@@ -183,6 +184,8 @@ def absolute_filename(the_file):
 
 if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
     mail = MailgunMail(app)
+elif 'sendgrid api key' in daconfig['mail'] and daconfig['mail']['sendgrid api key']:
+    mail = SendgridMail(app)
 else:
     mail = FlaskMail(app)
 

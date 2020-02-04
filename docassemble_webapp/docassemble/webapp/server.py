@@ -6900,16 +6900,20 @@ def index(action_argument=None):
                 fake_up(response)
             return response
         else:
+            if hasattr(interview_status.question, 'response_code'):
+                resp_code = interview_status.question.response_code
+            else:
+                resp_code = 200
             if hasattr(interview_status.question, 'all_variables'):
                 if hasattr(interview_status.question, 'include_internal'):
                     include_internal = interview_status.question.include_internal
                 else:
                     include_internal = False
-                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), '200 OK')
+                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), resp_code)
             elif hasattr(interview_status.question, 'binaryresponse'):
-                response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+                response_to_send = make_response(interview_status.question.binaryresponse, resp_code)
             else:
-                response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
+                response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
             response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
@@ -22088,16 +22092,20 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if use_lock:
         release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
+        if hasattr(interview_status.question, 'response_code'):
+            resp_code = interview_status.question.response_code
+        else:
+            resp_code = 200
         if hasattr(interview_status.question, 'all_variables'):
             if hasattr(interview_status.question, 'include_internal'):
                 include_internal = interview_status.question.include_internal
             else:
                 include_internal = False
-            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), '200 OK')
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), resp_code)
         elif hasattr(interview_status.question, 'binaryresponse'):
-            response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+            response_to_send = make_response(interview_status.question.binaryresponse, resp_code)
         else:
-            response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
+            response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         return dict(questionType='response', response=response_to_send)
     elif interview_status.question.question_type == "sendfile":
