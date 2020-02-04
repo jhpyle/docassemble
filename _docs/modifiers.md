@@ -422,7 +422,7 @@ The types of questions that feature a "Continue" button include:
 
 * [`field` with `choices`]
 * [`fields`]
-* [`field` without `buttons` or `choices`]
+* [`continue button field`]
 
 This modifier also allows you to customize the "Done" button that
 appears in [`signature`] questions.
@@ -1026,7 +1026,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`field` with `choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
-[`field` without `buttons` or `choices`]: {{ site.baseurl }}/docs/fields.html#field
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets

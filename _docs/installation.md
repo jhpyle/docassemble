@@ -1060,15 +1060,15 @@ Traditionally, e-mail has been sent through [SMTP] servers.  While it
 is easy to deploy an [SMTP] server on a machine, most cloud providers
 block outgoing [SMTP] connections as a way to limit spam.  As a
 result, you will probably have to use a special service to send e-mail
-through [SMTP], such as [Amazon SES], [SendGrid] (which is
-particularly easy to set up if you host on [Microsoft Azure]),
-[MailChimp], [Mailgun], and [Google Apps].
+through [SMTP], such as [Amazon SES], [SendGrid], [MailChimp],
+[Mailgun], and [Google Apps].
 
 You can also send e-mail without using [SMTP].  If you have a
-[Mailgun] account, you can use the [Mailgun API] from **docassemble**
-to send mail.  This avoids many of the problems with [SMTP].  For
-instructions on sending e-mail this way, see the documentation for the
-[`mailgun api`] directive in the [configuration].
+[Mailgun] account, you can use the [Mailgun API] or the [SendGrid API]
+from **docassemble** to send mail.  This avoids many of the problems
+with [SMTP].  For instructions on sending e-mail this way, see the
+documentation for the [`mailgun api`] and [`sendgrid api`] directive in the
+[configuration].
 
 However, if you want to send e-mail using [SMTP], you can use the
 [`mail`] directive in the [configuration] to point **docassemble** to
@@ -1669,3 +1669,4 @@ All of these system administration headaches can be avoided by
 [mermaid]: https://github.com/mermaidjs/mermaid.cli
 [NGINX]: https://www.nginx.com/
 [Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
+[SendGrid API]: https://sendgrid.com/solutions/email-api/

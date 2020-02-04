@@ -284,22 +284,22 @@ To undo a user's choice on a [`question`] that embeds blocks, tag the
 [`question`] with an [`id`] and call the [`forget_result_of()`]
 function with the ID.
 
-# <a name="field"></a>Questions with only a "continue" button
+# <a name="field continue"></a>Questions with only a "continue" button
 
 {% include side-by-side.html demo="continue-participation" %}
 
-A [`question`] with a `field` and no `buttons` will offer the user a
-"Continue" button.  When the user presses "Continue," the variable
-indicated by `field` will be set to `True`.
+A [`question`] with merely a `continue button field` will offer the
+user a "Continue" button.  When the user presses "Continue," the
+variable indicated by `continue button field` will be set to `True`.
 
-If you are using [`fields`] but you want the "Continue" button to set
-a variable to `True` the way that this [`question`] type does, use the
-[`continue button field`] specifier.
+If you are using [`fields`] and you want the "Continue" button to set
+a variable to `True` the way that this [`question`] type does, you can
+add the [`continue button field`] specifier.
 
 # <a name="fields"></a>Questions that collect one or more fields on a screen
 
 So far, we have discussed [questions that set a single multiple-choice
-variable](#mconevar) and the use of [`field`] by itself to set a
+variable](#mconevar) and the use of [`continue button field`] to set a
 single variable to `True`.  These are helpful when you are collecting
 `True` or `False` values or multiple choice values.  However,
 **docassemble**'s primary tool for collecting information in is the
@@ -1670,7 +1670,7 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 Sometimes, it is useful for a `question` to set a single variable to
 `True`, along with the other variables it sets, much like the [simple
-"continue" button that sets a variable](#field) question does.
+"continue" button that sets a variable](#field continue) question does.
 
 If you want your `question` to set a variable to `True` when the user
 presses "Continue," add a `continue button field` line to the
@@ -2192,15 +2192,15 @@ information and examples, see [url_action()], [process_action()],
 [action_menu_item()], and [menu_items].
 
 However, `event` is not appropriate for `question`s that set variables
-(e.g., that use `yesno`, `noyes`, `field`, `fields`, `signature`,
-etc.).  If you want to take the user to a screen that sets a variable,
-refer to an undefined variable so that **docassemble** will seek out
-the definition of the variable and show the `question` that defines
-the variable.  Or, if the variable is already defined, use
-`force_ask()`.  The [interview logic] system in **docassemble** is not
-like a flow chart, where you "go to" question 1 and then "go to"
-question 2; it is based on seeking definitions of variables and
-satisfying prerequisites.
+(e.g., that use `yesno`, `noyes`, `field`, `continue button field`,
+`fields`, `signature`, etc.).  If you want to take the user to a
+screen that sets a variable, refer to an undefined variable so that
+**docassemble** will seek out the definition of the variable and show
+the `question` that defines the variable.  Or, if the variable is
+already defined, use `force_ask()`.  The [interview logic] system in
+**docassemble** is not like a flow chart, where you "go to" question 1
+and then "go to" question 2; it is based on seeking definitions of
+variables and satisfying prerequisites.
 
 The `event` modifier can also be used on `code` blocks, where the
 meaning is similar, but the purpose is not necessarily to show a
@@ -2389,7 +2389,7 @@ selecting an item from the menu), or with [`code`].
 
 If you would like to insert a `review` screen into the normal course
 of an interview, so that it appears to the user one time, you can use
-`field` instead of `event`.
+`continue button field` instead of `event`.
 
 {% include side-by-side.html demo="review-field" %}
 
@@ -2435,9 +2435,9 @@ than the word "Resume," add a `resume button label` modifier.
 
 {% include side-by-side.html demo="resume-button-label" %}
 
-However, if `review` is used with `field`, a "Continue" button is
-used.  The "Continue" button can be customized using the modifier
-[`continue button label`].
+However, if `review` is used with `continue button field`, a
+"Continue" button is used.  The "Continue" button can be customized
+using the modifier [`continue button label`].
 
 For information about other ways to set a default value for the
 Continue button label, see the [screen parts] section.
@@ -2617,7 +2617,6 @@ why this needs to be done manually as opposed to automatically:
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [list comprehension]: https://docs.python.org/3.6/tutorial/datastructures.html#list-comprehensions
 [`continue button field`]: #continue button field
-[`field`]: #field
 [tuples]: https://docs.python.org/3.6/tutorial/datastructures.html#tuples-and-sequences
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [`url_action_call()`]: {{ site.baseurl }}/docs/functions.html#js_url_action_call

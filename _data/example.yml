@@ -1495,7 +1495,7 @@
   \ day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this question.\n\
   \  It does not seem necessary."
 "continue": |-
-  field: target_variable
+  continue button field: target_variable
   question: |
     Welcome to the interview.
   subquestion: |
@@ -1526,7 +1526,7 @@
     Welcome to the interview!
   subquestion: |
     Your participation means a lot to us.
-  field: user_saw_intro
+  continue button field: user_saw_intro
 "continue-serial": |-
   mandatory: true
   question: |
@@ -8952,8 +8952,9 @@
   \ fruit\n    button: |\n      You said your favorite fruit was\n      ${ fruit }.\n\
   \  - Revisit vegetable: vegetable\n    button: |\n      You said your favorite vegetable\n\
   \      was ${ vegetable }.\n  - Revisit fungus: fungi\n    button: |\n      You\
-  \ said your favorite fungus \n      was ${ fungi }.\nfield: answers_reviewed\n---\n\
-  mandatory: True\ncode: |\n  fruit\n  vegetable\n  fungi\n  answers_reviewed\n  final_screen"
+  \ said your favorite fungus \n      was ${ fungi }.\ncontinue button field: answers_reviewed\n\
+  ---\nmandatory: True\ncode: |\n  fruit\n  vegetable\n  fungi\n  answers_reviewed\n\
+  \  final_screen"
 "review-side-note": |-
   question: |
     Review your answers

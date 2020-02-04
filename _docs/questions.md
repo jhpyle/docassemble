@@ -96,13 +96,13 @@ buttons" in combination with a "Continue" button, use can use
 The variable indicated by [`field`] will be set to the value supplied in
 the [`choices`]/[`buttons`] list.
 
-## Acknowledgement button: `field`
+## Acknowledgement button: `continue button field`
 
 If you simply want the user to acknowledge something by clicking
-"Continue," provide a [`field`] without [`buttons`] or [`choices`].
+"Continue," provide a [`continue button field`].
 
-The variable indicated by [`field`] will be set to `True` when the user
-clicks "Continue."
+The variable indicated by [`continue button field`] will be set to
+`True` when the user clicks "Continue."
 
 {% include side-by-side.html demo="continue" %}
 
@@ -480,7 +480,8 @@ For more information about each method, see its documentation.
 [`noyes`]: {{ site.baseurl }}/docs/fields.html#noyes
 [`choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
 [`buttons`]: {{ site.baseurl }}/docs/fields.html#field with buttons
-[`field`]: {{ site.baseurl }}/docs/fields.html#field
+[`field`]: {{ site.baseurl }}/docs/fields.html#field with choices
+[`continue button field`]: {{ site.baseurl }}/docs/fields.html#field continue
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

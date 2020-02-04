@@ -528,9 +528,11 @@ response.
 There are four different types of responses, which you can invoke by
 using one of four keyword arguments: `response`, `binaryresponse`,
 `file`, and `url`.  There is also an optional keyword argument
-`content_type`, which determines the setting of the
-[Content-Type header].  (This is not used for `url` responses,
-though.)
+`content_type`, which determines the setting of the [Content-Type
+header].  (This is not used for `url` responses, though.)  The
+`response()` function accepts the optional keyword parameter
+`response_code`.  The default HTTP response code is 200 but you can
+use `response_code` to set it to a different value.
 
 The four response types are:
 
@@ -619,11 +621,15 @@ executed one after another without pauses.
 
 ## <a name="json_response"></a>json_response()
 
-The function `json_response(data)` is a shorthand for
+Calling `json_response(data)` is a shorthand for
 `response(json.dumps(data), content_type="application/json")`.
 
 In other words, it takes a single argument and returns it as an HTTP
 response in [JSON] format.
+
+The `json_response()` function accepts the optional keyword parameter
+`response_code`.  The default response code is 200 but you can use
+`response_code` to set it to a different value.
 
 Another way to get [JSON] output from **docassemble** is to use the
 [JSON interface], which provides a [JSON] representation of a

@@ -1360,6 +1360,18 @@ mailgun api url: https://api.mailgun.net/v3/%s/messages.mime
 
 (The `mailgun domain` will be substituted in place of the `%s`.)
 
+### <a name="sendgrid api"></a>Using the SendGrid API
+
+You can send e-mail using the [SendGrid API].  First, sign up for
+[SendGrid] and obtain an API key.  Under `mail` in your Configuration,
+set `sendgrid api key` to the API key.
+
+{% highlight yaml %}
+mail:
+  default sender: '"Example, Inc." <no-reply@mg.example.com>'
+  sendgrid api key: s8_MK.S.GmtjGD6krnOl4FkkPGTYe3I8fHqIi2NGZ057k7S-ZhuQfOF2ItWYBW97w6Kzu
+{% endhighlight %}
+
 ## <a name="default interview"></a>Default interview
 
 If no [interview] is specified in the URL when the web browser first
@@ -4161,3 +4173,5 @@ wrap lines in playground: False
 [Kubernetes]: https://kubernetes.io/
 [front end]: {{ site.baseurl }}/docs/frontend.html
 [`allowed to set`]: {{ site.baseurl }}/docs/modifiers.html#allowed to set
+[SendGrid API]: https://sendgrid.com/solutions/email-api/
+[SendGrid]: https://sendgrid.com/
