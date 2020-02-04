@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.89](https://github.com/jhpyle/docassemble/releases/tag/v0.5.89) - 2020-02-04
+
+### Changed
+- Backend health monitor HTTP server moved to port 8082 from port
+  8080.
+
 ## [0.5.88](https://github.com/jhpyle/docassemble/releases/tag/v0.5.88) - 2020-02-03
 
 ### Added
