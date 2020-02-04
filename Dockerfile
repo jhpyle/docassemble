@@ -101,7 +101,7 @@ a2enmod proxy_wstunnel; \
 a2enmod headers; \
 a2enconf docassemble; \
 echo 'export TERM=xterm' >> /etc/bash.bashrc
-EXPOSE 80 443 9001 514 25 465 8080 8081 5432 6379 4369 5671 5672 25672
+EXPOSE 80 443 9001 514 25 465 8080 8081 8082 5432 6379 4369 5671 5672 25672
 ENV \
 CONTAINERROLE="all" \
 LOCALE="en_US.UTF-8 UTF-8" \

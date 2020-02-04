@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.89] - 2020-02-04
+### Changed
+- Backend health monitor HTTP server moved to port 8082 from port
+  8080.
+
 ## [0.5.88] - 2020-02-03
 ### Added
 - The `response_code` option for `response()` and `json_response()`.

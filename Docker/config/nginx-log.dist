@@ -1,5 +1,5 @@
 server {
-    listen 8080;
+    listen 8082;
     server_tokens off;
     server_name {{DAHOSTNAME}};
     client_max_body_size {{DAMAXCONTENTLENGTH}};
