@@ -12052,7 +12052,10 @@
   \  seed and can be eaten as food.\n---\ntemplate: favorite_explanation\nsubject:\
   \ |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n  If you have\
   \ a favorite something,\n  that means you like it more than\n  you like other things\
-  \ of a similar\n  nature."
+  \ of a similar\n  nature.\n---\nquestion: |\n  What is your favorite fruit?\nsubquestion:\
+  \ |\n  Everybody has a favorite fruit.\n  \n  ${ prog_disclose(fruit_explanation)\
+  \ }\n\n  Don't you have a favorite fruit?\n\n  ${ prog_disclose(favorite_explanation)\
+  \ }\n\n  You must have a favorite.\nfields:\n  - Favorite fruit: favorite_fruit"
 "pytojs-dom": "imports:\n  - json\n---\nquestion: |\n  What are your favorites?\n\
   fields:\n  - Color: color\n  - Flavor: flavor\n---\nquestion: |\n  What is your\
   \ favorite fruit?\nsubquestion: |\n  <div id=\"myinfo\"\n       data-color=${ json.dumps(color)\

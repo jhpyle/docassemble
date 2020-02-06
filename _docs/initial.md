@@ -660,23 +660,12 @@ using the [`id` and `supersedes`] question modifiers.
 
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
-{% highlight yaml %}
----
-terms:
-  enderman: |
-    A slender fellow from The End who carries enderpearls and picks up
-    blocks.
-  fusilli: |
-    A pasta shape that looks like a corkscrew.
----
-{% endhighlight %}
-
-Sometimes you will use vocabulary that the user may or may not know.
-Instead of interrupting the flow of your questions to define every
-term, you can define certain vocabulary words, and **docassemble**
-will turn them into hyperlinks wherever they appear in curly brackets.
-When the user clicks on the hyperlink, a popup appears with the word's
-definition.
+Sometimes you will use vocabulary terms that the user may or may not
+know.  Instead of interrupting the flow of your questions to define
+every term, you can define certain vocabulary words, and
+**docassemble** will turn them into hyperlinks wherever they appear in
+curly brackets.  When the user clicks on the hyperlink, a popup
+appears with the word's definition.
 
 {% include side-by-side.html demo="terms" %}
 
