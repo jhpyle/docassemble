@@ -43,7 +43,7 @@ def env_translate(var):
         return True
     if value in ('false', 'False'):
         return False
-    if value in ('null', 'None'):
+    if value in ('null', 'None', 'Null'):
         return None
     if re.match(r'^\-?[0-9]+$', value):
         return int(value)

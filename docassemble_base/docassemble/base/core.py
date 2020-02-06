@@ -29,6 +29,7 @@ import copy
 import random
 #import tablib
 import pandas
+from PIL import Image
 NoneType = type(None)
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree', 'DAContext']
@@ -2853,6 +2854,43 @@ class DAFile(DAObject):
             if 'make_pngs' in kwargs and kwargs['make_pngs']:
                 self._make_pngs_for_pdf()
         return
+    def convert_to(self, output_extension):
+        self.retrieve()
+        if hasattr(self, 'extension'):
+            input_extension = self.extension
+        elif hasattr(self, 'filename'):
+            input_extension, input_mimetype = server.get_ext_and_mimetype(self.filename)
+        else:
+            raise Exception("DAFile.convert: could not identify file type")
+        output_extension = output_extension.strip().lower()
+        if output_extension == input_extension:
+            return
+        if hasattr(self, 'filename'):
+            output_filename = re.sub(r'\.[^\.]+$', '.' + output_extension, self.filename)
+        else:
+            output_filename = 'file.' + output_extension
+        input_path = self.path()
+        input_number = self.number
+        del self.number
+        self.ok = False
+        if hasattr(self, 'mimetype'):
+            del self.mimetype
+        self.initialize(extension=output_extension, filename=output_filename)
+        if input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
+            import docassemble.base.pandoc
+            docassemble.base.pandoc.convert_file(input_path, self.path(), input_extension, output_extension)
+        elif input_extension in ("png", "jpg", "tif") and output_extension in ("png", "jpg", "tif"):
+            the_image = Image.open(input_path)
+            if input_extension == 'png':
+                rgb_image = the_image.convert('RGB')
+                rgb_image.save(self.path())
+            else:
+                the_image.save(self.path())
+        else:
+            raise Exception("DAFile.convert: could not identify file type")
+        server.SavedFile(input_number).delete
+        self.commit()
+        self.retrieve()
     def set_alt_text(self, alt_text):
         """Sets the alt text for the file."""
         self.alt_text = alt_text
@@ -3336,6 +3374,9 @@ class DAFileList(DAList):
         if len(self.elements) == 0:
             return None
         return self.elements[0].is_encrypted()
+    def convert_to(self, output_extension):
+        for element in self.elements:
+            element.convert_to(output_extension)
     def size_in_bytes(self):
         """Returns the number of bytes in the first file."""
         if len(self.elements) == 0:

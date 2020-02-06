@@ -3446,6 +3446,23 @@ class Question:
                 att['indexno'] = indexno
                 indexno += 1
         self.data_for_debug = data
+    def get_old_values(self, user_dict):
+        old_values = dict()
+        if self.question_type != 'event_code':
+            for field_name in self.fields_used:
+                if field_name in self.interview.invalidation:
+                    try:
+                        old_values[field_name] = eval(field_name, user_dict)
+                    except:
+                        pass
+        return old_values
+    def invalidate_dependencies_of_variable(self, the_user_dict, field_name, old_value):
+        if field_name in self.interview.invalidation or field_name in self.interview.onchange:
+            self.interview.invalidate_dependencies(field_name, the_user_dict, { field_name: old_value })
+        try:
+            del the_user_dict['_internal']['dirty'][field_name]
+        except:
+            pass
     def invalidate_dependencies(self, the_user_dict, old_values):
         for field_name in self.fields_used:
             #logmessage("Question.invalidate_dependencies: invalidating for " + field_name)
@@ -6602,33 +6619,42 @@ class Interview:
                         seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_values = question.get_old_values(user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
+                        question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_da":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_values = question.get_old_values(user_dict)
                         exec(import_core, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
+                        question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_values = question.get_old_values(user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
+                        question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "data_from_code_da":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_values = question.get_old_values(user_dict)
                         exec(import_core, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
                         docassemble.base.functions.pop_current_variable()
+                        question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "objects":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         success = False
+                        old_variable = None
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
                             for variable, object_type_name in keyvalue.items():
@@ -6637,6 +6663,7 @@ class Interview:
                                 was_defined = False
                                 try:
                                     exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                    old_variable = user_dict['__oldvariable__']
                                     exec("del " + str(missing_var), user_dict)
                                     was_defined = True
                                 except:
@@ -6686,6 +6713,8 @@ class Interview:
                         #question.mark_as_answered(user_dict)
                         # logmessage("pop current variable")
                         docassemble.base.functions.pop_current_variable()
+                        if old_variable is not None:
+                            question.invalidate_dependencies_of_variable(user_dict, missing_var, old_variable)
                         # logmessage("Returning")
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "template":
@@ -6834,6 +6863,7 @@ class Interview:
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_values = question.get_old_values(user_dict)
                         #logmessage("original missing variable is " + origMissingVariable)
                         attachment_text = question.processed_attachments(user_dict, seeking_var=origMissingVariable, use_cache=False)
                         if missing_var in variable_stack:
@@ -6842,6 +6872,7 @@ class Interview:
                             eval(missing_var, user_dict)
                             #question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
+                            question.invalidate_dependencies(user_dict, old_values)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
@@ -6849,14 +6880,7 @@ class Interview:
                     if question.question_type in ["code", "event_code"]:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         was_defined = False
-                        old_values = dict()
-                        if question.question_type != 'event_code':
-                            for field_name in question.fields_used:
-                                if field_name in self.invalidation:
-                                    try:
-                                        old_values[field_name] = eval(field_name, user_dict)
-                                    except:
-                                        pass
+                        old_values = question.get_old_values(user_dict)
                         try:
                             exec("__oldvariable__ = " + str(missing_var), user_dict)
                             exec("del " + str(missing_var), user_dict)

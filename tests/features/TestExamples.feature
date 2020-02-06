@@ -8011,7 +8011,7 @@ Feature: Example interviews
     Then I should see the phrase "Ok, I am awake now."
     And I wait 18 seconds
     Then I should see the phrase "I did the hard work."
-    And I wait 15 seconds
+    And I wait 18 seconds
     Then I should see the phrase "Ok, I am done"
     And I should see the phrase "The answer is 555."
 

@@ -424,6 +424,35 @@ def rtf_to_docx(in_file, out_file):
         return False
     return True
 
+def convert_file(in_file, out_file, input_extension, output_extension):
+    initialize_libreoffice()
+    tempdir = tempfile.mkdtemp()
+    from_file = os.path.join(tempdir, "file." + input_extension)
+    to_file = os.path.join(tempdir, "file." + output_extension)
+    shutil.copyfile(in_file, from_file)
+    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
+    #logmessage("convert_to: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
+    tries = 0
+    while tries < 5:
+        docassemble.base.functions.server.applock('obtain', 'libreoffice')
+        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+        result = p.wait()
+        docassemble.base.functions.server.applock('release', 'libreoffice')
+        if result != 0:
+            logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
+        if result == 0 and os.path.isfile(to_file):
+            break
+        result = 1
+        tries += 1
+        time.sleep(0.5 + tries*random.random())
+    if result == 0:
+        shutil.copyfile(to_file, out_file)
+    if tempdir is not None:
+        shutil.rmtree(tempdir)
+    if result != 0:
+        return False
+    return True
+
 def word_to_markdown(in_file, in_format):
     initialize_libreoffice()
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
