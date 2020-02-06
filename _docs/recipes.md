@@ -1,4 +1,4 @@
----
+q---
 layout: docs
 title: Recipes
 short_title: Recipes
@@ -924,6 +924,114 @@ When you are satisfied that your payment process work correctly, you
 can set your `stripe public key` and `stripe secret key` to your
 "live" [Stripe] API keys on your production server.
 
+# <a name="formio"></a>Integration with form.io, AWS Lambda, and the **docassemble** API
+
+This recipe shows how you can set up [form.io] to send a webhook
+request to an [AWS Lambda] function, which in turn calls the
+**docassemble** [API] to start an interview session, inject data into
+the interview answers of the session, and then send a notification to
+someone to let them know that a session has been started.
+
+On your server, create the following interview, calling it `fromformio.yml`.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  multi_user = True
+---
+code: |
+  start_data = None
+---
+mandatory: |
+  start_data is not None
+code: |
+  send_email(to='jpyle@docassemble.org', template=start_of_session)
+---
+template: start_of_session
+subject: Session started
+content: |
+  A session has started.  [Go to it now](${ interview_url() }).
+---
+mandatory: True
+question: |
+  The start_data is:
+
+  `${ repr(start_data) }`
+{% endhighlight %}
+
+Create an [AWS Lambda] function and trigger it with an HTTP REST API
+that is authenticated with an API key.
+
+![AWS Lambda]({{ site.baseurl }}/img/examples/formio03.png){: .maybe-full-width }
+
+![AWS Lambda API key]({{ site.baseurl }}/img/examples/formio04.png){: .maybe-full-width }
+
+Add a layer that provides the `requests` module.  Then write a
+function like the following.
+
+![lambda function code]({{ site.baseurl }}/img/examples/formio06.png){: .maybe-full-width }
+
+{% highlight python %}
+import json
+import os
+import requests
+
+def lambda_handler(event, context):
+    try:
+        start_data = json.loads(event['body'])
+    except:
+        return { 'statusCode': 400, 'body': json.dumps('Could not read JSON from the HTTP body') }
+    key = os.environ['daapikey']
+    root = os.environ['baseurl']
+    i = os.environ['interview']
+    r = requests.get(root + '/api/session/new', params={'key': key, 'i': i})
+    if r.status_code != 200:
+        return { 'statusCode': 400, 'body': json.dumps('Error creating new session at ' + root + '/api/session/new')}
+    session = r.json()['session']
+    r = requests.post(root + '/api/session', data={'key': key,
+                                                   'i': i,
+                                                   'session': session,
+                                                   'variables': json.dumps({'start_data': start_data, 'event_data': event}),
+                                                   'question': '1'})
+    if r.status_code != 200:
+        return { 'statusCode': 400, 'body': json.dumps('Error writing data to new session')}
+    return { 'statusCode': 204, 'body': ''}
+{% endhighlight %}
+
+Set the environment variables so that your provide the function with
+an API key for the **docassemble** [API] (which you can set up in your
+Profile), the URL of your server, and the name of the interview you
+want to run (in this case, `fromformio.yml` is a Playground
+interview).
+
+![AWS Lambda]({{ site.baseurl }}/img/examples/formio07.png){: .maybe-full-width }
+
+Go to [form.io] and create a form that looks like this:
+
+![form.io form]({{ site.baseurl }}/img/examples/formio01.png){: .maybe-full-width }
+
+Attach a "webhook" action that sends a POST request to your [AWS
+Lambda] endpoint.  Add the API key for the HTTP REST API trigger as
+the `x-api-key` header.
+
+![form.io action]({{ site.baseurl }}/img/examples/formio02.png){: .maybe-full-width }
+
+Under Forms, click the "Use" button next to the form that you created
+and try submitting the form.  The e-mail recipient designated in your
+YAML code should receive an e-mail containing the text:
+
+> A session has started. Go to it now.
+
+where "Go to it now" is a hyperlink to an interview session.  When the
+e-mail recipient clicks the link, they will resume an interview
+session in which the variable `start_data` contains the information
+from the [form.io] form.
+
+![interview session]({{ site.baseurl }}/img/examples/formio08.png){: .maybe-full-width }
+
+[AWS Lambda]: https://aws.amazon.com/lambda/
+[API]: {{ site.baseurl }}/docs/api.html
+[form.io]: https://form.io
 [installing a package]: {{ site.baseurl }}/docs/packages.html#installing
 [PyPI]: https://pypi.python.org/pypi
 [Stripe]: https://stripe.com/
