@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.90](https://github.com/jhpyle/docassemble/releases/tag/v0.5.90) - 2020-02-06
+
+### Added
+- The `convert_to` method of `DAFile`.
+
+### Changed
+- Functionality of `depends on` extended to additional block types.
+
 ## [0.5.89](https://github.com/jhpyle/docassemble/releases/tag/v0.5.89) - 2020-02-04
 
 ### Changed

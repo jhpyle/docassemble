@@ -1424,6 +1424,13 @@ privileges_list = my_file.privilege_access()
 
 This will return a list of privileges (e.g., `['developer', 'user']`).
 
+<a name="DAFile.convert_to"></a>The `.convert_to()` accepts a single
+positional parameter, which is expected to be `'docx'`, `'doc'`, `'odt'`,
+`'rtf'`, `'png'`, `'jpg'`, `'tif'`.  The file will be converted
+in place to that format.  Word processing files cannot be converted to
+image files, and vice-versa.  If the conversion fails, an exception
+will be raised.
+
 <a name="DAFile.size_in_bytes"></a>The `.size_in_bytes()` method
 returns the number of bytes in the file.
 
