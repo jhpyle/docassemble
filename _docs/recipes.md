@@ -1,4 +1,4 @@
-q---
+---
 layout: docs
 title: Recipes
 short_title: Recipes
