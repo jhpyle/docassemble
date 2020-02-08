@@ -2120,7 +2120,7 @@ Path: `/api/user/api`
 
 Method: [POST]
 
-Parameters:
+Data:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `name`: the name of the API key.  It cannot be longer than 255
@@ -2307,6 +2307,67 @@ Response on success: [200]
 
 Body of response: Markdown-formatted text.
 
+## <a name="interview_data"></a>Obtain information about an interview
+
+Description: Given the name of an interview, returns information about
+the Python names used in the interview.
+
+Path: `/api/interview_data`
+
+Method: [GET]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `i`: the filename of the interview that should be inspected.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "File not included." if a file is not uploaded with the
+   request.
+
+Response on success: [200]
+
+Body of response: a [JSON] dictionary containing information about the
+names used in the interview given by the `i` parameter.  The output is
+intended to be used to create functionality similar to that of the
+"Variables, etc." sidebar that appears in the [Playground] and in the
+[Microsoft Word sidebar].  The dictionary has two keys: `names`
+and `vocabulary`.  The `names` key refers to a dictionary with the
+following keys:
+
+- `classes_list`: information about class names available in the
+  interview namespace.
+- `functions_list`: information about functions available in the
+  interview namespace.
+- `images_list`: information about [images] declared in the interview.
+- `modules_list`: information about module names available in the
+  interview namespace.
+- `undefined_names`: names that appear to be used in the interview but
+  which are not defined and do not appear to have a means of being defined.
+- `var_list`: names that exist in the interview namespace or that
+  appear to be capable of being defined.
+
+If the `i` parameter refers to an interview in the [Playground]
+belonging to the owner of the API key, the following additional keys
+are included:
+
+- `modules_available_list`: information about modules available in the
+  [Playground].
+- `sources_list`: information about files in the Sources folder of the
+  [Playground].
+- `static_list`: information about files in the Static folder of the
+  [Playground].
+- `templates_list`: information about files in the Templates folder of
+  the [Playground].
+
+The `vocabulary` key refers to a simple list of names used.  This can
+be used for an "autocomplete" feature.
+
 # <a name="questionless"></a>Example of usage: questionless interview
 
 One way to use the API is to use **docassemble** as nothing more than
@@ -2459,3 +2520,5 @@ function.
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [sample-form.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/sample-form.pdf
 [Get list of fields from PDF/DOCX template]: {{ site.baseurl }}/docs/admin.html#pdf fields
+[Microsoft Word sidebar]: {{ site.baseurl }}/docs/playground.html#word addin
+[images]: {{ site.baseurl }}/docs/initial.html#im

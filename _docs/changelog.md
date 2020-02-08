@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.91](https://github.com/jhpyle/docassemble/releases/tag/v0.5.91) - 2020-02-07
+
+### Added
+- The `/api/interview_data` API endpoint.
+
+### Fixed
+- Interview cache not cleared after Playground pull.
+
 ## [0.5.90](https://github.com/jhpyle/docassemble/releases/tag/v0.5.90) - 2020-02-06
 
 ### Added
