@@ -39,6 +39,7 @@
     - packages
     - errors
     - support
+    - future
     - recipes
 - title: Administration
   docs:
