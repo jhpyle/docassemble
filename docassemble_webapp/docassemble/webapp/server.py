@@ -2969,7 +2969,7 @@ def source_code_url(the_name, datatype=None):
     #logmessage("no match for " + str(source_file))
     return None
 
-def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False, current_project='default'):
+def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False, current_project='default', use_playground=True):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
     #if 'uid' not in session:
@@ -3035,18 +3035,24 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     modules = set()
     classes = set()
     name_info = copy.deepcopy(base_name_info)
-    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
-    the_directory = directory_for(area, current_project)
-    templates = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
-    the_directory = directory_for(area, current_project)
-    static = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    area = SavedFile(current_user.id, fix=True, section='playgroundsources')
-    the_directory = directory_for(area, current_project)
-    sources = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
-    the_directory = directory_for(area, current_project)
-    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    if use_playground:
+        area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+        the_directory = directory_for(area, current_project)
+        templates = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
+        the_directory = directory_for(area, current_project)
+        static = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        area = SavedFile(current_user.id, fix=True, section='playgroundsources')
+        the_directory = directory_for(area, current_project)
+        sources = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
+        the_directory = directory_for(area, current_project)
+        avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    else:
+        templates = []
+        static = []
+        sources = []
+        avail_modules = []
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             if val not in pg_code_cache:
@@ -3250,21 +3256,27 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['doc_content'] = name_info[var]['doc']
                     info['doc_title'] = word_documentation
                 modules_list.append(info)
-        modules_available_list = list()
-        if len(avail_modules):
-            for var in sorted(avail_modules):
-                info = dict(var=var, to_insert="." + var)
-                modules_available_list.append(info)
-        templates_list = list()
-        if len(templates):
-            for var in sorted(templates):
-                info = dict(var=var, to_insert=var)
-                templates_list.append(info)
-        sources_list = list()
-        if len(sources):
-            for var in sorted(sources):
-                info = dict(var=var, to_insert=var)
-                sources_list.append(info)
+        if use_playground:
+            modules_available_list = list()
+            if len(avail_modules):
+                for var in sorted(avail_modules):
+                    info = dict(var=var, to_insert="." + var)
+                    modules_available_list.append(info)
+            templates_list = list()
+            if len(templates):
+                for var in sorted(templates):
+                    info = dict(var=var, to_insert=var)
+                    templates_list.append(info)
+            sources_list = list()
+            if len(sources):
+                for var in sorted(sources):
+                    info = dict(var=var, to_insert=var)
+                    sources_list.append(info)
+            static_list = list()
+            if len(static):
+                for var in sorted(static):
+                    info = dict(var=var, to_insert=var)
+                    static_list.append(info)
         images_list = list()
         if len(interview.images):
             for var in sorted(interview.images):
@@ -3273,7 +3285,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 if the_ref:
                     info['url'] = the_ref
                 images_list.append(info)
-        return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, modules_available_list=modules_available_list, templates_list=templates_list, sources_list=sources_list, images_list=images_list), sorted(vocab_set)
+        if use_playground:
+            return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, modules_available_list=modules_available_list, templates_list=templates_list, sources_list=sources_list, images_list=images_list, static_list=static_list), sorted(vocab_set)
+        else:
+            return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, images_list=images_list), sorted(vocab_set)
     if len(undefined_names):
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
@@ -10610,6 +10625,7 @@ def redirect_to_interview(dispatch):
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = yaml_filename
+    arguments['new_session'] = '1'
     return redirect(url_for('index', **arguments))
 
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
@@ -16605,7 +16621,7 @@ def playground_packages():
         area['playgroundpackages'].finalize()
         for sec in area:
             area[sec].finalize()
-        for key in r.keys('da:interviewsource:playground' + str(current_user.id) + ':*'):
+        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
             r.incr(key.decode())
         the_file = package_name
         if show_message:
@@ -23006,6 +23022,40 @@ def api_user_userid_api(user_id):
     if user_info is None:
         return jsonify_with_status("User not found.", 404)
     return do_api_user_api(user_id)
+
+@app.route('/api/interview_data', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def api_interview_data():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    filename = request.args.get('i', None)
+    if filename is None:
+        return jsonify_with_status("No filename supplied.", 400)
+    try:
+        interview_source = docassemble.base.parse.interview_source_from_string(filename, testing=True)
+    except Exception as err:
+        return jsonify_with_status("Error finding interview: " + str(err), 400)
+    try:
+        interview = interview_source.get_interview()
+    except Exception as err:
+        return jsonify_with_status("Error finding interview: " + str(err), 400)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=filename, req=request, action=None))
+    m = re.search('docassemble.playground([0-9]+)([^:]*):', filename)
+    if m:
+        if current_user.id == int(m.group(1)):
+            use_playground = True
+        else:
+            use_playground = False
+        if m.group(2) != '':
+            current_project = m.group(2)
+        else:
+            current_project = 'default'
+    else:
+        use_playground = False
+        current_project = 'default'
+    variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, use_playground=use_playground, current_project=current_project)
+    return jsonify({'names': variables_json, 'vocabulary': list(vocab_list)})
 
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
