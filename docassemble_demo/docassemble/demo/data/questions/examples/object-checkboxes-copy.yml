@@ -1,0 +1,77 @@
+metadata:
+  title: Object checkboxes conversion
+  short title: Conversion
+  example start: 6
+  example end: 7
+  documentation: https://docassemble.org/docs/recipes.html#object_conversion
+---
+objects:
+  - fruit_data: DAList.using(object_type=Thing, auto_gather=False)
+  - person: DAList.using(object_type=Individual, there_are_any=True, complete_attribute='complete')
+---
+code: |
+  fruit_data.clear()
+  fruit_data.appendObject()
+  fruit_data[-1].name.text = 'apple'
+  fruit_data[-1].seeds = 5
+  fruit_data.appendObject()
+  fruit_data[-1].name.text = 'orange'
+  fruit_data[-1].seeds = 10
+  fruit_data.appendObject()
+  fruit_data[-1].name.text = 'peach'
+  fruit_data[-1].seeds = 1
+  fruit_data.appendObject()
+  fruit_data[-1].name.text = 'pear'
+  fruit_data[-1].seeds = 12313
+  fruit_data.gathered = True
+---
+code: |
+  person[i].name.first
+  for item in person[i].fruit_preferences:
+    item.preferred_seeds_verified
+  person[i].complete = True
+---
+question: |
+  Is there another person you
+  would like to add?
+yesno: person.there_is_another
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } person?
+fields:
+  - First name: person[i].name.first
+  - Last name: person[i].name.last
+---
+question: |
+  Which fruits does ${ person[i] } like?
+fields:
+  - Fruits: person[i].fruit_preferences
+    datatype: object_checkboxes
+    choices:
+      - fruit_data
+validation code: |
+  person[i].fruit_preferences = person[i].fruit_preferences.copy_deep(person[i].instanceName + '.fruit_preferences')
+---
+question: |
+  How many seeds does
+  ${ person[i].possessive('ideal ' + person[i].fruit_preferences[j].name.text) }
+  have?
+fields:
+  Seeds: person[i].fruit_preferences[j].seeds
+continue button field: person[i].fruit_preferences[j].preferred_seeds_verified
+---
+question: |
+  On the next screen you will see
+  a JSON representation of the
+  `fruit_data` and `person` objects.
+continue button field: warned_about_json
+---
+question: |
+  How many seeds does 
+---
+mandatory: True
+code: |
+  person.gather()
+  warned_about_json
+  json_response({'person': person.as_serializable(), 'fruit_data': fruit_data.as_serializable()})
