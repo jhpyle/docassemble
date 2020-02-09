@@ -11900,6 +11900,24 @@
     What is your user code?
   fields:
     - Code: user_code
+"object-checkboxes-copy": |-
+  question: |
+    Which fruits does ${ person[i] } like?
+  fields:
+    - Fruits: person[i].fruit_preferences
+      datatype: object_checkboxes
+      choices:
+        - fruit_data
+  validation code: |
+    person[i].fruit_preferences = person[i].fruit_preferences.copy_deep(person[i].instanceName + '.fruit_preferences')
+  ---
+  question: |
+    How many seeds does
+    ${ person[i].possessive('ideal ' + person[i].fruit_preferences[j].name.text) }
+    have?
+  fields:
+    Seeds: person[i].fruit_preferences[j].seeds
+  continue button field: person[i].fruit_preferences[j].preferred_seeds_verified
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
   ---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
   \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\

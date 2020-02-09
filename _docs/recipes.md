@@ -1029,6 +1029,21 @@ from the [form.io] form.
 
 ![interview session]({{ site.baseurl }}/img/examples/formio08.png){: .maybe-full-width }
 
+# <a name="object_conversion"></a>Converting the result of object questions
+
+When you gather objects using [`datatype: object_checkboxes`] or one
+of the other object-based data types, you might not want the variable
+you are setting to use object references.  You can use the
+[`validation code`] feature to apply a transformation to the variable
+you are defining.
+
+{% include demo-side-by-side.html demo="object-checkboxes-copy" %}
+
+The result is that the `fruit_preferences` objects are copies of the
+original `fruit_data` object and have separate `instanceName`s.
+
+[`datatype: object_checkboxes`]: {{ site.baseurl }}/docs/fields.html#object_checkboxes
+[`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [AWS Lambda]: https://aws.amazon.com/lambda/
 [API]: {{ site.baseurl }}/docs/api.html
 [form.io]: https://form.io
