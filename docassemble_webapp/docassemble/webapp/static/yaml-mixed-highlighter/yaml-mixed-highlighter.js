@@ -24,10 +24,8 @@
 
     let innerOptions = {
       open: /^code: /,
-      close: /\n[^\s]/,
+      close: /^[^\s]/,
       mode: inner,
-      // delimStyle: 'delim',
-      // innerStyle: 'inner',
     };
 
     return CodeMirror.multiplexingMode( outer, innerOptions );
