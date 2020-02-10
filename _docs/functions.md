@@ -1314,11 +1314,12 @@ visits a given URL.  It is often given the output of [`url_ask()`] or
 It accepts the following optional keyword arguments:
 
 * `icon` - this is the name of the [Font Awesome] icon to use at the
-  start of the button.  The default is `'pencil-alt'`.  By default,
-  the icon is assumed to be in the "solid" collection (`fas`).  To use
-  a different collection, specify a name such as `fab-fa-windows` for
-  the `windows` icon in the "brand" collection.  If you do not want
-  any icon, set `icon` to `None`.
+  start of the button.  It can take a value like `'pencil-alt'`.  By
+  default, the icon is assumed to be in the "solid" collection
+  (`fas`).  To use a different collection, specify a name such as
+  `fab-fa-windows` for the `windows` icon in the "brand" collection.
+  If you do not want any icon, set `icon` to `None`.  The default is
+  `None`.
 * `color` - this is the Bootstrap color of the button.  The options
   are `primary`, `secondary`, `success`, `danger`, `warning`, `info`,
   `light`, `link`, and `dark`.  The default is `'dark'`.  The actual

@@ -182,7 +182,7 @@ question: |
   Your e-mail address is ${ email_address }.
 {% endhighlight %}
 
-# <a name="progressive disclosure"></a>Progresive disclosure
+# <a name="progressive disclosure"></a>Progressive disclosure
 
 {% include demo-side-by-side.html demo="progressive-disclosure" %}
 
