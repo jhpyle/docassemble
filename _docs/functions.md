@@ -3206,6 +3206,30 @@ If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then `comma_list(things)` will return
 `lions, tigers, bears`.
 
+## <a name="add_separators"></a>add_separators()
+
+The `add_separators()` functions takes a list as input and returns a
+list in which each item is reduced to text, a period is appended to
+the last item, `; and` is appended to the penultimate item, and `;` is
+appended to all other items.
+
+{% include side-by-side.html demo="add-separators" %}
+
+`add_separators()` takes three optional keyword parameters:
+
+* `separator`: default is `';'`
+* `last_separator`: default is `'; and'`
+* `end_mark`: default is `'.'`
+
+The function is also available as a [Jinja2] filter called
+`add_separators`.  In the above example, the [`add-separators.docx`]
+file contains:
+
+> You like:<br>
+> {% raw %}{%p for item in fruit | add_separators %}{% endraw %}<br>
+>     1. {% raw %}{{ item }}{% endraw %}<br>
+> {% raw %}{%p endfor %}{% endraw %}
+
 ## <a name="currency"></a>currency()
 
 If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
@@ -7013,3 +7037,4 @@ $(document).on('daPageLoad', function(){
 [`locale`]: https://docs.python.org/3.6/library/locale.html
 [language-specific functions]: #linguistic
 [`docassemble.base.util.update_word_collection()`]: #update_word_collection
+[`add-separators.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/add-separators.docx

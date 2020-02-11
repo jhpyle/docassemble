@@ -1526,6 +1526,30 @@ error notification email:
 
 Information about errors is also available in the [Logs].
 
+## <a name="session error redirect url"></a>Redirecting user in case of session error 
+
+If the user tries to access a non-existent session, the default
+behavior is to start a new session in the interview and display an
+error message to the user.  If you would rather redirect the user to a
+different URL, you can set `session error redirect url` to the URL to
+which you want to redirect users in this circumstance.
+
+{% highlight yaml %}
+session error redirect url: https://example.com/launch_page.html
+{% endhighlight %}
+
+You can set the `session error redirect url` to a template into which
+the named parameters `i` and `error` can be inserted.  The `i`
+parameter refers to the URI-encoded interview filename, and the
+`error` refers to an error message (also safe for inclusion in a URL
+parameter), which will be either `answers_fetch_fail` (in case there
+was an error retrieving the interview answers, such as a decryption
+error) or `answers_missing` (in case no session could be found).
+
+{% highlight yaml %}
+session error redirect url: https://example.com/error_page?filename={i:s}&error_code={error:s}
+{% endhighlight %}
+
 ## <a name="verbose error messages"></a>Whether error messages contain details
 
 By default, when the user sees an error on the screen, information

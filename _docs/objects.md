@@ -692,8 +692,8 @@ Other methods available on a `DAList` are:
   the number of items in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
   number of items in the list.  You can also give this function any
-  arbitrary noun and it will pluralize it or not depending on whether
-  the number of items in the list is more than one.  E.g.,
+  arbitrary noun and it will pluralize it or singularize it depending
+  on whether the number of items in the list is more than one.  E.g.,
   `client.child.as_noun('kid')` will return `'kid'` or `'kids'`.
 * <a name="DAList.number"></a><a name="DADict.number"></a><a
   name="DASet.number"></a>`number()` - returns the total number of

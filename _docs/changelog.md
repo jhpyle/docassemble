@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.92](https://github.com/jhpyle/docassemble/releases/tag/v0.5.92) - 2020-02-11
+
+### Added
+- The `add_separators()` function.
+- The `session error redirect url` Configuration directive.
+
+### Changed
+- Calling `as_noun()` on a group with one item will return the
+  `noun_singular()` of the applicable noun.
+
 ## [0.5.91](https://github.com/jhpyle/docassemble/releases/tag/v0.5.91) - 2020-02-07
 
 ### Added

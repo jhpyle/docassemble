@@ -2319,7 +2319,8 @@ Method: [GET]
 Parameters:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
- - `i`: the filename of the interview that should be inspected.
+ - `i`: the filename of the interview that should be inspected (e.g.,
+   `docassemble.demo:data/questions/questions.yml`).
 
 Required privileges:
 - `admin` or
