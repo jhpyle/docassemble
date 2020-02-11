@@ -108,13 +108,13 @@ subquestion: |
   
   ${ state.co_share_list.table }
 
-  ${ state.co_share_list.add_action(label='Add shareholder') }
+  ${ state.co_share_list.add_action('Add shareholder') }
 
   #### Lawsuits
   
   ${ state.co_lawsuit_list.table }
 
-  ${ state.co_lawsuit_list.add_action(label='Add lawsuit') }
+  ${ state.co_lawsuit_list.add_action('Add lawsuit') }
   
   ${ main_menu_button }
 ---
@@ -128,7 +128,7 @@ subquestion: |
   
   ${ state.lawsuit_document_list.table }
 
-  ${ state.lawsuit_document_list.add_action(label='Add document') }
+  ${ state.lawsuit_document_list.add_action('Add document') }
 
   ${ cancel_subtask_button }
 ---

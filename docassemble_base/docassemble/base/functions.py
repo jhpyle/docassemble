@@ -53,7 +53,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_save_status', 'single_to_double_newlines', 'verbatim']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators']
 
 # debug = False
 # default_dialect = 'us'
@@ -1466,15 +1466,21 @@ ordinal_functions = {
     '*': ordinal_function_en
 }
 
-def fix_punctuation(text, mark=None):
+def fix_punctuation(text, mark=None, other_marks=None):
     """Ensures the text ends with punctuation."""
-    ensure_definition(text, mark)
+    ensure_definition(text, mark, other_marks)
+    if other_marks is None:
+        other_marks = ['.', '?', '!']
+    if not isinstance(other_marks, list):
+        other_marks = list(other_marks)
     if mark is None:
         mark = '.'
-    text = re.sub(r' +$', r'', text)
-    m = re.search(r'[\.\!\?]$', text)
-    if m:
+    text = text.rstrip()
+    if mark == '':
         return text
+    for end_mark in set([mark] + other_marks):
+        if text.endswith(end_mark):
+            return text
     return text + mark
 
 def item_label(num, level=None, punctuation=True):
@@ -1811,6 +1817,38 @@ def comma_and_list_en(*pargs, **kwargs):
         return the_list[0] + before_and + and_string + after_and + the_list[1]
     else:
         return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
+
+def add_separators_en(*pargs, **kwargs):
+    """Accepts a list and returns a list, with semicolons after each item,
+    except "and" after the penultimate item and a period after the
+    last.
+
+    """
+    ensure_definition(*pargs, **kwargs)
+    separator = kwargs.get('separator', ';')
+    last_separator = kwargs.get('last_separator', '; ' + word("and"))
+    end_mark = kwargs.get('end_mark', '.')
+    the_list = list()
+    for parg in pargs:
+        if isinstance(parg, str):
+            the_list.append(parg.rstrip())
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+            for sub_parg in parg:
+                the_list.append(str(sub_parg).rstrip())
+        else:
+            the_list.append(str(parg).rstrip())
+    if len(the_list) == 0:
+        return the_list
+    if len(the_list) == 1:
+        return [fix_punctuation(the_list[0], mark=end_mark)]
+    for indexno in range(len(the_list) - 2): # for 4: 0, 1; for 3: 0; for 2: []
+        the_list[indexno] = the_list[indexno].rstrip(',')
+        the_list[indexno] = fix_punctuation(the_list[indexno], mark=separator)
+    if not the_list[-2].endswith(last_separator):
+        the_list[-2] = the_list[-2].rstrip(last_separator[0])
+        the_list[-2] += last_separator
+    the_list[-1] = fix_punctuation(the_list[-1], mark=end_mark)
+    return the_list
 
 def need(*pargs):
     """Given one or more variables, this function instructs docassemble
@@ -2507,6 +2545,9 @@ language_functions = {
     'comma_list': {
         'en': comma_list_en
     },
+    'add_separators': {
+        'en': add_separators_en
+    },
     'nice_number': {
         '*': nice_number_default
     },
@@ -2581,6 +2622,7 @@ possessify = language_function_constructor('possessify')
 possessify_long = language_function_constructor('possessify_long')
 comma_list = language_function_constructor('comma_list')
 comma_and_list = language_function_constructor('comma_and_list')
+add_separators = language_function_constructor('add_separators')
 nice_number = language_function_constructor('nice_number')
 quantity_noun = language_function_constructor('quantity_noun')
 capitalize = language_function_constructor('capitalize')

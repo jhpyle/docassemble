@@ -1202,6 +1202,9 @@ def docx_variable_fix(variable):
     variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
     return variable
 
+def url_sanitize(url):
+    return re.sub(r'\s', ' ', url)
+
 class FileInPackage:
     def __init__(self, fileref, area, package):
         if area == 'template' and not isinstance(fileref, dict):
@@ -1231,7 +1234,7 @@ class FileInPackage:
                 elif re.search(r'^https?://', str(the_file_ref)):
                     temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
                     try:
-                        urlretrieve(str(the_file_ref), temp_template_file.name)
+                        urlretrieve(url_sanitize(str(the_file_ref)), temp_template_file.name)
                     except Exception as err:
                         raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
                     the_file_ref = temp_template_file.name
@@ -5170,7 +5173,7 @@ class Question:
                     if re.search(r'^https?://', str(the_filename)):
                         temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
                         try:
-                            urlretrieve(str(the_filename), temp_template_file.name)
+                            urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
                         except Exception as err:
                             raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
                         the_filename = temp_template_file.name
@@ -6773,7 +6776,7 @@ class Interview:
                                 if re.search(r'^https?://', str(the_filename)):
                                     temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
                                     try:
-                                        urlretrieve(str(the_filename), temp_template_file.name)
+                                        urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
                                     except Exception as err:
                                         raise DAError("askfor: error downloading " + str(the_filename) + ": " + str(err))
                                     the_filename = temp_template_file.name
@@ -7661,6 +7664,7 @@ def custom_jinja_env():
     env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters['ampersand_filter'] = ampersand_filter
     env.filters['markdown'] = markdown_filter
+    env.filters['add_separators'] = docassemble.base.functions.add_separators
     env.filters['inline_markdown'] = inline_markdown_filter
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
     env.filters['RichText'] = docassemble.base.file_docx.RichText

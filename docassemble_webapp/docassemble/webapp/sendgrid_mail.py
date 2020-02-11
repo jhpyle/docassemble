@@ -46,9 +46,9 @@ class Connection(object):
                 sgmessage.add_attachment(attachment)
         sg = SendGridAPIClient(self.mail.api_key)
         response = sg.send(sgmessage)
-        sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
+        #sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
         #sys.stderr.write(str(response.body) + "\n")
-        sys.stderr.write("SendGrid response headers: " + str(response.headers) + "\n")
+        #sys.stderr.write("SendGrid response headers: " + str(response.headers) + "\n")
         if response.status_code >= 400:
             raise Exception("Failed to send e-mail message to SendGrid")
         email_dispatched.send(message, app=current_app._get_current_object())

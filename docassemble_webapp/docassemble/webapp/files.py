@@ -5,8 +5,6 @@ import json
 import pytz
 import shutil
 import requests
-from urllib.request import urlretrieve
-from urllib.parse import urlencode
 import pycurl
 import tempfile
 import mimetypes
@@ -45,6 +43,9 @@ def listdirs(directory):
 
 def path_to_key(path):
     return '/'.join(str(path).split(os.sep))
+
+def url_sanitize(url):
+    return re.sub(r'\s', ' ', url)
 
 class SavedFile:
     def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', project=None, subdir=None):
@@ -209,7 +210,7 @@ class SavedFile:
     def fetch_url_post(self, url, post_args, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
-        r = requests.post(url, data=post_args)
+        r = requests.post(url_sanitize(url), data=post_args)
         if r.status_code != 200:
             raise DAError('fetch_url_post: retrieval from ' + url + 'failed')
         with open(os.path.join(self.directory, filename), 'wb') as fp:

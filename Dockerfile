@@ -2,7 +2,9 @@ FROM jhpyle/docassemble-os
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 bash -c \
-"ln -s /var/mail/mail /var/mail/root \
+"apt-get -y update \
+&& apt-get -y upgrade \
+&& ln -s /var/mail/mail /var/mail/root \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \

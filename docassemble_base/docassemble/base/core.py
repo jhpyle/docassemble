@@ -16,7 +16,7 @@ import json
 import types
 import mimetypes
 import datetime
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun, invalidate
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_singular, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article, force_gather, quantity_noun, invalidate
 import docassemble.base.functions
 import docassemble.base.filter
 import docassemble.base.file_docx
@@ -1168,7 +1168,7 @@ class DAList(DAObject):
             else:
                 return output
         else:
-            output = the_noun
+            output = noun_singular(the_noun)
             if 'article' in kwargs and kwargs['article']:
                 output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
@@ -1542,7 +1542,7 @@ class DAList(DAObject):
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None, label=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
+    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a list"""
         if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
@@ -1907,7 +1907,7 @@ class DADict(DAObject):
             else:
                 return output
         else:
-            output = the_noun
+            output = noun_singular(the_noun)
             if 'article' in kwargs and kwargs['article']:
                 output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:
@@ -2340,7 +2340,7 @@ class DADict(DAObject):
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
+    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a dict"""
         if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
@@ -2365,6 +2365,10 @@ class DADict(DAObject):
             classname = ''
         else:
             classname = ' ' + str(classname)
+        if message is not None:
+            logmessage("add_action: note that the 'message' parameter has been renamed to 'label'.")
+        if message is None and label is not None:
+            message = label
         if message is None:
             if len(self.elements) > 0:
                 message = word("Add another")
@@ -2612,7 +2616,7 @@ class DASet(DAObject):
             else:
                 return output
         else:
-            output = the_noun
+            output = noun_singular(the_noun)
             if 'article' in kwargs and kwargs['article']:
                 output = indefinite_article(output, language=language)
             elif 'this' in kwargs and kwargs['this']:

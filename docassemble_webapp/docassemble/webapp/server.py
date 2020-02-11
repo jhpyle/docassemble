@@ -5541,6 +5541,12 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
+        if session_parameter is not None:
+            redirect_url = daconfig.get('session error redirect url', None)
+            if isinstance(redirect_url, str) and redirect_url:
+                redirect_url = redirect_url.format(i=urllibquote(yaml_filename), error=urllibquote('answers_fetch_fail'))
+                sys.stderr.write("Session error because failure to get user dictionary.\n")
+                return do_redirect(redirect_url, is_ajax, is_json, js_target)
         sys.stderr.write("Redirecting back to index because of failure to get user dictionary.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if session_parameter is not None:
@@ -5551,6 +5557,11 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch returned no results")
         clear_session(yaml_filename)
+        redirect_url = daconfig.get('session error redirect url', None)
+        if isinstance(redirect_url, str) and redirect_url:
+            redirect_url = redirect_url.format(i=urllibquote(yaml_filename), error=urllibquote('answers_missing'))
+            sys.stderr.write("Session error because user dictionary was None.\n")
+            return do_redirect(redirect_url, is_ajax, is_json, js_target)
         sys.stderr.write("Redirecting back to index because user dictionary was None.\n")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         flash(word("Unable to locate interview session.  Starting a new session instead."), "error")
@@ -23433,11 +23444,14 @@ repository: """ + pypi_url + "\n"
             fp.write(content)
         os.chmod(pypirc_file, stat.S_IRUSR | stat.S_IWUSR)
 
+def url_sanitize(url):
+    return re.sub(r'\s', ' ', url)
+
 def pypi_status(packagename):
     result = dict()
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
-        response = requests.get(pypi_url + '/' + str(packagename) + '/json')
+        response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'))
         assert response.status_code == 200
     except AssertionError:
         if response.status_code == 404:
