@@ -2155,6 +2155,7 @@
     - b
   ---
   event: review_screen
+  skip undefined: False
   question: |
     Review your answers.
   review:
@@ -2192,6 +2193,7 @@
     - b
   ---
   event: review_screen
+  skip undefined: False
   question: |
     Review your answers.
   review:
@@ -12376,6 +12378,10 @@
         - phone: user.phone_number
         - address: redact(user.address)
         - money: currency(money_claimed)
+"repeatable": |-
+  mandatory: True
+  code: |
+    version = 0
 "run-python-module": |-
   code: |
     output, return_code = run_python_module('hello.py')

@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.93](https://github.com/jhpyle/docassemble/releases/tag/v0.5.93) - 2020-02-13
+
+### Changed
+- `code` blocks with `event` work with `depends on` now.
+- Playground folders have download buttons now.
+- `re` and `json` are now available inside the interview namespace.
+
+### Fixed
+- Let's Encrypt issue.
+
 ## [0.5.92](https://github.com/jhpyle/docassemble/releases/tag/v0.5.92) - 2020-02-11
 
 ### Added
