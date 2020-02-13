@@ -349,6 +349,9 @@ The behavior when you insert a PDF file depends on the context:
   will be converted to images and inserted into the document in the
   same way images are inserted.
 
+However, PDF thumbnail conversion does not work with static PDF files;
+it only works with generated or uploaded PDF files.
+
 When you insert a word processing file, the file will be converted to
 PDF and inserted into the document the way a PDF file is inserted.
 However, if you include a DOCX file inside a DOCX file created using
