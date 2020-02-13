@@ -505,3 +505,9 @@ string_types:
 PY2:
   doc: |
     This is true if Python 2 is being used.
+json:
+  doc: |
+    This is a standard Python module for converting to and from JSON.
+re:
+  doc: |
+    This is a standard Python module for using regular expressions.

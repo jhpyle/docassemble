@@ -1305,6 +1305,7 @@ class Question:
         self.audiovideo = None
         self.compute_attachment = None
         self.can_go_back = True
+        self.other_fields_used = set()
         self.fields_used = set()
         self.names_used = set()
         self.mako_names = set()
@@ -1701,6 +1702,8 @@ class Question:
                         self.fields.append(Field({'saveas': key, 'type': 'object_from_file', 'file': item[key]}))
                         if self.scan_for_variables:
                             self.fields_used.add(key)
+                        else:
+                            self.other_fields_used.add(key)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'data' in data and 'variable name' in data:
@@ -1708,6 +1711,8 @@ class Question:
                 raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'].strip())
+            else:
+                self.other_fields_used.add(data['variable name'].strip())
             if 'use objects' in data and data['use objects']:
                 self.question_type = 'data_da'
             else:
@@ -1718,6 +1723,8 @@ class Question:
                 raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'])
+            else:
+                self.other_fields_used.add(data['variable name'])
             if 'use objects' in data and data['use objects']:
                 self.question_type = 'data_from_code_da'
             else:
@@ -1735,6 +1742,8 @@ class Question:
                         self.fields.append(Field({'saveas': key, 'type': 'object', 'objecttype': item[key]}))
                         if self.scan_for_variables:
                             self.fields_used.add(key)
+                        else:
+                            self.other_fields_used.add(key)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
@@ -2381,6 +2390,8 @@ class Question:
             self.fields.append(Field({'saveas': data['signature']}))
             if self.scan_for_variables:
                 self.fields_used.add(data['signature'])
+            else:
+                self.other_fields_used.add(data['signature'])
         if 'under' in data:
             self.undertext = TextObject(definitions + str(data['under']), question=self)
         if 'right' in data:
@@ -2395,21 +2406,29 @@ class Question:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['yesno'])
+            else:
+                self.other_fields_used.add(data['yesno'])
             self.question_type = 'yesno'
         if 'noyes' in data:
             self.fields.append(Field({'saveas': data['noyes'], 'boolean': -1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['noyes'])
+            else:
+                self.other_fields_used.add(data['noyes'])
             self.question_type = 'noyes'
         if 'yesnomaybe' in data:
             self.fields.append(Field({'saveas': data['yesnomaybe'], 'threestate': 1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['yesnomaybe'])
+            else:
+                self.other_fields_used.add(data['yesnomaybe'])
             self.question_type = 'yesnomaybe'
         if 'noyesmaybe' in data:
             self.fields.append(Field({'saveas': data['noyesmaybe'], 'threestate': -1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['noyesmaybe'])
+            else:
+                self.other_fields_used.add(data['noyesmaybe'])
             self.question_type = 'noyesmaybe'
         if 'sets' in data:
             if isinstance(data['sets'], str):
@@ -2473,6 +2492,8 @@ class Question:
                     raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
                 if self.scan_for_variables:
                     self.fields_used.add(data['field'])
+                else:
+                    self.other_fields_used.add(data['field'])
                 field_data['saveas'] = data['field']
                 if 'datatype' in data and 'type' not in field_data:
                     field_data['type'] = data['datatype']
@@ -2487,6 +2508,8 @@ class Question:
                 raise DAError("A continue button field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['continue button field'])
+            else:
+                self.other_fields_used.add(data['continue button field'])
             if 'review' in data:
                 self.review_saveas = data['continue button field']
             else:
@@ -2623,6 +2646,8 @@ class Question:
                     header.append(TextObject(word("Actions")))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
+            else:
+                self.other_fields_used.add(data['table'])
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
                 empty_message = TextObject(definitions + str(empty_message), question=self)
@@ -2636,6 +2661,8 @@ class Question:
                 if len(data['content file']) == 1 and 'code' in data['content file'] and isinstance(data['content file']['code'], str):
                     if self.scan_for_variables:
                         self.fields_used.add(data['template'])
+                    else:
+                        self.other_fields_used.add(data['template'])
                     field_data = {'saveas': data['template']}
                     self.fields.append(Field(field_data))
                     self.compute = compile(data['content file']['code'], '<content file code>', 'eval')
@@ -2666,6 +2693,8 @@ class Question:
                 raise DAError("The content of a template must be expressed as text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['template'])
+            else:
+                self.other_fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
             self.content = TextObject(definitions + str(data['content']), question=self)
@@ -2680,6 +2709,7 @@ class Question:
         if 'code' in data:
             if 'event' in data:
                 self.question_type = 'event_code'
+                self.scan_for_variables = False
             else:
                 self.question_type = 'code'
             if isinstance(data['code'], str):
@@ -2691,8 +2721,7 @@ class Question:
                 except:
                     logmessage("Question: compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
-                if self.question_type == 'code':
-                    self.find_fields_in(data['code'])
+                self.find_fields_in(data['code'])
             else:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
         if 'reconsider' in data:
@@ -2735,6 +2764,8 @@ class Question:
                 raise DAError("A continue button field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['continue button field'])
+            else:
+                self.other_fields_used.add(data['continue button field'])
             self.fields_saveas = data['continue button field']
         if 'fields' in data:
             self.question_type = 'fields'
@@ -3117,9 +3148,17 @@ class Question:
                                         if field_info['type'] == 'checkboxes':
                                             for the_key in manual_keys:
                                                 self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
+                                        self.other_fields_used.add(field_info['saveas'] + '.gathered')
+                                        if field_info['type'] == 'checkboxes':
+                                            for the_key in manual_keys:
+                                                self.other_fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
                                 elif field_info['type'] == 'ml':
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
                                     self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
                                     if 'extras' in field_info and 'ml_group' in field_info['extras']:
                                         self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
@@ -3130,15 +3169,23 @@ class Question:
                                         field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
                                         if self.scan_for_variables:
                                             self.fields_used.add(field_info['saveas'])
+                                        else:
+                                            self.other_fields_used.add(field_info['saveas'])
                                     else:
                                         if self.scan_for_variables:
                                             self.fields_used.add(field_info['saveas'] + '.text')
+                                        else:
+                                            self.other_fields_used.add(field_info['saveas'] + '.text')
                                 else:
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
                             else:
                                 if self.scan_for_variables:
                                     self.fields_used.add(field_info['saveas'])
+                                else:
+                                    self.other_fields_used.add(field_info['saveas'])
                         elif 'note' in field or 'html' in field:
                             if 'note' in field:
                                 field_info['type'] = 'note'
@@ -3451,13 +3498,12 @@ class Question:
         self.data_for_debug = data
     def get_old_values(self, user_dict):
         old_values = dict()
-        if self.question_type != 'event_code':
-            for field_name in self.fields_used:
-                if field_name in self.interview.invalidation:
-                    try:
-                        old_values[field_name] = eval(field_name, user_dict)
-                    except:
-                        pass
+        for field_name in self.fields_used:
+            if field_name in self.interview.invalidation:
+                try:
+                    old_values[field_name] = eval(field_name, user_dict)
+                except:
+                    pass
         return old_values
     def invalidate_dependencies_of_variable(self, the_user_dict, field_name, old_value):
         if field_name in self.interview.invalidation or field_name in self.interview.onchange:
@@ -3467,8 +3513,7 @@ class Question:
         except:
             pass
     def invalidate_dependencies(self, the_user_dict, old_values):
-        for field_name in self.fields_used:
-            #logmessage("Question.invalidate_dependencies: invalidating for " + field_name)
+        for field_name in self.fields_used.union(self.other_fields_used):
             if field_name in self.interview.invalidation or field_name in self.interview.onchange:
                 self.interview.invalidate_dependencies(field_name, the_user_dict, old_values)
             try:
@@ -3538,6 +3583,10 @@ class Question:
             for item in myvisitor.targets.keys():
                 if item not in predefines:
                     self.fields_used.add(item)
+        else:
+            for item in myvisitor.targets.keys():
+                if item not in predefines:
+                    self.other_fields_used.add(item)
         definables = set(predefines) | set(myvisitor.targets.keys())
         for item in myvisitor.names.keys():
             if item not in definables:
@@ -3645,6 +3694,8 @@ class Question:
                 variable_name = target['variable name']
                 if self.scan_for_variables:
                     self.fields_used.add(target['variable name'])
+                else:
+                    self.other_fields_used.add(target['variable name'])
             else:
                 variable_name = "_internal['docvar'][" + str(self.interview.next_attachment_number()) + "]"
             if 'metadata' in target:
@@ -5665,15 +5716,12 @@ class Interview:
         if len(the_list) <= 1:
             return the_list
     def invalidate_dependencies(self, field_name, the_user_dict, old_values):
-        #logmessage("Interview.invalidate_dependencies: invalidating for " + field_name)
-        #logmessage("Interview.invalidate_dependencies: invalidation is " + repr(self.invalidation))
         try:
             current_value = eval(field_name, the_user_dict)
         except:
             return
         try:
             if current_value == old_values[field_name]:
-                #logmessage("Interview.invalidate_dependencies: no need to dirty for " + field_name + " because unchanged")
                 return
         except:
             pass
@@ -6900,6 +6948,7 @@ class Interview:
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            question.invalidate_dependencies(user_dict, old_values)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)

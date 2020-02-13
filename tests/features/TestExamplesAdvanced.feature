@@ -205,3 +205,12 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/action-button-html.yml"
     Then I should see the phrase "Need more information?"
     And I click the final link "Visit our web site"
+
+  Scenario: Test the interview "Action buttons"
+    Given I start the interview "docassemble.base:data/questions/examples/action-buttons-http.yml"
+    Then I should see the phrase "You may wish to wait until"
+    And I click the final link " Come back later"
+
+  # Scenario: Test the interview "DAWeb"
+  #   Given I start the interview "docassemble.base:data/questions/examples/daweb.yml"
+

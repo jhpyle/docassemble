@@ -15270,12 +15270,18 @@ def playground_static(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    try:
+        attach = int(request.args.get('attach', 0))
+    except:
+        attach = 0
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     the_directory = directory_for(area, current_project)
-    filename = os.path.join(the_directory, filename)
-    if os.path.isfile(filename):
+    pth = os.path.join(the_directory, filename)
+    if os.path.isfile(path):
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(filename, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype))
+        if attach:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         return(response)
     return ('File not found', 404)
 
@@ -15286,12 +15292,19 @@ def playground_modules(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    try:
+        attach = int(request.args.get('attach', 0))
+    except:
+        attach = 0
     area = SavedFile(userid, fix=True, section='playgroundmodules')
     the_directory = directory_for(area, current_project)
-    filename = os.path.join(the_directory, filename)
-    if os.path.isfile(filename):
+    path = os.path.join(the_directory, filename)
+    if os.path.isfile(path):
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(filename, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype))
+        if attach:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     return ('File not found', 404)
 
@@ -15301,14 +15314,20 @@ def playground_modules(current_project, userid, filename):
 def playground_sources(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    try:
+        attach = int(request.args.get('attach', 0))
+    except:
+        attach = 0
     filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, current_project, filename)
     the_directory = directory_for(area, current_project)
-    filename = os.path.join(the_directory, filename)
-    if os.path.isfile(filename):
+    path = os.path.join(the_directory, filename)
+    if os.path.isfile(path):
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(filename, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype))
+        if attach:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     return ('File not found', 404)
@@ -15320,12 +15339,18 @@ def playground_template(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    try:
+        attach = int(request.args.get('attach', 0))
+    except:
+        attach = 0
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     the_directory = directory_for(area, current_project)
-    filename = os.path.join(the_directory, filename)
-    if os.path.isfile(filename):
+    path = os.path.join(the_directory, filename)
+    if os.path.isfile(path):
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(filename, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype))
+        if attach:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     return ('File not found', 404)
