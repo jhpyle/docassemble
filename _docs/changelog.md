@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.95](https://github.com/jhpyle/docassemble/releases/tag/v0.5.95) - 2020-02-14
+
+### Added
+- The `show incomplete` and `not available label` options for `table`
+  blocks.
+- The `gathering_started()` method of groups.
+
 ## [0.5.94](https://github.com/jhpyle/docassemble/releases/tag/v0.5.94) - 2020-02-13
 
 ### Added

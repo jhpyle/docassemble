@@ -10294,6 +10294,12 @@
   edit:
     - name.text
   allow reordering: True
+"table-show-incomplete": |-
+  code: |
+    fruit[i].name.text
+    fruit[i].seeds
+    fruit[i].last_eaten
+    fruit[i].complete = True
 "table-width": |-
   features:
     table width: 35
