@@ -1184,6 +1184,11 @@ class DAList(DAObject):
             return self._target_or_actual()
         self._trigger_gather()
         return len(self.elements)
+    def gathering_started(self):
+        """Returns True if the gathering process has started or the number of elements is non-zero."""
+        if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
+            return True
+        return False
     def number_gathered(self):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
@@ -1932,6 +1937,11 @@ class DADict(DAObject):
             return self._target_or_actual()
         self._trigger_gather()
         return len(self.elements)
+    def gathering_started(self):
+        """Returns True if the gathering process has started or the number of elements is non-zero."""
+        if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
+            return True
+        return False
     def number_gathered(self):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
@@ -2634,6 +2644,11 @@ class DASet(DAObject):
             return self._target_or_actual()
         self._trigger_gather()
         return len(self.elements)
+    def gathering_started(self):
+        """Returns True if the gathering process has started or the number of elements is non-zero."""
+        if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
+            return True
+        return False
     def number_gathered(self):
         """Returns the number of elements in the list that have been gathered so far."""
         return len(self.elements)
@@ -3649,6 +3664,12 @@ def export_safe(text):
         text = text.replace(tzinfo=None)
     return text
 
+def table_safe_eval(x, user_dict_copy, table_info):
+    try:
+        return table_safe(eval(x, user_dict_copy))
+    except:
+        return table_safe(word(table_info.not_available_label))
+
 def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     table_content = "\n"
     user_dict_copy = copy.copy(orig_user_dict)
@@ -3661,7 +3682,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     if not isinstance(the_iterable, (list, dict, DAList, DADict)):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
     if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
-        if not table_info.require_gathered:
+        if (not table_info.require_gathered) or (table_info.show_incomplete and the_iterable.gathering_started()):
             the_iterable = the_iterable.elements
         elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
             the_iterable = the_iterable.complete_elements()
@@ -3671,18 +3692,27 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
             for key in the_iterable:
                 user_dict_copy['row_item'] = the_iterable[key]
                 user_dict_copy['row_index'] = key
-                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
+                if table_info.show_incomplete:
+                    contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
+                else:
+                    contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
         else:
             for key in sorted(the_iterable):
                 user_dict_copy['row_item'] = the_iterable[key]
                 user_dict_copy['row_index'] = key
-                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
+                if table_info.show_incomplete:
+                    contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
+                else:
+                    contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
     else:
         indexno = 0
         for item in the_iterable:
             user_dict_copy['row_item'] = item
             user_dict_copy['row_index'] = indexno
-            contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
+            if table_info.show_incomplete:
+                contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
+            else:
+                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
             indexno += 1
     if table_info.is_editable and not editable:
         for cols in contents:
@@ -3851,6 +3881,11 @@ class DALazyTableTemplate(DALazyTemplate):
         """Returns the table as a pandas data frame"""
         header_output, contents = self.header_and_contents()
         return pandas.DataFrame.from_records(contents, columns=header_output)
+    def export_safe_eval(x, user_dict_copy):
+        try:
+            return table_safe(eval(x, user_dict_copy))
+        except:
+            return table_safe(word(self.table_info.not_available_label))
     def header_and_contents(self):
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
@@ -3861,7 +3896,7 @@ class DALazyTableTemplate(DALazyTemplate):
         if not isinstance(the_iterable, (list, dict, DAList, DADict)):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
         if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
-            if not self.table_info.require_gathered:
+            if (not self.table_info.require_gathered) or (table_info.show_incomplete and the_iterable.gathering_started()):
                 the_iterable = the_iterable.elements
             elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
                 the_iterable = the_iterable.complete_elements()
@@ -3870,13 +3905,19 @@ class DALazyTableTemplate(DALazyTemplate):
             for key in sorted(the_iterable):
                 user_dict_copy['row_item'] = the_iterable[key]
                 user_dict_copy['row_index'] = key
-                contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
+                if self.table_info.show_incomplete:
+                    contents.append([self.export_safe_eval(x, user_dict_copy) for x in self.table_info.column])
+                else:
+                    contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
         else:
             indexno = 0
             for item in the_iterable:
                 user_dict_copy['row_item'] = item
                 user_dict_copy['row_index'] = indexno
-                contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
+                if table_info.show_incomplete:
+                    contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
+                else:
+                    contents.append([self.export_safe_eval(x, user_dict_copy) for x in self.table_info.column])
                 indexno += 1
         if self.table_info.is_editable:
             for cols in contents:

@@ -2855,17 +2855,17 @@ Feature: Example interviews
     And I select "Fruit" from the menu
     Then I should see the phrase "What is your favorite fruit?"
 
-  Scenario: Test the interview "Several interviews in one" with vegetables interview
-    Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
-    Then I should see the phrase "Select an option from the menu in the upper right."
-    And I select "Vegetables" from the menu
-    Then I should see the phrase "What is your favorite vegetable?"
+  # Scenario: Test the interview "Several interviews in one" with vegetables interview
+  #   Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
+  #   Then I should see the phrase "Select an option from the menu in the upper right."
+  #   And I select "Vegetables" from the menu
+  #   Then I should see the phrase "What is your favorite vegetable?"
 
-  Scenario: Test the interview "Several interviews in one" with flowers interview
-    Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
-    Then I should see the phrase "Select an option from the menu in the upper right."
-    And I select "Flowers" from the menu
-    Then I should see the phrase "What is your favorite flower?"
+  # Scenario: Test the interview "Several interviews in one" with flowers interview
+  #   Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
+  #   Then I should see the phrase "Select an option from the menu in the upper right."
+  #   And I select "Flowers" from the menu
+  #   Then I should see the phrase "What is your favorite flower?"
 
   Scenario: Test the interview "Menu item"
     Given I start the interview "docassemble.base:data/questions/examples/menu-item.yml"

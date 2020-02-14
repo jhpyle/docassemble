@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.95] - 2020-02-14
+### Added
+- The `show incomplete` and `not available label` options for `table`
+  blocks.
+- The `gathering_started()` method of groups.
+
 ## [0.5.94] - 2020-02-13
 ### Added
 - The `allow external auth with admin accounts` Configuration

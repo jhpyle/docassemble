@@ -1144,6 +1144,9 @@ def fix_http(url):
     else:
         return url
 
+def safe_quote_func(string, safe='', encoding=None, errors=None):
+    return urllibquote(string, safe='', encoding=encoding, errors=errors)
+
 def remove_question_package(args):
     if '_question' in args:
         del args['_question']
@@ -1187,7 +1190,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
             if len(args) > 0:
                 if file_reference.startswith('mailto:') and 'body' in args:
                     args['body'] = re.sub(r'(?<!\r)\n', '\r\n', args['body'], re.MULTILINE)
-                return(file_reference) + '?' + urlencode(args)
+                return(file_reference) + '?' + urlencode(args, quote_via=safe_quote_func)
         return(file_reference)
     kwargs_with_i = copy.copy(kwargs)
     if 'i' not in kwargs_with_i:
