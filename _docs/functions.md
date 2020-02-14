@@ -1283,7 +1283,7 @@ becomes `https://example.com?query=Hello%2C+world%21`.
 
 You can also use this feature to format `mailto:` URLs:
 
-```
+{% highlight yaml %}
 question: |
   What e-mail would you like to send?
 fields:
@@ -1299,7 +1299,7 @@ question: |
 subquestion: |
   [Your draft e-mail](${ url_of('mailto:' + addressee, subject=subject, body=body)
   is ready.
-```
+{% endhighlight %}
 
 ## <a name="url_ask"></a>url_ask()
 
