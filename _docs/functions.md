@@ -1297,7 +1297,7 @@ mandatory: True
 question: |
   Draft e-mail
 subquestion: |
-  [Your draft e-mail](${ url_of('mailto:' + addressee, subject=subject, body=body)
+  [Your draft e-mail](${ url_of('mailto:' + addressee, subject=subject, body=body) })
   is ready.
 {% endhighlight %}
 
