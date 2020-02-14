@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.94](https://github.com/jhpyle/docassemble/releases/tag/v0.5.94) - 2020-02-13
+
+### Added
+- The `allow external auth with admin accounts` Configuration
+  directive.
+- The url parameter feature of `url_of()`.
+
 ## [0.5.93](https://github.com/jhpyle/docassemble/releases/tag/v0.5.93) - 2020-02-13
 
 ### Changed

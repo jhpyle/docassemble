@@ -1042,6 +1042,22 @@ you are defining.
 The result is that the `fruit_preferences` objects are copies of the
 original `fruit_data` object and have separate `instanceName`s.
 
+# <a name="repeatable"></a>Repeatable session with defaults
+
+If you want to restart an interview session and use the answers from
+the just-finished session as default values for the new session, you
+can accomplish this using the [`depends on`] feature.
+
+{% include demo-side-by-side.html demo="repeatable" %}
+
+When the variable `counter` is incremented by the `new_version`
+[action], all of the variables set by [`question`] blocks that use
+`depends on: counter` will be undefined, but the old values will be
+remembered and offered as defaults when the [`question`] blocks are
+encountered again.
+
+[action]: {{ site.baseurl }}/docs/functions.html#actions
+[`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`datatype: object_checkboxes`]: {{ site.baseurl }}/docs/fields.html#object_checkboxes
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [AWS Lambda]: https://aws.amazon.com/lambda/

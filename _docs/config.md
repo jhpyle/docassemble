@@ -3495,6 +3495,17 @@ have one `ouath:` line in your configuration.  Put all of your
 integration, OneDrive integration, etc.) within a single `oauth`
 directive.
 
+<a name="allow external auth with admin accounts"></a>By default, users who
+log with an authentication mechanism other than username/password
+cannot have their privileges elevated to `admin`.  However, if you
+want to take the risk that administrators could be locked out of their
+accounts if the external authentication mechanism fails, you can set
+`allow external auth with admin accounts` to `True`:
+
+{% highlight yaml %}
+allow external auth with admin accounts: True
+{% endhighlight %}
+
 ## <a name="googledrive"></a>Google Drive configuration
 
 To enable the [Google Drive synchronization] feature, add

@@ -1277,6 +1277,30 @@ By default, `url_of()` returns relative URLs, which begin with `/`.
 However, if you want a full URL, you can call, e.g., `url_of('root',
 _external=True)`.
 
+The `url_of()` function can also be used to format URLs with
+parameters.  For example, `url_of('https://example.com', query="Hello, world!")`
+becomes `https://example.com?query=Hello%2C+world%21`.
+
+You can also use this feature to format `mailto:` URLs:
+
+```
+question: |
+  What e-mail would you like to send?
+fields:
+  - To: addressee
+    datatype: email
+  - Subject: subject
+  - Body: body
+    input type: area
+---
+mandatory: True
+question: |
+  Draft e-mail
+subquestion: |
+  [Your draft e-mail](${ url_of('mailto:' + addressee, subject=subject, body=body)
+  is ready.
+```
+
 ## <a name="url_ask"></a>url_ask()
 
 The `url_ask()` function is like [`url_action()`], except instead
