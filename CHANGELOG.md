@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.94] - 2020-02-13
+### Added
+- The `allow external auth with admin accounts` Configuration
+  directive.
+- The url parameter feature of `url_of()`.
+
 ## [0.5.93] - 2020-02-13
 ### Changed
 - `code` blocks with `event` work with `depends on` now.

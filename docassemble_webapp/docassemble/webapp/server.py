@@ -1177,7 +1177,17 @@ def get_url_from_file_reference(file_reference, **kwargs):
             else:
                 return(the_file.url_for(**url_properties))
     file_reference = str(file_reference)
-    if re.search(r'^https?://', file_reference) or file_reference.startswith('/') or file_reference.startswith('?'):
+    if re.search(r'^https?://', file_reference) or re.search(r'^mailto:', file_reference) or file_reference.startswith('/') or file_reference.startswith('?'):
+        if '?' not in file_reference:
+            args = dict()
+            for key, val in kwargs.items():
+                if key in ('_package', '_question'):
+                    continue
+                args[key] = val
+            if len(args) > 0:
+                if file_reference.startswith('mailto:') and 'body' in args:
+                    args['body'] = re.sub(r'(?<!\r)\n', '\r\n', args['body'], re.MULTILINE)
+                return(file_reference) + '?' + urlencode(args)
         return(file_reference)
     kwargs_with_i = copy.copy(kwargs)
     if 'i' not in kwargs_with_i:
@@ -9128,6 +9138,18 @@ def index(action_argument=None):
             $("#dareadability-question").show();
           }
           $("#dareadability").slideDown();
+          if (daJsEmbed){
+            scrollTarget = $("#dareadability").first().position().top - 60;
+            $(daTargetDiv).animate({
+              scrollTop: scrollTarget
+            }, 1000);
+          }
+          else{
+            scrollTarget = $("#dareadability").first().offset().top - 60;
+            $("html, body").animate({
+              scrollTop: scrollTarget
+            }, 1000);
+          }
         });
         $('a[data-target="#dahelp"], a[data-target="#daquestion"]').on('shown.bs.tab', function (e) {
           if ($(this).data("target") == '#dahelp'){
@@ -9386,7 +9408,7 @@ def index(action_argument=None):
           else{
             window.scrollTo(0, 1);
           }
-          $("#dahelptoggle span").removeClass('daactivetext')
+          $("#dahelptoggle span").removeClass('daactivetext');
           $("#dahelptoggle").blur();
         });
         $("#dasourcetoggle").on("click", function(){

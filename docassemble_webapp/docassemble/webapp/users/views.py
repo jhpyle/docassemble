@@ -159,7 +159,7 @@ def edit_user_profile_page(id):
     if request.method == 'POST' and form.cancel.data:
         flash(word('The user profile was not changed.'), 'success')
         return redirect(url_for('user_list'))
-    if user.social_id.startswith('local$'):
+    if user.social_id.startswith('local$') or daconfig.get('allow external auth with admin accounts', False):
         form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
         privileges_note = None
     else:

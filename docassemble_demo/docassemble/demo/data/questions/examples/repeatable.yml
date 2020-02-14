@@ -2,6 +2,8 @@ metadata:
   title: Repeatable with defaults
   short title: Repeat
   documentation: "https://docassemble.org/docs/recipes.html#repeatable"
+  example start: 1
+  example end: 6
 ---
 mandatory: True
 code: |
