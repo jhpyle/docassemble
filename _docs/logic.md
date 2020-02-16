@@ -468,9 +468,9 @@ definitions of those variables.
 
 ## <a name="depends on"></a>`depends on`
 
-The `depends on` specifier does what `need` does, but also indicates
-that if the listed variables change, the results of the [`question`] or
-[`code`] block should be invalidated.
+The `depends on` specifier indicates that if the listed variables
+change, the results of the [`question`] or [`code`] block should be
+invalidated.
 
 {% include side-by-side.html demo="depends-on" %}
 

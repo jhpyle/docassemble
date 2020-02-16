@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.96](https://github.com/jhpyle/docassemble/releases/tag/v0.5.96) - 2020-02-15
+
+### Changed
+- `depends on` no longer implies `need`.
+
 ## [0.5.95](https://github.com/jhpyle/docassemble/releases/tag/v0.5.95) - 2020-02-14
 
 ### Added
