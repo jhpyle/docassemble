@@ -2535,10 +2535,10 @@ class Question:
                 depends_list = [str(data['depends on'])]
             else:
                 depends_list = [str(x) for x in data['depends on']]
-            if len(depends_list):
-                if self.need is None:
-                    self.need = list()
-                self.need += list(map((lambda x: compile(x, '<depends expression>', 'exec')), depends_list))
+            # if len(depends_list):
+            #     if self.need is None:
+            #         self.need = list()
+            #     self.need += list(map((lambda x: compile(x, '<depends expression>', 'exec')), depends_list))
         else:
             depends_list = []
         if 'target' in data:

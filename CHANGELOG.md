@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.96] - 2020-02-15
+### Changed
+- `depends on` no longer implies `need`.
+
 ## [0.5.95] - 2020-02-14
 ### Added
 - The `show incomplete` and `not available label` options for `table`
