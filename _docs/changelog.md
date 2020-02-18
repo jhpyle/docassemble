@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.98](https://github.com/jhpyle/docassemble/releases/tag/v0.5.98) - 2020-02-18
+
+### Fixed
+- Typo causing `/playgroundstatic` file links to fail.
+
 ## [0.5.97](https://github.com/jhpyle/docassemble/releases/tag/v0.5.97) - 2020-02-17
 
 ### Added
