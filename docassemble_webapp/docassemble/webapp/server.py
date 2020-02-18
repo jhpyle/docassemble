@@ -15339,7 +15339,7 @@ def playground_static(current_project, userid, filename):
         attach = 0
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     the_directory = directory_for(area, current_project)
-    pth = os.path.join(the_directory, filename)
+    path = os.path.join(the_directory, filename)
     if os.path.isfile(path):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(path, mimetype=str(mimetype))

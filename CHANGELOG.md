@@ -1,10 +1,15 @@
 # Change Log
 
+## [0.5.98] - 2020-02-18
+### Fixed
+- Typo causing `/playgroundstatic` file links to fail.
+
 ## [0.5.97] - 2020-02-17
 ### Added
 - The `forget prior` option for `action buttons`.
 ### Changed
 - Calls to subprocesses now have timeouts.
+- Database columns used as indices changed from text to variable character.
 ### Fixed
 - Bug with table export.
 
