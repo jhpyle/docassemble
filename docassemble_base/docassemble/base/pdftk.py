@@ -14,7 +14,6 @@ import codecs
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
-from subprocess import call, check_output
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import word
 from pdfminer.pdfparser import PDFParser
@@ -24,6 +23,7 @@ from pdfminer.pdfpage import PDFPage
 import logging
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
 import uuid
+from docassemble.base.config import daconfig
 
 PDFTK_PATH = 'pdftk'
 QPDF_PATH = 'qpdf'
@@ -122,7 +122,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                 outfields.append((prefix, default, pageno, rect, field_type))
 
 def read_fields_pdftk(pdffile):
-    output = check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
+    output = subprocess.check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
     fields = list()
     if not len(output) > 0:
         return None
@@ -208,7 +208,11 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if template_password is not None:
         template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, '--decrypt', '--password=' + template_password, template, template_file.name]
-        result = call(qpdf_subprocess_arguments)
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            logmessage("fill_template: call to qpdf took too long")
         if result != 0:
             logmessage("Failed to decrypt PDF template " + str(template))
             raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
@@ -219,7 +223,11 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         subprocess_arguments.append('need_appearances')
     else:
         subprocess_arguments.append('flatten')
-    result = call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=600).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("fill_template: call to pdftk fill_form took too long")
     if result != 0:
         logmessage("Failed to fill PDF form " + str(template))
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
@@ -235,8 +243,12 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 continue
             #logmessage("Need to put image on page " + str(fields[field]['pageno']))
             temp_png = tempfile.NamedTemporaryFile(mode="wb", suffix=".png")
-            args = ["convert", file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
-            result = call(args)
+            args = [daconfig.get('imagemagick', 'convert'), file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
+            try:
+                result = subprocess.run(args, timeout=60).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("fill_template: convert took too long")
+                result = 1
             if result == 1:
                 logmessage("failed to trim file: " + " ".join(args))
                 continue
@@ -251,8 +263,12 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 dpp = dppy
             extent_x, extent_y = xone*dpp+width, yone*dpp+height
             overlay_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            args = ["convert", temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
-            result = call(args)
+            args = [daconfig.get('imagemagick', 'convert'), temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
+            try:
+                result = subprocess.run(args, timeout=60).returncode
+            except subprocess.TimeoutExpired:
+                result = 1
+                logmessage("fill_template: call to convert took too long")
             if result == 1:
                 logmessage("failed to make overlay: " + " ".join(args))
                 continue
@@ -561,7 +577,11 @@ def flatten_pdf(filename):
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
     #logmessage("Arguments are " + str(subprocess_arguments))
-    result = call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("flatten_pdf: call to pdftk took too long")
     if result != 0:
         logmessage("Failed to flatten PDF form " + str(template))
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))

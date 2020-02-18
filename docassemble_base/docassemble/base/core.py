@@ -1515,6 +1515,7 @@ class DAList(DAObject):
             can_delete = True
         use_edit = kwargs.get('edit', True)
         use_delete = kwargs.get('delete', True)
+        ensure_complete = kwargs.get('ensure_complete', True)
         if 'read_only_attribute' in kwargs:
             val = getattr(item, kwargs['read_only_attribute'])
             if isinstance(val, bool):
@@ -1534,7 +1535,8 @@ class DAList(DAObject):
                 items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
+            if ensure_complete:
+                items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
@@ -2318,6 +2320,7 @@ class DADict(DAObject):
             can_delete = True
         use_edit = kwargs.get('edit', True)
         use_delete = kwargs.get('delete', True)
+        ensure_complete = kwargs.get('ensure_complete', True)
         if 'read_only_attribute' in kwargs:
             val = getattr(item, kwargs['read_only_attribute'])
             if isinstance(val, bool):
@@ -2337,7 +2340,8 @@ class DADict(DAObject):
                 items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
-            items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
+            if ensure_complete:
+                items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
@@ -3682,7 +3686,9 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     if not isinstance(the_iterable, (list, dict, DAList, DADict)):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
     if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
-        if (not table_info.require_gathered) or (table_info.show_incomplete and the_iterable.gathering_started()):
+        if not table_info.require_gathered:
+            the_iterable = the_iterable.complete_elements()
+        elif table_info.show_incomplete and the_iterable.gathering_started():
             the_iterable = the_iterable.elements
         elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
             the_iterable = the_iterable.complete_elements()
@@ -3896,7 +3902,9 @@ class DALazyTableTemplate(DALazyTemplate):
         if not isinstance(the_iterable, (list, dict, DAList, DADict)):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
         if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
-            if (not self.table_info.require_gathered) or (table_info.show_incomplete and the_iterable.gathering_started()):
+            if not self.table_info.require_gathered:
+                the_iterable = the_iterable.complete_elements()
+            elif self.table_info.show_incomplete and the_iterable.gathering_started():
                 the_iterable = the_iterable.elements
             elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
                 the_iterable = the_iterable.complete_elements()
@@ -3914,7 +3922,7 @@ class DALazyTableTemplate(DALazyTemplate):
             for item in the_iterable:
                 user_dict_copy['row_item'] = item
                 user_dict_copy['row_index'] = indexno
-                if table_info.show_incomplete:
+                if self.table_info.show_incomplete:
                     contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
                 else:
                     contents.append([self.export_safe_eval(x, user_dict_copy) for x in self.table_info.column])

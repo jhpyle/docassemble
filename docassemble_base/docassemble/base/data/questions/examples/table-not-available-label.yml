@@ -1,7 +1,7 @@
 metadata:
-  title: Show incomplete
-  short title: Incomplete
-  documentation: "https://docassemble.org/docs/initial.html#show incomplete"
+  title: Not available label
+  short title: Available
+  documentation: "https://docassemble.org/docs/initial.html#not available label"
   example start: 7
   example end: 7
 ---
@@ -57,6 +57,7 @@ columns:
   - Last eaten: row_item.last_eaten
 show incomplete: True
 show if empty: You do not have any fruit.
+not available label: ""
 edit:
   - name.text
   - last_eaten

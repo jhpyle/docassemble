@@ -51,7 +51,7 @@ class UserRoles(db.Model):
 class UserDict(db.Model):
     __tablename__ = dbtableprefix + "userdict"
     indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     dictionary = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
@@ -63,7 +63,7 @@ db.Index(dbtableprefix + 'ix_userdict_key_filename', UserDict.key, UserDict.file
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"
     indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
@@ -77,7 +77,7 @@ class TempUser(db.Model):
 class ChatLog(db.Model):
     __tablename__ = dbtableprefix + "chatlog"
     id = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     message = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))

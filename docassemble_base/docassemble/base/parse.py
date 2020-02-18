@@ -2136,6 +2136,7 @@ class Question:
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)
                     placement = item.get('placement', None)
+                    forget_prior = item.get('forget prior', False)
                     given_arguments = item.get('arguments', dict())
                     if not isinstance(action, str):
                         raise DAError("An action buttons item must contain an action in plain text." + self.idebug(data))
@@ -2149,6 +2150,8 @@ class Question:
                         raise DAError("The icon specifier in an action buttons item must refer to plain text." + self.idebug(data))
                     if not isinstance(placement, (str, NoneType)):
                         raise DAError("The placement specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    if not isinstance(forget_prior, bool):
+                        raise DAError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
                     button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
                     if icon is not None:
                         button['icon'] = TextObject(definitions + icon, question=self)
@@ -2158,6 +2161,10 @@ class Question:
                         button['placement'] = TextObject(definitions + placement, question=self)
                     else:
                         button['placement'] = None
+                    if forget_prior:
+                        button['forget_prior'] = True
+                    else:
+                        button['forget_prior'] = False
                     button['arguments'] = dict()
                     for key, val in given_arguments.items():
                         if isinstance(val, (list, dict)):
@@ -2571,6 +2578,10 @@ class Question:
                 show_incomplete = True
             else:
                 show_incomplete = False
+            if show_incomplete is True or require_gathered is False:
+                ensure_complete = False
+            else:
+                ensure_complete = True
             if 'not available label' in data and isinstance(data['not available label'], str):
                 not_available_label = data['not available label'].strip()
             else:
@@ -2619,9 +2630,9 @@ class Question:
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
                 if isinstance(data['edit'], list):
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<edit code>', 'eval'))
                 else:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index' + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index' + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], str):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2641,9 +2652,9 @@ class Question:
                 if 'confirm' in data and data['confirm']:
                     keyword_args += ', confirm=True'
                 if 'delete buttons' in data and data['delete buttons']:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ')', '<delete button code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<delete button code>', 'eval'))
                 else:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', delete=False, reorder=' + repr(reorder) + ')', '<reorder buttons code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', delete=False, reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<reorder buttons code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], str):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -4004,6 +4015,7 @@ class Question:
                     label = item['label'].text(user_dict).strip()
                     given_arguments = item.get('arguments', dict())
                     arguments = dict()
+                    forget_prior = item.get('forget_prior', False)
                     for key, val in given_arguments.items():
                         if isinstance(val, TextObject):
                             arguments[key] = val.text(user_dict).strip()
@@ -4011,6 +4023,9 @@ class Question:
                             arguments[key] = val
                     action = item['action'].text(user_dict).strip()
                     if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                        if forget_prior:
+                            arguments = {'_action': action, '_arguments': arguments}
+                            action = '_da_priority_action'
                         action = docassemble.base.functions.url_action(action, **arguments)
                     color = item['color'].text(user_dict).strip()
                     if item['icon'] is not None:
@@ -4021,7 +4036,7 @@ class Question:
                         placement = item['placement'].text(user_dict).strip()
                     else:
                         placement = None
-                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
+                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, forget_prior=forget_prior))
                 else:
                     action_buttons = eval(item, user_dict)
                     if hasattr(action_buttons, 'instanceName') and hasattr(action_buttons, 'elements'):
@@ -4041,12 +4056,16 @@ class Question:
                         icon = button.get('icon', None)
                         placement = button.get('placement', None)
                         arguments = button.get('arguments', dict())
+                        forget_prior = button.get('forget_prior', False)
                         if arguments is None:
                             arguments = dict()
                         if not isinstance(arguments, dict):
                             raise DAError("action buttons code included an arguments item that was not a dictionary")
                         action = button['action']
                         if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                            if forget_prior:
+                                arguments = {'_action': action, '_arguments': arguments}
+                                action = '_da_priority_action'
                             action = docassemble.base.functions.url_action(action, **arguments)
                         label = button['label']
                         extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
@@ -4895,7 +4914,7 @@ class Question:
                         the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
                             the_att.info['valid_formats'] = list(file_dict.keys())
-                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info['raw']})
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info.get('raw', False)})
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:

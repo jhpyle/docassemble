@@ -1,7 +1,7 @@
 metadata:
-  title: Show incomplete
-  short title: Incomplete
-  documentation: "https://docassemble.org/docs/initial.html#show incomplete"
+  title: Require gathered
+  short title: Gathered
+  documentation: "https://docassemble.org/docs/initial.html#require gathered"
   example start: 7
   example end: 7
 ---
@@ -29,6 +29,7 @@ action buttons:
   - label: Edit past answers
     action: review_answers
     color: info
+    forget prior: True
 ---
 question: |  
   When did you last eat a ${ fruit[i] }?
@@ -39,6 +40,7 @@ action buttons:
   - label: Edit past answers
     action: review_answers
     color: info
+    forget prior: True
 ---
 question: |
   So far, the fruits include ${ fruit }.
@@ -48,6 +50,7 @@ action buttons:
   - label: Edit past answers
     action: review_answers
     color: info
+    forget prior: True
 ---
 table: fruit.table
 rows: fruit
@@ -55,8 +58,7 @@ columns:
   - Fruit Name: row_item
   - Number of Seeds: row_item.seeds
   - Last eaten: row_item.last_eaten
-show incomplete: True
-show if empty: You do not have any fruit.
+require gathered: False
 edit:
   - name.text
   - last_eaten

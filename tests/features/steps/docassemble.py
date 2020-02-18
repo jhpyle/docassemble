@@ -108,6 +108,12 @@ def start_error_interview(step, interview_name):
     world.browser.get(world.da_path + "/interview?i=" + interview_name + '&reset=2')
     world.browser.wait_for_it()
 
+@step(r'I reload the screen')
+def reload_screen(step):
+    do_wait()
+    world.browser.get(re.sub(r'\#.*', '', world.browser.current_url))
+    world.browser.wait_for_it()
+
 @step(r'I click the back button')
 def click_back_button(step):
     do_wait()

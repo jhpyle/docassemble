@@ -458,7 +458,7 @@ def install_package(package):
     logfilecontents += " ".join(commands) + "\n"
     returnval = 1
     try:
-        subprocess.call(commands)
+        subprocess.run(commands)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
@@ -491,7 +491,7 @@ def uninstall_package(package):
     logfilecontents += " ".join(commands) + "\n"
     #returnval = pip.main(commands)
     try:
-        subprocess.call(commands)
+        subprocess.run(commands)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
@@ -594,7 +594,7 @@ if __name__ == "__main__":
                 if re.search(r':(web|celery|all):', container_role):
                     sys.stderr.write("Sending reset signal\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
-                    result = subprocess.call(args)
+                    subprocess.run(args)
                 else:
                     sys.stderr.write("Not sending reset signal because not web or celery\n")
             else:

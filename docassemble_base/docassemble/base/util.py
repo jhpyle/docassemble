@@ -2317,7 +2317,11 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 if H is not None:
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
-                result = subprocess.call(args)
+                try:
+                    result = subprocess.run(args, timeout=3600).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("ocr_file: call to pdftoppm took too long")
                 if result > 0:
                     return word("(Unable to extract images from PDF file)")
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
@@ -2381,7 +2385,11 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
                 if H is not None:
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
-                result = subprocess.call(args)
+                try:
+                    result = subprocess.run(args, timeout=3600).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("read_qr: call to pdftoppm took too long")
                 if result > 0:
                     return word("(Unable to extract images from PDF file)")
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))

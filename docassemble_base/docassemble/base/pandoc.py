@@ -15,7 +15,6 @@ from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_calculations
 import mimetypes
-from subprocess import call, check_output
 import convertapi
 import requests
 import urllib.request
@@ -370,8 +369,12 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             initialize_libreoffice()
             #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
-            p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-            result = p.wait()
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("word_to_pdf: libreoffice took too long")
+                result = 1
+                tries = 5
             docassemble.base.functions.server.applock('release', 'libreoffice')
         if os.path.isfile(to_file):
             break
@@ -406,8 +409,12 @@ def rtf_to_docx(in_file, out_file):
     tries = 0
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
-        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-        result = p.wait()
+        try:
+            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            logmessage("rtf_to_docx: call to LibreOffice took too long")
+            result = 1
+            tries = 5
         docassemble.base.functions.server.applock('release', 'libreoffice')
         if result != 0:
             logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
@@ -435,8 +442,12 @@ def convert_file(in_file, out_file, input_extension, output_extension):
     tries = 0
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
-        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-        result = p.wait()
+        try:
+            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            logmessage("convert_file: libreoffice took too long")
+            result = 1
+            tries = 5
         docassemble.base.functions.server.applock('release', 'libreoffice')
         if result != 0:
             logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
@@ -465,8 +476,12 @@ def word_to_markdown(in_file, in_format):
         tries = 0
         while tries < 5:
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
-            p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
-            result = p.wait()
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("word_to_markdown: libreoffice took too long")
+                result = 1
+                tries = 5
             docassemble.base.functions.server.applock('release', 'libreoffice')
             if result != 0:
                 logmessage("word_to_markdown: call to LibreOffice returned non-zero response")
@@ -490,7 +505,10 @@ def word_to_markdown(in_file, in_format):
         if in_format_to_use == 'markdown':
             in_format_to_use = "markdown+smart"
     subprocess_arguments.extend(['--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)])
-    result = subprocess.call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
     if tempdir is not None:
         shutil.rmtree(tempdir)
     if result == 0:
@@ -503,7 +521,7 @@ def word_to_markdown(in_file, in_format):
         return final_file
     else:
         return None
-    
+
 def get_rtf_styles(filename):
     file_contents = ''
     styles = dict()
@@ -514,15 +532,18 @@ def get_rtf_styles(filename):
             #logmessage("heading " + str(heading_number) + " is style " + str(style_number))
             styles[heading_number] = style_string
     return styles
-    
+
 def update_references(filename):
     initialize_libreoffice()
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexer(' + filename + ')']
     tries = 0
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
-        p = subprocess.Popen(subprocess_arguments, cwd=tempfile.gettempdir())
-        result = p.wait()
+        try:
+            result = subprocess.run(subprocess_arguments, cwd=tempfile.gettempdir(), timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            tries = 5
         docassemble.base.functions.server.applock('release', 'libreoffice')
         if result == 0:
             break
@@ -561,8 +582,12 @@ def concatenate_files(path_list, pdfa=False, password=None):
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype.startswith('image'):
             new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            args = ["convert", path, new_pdf_file.name]
-            result = call(args)
+            args = [daconfig.get('imagemagick', 'convert'), path, new_pdf_file.name]
+            try:
+                result = subprocess.run(args, timeout=60).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("concatenate_files: convert took too long")
+                result = 1
             if result != 0:
                 logmessage("failed to convert image to PDF: " + " ".join(args))
                 continue
@@ -586,7 +611,11 @@ def concatenate_files(path_list, pdfa=False, password=None):
     subprocess_arguments.extend(new_path_list)
     subprocess_arguments.extend(['cat', 'output', pdf_file.name])
     #logmessage("Arguments are " + str(subprocess_arguments))
-    result = call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("concatenate_files: call to cat took too long")
     if result != 0:
         logmessage("Failed to concatenate PDF files")
         raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))

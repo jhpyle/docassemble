@@ -2985,12 +2985,16 @@ def process_action():
     #    this_thread.misc['forgive_missing_question'] = True
     #    #logmessage("Asking for " + this_thread.current_info['arguments']['action'])
     #    the_action = this_thread.current_info['arguments']['action']
-    if the_action == '_da_priority_action' and 'action' in this_thread.current_info['arguments']:
+    if the_action == '_da_priority_action' and '_action' in this_thread.current_info['arguments']:
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             this_thread.internal['event_stack'][unique_id] = []
-        the_action = this_thread.current_info['arguments']['action']
-    elif the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+        the_action = this_thread.current_info['arguments']['_action']
+        if '_arguments' in this_thread.current_info['arguments']:
+            this_thread.current_info['arguments'] = this_thread.current_info['arguments']['_arguments']
+        else:
+            this_thread.current_info['arguments'] = dict()
+    if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
         this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['variables'] #restore
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:

@@ -1,8 +1,6 @@
 import sys
-#import pip
 import re
 import datetime
-#import subprocess
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -10,7 +8,9 @@ from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage
+
 import docassemble.webapp.core.models
 from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import get_installed_distributions, add_dependencies
@@ -110,6 +110,39 @@ def populate_tables():
 def main():
     with app.app_context():
         if daconfig.get('use alembic', True):
+            changed = False
+            if db.engine.has_table(dbtableprefix + 'userdict'):
+                db.session.query(UserDict).filter(db.func.length(UserDict.filename) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'userdictkeys'):
+                db.session.query(UserDictKeys).filter(db.func.length(UserDictKeys.filename) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'chatlog'):
+                db.session.query(ChatLog).filter(db.func.length(ChatLog.filename) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'uploads'):
+                db.session.query(Uploads).filter(db.func.length(Uploads.filename) > 255).delete(synchronize_session=False)
+                db.session.query(Uploads).filter(db.func.length(Uploads.yamlfile) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'objectstorage'):
+                db.session.query(ObjectStorage).filter(db.func.length(ObjectStorage.key) > 1024).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'speaklist'):
+                db.session.query(SpeakList).filter(db.func.length(SpeakList.filename) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'shortener'):
+                db.session.query(Shortener).filter(db.func.length(Shortener.filename) > 255).delete(synchronize_session=False)
+                db.session.query(Shortener).filter(db.func.length(Shortener.key) > 255).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'machinelearning'):
+                db.session.query(MachineLearning).filter(db.func.length(MachineLearning.key) > 1024).delete(synchronize_session=False)
+                db.session.query(MachineLearning).filter(db.func.length(MachineLearning.group_id) > 1024).delete(synchronize_session=False)
+                changed = True
+            if db.engine.has_table(dbtableprefix + 'globalobjectstorage'):
+                db.session.query(GlobalObjectStorage).filter(db.func.length(GlobalObjectStorage.key) > 1024).delete(synchronize_session=False)
+                changed = True
+            if changed:
+                db.session.commit()
             packagedir = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), 'docassemble/webapp')
             if not os.path.isdir(packagedir):
                 sys.exit("path for running alembic could not be found")

@@ -38,7 +38,7 @@ def get_available_languages():
         result = output.splitlines()
         result.pop(0)
         return result
-    
+
 def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=None, user_code=None, **kwargs):
     #sys.stderr.write("ocr_page_tasks running\n")
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
@@ -105,9 +105,15 @@ def make_png_for_pdf_path(path, prefix, resolution, pdf_to_ppm, page=None):
     with open(test_path, 'a'):
         os.utime(test_path, None)
     if page is None:
-        result = subprocess.call([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
+        try:
+            result = subprocess.run([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     else:
-        result = subprocess.call([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)])
+        try:
+            result = subprocess.run([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if os.path.isfile(test_path):
         os.remove(test_path)
     if result > 0:
@@ -142,7 +148,10 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
             if H is not None:
                 args.extend(['-H', str(H)])
             args.extend(['-singlefile', '-png', str(path), str(output_file.name)])
-            result = subprocess.call(args)
+            try:
+                result = subprocess.run(args, timeout=120).returncode
+            except subprocess.TimeoutExpired:
+                result = 1
             if result > 0:
                 return word("(Unable to extract images from PDF file)")
             the_file = output_file.name + '.png'

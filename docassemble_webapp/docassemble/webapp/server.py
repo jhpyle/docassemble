@@ -799,7 +799,7 @@ import links_from_header
 import xlsxwriter
 import hashlib
 from distutils.version import LooseVersion
-from subprocess import call, Popen, PIPE
+from subprocess import Popen, PIPE
 import subprocess
 from pygments import highlight
 from pygments.lexers import YamlLexer, PythonLexer
@@ -1904,7 +1904,11 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         converted = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
         shutil.move(orig_file, unconverted.name)
         call_array = [daconfig.get('imagemagick', 'convert'), str(unconverted.name), 'png:' + converted.name]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            logmessage("process_file: convert from gif took too long")
+            result = 1
         if result == 0:
             saved_file.copy_from(converted.name, filename=re.sub(r'\.[^\.]+$', '', saved_file.filename) + '.png')
         else:
@@ -1916,7 +1920,11 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         rotated = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".jpg", delete=False)
         shutil.move(orig_file, unrotated.name)
         call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            logmessage("process_file: convert from jpeg took too long")
+            result = 1
         if result == 0:
             saved_file.copy_from(rotated.name)
         else:
@@ -1926,31 +1934,61 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         saved_file.save()
     if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype == 'audio/3gpp' and daconfig.get('avconv', 'avconv') is not None:
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
         call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     if mimetype in ('audio/x-wav', 'audio/wav') and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-        result = call(call_array)
+        try:
+            result = subprocess.run(call_array, timeout=120).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
     #if extension == "pdf":
     #    make_image_files(saved_file.path)
     saved_file.finalize()
@@ -3549,7 +3587,7 @@ def trigger_update(except_for=None):
                 else:
                     the_url = host.url
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
-                result = call(args)
+                result = subprocess.run(args).returncode
                 if result == 0:
                     logmessage("trigger_update: sent update to " + str(host.hostname) + " using " + the_url)
                 else:
@@ -3563,7 +3601,7 @@ def restart_on(host):
     else:
         the_url = host.url
     args = [SUPERVISORCTL, '-s', the_url, 'start', 'reset']
-    result = call(args)
+    result = subprocess.run(args).returncode
     if result == 0:
         logmessage("restart_on: sent reset to " + str(host.hostname))
     else:
@@ -3676,7 +3714,7 @@ def call_sync():
     if not USING_SUPERVISOR:
         return
     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
-    result = call(args)
+    result = subprocess.run(args).returncode
     if result == 0:
         pass
         #logmessage("call_sync: sent message to " + hostname)
@@ -9305,7 +9343,7 @@ def index(action_argument=None):
         });
         $(".danavlinks a.daclickable").click(function(e){
           var the_key = $(this).data('key');
-          action_perform("_da_priority_action", {action: the_key});
+          action_perform("_da_priority_action", {_action: the_key});
           e.preventDefault();
           return false;
         });
@@ -10531,7 +10569,7 @@ def speak_file():
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("speak_file: calling " + " ".join(call_array))
-                result = call(call_array)
+                result = subprocess.run(call_array).returncode
                 if result != 0:
                     logmessage("speak_file: failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
                     return ('File not found', 404)

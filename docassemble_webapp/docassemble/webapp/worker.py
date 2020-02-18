@@ -20,7 +20,7 @@ import iso8601
 import datetime
 import pytz
 import traceback
-from subprocess import call
+import subprocess
 from requests.utils import quote
 from docassemble.webapp.files import SavedFile
 
@@ -855,7 +855,7 @@ def reset_server(result):
             else:
                 hostname_to_use = result.hostname
             args = [SUPERVISORCTL, '-s', 'http://' + hostname_to_use + ':9001', 'start', 'reset']
-            result = call(args)
+            result = subprocess.run(args).returncode
             sys.stderr.write("reset_server in worker: called " + ' '.join(args) + "\n")
         else:
             sys.stderr.write("reset_server in worker: did not reset due to container role\n")
