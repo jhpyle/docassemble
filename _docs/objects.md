@@ -647,9 +647,13 @@ Other methods available on a `DAList` are:
   name="DADict.gathered_and_complete"></a>`gathered_and_complete()` -
   this effectively re-runs the gathering logic on the list to make
   sure that the list is "complete."  This method is run automatically
-  when editing a list item using a [`table`].  If `complete_element`
+  when editing a list item using a [`table`].  If `complete_attribute`
   is set to `'complete'`, this method will reset the "completeness" of
   each item before re-running the gathering logic.
+* <a name="DAList.gathering_started"></a><a
+  name="DADict.gathering_started"></a>`gathering_started()` - this
+  returns `True` if the gathering process has started, or is complete;
+  otherwise it returns `False`.
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.

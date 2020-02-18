@@ -1036,7 +1036,8 @@ will be stored in the cloud if cloud [data storage] is enabled.  Using
 the [GitHub API], **docassemble** stores the public key in the user's
 [GitHub] account, using the name of the application as specified in
 the [configuration] as the value of [`appname`] (which defaults to
-`docassemble`).
+`docassemble`).  (If you are using GitHub integration from more than
+one server, make sure that each server has a different [`appname`].)
 
 When users configure their [GitHub] integration, they have two
 checkboxes they can use to configure how the integration works:

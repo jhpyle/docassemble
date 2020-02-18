@@ -353,6 +353,14 @@ the value of the `action` as the `href`.
 
 {% include side-by-side.html demo="action-buttons-http" %}
 
+<a name="forget prior"></a>By default, if the user starts an action
+and then starts a second action without finishing the first, then when
+the user finishes the second action, the first action will be resumed.
+This is sometimes desirable and sometimes not.  If you want the action
+launched by your button to be the only active action, set `forget
+prior: True` in the action button definition; then all prior actions
+will be forgotten.
+
 # <a name="screen parts"></a>Customizing screen parts
 
 When the user looks at a screen in an interview, there are many

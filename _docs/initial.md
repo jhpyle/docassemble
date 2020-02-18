@@ -965,6 +965,27 @@ inherently unordered.  The keys are sorted is this fashion so that
 the order of the rows in a table does not change every time the table
 appears on the screen.
 
+<a name="require gathered"></a>By default, the display of a table
+will require that the table is gathered.  If you want to display a
+table with the items in a group that have been completely gathered so
+far, you can set `require gathered: False` in the table definition.
+
+{% include side-by-side.html demo="table-require-gathered" %}
+
+<a name="show incomplete"></a>When displaying a table using `require
+gathered: False`, an item will not be shown unless it has been
+completely gathered.  If you want to show unfinished items, set `show
+incomplete: True`.
+
+{% include side-by-side.html demo="table-show-incomplete" %}
+
+<a name="not available label"></a>By default, a column for which
+information is not known will be displayed as "n/a."  You can
+customize this by setting `not available label`.  In this example, the
+label is set to a blank value:
+
+{% include side-by-side.html demo="table-not-available-label" %}
+
 ## <a name="export"></a>Exporting tables to Excel and other formats
 
 You can call the `export()` method on a `table` to get a [`DAFile`]

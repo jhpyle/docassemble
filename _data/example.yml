@@ -10227,6 +10227,19 @@
     Potato|4
     Brocolli|3
     Beet|6
+"table-not-available-label": |-
+  table: fruit.table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item
+    - Number of Seeds: row_item.seeds
+    - Last eaten: row_item.last_eaten
+  show incomplete: True
+  show if empty: You do not have any fruit.
+  not available label: ""
+  edit:
+    - name.text
+    - last_eaten
 "table-python": |-
   table: fruit_table
   rows: fruit
@@ -10294,12 +10307,29 @@
   edit:
     - name.text
   allow reordering: True
+"table-require-gathered": |-
+  table: fruit.table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item
+    - Number of Seeds: row_item.seeds
+    - Last eaten: row_item.last_eaten
+  require gathered: False
+  edit:
+    - name.text
+    - last_eaten
 "table-show-incomplete": |-
-  code: |
-    fruit[i].name.text
-    fruit[i].seeds
-    fruit[i].last_eaten
-    fruit[i].complete = True
+  table: fruit.table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item
+    - Number of Seeds: row_item.seeds
+    - Last eaten: row_item.last_eaten
+  show incomplete: True
+  show if empty: You do not have any fruit.
+  edit:
+    - name.text
+    - last_eaten
 "table-width": |-
   features:
     table width: 35

@@ -56,67 +56,81 @@
     <td align="left">true</td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
+    <td align="left">chatlog</td>
     <td align="left">id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
-    <td align="left">nextval('shortener_id_seq'::regclass)</td>
+    <td align="left">nextval('chatlog_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
-    <td align="left">short</td>
+    <td align="left">chatlog</td>
+    <td align="left">filename</td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">chatlog</td>
+    <td align="left">key</td>
     <td align="left">character varying</td>
     <td align="right">250</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
-    <td align="left">filename</td>
+    <td align="left">chatlog</td>
+    <td align="left">message</td>
     <td align="left">text</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
-    <td align="left">uid</td>
-    <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">shortener</td>
+    <td align="left">chatlog</td>
     <td align="left">user_id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
+    <td align="left">chatlog</td>
     <td align="left">temp_user_id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
-    <td align="left">key</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">shortener</td>
-    <td align="left">index</td>
+    <td align="left">chatlog</td>
+    <td align="left">owner_id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">shortener</td>
+    <td align="left">chatlog</td>
+    <td align="left">temp_owner_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">chatlog</td>
+    <td align="left">open_to_peer</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">false</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">chatlog</td>
+    <td align="left">encrypted</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">true</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">chatlog</td>
     <td align="left">modtime</td>
     <td align="left">timestamp without time zone</td>
     <td align="right">&nbsp; </td>
-    <td align="left">now()</td>
+    <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
     <td align="left">emailattachment</td>
@@ -196,90 +210,6 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('machinelearning_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">group_id</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">key</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">independent</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">dependent</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">info</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">create_time</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">modtime</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">machinelearning</td>
-    <td align="left">active</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">false</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">objectstorage</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('objectstorage_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">objectstorage</td>
-    <td align="left">key</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">objectstorage</td>
-    <td align="left">value</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
     <td align="left">role</td>
     <td align="left">id</td>
     <td align="left">integer</td>
@@ -298,83 +228,6 @@
     <td align="left">description</td>
     <td align="left">character varying</td>
     <td align="right">255</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('chatlog_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">key</td>
-    <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">message</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">temp_user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">owner_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">temp_owner_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">open_to_peer</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">false</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">encrypted</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">true</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">chatlog</td>
-    <td align="left">modtime</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -546,6 +399,27 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">objectstorage</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('objectstorage_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">objectstorage</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">1024</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">objectstorage</td>
+    <td align="left">value</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
     <td align="left">package_auth</td>
     <td align="left">id</td>
     <td align="left">integer</td>
@@ -609,6 +483,13 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">tempuser</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('tempuser_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
     <td align="left">uploads</td>
     <td align="left">indexno</td>
     <td align="left">integer</td>
@@ -625,15 +506,15 @@
   <tr valign="top">
     <td align="left">uploads</td>
     <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
     <td align="left">uploads</td>
     <td align="left">yamlfile</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -651,13 +532,6 @@
     <td align="left">false</td>
   </tr>
   <tr valign="top">
-    <td align="left">tempuser</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('tempuser_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
     <td align="left">speaklist</td>
     <td align="left">id</td>
     <td align="left">integer</td>
@@ -667,8 +541,8 @@
   <tr valign="top">
     <td align="left">speaklist</td>
     <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -765,8 +639,8 @@
   <tr valign="top">
     <td align="left">userdict</td>
     <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -1017,8 +891,8 @@
   <tr valign="top">
     <td align="left">userdictkeys</td>
     <td align="left">filename</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -1037,48 +911,6 @@
   </tr>
   <tr valign="top">
     <td align="left">userdictkeys</td>
-    <td align="left">temp_user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('globalobjectstorage_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
-    <td align="left">key</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
-    <td align="left">value</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
-    <td align="left">encrypted</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">true</td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
-    <td align="left">user_id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">globalobjectstorage</td>
     <td align="left">temp_user_id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
@@ -1129,6 +961,174 @@
   <tr valign="top">
     <td align="left">uploadsroleauth</td>
     <td align="left">role_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('shortener_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">short</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">filename</td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">uid</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">temp_user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">index</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">shortener</td>
+    <td align="left">modtime</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">now()</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('machinelearning_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">group_id</td>
+    <td align="left">character varying</td>
+    <td align="right">1024</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">1024</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">independent</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">dependent</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">info</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">create_time</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">modtime</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">machinelearning</td>
+    <td align="left">active</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">false</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('globalobjectstorage_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">1024</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">value</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">encrypted</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">true</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">user_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">globalobjectstorage</td>
+    <td align="left">temp_user_id</td>
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>

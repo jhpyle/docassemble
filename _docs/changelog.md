@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.97](https://github.com/jhpyle/docassemble/releases/tag/v0.5.97) - 2020-02-17
+
+### Added
+- The `forget prior` option for `action buttons`.
+
+### Changed
+- Calls to subprocesses now have timeouts.
+- Database columns used as indices changed from text to variable character.
+
+### Fixed
+- Bug with table export.
+
 ## [0.5.96](https://github.com/jhpyle/docassemble/releases/tag/v0.5.96) - 2020-02-15
 
 ### Changed
