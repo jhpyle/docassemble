@@ -620,6 +620,202 @@ class DAObject:
     def __hash__(self):
         return hash((self.instanceName,))
 
+class DACatchAll(DAObject):
+    def __str__(self):
+        self.context = 'str'
+        return str(self.value)
+    def __dir__(self):
+        self.context = 'dir'
+        return dir(self.value)
+    def __contains__(self, item):
+        self.context = 'contains'
+        self.operand = item
+        return self.value.__contains__(item)
+    def __iter__(self):
+        self.context = 'iter'
+        return self.value.__iter__()
+    def __len__(self):
+        self.context = 'len'
+        return len(self.value)
+    def __reversed__(self):
+        self.context = 'reversed'
+        return reversed(self.value)
+    def __getitem__(self, index):
+        self.context = 'getitem'
+        self.operand = index
+        return self.value.__getitem__(index)
+    def __repr__(self):
+        self.context = 'repr'
+        return repr(self.value)
+    def __add__(self, other):
+        self.context = 'add'
+        self.operand = other
+        return self.value.__add__(other)
+    def __sub__(self, other):
+        self.context = 'sub'
+        self.operand = other
+        return self.value.__sub__(other)
+    def __mul__(self, other):
+        self.context = 'mul'
+        self.operand = other
+        return self.value.__mul__(other)
+    def __floordiv__(self, other):
+        self.context = 'floordiv'
+        self.operand = other
+        return self.value.__floordiv__(other)
+    def __mod__(self, other):
+        self.context = 'mod'
+        self.operand = other
+        return self.value.__mod__(other)
+    def __divmod__(self, other):
+        self.context = 'divmod'
+        self.operand = other
+        return self.value.__divmod__(other)
+    def __pow__(self, other):
+        self.context = 'pow'
+        self.operand = other
+        return self.value.__pow__(other)
+    def __lshift__(self, other):
+        self.context = 'sub'
+        self.operand = other
+        return self.value.__lshift__(other)
+    def __rshift__(self, other):
+        self.context = 'rshift'
+        self.operand = other
+        return self.value.__rshift__(other)
+    def __and__(self, other):
+        self.context = 'and'
+        self.operand = other
+        return self.value.__and__(other)
+    def __xor__(self, other):
+        self.context = 'xor'
+        self.operand = other
+        return self.value.__xor__(other)
+    def __or__(self, other):
+        self.context = 'or'
+        self.operand = other
+        return self.value.__or__(other)
+    def __div__(self, other):
+        self.context = 'div'
+        self.operand = other
+        return self.value.__div__(other)
+    def __truediv__(self, other):
+        self.context = 'truediv'
+        self.operand = other
+        return self.value.__truediv__(other)
+    def __radd__(self, other):
+        self.context = 'radd'
+        self.operand = other
+        return self.value.__radd__(other)
+    def __rsub__(self, other):
+        self.context = 'rsub'
+        self.operand = other
+        return self.value.__rsub__(other)
+    def __rmul__(self, other):
+        self.context = 'rmul'
+        self.operand = other
+        return self.value.__rmul__(other)
+    def __rdiv__(self, other):
+        self.context = 'rdiv'
+        self.operand = other
+        return self.value.__rdiv__(other)
+    def __rtruediv__(self, other):
+        self.context = 'rtruediv'
+        self.operand = other
+        return self.value.__rtruediv__(other)
+    def __rfloordiv__(self, other):
+        self.context = 'rfloordiv'
+        self.operand = other
+        return self.value.__rfloordiv__(other)
+    def __rmod__(self, other):
+        self.context = 'rmod'
+        self.operand = other
+        return self.value.__rmod__(other)
+    def __rdivmod__(self, other):
+        self.context = 'rdivmod'
+        self.operand = other
+        return self.value.__rdivmod__(other)
+    def __rpow__(self, other):
+        self.context = 'rpow'
+        self.operand = other
+        return self.value.__rpow__(other)
+    def __rlshift__(self, other):
+        self.context = 'rlshift'
+        self.operand = other
+        return self.value.__rlshift__(other)
+    def __rrshift__(self, other):
+        self.context = 'rrshift'
+        self.operand = other
+        return self.value.__rrshift__(other)
+    def __rand__(self, other):
+        self.context = 'rand'
+        self.operand = other
+        return self.value.__rand__(other)
+    def __ror__(self, other):
+        self.context = 'ror'
+        self.operand = other
+        return self.value.__ror__(other)
+    def __neg__(self):
+        self.context = 'neg'
+        return self.value.__neg__()
+    def __pos__(self):
+        self.context = 'pos'
+        return self.value.__pos__()
+    def __abs__(self):
+        self.context = 'abs'
+        return abs(self.value)
+    def __invert__(self):
+        self.context = 'invert'
+        return self.value.__invert__()
+    def __complex__(self):
+        self.context = 'complex'
+        return complex(self.value)
+    def __int__(self):
+        self.context = 'int'
+        return int(self.value)
+    def __long__(self):
+        self.context = 'long'
+        return long(self.value)
+    def __float__(self):
+        self.context = 'float'
+        return float(self.value)
+    def __oct__(self):
+        self.context = 'oct'
+        return self.octal_value
+    def __hex__(self):
+        self.context = ''
+        return hex(self.value)
+    def __index__(self):
+        self.context = 'index'
+        return self.value.__index__()
+    def __le__(self, other):
+        self.context = 'le'
+        self.operand = other
+        return self.value.__le__(other)
+    def __ge__(self, other):
+        self.context = 'ge'
+        self.operand = other
+        return self.value.__ge__(other)
+    def __gt__(self, other):
+        self.context = 'gt'
+        self.operand = other
+        return self.value.__gt__(other)
+    def __lt__(self, other):
+        self.context = 'lt'
+        self.operand = other
+        return self.value.__lt__(other)
+    def __eq__(self, other):
+        self.context = 'eq'
+        self.operand = other
+        return self.value.__eq__(other)
+    def __ne__(self, other):
+        self.context = 'ne'
+        self.operand = other
+        return self.value.__ne__(other)
+    def __hash__(self):
+        self.context = 'hash'
+        return hash(self.value)
+
 class RelationshipDir(DAObject):
     """A data structure representing a relationships among people."""
     def init(self, *pargs, **kwargs):

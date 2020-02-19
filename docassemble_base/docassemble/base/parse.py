@@ -1329,6 +1329,8 @@ class Question:
             should_append = False
             if not isinstance(data['features'], dict):
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
+            if data['features'].get('use catchall', False):
+                self.interview.options['use catchall'] = True
             if 'table width' in data['features']:
                 if not isinstance(data['features']['table width'], int):
                     raise DAError("Table width in features must be an integer." + self.idebug(data))
@@ -3221,6 +3223,8 @@ class Question:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if 'review' in data:
             self.question_type = 'review'
+            if self.is_mandatory and 'continue button field' not in data:
+                raise DAError("A review block without a continue button field cannot be mandatory." + self.idebug(data))
             if isinstance(data['review'], dict):
                 data['review'] = [data['review']]
             if not isinstance(data['review'], list):
@@ -7009,6 +7013,14 @@ class Interview:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
                     #logmessage("Forgiving " + origMissingVariable)
+                    docassemble.base.functions.pop_current_variable()
+                    docassemble.base.functions.pop_event_stack(origMissingVariable)
+                    return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
+                if self.options.get('use catchall', False) and not origMissingVariable.endswith('.value'):
+                    string = "import docassemble.base.core"
+                    exec(string, user_dict)
+                    string = origMissingVariable + ' = docassemble.base.core.DACatchAll(' + repr(origMissingVariable) + ')'
+                    exec(string, user_dict)
                     docassemble.base.functions.pop_current_variable()
                     docassemble.base.functions.pop_event_stack(origMissingVariable)
                     return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})

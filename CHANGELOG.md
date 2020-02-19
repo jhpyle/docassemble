@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.99] - 2020-02-19
+### Added
+- Catchall questions.
+### Fixed
+- When item under `edit` in a `table` has no question associated with
+  it, an error was raised only if the item was first.
+
 ## [0.5.98] - 2020-02-18
 ### Fixed
 - Typo causing `/playgroundstatic` file links to fail.

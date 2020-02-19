@@ -2006,6 +2006,8 @@ def currency_default(value, **kwargs):
             value = value.amount()
         else:
             value = 0
+    elif obj_type == 'DACatchAll':
+        value = float(value)
     try:
         float(value)
     except:
@@ -3077,6 +3079,8 @@ def process_action():
         force_ask(dict(action='_da_dict_ensure_complete', arguments=dict(group=this_thread.current_info['action_dict'].instanceName)))
         #raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
+        if isinstance(this_thread.current_info['arguments']['items'][0], dict) and 'follow up' in this_thread.current_info['arguments']['items'][0] and isinstance(this_thread.current_info['arguments']['items'][0]['follow up'], list) and len(this_thread.current_info['arguments']['items'][0]['follow up']) > 0:
+            this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['items'][0]['follow up']
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
         group_name = this_thread.current_info['arguments']['group']
@@ -3461,7 +3465,7 @@ def value(var):
     except:
         pass
     if re.search(r'[\(\)\n\r]|lambda', var):
-        raise Exception("value() is invalid")
+        raise Exception("value() is invalid: " + repr(var))
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:

@@ -101,7 +101,7 @@ code: |
   other_company.cfo.name.first
   other_company.employee.gather()
 ---
-mandatory: True
+event: review_screen
 question: |
   Edit company info
 review:
@@ -141,5 +141,7 @@ review:
       % for ee in other_company.employee:
       * ${ ee }
       % endfor
-  
-  
+---
+mandatory: True
+code: |
+  review_screen
