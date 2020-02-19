@@ -1056,7 +1056,7 @@ When the variable `counter` is incremented by the `new_version`
 remembered and offered as defaults when the [`question`] blocks are
 encountered again.
 
-# <a name="repeatable"></a>Repeatable session with defaults
+# <a name="universal"></a>Universal document assembler
 
 Here is an example of using the [catchall questions] feature to
 provide an interview that can ask questions to define arbitrary
