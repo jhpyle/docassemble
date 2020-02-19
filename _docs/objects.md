@@ -2082,6 +2082,27 @@ template that refers to variables that you decide you don't actually
 want to use.  If your interview simply sets those variables to
 `DAEmpty`, your template will not trigger an error.
 
+## <a name="DACatchAll"></a>`DACatchAll`
+
+The `DACatchAll` is a special class used internally by the [catchall
+questions] feature.  If the definition of an undefined variable is
+sought, and no block exists in the interview that defines it, the
+variable will be initialized as a `DACatchAll` object.  The
+`DACatchAll` is a subclass of `DAObject`.
+
+Like a [`DAObject`], the `DACatchAll` can exist without having any
+substance.  But when `str()` or `int()` is called on the object, the
+the `value` attribute is returned.  Thus you can write [`generic
+object`] questions that define `x.value`.  The `DACatchAll` class
+overrides built-in methods like `__str__()` and `__int__()` and sets
+the `context` attribute to `'str'`, `'int'`, etc. so that your
+[`generic object`] questions know the context in which the value was
+sought.  If the method is something like `__add__()` that takes a
+parameter, the `operand` attribute is set to that parameter.
+
+For more information on how `DACatchAll` is used, see the [catchall
+questions] subsection.
+
 ## <a name="DALink"></a>DALink
 
 The `DALink` class represents a [hyperlink] to a [URL].  It has two
@@ -6167,3 +6188,4 @@ the `_uid` of the table rather than the `id`.
 [`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
 [API]: {{ site.baseurl }}/docs/api.html
 [`response()`]: {{ site.baseurl }}/docs/functions.html#response
+[catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall

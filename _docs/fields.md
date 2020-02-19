@@ -2150,6 +2150,81 @@ not even be defined at all.
 Thus, you should only use `x`, `i`, `j`, `k`, etc. when you are
 letting **docassemble** choose which block to use.
 
+# <a name="catchall"></a>Catchall questions
+
+By default, if a reference is made to a variable and no block that
+defines that variable is available, an error message will appear
+saying "Interview has an error.  There was a reference to a variable
+'variable_name' that could not be looked up in the question file."
+
+Typically, you should always have a [`question`] or [`code`] block
+that defines any variable your interview might encounter.  But if you
+want to have a fallback option, you can set `use catchall: True` in
+the [`features`].
+
+{% include side-by-side.html demo="catchall" %}
+
+In the above interview, `use catchall: True` is added to the
+[`features`].  This means that when the variable `user_name` is
+encountered, the name is set to a `DACatchAll` object.  The
+`DACatchAll` class is a subclass of [`DAObject`].  The `instanceName`
+attribute of the object is set to `user_name`.  When the interview
+tries to place `user_name` into Mako text, this has the effect of
+calling `str(user_name)`.  Because of the way `DACatchAll` objects
+work, this results in seeking the name `user_name.value`.
+
+This enables the interview to provide a [`generic object`](#generic)
+block that sets `x.value` where `x` is a `DACatchAll` object.  Thus,
+you can have a single [`question`] in your interview that can define
+any single variable.  In the example above, the first [`question`]
+uses the [`.object_name()`] method to present a user-friendly
+representation of the variable name based on the `.instanceName`
+attribute of the object.
+
+One problem with such "catchall" questions is that the data type of
+the variable is not known.  The `DACatchAll` object provides a hint
+about the data type where possible.  If the variable `user_name.value`
+is sought because `str()` is called on `user_name`, then
+`user_name.context` is set to `'str'`.
+
+In the above example, a second variable is `salary`.  When the
+interview calls `currency(salary)`, this has the effect of calling
+`float(salary)`.  This means that when `salary.value` is sought,
+`salary.context` will be 'float'`.  The second `question` block in the
+interview asks the question a different way based on this context.
+
+If `user_name + '@example.com'` or `currency(salary + 10000.0)` triggers
+the seeking of the `value` attribute, then the `context` attribute
+will be `'add'`.  This is ambiguous because the `+` operator can refer
+to string concatenation as well as numeric addition.  Luckily, in the
+scenario where the catchall variable is followed by an operator like
+`+`, the `operand` attribute is set to the value on the other side of
+the operator.  You can test for the data type on the other side of the
+operator and infer what the data type of the catchall variable should be.
+
+{% highlight yaml %}
+if: |
+  x.context == 'float' or (x.context == 'add' and isinstance(x.operand, float))
+generic object: DACatchAll
+question: |
+  How much is ${ x.object_name() }?
+fields:
+  - Amount: x.value
+    datatype: currency
+{% endhighlight %}
+
+You may want to use catchall questions to define normal [Python]
+variables, like strings and numbers, rather than `DACatchAll` objects.
+You can use [`validation code`](#validation code) to overwrite the
+`DACatchAll` object with a different value.  The example above does
+this by using the [`define()`] function, obtaining the name of the
+variable from the `instanceName`.  Thus, at the end of the interview,
+`user_name` is a string, `salary` is a floating-point number, and
+there are no `DACatchAll` objects.
+
+Note that the utility of the `use catchall` feature is very limited.
+They are not a replacement for interview [YAML].
+
 # <a name="specialscreens"></a>Special screens
 
 ## <a name="event"></a>Performing special actions requested by the user
@@ -2474,6 +2549,7 @@ why this needs to be done manually as opposed to automatically:
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [Python identifiers]: https://docs.python.org/3/reference/lexical_analysis.html#identifiers
@@ -2634,7 +2710,10 @@ why this needs to be done manually as opposed to automatically:
 [`.user_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.user_access
 [`.privilege_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.privilege_access
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
+[`define()`]: {{ site.baseurl }}/docs/functions.html#define
 [jQuery Validation Plugin]: http://jqueryvalidation.org
 [jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
 [`validation messages`]: #validation messages
 [Python object]: https://docs.python.org/3.6/tutorial/classes.html
+[`features`]: {{ site.baseurl }}/docs/initial.html#features
+[`.object_name()`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_name

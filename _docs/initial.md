@@ -2003,6 +2003,20 @@ tables.
 
 {% include side-by-side.html demo="review-edit-list-custom-button" %}
 
+## <a name="use catchall"></a>Enabling catchall blocks
+
+If you set `use catchall` to `True`, then any variables for which no
+block is available will be set to a `DACatchAll` object.
+
+{% highlight yaml %}
+features:
+  use catchall: True
+{% endhighlight %}
+
+For more information about this feature, see the [catchall questions]
+subsection.
+
+[catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
 [`device()`]: {{ site.baseurl }}/docs/functions.html#device

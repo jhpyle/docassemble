@@ -1142,6 +1142,13 @@
     favorite color, but ${ color } is
     not your favorite color of eggs.
   sets: all_done
+"catchall": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\nquestion:\
+  \ |\n  What is ${ x.object_name() }?\nfields:\n  - no label: x.value\nvalidation\
+  \ code: |\n  define(x.instanceName, x.value)\n---\nif: |\n  x.context == 'float'\n\
+  generic object: DACatchAll\nquestion: |\n  How much is ${ x.object_name() }?\nfields:\n\
+  \  - Amount: x.value\n    datatype: currency\nvalidation code: |\n  define(x.instanceName,\
+  \ x.value)\n---\nmandatory: True\nquestion: Summary\nsubquestion: |\n  Your name\
+  \ is ${ user_name }.\n  \n  You earn ${ currency(salary) } each year."
 "centered": |-
   features:
     centered: False
