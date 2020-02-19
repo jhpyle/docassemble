@@ -12801,6 +12801,26 @@
     docx template file:
       code: |
         the_template.docx
+"universal-document": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\n\
+  question: |\n  What is ${ x.object_name() }?\nfields:\n  - no label: x.value\nvalidation\
+  \ code: |\n  define(x.instanceName, x.value)\n---\nif: |\n  x.context == 'float'\
+  \ or (x.context == 'add' and isinstance(x.operand, float))\ngeneric object: DACatchAll\n\
+  question: |\n  How much is ${ x.object_name() }?\nfields:\n  - Amount: x.value\n\
+  \    datatype: currency\nvalidation code: |\n  define(x.instanceName, x.value)\n\
+  ---\nif: |\n  x.context == 'int' or (x.context == 'add' and isinstance(x.operand,\
+  \ int))\ngeneric object: DACatchAll\nquestion: |\n  How much is ${ x.object_name()\
+  \ }?\nfields:\n  - Amount: x.value\n    datatype: integer\nvalidation code: |\n\
+  \  define(x.instanceName, x.value)\n---\nif: |\n  x.context == 'str' and x.instanceName.lower()\
+  \ == 'signature'\ngeneric object: DACatchAll\nquestion: |\n  Sign your name\nsignature:\
+  \ x.value\nvalidation code: |\n  define(x.instanceName, x.value)\n---\nquestion:\
+  \ |\n  Please attach a .docx file that you would like to assemble.\nsubquestion:\
+  \ |\n  Place variables in brackets like so:\n\n  > The quick brown {{ animal }}\
+  \ jumped \n  > over the {{ adjective }} {{ other_animal }}.\n\n  To enter a signature,\
+  \ use `{{ signature }}`.\n\n  To see how this works, try uploading this [test file].\n\
+  \n  [test file]: ${ DAStaticFile(filename='universal-test.docx').url_for() }\nfields:\n\
+  \  - no label: attached_template\n    datatype: file\n    accept: |\n      \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\"\
+  \n---\nmandatory: True\nquestion: Here is your document.\nattachment:\n  - docx\
+  \ template file:\n      code: attached_template"
 "update-references": |-
   mandatory: True
   question: Here is your document

@@ -1056,6 +1056,15 @@ When the variable `counter` is incremented by the `new_version`
 remembered and offered as defaults when the [`question`] blocks are
 encountered again.
 
+# <a name="repeatable"></a>Repeatable session with defaults
+
+Here is an example of using the [catchall questions] feature to
+provide an interview that can ask questions to define arbitrary
+variables that are referenced in a document.
+
+{% include demo-side-by-side.html demo="universal-document.yml" %}
+
+[catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`datatype: object_checkboxes`]: {{ site.baseurl }}/docs/fields.html#object_checkboxes
