@@ -1,0 +1,72 @@
+metadata:
+  title: Universal assembler
+  documentation: "https://docassemble.org/docs/recipes.html#universal"
+  example start: 1
+  example end: 7
+---
+features:
+  use catchall: True
+---
+generic object: DACatchAll
+question: |
+  What is ${ x.object_name() }?
+fields:
+  - no label: x.value
+validation code: |
+  define(x.instanceName, x.value)
+---
+if: |
+  x.context == 'float' or (x.context == 'add' and isinstance(x.operand, float))
+generic object: DACatchAll
+question: |
+  How much is ${ x.object_name() }?
+fields:
+  - Amount: x.value
+    datatype: currency
+validation code: |
+  define(x.instanceName, x.value)
+---
+if: |
+  x.context == 'int' or (x.context == 'add' and isinstance(x.operand, int))
+generic object: DACatchAll
+question: |
+  How much is ${ x.object_name() }?
+fields:
+  - Amount: x.value
+    datatype: integer
+validation code: |
+  define(x.instanceName, x.value)
+---
+if: |
+  x.context == 'str' and x.instanceName.lower() == 'signature'
+generic object: DACatchAll
+question: |
+  Sign your name
+signature: x.value
+validation code: |
+  define(x.instanceName, x.value)
+---
+question: |
+  Please attach a .docx file that you would like to assemble.
+subquestion: |
+  Place variables in brackets like so:
+
+  > The quick brown {{ animal }} jumped 
+  > over the {{ adjective }} {{ other_animal }}.
+
+  To enter a signature, use `{{ signature }}`.
+
+  To see how this works, try uploading this [test file].
+
+  [test file]: ${ DAStaticFile(filename='universal-test.docx').url_for() }
+fields:
+  - no label: attached_template
+    datatype: file
+    accept: |
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+---
+mandatory: True
+question: Here is your document.
+attachment:
+  - docx template file:
+      code: attached_template
