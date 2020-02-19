@@ -1062,7 +1062,7 @@ Here is an example of using the [catchall questions] feature to
 provide an interview that can ask questions to define arbitrary
 variables that are referenced in a document.
 
-{% include demo-side-by-side.html demo="universal-document.yml" %}
+{% include demo-side-by-side.html demo="universal-document" %}
 
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
