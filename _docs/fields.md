@@ -1646,6 +1646,33 @@ If the input is invalid, the user will see a message at the top of the
 screen containing the error message passed to [`validation_error()`],
 or the error message for the error that was otherwise [`raise`]d.
 
+Code under `validation code` is very different from code in a [`code`]
+block.  If you refer to an undefined variable in `validation code`,
+**docassemble** will not try to fetch the definition for you, as it
+normally does; instead, the user will see an error.
+
+In addition to validating user input by raising an exception if
+something is wrong, you can use `validation code` to transform values
+into valid values without raising an error for the user.
+
+For example, this `validation code` normalizes the formatting of a
+phone number.
+
+{% highlight yaml %}
+validation code: |
+  phone_number = phone_number_formatted(phone_number)
+{% endhighlight %}
+
+This `validation code` makes adjustments to object attributes if a
+user's income is less than zero.
+
+{% highlight yaml %}
+validation code: |
+  if user.income < 0:
+    user.has_negative_income = True
+    user.income = 0
+{% endhighlight %}
+
 ## <a name="address autocomplete"></a>Address autocomplete
 
 If you have defined a [`google maps api key`] in the [Configuration],
@@ -2164,34 +2191,40 @@ the [`features`].
 
 {% include side-by-side.html demo="catchall" %}
 
-In the above interview, `use catchall: True` is added to the
-[`features`].  This means that when the variable `user_name` is
-encountered, the name is set to a `DACatchAll` object.  The
-`DACatchAll` class is a subclass of [`DAObject`].  The `instanceName`
-attribute of the object is set to `user_name`.  When the interview
-tries to place `user_name` into Mako text, this has the effect of
-calling `str(user_name)`.  Because of the way `DACatchAll` objects
-work, this results in seeking the name `user_name.value`.
+This interview uses the variable names `user_name` and `salary`, but
+there are no blocks that define `user_name` or `salary`.  However,
+`use catchall: True` is part of the [`features`].  This means that
+when the variable `user_name` is encountered, `user_name` is defined
+as a `DACatchAll` object.  The `DACatchAll` class is a subclass of
+[`DAObject`].  The `instanceName` attribute of the object is set to
+`'user_name'`.  When the interview tries to place `user_name` into
+[Mako] text, this has the effect of calling `str(user_name)`.  Because
+of the way `DACatchAll` objects work, this results in a call to
+`str(user_name.value)`; thus **docassemble** will seek the value of
+`user_name.value`.  The interview provides a [`generic
+object`](#generic) block that sets `x.value` where `x` is a
+`DACatchAll` object.
 
-This enables the interview to provide a [`generic object`](#generic)
-block that sets `x.value` where `x` is a `DACatchAll` object.  Thus,
-you can have a single [`question`] in your interview that can define
-any single variable.  In the example above, the first [`question`]
-uses the [`.object_name()`] method to present a user-friendly
-representation of the variable name based on the `.instanceName`
-attribute of the object.
+Thus, with `use catchall`, you can have a single [`question`] in your
+interview that can define any single variable, no matter what its name
+is.  In the example above, the first [`question`] uses the
+[`.object_name()`] method to present a user-friendly representation of
+the variable name based on the `.instanceName` attribute of the
+object.
 
 One problem with such "catchall" questions is that the data type of
 the variable is not known.  The `DACatchAll` object provides a hint
 about the data type where possible.  If the variable `user_name.value`
 is sought because `str()` is called on `user_name`, then
-`user_name.context` is set to `'str'`.
+`user_name.context` is set to `'str'`.  This attribute is available to
+your [`question`] block.
 
 In the above example, a second variable is `salary`.  When the
 interview calls `currency(salary)`, this has the effect of calling
 `float(salary)`.  This means that when `salary.value` is sought,
-`salary.context` will be 'float'`.  The second `question` block in the
-interview asks the question a different way based on this context.
+`salary.context` will be `'float'`.  The second `question` block in
+the interview asks the question a different way based on this context,
+using an `if` specifier.
 
 If `user_name + '@example.com'` or `currency(salary + 10000.0)` triggers
 the seeking of the `value` attribute, then the `context` attribute
@@ -2213,14 +2246,65 @@ fields:
     datatype: currency
 {% endhighlight %}
 
-You may want to use catchall questions to define normal [Python]
-variables, like strings and numbers, rather than `DACatchAll` objects.
-You can use [`validation code`](#validation code) to overwrite the
+The `.context` values are based on whichever of the [Python special
+methods] was called on the variable.  The possible values of
+`.context` are `'abs'`, `'add'`, `'and'`, `'bool'`, `'complex'`,
+`'contains'`, `dir'`, `'div'`, `'divmod'`, `'eq'`, `'float'`,
+`'floordiv'`, `'ge'`, `'getitem'`, `gt'`, `'hash'`, `'hex'`,
+`'index'`, `'int'`, `'invert'`, `'iter'`, `'le'`, `'len'`, `'long'`,
+`'lshift'`, `'lt'`, `'mod'`, `'mul'`, `'ne'`, `'neg'`, `'oct'`,
+`'or'`, `'pos'`, `'pow'`, `'radd'`, `'rand'`, `'rdiv'`, `'rdivmod'`,
+`'repr'`, `'reversed'`, `'rfloordiv'`, `'rlshift'`, `'rmod'`,
+`'rmul'`, `'ror'`, `'rpow'`, `'rrshift'`, `'rshift'`, `'rsub'`,
+`'rtruediv'`, `'str'`, `'sub'`, `'truediv'`, and `'xor'`.  Since dates
+are not a built-in Python data type, whether the variable is a date
+cannot be detected based on the context in which the variable was
+accessed.  If the `.context` is `'bool'`, it is likely that the
+variable was used in the context of an `if` statement.
+
+If you call `.data_type_guess()` on a `DACatchAll` object, it will
+return `'str'`, `'int'`, `'float'`, `'bool'`, or `'complex'`, based on
+what the `.context` is and what the `.operand` is (if applicable).
+
+{% include side-by-side.html demo="catchall-guess" %}
+
+The `.data_type_guess()` method will likely work correctly most of the
+time, but what it returns is just an opinion.  In particular, whether
+a number should be an `int` or a `float` is highly debatable.
+
+You may want to implement a convention of embedding the data type in
+the variable name, so that you can identify the data type in
+situations where the [Python special methods] do not provide a
+reliable answer.  For example, you `household_size_int` instead of
+`household_size`, `deadline_date` instead of `deadline`, or
+`salary_currency` instead of `salary`.
+
+Since it is better for variables to be set to their natural types
+rather than as the artificial object `DACatchAll`, you will probably
+want to use [`validation code`](#validation code) to overwrite the
 `DACatchAll` object with a different value.  The example above does
 this by using the [`define()`] function, obtaining the name of the
 variable from the `instanceName`.  Thus, at the end of the interview,
 `user_name` is a string, `salary` is a floating-point number, and
 there are no `DACatchAll` objects.
+
+It is possible to use `validation code` to try to transform data types
+once you know what input the user has provided.  For example, if the
+user types a valid date into a text box, you can set the variable to a
+[`DADateTime`] object:
+
+{% highlight yaml %}
+validation_code: |
+  try:
+    define(x.instanceName, as_datetime(x.value))
+  except:
+    define(x.instanceName, x.value)
+{% endhighlight %}
+
+This works because `as_datetime()` will raise an exception if it is
+given text that does not contain a valid date.  [Python]'s
+`try`/`except` intercepts the error and sets the variable to the plain
+value of the date is not valid.
 
 Note that the utility of the `use catchall` feature is very limited.
 They are not a replacement for interview [YAML].
@@ -2717,3 +2801,4 @@ why this needs to be done manually as opposed to automatically:
 [Python object]: https://docs.python.org/3.6/tutorial/classes.html
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`.object_name()`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_name
+[Python special methods]: https://docs.python.org/3.6/reference/datamodel.html#special-method-names

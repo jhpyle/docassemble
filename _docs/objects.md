@@ -2222,6 +2222,9 @@ and `False` otherwise.
 `mystore.is_encrypted()`, it will return `True` or `False` depending
 on whether encryption is enabled for the data store.
 
+<a name="DAStore.keys"></a>If you call `mystore.keys()`, it will
+return a list of keys that exist in the data store.
+
 The operations of the `DAStore` object can be configured using two
 optional attributes: `base` and `encrypted`.
 
