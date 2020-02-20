@@ -101,6 +101,8 @@ class DAStore(DAObject):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key
         server.server_sql_delete(the_key)
+    def keys(self):
+        return server.server_sql_keys(self._get_base_key() + ':')
 
 class DAWeb(DAObject):
     """A class used to call external APIs"""

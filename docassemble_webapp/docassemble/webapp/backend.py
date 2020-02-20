@@ -259,6 +259,10 @@ def sql_delete(key):
     GlobalObjectStorage.query.filter_by(key=key).delete()
     db.session.commit()
 
+def sql_keys(prefix):
+    n = len(prefix)
+    return list(set([y.key[n:] for y in db.session.query(GlobalObjectStorage.key).filter(GlobalObjectStorage.key.like(prefix + '%')).all()]))
+
 def get_info_from_file_reference_with_uids(*pargs, **kwargs):
     if 'uids' not in kwargs:
         kwargs['uids'] = get_session_uids()
@@ -293,6 +297,7 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          server_sql_defined=sql_defined,
                                          server_sql_set=sql_set,
                                          server_sql_delete=sql_delete,
+                                         server_sql_keys=sql_keys,
                                          alchemy_url=docassemble.webapp.user_database.alchemy_url)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)

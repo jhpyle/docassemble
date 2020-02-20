@@ -5713,6 +5713,7 @@ def index(action_argument=None):
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
         visible_field_names = list()
+    all_field_numbers = dict()
     field_numbers = dict()
     numbered_fields = dict()
     for kv_key, kv_var in known_varnames.items():
@@ -5722,6 +5723,9 @@ def index(action_argument=None):
             if m:
                 numbered_fields[kv_var] = kv_key
                 field_numbers[kv_var] = int(m.group(1))
+                if kv_var not in all_field_numbers:
+                    all_field_numbers[kv_var] = set()
+                all_field_numbers[kv_var].add(int(m.group(1)))
         except:
             logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
     visible_fields = set()
@@ -10100,8 +10104,9 @@ def index(action_argument=None):
                 interview_status.screen_reader_links[question_type].append([url_for('speak_file', i=yaml_filename, question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
         for def_key, def_val in post_data.items():
-            if def_key in field_numbers:
-                interview_status.defaults[field_numbers[def_key]] = def_val
+            if def_key in all_field_numbers:
+                for number in all_field_numbers[def_key]:
+                    interview_status.defaults[number] = def_val
         the_field_errors = field_error
     else:
         the_field_errors = None

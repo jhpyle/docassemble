@@ -621,6 +621,30 @@ class DAObject:
         return hash((self.instanceName,))
 
 class DACatchAll(DAObject):
+    def data_type_guess(self):
+        if not hasattr(self, 'context'):
+            return 'str'
+        if self.context == 'bool':
+            return 'bool'
+        if self.context in ('hex', 'rlshift', 'rrshift', 'rand', 'ror', 'int', 'oct', 'hex'):
+            return 'int'
+        if self.context in ('neg', 'pos', 'abs', 'invert', 'float'):
+            return 'float'
+        if self.context == 'complex':
+            return 'complex'
+        if self.context in ('add', 'radd', 'sub', 'rsub', 'mul', 'rmul', 'div', 'rdiv', 'truediv', 'rtruediv', 'floordiv', 'rfloordiv', 'mod', 'rmod', 'divmod', 'rdivmod', 'pow', 'rpow', 'lt', 'eq', 'gt', 'ne', 'ge', 'le'):
+            if isinstance(self.operand, bool):
+                return 'bool'
+            if isinstance(self.operand, str):
+                return 'str'
+            if isinstance(self.operand, float):
+                return 'float'
+            if isinstance(self.operand, int):
+                return 'int'
+            if isinstance(self.operand, complex):
+                return 'complex'
+            return 'str'
+        return 'str'
     def __str__(self):
         self.context = 'str'
         return str(self.value)
@@ -676,7 +700,7 @@ class DACatchAll(DAObject):
         self.operand = other
         return self.value.__pow__(other)
     def __lshift__(self, other):
-        self.context = 'sub'
+        self.context = 'lshift'
         self.operand = other
         return self.value.__lshift__(other)
     def __rshift__(self, other):
@@ -783,7 +807,7 @@ class DACatchAll(DAObject):
         self.context = 'oct'
         return self.octal_value
     def __hex__(self):
-        self.context = ''
+        self.context = 'hex'
         return hex(self.value)
     def __index__(self):
         self.context = 'index'
@@ -815,6 +839,9 @@ class DACatchAll(DAObject):
     def __hash__(self):
         self.context = 'hash'
         return hash(self.value)
+    def __bool__(self):
+        self.context = 'bool'
+        return bool(self.value)
 
 class RelationshipDir(DAObject):
     """A data structure representing a relationships among people."""

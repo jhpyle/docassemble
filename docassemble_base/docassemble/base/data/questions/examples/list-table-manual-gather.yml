@@ -7,9 +7,9 @@ metadata:
 ---
 objects:
   - person: DAList.using(object_type=Individual,
-                         complete_attribute='complete',
-                         auto_gather=False)
+                         complete_attribute='complete')
 ---
+mandatory: True
 code: |
   person[0]
   person[1]

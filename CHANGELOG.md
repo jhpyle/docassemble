@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.5.100] - 2020-02-20
+### Added
+- The `.data_type_guess()` method of `DACatchAll`.
+- The `.keys()` method of `DAStore`.
+### Fixed
+- Issue with default values after input validation fails and two
+  fields set the same variable.
+
 ## [0.5.99] - 2020-02-19
 ### Added
 - Catchall questions.
