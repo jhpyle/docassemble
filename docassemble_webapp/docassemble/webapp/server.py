@@ -21260,16 +21260,24 @@ def api_user_by_id(user_id):
     if request.method == 'GET':
         return jsonify(user_info)
     elif request.method == 'DELETE':
+        if current_user.id != user_id or not current_user.has_role('admin', 'developer'):
+            return jsonify_with_status("You must have admin privileges to edit user information.", 403)
         if request.args.get('remove', None) == 'account':
+            if current_user.id != user_id or not current_user.has_role('admin'):
+                return jsonify_with_status("You must have admin privileges to delete user accounts.", 403)
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
             delete_user_data(user_id, r, r_user)
         elif request.args.get('remove', None) == 'account_and_shared':
+            if current_user.id != user_id or not current_user.has_role('admin'):
+                return jsonify_with_status("You must have admin privileges to delete user accounts.", 403)
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
             delete_user_data(user_id, r, r_user)
         else:
             make_user_inactive(user_id=user_id)
         return ('', 204)
     elif request.method == 'POST':
+        if current_user.id != user_id or not current_user.has_role('admin', 'advocate'):
+            return jsonify_with_status("You must have admin or advocate privileges to edit user information.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
