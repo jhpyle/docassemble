@@ -3993,9 +3993,9 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
         return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared)
     return None
 
-def interview_menu():
+def interview_menu(*pargs, **kwargs):
     """Returns the list of interviews that is offered at /list."""
-    return server.interview_menu()
+    return server.interview_menu(*pargs, **kwargs)
 
 def get_user_list(include_inactive=False):
     """Returns a list of users on the system."""

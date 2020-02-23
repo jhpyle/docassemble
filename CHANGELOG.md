@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.101] - 2020-02-23
+### Changed
+- Playground syntax highlighting now highlights Python code as Python
+  code.
+### Fixed
+- The `interview_menu()` function did not accept parameters.
+
 ## [0.5.100] - 2020-02-20
 ### Added
 - The `.data_type_guess()` method of `DACatchAll`.

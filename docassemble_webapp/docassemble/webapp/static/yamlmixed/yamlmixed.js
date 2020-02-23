@@ -1,8 +1,8 @@
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("../../lib/codemirror"));
+    mod(require("../codemirror/lib/codemirror"));
   else if (typeof define == "function" && define.amd) // AMD
-    define(["../../lib/codemirror"], mod);
+    define(["../codemirror/lib/codemirror"], mod);
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
@@ -25,13 +25,13 @@ CodeMirror.yamlmixedMode = function() {
   let metaTokenRegex = /\bmeta\b/;
   let pipeRegex      = /\|/;
   // Do these need to be lazy?
-  let codeDefinitionRegex = /\s*code/;
+  let codeDefinitionRegex = /\s*(?:validation )?code/;
   // if has pipe, can't have any non-whitespace character after...
-  let withPipeRegex = /^\s*code\s*:\s+\|\s*$/;
+  let withPipeRegex = /^\s*(?:validation )?code\s*:\s+\|\s*$/;
   // ...except a comment, which we need to deal with differently
-  let withPipeAndCommentRegex = /^\s*code\s*:\s+\|\s*#.*$/
+  let withPipeAndCommentRegex = /^\s*(?:validation )?code\s*:\s+\|\s*#.*$/
   // If doesn't have pipe, can have code on the same line.
-  let noPipeRegex = /^\s*code\s*:\s+[^\|][\s\S]+$/;
+  let noPipeRegex = /^\s*(?:validation )?code\s*:\s+[^\|][\s\S]+$/;
 
   return {
     startState: function() {
