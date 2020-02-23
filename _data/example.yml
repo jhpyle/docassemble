@@ -1149,6 +1149,17 @@
   \  - Amount: x.value\n    datatype: currency\nvalidation code: |\n  define(x.instanceName,\
   \ x.value)\n---\nmandatory: True\nquestion: Summary\nsubquestion: |\n  Your name\
   \ is ${ user_name }.\n  \n  You earn ${ currency(salary) } each year."
+"catchall-guess": |-
+  if: |
+    x.data_type_guess() in ('float', 'int')
+  generic object: DACatchAll
+  question: |
+    How much is ${ x.object_name() }?
+  fields:
+    - Amount: x.value
+      datatype: currency
+  validation code: |
+    define(x.instanceName, x.value)
 "centered": |-
   features:
     centered: False
@@ -6051,9 +6062,9 @@
 "list-table-manual-gather": |-
   objects:
     - person: DAList.using(object_type=Individual,
-                           complete_attribute='complete',
-                           auto_gather=False)
+                           complete_attribute='complete')
   ---
+  mandatory: True
   code: |
     person[0]
     person[1]
@@ -6067,8 +6078,9 @@
     person[i].complete = True
 "list-table-manual-gather-simple": |-
   objects:
-    - person: DAList.using(auto_gather=False)
+    - person: DAList
   ---
+  mandatory: True
   code: |
     person[0]
     person[1]

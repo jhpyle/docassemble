@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.101](https://github.com/jhpyle/docassemble/releases/tag/v0.5.101) - 2020-02-23
+
+### Changed
+- Playground syntax highlighting now highlights Python code as Python
+  code.
+
+### Fixed
+- The `interview_menu()` function did not accept parameters.
+
 ## [0.5.100](https://github.com/jhpyle/docassemble/releases/tag/v0.5.100) - 2020-02-20
 
 ### Added

@@ -3859,9 +3859,9 @@ If `start_new` is set to `True`, then the URLs will have `&reset=1` at
 the end.  Thus, even if the user has already started an interview,
 clicking the link will start the interview at the beginning again.
 
-If `tag` is set to `estates` (for example), then `interview_menu()`
-will only return interviews that have `estates` defined as a `tag` in
-the interview [`metadata`].
+If `tag` is set to `'estates'` (for example), then `interview_menu()`
+will only return interviews that have `'estates'` defined as a `tag`
+in the interview [`metadata`].
 
 This function can be useful in interviews that replace the standard
 list of available interviews.  See the [`dispatch interview`]
