@@ -523,7 +523,11 @@ when the host domain and [iframe] domain are different.  However, some
 browsers, such as Safari, might block the content because of
 [Cross-Origin Resource Sharing] concerns.
 
-If you encounter this issue, you may want to configure your
+If you set the [`allow embedding`] directive in the [Configuration] to
+`True`, then a flag on the cookies will be set so that cross-site
+cookie sharing is allowed.
+
+If this doesn't solve the problem, you may want to configure your
 **docassemble** site so that it runs on the same domain as your host
 site.  You can do this if you can configure the host site to use a
 proxy.  For instructions on how to do this, see the subsection on
@@ -780,12 +784,19 @@ cross site domains:
   - https://example.com
 {% endhighlight %}
 
-Even after you set [`cross site domains`], some browsers, such as
-Firefox, may still block the content if the top-level domain of the
-host server is different from the top-level domain of the
-**docassemble** server.  Thus, if your host web site is example.com,
-you should run your **docassemble** server on a subdomain of
-example.com, such as interviews.example.com.
+Also set the [`allow embedding`] directive in the [Configuration] to
+`True`, so that cross-site cookie sharing is allowed.
+
+{% highlight yaml %}
+allow embedding: True
+{% endhighlight %}
+
+Even after you set [`cross site domains`] and [`allow embedding`],
+some browsers, such as Firefox, may still block the content if the
+top-level domain of the host server is different from the top-level
+domain of the **docassemble** server.  Thus, if your host web site is
+example.com, you should run your **docassemble** server on a subdomain
+of example.com, such as interviews.example.com.
 
 If you still encounter problems on some browsers, consider setting up
 your host server to act as a proxy, following the model discussed in
@@ -1016,3 +1027,4 @@ functions.
 [installing on a machine already using a web server]: {{ site.baseurl }}/docs/docker.html#forwarding
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
+[`allow embedding`]: {{ site.baseurl }}/docs/config.html#allow embedding

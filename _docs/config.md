@@ -2206,6 +2206,61 @@ interview delete days by filename:
   docassemble.missouri:data/questions/support.yml: 20
 {% endhighlight %}
 
+## <a name="user auto delete"></a>Automatic user account deletion
+
+While `interview delete days` and `interview delete days by filename`
+result in sessions being deleted, the user accounts associated with
+inactive sessions are unaffected, and users are still able to log in
+even if their sessions have been deleted.
+
+If you want user accounts to be automatically deleted if a user does
+not log in after a period of time, you can enable this with `user auto
+delete`.
+
+{% highlight yaml %}
+user auto delete:
+  inactivity days: 90
+{% endhighlight %}
+
+The `inactivity days` refers to the number of days of inactivity after
+which the user account will be deleted.
+
+Additional sub-directives that can appear under `user auto delete` include
+`enable`, `privileges`, and `delete shared`.
+
+{% highlight yaml %}
+user auto delete:
+  enable: True
+  inactivity days: 90
+  privileges:
+    - user
+    - advocate
+  delete shared: True
+{% endhighlight %}
+
+The `enable` sub-directive can be set to `False` if you want to
+disable auto deletion but keep `user auto delete` in the
+Configuration.
+
+The `privileges` sub-directive refers to a list of user [privileges]
+for which auto-deletion should apply.  The default is that only users
+with the privilege of `user` can be auto-deleted; users with `admin`,
+`advocate` or `developer` privileges (who do not also have the `user`
+privilege) will not have their accounts deleted.
+
+The `delete shared` directive refers to the type of user deletion that
+should occur.  If `True`, then all sessions accessed by the user will
+be deleted, even if the session is a multi-user session and other
+users of the session still have accounts.  The default is `False`.
+
+If `inactivity days` is `0`, this has the effect of `enable: False`.
+
+Inactivity is measured based on when the user last logged in.  Use of
+the API counts as a log in.  If a user logged in more than `inactivity
+days` ago but an interview session to which the user has access was
+modified within the `inactivity days` period, then the user's account
+will not be deleted.
+
 ## <a name="session lifetime seconds"></a>Flask session lifetime
 
 By default, [Flask] remembers sessions for 31 days.  To set this
@@ -3894,6 +3949,19 @@ turn off line wrapping, set:
 
 {% highlight yaml %}
 wrap lines in playground: False
+{% endhighlight %}
+
+# <a name="allow embedding"></a>Allowing interviews to be embedded in another site
+
+By default, cookies will be sent with `SameSite` set to `Strict`, so
+that cookies will not work if the address in the location bar does not
+match the address of the **docassemble** server.  This will prevent
+the embedding of a **docassemble** interview in a third-party site.
+To enable embedding, set `allow embedding` to `True`.  The default is
+`False`.
+
+{% highlight yaml %}
+allow embedding: True
 {% endhighlight %}
 
 [VoiceRSS]: http://www.voicerss.org/
