@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.103] - 2020-02-23
+### Fixed
+- Error with `DAContext` variables.
+
 ## [0.5.102] - 2020-02-23
 ### Added
 - The `user auto delete` Configuration directive.

@@ -1822,6 +1822,8 @@ class DAList(DAObject):
     def __eq__(self, other):
         self._trigger_gather()
         return self.elements == other
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -2632,6 +2634,8 @@ class DADict(DAObject):
     def __eq__(self, other):
         self._trigger_gather()
         return self.elements == other
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class DAOrderedDict(DADict):
     """A base class for objects that behave like Python OrderedDicts."""
@@ -3079,6 +3083,8 @@ class DASet(DAObject):
     def __eq__(self, other):
         self._trigger_gather()
         return self.elements == other
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
@@ -4416,6 +4422,8 @@ class DAContext(DADict):
         if len(self.elements):
             output += ', '.join(key + '=' + repr(val) for key, val in self.elements.items())
         output += str(')')
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 def objects_from_structure(target, root=None):
     if isinstance(target, dict):
