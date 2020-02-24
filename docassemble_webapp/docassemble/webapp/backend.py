@@ -701,6 +701,8 @@ def delete_user_data(user_id, r, r_user):
         user_object.pypi_username = None
         user_object.pypi_password = None
         user_object.otp_secret = None
+        user_object.confirmed_at = None
+        user_object.last_login = None
         user_object.social_id = 'disabled$' + str(user_id)
     db.session.commit()
     keys_to_delete = set()
@@ -750,27 +752,28 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             do_delete = True
         else:
             do_delete = False
-    files_to_save = list()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
-        files_to_save.append(upload.indexno)
-    if len(files_to_save):
-        something_added = False
-        if user_type == 'user':
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        else:
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        if something_added:
-            db.session.commit()
+    if not force:
+        files_to_save = list()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
+            files_to_save.append(upload.indexno)
+        if len(files_to_save):
+            something_added = False
+            if user_type == 'user':
+                for uploads_indexno in files_to_save:
+                    existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            else:
+                for uploads_indexno in files_to_save:
+                    existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            if something_added:
+                db.session.commit()
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()

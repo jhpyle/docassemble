@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.5.102] - 2020-02-23
+### Added
+- The `user auto delete` Configuration directive.
+- The `allow embedding` Configuration directive, which if `True` sets
+  the `SameSite` flag in cookies to `None`.
+### Changed
+- The `SameSite` flag is now set to `Strict` in cookies by default.
+  For the old behavior, set `allow embedding: True` in the
+  Configuration.
+
 ## [0.5.101] - 2020-02-23
 ### Changed
 - Playground syntax highlighting now highlights Python code as Python

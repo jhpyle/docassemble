@@ -584,7 +584,7 @@ def custom_login():
 
 def add_secret_to(response):
     if 'newsecret' in session:
-        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         del session['newsecret']
     return response
 
@@ -610,7 +610,7 @@ def logout():
     flash(word('You have signed out successfully.'), 'success')
     response = redirect(next)
     if set_cookie:
-        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     else:
         response.set_cookie('remember_token', '', expires=0)
         response.set_cookie('visitor_secret', '', expires=0)
@@ -825,7 +825,7 @@ from rauth import OAuth1Service, OAuth2Service
 import apiclient
 import oauth2client.client
 import io
-from flask_kvsession import KVSessionExtension
+from docassemblekvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import or_, and_
 import docassemble.base.parse
@@ -4065,6 +4065,7 @@ def auto_login():
     if (not user) or user.social_id.startswith('disabled$'):
         abort(403)
     login_user(user, remember=False)
+    update_last_login(user)
     if 'i' in info:
         url_info = dict(i=info['i'])
         if 'url_args' in info:
@@ -4078,7 +4079,7 @@ def auto_login():
     else:
         next_url = url_for('interview_list', from_login='1')
     response = redirect(next_url)
-    response.set_cookie('secret', info['secret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+    response.set_cookie('secret', info['secret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     return response
 
 @app.route('/headers', methods=['POST', 'GET'])
@@ -4123,6 +4124,7 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
+    update_last_login(user)
     if 'i' in session: #TEMPORARY
         get_session(session['i'])
     to_convert = list()
@@ -4138,7 +4140,7 @@ def oauth_callback(provider):
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
     sub_temp_other(user)
     response = redirect(url_for('interview_list', from_login='1'))
-    response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+    response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     return response
 
 @app.route('/phone_login', methods=['POST', 'GET'])
@@ -4229,6 +4231,7 @@ def phone_login_verify():
                 db.session.add(user)
                 db.session.commit()
             login_user(user, remember=False)
+            update_last_login(user)
             r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
             to_convert = list()
             if 'i' in session: #TEMPORARY
@@ -4243,7 +4246,7 @@ def phone_login_verify():
                         update_session(filename, key_logged=True)
             secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
             response = redirect(url_for('interview_list', from_login='1'))
-            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
             return response
         else:
             logmessage("IP address " + str(request.remote_addr) + " made a failed login attempt using phone number " + str(phone_number) + ".")
@@ -5665,7 +5668,7 @@ def index(action_argument=None):
         sys.stderr.write("Redirecting back to index because of need_to_reset.\n")
         response = do_redirect(url_for('index', **index_params), is_ajax, is_json, js_target)
         if set_cookie:
-            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         if expire_visitor_secret:
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
@@ -6997,7 +7000,7 @@ def index(action_argument=None):
                 response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
             response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         if set_cookie:
-            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
@@ -7019,7 +7022,7 @@ def index(action_argument=None):
             response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
-            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         if expire_visitor_secret:
             response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
@@ -10357,7 +10360,7 @@ def index(action_argument=None):
         response.headers['Content-type'] = 'text/html; charset=utf-8'
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     if set_cookie:
-        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     if expire_visitor_secret:
         response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
@@ -18830,7 +18833,7 @@ def after_reset():
     response = redirect(url_for('user.login'))
     if 'newsecret' in session:
         #logmessage("after_reset: fixing cookie")
-        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         del session['newsecret']
     return response
 
@@ -19343,13 +19346,13 @@ def train():
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
     if user_id is None and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
         raise Exception('user_interviews: only administrators and advocates can access information about other users')
-    if user_id is not None and not current_user.is_anonymous and current_user.id != user_id and not current_user.has_role('admin', 'advocate'):
+    if user_id is not None and admin is False and not current_user.is_anonymous and current_user.id != user_id and not current_user.has_role('admin', 'advocate'):
         raise Exception('user_interviews: only administrators and advocates can access information about other users')
-    if action is not None and not current_user.has_role('admin', 'advocate'):
+    if action is not None and admin is False and not current_user.has_role('admin', 'advocate'):
         if user_id is None:
             raise Exception("user_interviews: no user_id provided")
         the_user = get_person(int(user_id), dict())
@@ -19358,7 +19361,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     if action == 'delete_all':
         sessions_to_delete = set()
         if tag:
-            for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag):
+            for interview_info in user_interviews(user_id=user_id, secret=secret, tag=tag, include_dict=False):
                 sessions_to_delete.add((interview_info['session'], interview_info['filename'], interview_info['user_id']))
         else:
             if user_id is None:
@@ -19401,7 +19404,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         reset_user_dict(session, filename, user_id=user_id, force=delete_shared)
         #release_lock(session, filename)
         return True
-    if current_user and current_user.is_authenticated and current_user.timezone:
+    if admin is False and current_user and current_user.is_authenticated and current_user.timezone:
         the_timezone = pytz.timezone(current_user.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
@@ -19599,7 +19602,7 @@ def interview_list():
         if 'resume' in request.args:
             the_args['resume'] = request.args['resume']
         response = redirect(url_for('interview_list', **the_args))
-        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'])
+        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         del session['newsecret']
         return response
     if request.method == 'GET' and needs_to_change_password():
@@ -19742,9 +19745,14 @@ def login_or_register(sender, user, source, **extra):
     if user.language:
         session['language'] = user.language
 
+def update_last_login(user):
+    user.last_login = datetime.datetime.utcnow()
+    db.session.commit()
+
 @user_logged_in.connect_via(app)
 def _on_user_login(sender, user, **extra):
     #logmessage("on user login")
+    update_last_login(user)
     login_or_register(sender, user, 'login', **extra)
     #flash(word('You have signed in successfully.'), 'success')
 
@@ -19775,6 +19783,7 @@ def on_register_hook(sender, user, **extra):
         user.roles.remove(role)
     user.roles.append(this_user_role)
     db.session.commit()
+    update_last_login(user)
     login_or_register(sender, user, 'register', **extra)
 
 @app.route("/fax_callback", methods=['POST'])
@@ -20765,6 +20774,7 @@ def api_verify(req, roles=None):
         logmessage("api_verify: user is no longer active")
         return False
     login_user(user, remember=False)
+    update_last_login(user)
     if roles:
         ok_role = False
         for role in roles:
@@ -21650,7 +21660,7 @@ def api_users_interviews():
         return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
-            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename)
+            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename, include_dict=False)
         except:
             return jsonify_with_status("Error reading interview list.", 400)
         for info in the_list:
@@ -21679,7 +21689,7 @@ def api_user_user_id_interviews(user_id):
         return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
-            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename)
+            the_list = user_interviews(user_id=user_id, exclude_invalid=False, tag=tag, filename=filename, include_dict=False)
         except:
             return jsonify_with_status("Error reading interview list.", 400)
         for info in the_list:
@@ -22473,7 +22483,7 @@ def api_user_interviews():
         return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
-            the_list = user_interviews(user_id=current_user.id, filename=filename, session=session, exclude_invalid=False, tag=tag)
+            the_list = user_interviews(user_id=current_user.id, filename=filename, session=session, exclude_invalid=False, tag=tag, include_dict=False)
         except:
             return jsonify_with_status("Error reading interview list.", 400)
         for info in the_list:
@@ -22501,7 +22511,7 @@ def api_interviews():
         return jsonify(docassemble.base.functions.safe_json(the_list))
     elif request.method == 'DELETE':
         try:
-            the_list = user_interviews(filename=filename, session=session, exclude_invalid=False, tag=tag)
+            the_list = user_interviews(filename=filename, session=session, exclude_invalid=False, tag=tag, include_dict=False)
         except:
             return jsonify_with_status("Error reading interview list.", 400)
         for info in the_list:

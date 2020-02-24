@@ -1819,6 +1819,9 @@ class DAList(DAObject):
         pass
     def hook_on_remove(self, item):
         pass
+    def __eq__(self, other):
+        self._trigger_gather()
+        return self.elements == other
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -2626,6 +2629,9 @@ class DADict(DAObject):
         pass
     def hook_on_remove(self, item):
         pass
+    def __eq__(self, other):
+        self._trigger_gather()
+        return self.elements == other
 
 class DAOrderedDict(DADict):
     """A base class for objects that behave like Python OrderedDicts."""
@@ -3070,6 +3076,9 @@ class DASet(DAObject):
         pass
     def hook_on_remove(self, item):
         pass
+    def __eq__(self, other):
+        self._trigger_gather()
+        return self.elements == other
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""

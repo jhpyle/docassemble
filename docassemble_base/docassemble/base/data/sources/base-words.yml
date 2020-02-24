@@ -259,7 +259,6 @@
 "is not a valid time.": Null
 "is not a whole number.": Null
 "is not within the range.": Null
-"is": Null
 "it": Null
 "Jinja2 help template": Null
 "Join": Null
@@ -766,7 +765,7 @@
 "Your GitHub settings were saved.": Null
 "Your information was saved.": Null
 "Your IP address is": Null
-"Your new API key, known internally as": Null
+"Your new API key, known internally as %s, is %s": Null
 "Your password has been changed successfully.": Null
 "Your password has been reset successfully.": Null
 "Your password is insecure and needs to be changed": Null

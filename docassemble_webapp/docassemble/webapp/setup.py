@@ -92,6 +92,10 @@ app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', Tr
 app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)
 app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', True)
 app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)
+if daconfig.get('allow embedding', False):
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+else:
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
 app.config['REMEMBER_COOKIE_SECURE'] = app.config['SESSION_COOKIE_SECURE']
 if 'session lifetime seconds' in daconfig:
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])

@@ -57,7 +57,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification, noquote
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification, noquote, update_last_login
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     docassemble.base.functions.server_context.context = 'celery'
@@ -87,6 +87,7 @@ def initialize_db():
     worker_controller.loaded = True
     worker_controller.get_user_object = get_user_object
     worker_controller.login_user = login_user
+    worker_controller.update_last_login = update_last_login
     worker_controller.error_notification = error_notification
     worker_controller.noquote = noquote
 
@@ -1020,7 +1021,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
             if not str(user_info['the_user_id']).startswith('t'):
-                worker_controller.login_user(worker_controller.get_user_object(user_info['theid']), remember=False)
+                user_object = worker_controller.get_user_object(user_info['theid'])
+                worker_controller.login_user(user_object, remember=False)
+                worker_controller.update_last_login(user_object)
             sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action) + "\n")
             worker_controller.set_request_active(False)
             if action['action'] == 'incoming_email':
