@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.103](https://github.com/jhpyle/docassemble/releases/tag/v0.5.103) - 2020-02-23
+
+### Fixed
+- Error with `DAContext` variables.
+
 ## [0.5.102](https://github.com/jhpyle/docassemble/releases/tag/v0.5.102) - 2020-02-23
 
 ### Added
