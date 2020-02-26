@@ -819,7 +819,7 @@ flask_user.views._ = word_with_format
 flask_user.forms._ = word_with_format
 
 import wtforms
-import werkzeug
+import werkzeug.utils
 import werkzeug.exceptions
 from rauth import OAuth1Service, OAuth2Service
 import apiclient
@@ -15668,7 +15668,7 @@ def playground_files():
                 need_to_restart = False
                 for up_file in the_files:
                     try:
-                        filename = werkzeug.secure_filename(up_file.filename)
+                        filename = werkzeug.utils.secure_filename(up_file.filename)
                         extension, mimetype = get_ext_and_mimetype(filename)
                         if section == 'modules' and extension != 'py':
                             flash(word("Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders."), 'error')
@@ -16451,7 +16451,7 @@ def playground_packages():
         if the_files:
             for up_file in the_files:
                 #try:
-                    zip_filename = werkzeug.secure_filename(up_file.filename)
+                    zip_filename = werkzeug.utils.secure_filename(up_file.filename)
                     zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", delete=True)
                     up_file.save(zippath.name)
                     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
@@ -22865,7 +22865,7 @@ def api_playground():
                 the_files = request.files.getlist(filekey)
                 if the_files:
                     for the_file in the_files:
-                        filename = werkzeug.secure_filename(the_file.filename)
+                        filename = werkzeug.utils.secure_filename(the_file.filename)
                         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
                         the_file.save(temp_file.name)
                         pg_section.copy_from(temp_file.name, filename=filename)
@@ -22894,7 +22894,7 @@ def api_convert_file():
         the_files = request.files.getlist(filekey)
         if the_files:
             for the_file in the_files:
-                filename = werkzeug.secure_filename(the_file.filename)
+                filename = werkzeug.utils.secure_filename(the_file.filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 if (mimetype and mimetype in convertible_mimetypes):
                     the_format = convertible_mimetypes[mimetype]
@@ -23617,7 +23617,7 @@ def path_from_reference(file_reference):
     return file_info['fullpath']
 
 def secure_filename(filename):
-    filename = werkzeug.secure_filename(filename)
+    filename = werkzeug.utils.secure_filename(filename)
     extension, mimetype = get_ext_and_mimetype(filename)
     filename = re.sub(r'\..*', '', filename) + '.' + extension
     return filename

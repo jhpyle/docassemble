@@ -47,7 +47,7 @@ import pycountry
 import random
 from user_agents import parse as ua_parse
 import phonenumbers
-import werkzeug
+import werkzeug.utils
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
@@ -2688,7 +2688,7 @@ def underscore_to_space(a):
 
 def space_to_underscore(a):
     """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
-    return werkzeug.secure_filename(str(a).encode('ascii', errors='ignore').decode())
+    return werkzeug.utils.secure_filename(str(a).encode('ascii', errors='ignore').decode())
 
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message."""
