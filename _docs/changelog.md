@@ -4,10 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
-Note: if you have a large quantity of stored sessions in your SQL
-database, do not upgrade past 0.5.96 (for the time being).  The `ALTER
-TABLE` commands triggered by Alembic during the upgrade might take an
-unreasonably long time to finish.
+## [0.5.105](https://github.com/jhpyle/docassemble/releases/tag/v0.5.105) - 2020-02-26
+
+### Changed
+- If the database is PostgreSQL, the Alembic table alteration
+  introduced in 0.5.97 for MySQL compatibility purposes is no longer
+  applied by default because it might take too much time on a server
+  with a large SQL database.  The discrepancy between the SQLAlchemy
+  column type specification (varchar) and the actual PostgreSQL column
+  types (text) is harmless.  If your SQL database is not large, you
+  can set `force text to varchar upgrade: True` in your Configuration
+  before upgrading to force the column type alteration to take place
+  during the upgrade.  After upgrading to 0.5.105+, you can remove
+  `force text to varchar upgrade` from the Configuration.  This is
+  only applicable if upgrading from 0.5.96 or before; if you already
+  upgraded to 0.5.97 - 0.5.104, then the alteration has already taken
+  place.
+
+### Fixed
+- Upgraded `bleach` due to security vulnerability.
 
 ## [0.5.104](https://github.com/jhpyle/docassemble/releases/tag/v0.5.104) - 2020-02-25
 
