@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+Note: if you have a large quantity of stored sessions in your SQL
+database, do not upgrade past 0.5.96 (for the time being).  The `ALTER
+TABLE` commands triggered by Alembic during the upgrade might take an
+unreasonably long time to finish.
+
+## [0.5.104](https://github.com/jhpyle/docassemble/releases/tag/v0.5.104) - 2020-02-25
+
+### Fixed
+- Error with `allow embedding`.
+
 ## [0.5.103](https://github.com/jhpyle/docassemble/releases/tag/v0.5.103) - 2020-02-23
 
 ### Fixed
