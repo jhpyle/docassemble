@@ -90,65 +90,124 @@ if FileExists(sDocUrl) then
         dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
     end if
 
-    pdfFilterData() = Array((MakePropertyValue("UseLosslessCompression", false)))
-    AddPropertyValue(pdfFilterData,"Quality",0.90)
-    AddPropertyValue(pdfFilterData,"Quality",90)
-    AddPropertyValue(pdfFilterData,"ReduceImageResolution",false)
-    AddPropertyValue(pdfFilterData,"MaxImageResolution",1200)
-    AddPropertyValue(pdfFilterData,"UseTaggedPDF",useTaggedPdf)
-    AddPropertyValue(pdfFilterData,"SelectPdfVersion",pdfVersion)
-    AddPropertyValue(pdfFilterData,"ExportNotes",false)
-    AddPropertyValue(pdfFilterData,"ViewPDFAfterExport",false)
-    AddPropertyValue(pdfFilterData,"ExportBookmarks",true)
-    AddPropertyValue(pdfFilterData,"OpenBookmarkLevels",-1)
-    AddPropertyValue(pdfFilterData,"UseTransitionEffects",true)
-    AddPropertyValue(pdfFilterData,"IsSkipEmptyPages",true)
-    AddPropertyValue(pdfFilterData,"ExportPlaceholders",false)
-    AddPropertyValue(pdfFilterData,"IsAddStream",false)
-    AddPropertyValue(pdfFilterData,"FormsType",0)
-    AddPropertyValue(pdfFilterData,"ExportFormFields",true)
-    AddPropertyValue(pdfFilterData,"AllowDuplicateFieldNames",false)
-    AddPropertyValue(pdfFilterData,"HideViewerToolbar",false)
-    AddPropertyValue(pdfFilterData,"HideViewerMenubar",false)
-    AddPropertyValue(pdfFilterData,"HideViewerWindowControls",false)
-    AddPropertyValue(pdfFilterData,"ResizeWindowToInitialPage",false)
-    AddPropertyValue(pdfFilterData,"CenterWindow",false)
-    AddPropertyValue(pdfFilterData,"OpenInFullScreenMode",false)
-    AddPropertyValue(pdfFilterData,"DisplayPDFDocumentTitle",true)
-    AddPropertyValue(pdfFilterData,"InitialView",0)
-    AddPropertyValue(pdfFilterData,"Magnification",0)
-    AddPropertyValue(pdfFilterData,"Zoom",100)
-    AddPropertyValue(pdfFilterData,"PageLayout",0)
-    AddPropertyValue(pdfFilterData,"FirstPageOnLeft",false)
-    AddPropertyValue(pdfFilterData,"InitialPage",1)
-    AddPropertyValue(pdfFilterData,"Printing",2)
-    AddPropertyValue(pdfFilterData,"Changes",4)
-    AddPropertyValue(pdfFilterData,"EnableCopyingOfContent",true)
-    AddPropertyValue(pdfFilterData,"EnableTextAccessForAccessibilityTools",true)
-    AddPropertyValue(pdfFilterData,"ExportLinksRelativeFsys",true)
-    AddPropertyValue(pdfFilterData,"PDFViewSelection",0)
-    AddPropertyValue(pdfFilterData,"ConvertOOoTargetToPDFTarget",false)
-    AddPropertyValue(pdfFilterData,"ExportBookmarksToPDFDestination",false)
-    AddPropertyValue(pdfFilterData,"SignPDF",false)
-    AddPropertyValue(pdfFilterData,"_OkButtonString","")
-    AddPropertyValue(pdfFilterData,"Watermark","")
-    AddPropertyValue(pdfFilterData,"EncryptFile",false)
-    AddPropertyValue(pdfFilterData,"PreparedPasswords","")
-    AddPropertyValue(pdfFilterData,"RestrictPermissions",false)
-    AddPropertyValue(pdfFilterData,"PreparedPermissionPassword",Array())
-    AddPropertyValue(pdfFilterData,"SignatureLocation","")
-    AddPropertyValue(pdfFilterData,"SignatureReason","")
-    AddPropertyValue(pdfFilterData,"SignatureContactInfo","")
-    AddPropertyValue(pdfFilterData,"SignaturePassword","")
-    AddPropertyValue(pdfFilterData,"SignatureCertificate","")
-    AddPropertyValue(pdfFilterData,"SignatureTSA","")
-    AddPropertyValue(pdfFilterData,"UseReferenceXObject",false)
+    dim pdfFilterData(53) as new com.sun.star.beans.PropertyValue
+    dim propExp(1) as new com.sun.star.beans.PropertyValue
 
-    oExport = Array(MakePropertyValue("Overwrite", True), MakePropertyValue("FilterName", "writer_pdf_Export"), MakePropertyValue("FilterData", pdfFilterData))
+    pdfFilterData(0).Name = "UseLosslessCompression"
+    pdfFilterData(0).Value = false
+    pdfFilterData(1).Name = "Quality"
+    pdfFilterData(1).Value = 0.90
+    pdfFilterData(2).Name = "Quality"
+    pdfFilterData(2).Value = 90
+    pdfFilterData(3).Name = "ReduceImageResolution"
+    pdfFilterData(3).Value = false
+    pdfFilterData(4).Name = "MaxImageResolution"
+    pdfFilterData(4).Value = 1200
+    pdfFilterData(5).Name = "UseTaggedPDF"
+    pdfFilterData(5).Value = useTaggedPdf
+    pdfFilterData(6).Name = "SelectPdfVersion"
+    pdfFilterData(6).Value = pdfVersion
+    pdfFilterData(7).Name = "ExportNotes"
+    pdfFilterData(7).Value = false
+    pdfFilterData(8).Name = "ViewPDFAfterExport"
+    pdfFilterData(9).Value = false
+    pdfFilterData(10).Name = "ExportBookmarks"
+    pdfFilterData(10).Value = true
+    pdfFilterData(11).Name = "OpenBookmarkLevels"
+    pdfFilterData(11).Value = -1
+    pdfFilterData(12).Name = "UseTransitionEffects"
+    pdfFilterData(12).Value = true
+    pdfFilterData(13).Name = "IsSkipEmptyPages"
+    pdfFilterData(13).Value = true
+    pdfFilterData(14).Name = "ExportPlaceholders"
+    pdfFilterData(14).Value = false
+    pdfFilterData(15).Name = "IsAddStream"
+    pdfFilterData(15).Value = false
+    pdfFilterData(16).Name = "FormsType"
+    pdfFilterData(16).Value = 0
+    pdfFilterData(17).Name = "ExportFormFields"
+    pdfFilterData(17).Value = true
+    pdfFilterData(18).Name = "AllowDuplicateFieldNames"
+    pdfFilterData(18).Value = false
+    pdfFilterData(19).Name = "HideViewerToolbar"
+    pdfFilterData(19).Value = false
+    pdfFilterData(20).Name = "HideViewerMenubar"
+    pdfFilterData(20).Value = false
+    pdfFilterData(21).Name = "HideViewerWindowControls"
+    pdfFilterData(21).Value = false
+    pdfFilterData(22).Name = "ResizeWindowToInitialPage"
+    pdfFilterData(22).Value = false
+    pdfFilterData(23).Name = "CenterWindow"
+    pdfFilterData(23).Value = false
+    pdfFilterData(24).Name = "OpenInFullScreenMode"
+    pdfFilterData(24).Value = false
+    pdfFilterData(25).Name = "DisplayPDFDocumentTitle"
+    pdfFilterData(25).Value = true
+    pdfFilterData(26).Name = "InitialView"
+    pdfFilterData(26).Value = 0
+    pdfFilterData(27).Name = "Magnification"
+    pdfFilterData(27).Value = 0
+    pdfFilterData(28).Name = "Zoom"
+    pdfFilterData(28).Value = 100
+    pdfFilterData(29).Name = "PageLayout"
+    pdfFilterData(29).Value = 0
+    pdfFilterData(30).Name = "FirstPageOnLeft"
+    pdfFilterData(30).Value = false
+    pdfFilterData(31).Name = "InitialPage"
+    pdfFilterData(31).Value = 1
+    pdfFilterData(32).Name = "Printing"
+    pdfFilterData(32).Value = 2
+    pdfFilterData(33).Name = "Changes"
+    pdfFilterData(33).Value = 4
+    pdfFilterData(34).Name = "EnableCopyingOfContent"
+    pdfFilterData(34).Value = true
+    pdfFilterData(35).Name = "EnableTextAccessForAccessibilityTools"
+    pdfFilterData(35).Value = true
+    pdfFilterData(36).Name = "ExportLinksRelativeFsys"
+    pdfFilterData(36).Value = true
+    pdfFilterData(37).Name = "PDFViewSelection"
+    pdfFilterData(37).Value = 0
+    pdfFilterData(38).Name = "ConvertOOoTargetToPDFTarget"
+    pdfFilterData(38).Value = false
+    pdfFilterData(39).Name = "ExportBookmarksToPDFDestination"
+    pdfFilterData(39).Value = false
+    pdfFilterData(40).Name = "SignPDF"
+    pdfFilterData(40).Value = false
+    pdfFilterData(41).Name = "_OkButtonString"
+    pdfFilterData(41).Value = ""
+    pdfFilterData(42).Name = "Watermark"
+    pdfFilterData(42).Value = ""
+    pdfFilterData(43).Name = "EncryptFile"
+    pdfFilterData(43).Value = false
+    pdfFilterData(44).Name = "PreparedPasswords"
+    pdfFilterData(44).Value = ""
+    pdfFilterData(45).Name = "RestrictPermissions"
+    pdfFilterData(45).Value = false
+    pdfFilterData(46).Name = "PreparedPermissionPassword"
+    pdfFilterData(46).Value = Array()
+    pdfFilterData(47).Name = "SignatureLocation"
+    pdfFilterData(47).Value = ""
+    pdfFilterData(48).Name = "SignatureReason"
+    pdfFilterData(48).Value = ""
+    pdfFilterData(49).Name = "SignatureContactInfo"
+    pdfFilterData(49).Value = ""
+    pdfFilterData(50).Name = "SignaturePassword"
+    pdfFilterData(50).Value = ""
+    pdfFilterData(51).Name = "SignatureCertificate"
+    pdfFilterData(51).Value = ""
+    pdfFilterData(52).Name = "SignatureTSA"
+    pdfFilterData(52).Value = ""
+    pdfFilterData(53).Name = "UseReferenceXObject"
+    pdfFilterData(53).Value = false
+
+    propExp(0).Name = "FilterName"
+    propExp(0).Value = "writer_pdf_Export"
+    propExp(1).Name = "FilterData"
+    propExp(1).Value = pdfFilterData()
 
     GlobalScope.BasicLibraries.LoadLibrary("Tools")
 
-    oDocument.storeToURL(convertToUrl(sPdfURL), oExport)
+    oDocument.storeToURL(convertToUrl(sPdfURL), propExp())
 
 end if
 

@@ -24280,7 +24280,7 @@ with app.app_context():
         release_lock('init', 'init')
     try:
         macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
-        if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 6471:
+        if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7774:
             sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
             os.remove(macro_path)
         else:
