@@ -18,6 +18,23 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
 -->
 <script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic">REM  *****  BASIC  *****
+function MakePropertyValue(aName as string, aValue as variant)
+    dim Arg as new com.sun.star.beans.PropertyValue
+    Arg.name = aName
+    Arg.value = aValue
+    MakePropertyValue = Arg
+end function
+
+function AddPropertyValue(aArray, aName as string, aValue as variant)
+   Dim result
+   result = aArray
+   dim theIndex as integer
+   theIndex = UBound(result)-LBound(result)
+   ReDim Preserve result(the_index+1)
+   result(theIndex) = MakePropertyValue(aName, aValue)
+   AddPropertyValue = result
+end function
+
 sub PysIndexer(sDocUrl as string)
 
 ' Test
@@ -28,14 +45,14 @@ if FileExists(sDocUrl) then
 
 ' TEst
 
-    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, array())
+    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, Array())
     dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
     dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
 
     oDocument.store()
 
 end if
-    
+
 Wait 400
 ThisComponent.close(True)
 Wait 400
@@ -49,38 +66,92 @@ sub ConvertToPdf(sDocUrl as string, sPdfURL as string, updateIndex as boolean, m
 dim oDocument as object
 dim dispatcher as object
 
-dim propExp(1) as new com.sun.star.beans.PropertyValue
 dim pdfVersion as integer
+dim useTaggedPdf as boolean
 
 if method = "pdfa" OR method = "tagged" then
     if method = "pdfa" then
         pdfVersion = 1
     else
         pdfVersion = 0
-    end if 
+    end if
+    useTaggedPdf = true
+else
+    pdfVersion = 0
+    useTaggedPdf = false
 end if
 
 if FileExists(sDocUrl) then
 
-    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, array())
+    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, Array())
     dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
-    
+
     if updateIndex then
         dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
     end if
-	
-    propExp(0).Name = "FilterName"
-    propExp(0).Value = "writer_pdf_Export"
-    if method = "pdfa" OR method = "tagged" then
-        propExp(1).Value = Array(Array("UseLosslessCompression",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Quality",0,90,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ReduceImageResolution",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("MaxImageResolution",0,300,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("UseTaggedPDF",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SelectPdfVersion",0,pdfVersion,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportNotes",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ViewPDFAfterExport",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportBookmarks",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("OpenBookmarkLevels",0,-1,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("UseTransitionEffects",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("IsSkipEmptyPages",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportPlaceholders",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("IsAddStream",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("FormsType",0,0,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportFormFields",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("AllowDuplicateFieldNames",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("HideViewerToolbar",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("HideViewerMenubar",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("HideViewerWindowControls",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ResizeWindowToInitialPage",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("CenterWindow",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("OpenInFullScreenMode",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("DisplayPDFDocumentTitle",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("InitialView",0,0,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Magnification",0,0,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Zoom",0,100,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("PageLayout",0,0,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("FirstPageOnLeft",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("InitialPage",0,1,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Printing",0,2,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Changes",0,4,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("EnableCopyingOfContent",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("EnableTextAccessForAccessibilityTools",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportLinksRelativeFsys",0,true,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("PDFViewSelection",0,0,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ConvertOOoTargetToPDFTarget",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("ExportBookmarksToPDFDestination",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignPDF",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("_OkButtonString",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("Watermark",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("EncryptFile",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("PreparedPasswords",0,,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("RestrictPermissions",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("PreparedPermissionPassword",0,Array(),com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignatureLocation",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignatureReason",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignatureContactInfo",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignaturePassword",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignatureCertificate",0,,com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("SignatureTSA",0,"",com.sun.star.beans.PropertyState.DIRECT_VALUE),Array("UseReferenceXObject",0,false,com.sun.star.beans.PropertyState.DIRECT_VALUE))
-    end if 
+
+    pdfFilterData() = Array((MakePropertyValue("UseLosslessCompression", false)))
+    AddPropertyValue(pdfFilterData,"Quality",0.90)
+    AddPropertyValue(pdfFilterData,"Quality",90)
+    AddPropertyValue(pdfFilterData,"ReduceImageResolution",false)
+    AddPropertyValue(pdfFilterData,"MaxImageResolution",1200)
+    AddPropertyValue(pdfFilterData,"UseTaggedPDF",useTaggedPdf)
+    AddPropertyValue(pdfFilterData,"SelectPdfVersion",pdfVersion)
+    AddPropertyValue(pdfFilterData,"ExportNotes",false)
+    AddPropertyValue(pdfFilterData,"ViewPDFAfterExport",false)
+    AddPropertyValue(pdfFilterData,"ExportBookmarks",true)
+    AddPropertyValue(pdfFilterData,"OpenBookmarkLevels",-1)
+    AddPropertyValue(pdfFilterData,"UseTransitionEffects",true)
+    AddPropertyValue(pdfFilterData,"IsSkipEmptyPages",true)
+    AddPropertyValue(pdfFilterData,"ExportPlaceholders",false)
+    AddPropertyValue(pdfFilterData,"IsAddStream",false)
+    AddPropertyValue(pdfFilterData,"FormsType",0)
+    AddPropertyValue(pdfFilterData,"ExportFormFields",true)
+    AddPropertyValue(pdfFilterData,"AllowDuplicateFieldNames",false)
+    AddPropertyValue(pdfFilterData,"HideViewerToolbar",false)
+    AddPropertyValue(pdfFilterData,"HideViewerMenubar",false)
+    AddPropertyValue(pdfFilterData,"HideViewerWindowControls",false)
+    AddPropertyValue(pdfFilterData,"ResizeWindowToInitialPage",false)
+    AddPropertyValue(pdfFilterData,"CenterWindow",false)
+    AddPropertyValue(pdfFilterData,"OpenInFullScreenMode",false)
+    AddPropertyValue(pdfFilterData,"DisplayPDFDocumentTitle",true)
+    AddPropertyValue(pdfFilterData,"InitialView",0)
+    AddPropertyValue(pdfFilterData,"Magnification",0)
+    AddPropertyValue(pdfFilterData,"Zoom",100)
+    AddPropertyValue(pdfFilterData,"PageLayout",0)
+    AddPropertyValue(pdfFilterData,"FirstPageOnLeft",false)
+    AddPropertyValue(pdfFilterData,"InitialPage",1)
+    AddPropertyValue(pdfFilterData,"Printing",2)
+    AddPropertyValue(pdfFilterData,"Changes",4)
+    AddPropertyValue(pdfFilterData,"EnableCopyingOfContent",true)
+    AddPropertyValue(pdfFilterData,"EnableTextAccessForAccessibilityTools",true)
+    AddPropertyValue(pdfFilterData,"ExportLinksRelativeFsys",true)
+    AddPropertyValue(pdfFilterData,"PDFViewSelection",0)
+    AddPropertyValue(pdfFilterData,"ConvertOOoTargetToPDFTarget",false)
+    AddPropertyValue(pdfFilterData,"ExportBookmarksToPDFDestination",false)
+    AddPropertyValue(pdfFilterData,"SignPDF",false)
+    AddPropertyValue(pdfFilterData,"_OkButtonString","")
+    AddPropertyValue(pdfFilterData,"Watermark","")
+    AddPropertyValue(pdfFilterData,"EncryptFile",false)
+    AddPropertyValue(pdfFilterData,"PreparedPasswords","")
+    AddPropertyValue(pdfFilterData,"RestrictPermissions",false)
+    AddPropertyValue(pdfFilterData,"PreparedPermissionPassword",Array())
+    AddPropertyValue(pdfFilterData,"SignatureLocation","")
+    AddPropertyValue(pdfFilterData,"SignatureReason","")
+    AddPropertyValue(pdfFilterData,"SignatureContactInfo","")
+    AddPropertyValue(pdfFilterData,"SignaturePassword","")
+    AddPropertyValue(pdfFilterData,"SignatureCertificate","")
+    AddPropertyValue(pdfFilterData,"SignatureTSA","")
+    AddPropertyValue(pdfFilterData,"UseReferenceXObject",false)
+
+    oExport = Array(MakePropertyValue("Overwrite", True), MakePropertyValue("FilterName", "writer_pdf_Export"), MakePropertyValue("FilterData", pdfFilterData))
 
     GlobalScope.BasicLibraries.LoadLibrary("Tools")
 
-    oDocument.storeToURL(convertToUrl(sPdfURL), propExp())
+    oDocument.storeToURL(convertToUrl(sPdfURL), oExport)
 
 end if
-    
+
 Wait 400
 ThisComponent.close(True)
 Wait 400

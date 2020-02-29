@@ -362,7 +362,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             password = False
         else:
             if method == 'default':
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
+                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
+#                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
             else:
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:

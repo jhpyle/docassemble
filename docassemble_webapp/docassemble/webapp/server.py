@@ -5505,7 +5505,7 @@ def index(action_argument=None):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             sys.stderr.write("Redirecting to login because no anonymous access allowed.\n")
-            return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
+            return redirect(url_for('user.login', next=url_for('index', **request.args)))
         if yaml_filename.startswith('docassemble.playground'):
             if not app.config['ENABLE_PLAYGROUND']:
                 raise DAError(word("Not authorized"), code=403)
@@ -18491,9 +18491,9 @@ def logfile(filename):
             return ('File not found', 404)
     else:
         h = httplib2.Http()
-        resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
+        resp, content = h.request("http://" + LOGSERVER + ':8082', "GET")
         try:
-            the_file, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(filename))
+            the_file, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(filename))
         except:
             return ('File not found', 404)
     response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
@@ -18552,7 +18552,7 @@ def logs():
             filename = os.path.join(LOG_DIRECTORY, the_file)
     else:
         h = httplib2.Http()
-        resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
+        resp, content = h.request("http://" + LOGSERVER + ':8082', "GET")
         if int(resp['status']) >= 200 and int(resp['status']) < 300:
             files = [f for f in content.decode().split("\n") if f != '' and f is not None]
         else:
@@ -18560,7 +18560,7 @@ def logs():
         if len(files):
             if the_file is None:
                 the_file = files[0]
-            filename, headers = urlretrieve("http://" + LOGSERVER + ':8080/' + urllibquote(the_file))
+            filename, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(the_file))
     if len(files) and not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
         if len(files):
@@ -24278,6 +24278,15 @@ with app.app_context():
         copy_playground_modules()
         write_pypirc()
         release_lock('init', 'init')
+    try:
+        macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
+        if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 6471:
+            sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
+            os.remove(macro_path)
+        else:
+            sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
+    except Exception as err:
+        sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
     with app.test_request_context(base_url=url_root, path=url):

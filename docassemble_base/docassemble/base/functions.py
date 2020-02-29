@@ -3066,6 +3066,14 @@ def process_action():
                     this_thread.current_info['action_list'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + str(err))
+                try:
+                    logmessage("process_action: list is: " + str(this_thread.current_info['action_list'].instanceName))
+                except:
+                    pass
+                try:
+                    logmessage("process_action: item is: " + str(this_thread.current_info['action_item'].instanceName))
+                except:
+                    pass
         force_ask(dict(action='_da_list_ensure_complete', arguments=dict(group=this_thread.current_info['action_list'].instanceName)))
         #raise ForcedReRun()
     elif the_action == '_da_dict_remove':
@@ -3076,6 +3084,14 @@ def process_action():
                     this_thread.current_info['action_dict'].there_are_any = False
             except Exception as err:
                 logmessage("process_action: _da_dict_remove error: " + str(err))
+                try:
+                    logmessage("process_action: dict is: " + str(this_thread.current_info['action_dict'].instanceName))
+                except:
+                    pass
+                try:
+                    logmessage("process_action: item is: " + str(this_thread.current_info['action_item'].instanceName))
+                except:
+                    pass
         force_ask(dict(action='_da_dict_ensure_complete', arguments=dict(group=this_thread.current_info['action_dict'].instanceName)))
         #raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
