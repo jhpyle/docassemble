@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.5.106] - 2020-02-29
+### Changed
+- LibreOffice Word to PDF conversion no longer reduces image
+  resolution.
+### Fixed
+- Log server in multi-server mode accessed on wrong port.
+- URL parameters stripped when redirecting to login when `allow
+  anonymous access` is `False`.
+
 ## [0.5.105] - 2020-02-26
 ### Changed
 - If the database is PostgreSQL, the Alembic table alteration

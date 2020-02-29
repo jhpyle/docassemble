@@ -5532,7 +5532,7 @@ def index(action_argument=None):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
                     sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
-                    return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
+                    return redirect(url_for('user.login', next=url_for('index', **request.args)))
             elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                 raise DAError(word('You are not allowed to access this interview.'), code=403)
             unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
@@ -5540,7 +5540,7 @@ def index(action_argument=None):
                 delete_session_for_interview(yaml_filename)
                 flash(word("You need to be logged in to access this interview."), "info")
                 sys.stderr.write("Redirecting to login because sessions are unique.\n")
-                return redirect(url_for('user.login', next=url_for('index', i=yaml_filename)))
+                return redirect(url_for('user.login', next=url_for('index', **request.args)))
             session_id = None
             if reset_interview == 2:
                 delete_session_sessions()
@@ -10652,7 +10652,7 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
 @app.route('/list', methods=['GET'])
 def interview_start():
     if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
-        return redirect(url_for('user.login'))
+        return redirect(url_for('user.login', next=url_for('interview_start', **request.args)))
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
