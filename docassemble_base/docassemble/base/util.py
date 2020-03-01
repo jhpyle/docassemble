@@ -1335,7 +1335,7 @@ class Address(DAObject):
             the_unit = self.formatted_unit(language=language)
             if the_unit != '':
                 # street_address can be multiline, assume second line is for unit
-                i18n_address['street_address'] += '\n' the_unit
+                i18n_address['street_address'] += '\n' + the_unit
             if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
                 i18n_address['city_area'] = str(self.sublocality_level_1)
             i18n_address['city'] = str(self.city)
