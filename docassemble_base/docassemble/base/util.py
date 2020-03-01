@@ -49,6 +49,8 @@ import requests
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 from requests.exceptions import RequestException
 
+from i18naddress import format_address
+
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status', 'verbatim', 'add_separators', 'DAWeb', 'DAWebError', 'json', 're']
@@ -1313,7 +1315,44 @@ class Address(DAObject):
         self.norm = the_norm
         self.norm_long = the_norm_long
         return True
-    def block(self, language=None):
+    def block(self, name=None, company_name=None):
+        """Returns the address formatted as a block, as in a mailing.
+        Attempts to properly format based on country code. Otherwise,
+        falls back on US address formatting rules."""
+        if self.city_only or not hasattr(self, 'country'):
+            return self._naive_block()
+        else:        
+            if this_thread.evaluation_context == 'docx':
+                line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
+            else:
+                line_breaker = " [NEWLINE] "        
+            i18n_address = {}
+            if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
+                # Not sure if this is properly international, but someone should use `address` instead when street number does not come first
+                i18n_address['street_address'] = str(self.street_number) + " " + str(self.street)
+            else:
+                i18n_address['street_address'] = str(self.address)
+            the_unit = self.formatted_unit(language=language)
+            if the_unit != '':
+                # street_address can be multiline, assume second line is for unit
+                i18n_address['street_address'] += '\n' the_unit
+            if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
+                i18n_address['city_area'] = str(self.sublocality_level_1)
+            i18n_address['city'] = str(self.city)
+            if hasattr(self, 'state') and self.state:
+                i18n_address['country_area'] = str(self.state)
+            if hasattr(self, 'zip'):
+                i18n_address['postal_code'] = str(self.zip)
+            elif hasattr(self, 'postal_code') and self.postal_code:
+                i18n_address['postal_code'] = str(self.postal_code)
+            i18n_address['country'] = iso_country(self.country)
+            try:
+                formatted = format_address(i18n_address)
+            except ValueError: # One of the values isn't properly formatted for i18naddress
+                return self._naive_block()
+            return formatted.replace('\n',line_breaker)
+
+    def _naive_block(self, language=None):
         """Returns the address formatted as a block, as in a mailing."""
         output = ""
         if this_thread.evaluation_context == 'docx':
@@ -1338,6 +1377,7 @@ class Address(DAObject):
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + str(self.postal_code)
         return(output)
+
     def formatted_unit(self, language=None, require=False):
         """Returns the unit, formatted appropriately"""
         if not hasattr(self, 'unit') and not hasattr(self, 'floor') and not hasattr(self, 'room'):
@@ -1384,6 +1424,14 @@ class Address(DAObject):
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + str(self.postal_code)
         return(output)
+
+def iso_country(country):
+    """Accept user-input country name and return either an ISO 3166-1 alpha-2 country code or empty string"""
+    try:
+        country_guess = pycountry.countries.search_fuzzy(country)
+    except LookupError:
+        return '' # Safe to return an empty string here--better than invalid value
+    return next(iter(country_guess)).alpha_2
 
 class City(Address):
     """A geographic address specific only to a city."""
