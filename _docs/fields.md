@@ -440,11 +440,20 @@ a document or a question, you will probably want to use the
 [`.format_date()`] method or the [`format_date()`] function.
 
 If you set a [`default`] value for a date field, write the date in the
-format YYYY-MM-DD.  Many browsers have built-in "date pickers" that
+format YYYY-MM-dd.  Many browsers have built-in "date pickers" that
 expect dates to be in this format.  See [Mozilla's documentation] of
 the date input field.  If the browser uses a date picker, then your
-interview will see text values in the form YYYY-MM-DD, but on other
+interview will see text values in the form YYYY-MM-dd, but on other
 browsers, like [Firefox], the format may be some other format.
+
+For example, to default to today's date in a date picker:
+
+```
+fields:
+  - What date should be on the letter?: letter_date
+    default: ${today().format("YYYY-MM-dd")}
+    datatype: date
+```
 
 ## <a name="time"></a>Times
 
