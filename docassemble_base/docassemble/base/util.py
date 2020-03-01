@@ -1345,7 +1345,7 @@ class Address(DAObject):
                 i18n_address['postal_code'] = str(self.zip)
             elif hasattr(self, 'postal_code') and self.postal_code:
                 i18n_address['postal_code'] = str(self.postal_code)
-            i18n_address['country'] = iso_country(self.country)
+            i18n_address['country_code'] = iso_country(self.country)
             try:
                 formatted = format_address(i18n_address)
             except ValueError: # One of the values isn't properly formatted for i18naddress
