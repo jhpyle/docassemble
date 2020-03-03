@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.107](https://github.com/jhpyle/docassemble/releases/tag/v0.5.107) - 2020-03-03
+
+### Changed
+- More flexible handling of `default` values with `datatype: date`.
+- The `allow embedding` Configuration directive now accepts the value
+  `'Lax'`, which is the default.
+
 ## [0.5.106](https://github.com/jhpyle/docassemble/releases/tag/v0.5.106) - 2020-02-29
 
 ### Changed

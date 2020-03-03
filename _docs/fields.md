@@ -439,12 +439,17 @@ In particular, if you want to format a date variable for inclusion in
 a document or a question, you will probably want to use the
 [`.format_date()`] method or the [`format_date()`] function.
 
-If you set a [`default`] value for a date field, write the date in the
-format YYYY-MM-DD.  Many browsers have built-in "date pickers" that
-expect dates to be in this format.  See [Mozilla's documentation] of
-the date input field.  If the browser uses a date picker, then your
-interview will see text values in the form YYYY-MM-DD, but on other
-browsers, like [Firefox], the format may be some other format.
+To set a default value, you can set [`default`] to any value that can
+be understood as a date.
+
+{% highlight yaml %}
+question: What is your date of birth?
+fields:
+  - Your birthday: birthdate
+    datatype: date
+    default: |
+      ${ today().minus(years=100) }
+{% endhighlight %}
 
 ## <a name="time"></a>Times
 

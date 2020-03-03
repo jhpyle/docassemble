@@ -3953,17 +3953,24 @@ wrap lines in playground: False
 
 # <a name="allow embedding"></a>Allowing interviews to be embedded in another site
 
-By default, cookies will be sent with `SameSite` set to `Strict`, so
-that cookies will not work if the address in the location bar does not
-match the address of the **docassemble** server.  This will prevent
-the embedding of a **docassemble** interview in a third-party site.
-To enable embedding, set `allow embedding` to `True`.  The default is
-`False`.
+By default, cookies will be sent with the [SameSite] flag set to
+`Lax`, so that cookies will not work if the address in the location
+bar does not match the address of the **docassemble** server.  This
+will prevent the embedding of a **docassemble** interview in a
+third-party site.  To enable embedding, set `allow embedding` to
+`True`.
 
 {% highlight yaml %}
 allow embedding: True
 {% endhighlight %}
 
+If `allow embedding` is `True`, cookies will be sent with the
+[SameSite] flag set to `'None'`.  If `allow embedding` is `False`, the
+cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
+`allow embedding` is set to `'Lax'`, the cookies will be sent with the
+[SameSite] flag set to `'Lax'`.  The default is `'Lax'`.
+
+[SameSite]: https://www.chromestatus.com/feature/5088147346030592
 [VoiceRSS]: http://www.voicerss.org/
 [Flask]: http://flask.pocoo.org/
 [YAML]: https://en.wikipedia.org/wiki/YAML
