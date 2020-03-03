@@ -92,9 +92,9 @@ app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', Tr
 app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)
 app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', True)
 app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)
-if daconfig.get('allow embedding', False) is True:
+if daconfig.get('allow embedding', 'Lax') is True:
     app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-elif daconfig.get('allow embedding', False) is False:
+elif daconfig.get('allow embedding', 'Lax') is False:
     app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
 else:
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
