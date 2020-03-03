@@ -2415,6 +2415,10 @@ def input_for(status, field, wide=False, embedded=False):
                     output += '</span>'
         else:
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
+                if field.datatype == 'date':
+                    the_date = format_date(defaultvalue, format='yyyy-MM-dd')
+                    if the_date != word("Bad date"):
+                        defaultvalue = the_date
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
             elif isinstance(defaultvalue, datetime.datetime):
                 defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
