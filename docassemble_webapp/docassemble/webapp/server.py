@@ -886,7 +886,7 @@ def import_necessary():
                 for cnt, line in enumerate(fp):
                     if line.startswith('# do not pre-load'):
                         break
-                    if line.startswith('class') or 'docassemble.base.util.update' in line:
+                    if line.startswith('class') or line.startswith('# pre-load') or 'docassemble.base.util.update' in line:
                         parts = thefilename.split(os.sep)[start_dir:]
                         parts[-1] = parts[-1][0:-3]
                         modules.append(('.'.join(parts)))
@@ -24244,52 +24244,63 @@ def random_social():
 
 with app.app_context():
     app.user_manager.random_social = random_social
-    if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
-        app.config['BOOTSTRAP_THEME'] = str(get_url_from_file_reference(daconfig['bootstrap theme']))
-        app.config['BOOTSTRAP_THEME_DEFAULT'] = False
-    else:
-        app.config['BOOTSTRAP_THEME'] = None
-        app.config['BOOTSTRAP_THEME_DEFAULT'] = True
-    if 'global css' in daconfig:
-        for fileref in daconfig['global css']:
-            global_css += "\n" + '    <link href="' + str(get_url_from_file_reference(fileref)) + '" rel="stylesheet">'
-    if 'global javascript' in daconfig:
-        for fileref in daconfig['global javascript']:
-            global_js += "\n" + '    <script src="' + str(get_url_from_file_reference(fileref)) + '"></script>';
-    if 'raw global css' in daconfig:
-        global_css += "\n" + str(daconfig['raw global css'])
-    if 'raw global javascript' in daconfig:
-        global_js += "\n" + str(daconfig['raw global javascript'])
-    app.config['GLOBAL_CSS'] = global_css
-    app.config['GLOBAL_JS'] = global_js
-    app.config['PARTS'] = page_parts
-    app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
-    app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
-    app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
-    interviews_to_load = daconfig.get('preloaded interviews', None)
-    if isinstance(interviews_to_load, list):
-        for yaml_filename in daconfig['preloaded interviews']:
-            try:
-                docassemble.base.interview_cache.get_interview(yaml_filename)
-            except:
-                pass
-    if app.config['ENABLE_PLAYGROUND']:
-        obtain_lock('init', 'init')
-        copy_playground_modules()
-        write_pypirc()
-        release_lock('init', 'init')
-    try:
-        macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
-        if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7774:
-            sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
-            os.remove(macro_path)
-        else:
-            sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
-    except Exception as err:
-        sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
     with app.test_request_context(base_url=url_root, path=url):
+        if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
+            try:
+                app.config['BOOTSTRAP_THEME'] = str(get_url_from_file_reference(daconfig['bootstrap theme']))
+                app.config['BOOTSTRAP_THEME_DEFAULT'] = False
+                sys.stderr.write("error loading bootstrap theme\n")
+            except:
+                app.config['BOOTSTRAP_THEME'] = None
+                app.config['BOOTSTRAP_THEME_DEFAULT'] = True
+        else:
+            app.config['BOOTSTRAP_THEME'] = None
+            app.config['BOOTSTRAP_THEME_DEFAULT'] = True
+        if 'global css' in daconfig:
+            for fileref in daconfig['global css']:
+                try:
+                    global_css += "\n" + '    <link href="' + str(get_url_from_file_reference(fileref)) + '" rel="stylesheet">'
+                except:
+                    sys.stderr.write("error loading global css\n")
+        if 'global javascript' in daconfig:
+            for fileref in daconfig['global javascript']:
+                try:
+                    global_js += "\n" + '    <script src="' + str(get_url_from_file_reference(fileref)) + '"></script>';
+                except:
+                    sys.stderr.write("error loading global css\n")
+        if 'raw global css' in daconfig:
+            global_css += "\n" + str(daconfig['raw global css'])
+        if 'raw global javascript' in daconfig:
+            global_js += "\n" + str(daconfig['raw global javascript'])
+        app.config['GLOBAL_CSS'] = global_css
+        app.config['GLOBAL_JS'] = global_js
+        app.config['PARTS'] = page_parts
+        app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
+        app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
+        app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
+        interviews_to_load = daconfig.get('preloaded interviews', None)
+        if isinstance(interviews_to_load, list):
+            for yaml_filename in daconfig['preloaded interviews']:
+                try:
+                    docassemble.base.interview_cache.get_interview(yaml_filename)
+                except:
+                    pass
+        if app.config['ENABLE_PLAYGROUND']:
+            obtain_lock('init', 'init')
+            copy_playground_modules()
+            write_pypirc()
+            release_lock('init', 'init')
+        try:
+            macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
+            if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7774:
+                sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
+                os.remove(macro_path)
+            else:
+                sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
+        except Exception as err:
+            sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
         import_necessary()
 
 if __name__ == "__main__":
