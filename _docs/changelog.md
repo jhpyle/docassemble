@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [0.5.108](https://github.com/jhpyle/docassemble/releases/tag/v0.5.108) - 2020-03-08
+
+### Fixed
+- Issue with `bootstrap theme` and other Configuration directives that
+  require Flask URL formation.
+
 ## [0.5.107](https://github.com/jhpyle/docassemble/releases/tag/v0.5.107) - 2020-03-03
 
 ### Changed
