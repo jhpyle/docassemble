@@ -32,14 +32,18 @@ def url_if_exists(file_reference, **kwargs):
     base_url = url_for('rootindex', _external=kwargs.get('_external', False)).rstrip('/')
     if len(parts) == 2:
         if cloud and docassemble.base.config.daconfig.get('use cloud urls', False):
-            m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
+            m = re.search(r'^docassemble.playground([0-9]+)(.*)$', parts[0])
             if m:
                 user_id = m.group(1)
+                project = m.group(2)
                 if re.search(r'^data/sources/', parts[1]):
                     section = 'playgroundsources'
                     filename = re.sub(r'^data/sources/', '', parts[1])
                     filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
-                    key = str(section) + '/' + str(user_id) + '/' + filename
+                    if project == '':
+                        key = str(section) + '/' + str(user_id) + '/' + filename
+                    else:
+                        key = str(section) + '/' + str(user_id) + '/' + project + '/' + filename
                     cloud_key = cloud.get_key(key)
                     if cloud_key.does_exist:
                         if not kwargs.get('inline', False):

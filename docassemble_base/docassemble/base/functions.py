@@ -3064,6 +3064,8 @@ def process_action():
                 this_thread.current_info['action_list'].pop(this_thread.current_info['action_item'])
                 if len(this_thread.current_info['action_list'].elements) == 0 and hasattr(this_thread.current_info['action_list'], 'there_are_any'):
                     this_thread.current_info['action_list'].there_are_any = False
+                if hasattr(this_thread.current_info['action_list'], 'there_is_another') and this_thread.current_info['action_list'].there_is_another:
+                    del this_thread.current_info['action_list'].there_is_another
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + str(err))
                 try:
@@ -3080,6 +3082,10 @@ def process_action():
         if 'action_item' in this_thread.current_info and 'action_dict' in this_thread.current_info:
             try:
                 this_thread.current_info['action_dict'].pop(this_thread.current_info['action_item'])
+                if len(this_thread.current_info['action_dict'].elements) == 0 and hasattr(this_thread.current_info['action_dict'], 'there_are_any'):
+                    this_thread.current_info['action_list'].there_are_any = False
+                if hasattr(this_thread.current_info['action_dict'], 'there_is_another') and this_thread.current_info['action_dict'].there_is_another:
+                    del this_thread.current_info['action_dict'].there_is_another
                 if len(this_thread.current_info['action_dict'].elements) == 0 and hasattr(this_thread.current_info['action_dict'], 'there_are_any'):
                     this_thread.current_info['action_dict'].there_are_any = False
             except Exception as err:

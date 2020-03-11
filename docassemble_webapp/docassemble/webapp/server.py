@@ -1889,6 +1889,8 @@ def additional_css(interview_status, js_only=False):
     return start_output
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False):
+    if bootstrap_theme is None and app.config['BOOTSTRAP_THEME'] is not None:
+        bootstrap_theme = app.config['BOOTSTRAP_THEME']
     if bootstrap_theme is None:
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
@@ -24249,12 +24251,13 @@ with app.app_context():
     with app.test_request_context(base_url=url_root, path=url):
         if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
             try:
-                app.config['BOOTSTRAP_THEME'] = str(get_url_from_file_reference(daconfig['bootstrap theme']))
+                app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
+                assert isinstance(app.config['BOOTSTRAP_THEME'], str)
                 app.config['BOOTSTRAP_THEME_DEFAULT'] = False
-                sys.stderr.write("error loading bootstrap theme\n")
             except:
                 app.config['BOOTSTRAP_THEME'] = None
                 app.config['BOOTSTRAP_THEME_DEFAULT'] = True
+                sys.stderr.write("error loading bootstrap theme\n")
         else:
             app.config['BOOTSTRAP_THEME'] = None
             app.config['BOOTSTRAP_THEME_DEFAULT'] = True
