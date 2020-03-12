@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.5.108] - 2020-03-11
+### Changed
+- Deleting an item in a table now undefines `there_is_another` when it is
+  `True`.
+### Fixed
+- The `bootstrap theme` in the Configuration will apply to interviews
+  if `bootstrap theme` in `features` is not set.
+- Errors in global CSS and JS Configuration directives not intercepted
+  and logged.
+
 ## [0.5.108] - 2020-03-08
 ### Fixed
 - Issue with `bootstrap theme` and other Configuration directives that

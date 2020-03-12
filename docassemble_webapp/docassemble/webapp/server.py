@@ -24253,29 +24253,30 @@ with app.app_context():
             try:
                 app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
                 assert isinstance(app.config['BOOTSTRAP_THEME'], str)
-                app.config['BOOTSTRAP_THEME_DEFAULT'] = False
             except:
                 app.config['BOOTSTRAP_THEME'] = None
-                app.config['BOOTSTRAP_THEME_DEFAULT'] = True
                 sys.stderr.write("error loading bootstrap theme\n")
         else:
             app.config['BOOTSTRAP_THEME'] = None
-            app.config['BOOTSTRAP_THEME_DEFAULT'] = True
         if 'global css' in daconfig:
             for fileref in daconfig['global css']:
                 try:
-                    global_css += "\n" + '    <link href="' + str(get_url_from_file_reference(fileref)) + '" rel="stylesheet">'
+                    global_css_url = get_url_from_file_reference(fileref)
+                    assert isinstance(global_css_url, str)
+                    global_css += "\n" + '    <link href="' + global_css_url + '" rel="stylesheet">'
                 except:
-                    sys.stderr.write("error loading global css\n")
+                    sys.stderr.write("error loading global css: " + repr(fileref) + "\n")
         if 'global javascript' in daconfig:
             for fileref in daconfig['global javascript']:
                 try:
-                    global_js += "\n" + '    <script src="' + str(get_url_from_file_reference(fileref)) + '"></script>';
+                    global_js_url = get_url_from_file_reference(fileref)
+                    assert isinstance(global_js_url, str)
+                    global_js += "\n" + '    <script src="' + global_js_url + '"></script>'
                 except:
-                    sys.stderr.write("error loading global css\n")
-        if 'raw global css' in daconfig:
+                    sys.stderr.write("error loading global js: " + repr(fileref) + "\n")
+        if 'raw global css' in daconfig and daconfig['raw global css']:
             global_css += "\n" + str(daconfig['raw global css'])
-        if 'raw global javascript' in daconfig:
+        if 'raw global javascript' in daconfig and daconfig['raw global css']:
             global_js += "\n" + str(daconfig['raw global javascript'])
         app.config['GLOBAL_CSS'] = global_css
         app.config['GLOBAL_JS'] = global_js
