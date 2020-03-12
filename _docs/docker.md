@@ -1996,6 +1996,7 @@ line), as the containers depend on the images.
 [persistent volumes]: #persistent
 [persistent volume]: #persistent
 [configuration]: {{ site.baseurl }}/docs/config.html
+[`db`]: {{ site.baseurl }}/docs/config.html#db
 [`db` section]: {{ site.baseurl }}/docs/config.html#db
 [`s3` section]: {{ site.baseurl }}/docs/config.html#s3
 [`azure` section]: {{ site.baseurl }}/docs/config.html#azure

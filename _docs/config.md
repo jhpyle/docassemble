@@ -812,10 +812,10 @@ global javascript: https://example.com/js/tracker.js
 These [JavaScript] and [CSS] files are loaded after the other
 [JavaScript] and [CSS] files on the page.
 
-Note that the [`global css`] and [`global javascript`] directives can
-only refer to file names; if you want to write raw `<link>`, `<meta>`,
-or `<script>` content, you can use the `raw global css` and `raw
-global javascript` directives:
+The [`global css`] and [`global javascript`] directives can only refer
+to file names; if you want to write raw `<link>`, `<meta>`, or
+`<script>` content, you can use the `raw global css` and `raw global
+javascript` directives:
 
 {% highlight yaml %}
 raw global css: |
@@ -829,6 +829,14 @@ raw global javascript: |
     ga('create', 'UA-77777777-1', 'auto');
   </script>
 {% endhighlight %}
+
+The `raw global css` content is inserted into the `<head>` of the
+page, while the `raw global javascript` is inserted into the end of
+the `<body>` of the page.  There is no requirement that the `raw
+global css` content relate to [CSS], or that that the `raw global
+javascript` content relate to [JavaScript]; the names simply refer to
+the conventions about where [CSS] and [JavaScript] are typically
+placed in the [HTML] page.
 
 ## <a name="bootstrap theme"></a>Bootstrap theme
 
@@ -992,7 +1000,7 @@ Google have their own conventions for doing this.
 
 In order to "brand" your application in a custom way, create a square
 logo and go to
-[http://realfavicongenerator.net](http://realfavicongenerator.net) in
+[https://realfavicongenerator.net](https://realfavicongenerator.net) in
 order to generate [favicon] files from it.  Upload a square image that
 is at least 512x512 in size.  In addition to uploading your file, you
 will need to make some choices about different colors that should be
