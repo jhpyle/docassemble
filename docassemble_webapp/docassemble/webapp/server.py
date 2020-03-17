@@ -24276,7 +24276,7 @@ with app.app_context():
                     sys.stderr.write("error loading global js: " + repr(fileref) + "\n")
         if 'raw global css' in daconfig and daconfig['raw global css']:
             global_css += "\n" + str(daconfig['raw global css'])
-        if 'raw global javascript' in daconfig and daconfig['raw global css']:
+        if 'raw global javascript' in daconfig and daconfig['raw global javascript']:
             global_js += "\n" + str(daconfig['raw global javascript'])
         app.config['GLOBAL_CSS'] = global_css
         app.config['GLOBAL_JS'] = global_js
