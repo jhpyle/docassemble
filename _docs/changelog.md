@@ -4,7 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [0.5.108](https://github.com/jhpyle/docassemble/releases/tag/v0.5.108) - 2020-03-11
+## [0.5.110](https://github.com/jhpyle/docassemble/releases/tag/v0.5.110) - 2020-03-17
+
+### Fixed
+- Bug affecting `raw global javascript`.
+
+## [0.5.109](https://github.com/jhpyle/docassemble/releases/tag/v0.5.109) - 2020-03-11
 
 ### Changed
 - Deleting an item in a table now undefines `there_is_another` when it is
