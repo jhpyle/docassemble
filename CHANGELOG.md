@@ -1,6 +1,22 @@
 # Change Log
 
-## [0.5.108] - 2020-03-11
+## [0.5.111] - 2020-03-20
+### Added
+- The `auto open` option for the `sections` block.
+- The `pages()` method for Twilio fax status.
+### Fixed
+- The caret next to automatically closed subsections in the section
+  navigation bar defaulted to the wrong setting.
+- The `received()` method of the fax send status did not correctly
+  respond `True` when the fax was in `'delivered'` status.
+- Error message when clicking the back button under certain
+  circumstances.
+
+## [0.5.110] - 2020-03-17
+### Fixed
+- Bug affecting `raw global javascript`.
+
+## [0.5.109] - 2020-03-11
 ### Changed
 - Deleting an item in a table now undefines `there_is_another` when it is
   `True`.

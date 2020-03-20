@@ -2178,6 +2178,10 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         non_progressive = True
     else:
         non_progressive = False
+    if hasattr(nav, 'auto_open') and nav.auto_open:
+        auto_open = True
+    else:
+        auto_open = False
     if the_language not in nav.sections:
         the_language = DEFAULT_LANGUAGE
     if the_language not in nav.sections:
@@ -2338,7 +2342,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                         suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + str(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
-                if currently_active or current_is_within:
+                if currently_active or current_is_within or auto_open:
                     suboutput = '<div class="' + inner_div_class + '">' + suboutput
                 else:
                     suboutput = '<div style="display: none;" class="danotshowing ' + inner_div_class + '">' + suboutput
@@ -5693,6 +5697,7 @@ def index(action_argument=None):
         the_location = None
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
+    old_user_dict = None
     if '_back_one' in post_data and steps > 1:
         ok_to_go_back = True
         if STRICT_MODE:
@@ -5709,8 +5714,6 @@ def index(action_argument=None):
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info), tracker=user_dict['_internal']['tracker'])
             post_data = dict()
             disregard_input = True
-    else:
-        old_user_dict = None
     known_varnames = dict()
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
@@ -9361,7 +9364,7 @@ def index(action_argument=None):
           var prev = $(this).prev();
           if (prev && !prev.hasClass('active')){
             var toggler;
-            if ($(box).hasClass('notshowing')){
+            if ($(box).hasClass('danotshowing')){
               toggler = $('<a href="#" class="toggler" role="button" aria-pressed="false">');
               $('<i class="fas fa-caret-right">').appendTo(toggler);
             }
@@ -9379,7 +9382,7 @@ def index(action_argument=None):
                   $(this).attr('data-icon', 'caret-right');
                   $(box).hide();
                   $(oThis).attr('aria-pressed', 'false');
-                  $(box).toggleClass('notshowing');
+                  $(box).toggleClass('danotshowing');
                 }
                 else if ($(this).attr('data-icon') == 'caret-right'){
                   $(this).removeClass('fa-caret-right');
@@ -9387,7 +9390,7 @@ def index(action_argument=None):
                   $(this).attr('data-icon', 'caret-down');
                   $(box).show();
                   $(oThis).attr('aria-pressed', 'true');
-                  $(box).toggleClass('notshowing');
+                  $(box).toggleClass('danotshowing');
                 }
               });
               e.stopPropagation();

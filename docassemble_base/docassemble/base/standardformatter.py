@@ -1784,7 +1784,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         var n = 0;
         if ($(this).data('disableothers')){
           var id_list = JSON.parse(atob($(this).data('disableothers')));
-          var n = id_list.length;
+          n = id_list.length;
         }
         if (n){
           for(var i = 0; i < n; ++i){

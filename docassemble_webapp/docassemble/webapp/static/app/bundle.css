@@ -640,26 +640,26 @@ a.danohover:hover {
     white-space: normal;
 }
 
-button.btn-da-custom {
+.btn-da-custom {
     width: 8em;
     height: 8em;
     text-align: center;
     vertical-align: middle;
 }
 
-button.btn-da-custom svg {
+.btn-da-custom svg {
     width: 4em !important;
     height: 4em !important;
     text-align: center;
     vertical-align: middle;
 }
 
-button.btn-da-custom span:first-of-type::after {
+.btn-da-custom span:first-of-type::after {
     content: "";
     display: block;
 }
 
-button.btn-da-custom:focus {
+.btn-da-custom:focus {
     outline: 1px dotted !important;
 }
 
@@ -2705,7 +2705,7 @@ tr:first-child .datableup, tr:last-child .databledown {
     cursor: pointer;
 }
 
-button.da-wrap-toggle {
+.da-wrap-toggle {
     float: right;
 }
 

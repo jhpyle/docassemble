@@ -145,6 +145,7 @@ do
          "$file" = "sections-keywords-review" -o \
          "$file" = "sections-keywords-set-sections" -o \
 	 "$file" = "sections-non-progressive" -o \
+         "$file" = "sections-auto-open" -o \
          "$file" = "centered" -o \
          "$file" = "mainpage-demo-parts" -o \
          "$file" = "setparts-demo" -o \
