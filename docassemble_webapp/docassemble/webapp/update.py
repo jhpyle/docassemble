@@ -100,7 +100,7 @@ def check_for_updates(doing_startup=False):
     num_deleted = Package.query.filter_by(name='distutils2').delete()
     if num_deleted > 0:
         db.session.commit()
-    sys.stderr.write("check_for_updates: 1\n")
+    sys.stderr.write("check_for_updates: 1 after " + str(time.time() - start_time) + " seconds\n")
     installed_packages = get_installed_distributions()
     for package in installed_packages:
         here_already[package.key] = package.version
@@ -186,7 +186,7 @@ def check_for_updates(doing_startup=False):
             packages[package.id] = package
             #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type after " + str(time.time() - start_time) + " seconds\n")
             #print("Found a package " + package.name)
-    sys.stderr.write("check_for_updates: 4\n")
+    sys.stderr.write("check_for_updates: 4 after " + str(time.time() - start_time) + " seconds\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
             #sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled after " + str(time.time() - start_time) + " seconds\n")
@@ -326,55 +326,83 @@ def update_versions():
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
         if package.name in package_by_name:
             continue
-        package_by_name[package.name] = package
+        package_by_name[package.name] = Object(id=package.id, packageversion=package.packageversion, name=package.name)
     installed_packages = get_installed_distributions()
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
                 install_row = Install.query.filter_by(hostname=hostname, package_id=package_by_name[package.key].id).first()
                 install_row.packageversion = package.version
-                db.session.commit()
             if package.version != package_by_name[package.key].packageversion:
                 package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).with_for_update().first()
                 package_row.packageversion = package.version
-                db.session.commit()
+    db.session.commit()
     sys.stderr.write("update_versions: ended after " + str(time.time() - start_time) + "\n")
     return
+
+def get_home_page_dict():
+    from docassemble.base.config import daconfig
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
+    FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor), 'site-packages')
+    home_page = dict()
+    for d in os.listdir(FULL_PACKAGE_DIRECTORY):
+        if not d.startswith('docassemble.'):
+            continue
+        metadata_path = os.path.join(d, 'METADATA')
+        if os.path.isfile(metadata_path):
+            name = None
+            url = None
+            with open(metadata_path, 'rU', encoding='utf-8') as fp:
+                for line in fp:
+                    if line.startswith('Name: '):
+                        name = line[6:]
+                    elif line.startswith('Home-page: '):
+                        url = line[11:]
+                        break
+            if name:
+                home_page[name.lower()] = url
+    return home_page
 
 def add_dependencies(user_id):
     start_time = time.time()
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     sys.stderr.write("add_dependencies: starting\n")
-    from docassemble.base.config import hostname, daconfig
+    from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
-    #docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
-    package_by_name = dict()
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if package.name in package_by_name:
-            continue
-        package_by_name[package.name] = package
+    packages_known = set()
+    for package in Package.query.filter_by(active=True).all():
+        packages_known.add(package.name)
     installed_packages = get_installed_distributions()
+    home_pages = None
+    packages_to_add = list()
     for package in installed_packages:
-        if package.key in package_by_name:
+        if package.key in packages_known:
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
-        pip_info = get_pip_info(package.key)
-        #sys.stderr.write("Home page of " + str(package.key) + " is " + str(pip_info['Home-page']) + "\n")
         Package.query.filter_by(name=package.key).delete()
+        packages_to_add.append(package)
+    if len(packages_to_add):
         db.session.commit()
-        package_auth = PackageAuth(user_id=user_id)
-        if package.key.startswith('docassemble.') and pip_info['Home-page'] is not None and re.search(r'/github.com/', pip_info['Home-page']):
-            package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=pip_info['Home-page'], packageversion=package.version, dependency=True)
-        else:
-            package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
-        db.session.add(package_entry)
-        db.session.commit()
-        install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
-        db.session.add(install)
-        db.session.commit()
+        for package in packages_to_add:
+            package_auth = PackageAuth(user_id=user_id)
+            if package.key.startswith('docassemble.'):
+                if home_pages is None:
+                    home_pages = get_home_page_dict()
+                home_page = home_pages.get(package.key.lower(), None)
+                if home_page is not None and re.search(r'/github.com/', home_page):
+                    package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=home_page, packageversion=package.version, dependency=True)
+                else:
+                    package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+            else:
+                package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+            db.session.add(package_entry)
+            db.session.commit()
+            install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
+            db.session.add(install)
+            db.session.commit()
     sys.stderr.write("add_dependencies: ending after " + str(time.time() - start_time) + " seconds\n")
     return
 
