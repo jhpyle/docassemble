@@ -43,11 +43,13 @@ def fix_fnctl():
         pass
 
 def remove_inactive_hosts():
-    from docassemble.base.config import hostname
-    from docassemble.webapp.app_object import app
-    from docassemble.webapp.db_object import db
-    from docassemble.webapp.core.models import Supervisors
+    start_time = time.time()
+    sys.stderr.write("remove_inactive_hosts: starting\n")
     if USING_SUPERVISOR:
+        from docassemble.base.config import hostname
+        from docassemble.webapp.app_object import app
+        from docassemble.webapp.db_object import db
+        from docassemble.webapp.core.models import Supervisors
         to_delete = set()
         for host in Supervisors.query.all():
             if host.hostname == hostname:
@@ -60,6 +62,7 @@ def remove_inactive_hosts():
                 to_delete.add(host.id)
         for id_to_delete in to_delete:
             Supervisors.query.filter_by(id=id_to_delete).delete()
+    sys.stderr.write("remove_inactive_hosts: ended after " + str(time.time() - start_time) + " seconds\n")
 
 class DummyPackage(object):
     def __init__(self, name):
@@ -68,6 +71,7 @@ class DummyPackage(object):
         self.limitation = None
 
 def check_for_updates(doing_startup=False):
+    start_time = time.time()
     sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
@@ -76,7 +80,7 @@ def check_for_updates(doing_startup=False):
     ok = True
     here_already = dict()
     results = dict()
-    sys.stderr.write("check_for_updates: 0.5\n")
+    sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
 
     num_deleted = Package.query.filter_by(name='psycopg2').delete()
     if num_deleted > 0:
@@ -171,34 +175,34 @@ def check_for_updates(doing_startup=False):
     uninstalled_packages = dict()
     logmessages = ''
     package_by_name = dict()
-    sys.stderr.write("check_for_updates: 2\n")
+    sys.stderr.write("check_for_updates: 2 after " + str(time.time() - start_time) + " seconds\n")
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
-        sys.stderr.write("check_for_updates: database includes a package called " + package.name + ".\n")
+        #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
     # packages is what is supposed to be installed
-    sys.stderr.write("check_for_updates: 3\n")
+    sys.stderr.write("check_for_updates: 3 after " + str(time.time() - start_time) + " seconds\n")
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
-            sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type.\n")
+            #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type after " + str(time.time() - start_time) + " seconds\n")
             #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4\n")
     for package in Package.query.filter_by(active=False).all():
         if package.name not in package_by_name:
-            sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled.\n")
+            #sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled after " + str(time.time() - start_time) + " seconds\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
-    sys.stderr.write("check_for_updates: 5\n")
+    sys.stderr.write("check_for_updates: 5 after " + str(time.time() - start_time) + " seconds\n")
     for install in Install.query.filter_by(hostname=hostname).all():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
-            sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled.\n")
+            sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled after " + str(time.time() - start_time) + " seconds\n")
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
-    sys.stderr.write("check_for_updates: 6\n")
+    sys.stderr.write("check_for_updates: 6 after " + str(time.time() - start_time) + " seconds\n")
     for auth in PackageAuth.query.filter_by(authtype='owner').all():
         package_owner[auth.package_id] = auth.user_id
-    sys.stderr.write("check_for_updates: 7\n")
+    sys.stderr.write("check_for_updates: 7 after " + str(time.time() - start_time) + " seconds\n")
     for package in packages.values():
         if package.id not in installs and package.name in here_already:
             sys.stderr.write("check_for_updates: package " + package.name + " here already.  Writing an Install record for it.\n")
@@ -208,40 +212,40 @@ def check_for_updates(doing_startup=False):
             changed = True
     if changed:
         db.session.commit()
-    sys.stderr.write("check_for_updates: 8\n")
+    sys.stderr.write("check_for_updates: 8 after " + str(time.time() - start_time) + " seconds\n")
     for package in packages.values():
         #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
         #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
-            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + str(package.packageversion) + ", is ahead of the installed version, " + str(installs[package.id].packageversion) + "\n")
+            sys.stderr.write("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + str(package.packageversion) + ", is ahead of the installed version, " + str(installs[package.id].packageversion) + " after " + str(time.time() - start_time) + " seconds\n")
             new_version_needed = True
         else:
             new_version_needed = False
         #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
         # Check for missing local packages
         if (package.name not in here_already) and (package.id in installs):
-            sys.stderr.write("check_for_updates: the package " + package.name + " is supposed to be installed on this server, but was not detected.\n")
+            sys.stderr.write("check_for_updates: the package " + package.name + " is supposed to be installed on this server, but was not detected after " + str(time.time() - start_time) + " seconds\n")
             package_missing = True
         else:
             package_missing = False
         if package.id in installs and package.version > installs[package.id].version:
-            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + str(package.version) + " but the installed version has version " + str(installs[package.id].version) + ".\n")
+            sys.stderr.write("check_for_updates: the package " + package.name + " has internal version " + str(package.version) + " but the installed version has version " + str(installs[package.id].version) + " after " + str(time.time() - start_time) + " seconds\n")
             package_version_greater = True
         else:
             package_version_greater = False
         if package.id not in installs:
-            sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server.\n")
+            sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server after " + str(time.time() - start_time) + " seconds\n")
         if package.id not in installs or package_version_greater or new_version_needed or package_missing:
             to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
-    sys.stderr.write("check_for_updates: 9\n")
+    sys.stderr.write("check_for_updates: 9 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_uninstall:
         #sys.stderr.write("Going to uninstall a package: " + package.name + "\n")
         if package.name in uninstall_done:
-            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled" + "\n")
+            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled after " + str(time.time() - start_time) + " seconds" + "\n")
             continue
         if package.name not in here_already:
-            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + "\n")
+            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because not installed" + " after " + str(time.time() - start_time) + " seconds\n")
             returnval = 1
             newlog = ''
         else:
@@ -258,9 +262,9 @@ def check_for_updates(doing_startup=False):
             results[package.name] = 'pip uninstall command returned failure code'
             ok = False
     packages_to_delete = list()
-    sys.stderr.write("check_for_updates: 10\n")
+    sys.stderr.write("check_for_updates: 10 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_install:
-        sys.stderr.write("check_for_updates: going to install a package: " + package.name + "\n")
+        sys.stderr.write("check_for_updates: going to install a package: " + package.name + "after " + str(time.time() - start_time) + " seconds\n")
         # if doing_startup and package.name.startswith('docassemble') and package.name in here_already:
         #     #adding this because of unpredictability of installing new versions of docassemble
         #     #just because of a system restart.
@@ -268,26 +272,26 @@ def check_for_updates(doing_startup=False):
         #     continue
         returnval, newlog = install_package(package)
         logmessages += newlog
-        sys.stderr.write("check_for_updates: return value was " + str(returnval) + "\n")
+        sys.stderr.write("check_for_updates: return value was " + str(returnval) + " after " + str(time.time() - start_time) + " seconds\n")
         if returnval != 0:
-            sys.stderr.write("Return value was not good" + "\n")
+            sys.stderr.write("Return value was not good" + " after " + str(time.time() - start_time) + " seconds\n")
             ok = False
         #pip._vendor.pkg_resources._initialize_master_working_set()
         pip_info = get_pip_info(package.name)
         real_name = pip_info['Name']
-        sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n")
+        sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n after " + str(time.time() - start_time) + " seconds")
         if real_name is None:
             results[package.name] = 'install failed'
             ok = False
             if package.name not in here_already:
-                sys.stderr.write("check_for_updates: removing package entry for " + package.name + "\n")
+                sys.stderr.write("check_for_updates: removing package entry for " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
                 packages_to_delete.append(package)
         elif returnval != 0:
             results[package.name] = 'pip install command returned failure code'
         else:
             results[package.name] = 'pip install command returned success code.  See log for details.'
             if real_name != package.name:
-                sys.stderr.write("check_for_updates: changing name" + "\n")
+                sys.stderr.write("check_for_updates: changing name" + " after " + str(time.time() - start_time) + " seconds\n")
                 package.name = real_name
             if package.id in installs:
                 install = installs[package.id]
@@ -299,15 +303,16 @@ def check_for_updates(doing_startup=False):
             update_versions()
             add_dependencies(package_owner.get(package.id, 1))
             update_versions()
-    sys.stderr.write("check_for_updates: 11\n")
+    sys.stderr.write("check_for_updates: 11 after " + str(time.time() - start_time) + " seconds\n")
     for package in packages_to_delete:
         db.session.delete(package)
-    sys.stderr.write("check_for_updates: 12\n")
+    sys.stderr.write("check_for_updates: 12 after " + str(time.time() - start_time) + " seconds\n")
     db.session.commit()
-    sys.stderr.write("check_for_updates: finished uninstalling and installing\n")
+    sys.stderr.write("check_for_updates: finished uninstalling and installing after " + str(time.time() - start_time) + " seconds\n")
     return ok, logmessages, results
 
 def update_versions():
+    start_time = time.time()
     sys.stderr.write("update_versions: starting" + "\n")
     from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
@@ -333,9 +338,11 @@ def update_versions():
                 package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).with_for_update().first()
                 package_row.packageversion = package.version
                 db.session.commit()
+    sys.stderr.write("update_versions: ended after " + str(time.time() - start_time) + "\n")
     return
 
 def add_dependencies(user_id):
+    start_time = time.time()
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     sys.stderr.write("add_dependencies: starting\n")
     from docassemble.base.config import hostname, daconfig
@@ -368,7 +375,7 @@ def add_dependencies(user_id):
         install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
         db.session.add(install)
         db.session.commit()
-    sys.stderr.write("add_dependencies: ending\n")
+    sys.stderr.write("add_dependencies: ending after " + str(time.time() - start_time) + " seconds\n")
     return
 
 def fix_names():
@@ -520,6 +527,7 @@ class Object(object):
     pass
 
 def get_installed_distributions():
+    start_time = time.time()
     sys.stderr.write("get_installed_distributions: starting\n")
     results = list()
     try:
@@ -537,7 +545,7 @@ def get_installed_distributions():
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
-    sys.stderr.write("get_installed_distributions: ending\n")
+    sys.stderr.write("get_installed_distributions: ending after " + str(time.time() - start_time) + " seconds\n")
     #sys.stderr.write(repr([x.key for x in results]) + "\n")
     return results
 

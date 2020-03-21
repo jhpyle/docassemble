@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.112] - 2020-03-
+### Fixed
+- Bug with `restrict input variables` and attachment e-mailing and
+  downloading.
+
 ## [0.5.111] - 2020-03-20
 ### Added
 - The `auto open` option for the `sections` block.

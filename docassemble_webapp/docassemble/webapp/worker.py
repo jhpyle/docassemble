@@ -933,7 +933,10 @@ def email_attachments(user_code, email_address, attachment_info, language):
                     sys.stderr.write("Finished sending\n")
                     success = True
                 except Exception as errmess:
-                    sys.stderr.write(str(errmess) + "\n")
+                    try:
+                        sys.stderr.write(str(errmess.__class__.__name__) + ": " + str(errmess) + "\n")
+                    except:
+                        sys.stderr.write("Error of type" + str(errmess.__class__.__name__) + " that could not be displayed\n")
                     success = False
             if success:
                 return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')

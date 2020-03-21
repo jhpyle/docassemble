@@ -1623,6 +1623,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 <div id="dacollapseOne" class="collapse show" aria-labelledby="daheadingOne">
                   <div class="card-body">
                     <form aria-labelledby="daheadingOne" action=\"""" + root + """\" id="daemailform" class="form-horizontal" method="POST">
+                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>
                       <div class="form-group row"><label for="da_attachment_email_address" class="col-md-4 col-form-label da-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-md-8"><input alt=""" + fix_double_quote(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="da_attachment_email_address" value=""" + fix_double_quote(str(default_email)) + """/></div></div>"""
                 if editable_included:
                     output += """
@@ -1646,7 +1647,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 </div>
                 <div id="dacollapseTwo" class="collapse show" aria-labelledby="daheadingTwo">
                   <div class="card-body">
-                    <form aria-labelledby="daheadingTwo" action=\"""" + root + """\" id="dadownloadform" class="form-horizontal" method="POST">"""
+                    <form aria-labelledby="daheadingTwo" action=\"""" + root + """\" id="dadownloadform" class="form-horizontal" method="POST">
+                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>"""
                 if editable_included:
                     output += """
                       <div class="form-group row"><div class="col-md-12"><input alt=""" + fix_double_quote(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
