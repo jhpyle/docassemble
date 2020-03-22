@@ -23,4 +23,5 @@ es:
   "Back": "Atras"
   "Loading.  Please wait . . . ": "Cargando.  Espere, por favor."
   "You must sign your name to continue.": "Tiene que firmar antes de continuar."
-  "None of the above": "Ninguno"
+  "None of the above": "Ninguno",
+  "This field is required.": "Esta pregunta es requerida."
