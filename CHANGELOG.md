@@ -1,9 +1,18 @@
 # Change Log
 
-## [0.5.112] - 2020-03-
+## [1.0.0] - 2020-03-22
+### Changed
+- Switched to a different versioning system.  The `stable` branch on
+  GitHub will be version 1.0.  Patch versions within version 1.0
+  (1.0.1, 1.0.2, etc.) will be for bug fixes and security upgrades
+  only.  The `master` branch on GitHub will be version 1.1.  Patch
+  versions within version 1.1 will include bug fixes as well as
+  feature enhancements.
 ### Fixed
 - Bug with `restrict input variables` and attachment e-mailing and
   downloading.
+- `pip show` inefficiency unnecessarily slowed down initial start up
+  time.
 
 ## [0.5.111] - 2020-03-20
 ### Added
