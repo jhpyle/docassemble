@@ -58,7 +58,7 @@ setup(name='docassemble.demo',
       download_url='https://download.docassemble.org/docassemble-demo.tar.gz',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
-      install_requires = ['docassemble==0.5.111', 'docassemble.base==0.5.111', "python-dateutil==2.8.0"],
+      install_requires = ['docassemble==0.5.111', 'docassemble.base==0.5.111'],
       zip_safe = False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo'),
   )
