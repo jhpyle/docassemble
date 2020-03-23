@@ -16,6 +16,7 @@ import pickle
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
 from jinja2.runtime import UndefinedError
+from jinja2.exceptions import TemplateError
 
 import docassemble.base.pandoc
 import docassemble.base.pdftk
@@ -48,12 +49,256 @@ import types
 import requests
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 from requests.exceptions import RequestException
-
-from i18naddress import format_address
+import i18naddress
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status', 'verbatim', 'add_separators', 'DAWeb', 'DAWebError', 'json', 're']
+__all__ = [
+    'alpha',
+    'roman',
+    'item_label',
+    'ordinal',
+    'ordinal_number',
+    'comma_list',
+    'word',
+    'get_language',
+    'set_language',
+    'get_dialect',
+    'set_country',
+    'get_country',
+    'get_locale',
+    'set_locale',
+    'comma_and_list',
+    'need',
+    'nice_number',
+    'quantity_noun',
+    'currency_symbol',
+    'verb_past',
+    'verb_present',
+    'noun_plural',
+    'noun_singular',
+    'indefinite_article',
+    'capitalize',
+    'space_to_underscore',
+    'force_ask',
+    'force_gather',
+    'period_list',
+    'name_suffix',
+    'currency',
+    'static_image',
+    'title_case',
+    'url_of',
+    'process_action',
+    'url_action',
+    'get_info',
+    'set_info',
+    'get_config',
+    'prevent_going_back',
+    'qr_code',
+    'action_menu_item',
+    'from_b64_json',
+    'defined',
+    'define',
+    'value',
+    'message',
+    'response',
+    'json_response',
+    'command',
+    'single_paragraph',
+    'quote_paragraphs',
+    'location_returned',
+    'location_known',
+    'user_lat_lon',
+    'interview_url',
+    'interview_url_action',
+    'interview_url_as_qr',
+    'interview_url_action_as_qr',
+    'LatitudeLongitude',
+    'RoleChangeTracker',
+    'Name',
+    'IndividualName',
+    'Address',
+    'City',
+    'Event',
+    'Person',
+    'Thing',
+    'Individual',
+    'ChildList',
+    'FinancialList',
+    'PeriodicFinancialList',
+    'Income',
+    'Asset',
+    'Expense',
+    'Value',
+    'PeriodicValue',
+    'OfficeList',
+    'Organization',
+    'objects_from_file',
+    'send_email',
+    'send_sms',
+    'send_fax',
+    'map_of',
+    'selections',
+    'DAObject',
+    'DAList',
+    'DADict',
+    'DAOrderedDict',
+    'DASet',
+    'DAFile',
+    'DAFileCollection',
+    'DAFileList',
+    'DAStaticFile',
+    'DAEmail',
+    'DAEmailRecipient',
+    'DAEmailRecipientList',
+    'DATemplate',
+    'DAEmpty',
+    'DALink',
+    'last_access_time',
+    'last_access_delta',
+    'last_access_days',
+    'last_access_hours',
+    'last_access_minutes',
+    'returning_user',
+    'action_arguments',
+    'action_argument',
+    'timezone_list',
+    'as_datetime',
+    'current_datetime',
+    'date_difference',
+    'date_interval',
+    'year_of',
+    'month_of',
+    'day_of',
+    'dow_of',
+    'format_date',
+    'format_datetime',
+    'format_time',
+    'today',
+    'get_default_timezone',
+    'user_logged_in',
+    'interface',
+    'user_privileges',
+    'user_has_privilege',
+    'user_info',
+    'task_performed',
+    'task_not_yet_performed',
+    'mark_task_as_performed',
+    'times_task_performed',
+    'set_task_counter',
+    'background_action',
+    'background_response',
+    'background_response_action',
+    'background_error_action',
+    'us',
+    'DARedis',
+    'DACloudStorage',
+    'DAGoogleAPI',
+    'MachineLearningEntry',
+    'SimpleTextMachineLearner',
+    'SVMMachineLearner',
+    'RandomForestMachineLearner',
+    'set_live_help_status',
+    'chat_partners_available',
+    'phone_number_in_e164',
+    'phone_number_formatted',
+    'phone_number_is_valid',
+    'countries_list',
+    'country_name',
+    'write_record',
+    'read_records',
+    'delete_record',
+    'variables_as_json',
+    'all_variables',
+    'ocr_file',
+    'ocr_file_in_background',
+    'read_qr',
+    'get_sms_session',
+    'initiate_sms_session',
+    'terminate_sms_session',
+    'language_from_browser',
+    'device',
+    'interview_email',
+    'get_emails',
+    'plain',
+    'bold',
+    'italic',
+    'path_and_mimetype',
+    'states_list',
+    'state_name',
+    'subdivision_type',
+    'indent',
+    'raw',
+    'fix_punctuation',
+    'set_progress',
+    'get_progress',
+    'referring_url',
+    'run_python_module',
+    'undefine',
+    'invalidate',
+    'dispatch',
+    'yesno',
+    'noyes',
+    'split',
+    'showif',
+    'showifdef',
+    'phone_number_part',
+    'pdf_concatenate',
+    'set_parts',
+    'log',
+    'encode_name',
+    'decode_name',
+    'interview_list',
+    'interview_menu',
+    'server_capabilities',
+    'session_tags',
+    'include_docx_template',
+    'get_chat_log',
+    'get_user_list',
+    'get_user_info',
+    'set_user_info',
+    'get_user_secret',
+    'create_user',
+    'get_session_variables',
+    'set_session_variables',
+    'go_back_in_session',
+    'manage_privileges',
+    'start_time',
+    'zip_file',
+    'validation_error',
+    'DAValidationError',
+    'redact',
+    'forget_result_of',
+    're_run_logic',
+    'reconsider',
+    'action_button_html',
+    'url_ask',
+    'overlay_pdf',
+    'get_question_data',
+    'text_type',
+    'string_types',
+    'PY2',
+    'set_title',
+    'set_save_status',
+    'single_to_double_newlines',
+    'RelationshipTree',
+    'DAContext',
+    'DAOAuth',
+    'DAStore',
+    'explain',
+    'clear_explanations',
+    'explanation',
+    'set_status',
+    'get_status',
+    'verbatim',
+    'add_separators',
+    'DAWeb',
+    'DAWebError',
+    'json',
+    're',
+    'iso_country',
+    'assemble_docx'
+]
 
 #knn_machine_learner = DummyObject
 
@@ -1087,7 +1332,7 @@ class Address(DAObject):
         return super().init(*pargs, **kwargs)
     def __str__(self):
         return(str(self.block()))
-    def on_one_line(self, include_unit=False, omit_default_country=True, language=None):
+    def on_one_line(self, include_unit=False, omit_default_country=True, language=None, show_country=None):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
@@ -1112,6 +1357,11 @@ class Address(DAObject):
             output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + str(self.postal_code)
+        if show_country is None and hasattr(self, 'country') and self.country and ((not omit_default_country) or get_country() != self.country):
+            show_country = True
+        if show_country:
+            output += line_breaker + country_name(self._get_country())
+
         if hasattr(self, 'country') and self.country:
             if (not omit_default_country) or get_country() != self.country:
                 output += ", " + country_name(self.country)
@@ -1186,7 +1436,7 @@ class Address(DAObject):
                     'locality': ('city', 'long_name'),
                     'neighborhood': ('neighborhood', 'long_name'),
                     'post_box': ('post_box', 'long_name'),
-                    'postal_code': ('zip', 'long_name'),
+                    'postal_code': ('postal_code', 'long_name'),
                     'postal_code_prefix': ('postal_code_prefix', 'long_name'),
                     'postal_code_suffix': ('postal_code_suffix', 'long_name'),
                     'postal_town': ('postal_town', 'long_name'),
@@ -1222,7 +1472,7 @@ class Address(DAObject):
                     'locality': 'city',
                     'neighborhood': 'neighborhood',
                     'post_box': 'post_box',
-                    'postal_code': 'zip',
+                    'postal_code': 'postal_code',
                     'postal_code_prefix': 'postal_code_prefix',
                     'postal_code_suffix': 'postal_code_suffix',
                     'postal_town': 'postal_town',
@@ -1315,50 +1565,33 @@ class Address(DAObject):
         self.norm = the_norm
         self.norm_long = the_norm_long
         return True
-    def block(self, name=None, company_name=None):
-        """Returns the address formatted as a block, as in a mailing.
-        Attempts to properly format based on country code. Otherwise,
-        falls back on US address formatting rules."""
-        if self.city_only or not hasattr(self, 'country'):
-            return self._naive_block()
-        else:        
-            if this_thread.evaluation_context == 'docx':
-                line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
-            else:
-                line_breaker = " [NEWLINE] "        
+    def block(self, language=None, international=False, show_country=None):
+        """Returns the address formatted as a block, as in a mailing."""
+        if this_thread.evaluation_context == 'docx':
+            line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
+        else:
+            line_breaker = " [NEWLINE] "
+        if international:
             i18n_address = {}
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-                # Not sure if this is properly international, but someone should use `address` instead when street number does not come first
                 i18n_address['street_address'] = str(self.street_number) + " " + str(self.street)
             else:
                 i18n_address['street_address'] = str(self.address)
             the_unit = self.formatted_unit(language=language)
             if the_unit != '':
-                # street_address can be multiline, assume second line is for unit
                 i18n_address['street_address'] += '\n' + the_unit
             if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
                 i18n_address['city_area'] = str(self.sublocality_level_1)
             i18n_address['city'] = str(self.city)
             if hasattr(self, 'state') and self.state:
                 i18n_address['country_area'] = str(self.state)
-            if hasattr(self, 'zip'):
+            if hasattr(self, 'zip') and self.zip:
                 i18n_address['postal_code'] = str(self.zip)
             elif hasattr(self, 'postal_code') and self.postal_code:
                 i18n_address['postal_code'] = str(self.postal_code)
-            i18n_address['country_code'] = iso_country(self.country)
-            try:
-                formatted = format_address(i18n_address)
-            except ValueError: # One of the values isn't properly formatted for i18naddress
-                return self._naive_block()
-            return formatted.replace('\n',line_breaker)
-
-    def _naive_block(self, language=None):
-        """Returns the address formatted as a block, as in a mailing."""
+            i18n_address['country_code'] = self._get_country()
+            return i18naddress.format_address(i18n_address).replace('\n', line_breaker)
         output = ""
-        if this_thread.evaluation_context == 'docx':
-            line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
-        else:
-            line_breaker = " [NEWLINE] "
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
                 output += str(self.street_number) + " " + str(self.street) + line_breaker
@@ -1372,12 +1605,30 @@ class Address(DAObject):
         output += str(self.city)
         if hasattr(self, 'state') and self.state:
             output += ", " + str(self.state)
-        if hasattr(self, 'zip'):
+        if hasattr(self, 'zip') and self.zip:
             output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + str(self.postal_code)
+        if show_country is None and hasattr(self, 'country') and self.country and get_country() != self.country:
+            show_country = True
+        if show_country:
+            output += line_breaker + country_name(self._get_country())
         return(output)
-
+    def _get_country(self):
+        if hasattr(self, 'country') and isinstance(self.country, str):
+            country = self.country
+        else:
+            country = None
+        if not country:
+            country = get_country()
+        if not country:
+            country = 'US'
+        try:
+            country = iso_country(country)
+        except:
+            logmessage("Invalid country code " + repr(country))
+            country = 'US'
+        return country
     def formatted_unit(self, language=None, require=False):
         """Returns the unit, formatted appropriately"""
         if not hasattr(self, 'unit') and not hasattr(self, 'floor') and not hasattr(self, 'room'):
@@ -1425,13 +1676,29 @@ class Address(DAObject):
             output += " " + str(self.postal_code)
         return(output)
 
-def iso_country(country):
-    """Accept user-input country name and return either an ISO 3166-1 alpha-2 country code or empty string"""
+def iso_country(country, part='alpha_2'):
+    """Returns a best-guess ISO 3166-1 country information given a country
+    name.  The optional keyword parameter "part" can be alpha_2,
+    alpha_3, name, or official_name.  The default "part" is alpha_2.
+
+    """
     try:
-        country_guess = pycountry.countries.search_fuzzy(country)
-    except LookupError:
-        return '' # Safe to return an empty string here--better than invalid value
-    return next(iter(country_guess)).alpha_2
+        guess = pycountry.countries.search_fuzzy(country)
+        assert len(guess) > 0
+    except:
+        raise DAError("Invalid country: " + str(country))
+    if part == 'alpha_2':
+        return guess[0].alpha_2
+    elif part == 'alpha_3':
+        return guess[0].alpha_3
+    elif part == 'name':
+        return guess[0].name
+    elif part == 'numeric':
+        return guess[0].numeric
+    elif part == 'official_name':
+        return guess[0].official_name
+    else:
+        raise DAError('iso_country: unknown part')
 
 class City(Address):
     """A geographic address specific only to a city."""
@@ -2828,5 +3095,83 @@ def prevent_dependency_satisfaction(f):
         # except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
         #     raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
     return wrapper
+
+def assemble_docx(input_file, fields=None, output_path=None, output_format='docx', return_content=False, pdf_options=None):
+    import docassemble.base.parse
+    input_file = path_and_mimetype(input_file)[0]
+    if not (isinstance(input_file, str) and os.path.isfile(input_file)):
+        raise DAError("assemble_docx: input file did not exist")
+    if output_format not in ('docx', 'pdf', 'md'):
+        raise DAError("assemble_docx: invalid output format")
+    if output_path is None:
+        using_temporary_file = True
+        output_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + output_format, delete=False)
+        output_path = output_file.name
+    else:
+        using_temporary_file = False
+    the_fields = copy.copy(docassemble.base.functions.get_user_dict())
+    if isinstance(fields, dict):
+        the_fields.update(fields)
+    try:
+        docx_template = docassemble.base.file_docx.DocxTemplate(input_file)
+        docassemble.base.functions.set_context('docx', template=docx_template)
+        the_env = docassemble.base.parse.custom_jinja_env()
+        the_xml = docx_template.get_xml()
+        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', docassemble.base.parse.fix_quotes, the_xml)
+        the_xml = docx_template.patch_xml(the_xml)
+        parsed_content = the_env.parse(the_xml)
+        while True:
+            old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
+            docx_template.render(the_fields, jinja_env=docassemble.base.parse.custom_jinja_env())
+            if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                docx_template.save(new_template_file.name)
+                docx_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                docassemble.base.functions.this_thread.misc['docx_template'] = docx_template
+            else:
+                break
+        subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])
+        the_template_docx = docx_template.docx
+        for subdoc in subdocs:
+            docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+    except TemplateError as the_error:
+        if (not hasattr(the_error, 'filename')) or the_error.filename is None:
+            the_error.filename = os.path.basename(input_file)
+            raise the_error
+    docassemble.base.functions.reset_context()
+    if output_format == 'docx':
+        docx_template.save(output_path)
+    elif output_format == 'pdf':
+        temp_file = tempfile.NamedTemporaryFile()
+        docx_template.save(temp_file.name)
+        if not isinstance(pdf_options, dict):
+            pdf_options = dict()
+        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False))
+        if not result:
+            raise DAError("Error converting to PDF")
+    elif output_format == 'md':
+        temp_file = tempfile.NamedTemporaryFile()
+        docx_template.save(temp_file.name)
+        result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
+        if not result:
+            raise DAError("Unable to convert docx to Markdown")
+        shutil.copyfile(result.name, output_path)
+    if return_content:
+        if output_format == 'md':
+            with open(output_path, 'r', encoding='utf-8') as fp:
+                output = fp.read()
+        else:
+            with open(output_path, 'rb') as fp:
+                output = fp.read()
+        if using_temporary_file:
+            try:
+                output_file.close()
+                os.unlink(output_file.name)
+            except:
+                logmessage("assemble_docx: could not delete temporary file")
+        return output
+    if using_temporary_file:
+        return output_path
 
 from docassemble.base.oauth import DAOAuth

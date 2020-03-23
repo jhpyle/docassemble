@@ -1,6 +1,11 @@
 # Change Log
 
 ## [1.0.0] - 2020-03-22
+### Added
+- The `show_country` keyword parameter for the `.on_one_line()` and
+  `.block()` methods of the `Address` class.
+- The `international` keyword parameter for the `.block()` method of
+  the `Address` class.
 ### Changed
 - Switched to a different versioning system.  The `stable` branch on
   GitHub will be version 1.0.  Patch versions within version 1.0
@@ -8,6 +13,8 @@
   only.  The `master` branch on GitHub will be version 1.1.  Patch
   versions within version 1.1 will include bug fixes as well as
   feature enhancements.
+- The `omit_default_country` parameter of the `.on_one_line()` method
+  of the `Address` class is deprecated.
 ### Fixed
 - Bug with `restrict input variables` and attachment e-mailing and
   downloading.

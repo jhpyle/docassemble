@@ -3140,6 +3140,12 @@ class DAFile(DAObject):
         if input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
             import docassemble.base.pandoc
             docassemble.base.pandoc.convert_file(input_path, self.path(), input_extension, output_extension)
+        elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension == 'md':
+            import docassemble.base.pandoc
+            result = docassemble.base.pandoc.word_to_markdown(input_path, input_extension)
+            if result is None:
+                raise DAError("Could not convert file")
+            shutil.copyfile(result.name, self.path())
         elif input_extension in ("png", "jpg", "tif") and output_extension in ("png", "jpg", "tif"):
             the_image = Image.open(input_path)
             if input_extension == 'png':

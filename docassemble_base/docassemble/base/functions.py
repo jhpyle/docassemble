@@ -3499,17 +3499,17 @@ def value(var):
     while variable not in the_user_dict:
         frame = frame.f_back
         if frame is None:
-            force_ask(var, persistent=False)
+            force_ask(variable, persistent=False)
         if 'user_dict' in frame.f_locals:
             the_user_dict = eval('user_dict', frame.f_locals)
             if variable in the_user_dict:
                 break
             else:
-                force_ask(var, persistent=False)
+                force_ask(variable, persistent=False)
         else:
             the_user_dict = frame.f_locals
     if variable not in the_user_dict:
-        force_ask(var, persistent=False)
+        force_ask(variable, persistent=False)
     if len(components) == 1:
         return eval(variable, the_user_dict)
     cum_variable = ''
@@ -3525,11 +3525,11 @@ def value(var):
             try:
                 the_index = eval(elem[1], the_user_dict)
             except:
-                force_ask(var, persistent=False)
+                force_ask(elem[1], persistent=False)
             try:
                 the_cum_variable = eval(cum_variable, the_user_dict)
             except:
-                force_ask(var, persistent=False)
+                force_ask(cum_variable, persistent=False)
             if hasattr(the_cum_variable, 'instanceName') and hasattr(the_cum_variable, 'elements'):
                 cum_variable_elements = cum_variable + '.elements'
             else:
@@ -3542,7 +3542,7 @@ def value(var):
         try:
             result = eval(to_eval, the_user_dict)
         except:
-            force_ask(var, persistent=False)
+            force_ask(to_eval, persistent=False)
         if result:
             continue
         force_ask(var, persistent=False)

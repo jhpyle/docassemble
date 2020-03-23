@@ -438,6 +438,10 @@ def convert_file(in_file, out_file, input_extension, output_extension):
     from_file = os.path.join(tempdir, "file." + input_extension)
     to_file = os.path.join(tempdir, "file." + output_extension)
     shutil.copyfile(in_file, from_file)
+    if output_extension == 'md':
+        output_format = 'markdown'
+    else:
+        output_format = 'md'
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
     #logmessage("convert_to: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     tries = 0

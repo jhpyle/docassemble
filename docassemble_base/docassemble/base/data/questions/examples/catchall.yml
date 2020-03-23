@@ -32,4 +32,3 @@ subquestion: |
   Your name is ${ user_name }.
   
   You earn ${ currency(salary) } each year.
-  
