@@ -1644,6 +1644,7 @@ of the fax sending.  The object has the following methods:
   However, if there is a [Twilio] configuration error, it will be
   `'not-configured'`, and if no result is available, it will be
   `'no-information'`.
+* `.pages()` - this will be one of [Twilio]'s [fax status values].
 * `.info()` - this will be a [dictionary] containing the
   [status callback values] returned from [Twilio] (excluding the
   `AccountSid`).  If no result is available, this will be a
@@ -1734,6 +1735,26 @@ Returns the user's latitude and longitude as a tuple.
 See [`track_location`] and [`LatitudeLongitude`] for more information
 about how **docassemble** collects information about the user's
 location.
+
+## <a name="iso_country"></a>iso_country()
+
+The `iso_country()` function takes a country name or abbreviation as
+input and returns a two-character [ISO 3166-1 alpha-2] code or other
+[ISO 3166-1] information about a country.
+
+{% include side-by-side.html demo="iso-country" %}
+
+By default, it returns the [ISO 3166-1 alpha-2] country code, but it
+can return other things depending on the optional keyword parameter
+`part`, which can be set to one of the following values:
+
+* `'alpha_2'` (the default): returns the two-letter country code
+  (e.g., `US`).
+* `'alpha_3'`: Returns the three-letter country code (e.g., `'USA'`).
+* `'name'`: Returns the name of the country (e.g., `'United States'`).
+* `'numeric'`: Returns the three-digit country code, as text (e.g., `'840'`).
+* `'official_name'`: Returns a long-form name of the country (e.g.,
+  `'United States of America'`).
 
 ## <a name="countries_list"></a><a name="country_name"></a>countries_list() and country_name()
 
@@ -6161,6 +6182,93 @@ Moreover, the easiest way to pass "raw" values is to omit `field`,
 entirely, so that your DOCX file is [assembled] using your full set
 of interview variables.
 
+## <a name="assemble_docx"></a>assemble_docx()
+
+The `assemble_docx()` function does what an `attachment` does, except
+it is triggered by Python code and it does not create a `DAFile` in
+the document storage.
+
+This is an advanced function, so in the vast majority of
+circumstances, you should instead use an [`attachments`] block.
+
+The `assemble_docx()` takes a single positional parameter, which needs
+to be a file.  The format is flexible; it can be a [`DAFile`] or
+related object, or a template reference like
+`'data/templates/mytemplate.docx'`.
+
+The function returns a path to a temporary file in DOCX format,
+representing the assembled document.  This file needs to be processed
+right away, because it is not guaranteed to persist across HTTP
+requests.
+
+It also takes the following optional keyword parameters:
+
+* `fields`: this can be set to a [Python dictionary] in which the keys
+  are variable names and the values are the values of those variables.
+  This allows you to superimpose particular variables on top of the
+  interview answers for purposes of document assembly.  The values are
+  not saved in the interview answers.  The keys can only be simple
+  [Python] variable names (`favorite_fruit`, `type_of_document`),
+  not indices (`fruits[0]`, `favorite['fruit']`) or attributes
+  (`favorite_vegetable.color`, `apple.seeds`).
+* `output_path`: if you want the function to save a file to a
+  particular path instead of returning a path to a temporary file, set
+  `output_path` to the path to which you want `assemble_docx` to
+  write.
+* `output_format`: if you want the assembled document to be converted
+  to PDF, set `output_format` to `'pdf'`.  If you want it assembled to
+  [Markdown], set `output_format` to `'md'`.
+* `pdf_options`: if you are setting `output_format` to `'pdf'`, you
+  can also set options for the way the PDF conversion is conducted by
+  setting `pdf_options` to a [Python dictionary] with one or more of
+  the following keys: `pdfa` (boolean for whether PDF/A should be
+  created, `password` (a password for securing the PDF), `update_refs`
+  (if you want references to be updated in the DOCX file before
+  conversion), `tagged` (if you want LibreOffice to produce a tagged
+  PDF).  For more information about these options, see the [Documents]
+  section.
+* `return_content`: if you want the contents of the file to be
+  returned, instead of a file path, set `return_content` to `True`.
+
+Here is an example of an interview that uses `assembled_docx()` in a
+contract assembly interview.  All of the clauses of the contract are
+in the [`contract.docx`] DOCX template file, but they are written in
+such a way that they can be extracted from the DOCX file using
+`assembled_docx()` and converted into [Markdown].  Extracting clauses
+in [Markdown] format is useful because:
+
+* It allows you to manage your contract clauses as a list of
+  paragraphs, separated from the logic about whether the clauses
+  should be included in the contract or not.
+* It allows you to draft your contract clauses in a DOCX file, which
+  is the ideal format for writing, especially when formatting is used.
+* It allows you to show the text of the contract clauses in the web
+  browser, without needing to maintain the content for the contract
+  clauses in more than one place.
+* It allows you to give the user an opportunity to edit contract
+  clauses during the interview and then insert the clauses into the
+  DOCX file with formatting preserved (at least as far as the
+  formatting translates to and from [Markdown]).
+
+{% include demo-side-by-side.html demo="clauses" %}
+
+The [`contract.docx`] DOCX template is used for two very different
+purposes:
+
+1. Assembling a document containing a single clause.
+2. Assembling the contract itself.
+
+The template uses the variable `clause` to determine which clause to
+assemble, or whether to assemble the contract itself.  In the
+interview answers, `clause` is set to `None`, but the `fields`
+parameter passed to `assemble_docx()` will override that value for
+purposes of assembling a single clause.
+
+The DOCX file uses the `macro` feature of [Jinja2].  The DOCX template
+could be written without the use of `macro` definitions, but they are
+useful so that if you want, you can insert clauses into the contract
+without converting them to [Markdown] and back again.
+
 # <a name="yourown"></a>Writing your own functions
 
 There are two ways that you can write your own functions in
@@ -7045,7 +7153,6 @@ $(document).on('daPageLoad', function(){
 [`sms_number()`]: {{ site.baseurl }}/docs/objects.html#Person.sms_number
 [WhatsApp]: https://www.twilio.com/whatsapp
 [`suppress loading util`]: {{ site.baseurl }}/docs/initial.html#suppress loading util
-[ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [country calling code]: https://en.wikipedia.org/wiki/List_of_country_calling_codes
 [`get_interview_variables()`]: #js_get_interview_variables
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug
@@ -7062,3 +7169,7 @@ $(document).on('daPageLoad', function(){
 [language-specific functions]: #linguistic
 [`docassemble.base.util.update_word_collection()`]: #update_word_collection
 [`add-separators.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/add-separators.docx
+[`reconsider()`]: #reconsider
+[`contract.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/contract.docx
+[ISO 3166-1 alpha-2]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[ISO 3166-1]: https://en.wikipedia.org/wiki/ISO_3166-1

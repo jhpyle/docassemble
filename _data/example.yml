@@ -191,6 +191,40 @@
       required: False
     - zip: the_address.zip
       required: False
+"address-block": |-
+  objects:
+    address: Address
+  ---
+  question: |
+    What is your address?
+  fields:
+    - Address: address.address
+    - Unit: address.unit
+      required: False
+    - City: address.city
+    - State: address.state
+      required: False
+    - Postal Code: address.postal_code
+      required: False
+    - Country: address.country
+      code: |
+        countries_list()
+      required: False
+  ---
+  mandatory: True
+  question: Your address block
+  subquestion: |
+    Default:
+
+    ${ address }
+
+    Showing the country:
+
+    ${ address.block(show_country=True) }
+
+    International:
+
+    ${ address.block(international=True) }
 "age_in_years": |-
   question: |
     What is your date of birth?
@@ -5808,6 +5842,20 @@
 "inverse-navbar": |-
   features:
     inverse navbar: False
+"iso-country": |-
+  question: |
+    In what country do you live?
+  fields:
+    - Country: country
+  validation code: |
+    try:
+      country = iso_country(country)
+    except:
+      validation_error("That country does not exist.  Please try again.")
+  ---
+  mandatory: True
+  question: |
+    You live in ${ country_name(country) }.
 "item": "question: |\n  Describe the ${ ordinal(i) } fruit.\nfields:\n  - Name: fruit[i].name\n\
   \  - Color: fruit[i].color\n  - Seeds: fruit[i].seeds\n    datatype: integer\n---\n\
   question: |\n  Are there any more fruit?\nyesno: fruit.there_is_another\n---\nmandatory:\
@@ -9223,6 +9271,15 @@
   \ are currently in the\n  **${ nav.get_section(display=True) }**\n  section.\n\n\
   \  ${ nav }\n\n  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue:\
   \ continue"
+"sections-auto-open": |-
+  sections:
+    - Introduction
+    - About you:
+      - Contact info
+      - Demographics
+    - Preferences
+    - Conclusion
+  auto open: True
 "sections-horizontal": |-
   features:
     navigation: horizontal
@@ -11240,6 +11297,20 @@
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
+"clauses": "objects:\n  - markdown_clause: DADict\n  - edited_clause: DADict\n---\n\
+  code: |\n  markdown_clause[i] = assemble_docx('data/templates/contract.docx', fields={'clause':\
+  \ i}, output_format='md', return_content=True)\n---\ncode: |\n  # This variable\
+  \ is set to None \n  # so that the .docx file does \n  # not assemble a single clause\n\
+  \  # when it is assembled at the\n  # end.\n  clause = None\n---\nquestion: |\n\
+  \  A contract\nsubquestion: |\n  You are agreeing to a contract \n  with me.  Please\
+  \ continue.\ncontinue button field: welcome_screen\n---\nquestion: The clauses\n\
+  subquestion: |\n  The firstborn clause is:\n  \n  ${ quote_paragraphs(markdown_clause['firstborn'])\
+  \ }\n\n  The counterparts clause is:\n  \n  ${ quote_paragraphs(markdown_clause['counterparts'])\
+  \ }\ncontinue button field: clauses_shown\n---\nquestion: |\n  Make any necessary\
+  \ changes to the ${ i } clause.\nfields:\n  - no label: edited_clause[i]\n    default:\
+  \ ${ markdown_clause[i] }\n    input type: area\n---\nevent: final_screen\nquestion:\
+  \ |\n  Here is the contract.\nattachment:\n  name: Contract\n  docx template file:\
+  \ contract.docx"
 "collate": "objects:\n  - favorite: DADict.using(object_type=DAObject, keys=['fruit',\
   \ 'vegetable', 'fungus'], gathered=True)\n  - cover_page: DAList\n---\nquestion:\
   \ |\n  What is your favorite ${ i }?\nfields:\n  - \"${ capitalize(i) }\": favorite[i].variety\n\

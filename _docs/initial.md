@@ -1121,6 +1121,12 @@ time, set `progressive` to `False`:
 
 {% include side-by-side.html demo="sections-non-progressive" %}
 
+By default, subsections are not shown until the user has entered one
+of the subsections.  If you want subsections to be opened by default,
+set `auto open` to `True`.
+
+{% include side-by-side.html demo="sections-auto-open" %}
+
 # <a name="interview help"></a>Assisting users with `interview help`
 
 {% highlight yaml %}

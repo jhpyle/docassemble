@@ -3756,13 +3756,32 @@ An `Address` has the following text attributes:
 * `country`: e.g., 'US' ([ISO 3166-1 alpha-2] format)
 * `city_only`: defaults to `False`.  See [`City`], below.
 
+Instead of `zip`, you can use `postal_code`.
+
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
 
 If you refer to an address in a [Mako] template, it returns `.block()`.
 
 <a name="Address.block"></a> The `.block()` method returns a formatted
-address.  The attribute `city` is needed.
+address.  At a minimum, the attribute `city` is required.
+
+{% include side-by-side.html demo="address-block" %}
+
+The optional keyword argument `language` will affect
+the translation of the word "Unit" if the address contains a suite
+number like `'2000'`.  (See the
+[`.formatted_unit()`](#Address.formatted_unit) method.)
+
+The optional keyword argument `show_country` can be set to `True` if
+you always want the country to be shown.  Set it to `False` if you
+never want the country to be shown.  The default value is `None`,
+which means the country is shown only if the `.country` attribute of
+the address differs from the default country.
+
+The optional keyword argument `international` can be set to `True` if
+you want the address to be formatted according to [Google's
+internationalization standards].
 
 <a name="Address.formatted_unit"></a> The `.formatted_unit()` method
 returns the `.unit` attribute (or the `.floor` or `.room`) attributes,
@@ -3773,7 +3792,8 @@ default, if the `.unit` attribute is not defined, this method will
 return `''`.  However, if it is called as
 `.formatted_unit(require=True)` and neither `.unit` nor `.floor` nor
 `.room` is defined, it will seek the definition of the `unit`
-attribute.
+attribute.  It takes an optional keyword argument `language`, which
+will affect the translation of the word "Unit."
 
 <a name="Address.geolocate"></a> The `.geolocate()` method determines
 the latitude and longitude of the address and stores it in the
@@ -3914,9 +3934,10 @@ It takes two optional keyword parameters:
 
 * `include_unit` - Default value is `False`.  Set to `True` if you want
   the unit number to be included.
-* `omit_default_country` - Default value is `True`.  Set to `False` if
-  you want the country to be included.  Normally, the country is
-  included only if it is different from the default country.
+* `show_country` - Default value is `None`.  Set to `True` if you
+  always want the country to be shown.  Set to `False` if you never
+  want the country to be shown.  Set to `None` if you want the country
+  to be shown only if the `.country` differs from the default country.
 
 ### <a name="address autocomplete"></a>Address autocomplete
 
@@ -6192,3 +6213,4 @@ the `_uid` of the table rather than the `id`.
 [API]: {{ site.baseurl }}/docs/api.html
 [`response()`]: {{ site.baseurl }}/docs/functions.html#response
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
+[Google's internationalization standards]: https://github.com/mirumee/google-i18n-address

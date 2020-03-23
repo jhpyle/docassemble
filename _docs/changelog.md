@@ -4,6 +4,44 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.0.0](https://github.com/jhpyle/docassemble/releases/tag/v1.0.0) - 2020-03-22
+
+### Added
+- The `show_country` keyword parameter for the `.on_one_line()` and
+  `.block()` methods of the `Address` class.
+- The `international` keyword parameter for the `.block()` method of
+  the `Address` class.
+
+### Changed
+- Switched to a different versioning system.  The `stable` branch on
+  GitHub will be version 1.0.  Patch versions within version 1.0
+  (1.0.1, 1.0.2, etc.) will be for bug fixes and security upgrades
+  only.  The `master` branch on GitHub will be version 1.1.  Patch
+  versions within version 1.1 will include bug fixes as well as
+  feature enhancements.
+- The `omit_default_country` parameter of the `.on_one_line()` method
+  of the `Address` class is deprecated.
+
+### Fixed
+- Bug with `restrict input variables` and attachment e-mailing and
+  downloading.
+- `pip show` inefficiency unnecessarily slowed down initial start up
+  time.
+
+## [0.5.111](https://github.com/jhpyle/docassemble/releases/tag/v0.5.111) - 2020-03-20
+
+### Added
+- The `auto open` option for the `sections` block.
+- The `pages()` method for Twilio fax status.
+
+### Fixed
+- The caret next to automatically closed subsections in the section
+  navigation bar defaulted to the wrong setting.
+- The `received()` method of the fax send status did not correctly
+  respond `True` when the fax was in `'delivered'` status.
+- Error message when clicking the back button under certain
+  circumstances.
+
 ## [0.5.110](https://github.com/jhpyle/docassemble/releases/tag/v0.5.110) - 2020-03-17
 
 ### Fixed
