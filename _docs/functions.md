@@ -5986,8 +5986,8 @@ def get_conn():
     dbconfig = get_config('db')
     return psycopg2.connect(database=dbconfig.get('name'),
                             user=dbconfig.get('user'),
-                            password=dbconfig.get('password')
-                            host=dbconfig.get('host')
+                            password=dbconfig.get('password'),
+                            host=dbconfig.get('host'),
                             port=dbconfig.get('port'))
 def some_function(id, thing):
     conn = get_conn()
