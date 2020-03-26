@@ -5991,7 +5991,7 @@ def get_conn():
                             port=dbconfig.get('port'))
 def some_function(id, thing):
     conn = get_conn()
-    cur = conn.get_cursor()
+    cur = conn.cursor()
     cur.execute("update foo set bar=%s where id=%s", (thing, id))
     conn.commit()
     cur.close()
