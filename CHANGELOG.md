@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.1] - 2020-03-25
+### Fixed
+- Deprecated use of access token in URL parameter when retrieving
+  branch listing from GitHub API when repository reference uses an
+  `oauth-basic` URL.
+
 ## [1.0.0] - 2020-03-22
 ### Added
 - The `show_country` keyword parameter for the `.on_one_line()` and
