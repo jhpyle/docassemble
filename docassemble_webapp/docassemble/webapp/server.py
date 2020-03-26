@@ -16088,14 +16088,14 @@ def get_git_branches():
     repo_name = request.args['url']
     m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
     if m:
-        access_token_part = '?access_token=' + m.group(1)
+        access_token = m.group(1)
     else:
-        access_token_part = ''
+        access_token = None
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
     try:
-        if github_auth and access_token_part == '':
+        if github_auth and access_token is None:
             storage = RedisCredStorage(app='github')
             credentials = storage.get()
             if not credentials or credentials.invalid:
@@ -16103,15 +16103,21 @@ def get_git_branches():
             http = credentials.authorize(httplib2.Http())
         else:
             http = httplib2.Http()
-        the_url = "https://api.github.com/repos/" + repo_name + '/branches' + access_token_part
+        the_url = "https://api.github.com/repos/" + repo_name + '/branches'
         branches = list()
-        resp, content = http.request(the_url, "GET")
+        if access_token:
+            resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
+        else:
+            resp, content = http.request(the_url, "GET")
         if int(resp['status']) == 200:
             branches.extend(json.loads(content.decode()))
             while True:
                 next_link = get_next_link(resp)
                 if next_link:
-                    resp, content = http.request(next_link, "GET")
+                    if access_token:
+                        resp, content = http.request(next_link, "GET", headers=dict(Authorization="token " + access_token))
+                    else:
+                        resp, content = http.request(next_link, "GET")
                     if int(resp['status']) != 200:
                         return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
                     else:
