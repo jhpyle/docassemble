@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.2] - 2020-03-25
+### Fixed
+- Fixed issue with incomplete pull request by dependabot.
+
 ## [1.0.1] - 2020-03-25
 ### Fixed
 - Deprecated use of access token in URL parameter when retrieving
