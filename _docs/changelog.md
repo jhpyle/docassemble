@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.0.3](https://github.com/jhpyle/docassemble/releases/tag/v1.0.3) - 2020-03-
+
+### Fixed
+- `update_ordinal_numbers()` and `update_ordinal_function` missing
+  from `docassemble.base.util`.
+
+## [1.0.2](https://github.com/jhpyle/docassemble/releases/tag/v1.0.2) - 2020-03-25
+
+### Fixed
+- Fixed issue with incomplete pull request by dependabot.
+
 ## [1.0.1](https://github.com/jhpyle/docassemble/releases/tag/v1.0.1) - 2020-03-25
 
 ### Fixed
