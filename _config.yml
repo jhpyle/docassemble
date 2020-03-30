@@ -12,12 +12,19 @@ github_username: jhpyle
 collections:
   docs:
     output: true
+  policies:
+    output: true
 defaults:
   - scope:
       path: "docs"
       type: docs
     values:
       layout: docs
+  - scope:
+      path: "policies"
+      type: policy
+    values:
+      layout: policy
 
 # Build settings
 markdown: kramdown

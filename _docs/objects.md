@@ -722,9 +722,9 @@ Other methods available on a `DAList` are:
   name="DASet.comma_and_list"></a>`comma_and_list()` - returns the
   items of the list run through the [`comma_and_list()`] function.
 * <a name="DAList.possessive"></a>`possessive()` - if the variable
-  name is `plaintiff` and the target is `"fish"`, returns "plaintiff's
-  fish" if there is one item in the list and "plaintiffs' fish" if
-  there is more than one item in the list.
+  name is `plaintiff` and the parameter is `"fish"`, returns
+  "plaintiff's fish" if there is one item in the list and "plaintiffs'
+  fish" if there is more than one item in the list.
 * <a name="DAList.pronoun"></a><a name="DADict.pronoun"></a><a
   name="DASet.pronoun"></a>`pronoun()` - returns a pronoun like "you,"
   "her," "him," or "them" "it", or "them," as appropriate, depending on the
@@ -3243,8 +3243,8 @@ The following methods can be used:
 
 ### <a name="Person.possessive"></a>`.possessive()`
 
-Calling `defendant.possessive('fish')` returns "ABC Corporation's fish" or
-"your fish" depending on whether `defendant` is the user.
+Calling `defendant.possessive('fish')` returns "ABC Corporation's
+fish" or "your fish" depending on whether `defendant` is the user.
   
 ### <a name="Person.identified"></a>`.identified()`
 
@@ -3496,9 +3496,10 @@ For an explanation of how [`.object_possessive()`] works, see the
 
 ### <a name="Individual.possessive"></a>`.possessive()`
 
-If the individual's name is "Adam Smith," this returns "Adam Smith's."
- But if the individual is the current user, this returns "your."  (See
- the [note above].)
+If `client` is an `Individual` and the individual's name is "Adam
+Smith," `client.possessive('orange')` returns "Adam Smith's orange."
+But if the individual is the current user, this returns "your."  (See
+the [note above].)
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 

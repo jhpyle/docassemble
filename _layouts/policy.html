@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+{%- include head.html %}
+  <body>
+{%- include header.html %}
+    <div class="container">
+      <div class="row mt-lg-4">
+	<div class="col-lg-12">
+	  <header>
+            <a style="float: right" target="_blank" href="{{site.github.repository_url}}/blob/gh-pages/{{page.path}}">Edit this page on GitHub <i class="fab fa-github-alt"></i></a>
+	    <h1 class="page-header">{{ page.title }}</h1>
+	  </header>
+	  <main id="main">
+	  {{ content }}
+	  </main>
+	</div>
+      </div>
+    </div>
+    <hr>
+{%- include footer.html %}
+{%- include google-analytics.html %}
+  </body>
+</html>
