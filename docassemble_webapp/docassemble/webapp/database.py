@@ -28,6 +28,8 @@ if dbuser is not None:
 if dbpassword is not None:
     connect_string += " password=" + dbpassword
 
+pool_pre_ping = daconfig.get('sql ping', False)
+
 alchemy_connect_string = ""
 if dbprefix is not None:
     alchemy_connect_string += dbprefix

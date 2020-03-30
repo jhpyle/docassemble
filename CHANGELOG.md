@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.0.3] - 2020-03-30
+### Fixed
+- `update_ordinal_numbers()` and `update_ordinal_function` missing
+  from `docassemble.base.util`.
+- `sql ping` workaround for SQL connections being cut off.
+
 ## [1.0.2] - 2020-03-25
 ### Fixed
 - Fixed issue with incomplete pull request by dependabot.

@@ -19,7 +19,7 @@ def create_app():
     app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
     #app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     #db = SQLAlchemy(app)
-    db = sqlalchemy.create_engine(alchemy_connect_string)
+    db = sqlalchemy.create_engine(alchemy_connect_string, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
     Base = declarative_base()
     Base.metadata.bind = db
     #app.wsgi_app = ProxyFix(app.wsgi_app)

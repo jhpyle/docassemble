@@ -976,7 +976,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     field_class += ' da-field-container-inputtype-dropdown'
             if field.number in status.helptexts:
                 helptext_start = '<a tabindex="0" class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(status.helptexts[field.number]) + '>'
-                helptext_end = ' <sup><i class="fas fa-question-circle"></i></sup></a>'
+                helptext_end = '&nbsp;<sup style="white-space: nowrap"><i class="fas fa-question-circle"></i></sup></a>'
             else:
                 helptext_start = ''
                 helptext_end = ''

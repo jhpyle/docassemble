@@ -17,9 +17,9 @@ def init_sqlalchemy():
     import docassemble.webapp.database
     url = docassemble.webapp.database.alchemy_connection_string()
     if url.startswith('postgresql'):
-        db = sqlalchemy.create_engine(url, client_encoding='utf8')
+        db = sqlalchemy.create_engine(url, client_encoding='utf8', pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
     else:
-        db = sqlalchemy.create_engine(url)
+        db = sqlalchemy.create_engine(url, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
     #meta = sqlalchemy.MetaData(bind=con, reflect=True)
     from sqlalchemy.orm import sessionmaker, relationship, backref
     Session = sessionmaker(bind=db)
