@@ -4,11 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.0.3](https://github.com/jhpyle/docassemble/releases/tag/v1.0.3) - 2020-03-
+## [1.0.3](https://github.com/jhpyle/docassemble/releases/tag/v1.0.3) - 2020-03-30
 
 ### Fixed
 - `update_ordinal_numbers()` and `update_ordinal_function` missing
   from `docassemble.base.util`.
+- `sql ping` workaround for SQL connections being cut off.
 
 ## [1.0.2](https://github.com/jhpyle/docassemble/releases/tag/v1.0.2) - 2020-03-25
 
