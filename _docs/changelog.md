@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.0.4](https://github.com/jhpyle/docassemble/releases/tag/v1.0.4) - 2020-03-31
+
+### Fixed
+- Error when `disable others` is used inside of a `show if` or `js
+  show if`.
+
 ## [1.0.3](https://github.com/jhpyle/docassemble/releases/tag/v1.0.3) - 2020-03-30
 
 ### Fixed

@@ -4,7 +4,7 @@ title: Data Privacy Policy
 short_title: Data Privacy
 ---
 
-## Application
+## Data privacy and the application
 
 **docassemble** is not software-as-a-service; it is just software.
 The **docassemble** software itself does not contain any code that
@@ -19,8 +19,14 @@ privacy depending on the choices of the implementer.
 **docassemble** contains a number of privacy features that benefit end
 user data privacy, such as:
 * Server-side encryption where the user's interview answers are
-  encrypted by the user's password; and
-* Password-based login system.
+  encrypted by the user's password.  The downside is that if a user
+  forgets their password, they are locked out of their answers.
+* Password-based login system.  There are also other authentication
+  mechanisms, but they diminish the security of server-side encryption
+  because the decryption key is stored inside the sever.
+* Role-based authorization system that allows administrators to assign
+  varying levels of permission to users.
+* Automatic banning of any IP addresses that try to guess passwords.
 
 **docassemble** contains a number of features that enable end users'
 the right to be forgotten, such as:
@@ -56,7 +62,7 @@ will endeavor to fix the issue as soon as possible.  Notification to
 users will be in the form of GitHub commit messages and changelog
 messages.
 
-## Development community
+## Data privacy and the development community
 
 The **docassemble** community collaborates in a number of ways:
 
@@ -83,12 +89,13 @@ will keep the content of those conversations private.
 
 Jonathan Pyle is the sole administrator of the [Slack group].  He is
 the only one with access to the e-mail addresses of members.  He does
-not back up or make copies of the e-mail addresses.
+not back up or make copies of the e-mail addresses and will not share
+the e-mail address list with third parties.
 
-A few APIs are enabled on the Slack group, such as an API that
-connects Slack with GitHub.  If an intruder obtains unauthorized
-access to the Slack group through an API, Jonathan Pyle will make best
-efforts to block the intruder's access.
+A few APIs are enabled on the Slack group, such as an API that posts
+messages in Slack when there is activity on GitHub.  If an intruder
+obtains unauthorized access to the Slack group through an API,
+Jonathan Pyle will make best efforts to block the intruder's access.
 
 If [Slack] itself suffers a data breach, such that e-mail addresses
 are exposed, Jonathan Pyle will post a message in the `#general`
