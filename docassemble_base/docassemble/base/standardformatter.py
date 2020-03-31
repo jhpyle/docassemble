@@ -1792,20 +1792,20 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
           for(var i = 0; i < n; ++i){
             var the_element_id = id_list[i].replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             if (theVal == null || theVal == ""){
-              daDisableIfNotHidden("#daform [name='" + the_element_id + "']");
-              $("#daform [name='" + the_element_id + "']").parent().parent().removeClass("dagreyedout");
+              daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", false);
+              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parent().parent().removeClass("dagreyedout");
             }
             else{
-              $("#daform [name='" + the_element_id + "']").prop("disabled", true);
-              $("#daform [name='" + the_element_id + "']").parent().parent().addClass("dagreyedout");
+              daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", true);
+              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parent().parent().addClass("dagreyedout");
             }
           }
         }
         else{
           if (theVal == null || theVal == ""){
-            daDisableIfNotHidden("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])");
-            daDisableIfNotHidden("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])");
-            daDisableIfNotHidden("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])");
+            daDisableIfNotHidden("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])", false);
+            daDisableIfNotHidden("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])", false);
+            daDisableIfNotHidden("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])", false);
             $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
             $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
             $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");

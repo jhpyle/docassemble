@@ -8864,11 +8864,11 @@ def index(action_argument=None):
           return false;
         }
       }
-      function daDisableIfNotHidden(query){
+      function daDisableIfNotHidden(query, value){
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif, .dajsshowif');
-          if (!(showIfParent.length && !$(showIfParent[0]).is(":visible"))){
-            $(this).prop("disabled", false);
+          if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
+            $(this).prop("disabled", value);
           }
         });
       }
@@ -10975,11 +10975,11 @@ def observer():
         daShowingSpinner = false;
         daSpinnerTimeout = null;
       }
-      function daDisableIfNotHidden(query){
+      function daDisableIfNotHidden(query, value){
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif, .dajsshowif');
-          if (!(showIfParent.length && !$(showIfParent[0]).is(":visible"))){
-            $(this).prop("disabled", false);
+          if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
+            $(this).prop("disabled", value);
           }
         });
       }

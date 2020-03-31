@@ -79,8 +79,13 @@ def set_text_area(step, value):
 def click_link_if_exists(step, link_name):
     do_wait()
     try:
-        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
-        world.browser.wait_for_it()
+        try:
+            world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+            world.browser.wait_for_it()
+        except:
+            link_name += ' '
+            world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+            world.browser.wait_for_it()
     except:
         pass
 
@@ -184,7 +189,11 @@ def click_button_post(step, choice):
 @step(r'I click the link "([^"]+)"')
 def click_link(step, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    try:
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
     world.browser.wait_for_it()
 
 @step(r'I select "([^"]+)" from the menu')
@@ -213,7 +222,11 @@ def click_back_to_question_button(step):
 @step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) link "([^"]+)"')
 def click_nth_link(step, ordinal, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+    try:
+        world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
     world.browser.wait_for_it()
 
 @step(r'I should see the phrase "([^"]+)"')
@@ -235,9 +248,16 @@ def not_see_phrase_sq(step, phrase):
 @step(r'I set "([^"]+)" to "([^"]*)"')
 def set_field(step, label, value):
     try:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
     except:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
+        label += " "
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
     #try:
     elem.clear()
     #except:
@@ -247,9 +267,16 @@ def set_field(step, label, value):
 @step(r'I set the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)" to "([^"]*)"')
 def set_nth_field(step, ordinal, label, value):
     try:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
     except:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
+        label += " "
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
     try:
         elem.clear()
     except:
@@ -282,7 +309,11 @@ def set_combobox_text(step, value):
 
 @step(r'I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
     found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:
@@ -293,7 +324,11 @@ def select_option(step, value, label):
 
 @step(r'I select "([^"]+)" as the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)"')
 def select_nth_option(step, value, ordinal, label):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
     found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:
@@ -317,7 +352,11 @@ def wait_seconds(step, seconds):
 
 @step(r'I should see that "([^"]+)" is "([^"]+)"')
 def value_of_field(step, label, value):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
     assert elem.get_attribute("value") == value
 
 @step(r'I set the text box to "([^"]*)"')
@@ -341,7 +380,11 @@ def set_text_box(step, num, value):
 
 @step(r'I click the "([^"]+)" option under "([^"]+)"')
 def set_mc_option_under(step, option, label):
-    div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    try:
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    except:
+        label += " "
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element_by_xpath('.//span[text()="' + option + '"]')
     except:
@@ -360,7 +403,11 @@ def set_mc_option(step, choice):
 
 @step(r'I click the option "([^"]+)" under "([^"]+)"')
 def set_mc_option_under_pre(step, option, label):
-    div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    try:
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    except:
+        label += " "
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element_by_xpath('.//span[text()="' + option + '"]')
     except:
@@ -417,4 +464,8 @@ def unfocus(step):
 @step(r'I click the final link "([^"]+)"')
 def finally_click_link(step, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    try:
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
