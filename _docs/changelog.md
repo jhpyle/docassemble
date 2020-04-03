@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.0.5](https://github.com/jhpyle/docassemble/releases/tag/v1.0.5) - 2020-04-02
+
+### Fixed
+- Apache initial certbot run used wrong syntax.
+- Synchronizing local updates to files inside projects on OneDrive failed.
+
 ## [1.0.4](https://github.com/jhpyle/docassemble/releases/tag/v1.0.4) - 2020-03-31
 
 ### Fixed
@@ -36,6 +42,7 @@ short_title: Change Log
   `.block()` methods of the `Address` class.
 - The `international` keyword parameter for the `.block()` method of
   the `Address` class.
+- The `assemble_docx()` function.
 
 ### Changed
 - Switched to a different versioning system.  The `stable` branch on
