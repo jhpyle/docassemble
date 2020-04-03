@@ -18588,7 +18588,10 @@ def logs():
             flash(word("The regular expression you provided could not be parsed."), 'error')
             default_filter_string = ''
         if default_filter_string == '':
-            lines = tailer.tail(open(filename, encoding='utf-8'), 30)
+            try:
+                lines = tailer.tail(open(filename, encoding='utf-8'), 30)
+            except:
+                lines = [word('Unable to read log file; please download.')]
         else:
             temp_file = tempfile.NamedTemporaryFile(mode='a+', encoding='utf-8')
             with open(filename, 'rU', encoding='utf-8') as fp:
@@ -18596,7 +18599,10 @@ def logs():
                     if reg_exp.search(line):
                         temp_file.write(line)
             temp_file.seek(0)
-            lines = tailer.tail(temp_file, 30)
+            try:
+                lines = tailer.tail(temp_file, 30)
+            except:
+                lines = [word('Unable to read log file; please download.')]
             temp_file.close()
         content = "\n".join(map(lambda x: x, lines))
     else:

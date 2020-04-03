@@ -1125,7 +1125,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 cd "${DA_ROOT}/letsencrypt"
                 export USE_PYTHON_3=1
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./certbot-auto renew --apache -d "${DAHOSTNAME}"
+                    ./certbot-auto renew --apache --cert-name "${DAHOSTNAME}"
                 else
                     ./certbot-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi

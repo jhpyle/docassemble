@@ -778,6 +778,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     item_data = copy.deepcopy(data)
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
         del item_data['fileSystemInfo']['createdDateTime']
+    item_data['name'] = re.sub(r'.*/', '', item_data['name'])
     sys.stderr.write("Patching with " + repr(item_data) + " to " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " and headers " + repr(headers) + "\n")
     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data, sort_keys=True))
     sys.stderr.write("PATCH request sent\n")
