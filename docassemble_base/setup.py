@@ -58,7 +58,7 @@ install_requires = [
     "backports.csv==1.0.7",
     "bcrypt==3.1.7",
     "beautifulsoup4==4.8.1",
-    "bleach==3.1.2",
+    "bleach==3.1.4",
     "blinker==1.4",
     "cachetools==3.1.1",
     "certifi==2019.9.11",
