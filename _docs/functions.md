@@ -1277,6 +1277,9 @@ By default, `url_of()` returns relative URLs, which begin with `/`.
 However, if you want a full URL, you can call, e.g., `url_of('root',
 _external=True)`.
 
+You can set `_attachment=True` if you want the user to download the
+file.  This only works when `url_of()` refers to a file.
+
 The `url_of()` function can also be used to format URLs with
 parameters.  For example, `url_of('https://example.com', query="Hello, world!")`
 becomes `https://example.com?query=Hello%2C+world%21`.

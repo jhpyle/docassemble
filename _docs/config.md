@@ -2311,6 +2311,17 @@ Other than setting `checkin interval` to `0`, it is probably not a
 good idea to reduce this value below `6000`.  If requests to modify a
 single interview come in too frequently, problems can occur.
 
+## <a name="stable version"></a>Using the bugfix-only version
+
+By default, when you press "Upgrade" on the [Package Management] page,
+you will download the latest version of **docassemble**.  If you want
+to stay on the 1.0.x series, which includes bug fixes only and no
+feature changes or new features, set `stable version` to `True`.
+
+{% highlight yaml %}
+stable version: True
+{% endhighlight %}
+
 ## <a name="docassemble git url"></a>Alternative GitHub location for docassemble
 
 The [Packages] feature updates the **docassemble** software directly

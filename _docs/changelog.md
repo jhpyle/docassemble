@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.0.6](https://github.com/jhpyle/docassemble/releases/tag/v1.0.6) - 2020-04-04
+
+### Added
+- The `stable version` Configuration directive.
+
 ## [1.0.5](https://github.com/jhpyle/docassemble/releases/tag/v1.0.5) - 2020-04-02
 
 ### Fixed
