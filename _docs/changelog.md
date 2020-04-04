@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.2](https://github.com/jhpyle/docassemble/releases/tag/v1.1.2) - 2020-04-04
+
+### Fixed
+- Issue with file names and `.url_for()`.
+
 ## [1.1.1](https://github.com/jhpyle/docassemble/releases/tag/v1.1.1) - 2020-04-04
 
 ### Added
