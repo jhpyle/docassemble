@@ -107,6 +107,8 @@ def populate_tables():
             package.giturl = None
             package.gitsubdir = None
             package.type = 'pip'
+            if daconfig.get('stable version', False):
+                package.limitation = '<1.1.0'
             db.session.commit()
     sys.stderr.write("populate_tables: ending after " + str(time.time() - start_time) + "\n")
     return

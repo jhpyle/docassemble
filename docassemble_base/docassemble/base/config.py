@@ -473,6 +473,8 @@ def load(**kwargs):
             daconfig['secretkey'] = env_translate('DASECRETKEY')
         if env_exists('DABACKUPDAYS'):
             override_config(daconfig, messages, 'backup days', 'DABACKUPDAYS')
+        if env_exists('DASTABLEVERSION'):
+            override_config(daconfig, messages, 'stable version', 'DASTABLEVERSION')
         if env_exists('SERVERADMIN'):
             override_config(daconfig, messages, 'server administrator email', 'SERVERADMIN')
         if env_exists('LOCALE'):
