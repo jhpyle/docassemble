@@ -13345,10 +13345,25 @@ def update_package():
     if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     if daconfig.get('stable version', False):
+        if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
+            stable_version = LooseVersion('1.1')
+            latest_version = None
+            for version_number, version_info in dw_status['info']['releases'].items():
+                version_number_loose = LooseVersion(version_number)
+                if version_number_loose >= stable_version:
+                    continue
+                if latest_version is None or version_number_loose > LooseVersion(latest_version):
+                    latest_version = version_number
+            if latest_version != str(python_version):
+                version += ' ' + word("Available") + ': <span class="badge badge-success">' + latest_version + '</span>'
+    else:
+        if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
+            version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
+    allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
+    if daconfig.get('stable version', False):
         limitation = '<1.1.0'
     else:
         limitation = ''
-    allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
     response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
