@@ -13266,7 +13266,7 @@ def update_package():
         form.gitbranch.choices.append((form.gitbranch.data, form.gitbranch.data))
     action = request.args.get('action', None)
     target = request.args.get('package', None)
-    #is_base_upgrade = request.args.get('base', False)
+    limitation = request.args.get('limitation', '')
     branch = None
     if action is not None and target is not None:
         package_list, package_auth = get_package_info()
@@ -13281,16 +13281,19 @@ def update_package():
             elif action == 'update' and the_package.can_update:
                 existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
                 if existing_package is not None:
+                    if limitation and existing_package.limitation != limitation:
+                        existing_package.limitation = limitation
+                        db.session.commit()
                     if existing_package.type == 'git' and existing_package.giturl is not None:
                         if existing_package.gitbranch:
                             install_git_package(target, existing_package.giturl, branch=existing_package.gitbranch)
                         else:
                             install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
-                        if existing_package.name == 'docassemble.webapp' and existing_package.limitation:
+                        if existing_package.name == 'docassemble.webapp' and existing_package.limitation and not limitation:
                             existing_package.limitation = None
+                            db.session.commit()
                         install_pip_package(existing_package.name, existing_package.limitation)
-                db.session.commit()
         result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
         session['taskwait'] = result.id
         return redirect(url_for('update_package_wait'))
@@ -13428,6 +13431,13 @@ def update_package():
         limitation = '<1.1'
     else:
         limitation = ''
+    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
+        version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
+    if daconfig.get('stable version', False):
+        limitation = '<1.1.0'
+    else:
+        limitation = ''
+    allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
     response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
