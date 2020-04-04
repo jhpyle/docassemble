@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.1] - 2020-04-04
+### Added
+- The `attachment` keyword parameter for `.url_for()`.
+- The `_attachment` keyword parameter for `url_of()`.
+### Changed
+- Securing of uploaded filenames less strict.
+
+## [1.0.6] - 2020-04-04
+### Added
+- The `stable version` Configuration directive.
+
 ## [1.0.5] - 2020-04-02
 ### Fixed
 - Apache initial certbot run used wrong syntax.

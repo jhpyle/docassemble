@@ -1147,6 +1147,8 @@ def url_of(file_reference, **kwargs):
         kwargs['_package'] = get_current_package()
     if 'question' not in kwargs:
         kwargs['_question'] = get_current_question()
+    if kwargs.get('attachment', False):
+        kwargs['_attachment'] = True
     return server.url_finder(file_reference, **kwargs)
 
 def server_capabilities():

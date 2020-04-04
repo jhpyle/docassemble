@@ -294,6 +294,10 @@ class SavedFile:
             self.save()
         return
     def temp_url_for(self, **kwargs):
+        if kwargs.get('_attachment', False):
+            suffix = 'download'
+        else:
+            suffix = ''
         filename = kwargs.get('filename', self.filename)
         seconds = kwargs.get('seconds', None)
         if type(seconds) is float:
@@ -303,8 +307,9 @@ class SavedFile:
         if cloud is not None and daconfig.get('use cloud urls', False):
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             key = cloud.get_key(keyname)
+            inline = False if kwargs.get('_attachment', False) else True
             if key.does_exist:
-                return key.generate_url(seconds, display_filename=kwargs.get('display_filename', None), inline=kwargs.get('inline', None), content_type=kwargs.get('content_type', None))
+                return key.generate_url(seconds, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
             else:
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
@@ -318,7 +323,7 @@ class SavedFile:
         use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
         from flask import url_for
         url = url_for('rootindex', _external=use_external).rstrip('/')
-        url += '/tempfile/' + code + '/' + path_to_key(kwargs.get('display_filename', filename))
+        url += '/tempfile' + suffix + '/' + code + '/' + path_to_key(kwargs.get('display_filename', filename))
         return(url)
     def cloud_path(self, filename=None):
         if cloud is None:
@@ -346,14 +351,19 @@ class SavedFile:
             elif extn:
                 keyname += '.' + extn
             key = cloud.get_key(keyname)
+            inline = False if kwargs.get('_attachment', False) else True
             if key.does_exist:
-                return key.generate_url(3600, display_filename=kwargs.get('display_filename', None), inline=kwargs.get('inline', None), content_type=kwargs.get('content_type', None))
+                return key.generate_url(3600, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
             else:
                 #logmessage("Key " + str(keyname) + " did not exist")
                 #why not serve right from uploadedpage in this case?
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
         else:
+            if kwargs.get('_attachment', False):
+                suffix = 'download'
+            else:
+                suffix = ''
             use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
             from flask import url_for
             base_url = url_for('rootindex', _external=use_external).rstrip('/')
@@ -370,14 +380,15 @@ class SavedFile:
                     url = base_url + '/uploadedpage'
                     if size == 'screen':
                         url += 'screen'
+                    url += suffix
                     url += '/' + str(self.file_number) + '/' + str(page)
                 else:
                     if re.search(r'\.', str(filename)):
-                        url = base_url + '/uploadedfile/' + str(self.file_number) + '/' + path_to_key(filename)
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename)
                     elif extn != '':
-                        url = base_url + '/uploadedfile/' + str(self.file_number) + '/' + path_to_key(filename) + extn
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename) + extn
                     else:
-                        url = base_url + '/uploadedfile/' + str(self.file_number)
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number)
             else:
                 sys.stderr.write("section " + section + " was wrong\n")
                 url = 'about:blank'

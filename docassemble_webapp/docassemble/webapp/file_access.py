@@ -22,11 +22,11 @@ import docassemble.base.config
 import sys
 from docassemble.base.generate_key import random_lower_string
 
-
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
 def url_if_exists(file_reference, **kwargs):
+    attach_parameter = '&attachment=1' if kwargs.get('_attachment', False) else ''
     parts = file_reference.split(":")
     from flask import url_for
     base_url = url_for('rootindex', _external=kwargs.get('_external', False)).rstrip('/')
@@ -46,7 +46,7 @@ def url_if_exists(file_reference, **kwargs):
                         key = str(section) + '/' + str(user_id) + '/' + project + '/' + filename
                     cloud_key = cloud.get_key(key)
                     if cloud_key.does_exist:
-                        if not kwargs.get('inline', False):
+                        if kwargs.get('_attachment', False):
                             return cloud_key.generate_url(3600, display_filename=filename)
                         else:
                             return cloud_key.generate_url(3600)
@@ -54,12 +54,12 @@ def url_if_exists(file_reference, **kwargs):
                 section = 'playgroundstatic'
                 filename = re.sub(r'^data/static/', '', parts[1])
                 version_parameter = get_version_parameter(parts[0])
-                return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
+                return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter + attach_parameter
         the_path = docassemble.base.functions.static_filename_path(file_reference)
         if the_path is None or not os.path.isfile(the_path):
             return None
         version_parameter = get_version_parameter(parts[0])
-        return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter
+        return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter + attach_parameter
     return None
 
 def get_version_parameter(package):

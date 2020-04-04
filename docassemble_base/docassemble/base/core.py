@@ -3452,6 +3452,9 @@ class DAFile(DAObject):
         if kwargs.get('external', False):
             kwargs['_external'] = True
             del kwargs['external']
+        if kwargs.get('attachment', False):
+            kwargs['_attachment'] = True
+            del kwargs['attachment']
         return server.url_finder(self, **kwargs)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
@@ -3800,6 +3803,12 @@ class DAStaticFile(DAObject):
         the_args = dict()
         for key, val in kwargs.items():
             the_args[key] = val
+        if 'external' in kwargs:
+            the_args['_external'] = kwargs['external']
+            del the_args['external']
+        if 'attachment' in kwargs:
+            the_args['_attachment'] = kwargs['attachment']
+            del the_args['attachment']
         the_args['_question'] = docassemble.base.functions.this_thread.current_question
         return server.url_finder(self.filename, **the_args)
     def __str__(self):

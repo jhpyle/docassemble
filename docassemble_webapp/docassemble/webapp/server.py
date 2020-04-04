@@ -1168,7 +1168,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         file_number = file_reference.number
         if privileged or can_access_file_number(file_number, uids=get_session_uids()):
             url_properties = dict()
-            if hasattr(file_reference, 'filename') and len(file_reference.filename) and not kwargs.get('inline', False):
+            if hasattr(file_reference, 'filename') and len(file_reference.filename) and kwargs.get('attachment', False):
                 url_properties['display_filename'] = file_reference.filename
             if hasattr(file_reference, 'extension'):
                 url_properties['ext'] = file_reference.extension
@@ -10719,6 +10719,13 @@ def redirect_to_interview(dispatch):
 
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
 def serve_stored_file(uid, number, filename, extension):
+    return do_serve_stored_file(uid, number, filename, extension)
+
+@app.route('/storedfiledownload/<uid>/<number>/<filename>.<extension>', methods=['GET'])
+def serve_stored_file_download(uid, number, filename, extension):
+    return do_serve_stored_file(uid, number, filename, extension, download=True)
+
+def do_serve_stored_file(uid, number, filename, extension, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     if not can_access_file_number(number, uids=[uid]):
         return ('File not found', 404)
@@ -10732,11 +10739,20 @@ def serve_stored_file(uid, number, filename, extension):
         if not os.path.isfile(file_info['path']):
             return ('File not found', 404)
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        if download:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
 
 @app.route('/tempfile/<code>/<filename>.<extension>', methods=['GET'])
 def serve_temporary_file(code, filename, extension):
+    return do_serve_temporary_file(code, filename, extension)
+
+@app.route('/tempfiledownload/<code>/<filename>.<extension>', methods=['GET'])
+def serve_temporary_file_download(code, filename, extension):
+    return do_serve_temporary_file(code, filename, extension, download=True)
+
+def do_serve_temporary_file(code, filename, extension, download=False):
     file_info = r.get('da:tempfile:' + str(code))
     if file_info is None:
         logmessage("serve_temporary_file: file_info was none")
@@ -10747,10 +10763,20 @@ def serve_temporary_file(code, filename, extension):
     if not os.path.isfile(the_path):
         return ('File not found', 404)
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
-    return send_file(the_path, mimetype=mimetype)
+    response = send_file(the_path, mimetype=mimetype)
+    if download:
+        response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
+    return response
 
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
+    return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension)
+
+@app.route('/uploadedfiledownload/<number>/<filename>.<extension>', methods=['GET'])
+def serve_uploaded_file_with_filename_and_extension_download(number, filename, extension):
+    return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=True)
+
+def do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=False):
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
     else:
@@ -10760,7 +10786,10 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
         if not (privileged or can_access_file_number(number, uids=get_session_uids())):
             return ('File not found', 404)
         the_file = SavedFile(number)
-        return redirect(the_file.temp_url_for())
+        if download:
+            return redirect(the_file.temp_url_for(_attachment=True))
+        else:
+            return redirect(the_file.temp_url_for())
     else:
         try:
             file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
@@ -10774,12 +10803,16 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
                 #logmessage("Using " + file_info['path'] + '.' + extension)
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                if download:
+                    response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             elif os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
                 #logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
                 extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
                 response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
+                if download:
+                    response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
@@ -10787,6 +10820,13 @@ def serve_uploaded_file_with_filename_and_extension(number, filename, extension)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
+    return do_serve_uploaded_file_with_extension(number, extension)
+
+@app.route('/uploadedfiledownload/<number>.<extension>', methods=['GET'])
+def serve_uploaded_file_with_extension_download(number, extension):
+    return do_serve_uploaded_file_with_extension(number, extension, download=True)
+
+def do_serve_uploaded_file_with_extension(number, extension, download=False):
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
     else:
@@ -10796,7 +10836,10 @@ def serve_uploaded_file_with_extension(number, extension):
         if not can_access_file_number(number, uids=get_session_uids()):
             return ('File not found', 404)
         the_file = SavedFile(number)
-        return redirect(the_file.temp_url_for())
+        if download:
+            return redirect(the_file.temp_url_for(_attachment=True))
+        else:
+            return redirect(the_file.temp_url_for())
     else:
         try:
             file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
@@ -10808,6 +10851,8 @@ def serve_uploaded_file_with_extension(number, extension):
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                if download:
+                    response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(str(number) + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
             else:
@@ -10816,6 +10861,9 @@ def serve_uploaded_file_with_extension(number, extension):
 
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
+    return do_serve_uploaded_file(number)
+
+def serve_uploaded_file(number, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
@@ -10834,12 +10882,21 @@ def serve_uploaded_file(number):
         if not os.path.isfile(file_info['path']):
             return ('File not found', 404)
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        if download:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(file_info['path']))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     return ('File not found', 404)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
+    return do_serve_uploaded_page(number, page)
+
+@app.route('/uploadedpagedownload/<number>/<page>', methods=['GET'])
+def serve_uploaded_page_download(number, page):
+    return do_serve_uploaded_page(number, page, download=True)
+
+def do_serve_uploaded_page(number, page, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
@@ -10855,9 +10912,12 @@ def serve_uploaded_page(number, page):
     else:
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + str(len(str(max_pages))) + 'd'
-        filename = file_info['path'] + 'page-' + (formatter % int(page)) + '.png'
+        basename = 'page-' + (formatter % int(page)) + '.png'
+        filename = file_info['path'] + basename
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
+            if download:
+                response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(basename)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
         else:
@@ -10865,6 +10925,13 @@ def serve_uploaded_page(number, page):
 
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):
+    return do_serve_uploaded_pagescreen(number, page)
+
+@app.route('/uploadedpagescreendownload/<number>/<page>', methods=['GET'])
+def serve_uploaded_pagescreen_download(number, page):
+    return do_serve_uploaded_pagescreen(number, page, download=True)
+
+def do_serve_uploaded_pagescreen(number, page, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
@@ -10892,6 +10959,8 @@ def serve_uploaded_pagescreen(number, page):
             return(response)
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
+            if download:
+                response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(filename))
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return(response)
         else:
@@ -13339,10 +13408,27 @@ def update_package():
     python_version = daconfig.get('python version', word('Unknown'))
     version = word("Current") + ': <span class="badge badge-primary">' + str(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
-    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
-        version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
+    if daconfig.get('stable version', False):
+        if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
+            stable_version = LooseVersion('1.1')
+            latest_version = None
+            for version_number, version_info in dw_status['info']['releases'].items():
+                version_number_loose = LooseVersion(version_number)
+                if version_number_loose >= stable_version:
+                    continue
+                if latest_version is None or version_number_loose > LooseVersion(latest_version):
+                    latest_version = version_number
+            if latest_version != str(python_version):
+                version += ' ' + word("Available") + ': <span class="badge badge-success">' + latest_version + '</span>'
+    else:
+        if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
+            version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
-    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade), 200)
+    if daconfig.get('stable version', False):
+        limitation = '<1.1'
+    else:
+        limitation = ''
+    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -18478,6 +18564,10 @@ def js_bundle_no_query():
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
+    try:
+        attach = int(request.args.get('attachment', 0))
+    except:
+        attach = 0
     if package == 'fonts':
         return redirect(url_for('static', filename='bootstrap/fonts/' + filename, v=da_version))
     try:
@@ -18492,6 +18582,8 @@ def package_static(package, filename):
         return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=str(mimetype))
+    if attach:
+        response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
     return(response)
 
 @app.route('/logfile/<filename>', methods=['GET'])
@@ -23579,7 +23671,7 @@ repository: """ + pypi_url + "\n"
 def url_sanitize(url):
     return re.sub(r'\s', ' ', url)
 
-def pypi_status(packagename):
+def pypi_status(packagename, limitation=None):
     result = dict()
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
@@ -23638,7 +23730,7 @@ def path_from_reference(file_reference):
 def secure_filename(filename):
     filename = werkzeug.utils.secure_filename(filename)
     extension, mimetype = get_ext_and_mimetype(filename)
-    filename = re.sub(r'\..*', '', filename) + '.' + extension
+    filename = re.sub(r'\.[^\.]+$', '', filename) + '.' + extension
     return filename
 
 def get_short_code(**pargs):
