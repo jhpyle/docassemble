@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.2] - 2020-04-04
+### Fixed
+- Issue with file names and `.url_for()`.
+
 ## [1.1.1] - 2020-04-04
 ### Added
 - The `attachment` keyword parameter for `.url_for()`.
