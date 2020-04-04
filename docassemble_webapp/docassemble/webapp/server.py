@@ -13346,7 +13346,7 @@ def update_package():
         version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     if daconfig.get('stable version', False):
         if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
-            stable_version = LooseVersion('1.1')
+            stable_version = LooseVersion('1.1.0')
             latest_version = None
             for version_number, version_info in dw_status['info']['releases'].items():
                 version_number_loose = LooseVersion(version_number)
