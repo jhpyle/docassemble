@@ -429,6 +429,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAALLOWUPDATES}}/'"${DAALLOWUPDATES:-true}"'/' \
         -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
         -e 's/{{DASTABLEVERSION}}/'"${DASTABLEVERSION:-false}"'/' \
+        -e 's/{{DASQLPING}}/'"${DASQLPING:-false}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 chown www-data.www-data "$DA_CONFIG_FILE"
