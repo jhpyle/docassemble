@@ -678,7 +678,7 @@ Other methods available on a `DAList` are:
 
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
-  `verb_present()` function, except that it uses the singular or
+  [`verb_present()`] function, except that it uses the singular or
   plural form depending on whether the list has more than one item or
   not.
 * <a name="DAList.did_verb"></a><a name="DADict.did_verb"></a><a
@@ -3409,6 +3409,10 @@ The following attributes are also used, but undefined by default:
 * <a name="Individual.gender"></a>`gender` - this should be set to
   `'male'`, `'female'`, or `'other'`.  It is used by a variety of
   methods such as [`pronoun()`].
+* <a name="Individual.use_familiar"></a>`use_familiar` - set this to
+  `True` if you want the individual to be referred to by their first
+  name when the individual's name is reduced to text.  By default, the
+  full name is used.
 
 <a name="set_info"></a>A number of useful methods can be applied to
 objects of class `Individual`.  Many of them will respond differently
@@ -3672,11 +3676,13 @@ common way of referring to the names of these objects.
 <a name="Name.full"></a>
 <a name="Name.firstlast"></a>
 <a name="Name.lastfirst"></a>
+<a name="Name.familiar"></a>
 The [`Name`] and [`IndividualName`] objects support the following methods:
 
-* `.full()`
-* `.firstlast()`
-* `.lastfirst()`
+* `.full()` - e.g., "John Smith, Jr."
+* `.firstlast()` - e.g., "John Smith, Jr."
+* `.lastfirst()` - e.g., "Smith, John Jr."
+* `.familiar()` - e.g., "John"
 
 Applied to an [`IndividualName`] object, these methods return different
 useful expressions of the name.  Applied to a [`Name`] object, these
@@ -6212,3 +6218,4 @@ the `_uid` of the table rather than the `id`.
 [`response()`]: {{ site.baseurl }}/docs/functions.html#response
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [Google's internationalization standards]: https://github.com/mirumee/google-i18n-address
+[`verb_present()`]: {{ site.baseurl }}/docs/functions.html#verb_present

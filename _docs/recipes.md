@@ -1068,119 +1068,74 @@ variables that are referenced in a document.
 
 You may want to have a single interview that can be used either by a
 person for themselves, or by a person who is assisting another person.
-In the following example, there is an object named `client` that is
-of the type [`Individual`]. The variable `user_is_client` indicates
-whether the user is the client, or the user is assisting a third party.
+In the following example, there is an object named `client` that is of
+the type [`Individual`].  The variable `user_is_client` indicates
+whether the user is the client, or the user is assisting a third
+party.
 
 Here is the text of the question and subquestion written in second
 person:
 
 ```
 question: |
-  Should your attorney be compensated for out-of-pocket expenses out of
-  your property?
+  Should your attorney be compensated for out-of-pocket expenses
+  out of your property?
 subquestion: |
   Your attorney may incur expenses in administering your property.
   If you allow your attorney to be compensated for out-of-pocket
-  expenses out of your property, that may make their life easier.
-  
-  Do you want your attorney to be compesnated for out-of-pocket
+  expenses out of your property, that may make the attorney's life
+  easier.
+
+  Do you want your attorney to be compensated for out-of-pocket
   expenses out of your property?
+yesno: should_be_compensated
 ```
 
 Here is how you might convert that text so that it will work properly
 if the user is the client, or if the client is someone else:
 
 ```
+initial: True
+code: |
+  if user_is_client:
+    set_info(user=client)
+---
 question: |
-  Should ${ client.possessive('') } attorney be compensated for
+  Should ${ client.possessive('attorney') } be compensated for
   out-of-pocket expenses out of ${ client.possessive('property') }?
 subquestion: |
-  ${ client.possessive('',capitalize=True) } attorney may incur
-  expenses in administering
-  ${ client.pronoun_possessive('property') }. If
-  ${ client.subject() } ${ "allow" if user_is_client else "allows" }
-  ${ client.possessive('attorney') to be compensated for
-  out-of-pocket expenses out of
-  ${ client.pronoun_possessive('property') }, that may make their
-  life easier.
-  
-  ${ "Do" if user_is_client else "Does" }
-  ${ client.subject().partition(' ')[0] }
-  want ${ client.pronoun_possessive('attorney') } to be compesnated
-  for out-of-pocket expenses out of
-  ${ client.pronoun_possessive('property')?
+  ${ client.possessive('attorney', capitalize=True) }
+  may incur expenses in administering
+  ${ client.pronoun_possessive('property') }.
+  If
+  ${ client.subject() }
+  ${ client.does_verb("allow") }
+  ${ client.pronoun_possessive('attorney') }
+  to be compensated for out-of-pocket expenses out of
+  ${ client.pronoun_possessive('property') },
+  that may make the attorney's life easier.
+
+  ${ client.do_question('want', capitalize=True) }
+  ${ client.pronoun_possessive('attorney') }
+  to be compensated for out-of-pocket expenses out of
+  ${ client.pronoun_possessive('property') }?
+yesno: should_be_compensated
 ```
 
-The block can now do two different things, only got 8 lines longer,
-and is still relatively readable compared to a bunch of nested if
-statements.
+This one block can now do two different things, and is still
+relatively readable.
 
 ## Possessives
+
 The first mention of the client in the sentence should use the client's
 name. If the first mention of the client in the sentence is possessive,
-you should use `${ client.possessive('') } object` to generate either
+you should use `${ client.possessive('object') }` to generate either
 "Client Name's object" or "your object".
 
 ## Capitalization
+
 Any of the language functions can be modified with `capitalize=True` if
 they are being used at the start of a sentence.
-
-## Ternary Operators
-Text with a large number of replacements becomes very difficult to
-read for the interview designer with a large number of Mako 
-if statements.
-Python's ternary `if` operator gives you a much less jarring way of
-including one of only two possibilities in your text. Compare
-
-```
-${ "Does" if user_is_client else "Do" }
-```
-
-with
-
-```
-% if user_is_client:
-Does
-% else:
-Do
-% endif
-```
-
-## Using "You" or the first name
-If you want your interview to read in a more friendly way, you may
-want to use either "you" in the second person or the client's first
-name in the third person. `${ client.subject() }` returns "you" or
-the client's whole name.
-
-Instead of
-
-```
-% if user_is_client:
-you
-% else:
-%{ client.name.first }
-% endif
-```
-
-you can say
-
-```
-${ client.subject().partition(' ')[0] }
-```
-
-`.partition()` is a Python string function that divides the string
-into an array on the provided input. So the above code will
-return either "you" or the client's name up to the first space character.
-
-## Avoid Nested Conditionals
-Nested conditions are very difficult to read in marked-up text, 
-in particular because you can't use indentation to show how deep the
-nesting has gone. Nested conditionals 
-will make your interview code harder to read and maintain. Use language
-functions where you can, and ternary if statements everywhere else, and 
-your language generation code will be shorter, and much easier to 
-maintain.
 
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions

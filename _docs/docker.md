@@ -888,6 +888,11 @@ your container for the new configuration to take effect.
   you are using cloud storage but you do not want URLs for files to
   point directly to the cloud storage provider.  See the [`use cloud
   urls`] configuration directive.
+* <a name="DASTABLEVERSION"></a>`DASTABLEVERSION`: Set this to `true`
+  if you want **docassemble** to stay on version 1.0.x.  This is the
+  `stable` branch of the [GitHub] repository, which only receives bug
+  fixes and security updates.  See the [`stable version`]
+  configuration directive.
 * <a
   name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
   It was noted above that once the [configuration] file is located in
@@ -2157,3 +2162,4 @@ line), as the containers depend on the images.
 [Kubernetes]: https://kubernetes.io/
 [`update on start`]: {{ site.baseurl }}/docs/config.html#update on start
 [`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
+[`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
