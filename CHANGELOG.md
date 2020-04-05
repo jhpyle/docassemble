@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.7] - 2020-04-05
+### Fixed
+- Display of available version on Package Management page.
+
 ## [1.0.6] - 2020-04-04
 ### Added
 - The `stable version` Configuration directive.

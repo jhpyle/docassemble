@@ -13342,8 +13342,6 @@ def update_package():
     python_version = daconfig.get('python version', word('Unknown'))
     version = word("Current") + ': <span class="badge badge-primary">' + str(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
-    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
-        version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     if daconfig.get('stable version', False):
         if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
             stable_version = LooseVersion('1.1.0')
