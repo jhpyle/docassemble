@@ -98,3 +98,4 @@ allow non-idempotent questions: False
 web server: {{DAWEBSERVER}}
 new markdown to docx: True
 stable version: {{DASTABLEVERSION}}
+sql ping: {{DASQLPING}}

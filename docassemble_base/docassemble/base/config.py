@@ -529,6 +529,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'root', 'POSTURLROOT')
         if env_exists('DAWEBSERVER'):
             override_config(daconfig, messages, 'web server', 'DAWEBSERVER')
+        if env_exists('DASQLPING'):
+            override_config(daconfig, messages, 'sql ping', 'DASQLPING')
         env_messages = messages
     return
 
