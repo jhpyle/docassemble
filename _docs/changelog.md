@@ -18,6 +18,11 @@ short_title: Change Log
 ### Changed
 - Securing of uploaded filenames less strict.
 
+## [1.0.7](https://github.com/jhpyle/docassemble/releases/tag/v1.0.7) - 2020-04-05
+
+### Fixed
+- Display of available version on Package Management page.
+
 ## [1.0.6](https://github.com/jhpyle/docassemble/releases/tag/v1.0.6) - 2020-04-04
 
 ### Added
