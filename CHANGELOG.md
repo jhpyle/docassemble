@@ -11,6 +11,10 @@
 ### Changed
 - Securing of uploaded filenames less strict.
 
+## [1.0.8] - 2020-04-05
+### Added
+- The `DASQLPING` Docker environment variable
+
 ## [1.0.7] - 2020-04-05
 ### Fixed
 - Display of available version on Package Management page.
