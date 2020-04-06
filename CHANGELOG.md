@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.9] - 2020-04-06
+### Fixed
+- Issue with too many flash messages on CSRF error.
+- Issue with multiple DOCX documents and subdocuments.
+
 ## [1.0.8] - 2020-04-05
 ### Added
 - The `DASQLPING` Docker environment variable

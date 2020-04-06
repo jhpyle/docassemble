@@ -23930,8 +23930,6 @@ def handle_csrf_error(the_error):
             referer = None
         if referer:
             flash(word("Input not processed because the page expired."), "success")
-            # extra_meta = """\n    <meta http-equiv="refresh" content="0;URL='""" + referer + """'">"""
-            # return render_template('pages/csrf.html', url=referer, extra_meta=Markup(extra_meta))
             return redirect(referer)
     return server_error(the_error)
 
