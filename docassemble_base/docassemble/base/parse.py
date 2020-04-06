@@ -5096,6 +5096,7 @@ class Question:
                     elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                         #logmessage("field_data is " + repr(result['field_data']))
                         docassemble.base.functions.set_context('docx', template=result['template'])
+                        docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
                         try:
                             the_template = result['template']
                             while True: # Rerender if there's a subdoc using include_docx_template
