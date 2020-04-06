@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.3] - 2020-04-
+### Added
+- The `use_familiar` attribute of the `Individual` class.
+- The `familiar()` method of the `Name` class.
+### Fixed
+- Reporting of CSRF errors failed in some circumstances.
+
 ## [1.1.2] - 2020-04-04
 ### Fixed
 - Issue with file names and `.url_for()`.

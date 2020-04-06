@@ -1688,10 +1688,13 @@ def set_language(lang, dialect=None):
     """Sets the language to use for linguistic functions.
     E.g., set_language('es') to set the language to Spanish.
     Use the keyword argument "dialect" to set a dialect."""
-    if dialect:
-        this_thread.dialect = dialect
-    elif lang != this_thread.language:
-        this_thread.dialect = None
+    try:
+        if dialect:
+            this_thread.dialect = dialect
+        elif lang != this_thread.language:
+            this_thread.dialect = None
+    except:
+        pass
     this_thread.language = lang
     return
 
@@ -3993,7 +3996,10 @@ def log(message, priority='log'):
         this_thread.message_log.append(dict(message=str(message), priority=priority))
 
 def get_message_log():
-    return this_thread.message_log
+    try:
+        return this_thread.message_log
+    except:
+        return []
 
 def encode_name(var):
     """Convert a variable name to base64-encoded form for inclusion in an HTML element."""
