@@ -226,7 +226,7 @@
 "Incorrect Password": Null
 "Incorrect %(username_or_email)s and/or Password": Null
 "Input box": Null
-"Input not processed because the page expired.  Please try again.": Null
+"Input not processed because the page expired.": Null
 "Input not processed because the question changed.  Please continue.": Null
 "Input not processed.  Please try again.": Null
 "Insert": Null

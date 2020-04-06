@@ -14,7 +14,6 @@ setup(name='docassemble',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
-      download_url='https://download.docassemble.org/docassemble.tar.gz',
       packages=find_packages(),
       zip_safe = False,
      )

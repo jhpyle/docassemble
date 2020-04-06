@@ -8415,6 +8415,9 @@ def index(action_argument=None):
         else if (data.action == 'refresh'){
           daRefreshSubmit();
         }
+        else if (data.action == 'reload'){
+          location.reload(true);
+        }
         else if (data.action == 'resubmit'){
           $("input[name='ajax']").remove();
           if (daSubmitter != null){
@@ -8567,6 +8570,9 @@ def index(action_argument=None):
         }
       }
       function daChatLogCallback(data){
+        if (data.action && data.action == 'reload'){
+          location.reload(true);
+        }
         //console.log("daChatLogCallback: success is " + data.success);
         if (data.success){
           $("#daCorrespondence").html('');
@@ -8605,6 +8611,9 @@ def index(action_argument=None):
         daCheckinCode = Math.random();
       }
       function daCheckinCallback(data){
+        if (data.action && data.action == 'reload'){
+          location.reload(true);
+        }
         daCheckingIn = 0;
         //console.log("daCheckinCallback: success is " + data.success);
         if (data.checkin_code != daCheckinCode){
@@ -8753,18 +8762,18 @@ def index(action_argument=None):
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction, ajax: '1'});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray())});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(), raw_parameters: JSON.stringify($("#daform").serializeArray()), ajax: '1'});
           }
         }
         else{
           if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: daFormAsJSON()});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: daFormAsJSON(), ajax: '1'});
           }
           else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode});
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, ajax: '1'});
           }
         }
         //console.log("Doing checkin with " + daChatStatus);
@@ -8789,7 +8798,7 @@ def index(action_argument=None):
           xhrFields: {
             withCredentials: true
           },
-          data: 'csrf_token=' + daCsrf + '&action=checkout',
+          data: 'csrf_token=' + daCsrf + '&ajax=1&action=checkout',
           success: daCheckoutCallback,
           dataType: 'json'
         });
@@ -9753,7 +9762,7 @@ def index(action_argument=None):
               xhrFields: {
                 withCredentials: true
               },
-              data: $.param({action: 'chat_log', csrf_token: daCsrf}),
+              data: $.param({action: 'chat_log', ajax: '1', csrf_token: daCsrf}),
               success: daChatLogCallback,
               dataType: 'json'
             });
@@ -15972,6 +15981,9 @@ def playground_files():
               url: """ + '"' + url_for('playground_files', project=current_project) + '"' + """,
               data: $("#formtwo").serialize() + extraVariable + '&submit=Save&ajax=1',
               success: function(data){
+                if (data.action && data.action == 'reload'){
+                  location.reload(true);
+                }
                 resetExpireSession();
                 saveCallback(data);
                 setTimeout(function(){
@@ -17429,8 +17441,11 @@ function fetchVars(changed){
   $.ajax({
     type: "POST",
     url: """ + '"' + url_for('playground_variables') + '"' + """ + '?project=' + currentProject,
-    data: 'csrf_token=' + $("#""" + form + """ input[name='csrf_token']").val() + '&variablefile=' + $("#daVariables").val() + '&changed=' + (changed ? 1 : 0),
+    data: 'csrf_token=' + $("#""" + form + """ input[name='csrf_token']").val() + '&variablefile=' + $("#daVariables").val() + '&ajax=1&changed=' + (changed ? 1 : 0),
     success: function(data){
+      if (data.action && data.action == 'reload'){
+        location.reload(true);
+      }
       if (data.vocab_list != null){
         vocab = data.vocab_list;
       }
@@ -18042,6 +18057,9 @@ function activateExample(id, scroll){
 }
 
 function saveCallback(data){
+  if (data.action && data.action == 'reload'){
+    location.reload(true);
+  }
   if ($("#daflash").length){
     $("#daflash").html(data.flash_message);
   }
@@ -18103,6 +18121,9 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&run=Save+and+Run&ajax=1',
       success: function(data){
+        if (data.action && data.action == 'reload'){
+          location.reload(true);
+        }
         resetExpireSession();
         saveCallback(data);
       },
@@ -18139,6 +18160,9 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
       data: $("#form").serialize() + '&submit=Save&ajax=1',
       success: function(data){
+        if (data.action && data.action == 'reload'){
+          location.reload(true);
+        }
         resetExpireSession();
         saveCallback(data);
         setTimeout(function(){
@@ -23897,8 +23921,18 @@ def applock(action, application):
 @app.errorhandler(CSRFError)
 def handle_csrf_error(the_error):
     if request.method == 'POST':
-        flash(word("Input not processed because the page expired.  Please try again."), "success")
-        return redirect(request.full_path)
+        if 'ajax' in request.form and int(request.form['ajax']):
+            flash(word("Input not processed because the page expired."), "success")
+            return jsonify(dict(action='reload'))
+        try:
+            referer = str(request.referrer)
+        except:
+            referer = None
+        if referer:
+            flash(word("Input not processed because the page expired."), "success")
+            # extra_meta = """\n    <meta http-equiv="refresh" content="0;URL='""" + referer + """'">"""
+            # return render_template('pages/csrf.html', url=referer, extra_meta=Markup(extra_meta))
+            return redirect(referer)
     return server_error(the_error)
 
 def error_notification(err, message=None, history=None, trace=None, referer=None, the_request=None, the_vars=None):

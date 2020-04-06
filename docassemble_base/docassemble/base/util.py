@@ -1254,6 +1254,9 @@ class Name(DAObject):
     def full(self):
         """Returns the full name."""
         return(self.text)
+    def familiar(self):
+        """Returns the familiar name."""
+        return(self.text)
     def firstlast(self):
         """This method is included for compatibility with other types of names."""
         return(self.text)
@@ -1279,6 +1282,11 @@ class IndividualName(Name):
         if not self.uses_parts:
             return super().defined()
         return hasattr(self, 'first')
+    def familiar(self):
+        """Returns the familiar name."""
+        if not self.uses_parts:
+            return self.full()
+        return self.first
     def full(self, middle='initial', use_suffix=True):
         """Returns the full name.  Has optional keyword arguments middle
         and use_suffix."""
@@ -1800,7 +1808,7 @@ class Person(DAObject):
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
         else:
-            return possessify(self.name, target, **kwargs)
+            return possessify(self, target, **kwargs)
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
@@ -1813,7 +1821,7 @@ class Person(DAObject):
         if self is this_thread.global_vars.user:
             output = word('are you', **kwargs)
         else:
-            output = is_word(self.name.full(), **kwargs)
+            output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -1878,14 +1886,14 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return(do_you(the_verb, **kwargs))
         else:
-            return(does_a_b(self.name, the_verb, **kwargs))
+            return(does_a_b(self, the_verb, **kwargs))
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
             return did_you(the_verb, **kwargs)
         else:
-            return did_a_b(self.name, the_verb, **kwargs)
+            return did_a_b(self, the_verb, **kwargs)
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were you married" or "was
         John Smith married," depending on whether the person is the
@@ -1893,7 +1901,7 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return were_you(the_target, **kwargs)
         else:
-            return was_a_b(self.name, the_target, **kwargs)
+            return was_a_b(self, the_target, **kwargs)
     def have_question(self, the_target, **kwargs):
         """Given a target like "", returns "have you married" or "has
         John Smith married," depending on whether the person is the
@@ -1901,7 +1909,7 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return have_you(the_target, **kwargs)
         else:
-            return has_a_b(self.name, the_target, **kwargs)
+            return has_a_b(self, the_target, **kwargs)
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
@@ -2051,7 +2059,7 @@ class Individual(Person):
         if self == this_thread.global_vars.user:
             output = word('yourself', **kwargs)
         else:
-            output = self.name.full()
+            output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -2063,6 +2071,10 @@ class Individual(Person):
             self.name.text = value
         else:
             return super().__setattr__(attrname, value)
+    def __str__(self):
+        if hasattr(self, 'use_familiar') and self.use_familiar and isinstance(self.name, IndividualName) and self.name.uses_parts:
+            return str(self.name.first)
+        return super().__str__()
 
 class ChildList(DAList):
     """Represents a list of children."""
