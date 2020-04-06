@@ -1137,6 +1137,19 @@ then the SQL database will be backed up on a daily basis.  You will
 want to set it to `false` if backing up the SQL database could lead to
 the exhaustion of hard drive space.
 
+## <a name="sql ping"></a>Avoiding SQL errors
+
+If your **docassemble** server runs in an environment in which
+persistent SQL connections will periodically be severed, you can set
+`sql ping` to `True` in order to avoid errors.
+
+{% highlight yaml %}
+sql ping: True
+{% endhighlight %}
+
+There is an overhead cost to using this, so only enable this if you
+get SQL errors when trying to connect after a period of inactivity.
+
 ## <a name="appname"></a><a name="brandname"></a>Branding
 
 The `appname` and `brandname` directives control the name of the

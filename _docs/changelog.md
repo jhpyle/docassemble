@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.3](https://github.com/jhpyle/docassemble/releases/tag/v1.1.3) - 2020-04-
+
+### Added
+- The `use_familiar` attribute of the `Individual` class.
+- The `familiar()` method of the `Name` class.
+
 ## [1.1.2](https://github.com/jhpyle/docassemble/releases/tag/v1.1.2) - 2020-04-04
 
 ### Fixed

@@ -4,6 +4,11 @@ title: Business Continuity Policy
 short_title: Business Continuity
 ---
 
+# Business continuity policy
+
+*Note: **docassemble** is licensed under the [MIT License].  This
+policy does not modify that license or create any contract.*
+
 **docassemble** is expected to continue to be maintained so long as
 there is interest in using it.
 
@@ -83,4 +88,4 @@ file could be proprietary and not interoperable, unlike the current
 DOCX format.  However, Microsoft is currently investing significant
 resources in open-source, so these would seem unlikely.
 
-
+[MIT License]: {{ site.baseurl }}/docs/license.html

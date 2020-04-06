@@ -4,6 +4,11 @@ title: Data Privacy Policy
 short_title: Data Privacy
 ---
 
+# Data privacy policy
+
+*Note: **docassemble** is licensed under the [MIT License].  This
+policy does not modify that license or create any contract.*
+
 ## Data privacy and the application
 
 **docassemble** is not software-as-a-service; it is just software.
@@ -132,3 +137,4 @@ will make an effort to delete the mailing list.
 [Docacon]: https://docacon.com
 [mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
 [Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[MIT License]: {{ site.baseurl }}/docs/license.html
