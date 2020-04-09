@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.4](https://github.com/jhpyle/docassemble/releases/tag/v1.1.4) - 2020-04-08
+
+### Changed
+- `DAEmpty` now accepts index assignments.
+- Obtaining a `new_session` during an interview now preserves
+  `url_args` and the `referring_url()`, consistent with the behavior
+  of `restart`.
+
 ## [1.1.3](https://github.com/jhpyle/docassemble/releases/tag/v1.1.3) - 2020-04-06
 
 ### Added
