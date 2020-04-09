@@ -6897,11 +6897,13 @@ def index(action_argument=None):
         interview.assemble(user_dict, interview_status)
     elif interview_status.question.question_type == "new_session":
         manual_checkout(manual_filename=yaml_filename)
+        url_args = user_dict['url_args']
         referer = user_dict['_internal'].get('referer', None)
-        user_dict = fresh_dictionary()
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info))
         release_lock(user_code, yaml_filename)
         user_code, user_dict = reset_session(yaml_filename, secret)
+        user_dict['url_args'] = url_args
+        user_dict['_internal']['referer'] = referer
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             update_session(yaml_filename, uid=user_code, key_logged=True)
@@ -10217,7 +10219,6 @@ def index(action_argument=None):
                     existing_entry.upload = None
                     existing_entry.encrypted = encrypted
             else:
-                logmessage("Adding speaklist entry where encrypted is " + repr(encrypted) + " and phrase is " + repr(the_phrase))
                 new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                 db.session.add(new_entry)
             db.session.commit()

@@ -84,6 +84,8 @@ class DAEmpty:
         return list()
     def __getitem__(self, index):
         return DAEmpty()
+    def __setitem__(self, index, val):
+        return
     def __call__(self, *pargs, **kwargs):
         return DAEmpty()
     def __repr__(self):
