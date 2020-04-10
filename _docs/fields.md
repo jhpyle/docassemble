@@ -2088,6 +2088,18 @@ Although you may be developing your app on a desktop or laptop
 monitor, your users are probably using smartphones, so test your app
 on a smartphone.
 
+By default, the `signature` screen will not let the user continue if
+the signature box is empty.  If you want to allow users to submit
+blank signatures, set `required` to `False`:
+
+{% highlight yaml %}
+question: Sign here
+signature: client.signature
+under: |
+  ${ client }
+required: False
+{% endhighlight %}
+
 # <a name="general"></a>Generalizing questions
 
 **docassemble** lets you write a single question that can be re-used

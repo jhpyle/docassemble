@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.5](https://github.com/jhpyle/docassemble/releases/tag/v1.1.5) - 2020-04-09
+
+### Added
+- The `required` modifier for the `signature` block.
+
+### Fixed
+- Error message about blank signature not showing.
+
 ## [1.1.4](https://github.com/jhpyle/docassemble/releases/tag/v1.1.4) - 2020-04-08
 
 ### Changed
