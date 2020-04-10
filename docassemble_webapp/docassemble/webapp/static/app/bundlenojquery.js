@@ -7749,8 +7749,8 @@ function daInitializeSignature(){
     daNewCanvas();
   });
   $(".dasigsave").click(function() {
-    if (daIsEmpty){
-      $("#errormess").removeClass("dasignotshowing");
+    if (daIsEmpty && document.getElementById("da_sig_required").value == '1'){
+      $("#daerrormess").removeClass("dasignotshowing");
       setTimeout(function(){ $("#daerrormess").addClass("dasignotshowing"); }, 3000);
     }
     else{
