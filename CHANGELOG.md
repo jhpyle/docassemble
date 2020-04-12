@@ -43,6 +43,7 @@
 ### Fixed
 - Removed 302 redirects.
 - Mako filter error.
+- Inline upload error.
 
 ## [1.0.9] - 2020-04-06
 ### Fixed
