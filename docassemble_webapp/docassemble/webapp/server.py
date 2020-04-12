@@ -804,7 +804,7 @@ import subprocess
 from pygments import highlight
 from pygments.lexers import YamlLexer, PythonLexer
 from pygments.formatters import HtmlFormatter
-from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g, make_response
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
@@ -20168,6 +20168,10 @@ def favicon_browserconfig():
 
 @app.route("/robots.txt", methods=['GET'])
 def robots():
+    if 'robots' not in daconfig and daconfig.get('allow robots', False):
+        response = make_response("User-agent: *\nDisallow:", 200)
+        response.mimetype = "text/plain"
+        return response
     the_file = docassemble.base.functions.package_data_filename(daconfig.get('robots', 'docassemble.webapp:data/static/robots.txt'))
     if the_file is None:
         return('File not found', 404)
