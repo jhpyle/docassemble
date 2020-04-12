@@ -1955,7 +1955,8 @@ class Question:
                     raise DAError("A metadata directive cannot be mixed with other directives." + self.idebug(data))
             should_append = False
             if isinstance(data['metadata'], dict):
-                data['metadata']['origin_path'] = self.from_source.path
+                data['metadata']['_origin_path'] = self.from_source.path
+                data['metadata']['_origin_package'] = self.from_source.get_package()
                 self.interview.metadata.append(data['metadata'])
             else:
                 raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
@@ -5683,6 +5684,14 @@ def is_threestate(field_data):
 class TableInfo:
     pass
 
+def recursive_update(base, target):
+    for key, val in target.items():
+        if isinstance(val, abc.Mapping):
+            base[key] = recursive_update(base.get(key, {}), val)
+        else:
+            base[key] = val
+    return base
+
 class Interview:
     def __init__(self, **kwargs):
         self.source = None
@@ -6009,8 +6018,24 @@ class Interview:
         if len(self.images) > 0 or get_config('default icons', 'font awesome') in ('material icons', 'font awesome'):
             self.scan_for_emojis = True
         for metadata in self.metadata:
+            if 'social' in metadata and isinstance(metadata['social'], dict):
+                if 'image' in metadata['social'] and isinstance(metadata['social']['image'], str):
+                    metadata['social']['image'] = docassemble.base.functions.server.url_finder(metadata['social']['image'], _package=metadata['_origin_package'], _external=True)
+                for key, subkey in (('og', 'image'), ('twitter', 'image')):
+                    if key in metadata['social'] and isinstance(metadata['social'][key], dict) and subkey in metadata['social'][key] and isinstance(metadata['social'][key][subkey], str):
+                        metadata['social'][key][subkey] = docassemble.base.functions.server.url_finder(metadata['social'][key][subkey], _package=metadata['_origin_package'], _external=True)
+                for key, val in metadata['social'].items():
+                    if isinstance(val, dict):
+                        for subkey, subval in val.items():
+                            if isinstance(subval, str):
+                                metadata['social'][key][subkey] = subval.replace('\n', ' ').replace('"', '&quot;').strip()
+                    elif isinstance(val, str):
+                        metadata['social'][key] = val.replace('\n', ' ').replace('"', '&quot;').strip()
             for key, val in metadata.items():
-                self.consolidated_metadata[key] = val
+                if key in self.consolidated_metadata and isinstance(self.consolidated_metadata[key], dict) and isinstance(val, dict):
+                    recursive_update(self.consolidated_metadata[key], val)
+                else:
+                    self.consolidated_metadata[key] = val
         mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:

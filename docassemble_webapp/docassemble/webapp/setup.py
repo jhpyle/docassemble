@@ -3,6 +3,7 @@ from docassemble.base.config import daconfig
 from datetime import timedelta
 import docassemble.webapp.database
 da_version = '1.0.9'
+import re
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -101,3 +102,5 @@ else:
 app.config['REMEMBER_COOKIE_SECURE'] = app.config['SESSION_COOKIE_SECURE']
 if 'session lifetime seconds' in daconfig:
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])
+app.config['SOCIAL'] = daconfig['social']
+app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
