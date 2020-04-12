@@ -175,8 +175,14 @@ def load(**kwargs):
                 del daconfig['social'][part][key]
             else:
                 daconfig['social'][part][key] = noquote(daconfig['social'][part][key])
+    if 'name' in daconfig['social']:
+        del daconfig['social']['name']
     if 'title' in daconfig['social']['og']:
         del daconfig['social']['og']['title']
+    if 'title' in daconfig['social']['twitter']:
+        del daconfig['social']['twitter']['title']
+    if 'url' in daconfig['social']['og']:
+        del daconfig['social']['og']['url']
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
         for item in daconfig['administrative interviews']:

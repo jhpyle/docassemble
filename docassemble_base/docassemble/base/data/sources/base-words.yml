@@ -145,6 +145,7 @@
 "E-mail this document": Null
 "E-mail was sent to": Null
 "(embedded question, source code not available)": Null
+"Embed test": Null
 "Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.": Null
 "Enter code": Null
 "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
