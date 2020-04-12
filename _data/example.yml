@@ -4261,24 +4261,118 @@
   fields:
     - File: the_file
       datatype: file
-"file-types": "objects:\n  - static_file: DAStaticFile.using(filename='cow.jpg')\n\
-  ---\nattachment:\n  variable name: assembled_file\n  filename: assembled_file\n\
-  \  content: |\n    Hello world!\n---\nquestion: |\n  Upload a file\nfields:\n  -\
-  \ File: uploaded_file\n    datatype: file\n---\nquestion: |\n  What type of file\
-  \ do you want?\nchoices:\n  Static:\n    code: |\n      the_file = static_file\n\
-  \  Assembled:\n    code: |\n      the_file = assembled_file\n  Upload:\n    code:\
-  \ |\n      the_file = uploaded_file\n  Single:\n    code: |\n      the_file = uploaded_file[0]\n\
-  ---\ncode: |\n  email_sent = send_email(to=email_address,\n    body=\"Here is your\
-  \ document\",\n    subject=\"Your document\",\n    attachments=the_file)\n---\n\
-  code: |\n  (the_path, the_mimetype) = path_and_mimetype(the_file)\n---\ncode: |\n\
-  \  button_list = [{True: 'Next', 'image': the_file}]\n---\nfield: menu_selection\n\
-  question: |\n  Your document\nsubquestion: |\n  ### As image\n  ${ the_file.show(width='1em')\
-  \ }\n\n  ${ the_file }\n\n  ### As path\n  \n  `${ the_file.path() }`\n\n  ### As\
-  \ url\n  \n  `${ the_file.url_for() }`\n\n  ### As external url\n  \n  `${ the_file.url_for(_external=True)\
-  \ }`\n\n  ### From url_of()\n\n  `${ url_of(the_file) }`\n\n  ### From path_and_mimetype()\n\
-  \n  `${ the_path }`\n\n  `${ the_mimetype }`\nbuttons:\n  code: button_list\n---\n\
-  mandatory: True\nneed:\n  - menu_selection\nquestion: |\n  All done\nbuttons:\n\
-  \  - Restart: restart"
+"file-types": |-
+  objects:
+    - static_file: DAStaticFile.using(filename='cow.jpg')
+  ---
+  attachment:
+    variable name: assembled_file
+    filename: assembled_file
+    content: |
+      Hello world!
+  ---
+  question: |
+    Upload a file
+  fields:
+    - File: uploaded_file
+      datatype: file
+  ---
+  question: |
+    What type of file do you want?
+  choices:
+    Static:
+      code: |
+        the_file = static_file
+    Assembled:
+      code: |
+        the_file = assembled_file
+    Upload:
+      code: |
+        the_file = uploaded_file
+    Single:
+      code: |
+        the_file = uploaded_file[0]
+  ---
+  code: |
+    email_sent = send_email(to=email_address,
+      body="Here is your document",
+      subject="Your document",
+      attachments=the_file)
+  ---
+  code: |
+    (the_path, the_mimetype) = path_and_mimetype(the_file)
+  ---
+  code: |
+    button_list = [{True: 'Next', 'image': the_file}]
+  ---
+  field: menu_selection
+  question: |
+    Your document
+  subquestion: |
+    ### As image
+    ${ the_file.show(width='1em') }
+
+    ${ the_file }
+
+    ### As path
+
+    `${ the_file.path() }`
+
+    ### As url
+
+    `${ the_file.url_for() }`
+    [open](${ the_file.url_for() })
+
+    ### As external url
+
+    `${ the_file.url_for(external=True) }`
+    [open](${ the_file.url_for(external=True) })
+
+    ### As downloadable url
+
+    `${ the_file.url_for(attachment=True) }`
+    [open](${ the_file.url_for(attachment=True) })
+
+    ### As temporary url
+
+    `${ the_file.url_for(temporary=True, seconds=500) }`
+    [open](${ the_file.url_for(temporary=True, seconds=500) })
+
+    ### As temporary downloadable url
+
+    `${ the_file.url_for(temporary=True, seconds=500, attachment=True) }`
+    [open](${ the_file.url_for(temporary=True, seconds=500, attachment=True) })
+
+    ### From url_of()
+
+    `${ url_of(the_file) }`
+    [open](${ url_of(the_file) })
+
+    ### From url_of(), external
+
+    `${ url_of(the_file, _external=True) }`
+    [open](${ url_of(the_file, _external=True) })
+
+    ### From url_of(), downloadable
+
+    `${ url_of(the_file, _attachment=True) }`
+    [open](${ url_of(the_file, _attachment=True) })
+
+    ### From path_and_mimetype()
+
+    `${ the_path }`
+
+    `${ the_mimetype }`
+  buttons:
+    code: button_list
+  ---
+  mandatory: True
+  need:
+    - menu_selection
+  question: |
+    All done
+  buttons:
+    - Restart: restart
 "fix-punctuation": |-
   mandatory: true
   question: |
@@ -9903,6 +9997,24 @@
       Hello world!
     valid formats:
       - pdf
+"social": |-
+  metadata:
+    title: Social meta tags
+    short: Social
+    social:
+      description: |
+        A demonstration of meta tags.
+      image: court.png
+      og:
+        image: docassemble.demo:data/static/crown.png
+        description: A one-page guided interview demonstrating meta tags.
+      twitter:
+        title: Social meta tag demo
+        site: "@docassemble"
+        description: |
+          An interview that demonstrates meta tags.
+        image: https://docassemble.org/img/docassemble-logo-sq-125.jpg
+        "image:alt": Docassemble logo
 "someone-already-mentioned-bad": |-
   imports:
     - docassemble.demo.change_suffix

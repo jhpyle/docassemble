@@ -1074,6 +1074,127 @@ your change is not working when it actually is.  If it seems that your
 [Favicon] has not taken effect, try accessing the app a web browser
 that you do not normally use.
 
+## <a name="robots"></a>Controlling the robots.txt file
+
+By default, **docassemble** discourages web crawlers by returning the
+following in response to a request for the `/robots.txt` file:
+
+{% highlight text %}
+User-agent: *
+Disallow: /
+{% endhighlight %}
+
+If you want to set a permissive `/robots.txt` file, for example if you
+want [social meta tags] to work, you can set `allow robots` to `True`.
+
+{% highlight yaml %}
+allow robots: True
+{% endhighlight %}
+
+Then, `/robots.txt` will return:
+
+{% highlight text %}
+User-agent: *
+Disallow:
+{% endhighlight %}
+
+If you want to customize the `/robots.txt` file, leave `allow robots`
+unset and set `robots` to a reference to a file in a package.
+
+{% highlight yaml %}
+robots: docassemble.missouri:data/static/robots.txt
+{% endhighlight %}
+
+Then the contents of the referenced file will be returned in response
+to a request for the `robots.txt` file.
+
+## <a name="social"></a>Social meta tags
+
+You can control the [meta tags] on **docassemble** pages by setting the
+`social` directive.
+
+{% highlight yaml %}
+social:
+  description: |
+    A site that will solve your legal problems
+  image: docassemble.missouri:data/static/logo.png
+  twitter:
+    description: |
+      The greatest legal services site in Missouri.
+    site: "@missourilaw"
+    creator: "@missourilaw"
+    image: docassemble.missouri:data/static/logofortwitter.png
+  fb:
+    app_id: "1447731792112118"
+    admins: "556880902, 547009392"
+  og:
+    description: |
+      The greatest legal services site in Missouri.
+    image: https://missourilaw.org/images/missourilaw.jpg
+{% endhighlight %}
+
+The resulting HTML will include the following in the `<head>`:
+
+{% highlight html %}
+<meta name="description" content="A site that will solve your legal problems">
+<meta name="image" content="https://docassemble.missourilaw.org/packagestatic/docassemble.missouri/logo.png?v=1.0.2">
+<meta itemprop="name" content="Missouri Law: Interviews">
+<meta itemprop="description" content="A site that will solve your legal problems">
+<meta itemprop="image" content="https://docassemble.missourilaw.org/packagestatic/docassemble.missouri/logo.png?v=1.0.2">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:description" content="The greatest legal services site in Missouri.">
+<meta name="twitter:site" content="@missourilaw">
+<meta name="twitter:creator" content="@missourilaw">
+<meta name="twitter:image" content="https://docassemble.missourilaw.org/packagestatic/docassemble.missouri/logofortwitter.png?v=1.0.2">
+<meta name="twitter:title" content="Missouri Law: Interviews">
+<meta name="og:title" content="Missouri Law: Interviews">
+<meta name="og:description" content="The greatest legal services site in Missouri.">
+<meta name="og:image" content="https://missourilaw.org/images/missourilaw.jpg">
+<meta name="og:url" content="https://docassemble.missourilaw.org/list">
+<meta name="og:locale" content="en_US">
+<meta name="og:site_name" content="Missouri Law">
+<meta name="og:type" content="website">
+<meta name="fb:app_id" content="1447731792112118">
+<meta name="fb:admins" content="556880902, 547009392">
+{% endhighlight %}
+
+In this example, the server is `https://docassemble.missourilaw.org`,
+the [`brandname`] is `Missouri Law`, the version of the
+`docassemble.missouri` package is 1.0.2, and the page that was
+accessed was the [list of available interviews] (`/list`).
+
+The `image` references are special because if you set them to a
+reference to a static file in a package, they will be replaced with a
+full URL to that file.  Alternatively, you can provide a full URL.
+
+Note that the `itemprop="name"`, `twitter:title`, and `og:title`
+fields were populated automatically.  Since the title of the page
+varies from page to page, you can't set this value in the
+Configuration.  For administrative pages, these fields are set to the
+[`brandname`] followed by a colon, followed by the name of the page.
+Note that these page names are [customizable](#customization).  For
+example, to change the name from "Interviews" to "Get Started," you
+could set `start page title: Get Started`.
+
+Likewise, `og:url` field is automatically set to the URL of the page,
+and this cannot be changed.
+
+By default, `twitter:card` is set to `summary`, `og:site_name` is set
+to the value of [`brandname`], `og:locale` is determined from the
+[`locale`], and `og:type` is set to `website`.  These can be
+specifically overridden.
+
+The `social` directive sets server-wide defaults.  Administrative
+pages will reflect these tags.  On interview pages, these defaults can
+be overridden using the `social` specifier under the interview
+[`metadata`].
+
+Note that by default, the **docassemble** server disallows web
+crawling by returning a restrictive `/robots.txt` file.  That means
+that as a practical matter, sites will not be able to consume your
+[meta tags].  The `/robots.txt` file can be [customized](#robots) so
+that your [meta tags] are accessible.
+
 ## <a name="icon size"></a>Icon size
 
 The size of icons in [decorations] and in [image buttons] is not
@@ -4317,3 +4438,7 @@ cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
 [`allowed to set`]: {{ site.baseurl }}/docs/modifiers.html#allowed to set
 [SendGrid API]: https://sendgrid.com/solutions/email-api/
 [SendGrid]: https://sendgrid.com/
+[social meta tags]: #social
+[`brandname`]: #brandname
+[`locale`]: #locale
+[meta tags]: https://en.wikipedia.org/wiki/Meta_element

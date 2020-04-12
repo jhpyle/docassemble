@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.6](https://github.com/jhpyle/docassemble/releases/tag/v1.1.6) - 2020-04-12
+
+### Added
+- The `social` Configuration directive for meta tags.
+- The `social` specifier under `metadata` for meta tags.
+- The `allow robots` Configuration directive.
+- Czech translation.
+
 ## [1.1.5](https://github.com/jhpyle/docassemble/releases/tag/v1.1.5) - 2020-04-09
 
 ### Added
@@ -43,6 +51,13 @@ short_title: Change Log
 
 ### Changed
 - Securing of uploaded filenames less strict.
+
+## [1.0.10](https://github.com/jhpyle/docassemble/releases/tag/v1.0.10) - 2020-04-12
+
+### Fixed
+- Removed 302 redirects.
+- Mako filter error.
+- Inline upload error.
 
 ## [1.0.9](https://github.com/jhpyle/docassemble/releases/tag/v1.0.9) - 2020-04-06
 

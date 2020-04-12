@@ -33,35 +33,39 @@ A `metadata` block contains information about the interview, such as
 the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
-If a `title` is defined, it will be displayed in the navigation bar in
-the web app.  If a `short title` is provided, it will be displayed
-in place of the `title` when the size of the screen is small.
+<a name="title"></a>If a `title` is defined, it will be displayed in
+the navigation bar in the web app.  If a `short title` is provided, it
+will be displayed in place of the `title` when the size of the screen
+is small.
 
-If a `logo` is defined, it will be displayed in the navigation bar in
-the web app in place of the `title` and `short title`.  The content of
-the `logo` should be raw [HTML].  If you include an image, you should
-size it to be about 20 pixels in height.
+<a name="logo"></a>If a `logo` is defined, it will be displayed in the
+navigation bar in the web app in place of the `title` and `short
+title`.  The content of the `logo` should be raw [HTML].  If you
+include an image, you should size it to be about 20 pixels in height.
 
-If a `tab title` is provided, it will be displayed as the title
-of the browser tab.  Otherwise, the `title` will be used.
+<a name="tab title"></a>If a `tab title` is provided, it will be
+displayed as the title of the browser tab.  Otherwise, the `title`
+will be used.
 
-If a `subtitle` is provided, it will be displayed as the subtitle of
-the interview in the "Interviews" list available to a logged-in
-user at `/interviews`.
+<a name="subtitle"></a>If a `subtitle` is provided, it will be
+displayed as the subtitle of the interview in the "Interviews" list
+available to a logged-in user at `/interviews`.
 
-If a `date format` is provided, this will be used as the default
-date format when the [`format_date()`] function is called, or the
-[`.format_date()`] method of the [`DADateTime`] object is called
-(which is used when [`DADateTime`] objects are reduced to text).
+<a name="date format"></a>If a `date format` is provided, this will be
+used as the default date format when the [`format_date()`] function is
+called, or the [`.format_date()`] method of the [`DADateTime`] object
+is called (which is used when [`DADateTime`] objects are reduced to
+text).
 
-If a `datetime format` is provided, this will be used as the default
-date/time format when the [`format_datetime()`] function is called, or
-the [`.format_datetime()`] method of the [`DADateTime`] object is
-called.
+<a name="datetime format"></a>If a `datetime format` is provided, this
+will be used as the default date/time format when the
+[`format_datetime()`] function is called, or the
+[`.format_datetime()`] method of the [`DADateTime`] object is called.
 
-If a `time format` is provided, this will be used as the default
-time format when the [`format_time()`] function is called, or the
-[`.format_time()`] method of the [`DADateTime`] object is called.
+<a name="time format"></a>If a `time format` is provided, this will be
+used as the default time format when the [`format_time()`] function is
+called, or the [`.format_time()`] method of the [`DADateTime`] object
+is called.
 
 These values can be overridden using the [`set_parts()` function].
 
@@ -262,6 +266,77 @@ metadata:
 
 If `suppress loading util` is `True`, the only name that will be
 imported into your interview is [`process_action`].
+
+<a name="social"></a>You can control the [meta tags] returned by an
+interview by setting `social`.
+
+{% include side-by-side.html demo="social" %}
+
+This results in the following [HTML] inside of the `<head>` tag:
+
+{% highlight html %}
+<meta name="image" content="https://demo.docassemble.org/packagestatic/docassemble.base/court.png?v=1.1.5">
+<meta name="description" content="A demonstration of meta tags.">
+<meta itemprop="description" content="A demonstration of meta tags.">
+<meta itemprop="image" content="https://demo.docassemble.org/packagestatic/docassemble.base/court.png?v=1.1.5">
+<meta itemprop="name" content="Social meta tags">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Social meta tag demo">
+<meta name="twitter:site" content="@docassemble">
+<meta name="twitter:description" content="An interview that demonstrates meta tags.">
+<meta name="twitter:image" content="https://docassemble.org/img/docassemble-logo-sq-125.jpg">
+<meta name="twitter:image:alt" content="Docassemble logo">
+<meta name="og:image" content="https://demo.docassemble.org/packagestatic/docassemble.demo/crown.png?v=1.1.5">
+<meta name="og:description" content="A one-page guided interview demonstrating meta tags.">
+<meta name="og:title" content="Social meta tags">
+<meta name="og:url" content="https://demo.docassemble.org/interview?i=docassemble.base%3Adata%2Fquestions%2Fexamples%2Fsocial.yml">
+<meta name="og:site_name" content="docassemble">
+<meta name="og:locale" content="en_US">
+<meta name="og:type" content="website">
+{% endhighlight %}
+
+In this example, the **docassemble** server is
+`https://demo.docassemble.org`, the version of the `docassemble.demo`
+package is 1.1.5, the [`brandname`] of the server is `docassemble`,
+and the [`locale`] of the server is `en_US.utf8`.
+
+The `image` references are special because if you set them to a
+reference to a static file, they will be replaced with a full URL to
+that file.  Alternatively, you can provide a full URL.  The example
+contains references to a file within the same package (`court.png`), a
+file in a different package
+(`docassemble.demo:data/static/crown.png`), and an external URL
+(`https://docassemble.org/img/docassemble-logo-sq-125.jpg`).
+
+Note that the `itemprop="name"`, `twitter: title`, and `og:title` are
+all set to the `title` of the page.  This can be overridden by setting
+the top-level `name`, `title` under `twitter`, and `title` under `og`.
+
+By default, `twitter:card` is set to `summary`, `og:url` is set to the
+URL for the interview, `og:site_name` is set to the value of
+[`brandname`], `og:locale` is determined from the [`locale`], and
+`og:type` is set to `website`.  These defaults can be specifically
+overridden.
+
+Server-wide default values for [meta tags] can be set using the
+[`social`] Configuration directive.
+
+Note that by default, the **docassemble** server disallows web
+crawling by returning a restrictive `/robots.txt` file.  That means
+that as a practical matter, sites will not be able to consume your
+[meta tags].  The `/robots.txt` file can be customized using the
+[`allow robots`] directive so that your [meta tags] are accessible.
+
+## <a name="overlapping metadata"></a>Effect of multiple `metadata` blocks
+
+An interview can contain multiple metadata blocks.  Values in later
+blocks override earlier blocks.  The values over later `metadata`
+blocks are effectively superimposed on top of earlier `metadata`
+blocks.
+
+If you write [YAML] files to be [`include`]d into other interviews, it
+is a best practice not to include [`metadata`] in [YAML] files that
+will be included into other interviews.
 
 # <a name="objects"></a>Creating `objects`
 
@@ -2034,8 +2109,8 @@ subsection.
 [`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
 [`tagged pdf` configuration directive]: {{ site.baseurl }}/docs/config.html#tagged pdf
 [`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
-[table]: {{ site.baseurl }}/docs/initial.html#table
-[tables]: {{ site.baseurl }}/docs/initial.html#table
+[table]: #table
+[tables]: #table
 [`ready()`]: https://api.jquery.com/ready/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [jQuery]: https://jquery.com/
@@ -2053,7 +2128,7 @@ subsection.
 [roles]: {{ site.baseurl}}/docs/roles.html
 [`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
 [`language` modifier]: {{ site.baseurl}}/docs/modifiers.html#language
-[`include`]: {{ site.baseurl}}/docs/initial.html#include
+[`include`]: #include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`my-functions.js`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-functions.js
@@ -2190,8 +2265,8 @@ subsection.
 [`disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [Pandoc]: http://johnmacfarlane.net/pandoc/
-[`table width`]: {{ site.baseurl }}/docs/initial.html#table width
-[`features`]: {{ site.baseurl }}/docs/initial.html#features
+[`table width`]: #table width
+[`features`]: #features
 [document]: {{ site.baseurl }}/docs/documents.html
 [list]: https://docs.python.org/3.6/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/3/library/stdtypes.html#dict
@@ -2232,3 +2307,8 @@ subsection.
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`undefine()`]: {{ site.baseurl}}/docs/functions.html#undefine
 [`invalidate()`]: {{ site.baseurl}}/docs/functions.html#invalidate
+[meta tags]: https://en.wikipedia.org/wiki/Meta_element
+[`social`]: {{ site.baseurl}}/docs/config.html#social
+[`brandname`]: {{ site.baseurl}}/docs/config.html#brandname
+[`locale`]: {{ site.baseurl}}/docs/config.html#locale
+[`allow robots`]: {{ site.baseurl}}/docs/config.html#allow robots
