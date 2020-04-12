@@ -1184,7 +1184,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         if '?' not in file_reference:
             args = dict()
             for key, val in kwargs.items():
-                if key in ('_package', '_question'):
+                if key in ('_package', '_question', '_external'):
                     continue
                 args[key] = val
             if len(args) > 0:
@@ -1888,7 +1888,11 @@ def additional_css(interview_status, js_only=False):
         return the_js
     return start_output
 
-def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False):
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False, page_title=None, social=None, yaml_filename=None):
+    if social is None:
+        social = dict()
+    if page_title is None:
+        page_title = app.config['BRAND_NAME']
     if bootstrap_theme is None and app.config['BOOTSTRAP_THEME'] is not None:
         bootstrap_theme = app.config['BOOTSTRAP_THEME']
     if bootstrap_theme is None:
@@ -1898,6 +1902,41 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
     output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    page_title = page_title.replace('\n', ' ').replace('"', '&quot;').strip()
+    for key, val in social.items():
+        if key not in ('twitter', 'og', 'fb'):
+            output += '\n    <meta name="' + key + '" content="' + social[key] + '">'
+    if 'description' in social:
+        output += '\n    <meta itemprop="description" content="' + social['description'] + '">'
+    if 'image' in social:
+        output += '\n    <meta itemprop="image" content="' + social['image'] + '">'
+    if 'name' in social:
+        output += '\n    <meta itemprop="name" content="' + social['name'] + '">'
+    else:
+        output += '\n    <meta itemprop="name" content="' + page_title + '">'
+    if 'twitter' in social:
+        if 'card' not in social['twitter']:
+            output += '\n    <meta name="twitter:card" content="summary">'
+        for key, val in social['twitter'].items():
+            output += '\n    <meta name="twitter:' + key + '" content="' + val + '">'
+        if 'title' not in social['twitter']:
+            output += '\n    <meta name="twitter:title" content="' + page_title + '">'
+    if 'fb' in social:
+        for key, val in social['fb'].items():
+            output += '\n    <meta name="fb:' + key + '" content="' + val + '">'
+    if 'og' in social and 'image' in social['og']:
+        for key, val in social['og'].items():
+            output += '\n    <meta name="og:' + key + '" content="' + val + '">'
+        if 'title' not in social['og']:
+            output += '\n    <meta name="og:title" content="' + page_title + '">'
+        if yaml_filename and 'url' not in social['og']:
+            output += '\n    <meta name="og:url" content="' + url_for('index', i=yaml_filename, _external=True) + '">'
+        if 'site_name' not in social['og']:
+            output += '\n    <meta name="og:site_name" content="' + app.config['BRAND_NAME'].replace('\n', ' ').replace('"', '&quot;').strip() + '">'
+        if 'locale' not in social['og']:
+            output += '\n    <meta name="og:locale" content="' + app.config['OG_LOCALE'] + '">'
+        if 'type' not in social['og']:
+            output += '\n    <meta name="og:type" content="website">'
     return output
 
 def process_file(saved_file, orig_file, mimetype, extension, initial=True):
@@ -5354,7 +5393,8 @@ def rootindex():
     for key, val in request.args.items():
         the_args[key] = val
     the_args['i'] = yaml_filename
-    return redirect(url_for('index', **the_args))
+    request.args = the_args
+    return index()
 
 def title_converter(content, part, status):
     if part in ('exit link', 'exit url'):
@@ -5376,9 +5416,10 @@ def test_embed():
     except:
         pass
     current_language = docassemble.base.functions.get_language()
-    start_part = standard_html_start(interview_language=current_language, debug=False, bootstrap_theme=interview_status.question.interview.get_bootstrap_theme(), external=True) + global_css + additional_css(interview_status)
+    page_title = word("Embed test")
+    start_part = standard_html_start(interview_language=current_language, debug=False, bootstrap_theme=interview_status.question.interview.get_bootstrap_theme(), external=True, page_title=page_title, social=daconfig['social'], yaml_filename=yaml_filename) + global_css + additional_css(interview_status)
     scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(interview_status, yaml_filename) + global_js
-    response = make_response(render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True)), 200)
+    response = make_response(render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True), page_title=page_title), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -5403,12 +5444,13 @@ def launch():
         update_session(data['i'], uid=data['session'])
     else:
         args['new_session'] = '1'
-    return redirect(url_for('index', **args))
+    request.args = args
+    return index()
 
 @app.route("/resume", methods=['POST'])
 @csrf.exempt
 def resume():
-    post_data = request.args.get_json(silent=True)
+    post_data = request.get_json(silent=True)
     if post_data is None:
         post_data = request.form.copy()
     if 'session' not in post_data or 'i' not in post_data:
@@ -5431,6 +5473,31 @@ def tidy_action(action):
     if 'arguments' in action:
         result['arguments'] = action['arguments']
     return result
+
+def make_response_wrapper(set_cookie, secret, expire_visitor_secret):
+    def the_wrapper(response):
+        if set_cookie:
+            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
+        if expire_visitor_secret:
+            response.set_cookie('visitor_secret', '', expires=0)
+    return the_wrapper
+
+def populate_social(social, metadata):
+    for key in ('image', 'description'):
+        if key in metadata:
+            if metadata[key] is None:
+                if key in social:
+                    del social[key]
+            elif isinstance(metadata[key], str):
+                social[key] = metadata[key].replace('\n', ' ').replace('"', '&quot;').strip()
+    for key in ('og', 'fb', 'twitter'):
+        if key in metadata and isinstance(metadata[key], dict):
+            for subkey, val in metadata[key].items():
+                if val is None:
+                    if subkey in social[key]:
+                        del social[key][subkey]
+                elif isinstance(val, str):
+                    social[key][subkey] = val.replace('\n', ' ').replace('"', '&quot;').strip()
 
 @app.route("/interview", methods=['POST', 'GET'])
 def index(action_argument=None):
@@ -5487,7 +5554,6 @@ def index(action_argument=None):
         set_cookie = False
     steps = 1
     need_to_reset = False
-    need_to_resave = False
     if 'i' not in request.args and 'state' in request.args:
         try:
             yaml_filename = re.sub(r'\^.*', '', from_safeid(request.args['state']))
@@ -5557,7 +5623,6 @@ def index(action_argument=None):
                 add_referer(user_dict)
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
-                need_to_resave = True
                 need_to_reset = True
             session_info = get_session(yaml_filename)
         else:
@@ -5570,7 +5635,6 @@ def index(action_argument=None):
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
                 session_info = get_session(yaml_filename)
-                need_to_resave = True
                 need_to_reset = True
             else:
                 session_info = update_session(yaml_filename, uid=session_parameter)
@@ -5667,18 +5731,9 @@ def index(action_argument=None):
     if need_to_reset:
         if use_cache == 0:
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
-        if need_to_resave:
-            save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        if action:
-            index_params['action'] = safeid(json.dumps(action))
-        sys.stderr.write("Redirecting back to index because of need_to_reset.\n")
-        response = do_redirect(url_for('index', **index_params), is_ajax, is_json, js_target)
-        if set_cookie:
-            response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
-        if expire_visitor_secret:
-            response.set_cookie('visitor_secret', '', expires=0)
-        release_lock(user_code, yaml_filename)
-        return response
+        response_wrapper = make_response_wrapper(set_cookie, secret, expire_visitor_secret)
+    else:
+        response_wrapper = None
     if request.method == 'POST' and not no_defs:
         disregard_input = False
     else:
@@ -5952,6 +6007,8 @@ def index(action_argument=None):
             the_zip_file = docassemble.base.util.zip_file(*files_to_zip, filename=zip_file_name)
             response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            if response_wrapper:
+                response_wrapper(response)
             return(response)
     if '_the_image' in post_data and (STRICT_MODE is False or interview_status.question.question_type == 'signature'):
         if STRICT_MODE:
@@ -6512,6 +6569,7 @@ def index(action_argument=None):
                         error_messages.append(("error", "Error: Invalid row number in table reorder: " + str(tableName) + " " + str(item)))
                         break
                 exec(tableName + '._reorder(' + ', '.join([repr(item) for item in changes]) + ')', user_dict)
+        inline_files_processed = list()
         if '_files_inline' in post_data:
             fileDict = json.loads(myb64unquote(post_data['_files_inline']))
             if not isinstance(fileDict, dict):
@@ -6629,6 +6687,7 @@ def index(action_argument=None):
                                             validated = False
                                             break
                                 the_string = file_field + " = " + the_file_list
+                                inline_files_processed.append(file_field)
                             else:
                                 the_string = file_field + " = None"
                             process_set_variable(file_field, user_dict, vars_set, old_values)
@@ -6772,6 +6831,8 @@ def index(action_argument=None):
                         except:
                             error_messages.append(("error", "Error: Invalid file_field: " + str(var_to_store)))
                             break
+                        if file_field in inline_files_processed:
+                            continue
                         if STRICT_MODE and file_field not in authorized_fields:
                             raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
                         if illegal_variable_name(file_field):
@@ -6924,6 +6985,8 @@ def index(action_argument=None):
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
+        if response_wrapper:
+            response_wrapper(response)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
         manual_checkout(manual_filename=yaml_filename)
@@ -6954,6 +7017,8 @@ def index(action_argument=None):
         response = do_refresh(is_ajax, yaml_filename)
         if return_fake_html:
             fake_up(response)
+        if response_wrapper:
+            response_wrapper(response)
         return response
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
@@ -6961,6 +7026,8 @@ def index(action_argument=None):
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
+        if response_wrapper:
+            response_wrapper(response)
         return response
     if interview_status.question.question_type == "register":
         release_lock(user_code, yaml_filename)
@@ -6968,6 +7035,8 @@ def index(action_argument=None):
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
+        if response_wrapper:
+            response_wrapper(response)
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
@@ -6978,6 +7047,8 @@ def index(action_argument=None):
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response)
+        if response_wrapper:
+            response_wrapper(response)
         return response
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
@@ -6989,6 +7060,8 @@ def index(action_argument=None):
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
                 fake_up(response)
+            if response_wrapper:
+                response_wrapper(response)
             return response
         else:
             if hasattr(interview_status.question, 'response_code'):
@@ -7006,16 +7079,14 @@ def index(action_argument=None):
             else:
                 response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
             response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
-        if set_cookie:
-            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
-        if expire_visitor_secret:
-            response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
                 fake_up(response)
+            if response_wrapper:
+                response_wrapper(response)
             return response
         else:
             if interview_status.question.response_file is not None:
@@ -7028,10 +7099,6 @@ def index(action_argument=None):
                 return ('File not found', 404)
             response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        if set_cookie:
-            response_to_send.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
-        if expire_visitor_secret:
-            response_to_send.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
         sys.stderr.write("Redirecting because of a redirect.\n")
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -7067,6 +7134,8 @@ def index(action_argument=None):
         release_lock(user_code, yaml_filename)
         if return_fake_html:
             fake_up(response_to_send)
+        if response_wrapper:
+            response_wrapper(response_to_send)
         return response_to_send
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -7452,7 +7521,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
+          url: locationBar,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -7481,7 +7550,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
+          url: locationBar,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -8178,7 +8247,7 @@ def index(action_argument=None):
         else{
           $.ajax({
             type: "POST",
-            url: $(form).attr('action'),
+            url: locationBar,
             data: $(form).serialize(),
             beforeSend: addCsrfHeader,
             xhrFields: {
@@ -8202,7 +8271,7 @@ def index(action_argument=None):
         $(this).find("input[name='ajax']").val(1);
         $.ajax({
           type: "POST",
-          url: $(this).attr('action'),
+          url: locationBar,
           data: $(this).serialize(),
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8247,7 +8316,7 @@ def index(action_argument=None):
         else{
           $.ajax({
             type: "POST",
-            url: $(form).attr('action'),
+            url: locationBar,
             data: $(form).serialize(),
             beforeSend: addCsrfHeader,
             xhrFields: {
@@ -8450,7 +8519,7 @@ def index(action_argument=None):
         var data = decodeURIComponent($(this).data('embaction'));
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index', i=yaml_filename) + '"' + """,
+          url: locationBar,
           data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8591,7 +8660,7 @@ def index(action_argument=None):
       function daRefreshSubmit(){
         $.ajax({
           type: "POST",
-          url: $('#daform').attr('action'),
+          url: locationBar,
           data: 'csrf_token=' + daCsrf + '&ajax=1',
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -10079,7 +10148,10 @@ def index(action_argument=None):
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
-        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme)
+        social = copy.deepcopy(daconfig['social'])
+        if 'social' in interview_status.question.interview.consolidated_metadata and isinstance(interview_status.question.interview.consolidated_metadata['social'], dict):
+            populate_social(social, interview_status.question.interview.consolidated_metadata['social'])
+        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme, page_title=interview_status.title, social=social, yaml_filename=yaml_filename)
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         if interview_status.question.interview.options.get('hide navbar', False):
@@ -10340,6 +10412,8 @@ def index(action_argument=None):
         else:
             do_action = None
         response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
+        if response_wrapper:
+            response_wrapper(response)
         if return_fake_html:
             fake_up(response)
     elif is_js:
@@ -10376,13 +10450,11 @@ def index(action_argument=None):
         response = make_response(output.encode('utf-8'), '200 OK')
         response.headers['Content-type'] = 'text/html; charset=utf-8'
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    if set_cookie:
-        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
-    if expire_visitor_secret:
-        response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
     if 'in error' in session:
         del session['in error']
+    if response_wrapper:
+        response_wrapper(response)
     return response
 
 def process_set_variable(field_name, user_dict, vars_set, old_values):
@@ -10725,7 +10797,8 @@ def redirect_to_interview(dispatch):
         arguments[arg] = request.args[arg]
     arguments['i'] = yaml_filename
     arguments['new_session'] = '1'
-    return redirect(url_for('index', **arguments))
+    request.args = arguments
+    return index()
 
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
 def serve_stored_file(uid, number, filename, extension):
@@ -11459,7 +11532,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index', i=i) + '"' + """,
+          url: locationBar,
           data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -11485,7 +11558,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: """ + '"' + url_for('index', i=i) + '"' + """,
+          url: locationBar,
           data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -11921,9 +11994,10 @@ def observer():
     else:
         logmessage("observer: failed to load JSON from key " + the_key)
         obj = dict()
+    page_title = word('Observation')
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
     output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
-    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar') + '">\n  <div id="dabody">\n  '
+    output += '\n    <title>' + page_title + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
     output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
     response = make_response(output.encode('utf-8'), '200 OK')
@@ -24436,6 +24510,14 @@ with app.app_context():
         app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
         app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
         app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
+        try:
+            if 'image' in daconfig['social'] and isinstance(daconfig['social']['image'], str):
+                daconfig['social']['image'] = get_url_from_file_reference(daconfig['social']['image'], _external=True)
+            for key, subkey in (('og', 'image'), ('twitter', 'image')):
+                if key in daconfig['social'] and isinstance(daconfig['social'][key], dict) and subkey in daconfig['social'][key] and isinstance(daconfig['social'][key][subkey], str):
+                    daconfig['social'][key][subkey] = get_url_from_file_reference(daconfig['social'][key][subkey], _external=True)
+        except:
+            sys.stderr.write("Error converting social image references")
         interviews_to_load = daconfig.get('preloaded interviews', None)
         if isinstance(interviews_to_load, list):
             for yaml_filename in daconfig['preloaded interviews']:

@@ -154,6 +154,29 @@ def load(**kwargs):
         else:
             config_error("The maximum content length must be an integer number of bytes, or null.")
             del daconfig['maximum content length']
+    if 'social' not in daconfig or not isinstance(daconfig['social'], dict):
+        daconfig['social'] = dict()
+    if 'twitter' not in daconfig['social'] or not isinstance(daconfig['social']['twitter'], dict):
+        daconfig['social']['twitter'] = dict()
+    if 'og' not in daconfig['social'] or not isinstance(daconfig['social']['og'], dict):
+        daconfig['social']['og'] = dict()
+    if 'fb' not in daconfig['social'] or not isinstance(daconfig['social']['fb'], dict):
+        daconfig['social']['fb'] = dict()
+    for key in list(daconfig['social'].keys()):
+        if key in ('og', 'twitter', 'fb'):
+            continue
+        if (not isinstance(daconfig['social'][key], str)) or daconfig['social'][key].strip() == '':
+            del daconfig['social'][key]
+        else:
+            daconfig['social'][key] = noquote(daconfig['social'][key])
+    for part in ('og', 'fb', 'twitter'):
+        for key in list(daconfig['social'][part].keys()):
+            if (not isinstance(daconfig['social'][part][key], str)) or daconfig['social'][part][key].strip() == '':
+                del daconfig['social'][part][key]
+            else:
+                daconfig['social'][part][key] = noquote(daconfig['social'][part][key])
+    if 'title' in daconfig['social']['og']:
+        del daconfig['social']['og']['title']
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
         for item in daconfig['administrative interviews']:
@@ -584,3 +607,8 @@ def parse_redis_uri():
     if redis_password is not None:
         redis_cli += ' -a ' + redis_password
     return (redis_host, redis_port, redis_password, redis_offset, redis_cli)
+
+def noquote(string):
+    if isinstance(string, str):
+        return string.replace('\n', ' ').replace('"', '&quot;').strip()
+    return string
