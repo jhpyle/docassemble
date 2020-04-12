@@ -6021,9 +6021,15 @@ class Interview:
             if 'social' in metadata and isinstance(metadata['social'], dict):
                 if 'image' in metadata['social'] and isinstance(metadata['social']['image'], str):
                     metadata['social']['image'] = docassemble.base.functions.server.url_finder(metadata['social']['image'], _package=metadata['_origin_package'], _external=True)
+                    if metadata['social']['image'] is None:
+                        logmessage("Invalid image reference in social meta tags")
+                        del metadata['social']['image']
                 for key, subkey in (('og', 'image'), ('twitter', 'image')):
                     if key in metadata['social'] and isinstance(metadata['social'][key], dict) and subkey in metadata['social'][key] and isinstance(metadata['social'][key][subkey], str):
                         metadata['social'][key][subkey] = docassemble.base.functions.server.url_finder(metadata['social'][key][subkey], _package=metadata['_origin_package'], _external=True)
+                        if metadata['social'][key][subkey] is None:
+                            logmessage("Invalid image reference in social meta tags")
+                            del metadata['social'][key][subkey]
                 for key, val in metadata['social'].items():
                     if isinstance(val, dict):
                         for subkey, subval in val.items():

@@ -24434,9 +24434,13 @@ with app.app_context():
         try:
             if 'image' in daconfig['social'] and isinstance(daconfig['social']['image'], str):
                 daconfig['social']['image'] = get_url_from_file_reference(daconfig['social']['image'], _external=True)
+                if daconfig['social']['image'] is None:
+                    del daconfig['social']['image']
             for key, subkey in (('og', 'image'), ('twitter', 'image')):
                 if key in daconfig['social'] and isinstance(daconfig['social'][key], dict) and subkey in daconfig['social'][key] and isinstance(daconfig['social'][key][subkey], str):
                     daconfig['social'][key][subkey] = get_url_from_file_reference(daconfig['social'][key][subkey], _external=True)
+                    if daconfig['social'][key][subkey] is None:
+                        del daconfig['social'][key][subkey]
         except:
             sys.stderr.write("Error converting social image references")
         interviews_to_load = daconfig.get('preloaded interviews', None)

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.10] - 2020-04-12
+### Fixed
+- Removed 302 redirects.
+- Mako filter error.
+
 ## [1.0.9] - 2020-04-06
 ### Fixed
 - Issue with too many flash messages on CSRF error.

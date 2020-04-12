@@ -1,5 +1,5 @@
 metadata:
-  documentation: "https://docassemble.org/docs/initial.html#metadata"
+  documentation: "https://docassemble.org/docs/initial.html#social"
   example start: 1
   example end: 1
 ---
@@ -17,7 +17,7 @@ metadata:
       title: Social meta tag demo
       site: "@docassemble"
       description: |
-        An "excellent" interview that demonstrates meta tags.
+        An interview that demonstrates meta tags.
       image: https://docassemble.org/img/docassemble-logo-sq-125.jpg
       "image:alt": Docassemble logo
 ---
