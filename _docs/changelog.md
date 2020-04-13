@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.7](https://github.com/jhpyle/docassemble/releases/tag/v1.1.7) - 2020-04-13
+
+### Fixed
+- Error with serving files through `/uploadedfile/<number>`.
+
 ## [1.1.6](https://github.com/jhpyle/docassemble/releases/tag/v1.1.6) - 2020-04-12
 
 ### Added
