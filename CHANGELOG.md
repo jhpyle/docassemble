@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.7] - 2020-04-13
+### Fixed
+- Error with serving files through `/uploadedfile/<number>`.
+
 ## [1.1.6] - 2020-04-12
 ### Added
 - The `social` Configuration directive for meta tags.

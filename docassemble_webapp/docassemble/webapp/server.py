@@ -5352,10 +5352,10 @@ def setup_variables():
 def get_variables():
     yaml_filename = request.args.get('i', None)
     if yaml_filename is None:
-        abort(400)
+        return ("Invalid request", 400)
     session_info = get_session(yaml_filename)
     if session_info is None:
-        abort(400)
+        return ("Invalid request", 400)
     session_id = session_info['uid']
     if 'visitor_secret' in request.cookies:
         secret = request.cookies['visitor_secret']
@@ -10946,7 +10946,7 @@ def do_serve_uploaded_file_with_extension(number, extension, download=False):
 def serve_uploaded_file(number):
     return do_serve_uploaded_file(number)
 
-def serve_uploaded_file(number, download=False):
+def do_serve_uploaded_file(number, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
@@ -13515,8 +13515,6 @@ def update_package():
         limitation = '<1.1'
     else:
         limitation = ''
-    if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
-        version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
     if daconfig.get('stable version', False):
         limitation = '<1.1.0'
     else:
