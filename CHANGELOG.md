@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.9] - 2020-04-14
+### Fixed
+- Typo in `Address.on_one_line()`.
+
 ## [1.1.8] - 2020-04-13
 ### Fixed
 - Error when `code` is used to generate `fields` and manually entered
