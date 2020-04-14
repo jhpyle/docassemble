@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.8] - 2020-04-13
+### Fixed
+- Error when `code` is used to generate `fields` and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
+
 ## [1.1.7] - 2020-04-13
 ### Fixed
 - Error with serving files through `/uploadedfile/<number>`.
