@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.9](https://github.com/jhpyle/docassemble/releases/tag/v1.1.9) - 2020-04-14
+
+### Fixed
+- Typo in `Address.on_one_line()`.
+
 ## [1.1.8](https://github.com/jhpyle/docassemble/releases/tag/v1.1.8) - 2020-04-13
 
 ### Fixed
