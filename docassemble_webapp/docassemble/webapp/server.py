@@ -9479,31 +9479,33 @@ def index(action_argument=None):
         });
         $("body").focus();
         if (!daJsEmbed){
-          var firstInput = $("#daform input, #daform textarea, #daform select").filter(":visible").first();
-          if (firstInput.length > 0){
-            $(firstInput).focus();
-            var inputType = $(firstInput).attr('type');
-            if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date" && inputType != "time"){
-              var strLength = $(firstInput).val().length * 2;
-              if (strLength > 0){
-                try {
-                  $(firstInput)[0].setSelectionRange(strLength, strLength);
-                }
-                catch(err) {
-                  console.log(err.message);
+          setTimeout(function(){
+            var firstInput = $("#daform input, #daform textarea, #daform select").filter(":visible").first();
+            if (firstInput.length > 0){
+              $(firstInput).focus();
+              var inputType = $(firstInput).attr('type');
+              if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date" && inputType != "time"){
+                var strLength = $(firstInput).val().length * 2;
+                if (strLength > 0){
+                  try {
+                    $(firstInput)[0].setSelectionRange(strLength, strLength);
+                  }
+                  catch(err) {
+                    console.log(err.message);
+                  }
                 }
               }
             }
-          }
-          else {
-            var firstButton = $("#danavbar-collapse .nav-link").filter(':visible').first();
-            if (firstButton.length > 0){
-              setTimeout(function(){
-                $(firstButton).focus();
-                $(firstButton).blur();
-              }, 0);
+            else {
+              var firstButton = $("#danavbar-collapse .nav-link").filter(':visible').first();
+              if (firstButton.length > 0){
+                setTimeout(function(){
+                  $(firstButton).focus();
+                  $(firstButton).blur();
+                }, 0);
+              }
             }
-          }
+          }, 15);
         }
         $(".dauncheckspecificothers").on('change', function(){
           if ($(this).is(":checked")){

@@ -2829,6 +2829,9 @@ class Question:
                             self.find_fields_in(field['code'])
                             field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
                             self.fields.append(Field(field_info))
+                            field_number += 1
+                            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                                del docassemble.base.functions.this_thread.misc['current_field']
                             continue
                         if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
@@ -7691,34 +7694,17 @@ class DAEnvironment(Environment):
         source = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, source)
         return super().from_string(source, **kwargs)
     def getitem(self, obj, argument):
-        """Get an item or attribute of an object but prefer the item."""
         try:
             return obj[argument]
         except (AttributeError, TypeError, LookupError):
-            if isinstance(argument, str):
-                try:
-                    attr = str(argument)
-                except Exception:
-                    pass
-                else:
-                    try:
-                        return getattr(obj, attr)
-                    except AttributeError:
-                        pass
             return self.undefined(obj=obj, name=argument, accesstype='item')
 
     def getattr(self, obj, attribute):
-        """Get an item or attribute of an object but prefer the attribute.
-        Unlike :meth:`getitem` the attribute *must* be a bytestring.
-        """
         try:
             return getattr(obj, attribute)
         except AttributeError:
             pass
-        try:
-            return obj[attribute]
-        except (TypeError, LookupError, AttributeError):
-            return self.undefined(obj=obj, name=attribute, accesstype='attribute')
+        return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
     if value.__class__.__name__ in ('DAFile', 'DALink', 'DAStaticFile', 'DAFileCollection', 'DAFileList'):
@@ -7748,8 +7734,8 @@ class DAStrictUndefined(StrictUndefined):
 
     @internalcode
     def __getitem__(self, index):
-        if name[:2] == '__':
-            raise IndexError(name)
+        if index[:2] == '__':
+            raise IndexError(index)
         return self._fail_with_undefined_error(item=True)
 
     @internalcode
@@ -7757,6 +7743,11 @@ class DAStrictUndefined(StrictUndefined):
         if True or self._undefined_hint is None:
             if self._undefined_obj is missing:
                 hint = "'%s' is undefined" % self._undefined_name
+            elif self._undefined_type == 'item' and hasattr(self._undefined_obj, 'instanceName'):
+                hint = "'%s[%r]' is undefined" % (
+                    self._undefined_obj.instanceName,
+                    self._undefined_name
+                )
             elif 'attribute' in kwargs or self._undefined_type == 'attribute':
                 if hasattr(self._undefined_obj, 'instanceName'):
                     hint = "'%s.%s' is undefined" % (
