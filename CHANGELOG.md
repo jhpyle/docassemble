@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.0.11] - 2020-04-15
+### Fixed
+- Typo in `Address.on_one_line()`.
+- Error when code is used to generate fields and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
+
 ## [1.0.10] - 2020-04-12
 ### Fixed
 - Removed 302 redirects.
@@ -13,7 +21,7 @@
 
 ## [1.0.8] - 2020-04-05
 ### Added
-- The `DASQLPING` Docker environment variable
+- The `DASQLPING` Docker environment variable.
 
 ## [1.0.7] - 2020-04-05
 ### Fixed
