@@ -70,6 +70,15 @@ short_title: Change Log
 ### Changed
 - Securing of uploaded filenames less strict.
 
+## [1.0.11](https://github.com/jhpyle/docassemble/releases/tag/v1.0.11) - 2020-04-15
+
+### Fixed
+- Typo in `Address.on_one_line()`.
+- Error when code is used to generate fields and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
+
 ## [1.0.10](https://github.com/jhpyle/docassemble/releases/tag/v1.0.10) - 2020-04-12
 
 ### Fixed
