@@ -16,6 +16,8 @@ import PyPDF2
 import codecs
 import time
 import stat
+import mimetypes
+import tempfile
 
 NoneType = type(None)
 
@@ -486,3 +488,31 @@ def pdf_pages(file_info, width):
         output += ' '
     return(output)
 
+def concatenate_files(path_list):
+    import docassemble.base.pandoc
+    import docx
+    new_path_list = list()
+    for path in path_list:
+        mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype in ('application/rtf', 'application/msword', 'application/vnd.oasis.opendocument.text'):
+            new_docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+            if mimetype == 'application/rtf':
+                ext = 'rtf'
+            elif mimetype == 'application/msword':
+                ext = 'doc'
+            elif mimetype == 'application/vnd.oasis.opendocument.text':
+                ext = 'odt'
+            docassemble.base.pandoc.convert_file(path, new_docx_file.name, ext, 'docx')
+            new_path_list.append(new_docx_file.name)
+        elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            new_path_list.append(path)
+    if len(new_path_list) == 0:
+        raise DAError("concatenate_files: no valid files to concatenate")
+    if len(new_path_list) == 1:
+        return new_path_list[0]
+    composer = Composer(docx.Document(new_path_list[0]))
+    for indexno in range(1, len(new_path_list)):
+        composer.append(docx.Document(new_path_list[indexno]))
+    docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+    composer.save(docx_file.name)
+    return docx_file.name

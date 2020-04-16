@@ -297,7 +297,8 @@ __all__ = [
     'json',
     're',
     'iso_country',
-    'assemble_docx'
+    'assemble_docx',
+    'docx_concatenate'
 ]
 
 #knn_machine_learner = DummyObject
@@ -2404,7 +2405,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
         return FaxStatus(None)
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
 
-def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):
+def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None, mailgun_variables=None):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
@@ -2432,6 +2433,11 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     bcc_string = email_stringer(bcc)
     #logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
     msg = Message(subject, sender=sender_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
+    if mailgun_variables is not None:
+        if isinstance(mailgun_variables, dict):
+            msg.mailgun_variables = mailgun_variables
+        else:
+            logmessage("send_email: mailgun_variables must be a dict")
     filenames_used = set()
     success = True
     for attachment in attachments:
@@ -2825,6 +2831,34 @@ class DAModel(DAObject):
             self.prediction = None
             self.probability = 1.0
 
+def docx_concatenate(*pargs, **kwargs):
+    """Concatenates DOCX files together and returns a DAFile representing
+    the new DOCX file.
+
+    """
+    paths = list()
+    get_docx_paths([x for x in pargs], paths)
+    if len(paths) == 0:
+        raise DAError("docx_concatenate: no valid files to concatenate")
+    docx_path = docassemble.base.file_docx.concatenate_files(paths)
+    docx_file = DAFile()._set_instance_name_for_function()
+    docx_file.initialize(filename=kwargs.get('filename', 'file.docx'))
+    docx_file.copy_into(docx_path)
+    docx_file.retrieve()
+    docx_file.commit()
+    return docx_file
+
+def get_docx_paths(target, paths):
+    if isinstance(target, DAFileCollection) and hasattr(target, 'docx'):
+        paths.append(target.docx.path())
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or isinstance(target, list):
+        for the_file in target:
+            get_docx_paths(the_file, paths)
+    elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
+        paths.append(target.path())
+    elif isinstance(target, str) and os.path.isfile(target):
+        paths.append(target)
+
 def pdf_concatenate(*pargs, **kwargs):
     """Concatenates PDF files together and returns a DAFile representing
     the new PDF.
@@ -2850,6 +2884,8 @@ def get_pdf_paths(target, paths):
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
         paths.append(target.path())
+    elif isinstance(target, str) and os.path.isfile(target):
+        paths.append(target)
 
 def recurse_zip_params(param, root, files):
     if isinstance(param, dict):
@@ -2883,7 +2919,30 @@ def zip_file(*pargs, **kwargs):
     zip_file = DAFile()._set_instance_name_for_function()
     zip_file.initialize(filename=kwargs.get('filename', 'file.zip'))
     zf = zipfile.ZipFile(zip_file.path(), mode='w')
+    seen = dict()
     for zip_path, path in files:
+        if zip_path not in seen:
+            seen[zip_path] = 0
+        seen[zip_path] += 1
+    revised_files = list()
+    count = dict()
+    for zip_path, path in files:
+        if seen[zip_path] > 1:
+            if zip_path not in count:
+                count[zip_path] = 0
+            while True:
+                count[zip_path] += 1
+                suffix = ('%0' + str(len(str(seen[zip_path]))) + 'd') % count[zip_path]
+                new_zip_path = re.sub(r'(\.[^\.]+)$', r'_' + suffix + r'\1', zip_path)
+                if new_zip_path == zip_path:
+                    new_zip_path = zip_path + '_' + suffix
+                if new_zip_path not in seen:
+                    seen[new_zip_path] = 1
+                    break
+            revised_files.append((new_zip_path, path))
+        else:
+            revised_files.append((zip_path, path))
+    for zip_path, path in revised_files:
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o644 << 16

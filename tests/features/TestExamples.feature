@@ -2659,6 +2659,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Interview variables"
     Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
+    And I wait 1 second
     Then I should see the phrase "The fruit."
     And I wait 3 seconds
     And I should see the phrase "Fruit is apple."

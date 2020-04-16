@@ -455,7 +455,7 @@ def convert_file(in_file, out_file, input_extension, output_extension):
             tries = 5
         docassemble.base.functions.server.applock('release', 'libreoffice')
         if result != 0:
-            logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
+            logmessage("convert_file: call to LibreOffice returned non-zero response")
         if result == 0 and os.path.isfile(to_file):
             break
         result = 1

@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.10] - 2020-04-15
+### Added
+- The `mailgun_variables` option for `send_email()`.
+- The `docx_concatenate()` function.
+### Changed
+- When more than one file with the same name is added to a ZIP file,
+  the files are renamed to avoid name collision.
+
 ## [1.1.9] - 2020-04-14
 ### Fixed
 - Typo in `Address.on_one_line()`.
@@ -53,6 +61,14 @@
 - The `_attachment` keyword parameter for `url_of()`.
 ### Changed
 - Securing of uploaded filenames less strict.
+
+## [1.0.11] - 2020-04-15
+### Fixed
+- Typo in `Address.on_one_line()`.
+- Error when code is used to generate fields and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
 
 ## [1.0.10] - 2020-04-12
 ### Fixed
