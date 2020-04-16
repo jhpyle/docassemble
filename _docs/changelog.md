@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.10](https://github.com/jhpyle/docassemble/releases/tag/v1.1.10) - 2020-04-15
+
+### Added
+- The `mailgun_variables` option for `send_email()`.
+- The `docx_concatenate()` function.
+
+### Changed
+- When more than one file with the same name is added to a ZIP file,
+  the files are renamed to avoid name collision.
+
 ## [1.1.9](https://github.com/jhpyle/docassemble/releases/tag/v1.1.9) - 2020-04-14
 
 ### Fixed
