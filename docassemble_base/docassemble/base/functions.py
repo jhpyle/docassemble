@@ -1878,14 +1878,15 @@ def ordinal_number_default(the_number, **kwargs):
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
     num = str(the_number)
-    if this_thread.language in ordinal_numbers:
-        language_to_use = this_thread.language
-    elif '*' in ordinal_numbers:
-        language_to_use = '*'
-    else:
-        language_to_use = 'en'
-    if num in ordinal_numbers[language_to_use]:
-        return ordinal_numbers[language_to_use][num]
+    if kwargs.get('use_word', True):
+        if this_thread.language in ordinal_numbers:
+            language_to_use = this_thread.language
+        elif '*' in ordinal_numbers:
+            language_to_use = '*'
+        else:
+            language_to_use = 'en'
+        if num in ordinal_numbers[language_to_use]:
+            return ordinal_numbers[language_to_use][num]
     if this_thread.language in ordinal_functions:
         language_to_use = this_thread.language
     elif '*' in ordinal_functions:
