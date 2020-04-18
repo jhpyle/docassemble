@@ -504,6 +504,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'backup days', 'DABACKUPDAYS')
         if env_exists('DASTABLEVERSION'):
             override_config(daconfig, messages, 'stable version', 'DASTABLEVERSION')
+        if env_exists('DASSLPROTOCOLS'):
+            override_config(daconfig, messages, 'nginx ssl protocols', 'DASSLPROTOCOLS')
         if env_exists('SERVERADMIN'):
             override_config(daconfig, messages, 'server administrator email', 'SERVERADMIN')
         if env_exists('LOCALE'):

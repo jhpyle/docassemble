@@ -40,6 +40,8 @@ else
     DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
 fi
 
+DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2}
+
 if [ "${POSTURLROOT}" == "/" ]; then
     DALOCATIONREWRITE=" "
 else
@@ -54,6 +56,7 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
 -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
 -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
+-e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
 -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
 -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
 "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"

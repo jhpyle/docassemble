@@ -5313,6 +5313,17 @@ def setup_variables():
     #docassemble.base.functions.reset_thread_variables()
     docassemble.base.functions.reset_local_variables()
 
+@app.after_request
+def apply_security_headers(response):
+    if app.config['SESSION_COOKIE_SECURE']:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000'
+    if daconfig.get('allow embedding', False) is not True:
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'none';"
+    elif daconfig.get('cross site domains', []):
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' " + ' '.join(daconfig['cross site domains']) + ';'
+    return response
+
 # @app.after_request
 # def print_time_of_request(response):
 #     time_spent = time.time() - g.request_start_time
@@ -11072,7 +11083,7 @@ def visit_interview():
     if 'tempuser' in session:
         del session['tempuser']
     response = redirect(url_for('index', i=i))
-    response.set_cookie('visitor_secret', obj['secret'])
+    response.set_cookie('visitor_secret', obj['secret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     return response
 
 @app.route('/observer', methods=['GET', 'POST'])
@@ -15989,6 +16000,7 @@ def playground_files():
                 content = fp.read()
             except:
                 filename = None
+                content = ''
     elif formtwo.file_content.data:
         content = re.sub(r'\r\n', r'\n', formtwo.file_content.data)
     else:
