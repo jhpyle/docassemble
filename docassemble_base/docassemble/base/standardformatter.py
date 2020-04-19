@@ -515,7 +515,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     datatypes = dict()
     varnames = dict()
     onchange = list()
-    autocomplete_id = False
+    autocomplete_id = list()
     if status.using_navigation == 'vertical':
         grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
@@ -820,7 +820,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             elif 'note' in status.extras and field.number in status.extras['note']:
                 note_fields[field.number] = markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input)
             if hasattr(field, 'address_autocomplete') and field.address_autocomplete and hasattr(field, 'saveas'):
-                autocomplete_id = field.saveas
+                autocomplete_id.append(field.saveas)
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
                 if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
@@ -1513,6 +1513,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '            <div class="da-attachment-alert da-attachment-alert-single alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
         attachment_index = 0
         editable_included = False
+        if status.extras.get('always_include_editable_files', False):
+            automatically_include_editable = True
+        else:
+            automatically_include_editable = False
         if len(status.attachments) > 1:
             file_word = 'files'
         else:
@@ -1565,7 +1569,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '            <div class="da-attachment-title-description">' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
             output += '            <div class="da-attachment-download-wrapper">\n'
             if True or show_preview or show_markdown:
-                output += '              <ul role="tablist" class="nav nav-tabs da-attachment-tablist" role="tablist">\n'
+                output += '              <ul role="tablist" class="nav nav-tabs da-attachment-tablist">\n'
                 if show_download:
                     output += '                <li class="nav-item da-attachment-tab-download-header"><a class="nav-link active" id="dadownload-tab' + str(attachment_index) + '" href="#dadownload' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dadownload' + str(attachment_index) + '" aria-selected="true">' + word('Download') + '</a></li>\n'
                 if show_preview:
@@ -1626,7 +1630,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                       <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>
                       <div class="form-group row"><label for="da_attachment_email_address" class="col-md-4 col-form-label da-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-md-8"><input alt=""" + fix_double_quote(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="da_attachment_email_address" value=""" + fix_double_quote(str(default_email)) + """/></div></div>"""
                 if editable_included:
-                    output += """
+                    if automatically_include_editable:
+                        output += """
+                      <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
+                    else:
+                        output += """
                       <div class="form-group row"><div class="col-md-4 col-form-label da-form-label datext-right"></div><div class="col-md-8"><input alt=""" + fix_double_quote(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Send') + '</span></button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
@@ -1650,7 +1658,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     <form aria-labelledby="daheadingTwo" action=\"""" + root + """\" id="dadownloadform" class="form-horizontal" method="POST">
                       <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>"""
                 if editable_included:
-                    output += """
+                    if automatically_include_editable:
+                        output += """
+                      <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
+                    else:
+                        output += """
                       <div class="form-group row"><div class="col-md-12"><input alt=""" + fix_double_quote(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Download All') + '</span></button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
@@ -1863,7 +1875,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
       });
     </script>"""
         status.extra_scripts.append(track_js)
-    if autocomplete_id:
+    if len(autocomplete_id):
         status.extra_scripts.append("""
 <script>
   daInitAutocomplete(""" + json.dumps(autocomplete_id) + """);

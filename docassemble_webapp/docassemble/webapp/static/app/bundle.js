@@ -7712,7 +7712,7 @@ var windowIsDefined = (typeof window === "undefined" ? "undefined" : _typeof(win
 if (typeof($) == 'undefined'){
     var $ = jQuery.noConflict();
 }
-var daCtx, daColor = "#000";	
+var daCtx, daColor = "#000";
 
 var daTheWidth;
 var daAspectRatio;
@@ -7736,7 +7736,7 @@ function daInitializeSignature(){
   }, 500);
   $(window).on('resize', function(){daResizeCanvas()});
   $(window).on('orientationchange', function(){daResizeCanvas()});
-  
+
   // $(".dasigpalette").click(function(){
   //   $(".dasigpalette").css("border-color", "#777");
   //   $(".dasigpalette").css("border-style", "solid");
@@ -7781,7 +7781,7 @@ function daResizeCanvas(){
   //   cheight = 350;
   // }
   // var cwidth = $(window).width() - daTheBorders;
-  
+
   // $("#sigcontent").height(cheight);
   // //$("#sigcontent").css('top', ($("#sigheader").height() + $("#sigtoppart").height()) + "px");
   // //$("#sigbottompart").css('top', (cheight) + "px");
@@ -7829,7 +7829,7 @@ function daNewCanvas(){
   if (daTheWidth < 1){
     daTheWidth = 1;
   }
-  
+
   // setup canvas
   // daCtx=document.getElementById("sigcanvas").getContext("2d");
   $("#dasigcanvas").each(function(){
@@ -7837,7 +7837,7 @@ function daNewCanvas(){
     daCtx.strokeStyle = daColor;
     daCtx.lineWidth = daTheWidth;
   });
-  
+
   // setup to trigger drawing on mouse or touch
   $("#dasigcanvas").drawTouch();
   $("#dasigcanvas").drawPointer();
@@ -7919,9 +7919,9 @@ $.fn.drawTouch = function() {
   $(this).on("touchend", moveline);
   $(this).on("touchcancel", moveline);
   $(this).on("touchstart", start);
-  $(this).on("touchmove", move);	
-}; 
-    
+  $(this).on("touchmove", move);
+};
+
 // prototype to	start drawing on pointer(microsoft ie) using canvas moveTo and lineTo
 $.fn.drawPointer = function() {
   var start = function(e) {
@@ -7963,7 +7963,7 @@ $.fn.drawPointer = function() {
   $(this).on("MSPointerDown", start);
   $(this).on("MSPointerMove", move);
   $(this).on("MSPointerUp", moveline);
-};        
+};
 
 // prototype to	start drawing on mouse using canvas moveTo and lineTo
 $.fn.drawMouse = function() {
@@ -8031,11 +8031,10 @@ function isCanvasSupported(){
   var elem = document.createElement('canvas');
   return !!(elem.getContext && elem.getContext('2d'));
 }
-  
-var daPlaceSearch, daAutocomplete, daBaseId;
 
-function daInitAutocomplete(id) {
-    daBaseId = id;
+var daAutocomplete = Object();
+
+function daInitAutocomplete(ids) {
     var timePeriod = 0;
     try {
 	google;
@@ -8044,12 +8043,21 @@ function daInitAutocomplete(id) {
 	timePeriod = 1000;
     }
     setTimeout(function(){
-	daAutocomplete = new google.maps.places.Autocomplete(
-	    (document.getElementById(daBaseId)),
-	    {types: ['address']});
-	daAutocomplete.setFields(['address_components']);
-	daAutocomplete.addListener('place_changed', daFillInAddress);
+	for (var i = 0; i < ids.length; ++i){
+	    var id = ids[i];
+	    daAutocomplete[id] = new google.maps.places.Autocomplete(
+		(document.getElementById(id)),
+		{types: ['address']});
+	    daAutocomplete[id].setFields(['address_components']);
+	    google.maps.event.addListener(daAutocomplete[id], 'place_changed', daFillInAddressFor(id));
+	}
     }, timePeriod);
+}
+
+function daFillInAddressFor(id){
+    return function(){
+	daFillInAddress(id);
+    }
 }
 
 function daInitMap(daMapInfo){
@@ -8124,106 +8132,106 @@ function daAddMarker(map, marker_info, show_marker){
     return marker;
 }
 
-function daFillInAddress() {
-  var base_varname = atob(daBaseId).replace(/.address$/, '');
-  base_varname = base_varname.replace(/[\[\]]/g, '.');
-  var re = new RegExp('^' + base_varname + '\\.(.*)');
-  var componentForm = {
-    locality: 'long_name',
-    sublocality: 'long_name',
-    administrative_area_level_3: 'long_name',
-    administrative_area_level_2: 'long_name',
-    administrative_area_level_1: 'short_name',
-    country: 'short_name',
-    postal_code: 'short_name'
-  };
-  var componentTrans = {
-    locality: 'city',
-    administrative_area_level_2: 'county',
-    administrative_area_level_1: 'state',
-    country: 'country',
-    postal_code: 'zip'
-  };
+function daFillInAddress(id) {
+    var base_varname = atob(id).replace(/.address$/, '');
+    base_varname = base_varname.replace(/[\[\]]/g, '.');
+    var re = new RegExp('^' + base_varname + '\\.(.*)');
+    var componentForm = {
+	locality: 'long_name',
+	sublocality: 'long_name',
+	administrative_area_level_3: 'long_name',
+	administrative_area_level_2: 'long_name',
+	administrative_area_level_1: 'short_name',
+	country: 'short_name',
+	postal_code: 'short_name'
+    };
+    var componentTrans = {
+	locality: 'city',
+	administrative_area_level_2: 'county',
+	administrative_area_level_1: 'state',
+	country: 'country',
+	postal_code: 'zip'
+    };
 
-  var fields_to_fill = ['address', 'city', 'county', 'state', 'zip', 'neighborhood', 'sublocality', 'administrative_area_level_3', 'postal_code'];
-  var id_for_part = {};
-  $("input, select").each(function(){
-    var the_id = $(this).attr('id');
-    if (typeof the_id !== typeof undefined && the_id !== false) {      
-      try {
-	var field_name = atob($(this).attr('id'));
-	var m = re.exec(field_name);
-	if (m.length > 0){
-	  id_for_part[m[1]] = $(this).attr('id');
+    var fields_to_fill = ['address', 'city', 'county', 'state', 'zip', 'neighborhood', 'sublocality', 'administrative_area_level_3', 'postal_code'];
+    var id_for_part = {};
+    $("input, select").each(function(){
+	var the_id = $(this).attr('id');
+	if (typeof the_id !== typeof undefined && the_id !== false) {
+	    try {
+		var field_name = atob($(this).attr('id'));
+		var m = re.exec(field_name);
+		if (m.length > 0){
+		    id_for_part[m[1]] = $(this).attr('id');
+		}
+	    } catch (e){
+	    }
 	}
-      } catch (e){
-      }
+    });
+    var place = daAutocomplete[id].getPlace();
+    if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
+	document.getElementById(id_for_part['address']).value = '';
     }
-  });
-  var place = daAutocomplete.getPlace();
-  if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
-    document.getElementById(id_for_part['address']).value = '';
-  }
 
-  for (var component in fields_to_fill) {
-    if (typeof(id_for_part[component]) != "undefined" && document.getElementById(id_for_part[component]) != null){
-      document.getElementById(id_for_part[component]).value = '';
-    }
-  }
-  
-  var street_number;
-  var route;
-  var savedValues = {};
-
-  for (var i = 0; i < place.address_components.length; i++) {
-    var addressType = place.address_components[i].types[0];
-    savedValues[addressType] = place.address_components[i]['long_name'];
-    if (addressType == 'street_number'){
-      street_number = place.address_components[i]['short_name'];
-    }                
-    if (addressType == 'route'){
-      route = place.address_components[i]['long_name'];
-    }
-    if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null){
-      var val = place.address_components[i][componentForm[addressType]];
-      if (typeof(val) != "undefined"){
-	document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
-      }
-      if (componentTrans[addressType] != addressType){
-        val = place.address_components[i]['long_name'];
-        if (typeof(val) != "undefined" && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
-          document.getElementById(id_for_part[addressType]).value = val;
+    for (var component in fields_to_fill) {
+	if (typeof(id_for_part[component]) != "undefined" && document.getElementById(id_for_part[component]) != null){
+	    document.getElementById(id_for_part[component]).value = '';
 	}
-      }
     }
-    else if (id_for_part[addressType] && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
-      var val = place.address_components[i]['long_name'];
-      if (typeof(val) != "undefined"){
-	document.getElementById(id_for_part[addressType]).value = val;
-      }
+
+    var street_number;
+    var route;
+    var savedValues = {};
+
+    for (var i = 0; i < place.address_components.length; i++) {
+	var addressType = place.address_components[i].types[0];
+	savedValues[addressType] = place.address_components[i]['long_name'];
+	if (addressType == 'street_number'){
+	    street_number = place.address_components[i]['short_name'];
+	}
+	if (addressType == 'route'){
+	    route = place.address_components[i]['long_name'];
+	}
+	if (componentForm[addressType] && id_for_part[componentTrans[addressType]] && typeof(id_for_part[componentTrans[addressType]]) != "undefined" && document.getElementById(id_for_part[componentTrans[addressType]]) != null){
+	    var val = place.address_components[i][componentForm[addressType]];
+	    if (typeof(val) != "undefined"){
+		document.getElementById(id_for_part[componentTrans[addressType]]).value = val;
+	    }
+	    if (componentTrans[addressType] != addressType){
+		val = place.address_components[i]['long_name'];
+		if (typeof(val) != "undefined" && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
+		    document.getElementById(id_for_part[addressType]).value = val;
+		}
+	    }
+	}
+	else if (id_for_part[addressType] && typeof(id_for_part[addressType]) != "undefined" && document.getElementById(id_for_part[addressType]) != null){
+	    var val = place.address_components[i]['long_name'];
+	    if (typeof(val) != "undefined"){
+		document.getElementById(id_for_part[addressType]).value = val;
+	    }
+	}
     }
-  }
-  if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
-    var the_address = ""
-    if (typeof(street_number) != "undefined"){
-      the_address += street_number + " ";
+    if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
+	var the_address = ""
+	if (typeof(street_number) != "undefined"){
+	    the_address += street_number + " ";
+	}
+	if (typeof(route) != "undefined"){
+	    the_address += route;
+	}
+	document.getElementById(id_for_part['address']).value = the_address;
     }
-    if (typeof(route) != "undefined"){
-      the_address += route;
+    if (typeof(id_for_part['city']) != "undefined" && document.getElementById(id_for_part['city']) != null){
+	if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['sublocality_level_1']) != 'undefined'){
+	    document.getElementById(id_for_part['city']).value = savedValues['sublocality_level_1'];
+	}
+	if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['neighborhood']) != 'undefined'){
+	    document.getElementById(id_for_part['city']).value = savedValues['neighborhood'];
+	}
+	if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['administrative_area_level_3']) != 'undefined'){
+	    document.getElementById(id_for_part['city']).value = savedValues['administrative_area_level_3'];
+	}
     }
-    document.getElementById(id_for_part['address']).value = the_address;
-  }
-  if (typeof(id_for_part['city']) != "undefined" && document.getElementById(id_for_part['city']) != null){
-    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['sublocality_level_1']) != 'undefined'){
-      document.getElementById(id_for_part['city']).value = savedValues['sublocality_level_1'];
-    }
-    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['neighborhood']) != 'undefined'){
-      document.getElementById(id_for_part['city']).value = savedValues['neighborhood'];
-    }
-    if (document.getElementById(id_for_part['city']).value == '' && typeof(savedValues['administrative_area_level_3']) != 'undefined'){
-      document.getElementById(id_for_part['city']).value = savedValues['administrative_area_level_3'];
-    }
-  }
 }
 
 function daGeolocate() {
@@ -8237,7 +8245,11 @@ function daGeolocate() {
 	center: geolocation,
 	radius: position.coords.accuracy
       });
-      daAutocomplete.setBounds(circle.getBounds());
+      for (var id in daAutocomplete){
+          if (daAutocomplete.hasOwnProperty(id)){
+	      daAutocomplete[id].setBounds(circle.getBounds());
+	  }
+      }
     });
   }
 }
