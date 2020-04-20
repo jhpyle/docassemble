@@ -4142,7 +4142,7 @@ class DALazyTableTemplate(DALazyTemplate):
         """Returns the table as a pandas data frame"""
         header_output, contents = self.header_and_contents()
         return pandas.DataFrame.from_records(contents, columns=header_output)
-    def export_safe_eval(x, user_dict_copy):
+    def export_safe_eval(self, x, user_dict_copy):
         try:
             return table_safe(eval(x, user_dict_copy))
         except:

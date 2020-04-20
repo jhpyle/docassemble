@@ -4752,9 +4752,13 @@ class Question:
                         except DAValidationError as err:
                             pass
                     if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
+                        if process_list_collect:
+                            saveas_to_use = from_safeid(field.saveas)
+                        else:
+                            saveas_to_use = substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators)
                         if field.number not in selectcompute:
                             raise DAError("datatype was set to object but no code or selections was provided")
-                        string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
+                        string = "_internal['objselections'][" + repr(saveas_to_use) + "] = dict()"
                         # logmessage("Doing " + string)
                         try:
                             exec(string, user_dict)
@@ -4762,7 +4766,7 @@ class Question:
                                 key = selection['key']
                                 #logmessage("key is " + str(key))
                                 real_key = from_safeid(key)
-                                string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
+                                string = "_internal['objselections'][" + repr(saveas_to_use) + "][" + repr(key) + "] = " + real_key
                                 #logmessage("Doing " + string)
                                 exec(string, user_dict)
                         except Exception as err:
