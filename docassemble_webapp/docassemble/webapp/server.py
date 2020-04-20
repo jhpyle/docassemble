@@ -8017,7 +8017,7 @@ def index(action_argument=None):
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
         if (daWhichButton != null){
-          $(".btn-da").each(function(){
+          $(".da-field-buttons .btn-da").each(function(){
             if (this != daWhichButton){
               $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary """ + app.config['BUTTON_STYLE'] + """info """ + app.config['BUTTON_STYLE'] + """warning """ + app.config['BUTTON_STYLE'] + """danger """ + app.config['BUTTON_STYLE'] + """secondary");
               $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """light");
@@ -8387,8 +8387,8 @@ def index(action_argument=None):
             if (tag != "INPUT" && tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
               e.preventDefault();
               e.stopPropagation();
-              if ($("#daform button").length == 1){
-                $("#daform button").click();
+              if ($("#daform .da-field-buttons button").length == 1){
+                $("#daform .da-field-buttons button").click();
               }
               return false;
             }
@@ -9186,6 +9186,16 @@ def index(action_argument=None):
           return false;
         });
         $(".dacollectextra").find('input, textarea, select').prop("disabled", true);
+        $("#da-extra-collect").on('click', function(){
+          $("<input>").attr({
+            type: 'hidden',
+            name: '_collect',
+            value: $(this).val()
+          }).appendTo($("#daform"));
+          $("#daform").submit();
+          event.preventDefault();
+          return false;
+        });
         $(".dacollectadd").on('click', function(e){
           e.preventDefault();
           if ($("#daform").valid()){
