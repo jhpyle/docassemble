@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.12](https://github.com/jhpyle/docassemble/releases/tag/v1.1.12) - 2020-04-20
+
+### Fixed
+ - Fields with an object-based `datatype` did not work when `list
+   collect` was used.
+ - Error with exporting tables to Excel.
+
 ## [1.1.11](https://github.com/jhpyle/docassemble/releases/tag/v1.1.11) - 2020-04-19
 
 ### Added
@@ -12,6 +19,7 @@ short_title: Change Log
 - The `use_word` keyword argument to `ordinal()`.
 - The `always include editable files` specifier for omitting the
   checkbox in the attachment UI.
+- The `nginx ssl protocols` Configuration directive.
 
 ### Changed
 - If `use https` or `behind https load balancer` are enabled, a

@@ -1412,9 +1412,7 @@ is true, the [`question`] will be expanded; if it is false, the
 [`question`] will not be expanded.
 
 A limitation of the `list collect` feature is that you cannot use
-[Mako] templating on labels, or else an error will result.  Another
-limitation is that you cannot use `datatype: object` or `datatype:
-object_checkboxes` fields in combination with `list collect`.
+[Mako] templating on field labels, or else an error will result.
 
 You can customize the behavior of the [`question`] by setting `list
 collect` to a dictionary.
