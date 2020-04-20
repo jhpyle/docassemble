@@ -2675,7 +2675,7 @@ def get_existing_session(yaml_filename, secret):
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(key, yaml_filename, secret=secret)
         except:
-            logmessage("get_existing_session: unable to decrypt existing interview session " + result.key)
+            logmessage("get_existing_session: unable to decrypt existing interview session " + key)
             continue
         update_session(yaml_filename, uid=key, key_logged=True, encrypted=is_encrypted)
         return key, is_encrypted
