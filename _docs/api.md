@@ -1676,7 +1676,7 @@ Response on success: [200]
 
 Body of response: the contents of the file
 
-## <a name="playground_get"></a>List files in Playground
+## <a name="playground_get"></a>List files in Playground or download a file
 
 Description: Returns a list of files in a folder of the [Playground]
 or returns the contents of a specific file.
