@@ -1936,7 +1936,7 @@ def ordinal_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
     number function, see ordinal_number()."""
-    result = ordinal_number(int(float(the_number)) + 1)
+    result = ordinal_number(int(float(the_number)) + 1, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return capitalize(result)
     return result

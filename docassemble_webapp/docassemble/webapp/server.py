@@ -4781,31 +4781,34 @@ def github_unconfigure():
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
-    resp, content = http.request("https://api.github.com/user/keys", "GET")
-    if int(resp['status']) == 200:
-        for key in json.loads(content.decode()):
-            if key['title'] == app.config['APP_NAME']:
-                found = True
-                id_to_remove = key['id']
-    else:
-        raise DAError("github_configure: could not get information about ssh keys")
-    while found is False:
-        next_link = get_next_link(resp)
-        if next_link:
-            resp, content = http.request(next_link, "GET")
-            if int(resp['status']) == 200:
-                for key in json.loads(content.decode()):
-                    if key['title'] == app.config['APP_NAME']:
-                        found = True
-                        id_to_remove = key['id']
-            else:
-                raise DAError("github_unconfigure: could not get additional information about ssh keys")
+    try:
+        resp, content = http.request("https://api.github.com/user/keys", "GET")
+        if int(resp['status']) == 200:
+            for key in json.loads(content.decode()):
+                if key['title'] == app.config['APP_NAME']:
+                    found = True
+                    id_to_remove = key['id']
         else:
-            break
-    if found:
-        resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
-        if int(resp['status']) != 204:
-            raise DAError("github_unconfigure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())
+            raise DAError("github_configure: could not get information about ssh keys")
+        while found is False:
+            next_link = get_next_link(resp)
+            if next_link:
+                resp, content = http.request(next_link, "GET")
+                if int(resp['status']) == 200:
+                    for key in json.loads(content.decode()):
+                        if key['title'] == app.config['APP_NAME']:
+                            found = True
+                            id_to_remove = key['id']
+                else:
+                    raise DAError("github_unconfigure: could not get additional information about ssh keys")
+            else:
+                break
+        if found:
+            resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
+            if int(resp['status']) != 204:
+                raise DAError("github_unconfigure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())
+    except:
+        logmessage("Error deleting SSH keys on GitHub")
     delete_ssh_keys()
     r.delete('da:github:userid:' + str(current_user.id))
     r.delete('da:using_github:userid:' + str(current_user.id))
@@ -23088,7 +23091,13 @@ def api_playground():
     from docassemble.webapp.playground import PlaygroundSection
     pg_section = PlaygroundSection(section=section, project=project)
     if request.method == 'GET':
-        return jsonify(pg_section.file_list)
+        if 'filename' not in request.args:
+            return jsonify(pg_section.file_list)
+        if not pg_section.file_exists(request.args['filename']):
+            return jsonify_with_status("File not found", 404)
+        response_to_send = send_file(pg_section.get_file(request.args['filename']), mimetype=pg_section.get_mimetype(request.args['filename']))
+        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return response_to_send
     elif request.method == 'DELETE':
         pg_section.delete_file(request.args['filename'])
         if section == 'modules':

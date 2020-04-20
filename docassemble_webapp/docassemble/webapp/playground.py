@@ -312,6 +312,9 @@ class PlaygroundSection(object):
         return out_list            
     def get_file(self, filename):
         return os.path.join(directory_for(self.get_area(), self.project), filename)
+    def get_mimetype(self, filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        return mimetype
     def file_exists(self, filename):
         path = self.get_file(filename)
         if os.path.isfile(path):

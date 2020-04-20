@@ -1,0 +1,14 @@
+metadata:
+  title: Date
+  documentation: "https://docassemble.org/docs/fields.html#date"
+---
+question: What is your date of birth?
+fields:
+  - Your birthday: birthdate
+    datatype: date
+    default: |
+      ${ today().minus(years=100) }
+---
+mandatory: True
+question: |
+  You were born on ${ birthdate }.

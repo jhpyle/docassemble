@@ -1,0 +1,19 @@
+metadata:
+  title: Always including editable files
+  documentation: "https://docassemble.org/docs/documents.html#always include editable files"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+question: Your document is ready.
+attachment:
+  - name: A hello world document
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+    valid formats:
+      - pdf
+      - docx
+always include editable files: True
