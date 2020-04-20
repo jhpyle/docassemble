@@ -1678,7 +1678,8 @@ Body of response: the contents of the file
 
 ## <a name="playground_get"></a>List files in Playground
 
-Description: Returns a list of files in a folder of the [Playground].
+Description: Returns a list of files in a folder of the [Playground]
+or returns the contents of a specific file.
 
 Path: `/api/playground`
 
@@ -1698,6 +1699,9 @@ Parameters:
  - `project` (optional): the project in the [Playground] from which to
    obtain the list of files.  The default is `default`, which is the
    "Default Playground" project.
+ - `filename` (optional): the name of the file to be downloaded.  If a
+   `filename` is not provided, a [JSON] list of files will be
+   returned.
 
 Required privileges:
 - `admin` or
@@ -1711,6 +1715,7 @@ Responses on failure:
  - [400] "Invalid folder" if the value of `folder` is unknown.
  - [400] "Invalid project" if the project given by `project` does not
    exist.
+ - [404] "File not found" if the `filename` did not exist.
 
 Response on success: [200]
 

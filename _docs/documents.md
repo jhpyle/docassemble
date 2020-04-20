@@ -1625,6 +1625,16 @@ enable e-mailing is to use the [Mailgun API] (which is free), but you
 can also use an [external SMTP server] hosted by [Mailgun] or another
 provider.
 
+## <a name="always include editable files"></a>Always include editable files
+
+By default, if an attachment includes a [PDF] version along with an
+editable version, such as a DOCX file, the user will have an option of
+including the editable version in the e-mail or download.  If you want
+the editable documents to always be included, set `always include
+editable files` to `True`.
+
+{% include side-by-side.html demo="always-include" %}
+
 ## <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
 When [`attachments`] are included in a [`question`], the user will be

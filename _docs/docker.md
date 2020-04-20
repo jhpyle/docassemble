@@ -893,6 +893,12 @@ your container for the new configuration to take effect.
   `stable` branch of the [GitHub] repository, which only receives bug
   fixes and security updates.  See the [`stable version`]
   configuration directive.
+* <a name="DASSLPROTOCOLS"></a>`DASSLPROTOCOLS`: This indicates the
+  SSL protocols that [NGINX] should accept.  The default is `TLSv1.2`.
+  You might want to set it to `TLSv1 TLSv1.1 TLSv1.2` if you need to
+  support older browsers.  The value is passed directly to the [NGINX]
+  directive [`ssl_protocols`].  See the [`nginx ssl protocols`]
+  configuration directive.
 * <a
   name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
   It was noted above that once the [configuration] file is located in
@@ -2163,3 +2169,4 @@ line), as the containers depend on the images.
 [`update on start`]: {{ site.baseurl }}/docs/config.html#update on start
 [`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
 [`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
+[`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html

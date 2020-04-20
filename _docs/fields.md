@@ -442,14 +442,7 @@ a document or a question, you will probably want to use the
 To set a default value, you can set [`default`] to any value that can
 be understood as a date.
 
-{% highlight yaml %}
-question: What is your date of birth?
-fields:
-  - Your birthday: birthdate
-    datatype: date
-    default: |
-      ${ today().minus(years=100) }
-{% endhighlight %}
+{% include side-by-side.html demo="date-default" %}
 
 ## <a name="time"></a>Times
 

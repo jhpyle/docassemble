@@ -502,6 +502,20 @@
         A document with a classic message
       content: |
         Hello, world!
+"always-include": |-
+  mandatory: True
+  question: Your document is ready.
+  attachment:
+    - name: A hello world document
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+      valid formats:
+        - pdf
+        - docx
+  always include editable files: True
 "animal": |-
   question: What is your favorite animal?
   fields:
@@ -2008,6 +2022,13 @@
   ---
   code: |
     appt_datetime = appt_date.replace_time(appt_time)
+"date-default": |-
+  question: What is your date of birth?
+  fields:
+    - Your birthday: birthdate
+      datatype: date
+      default: |
+        ${ today().minus(years=100) }
 "date-demo": |-
   question: |
     When did you file the complaint?

@@ -3237,6 +3237,26 @@ a running server, but they will only be effective if you restart the
 system using `docker stop -t 600 <container ID>` followed by
 `docker start <container ID>`.
 
+## <a name="nginx ssl protocols"></a>SSL protocols
+
+The `nginx ssl protocols` directive indicates the SSL protocols that
+[NGINX] should accept (assuming you are using [NGINX]).  You might
+want to set it to `TLSv1 TLSv1.1 TLSv1.2` if you need to support older
+browsers.
+
+{% highlight yaml %}
+nginx ssl protocols: TLSv1 TLSv1.1 TLSv1.2
+{% endhighlight %}
+
+The value is passed directly to the [NGINX] directive
+[`ssl_protocols`].  The default is `TLSv1.2`.
+
+This variable is typically set through the environment variable
+[`DASSLPROTOCOLS`].  You can change `nginx ssl protocols` on a running
+server, but the change will only be effective if you restart the
+system using `docker stop -t 600 <container ID>` followed by `docker
+start <container ID>`.
+
 ## <a name="cross site domains"></a>Cross-Origin Resource Sharing (CORS)
 
 Set the `cross site domains` directive if you want the web server to
@@ -4442,3 +4462,5 @@ cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
 [`brandname`]: #brandname
 [`locale`]: #locale
 [meta tags]: https://en.wikipedia.org/wiki/Meta_element
+[`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
+[`DASSLPROTOCOLS`]: {{ site.baseurl }}/docs/docker.html#DASSLPROTOCOLS

@@ -4,6 +4,28 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.11](https://github.com/jhpyle/docassemble/releases/tag/v1.1.11) - 2020-04-19
+
+### Added
+- Ability to download files by specifying a `filename` parameter to
+  GET requests to `/api/playground`.
+- The `use_word` keyword argument to `ordinal()`.
+- The `always include editable files` specifier for omitting the
+  checkbox in the attachment UI.
+
+### Changed
+- If `use https` or `behind https load balancer` are enabled, a
+  `Strict-Transport-Security` header is returned.
+- If `allow embedding` is not set to `True`, the `X-Frame-Options` and
+  `Content-Security-Policy` will block iframes.  If `allow embedding`
+  is set to `True` and `cross site domains` is set, the list of
+  domains will be used for the `Content-Security-Policy` header.
+- More than one `address autocomplete` can now be used on a screen.
+
+### Fixed
+- Disconnecting from GitHub integration failed if the existing
+  integration no longer functioned.
+
 ## [1.1.10](https://github.com/jhpyle/docassemble/releases/tag/v1.1.10) - 2020-04-15
 
 ### Added

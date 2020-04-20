@@ -3402,7 +3402,9 @@ untouched.
 ## <a name="ordinal_number"></a>ordinal_number()
 
 * `ordinal_number(8)` returns `eighth`.
+* `ordinal_number(8, capitalize=True)` returns `Eighth`.
 * `ordinal_number(11)` returns `11th`.
+* `ordinal_number(8, use_word=False)` returns `8th`.
 
 {% include side-by-side.html demo="ordinal-number" %}
 
@@ -3430,8 +3432,6 @@ es_ordinal_nums = {
 docassemble.base.util.update_ordinal_numbers('es', es_ordinal_nums)
 docassemble.base.util.update_ordinal_function()
 {% endhighlight %}
-
-
 
 Since these functions are not thread-safe, you should only run them
 from a [Python module] in code that runs when the module loads.
