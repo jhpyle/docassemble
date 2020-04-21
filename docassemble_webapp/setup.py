@@ -8,9 +8,9 @@ def read(fname):
 openpyxl_version = "2.5.14" if sys.version.startswith('3.5') else "3.0.0"
 twine_version = "1.15.0" if sys.version.startswith('3.5') else "2.0.0"
 install_requires = [
-    'docassemble==1.1.12',
-    'docassemble.base==1.1.12',
-    'docassemble.demo==1.1.12',
+    'docassemble==1.1.13',
+    'docassemble.base==1.1.13',
+    'docassemble.demo==1.1.13',
     "3to2==1.1.1",
     "airtable-python-wrapper==0.12.0",
     "alembic==1.2.1",
@@ -206,7 +206,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.webapp',
-      version='1.1.12',
+      version='1.1.13',
       python_requires='>=3.5',
       description=('The web application components of the docassemble system.'),
       long_description=read("README.md"),
