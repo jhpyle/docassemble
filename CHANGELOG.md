@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.1.13] - 2020-04-20
+## [1.1.13] - 2020-04-21
 ### Added
  - The `title url` and `title url opens in other window` screen parts.
  - A "retry" button on the error screen.
