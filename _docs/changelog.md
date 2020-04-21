@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.13](https://github.com/jhpyle/docassemble/releases/tag/v1.1.13) - 2020-04-21
+
+### Added
+ - The `title url` and `title url opens in other window` screen parts.
+ - A "retry" button on the error screen.
+
+### Changed
+ - Auto-focus on page load will only be given to an element in the first non-`note`,
+   non-`html` field.
+
+### Fixed
+ - Pressing enter key on the list collect screen clicked a hidden
+   button.
+ - Changes in 1.1.11 blocked certain types of uploads.
+
 ## [1.1.12](https://github.com/jhpyle/docassemble/releases/tag/v1.1.12) - 2020-04-20
 
 ### Fixed

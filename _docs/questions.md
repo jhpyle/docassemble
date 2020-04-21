@@ -379,6 +379,11 @@ results with different screen sizes.
   large screen.
 * The `short title` appears in the upper-left on a small screen.  If
   not provided, the `title` is used in its place.
+* The `title url` is the URL to which the user will be directed if the
+  user clicks on the title.  The default is that clicking the title
+  does nothing.
+* The `title url opens in other window` can be set to `False` if you
+  do not want the `title url` to open in new window or tab.
 * The `subtitle` is not visible on the screen, but can be seen in the
   list of [Available Interviews].
 * The `logo`, if set, will replace the `title` and `short title` with
@@ -396,6 +401,8 @@ results with different screen sizes.
   is set to `False`.
 * The `exit label` is the visible label of the exit link in the upper
   right corner, which is present if [`show login`] is set to `False`.
+* The `exit url` is a URL to which the user will be directed when they
+  click the exit link.
 * The `help label` is the default label for the "help" tab.  It can be
   overridden by a `label` specifier inside a [`help`] modifier.  If
   you set a [`question help button`], the `help label` will be used
@@ -529,3 +536,5 @@ For more information about each method, see its documentation.
 [`exit url`]: {{ site.baseurl }}/docs/initial.html#exit url
 [`question back button`]: {{ site.baseurl }}/docs/initial.html#question back button
 [`question help button`]: {{ site.baseurl }}/docs/initial.html#question help button
+[`title url`]: {{ site.baseurl }}/docs/initial.html#title url
+[`title url opens in other window`]: {{ site.baseurl }}/docs/initial.html#title url opens in other window

@@ -2167,11 +2167,13 @@ the e-mail address is already registered is not revealed.
 
 ## <a name="email confirmation"></a>E-mail confirmation for certain privileges
 
-If you want to verify e-mail addresses of users, you can set the
-`email confirmation privileges` directive to a list of [privileges] for which
+If you are using `confirm registration` but you want to verify e-mail
+addresses only for specific user privileges, you can set the `email
+confirmation privileges` directive to a list of [privileges] for which
 e-mail confirmation should be a requirement of logging in.
 
 {% highlight yaml %}
+confirm registration: True
 email confirmation privileges:
   - admin
   - developer

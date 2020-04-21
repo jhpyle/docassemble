@@ -51,6 +51,16 @@ will be used.
 displayed as the subtitle of the interview in the "Interviews" list
 available to a logged-in user at `/interviews`.
 
+<a name="title url"></a>If a `title url` is provided, clicking on the
+title will open the given URL.  Otherwise, the default behavior is
+that clicking the title does nothing except that when the user is on a
+help screen, clicking the title takes the user back to the question.
+
+<a name="title url opens in other window"></a>If you provide a `title
+url` and you do not want the URL to open in another browser window or
+tab, set `title url opens in other window` to `False`.  The default is
+that the link does open another window or tab.
+
 <a name="date format"></a>If a `date format` is provided, this will be
 used as the default date format when the [`format_date()`] function is
 called, or the [`.format_date()`] method of the [`DADateTime`] object
@@ -326,6 +336,16 @@ crawling by returning a restrictive `/robots.txt` file.  That means
 that as a practical matter, sites will not be able to consume your
 [meta tags].  The `/robots.txt` file can be customized using the
 [`allow robots`] directive so that your [meta tags] are accessible.
+
+<a name="example start"></a><a name="example start"></a>If you look at
+example interviews that are used in the documentation, you will see
+`example start` and `example end` in the `metadata`.  These indicate
+the YAML blocks that should be excerpted and included in the
+documentation.  There is a script in the [GitHub repository] called
+`make-screenshots.sh`, which calls `get_yaml_from_example.py`, which
+scans the [YAML] files in a directory and outputs [YAML] containing
+the excerpts, which is then processed by the [Jekyll] documentation
+site that is hosted on [GitHub Pages].
 
 ## <a name="overlapping metadata"></a>Effect of multiple `metadata` blocks
 
@@ -2312,3 +2332,6 @@ subsection.
 [`brandname`]: {{ site.baseurl}}/docs/config.html#brandname
 [`locale`]: {{ site.baseurl}}/docs/config.html#locale
 [`allow robots`]: {{ site.baseurl}}/docs/config.html#allow robots
+[Jekyll]: https://jekyllrb.com/
+[GitHub Pages]: https://pages.github.com/
+[GitHub repository]: {{ site.github.repository_url }}
