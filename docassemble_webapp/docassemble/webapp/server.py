@@ -5331,7 +5331,7 @@ def apply_security_headers(response):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
     if daconfig.get('allow embedding', False) is not True:
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
-        response.headers["Content-Security-Policy"] = "frame-ancestors 'none';"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self';"
     elif daconfig.get('cross site domains', []):
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' " + ' '.join(daconfig['cross site domains']) + ';'
     return response

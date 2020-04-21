@@ -8,7 +8,9 @@
  - Auto-focus on page load will only be given to an element in the first non-`note`,
    non-`html` field.
 ### Fixed
- - Pressing enter key on the list collect screen clicked a hidden button.
+ - Pressing enter key on the list collect screen clicked a hidden
+   button.
+ - Changes in 1.1.11 blocked certain types of uploads.
 
 ## [1.1.12] - 2020-04-20
 ### Fixed
