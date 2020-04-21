@@ -3,6 +3,7 @@
 ## [1.1.13] - 2020-04-20
 ### Added
  - The `title url` and `title url opens in other window` screen parts.
+ - A "retry" button on the error screen.
 ### Changed
  - Auto-focus on page load will only be given to an element in the first non-`note`,
    non-`html` field.

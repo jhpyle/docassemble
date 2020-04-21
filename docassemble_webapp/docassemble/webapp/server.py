@@ -18613,6 +18613,11 @@ def server_error(the_error):
         }
       }
       $( document ).ready(function() {
+        $("#da-retry").on('click', function(e){
+          location.reload();
+          e.preventDefault();
+          return false;
+        });
         daShowNotifications();
       });
     </script>"""
