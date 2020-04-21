@@ -1029,7 +1029,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -2504,8 +2504,17 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             navbar += """\
         <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
+    if status.title_url:
+        url = status.title_url
+        if str(status.title_url_opens_in_other_window) == 'False':
+            target = ''
+        else:
+            target = ' target="_blank"'
+    else:
+        url = '#'
+        target = ''
     navbar += """\
-        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href="#"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
+        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + url + '"' + target + """><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
 """
     help_message = word("Help is available")
     help_label = None
@@ -5411,7 +5420,7 @@ def rootindex():
     return index()
 
 def title_converter(content, part, status):
-    if part in ('exit link', 'exit url'):
+    if part in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
         return content
     if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo'):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
@@ -9251,8 +9260,10 @@ def index(action_argument=None):
           $(this).tab('show');
         });
         $('#dapagetitle').click(function(e) {
-          e.preventDefault();
-          $('#daquestionlabel').tab('show');
+          if ($(this).prop('href') == '#'){
+            e.preventDefault();
+            $('#daquestionlabel').tab('show');
+          }
         });
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
@@ -9506,7 +9517,7 @@ def index(action_argument=None):
         $("body").focus();
         if (!daJsEmbed){
           setTimeout(function(){
-            var firstInput = $("#daform input, #daform textarea, #daform select").filter(":visible").first();
+            var firstInput = $("#daform .da-field-container").not(".da-field-container-note").first().find("input, textarea, select").filter(":visible").first();
             if (firstInput.length > 0){
               $(firstInput).focus();
               var inputType = $(firstInput).attr('type');
@@ -10168,6 +10179,8 @@ def index(action_argument=None):
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
     interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
     interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    interview_status.title_url = title_info.get('title url', None)
+    interview_status.title_url_opens_in_other_window = title_info.get('title url opens in other window', True)
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
@@ -22520,6 +22533,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
     interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
     interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    interview_status.title_url = title_info.get('title url', None)
+    interview_status.title_url_opens_in_other_window = title_info.get('title url opens in other window', True)
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])

@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.1.13] - 2020-04-20
+### Added
+ - The `title url` and `title url opens in other window` screen parts.
+### Changed
+ - Auto-focus on page load will only be given to an element in the first non-`note`,
+   non-`html` field.
+### Fixed
+ - Pressing enter key on the list collect screen clicked a hidden button.
+
 ## [1.1.12] - 2020-04-20
 ### Fixed
  - Fields with an object-based `datatype` did not work when `list
