@@ -3245,25 +3245,31 @@ If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then:
 
 * `comma_and_list(things)` returns `lions, tigers, and bears`.
-* `comma_and_list(things, oxford=False)` returns `lions, tigers and bears`.
-* `comma_and_list('fish', 'toads', 'frogs')` returns `fish,
-toads, and frogs`.
+* `comma_and_list(things, oxford=False)` returns `lions, tigers and
+  bears`.
+* `comma_and_list('fish', 'toads', 'frogs')` returns `fish, toads, and
+  frogs`.
 * `comma_and_list('fish', 'toads')` returns `fish and toads`
 * `comma_and_list('fish')` returns `fish`.
-
-`comma_and_list` Also accepts the following optional keyword parameters:
-
-* "and_string": the word used before the last item in the list. E.g., "and" for "Jane and John" or "or" for "Jane or John". Not translated automatically
-* `oxford`: True/False. Set to True if you want a so-called Oxford, or trailing comma before the word "and"
-* `comma_string`: the separator used between each item. Defaults to ','. You could use ';' if you want each item separated by a semi-colon
-* `before_and`: defaults to empty. Word that will appear before the word "and"
-* `after_and`: defaults to empty. Word that will appear after the word "and" but before the final list item
+* `comma_and_list('fish', 'toads', 'frogs', and_string='or')` returns
+  `fish, toads, or frogs`.
+* `comma_and_list('fish', 'toads', 'frogs', comma_string='; ')`
+  returns `fish; toads; and frogs`.
+* `comma_and_list('fish', 'toads', 'frogs', before_and='---')` returns
+  `fish; toads;---and frogs`.
+* `comma_and_list('fish', 'toads', 'frogs', after_and=' (last but not
+  least) ')` returns `fish, toads, and (last but not least) frogs`.
 
 ## <a name="comma_list"></a>comma_list()
 
 If `things` is a [Python list] with the elements
-`['lions', 'tigers', 'bears']`, then `comma_list(things)` will return
-`lions, tigers, bears`.
+`['lions', 'tigers', 'bears']`, then:
+
+* `comma_list(things)` returns `lions, tigers, bears`.
+* `comma_list(things, comma_string='; ')` returns `lions; tigers; bears`.
+* `comma_list('fish', 'toads', 'frogs')` returns `fish, toads, and
+  frogs`.
+* `comma_list('fish')` returns `fish`.
 
 ## <a name="add_separators"></a>add_separators()
 
