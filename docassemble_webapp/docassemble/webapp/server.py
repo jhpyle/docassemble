@@ -13623,6 +13623,16 @@ def create_playground_package():
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
         github_auth = None
+    area = dict()
+    area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+    if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
+        filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
+        info = dict()
+        with open(filename, 'rU', encoding='utf-8') as fp:
+            content = fp.read()
+            info = yaml.load(content, Loader=yaml.FullLoader)
+    else:
+        info = dict()
     if do_github:
         if not app.config['USE_GITHUB']:
             return ('File not found', 404)
@@ -13661,46 +13671,45 @@ def create_playground_package():
         if github_email is None:
             resp, content = http.request("https://api.github.com/user/emails", "GET")
             if int(resp['status']) == 200:
-                info = json.loads(content.decode())
-                for item in info:
+                email_info = json.loads(content.decode())
+                for item in email_info:
                     if item.get('email', None) and item.get('visibility', None) != 'private':
                         github_email = item['email']
         if github_user_name is None or github_email is None:
             raise DAError("create_playground_package: login and/or email not present in user info from GitHub")
-        all_repositories = dict()
+        github_url_from_file = info.get('github_url', None)
+        found = False
+        found_strong = False
+        commit_repository = None
         resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
         if int(resp['status']) == 200:
             repo_info = json.loads(content.decode('utf-8', 'ignore'))
-            all_repositories[repo_info['name']] = repo_info
-        if github_auth_info['shared']:
+            commit_repository = repo_info
+            found = True
+            if github_url_from_file is None or github_url_from_file in [repo_info['html_url'], repo_info['ssh_url']]:
+                found_strong = True
+        if found_strong is False and github_auth_info['shared']:
             repositories = get_user_repositories(http)
-            for repository in repositories:
-                if repository['name'] in all_repositories and repository['owner']['login'] == github_user_name:
+            for repo_info in repositories:
+                if repo_info['name'] != github_package_name or (commit_repository is not None and commit_repository.get('html_url', None) is not None and commit_repository['html_url'] == repo_info['html_url']) or (commit_repository is not None and commit_repository.get('ssh_url', None) is not None and commit_repository['ssh_url'] == repo_info['ssh_url']):
                     continue
-                all_repositories[repository['name']] = repository
-        if github_auth_info['orgs']:
-            org_repositories = []
+                if found and github_url_from_file is not None and github_url_from_file not in [repo_info['html_url'], repo_info['ssh_url']]:
+                    break
+                commit_repository = repo_info
+                found = True
+                if github_url_from_file is None or github_url_from_file in [repo_info['html_url'], repo_info['ssh_url']]:
+                    found_strong = True
+                break
+        if found_strong is False and github_auth_info['orgs']:
             orgs_info = get_orgs_info(http)
             for org_info in orgs_info:
-                resp, content = http.request("https://api.github.com/orgs/:" + str(org_info['login']) + '/repos', "GET")
+                resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
                 if int(resp['status']) == 200:
-                    org_repositories.extend(json.loads(content.decode()))
-                    while True:
-                        next_link = get_next_link(resp)
-                        if next_link:
-                            resp, content = http.request(next_link, "GET")
-                            if int(resp['status']) != 200:
-                                raise DAError("could not get information from next URL")
-                            else:
-                                org_repositories.extend(json.loads(content.decode()))
-                        else:
-                            break
-            for repository in org_repositories:
-                if repository['name'] in all_repositories:
-                    continue
-                all_repositories[repository['name']] = repository
-    area = dict()
-    area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+                    repo_info = json.loads(content.decode('utf-8', 'ignore'))
+                    if found and github_url_from_file is not None and github_url_from_file not in [repo_info['html_url'], repo_info['ssh_url']]:
+                        break
+                    commit_repository = repo_info
+                    break
     file_list = dict()
     the_directory = directory_for(area['playgroundpackages'], current_project)
     file_list['playgroundpackages'] = sorted([re.sub(r'^docassemble.', r'', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -13780,10 +13789,22 @@ def create_playground_package():
                     time.sleep(3.0)
                     return redirect(url_for('playground_packages', project=current_project, file=current_package))
             if do_github:
-                if github_package_name in all_repositories:
-                    first_time = False
+                if commit_repository is not None:
+                    resp, content = http.request("https://api.github.com/repos/" + commit_repository['full_name'] + "/commits?per_page=1" , "GET")
+                    if int(resp['status']) == 200:
+                        commit_list = json.loads(content.decode('utf-8', 'ignore'))
+                        if len(commit_list) == 0:
+                            first_time = True
+                            is_empty = True
+                        else:
+                            first_time = False
+                            is_empty = False
+                    else:
+                        first_time = True
+                        is_empty = True
                 else:
                     first_time = True
+                    is_empty = False
                     headers = {'Content-Type': 'application/json'}
                     the_license = 'mit' if re.search(r'MIT License', info.get('license', '')) else None
                     body = json.dumps(dict(name=github_package_name, description=info.get('description', None), homepage=info.get('url', None), license_template=the_license))
@@ -13792,8 +13813,7 @@ def create_playground_package():
                         raise DAError("create_playground_package: unable to create GitHub repository: status " + str(resp['status']) + " " + str(content))
                     resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
                     if int(resp['status']) == 200:
-                        repo_info = json.loads(content.decode('utf-8', 'ignore'))
-                        all_repositories[repo_info['name']] = repo_info
+                        commit_repository = json.loads(content.decode('utf-8', 'ignore'))
                     else:
                         raise DAError("create_playground_package: GitHub repository could not be found after creating it.")
                 if first_time:
@@ -13801,9 +13821,14 @@ def create_playground_package():
                 else:
                     current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
                     if os.path.isfile(current_commit_file):
-                        pulled_already = True
                         with open(current_commit_file, 'rU', encoding='utf-8') as fp:
                             commit_code = fp.read()
+                        commit_code = commit_code.strip()
+                        resp, content = http.request("https://api.github.com/repos/" + commit_repository['full_name'] + "/commits/" + commit_code , "GET")
+                        if int(resp['status']) == 200:
+                            pulled_already = True
+                        else:
+                            pulled_already = False
                     else:
                         pulled_already = False
                 directory = tempfile.mkdtemp()
@@ -13816,8 +13841,8 @@ def create_playground_package():
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
                 #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
-                ssh_url = all_repositories[github_package_name].get('ssh_url', None)
-                github_url = all_repositories[github_package_name].get('html_url', None)
+                ssh_url = commit_repository.get('ssh_url', None)
+                github_url = commit_repository.get('html_url', None)
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
@@ -13826,13 +13851,62 @@ def create_playground_package():
                 else:
                     branch_option = '-b master '
                 tempbranch = 'playground' + random_string(5)
-                output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
-                try:
-                    output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("create_playground_package: error running git clone.  " + output)
                 packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+                the_user_name = str(current_user.first_name) + " " + str(current_user.last_name)
+                if the_user_name == ' ':
+                    the_user_name = 'Anonymous User'
+                if is_empty:
+                    os.makedirs(packagedir)
+                    output += "Doing git init\n"
+                    try:
+                        output += subprocess.check_output(["git", "init"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output
+                        raise DAError("create_playground_package: error running git init.  " + output)
+                    with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
+                        the_file.write("")
+                    output += "Doing git config user.email " + json.dumps(github_email) + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git config user.email.  " + output)
+                    output += "Doing git config user.name " + json.dumps(the_user_name) + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "config", "user.name", json.dumps(the_user_name)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git config user.email.  " + output)
+                    try:
+                        output += subprocess.check_output(["git", "add", "README.md"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git add README.md.  " + output)
+                    output += "Doing git commit -m \"first commit\"\n"
+                    try:
+                        output += subprocess.check_output(["git", "commit", "-m", "first commit"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git commit -m \"first commit\".  " + output)
+                    output += "Doing git remote add origin " + ssh_url + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git remote add origin.  " + output)
+                    output += "Doing " + git_prefix + "git push -u origin master\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git push -u origin master", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running first git push.  " + output)
+                else:
+                    output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git clone.  " + output)
                 if not os.path.isdir(packagedir):
                     raise DAError("create_playground_package: package directory did not exist")
                 if pulled_already:
@@ -13848,26 +13922,19 @@ def create_playground_package():
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
                 docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory, current_project=current_project)
-                # try:
-                #     output += subprocess.check_output(["git", "init"], cwd=packagedir, stderr=subprocess.STDOUT)
-                # except subprocess.CalledProcessError as err:
-                #     output += err.output
-                #     raise DAError("create_playground_package: error running git init.  " + output)
-                output += "Doing git config user.email " + json.dumps(github_email) + "\n"
-                try:
-                    output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("create_playground_package: error running git config user.email.  " + output)
-                the_user_name = str(current_user.first_name) + " " + str(current_user.last_name)
-                if the_user_name == ' ':
-                    the_user_name = 'Anonymous User'
-                output += "Doing git config user.name " + json.dumps(the_user_name) + "\n"
-                try:
-                    output += subprocess.check_output(["git", "config", "user.name", json.dumps(the_user_name)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("create_playground_package: error running git config user.email.  " + output)
+                if not is_empty:
+                    output += "Doing git config user.email " + json.dumps(github_email) + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git config user.email.  " + output)
+                    output += "Doing git config user.name " + json.dumps(the_user_name) + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "config", "user.name", json.dumps(the_user_name)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git config user.email.  " + output)
                 output += "Doing git checkout -b " + tempbranch + "\n"
                 try:
                     output += subprocess.check_output(git_prefix + "git checkout -b " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
@@ -13910,12 +13977,18 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git checkout.  " + output)
-                output += "Doing git merge -m " + json.dumps(word("merge from Playground")) + " --no-ff " + tempbranch + "\n"
+                output += "Doing git merge --squash " + tempbranch + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git merge -m " + json.dumps(word("merge from Playground")) + " --no-ff " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(git_prefix + "git merge --squash " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git merge.  " + output)
+                output += "Doing git commit\n"
+                try:
+                    output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                except subprocess.CalledProcessError as err:
+                    output += err.output.decode()
+                    raise DAError("create_playground_package: error running git commit.  " + output)
                 if False:
                     try:
                         output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -16566,6 +16639,33 @@ def playground_packages():
     github_user_name = None
     github_email = None
     github_author_name = None
+    github_url_from_file = None
+    pypi_package_from_file = None
+    if request.method == 'GET' and the_file != '':
+        if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
+            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
+            with open(filename, 'rU', encoding='utf-8') as fp:
+                content = fp.read()
+                old_info = yaml.load(content, Loader=yaml.FullLoader)
+                if isinstance(old_info, dict):
+                    github_url_from_file = old_info.get('github_url', None)
+                    pypi_package_from_file = old_info.get('pypi_package_name', None)
+                    for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme'):
+                        if field in old_info:
+                            form[field].data = old_info[field]
+                        else:
+                            form[field].data = ''
+                    if 'dependencies' in old_info and isinstance(old_info['dependencies'], list) and len(old_info['dependencies']):
+                        for item in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
+                            if item in old_info['dependencies']:
+                                del old_info['dependencies'][item]
+                    for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
+                        if field in old_info and isinstance(old_info[field], list) and len(old_info[field]):
+                            form[field].data = old_info[field]
+                else:
+                    raise Exception("YAML yielded " + repr(old_info) + " from " + repr(content))
+        else:
+            filename = None
     if the_file != '' and can_publish_to_github and not is_new:
         github_package_name = 'docassemble-' + the_file
         try:
@@ -16599,6 +16699,7 @@ def playground_packages():
             if github_user_name is None or github_email is None:
                 raise DAError("playground_packages: login not present in user info from GitHub")
             found = False
+            found_strong = False
             resp, content = http.request("https://api.github.com/repos/" + str(github_user_name) + "/" + github_package_name, "GET")
             if int(resp['status']) == 200:
                 repo_info = json.loads(content.decode('utf-8', 'ignore'))
@@ -16612,11 +16713,15 @@ def playground_packages():
                 on_github = True
                 branch_info = get_branch_info(http, repo_info['full_name'])
                 found = True
-            if found is False and github_auth_info['shared']:
+                if github_url_from_file is None or github_url_from_file in [github_ssh, github_http]:
+                    found_strong = True
+            if found_strong is False and github_auth_info['shared']:
                 repositories = get_user_repositories(http)
                 for repo_info in repositories:
-                    if repo_info['name'] != github_package_name:
+                    if repo_info['name'] != github_package_name or (github_http is not None and github_http == repo_info['html_url']) or (github_ssh is not None and github_ssh == repo_info['ssh_url']):
                         continue
+                    if found and github_url_from_file is not None and github_url_from_file not in [repo_info['html_url'], repo_info['ssh_url']]:
+                        break
                     github_http = repo_info['html_url']
                     github_ssh = repo_info['ssh_url']
                     if repo_info['private']:
@@ -16625,21 +16730,27 @@ def playground_packages():
                     on_github = True
                     branch_info = get_branch_info(http, repo_info['full_name'])
                     found = True
+                    if github_url_from_file is None or github_url_from_file in [github_ssh, github_http]:
+                        found_strong = True
                     break
-            if found is False and github_auth_info['orgs']:
+            if found_strong is False and github_auth_info['orgs']:
                 orgs_info = get_orgs_info(http)
                 for org_info in orgs_info:
                     resp, content = http.request("https://api.github.com/repos/" + str(org_info['login']) + "/" + github_package_name, "GET")
                     if int(resp['status']) == 200:
                         repo_info = json.loads(content.decode('utf-8', 'ignore'))
+                        if found and github_url_from_file is not None and github_url_from_file not in [repo_info['html_url'], repo_info['ssh_url']]:
+                            break
                         github_http = repo_info['html_url']
                         github_ssh = repo_info['ssh_url']
                         if repo_info['private']:
                             github_use_ssh = True
-                        github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on your GitHub account") + '</a>.'
+                        github_message = word('This package is') + ' <a target="_blank" href="' + repo_info.get('html_url', 'about:blank') + '">' + word("published on GitHub") + '</a>.'
                         on_github = True
                         branch_info = get_branch_info(http, repo_info['full_name'])
                         found = True
+                        if github_url_from_file is None or github_url_from_file in [github_ssh, github_http]:
+                            found_strong = True
                         break
             if found is False:
                 github_message = word('This package is not yet published on your GitHub account.')
@@ -16647,33 +16758,6 @@ def playground_packages():
             logmessage('playground_packages: GitHub error.  ' + str(e))
             on_github = None
             github_message = word('Unable to determine if the package is published on your GitHub account.')
-    github_url_from_file = None
-    pypi_package_from_file = None
-    if request.method == 'GET' and the_file != '':
-        if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
-            filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
-            with open(filename, 'rU', encoding='utf-8') as fp:
-                content = fp.read()
-                old_info = yaml.load(content, Loader=yaml.FullLoader)
-                if isinstance(old_info, dict):
-                    github_url_from_file = old_info.get('github_url', None)
-                    pypi_package_from_file = old_info.get('pypi_package_name', None)
-                    for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme'):
-                        if field in old_info:
-                            form[field].data = old_info[field]
-                        else:
-                            form[field].data = ''
-                    if 'dependencies' in old_info and isinstance(old_info['dependencies'], list) and len(old_info['dependencies']):
-                        for item in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
-                            if item in old_info['dependencies']:
-                                del old_info['dependencies'][item]
-                    for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
-                        if field in old_info and isinstance(old_info[field], list) and len(old_info[field]):
-                            form[field].data = old_info[field]
-                else:
-                    raise Exception("YAML yielded " + repr(old_info) + " from " + repr(content))
-        else:
-            filename = None
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
         need_to_restart = False
@@ -17014,6 +17098,13 @@ def playground_packages():
                             break
                         versions = new_info['version'].split(".")
                 filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
+                if os.path.isfile(filename):
+                    with open(filename, 'rU', encoding='utf-8') as fp:
+                        content = fp.read()
+                        old_info = yaml.load(content, Loader=yaml.FullLoader)
+                    for name in ('github_url', 'github_branch', 'pypi_package_name'):
+                        if old_info.get(name, None):
+                            new_info[name] = old_info[name]
                 with open(filename, 'w', encoding='utf-8') as fp:
                     the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
                     fp.write(str(the_yaml))
@@ -18640,7 +18731,8 @@ def server_error(the_error):
         yaml_filename = docassemble.base.functions.interview_path()
     except:
         yaml_filename = None
-    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename), error_code
+    show_retry = request.path.endswith('/interview')
+    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
 
 @app.route('/bundle.css', methods=['GET'])
 def css_bundle():

@@ -8,8 +8,10 @@
 <h1>{{ word('Error') }}</h1>
 {%- endif %}
 
+{%- if show_retry %}
 <p><a href="#" id="da-retry">{{ word('Retry') }}</a></p>
 
+{%- endif %}
 {%- if verbose %}
 {{ error|safe }}
 
