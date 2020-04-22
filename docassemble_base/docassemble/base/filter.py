@@ -15,7 +15,7 @@ import stat
 import PyPDF2
 from docassemble.base.functions import server, word
 import docassemble.base.functions
-from docassemble.base.pandoc import MyPandoc
+from docassemble.base.pandoc as pandoc
 from bs4 import BeautifulSoup
 import docassemble.base.file_docx
 from pylatex.utils import escape_latex
@@ -1243,7 +1243,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
     #logmessage("before: " + a)
     if use_pandoc:
-        converter = MyPandoc()
+        converter = pandoc.MyPandoc()
         converter.output_format = 'html'
         converter.input_content = str(a)
         converter.convert(question)
