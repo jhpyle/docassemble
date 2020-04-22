@@ -863,8 +863,8 @@ pixels in height.  But if your theme makes the navigation bar 66
 pixels tall, you will need to add the following styles:
 
 {% highlight css %}
-.pad-for-navbar         { padding-top: 76px; }
-.top-for-navbar         { top: 76px;         }
+.da-pad-for-navbar         { padding-top: 76px; }
+.da-top-for-navbar         { top: 76px;         }
 {% endhighlight %}
 
 Also, some of the colors that **docassemble** uses in the navigation
@@ -874,10 +874,10 @@ colors with [CSS] like the following:
 {% highlight css %}
 span.daactivetext       { color: yellow;         }
 span.daactivetext:hover { color: #ffff99;        }
-i.chat-active           { color: #45bf41;        }
-i.chat-active:hover     { color: #55cf51;        }
-i.chat-inactive         { color: #4f4f4f;        }
-i.chat-inactive:hover   { color: #5f5f5f;        }
+i.da-chat-active           { color: #45bf41;        }
+i.da-chat-active:hover     { color: #55cf51;        }
+i.da-chat-inactive         { color: #4f4f4f;        }
+i.da-chat-inactive:hover   { color: #5f5f5f;        }
 {% endhighlight %}
 
 These styles refer to the yellow "Help" button that appears when
