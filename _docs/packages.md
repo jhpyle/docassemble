@@ -612,7 +612,7 @@ If this line is present, then the server will not pre-load the module file.
 ["Packages" folder]: {{ site.baseurl }}/docs/playground.html#packages
 ["Templates" folder]: {{ site.baseurl }}/docs/playground.html#templates
 ["Static" folder]: {{ site.baseurl }}/docs/playground.html#static
-[Setting up GitHub integration]: {{ site.baseurl }}/docs/installation.html
+[Setting up GitHub integration]: {{ site.baseurl }}/docs/installation.html#github
 [GitHub section of the configuration]: {{ site.baseurl }}/docs/config.html#github
 [create one]: https://github.com/join
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname

@@ -993,7 +993,7 @@ this way, you will need to register your **docassemble** server as an
   "[Developer settings](https://github.com/settings/developers)."  The
   "[OAuth Apps](https://github.com/settings/developers)" tab should be
   active.
-* Press the "New OAuth App" button.
+* Press the "Register a new application" button.
 * Enter an "Application name" that describes your **docassemble**
   server.  Interview developers will see this application name when [GitHub]
   asks them if they wish to grant your server access to their [GitHub]
