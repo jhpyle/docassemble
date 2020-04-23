@@ -15,7 +15,7 @@ import stat
 import PyPDF2
 from docassemble.base.functions import server, word
 import docassemble.base.functions
-from docassemble.base.pandoc as pandoc
+import docassemble.base.pandoc as pandoc
 from bs4 import BeautifulSoup
 import docassemble.base.file_docx
 from pylatex.utils import escape_latex
