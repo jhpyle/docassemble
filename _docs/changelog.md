@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.14](https://github.com/jhpyle/docassemble/releases/tag/v1.1.14) - 2020-04-22
+
+### Changed
+- The GitHub button on the Playground Packages page will now respect
+  the GitHub repository that was pulled and will make an initial
+  commit when the repository exists on GitHub but is empty.
+
 ## [1.1.13](https://github.com/jhpyle/docassemble/releases/tag/v1.1.13) - 2020-04-21
 
 ### Added
