@@ -2117,6 +2117,17 @@ features:
 For more information about this feature, see the [catchall questions]
 subsection.
 
+## <a name="default date min"></a><a name="default date max"></a>Default date limits
+
+If you want to set a default [`min`] and/or [`max`] on a [`date`]
+field, you can use `default date min` and/or `default date max`.
+
+{% include side-by-side.html demo="default-date-min" %}
+
+[Mako] cannot be used to set these dates inside a `features` block.
+If you want to use a computed value, you need to specify a [`min`] or
+[`max`] on the field.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens

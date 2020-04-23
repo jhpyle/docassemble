@@ -2144,6 +2144,16 @@
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
   \ True"
+"default-date-min": |-
+  features:
+    default date min: "1950-01-01"
+    default date max: "2029-12-31"
+  ---
+  question: |
+    What is the date?
+  fields:
+    - Date: the_date
+      datatype: date
 "default-screen-parts": |-
   default screen parts:
     under: |
