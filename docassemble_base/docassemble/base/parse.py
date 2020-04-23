@@ -44,6 +44,8 @@ import collections.abc as abc
 from collections import OrderedDict
 from types import CodeType
 import pandas
+import dateutil.parser
+import pytz
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -1407,6 +1409,14 @@ class Question:
                         if key not in self.interview.external_files:
                             self.interview.external_files[key] = list()
                         self.interview.external_files[key].append((self.from_source.get_package(), the_file))
+            for key in ('default date min', 'default date max'):
+                if key in data['features']:
+                    if not isinstance(data['features'][key], str):
+                        raise DAError("A features section " + key + " entry must be plain text." + self.idebug(data))
+                    try:
+                        self.interview.options[key] = pytz.timezone(docassemble.base.functions.get_default_timezone()).localize(dateutil.parser.parse(data['features'][key]))
+                    except:
+                        raise DAError("The " + key + " in features did not contain a valid date." + self.idebug(data))
         if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):
             data['continue button field'] = data['field']
             del data['field']

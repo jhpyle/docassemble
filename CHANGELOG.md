@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.15] - 2020-04-23
+### Added
+- The `default date min` and `default date max` options under
+  `features`.
+
 ## [1.1.14] - 2020-04-22
 ### Changed
 - The GitHub button on the Playground Packages page will now respect

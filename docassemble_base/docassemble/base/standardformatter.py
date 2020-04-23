@@ -1084,16 +1084,27 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['messages'][the_saveas]['date'] = field.validation_message('date', status, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras:
                         validation_rules['rules'][the_saveas]['minmaxdate'] = [format_date(status.extras['min'][field.number], format='yyyy-MM-dd'), format_date(status.extras['max'][field.number], format='yyyy-MM-dd')]
-                        validation_rules['messages'][the_saveas]['minmaxdate'] = field.validation_message('date minmax', status, word("You need to enter a date between %s and %s."), parameters=(format_date(status.extras['min'][field.number], format='short'), format_date(status.extras['max'][field.number], format='short')))
+                        validation_rules['messages'][the_saveas]['minmaxdate'] = field.validation_message('date minmax', status, word("You need to enter a date between %s and %s."), parameters=(format_date(status.extras['min'][field.number], format='medium'), format_date(status.extras['max'][field.number], format='medium')))
                     else:
+                        was_defined = dict()
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in status.extras:
+                                was_defined[key] = True
                                 #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
                                 validation_rules['rules'][the_saveas][key + 'date'] = format_date(status.extras[key][field.number], format='yyyy-MM-dd')
                                 if key == 'min':
-                                    validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
+                                    validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.extras[key][field.number], format='medium')]))
                                 elif key == 'max':
-                                    validation_rules['messages'][the_saveas]['maxdate'] = field.validation_message('date max', status, word("You need to enter a date on or before %s."), parameters=tuple([format_date(status.extras[key][field.number], format='short')]))
+                                    validation_rules['messages'][the_saveas]['maxdate'] = field.validation_message('date max', status, word("You need to enter a date on or before %s."), parameters=tuple([format_date(status.extras[key][field.number], format='medium')]))
+                        if len(was_defined) == 0 and 'default date min' in status.question.interview.options and 'default date max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['minmaxdate'] = [format_date(status.question.interview.options['default date min'], format='yyyy-MM-dd'), format_date(status.question.interview.options['default date max'], format='yyyy-MM-dd')]
+                            validation_rules['messages'][the_saveas]['minmaxdate'] = field.validation_message('date minmax', status, word("You need to enter a date between %s and %s."), parameters=(format_date(status.question.interview.options['default date min'], format='medium'), format_date(status.question.interview.options['default date max'], format='medium')))
+                        elif 'max' not in was_defined and 'default date max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['maxdate'] = format_date(status.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            validation_rules['messages'][the_saveas]['maxdate'] = field.validation_message('date max', status, word("You need to enter a date on or before %s."), parameters=tuple([format_date(status.question.interview.options['default date max'], format='medium')]))
+                        elif 'min' not in was_defined and 'default date min' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['mindate'] = format_date(status.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.question.interview.options['default date min'], format='medium')]))
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
                     validation_rules['messages'][the_saveas]['time'] = field.validation_message('time', status, word("You need to enter a valid time."))
