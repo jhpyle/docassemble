@@ -231,6 +231,7 @@ def click_nth_link(step, ordinal, link_name):
 
 @step(r'I should see the phrase "([^"]+)"')
 def see_phrase(step, phrase):
+    take_screenshot()
     assert world.browser.text_present(phrase)
 
 @step(r'I should not see the phrase "([^"]+)"')
@@ -469,3 +470,32 @@ def finally_click_link(step, link_name):
     except:
         link_name += " "
         world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+
+
+@step(r'I screenshot the page')
+def save_screenshot(step):
+    take_screenshot()
+
+@step(r'I want to store screenshots in the folder "([^"]+)"')
+def save_screenshot(step, directory):
+    if world.headless:
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+        os.makedirs(directory, exist_ok=True)
+        world.screenshot_folder = directory
+        world.screenshot_number = 0
+
+def take_screenshot():
+    if world.headless and world.screenshot_folder:
+        world.screenshot_number += 1
+        elem = world.browser.find_element_by_id("dabody")
+        world.browser.set_window_size(1005, elem.size["height"] + 150)
+        world.browser.get_screenshot_as_file(os.path.join(world.screenshot_folder, "%05d.png") % (world.screenshot_number,))
+        world.browser.execute_script("window.open('');")
+        world.browser.switch_to.window(world.browser.window_handles[1])
+        world.browser.get(world.da_path + "/interview?i=" + world.interview_name + '&json=1')
+        with open(os.path.join(world.screenshot_folder, "%05d.json") % (world.screenshot_number,), "w", encoding='utf-8') as f:
+            the_json = json.loads(re.sub(r'^[^{]*{', '{', re.sub(r'</pre></body></html>$', '', world.browser.page_source)).strip())
+            f.write(json.dumps(the_json, indent=1))
+        world.browser.close()
+        world.browser.switch_to.window(world.browser.window_handles[0])

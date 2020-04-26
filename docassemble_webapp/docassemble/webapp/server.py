@@ -5951,7 +5951,7 @@ def index(action_argument=None):
     changed = False
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False
-        attachment_email_address = post_data['_attachment_email_address']
+        attachment_email_address = post_data['_attachment_email_address'].strip()
         if '_attachment_include_editable' in post_data:
             if post_data['_attachment_include_editable'] == 'True':
                 include_editable = True
@@ -5980,7 +5980,7 @@ def index(action_argument=None):
                     attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(docassemble.base.parse.extension_of_doc_format[the_format]), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
                     attached_file_count += 1
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-            for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
+            for email_address in re.split(r' *[,;] *', attachment_email_address):
                 try:
                     result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language())
                     r.rpush(worker_key, result.id)
@@ -15633,7 +15633,7 @@ def view_source():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route('/playgroundstatic/<current_project>/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundstatic/<current_project>/<userid>/<path:filename>', methods=['GET'])
 def playground_static(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
@@ -15644,8 +15644,12 @@ def playground_static(current_project, userid, filename):
         attach = 0
     area = SavedFile(userid, fix=True, section='playgroundstatic')
     the_directory = directory_for(area, current_project)
+    filename = filename.replace('/', os.path.sep)
     path = os.path.join(the_directory, filename)
+    if os.path.join('..', '') in path:
+        return ('File not found', 404)
     if os.path.isfile(path):
+        filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(path, mimetype=str(mimetype))
         if attach:
@@ -15653,7 +15657,7 @@ def playground_static(current_project, userid, filename):
         return(response)
     return ('File not found', 404)
 
-@app.route('/playgroundmodules/<current_project>/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundmodules/<current_project>/<userid>/<path:filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_modules(current_project, userid, filename):
@@ -15666,8 +15670,12 @@ def playground_modules(current_project, userid, filename):
         attach = 0
     area = SavedFile(userid, fix=True, section='playgroundmodules')
     the_directory = directory_for(area, current_project)
+    filename = filename.replace('/', os.path.sep)
     path = os.path.join(the_directory, filename)
+    if os.path.join('..', '') in path:
+        return ('File not found', 404)
     if os.path.isfile(path):
+        filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(path, mimetype=str(mimetype))
         if attach:
@@ -15676,7 +15684,7 @@ def playground_modules(current_project, userid, filename):
         return(response)
     return ('File not found', 404)
 
-@app.route('/playgroundsources/<current_project>/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundsources/<current_project>/<userid>/<path:filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_sources(current_project, userid, filename):
@@ -15686,12 +15694,16 @@ def playground_sources(current_project, userid, filename):
         attach = int(request.args.get('attach', 0))
     except:
         attach = 0
-    filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
+    #filename = re.sub(r'[^A-Za-z0-9\-\_\(\)\. ]', '', filename)
+    filename = filename.replace('/', os.path.sep)
     area = SavedFile(userid, fix=True, section='playgroundsources')
     reslt = write_ml_source(area, userid, current_project, filename)
     the_directory = directory_for(area, current_project)
     path = os.path.join(the_directory, filename)
+    if os.path.join('..', '') in path:
+        return ('File not found', 404)
     if os.path.isfile(path):
+        filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(path, mimetype=str(mimetype))
         if attach:
@@ -15700,7 +15712,7 @@ def playground_sources(current_project, userid, filename):
         return(response)
     return ('File not found', 404)
 
-@app.route('/playgroundtemplate/<current_project>/<userid>/<filename>', methods=['GET'])
+@app.route('/playgroundtemplate/<current_project>/<userid>/<path:filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_template(current_project, userid, filename):
@@ -15713,8 +15725,12 @@ def playground_template(current_project, userid, filename):
         attach = 0
     area = SavedFile(userid, fix=True, section='playgroundtemplate')
     the_directory = directory_for(area, current_project)
+    filename = filename.replace('/', os.path.sep)
     path = os.path.join(the_directory, filename)
+    if os.path.join('..', '') in path:
+        return ('File not found', 404)
     if os.path.isfile(path):
+        filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(path, mimetype=str(mimetype))
         if attach:
@@ -15723,7 +15739,7 @@ def playground_template(current_project, userid, filename):
         return(response)
     return ('File not found', 404)
 
-@app.route('/playgrounddownload/<current_project>/<userid>/<filename>', methods=['GET'])
+@app.route('/playgrounddownload/<current_project>/<userid>/<path:filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_download(current_project, userid, filename):
@@ -15732,8 +15748,12 @@ def playground_download(current_project, userid, filename):
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     the_directory = directory_for(area, current_project)
+    filename = filename.replace('/', os.path.sep)
     path = os.path.join(the_directory, filename)
+    if os.path.join('..', '') in path:
+        return ('File not found', 404)
     if os.path.isfile(path):
+        filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(path)
         response = send_file(path, mimetype=str(mimetype))
         response.headers['Content-type'] = 'text/plain; charset=utf-8'
@@ -18806,12 +18826,14 @@ def js_bundle_no_query():
     output += ''
     return Response(output, mimetype='application/javascript')
 
-@app.route('/packagestatic/<package>/<filename>', methods=['GET'])
+@app.route('/packagestatic/<package>/<path:filename>', methods=['GET'])
 def package_static(package, filename):
     try:
         attach = int(request.args.get('attachment', 0))
     except:
         attach = 0
+    if '../' in filename:
+        return ('File not found', 404)
     if package == 'fonts':
         return redirect(url_for('static', filename='bootstrap/fonts/' + filename, v=da_version))
     try:
@@ -18827,6 +18849,7 @@ def package_static(package, filename):
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=str(mimetype))
     if attach:
+        filename = os.path.basename(filename)
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
     return(response)
 
@@ -21559,7 +21582,7 @@ def api_create_user():
     if post_data is None:
         post_data = request.form.copy()
     if 'email' in post_data and 'username' not in post_data: # temporary
-        post_data['username'] = post_data['email']
+        post_data['username'] = post_data['email'].strip()
         del post_data['email']
     if 'username' not in post_data:
         return jsonify_with_status("An e-mail address must be supplied.", 400)

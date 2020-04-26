@@ -64,7 +64,6 @@ class SavedFile:
             self.subdir = subdir
         else:
             # sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
-            docassemble.base.functions.this_thread.saved_files[section][file_number] = self
             self.fixed = False
             self.file_number = file_number
             self.section = section
@@ -79,6 +78,7 @@ class SavedFile:
                     self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
             else:
                 self.directory = os.path.join(tempfile.gettempdir(), str(self.section), str(self.file_number))
+        docassemble.base.functions.this_thread.saved_files[section][file_number] = self
         if self.subdir and self.subdir != '' and self.subdir != 'default':
             self.path = os.path.join(self.directory, self.subdir, self.filename)
         else:

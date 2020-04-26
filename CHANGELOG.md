@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.16] - 2020-04-26
+### Added
+- Test script screenshot mechanism.
+### Changed
+- Subfolder paths now allowed in URLs for static files.
+### Fixed
+- S3 file sync problem.
+
 ## [1.1.15] - 2020-04-23
 ### Added
 - The `default date min` and `default date max` options under
