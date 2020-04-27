@@ -1531,7 +1531,7 @@ hyperlink.
 If you want to manually specify a character style to be used for
 hyperlinks, you can set a `hyperlink style`.
 
-{% include side-by-side.html demo="hyperlink-demo" %}
+{% include side-by-side.html demo="hyperlink-style" %}
 
 If there is no `hyperlink style` and no character style called
 `Hyperlink` or `InternetLink`, then underlined blue text will be used
