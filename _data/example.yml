@@ -5663,6 +5663,19 @@
     <script>
       $("#today_time").html(Date());
     </script>
+"hyperlink-style": |-
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    docx template file: resource_guide.docx
+    hyperlink style: CustomStyle
+  ---
+  code: |
+    if legal_issue == 'family':
+      the_link = "the [Family Law Information Portal](https://familylawinfo.com)"
+    else:
+      the_link = "your [local law library](https://lawlibrarydirectory.org), which may be able to help you"
 "if": |-
   question: |
     Describe your intelligence.

@@ -1495,6 +1495,48 @@ attachment:
   template password: ""
 {% endhighlight %}
 
+## <a name="hyperlink style"></a>Character style of hyperlinks in DOCX files
+
+When you are using [`docx template file`], you can insert hyperlinks
+into your assembled file using the [Markdown] format for a hyperlink.
+
+For example, you can put the following into a DOCX file.
+
+> For more information, visit {% raw %}{{r the_link | inline_markdown }}{% endraw %}.
+
+Then in your [YAML] you can write something like:
+
+{% highlight yaml %}
+code: |
+  if legal_issue == 'family':
+    the_link = "the [Family Law Information Portal](https://familylawinfo.com)"
+  else:
+    the_link = "your [local law library](https://lawlibrarydirectory.org), which may be able to help you"
+{% endhighlight %}
+
+If your DOCX file contains a character style called `Hyperlink` (the
+default in [Microsoft Word]) or `InternetLink` (the default in
+[LibreOffice]), this character style will be used.
+
+If you are using [Microsoft Word], your document may not contain a
+character style called `Hyperlink`.  The character style is not
+created by default when you create a new file in [Microsoft Word].
+However, it is easy to cause the style to be added: edit your template
+in Microsoft Word, add a hyperlink manuall (any hyperlink will do),
+save the file, and then delete the hyperlink.  When you create the
+link, [Microsoft Word] will create the character style `Hyperlink` and
+it the character style will persist even after you delete the
+hyperlink.
+
+If you want to manually specify a character style to be used for
+hyperlinks, you can set a `hyperlink style`.
+
+{% include side-by-side.html demo="hyperlink-demo" %}
+
+If there is no `hyperlink style` and no character style called
+`Hyperlink` or `InternetLink`, then underlined blue text will be used
+for hyperlinks.
+
 ## <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
