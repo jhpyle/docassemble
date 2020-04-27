@@ -206,6 +206,8 @@ class SoupParser(object):
         self.style = 'p'
         self.still_new = True
         self.size = None
+        self.charstyle = None
+        self.color = None
         self.tpl = tpl
     def new_paragraph(self):
         if self.still_new:
@@ -253,7 +255,7 @@ class SoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
                 self.still_new = False
             elif isinstance(part, Tag):
                 # logmessage("Part name is " + str(part.name))
@@ -314,12 +316,20 @@ class SoupParser(object):
                     self.size = oldsize
                 elif part.name == 'a':
                     self.start_link(part['href'])
-                    self.underline = True
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
                     self.traverse(part)
-                    self.underline = False
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
                     self.end_link()
                 elif part.name == 'br':
-                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
                     self.still_new = False
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
@@ -335,6 +345,8 @@ class InlineSoupParser(object):
         self.style = 'p'
         self.strike = False
         self.size = None
+        self.charstyle = None
+        self.color = None
         self.tpl = tpl
         self.at_start = True
         self.list_number = 1
@@ -342,7 +354,7 @@ class InlineSoupParser(object):
         if self.at_start:
             self.at_start = False
         else:
-            self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+            self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
         if self.indentation:
             self.run.add("\t" * self.indentation)
         if self.style == 'ul':
@@ -370,7 +382,7 @@ class InlineSoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
             elif isinstance(part, Tag):
                 if part.name in ('p', 'blockquote'):
                     self.new_paragraph()
@@ -417,12 +429,20 @@ class InlineSoupParser(object):
                     self.size = oldsize
                 elif part.name == 'a':
                     self.start_link(part['href'])
-                    self.underline = True
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
                     self.traverse(part)
-                    self.underline = False
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
                     self.end_link()
                 elif part.name == 'br':
-                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 

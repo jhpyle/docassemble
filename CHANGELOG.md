@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.17] - 2020-04-27
+### Added
+- The `hyperlink style` option for an `attachment`.
+### Fixed
+- Sendgrid API e-mails to multiple "To" recipients only reached the
+  first recipient.
+
 ## [1.1.16] - 2020-04-26
 ### Added
 - Test script screenshot mechanism.

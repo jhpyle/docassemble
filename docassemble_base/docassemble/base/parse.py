@@ -3970,6 +3970,11 @@ class Question:
                         if not isinstance(item, (str, int)):
                             raise DAError('Unknown data type in attachment allow users.' + self.idebug(target))
                     options['allow users'] = target['allow users']
+            if 'hyperlink style' in target:
+                if isinstance(target['hyperlink style'], str):
+                    options['hyperlink_style'] = TextObject(target['hyperlink style'].strip(), question=self)
+                else:
+                    raise DAError('Unknown data type in attachment hyperlink style.' + self.idebug(target))
             if 'pdf/a' in target:
                 if isinstance(target['pdf/a'], bool):
                     options['pdf_a'] = target['pdf/a']
@@ -5143,6 +5148,14 @@ class Question:
                                     new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                                     the_template.save(new_template_file.name) # Save and refresh the template
                                     the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                                    if result['hyperlink_style'] and result['hyperlink_style'] in the_template.docx.styles:
+                                        the_template.da_hyperlink_style = result['hyperlink_style']
+                                    elif 'Hyperlink' in result['template'].docx.styles:
+                                        the_template.da_hyperlink_style = 'Hyperlink'
+                                    elif 'InternetLink' in result['template'].docx.styles:
+                                        the_template.da_hyperlink_style = 'InternetLink'
+                                    else:
+                                        the_template.da_hyperlink_style = None
                                     docassemble.base.functions.this_thread.misc['docx_template'] = the_template
                                 else:
                                     break
@@ -5357,6 +5370,10 @@ class Question:
                 result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
         else:
             result['convert_to_pdf_a'] = self.interview.use_pdf_a
+        if 'hyperlink_style' in attachment['options']:
+            result['hyperlink_style'] = attachment['options']['hyperlink_style'].text(the_user_dict).strip()
+        else:
+            result['hyperlink_style'] = None
         result['permissions'] = dict()
         if 'persistent' in attachment['options']:
             if isinstance(attachment['options']['persistent'], bool):
@@ -5422,6 +5439,14 @@ class Question:
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
                         result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
+                        if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
+                            result['template'].da_hyperlink_style = result['hyperlink_style']
+                        elif 'Hyperlink' in result['template'].docx.styles:
+                            result['template'].da_hyperlink_style = 'Hyperlink'
+                        elif 'InternetLink' in result['template'].docx.styles:
+                            result['template'].da_hyperlink_style = 'InternetLink'
+                        else:
+                            result['template'].da_hyperlink_style = None
                         docassemble.base.functions.set_context('docx', template=result['template'])
                         if isinstance(attachment['options']['fields'], str):
                             result['field_data'] = the_user_dict

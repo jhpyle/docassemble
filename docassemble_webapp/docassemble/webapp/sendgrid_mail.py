@@ -4,7 +4,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId
+from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId, Email, To
 import sys
 import base64
 
@@ -25,8 +25,8 @@ class Connection(object):
         if message.date is None:
             message.date = time.time()
         sgmessage = SGMail(
-            from_email=message.sender,
-            to_emails=', '.join(list(sanitize_addresses(message.recipients))),
+            from_email=Email(message.sender),
+            to_emails=[To(addressee) for addressee in sanitize_addresses(message.recipients)],
             subject=message.subject,
             plain_text_content=message.body,
             html_content=message.html)
