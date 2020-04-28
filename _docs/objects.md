@@ -1567,6 +1567,8 @@ elements are:
    on the page.
 5. A code indicating the type of the field.  This can be `'/Tx'`,
    `'/Btn'`, or `None`.
+6. The export value of the field, if known.  This is only applicable
+   for `'/Btn'` fields.
 
 <a name="DAFile.get_docx_variables"></a>The `.get_docx_variables()`
 method only works on DOCX files.  It returns a list of variables that

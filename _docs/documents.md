@@ -1079,8 +1079,6 @@ such fields.  You must give each field in your PDF file a unique name.
 
 When writing the values of the fields, you can use [Mako], but not
 [Markdown].  If you use [Markdown], it will be interpreted literally.
-Checkbox fields will be checked if and only if the value evaluates to
-"True" or "Yes."
 
 The section below on [passing values using code](#template code)
 explains alternative ways that you can populate the values of fields
@@ -1139,30 +1137,6 @@ name.  For example:
       - second signature: ${ user.signature }
       - third signature: ${ user.signature }
 {% endhighlight %}
-
-## <a name="checkbox export value"></a>Changing the "export value" of checkbox fields
-
-By default, when populating checkboxes, **docassemble** sets the
-checkbox value to `'Yes'` if the checkbox should be checked.  This is
-the default "Export Value" of a checked checkbox in Adobe Acrobat.
-
-If your PDF file uses a different "Export Value," you can set it
-manually by using an expression like 
-`${ 'affirmative' if likes_toast else 'negative }`.
-
-You can also set the `checkbox export value` option to the value you
-want to use.  This example uses `'yes'` instead of `'Yes'`.
-
-{% include side-by-side.html demo="checkbox-export-value" %}
-
-When `checkbox export value` is set, then if the value of a PDF field
-evaluates to `True`, the `checkbox export value` will be substituted.
-In addition, [`yesno()`] and [`noyes()`] will return the `checkbox
-export value` instead of `'Yes'`.
-
-The `checkbox export value` can contain [Mako].  If the value you want
-to use has special meaning in [YAML], as `yes` does, make sure to
-quote the value.
 
 ## <a name="template code"></a>Passing values using code
 
