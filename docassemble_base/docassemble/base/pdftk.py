@@ -86,9 +86,14 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             pageno = id_to_page[page.objid]
         else:
             pageno = 1
+        export_value = None
         if str(field_type) in ('/Btn', "/'Btn'"):
+            try:
+                export_value = list(field['AP']['N'].keys())[0]
+            except:
+                export_value = 'Yes'
             if value == '/Yes':
-                default = "Yes"
+                default = export_value
             else:
                 default = "No"
         elif str(field_type) in ('/Sig', "/'Sig'"):
@@ -115,11 +120,11 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                     recursively_add_fields(kids, id_to_page, outfields, prefix=prefix + '.' + name)
         else:
             if prefix != '' and name is not None:
-                outfields.append((prefix + '.' + name, default, pageno, rect, field_type))
+                outfields.append((prefix + '.' + name, default, pageno, rect, field_type, export_value))
             elif prefix == '':
-                outfields.append((name, default, pageno, rect, field_type))
+                outfields.append((name, default, pageno, rect, field_type, export_value))
             else:
-                outfields.append((prefix, default, pageno, rect, field_type))
+                outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 def read_fields_pdftk(pdffile):
     output = subprocess.check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
@@ -189,9 +194,32 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
             #logmessage("Added bookmark " + destination.title)
 
-def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None):
+def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if pdf_url is None:
         pdf_url = ''
+    the_fields = read_fields(template)
+    export_values = dict()
+    for field, default, pageno, rect, field_type, export_value in the_fields:
+        field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
+        if field_type in ('/Btn', "/'Btn'"):
+            export_values[field] = export_value or default_export_value or 'Yes'
+    if len(export_values):
+        new_data_strings = list()
+        for key, val in data_strings:
+            if key in export_values:
+                if str(val) in ('Yes', 'yes', 'True', 'true', 'On', 'on', export_values[key]):
+                    val = export_values[key]
+                else:
+                    if export_values[key] == 'On':
+                        val = 'Off'
+                    elif export_values[key] == 'on':
+                        val = 'off'
+                    elif export_values[key] == 'yes':
+                        val = 'no'
+                    else:
+                        val = 'No'
+            new_data_strings.append((key, val))
+        data_strings = new_data_strings
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
     fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".fdf", delete=False)
     fdf_file.write(fdf)
@@ -233,7 +261,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
     if len(images):
         fields = dict()
-        for field, default, pageno, rect, field_type in read_fields(template):
+        for field, default, pageno, rect, field_type, export_value in the_fields:
             if str(field_type) in ('/Sig', "/'Sig'"):
                 fields[field] = {'pageno': pageno, 'rect': rect}
         image_todo = list()

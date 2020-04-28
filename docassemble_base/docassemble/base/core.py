@@ -3291,7 +3291,7 @@ class DAFile(DAObject):
             the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
             if the_type == 'None':
                 the_type = None
-            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
+            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type, item[5])
             results.append(result)
         return results
     def from_url(self, url):
@@ -3797,7 +3797,7 @@ class DAStaticFile(DAObject):
             the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
             if the_type == 'None':
                 the_type = None
-            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type)
+            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type, item[5])
             results.append(result)
         return results
     def url_for(self, **kwargs):

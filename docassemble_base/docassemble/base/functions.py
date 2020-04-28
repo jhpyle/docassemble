@@ -3897,9 +3897,9 @@ def yesno(value, invert=False):
     if value:
         if invert:
             return "No"
-        return this_thread.misc.get('checkbox_export_value', 'Yes')
+        return 'Yes'
     if invert:
-        return this_thread.misc.get('checkbox_export_value', 'Yes')
+        return 'Yes'
     return "No"
 
 def noyes(value, invert=False):

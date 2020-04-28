@@ -375,20 +375,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Live chat"
   #   Given I start the interview "docassemble.base:data/questions/examples/chat.yml"
 
-  Scenario: Test the interview "Checking in"
-    Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
-    Then I should see the phrase "What is your favorite food?"
-    And I set "Favorite food" to "potatoes"
-    And I unfocus
-    And I wait 8 seconds
-    And I set "Favorite food" to "tomatoes"
-    And I unfocus
-    And I wait 8 seconds
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite food"
-    And I should see the phrase "potatoes"
-    And I should see the phrase "tomatoes"
-
   Scenario: Test the interview "Dropdown"
     Given I start the interview "docassemble.base:data/questions/examples/choices-dropdown.yml"
     Then I should see the phrase "What type of shoes do you wear?"
@@ -2656,13 +2642,6 @@ Feature: Example interviews
     Then I should see the phrase "Your dessert is cod liver oil."
     And I click the link "choose something tastier"
     Then I should see the phrase "Your dessert is apple pie."
-
-  Scenario: Test the interview "Interview variables"
-    Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
-    And I wait 1 second
-    Then I should see the phrase "The fruit."
-    And I wait 3 seconds
-    And I should see the phrase "Fruit is apple."
 
   Scenario: Test the interview "Separate label and field"
     Given I start the interview "docassemble.base:data/questions/examples/label.yml"

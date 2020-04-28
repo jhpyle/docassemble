@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.18] - 2020-04-28
+### Changed
+- The `checkbox export value` feature is no longer documented because
+  PDF field filling now inspects the PDF for the export value.
+### Fixed
+- The `address autocomplete` feature was not compatible with `show
+  if`.
+
 ## [1.1.17] - 2020-04-27
 ### Added
 - The `hyperlink style` option for an `attachment`.

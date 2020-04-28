@@ -19022,7 +19022,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             if fields is None:
                 raise Exception(word("Error: no fields could be found in the file"))
             fields_output = "---\nquestion: " + word("Here is your document.") + "\nevent: " + 'some_event' + "\nattachment:" + "\n  - name: " + os.path.splitext(orig_file_name)[0] + "\n    filename: " + os.path.splitext(orig_file_name)[0] + "\n    pdf template file: " + re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', orig_file_name) + "\n    fields:\n"
-            for field, default, pageno, rect, field_type in fields:
+            for field, default, pageno, rect, field_type, export_value in fields:
                 if field not in fields_seen:
                     fields_output += '      - "' + str(field) + '": ' + sanitize(default) + "\n"
                     fields_seen.add(field)
@@ -19057,7 +19057,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             fields = docassemble.base.pdftk.read_fields(filename)
             if fields is not None:
                 fields_seen = set()
-                for field, default, pageno, rect, field_type in fields:
+                for field, default, pageno, rect, field_type, export_value in fields:
                     real_default = str(default)
                     if real_default == default_text:
                         real_default = ''
@@ -19066,6 +19066,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
                         output['default_values'][field] = real_default
                         output['types'][field] = re.sub(r"'", r'', str(field_type))
                         output['locations'][field] = dict(page=int(pageno), box=rect)
+                        output['export_values'][field] = export_value
             return json.dumps(output, sort_keys=True, indent=2)
         if input_format == 'docx' or input_format == 'markdown':
             if input_format == 'docx':

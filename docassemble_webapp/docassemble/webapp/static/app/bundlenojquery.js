@@ -8157,6 +8157,9 @@ function daFillInAddress(id) {
 	if (typeof the_id !== typeof undefined && the_id !== false) {
 	    try {
 		var field_name = atob($(this).attr('id'));
+		if (field_name.indexOf('_field_') == 0){
+		    field_name = atob(daVarLookupRev[$(this).attr('id')]);
+		}
 		var m = re.exec(field_name);
 		if (m.length > 0){
 		    id_for_part[m[1]] = $(this).attr('id');

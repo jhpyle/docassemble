@@ -201,7 +201,7 @@ class DAQuestion(DAObject):
                             content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
                             self.templates_used.add(attachment.pdf_filename)
                             content += "    fields: " + "\n"
-                            for field, default, pageno, rect, field_type in attachment.fields:
+                            for field, default, pageno, rect, field_type, export_type in attachment.fields:
                                 content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
                             content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"

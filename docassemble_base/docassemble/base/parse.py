@@ -5127,8 +5127,12 @@ class Question:
             elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                 if 'fields' in attachment['options']:
                     if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                        if 'checkbox_export_value' in attachment['options']:
+                            default_export_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
+                        else:
+                            default_export_value = None
                         docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
+                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value)
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
                         for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
                             if key in result:
@@ -5498,16 +5502,11 @@ class Question:
                         the_fields = [attachment['options']['fields']]
                     else:
                         the_fields = attachment['options']['fields']
-                    if 'checkbox_export_value' in attachment['options']:
-                        yes_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
-                    else:
-                        yes_value = 'Yes'
-                    docassemble.base.functions.this_thread.misc['checkbox_export_value'] = yes_value
                     for item in the_fields:
                         for key, val in item.items():
                             answer = val.text(the_user_dict).rstrip()
                             if answer == 'True':
-                                answer = yes_value
+                                answer = 'Yes'
                             elif answer == 'False':
                                 answer = 'No'
                             elif answer == 'None':
@@ -5531,7 +5530,7 @@ class Question:
                                 raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, val in item.items():
                                 if val is True:
-                                    val = yes_value
+                                    val = 'Yes'
                                 elif val is False:
                                     val = 'No'
                                 elif val is None:
@@ -5559,7 +5558,7 @@ class Question:
                             for key, var_code in item.items():
                                 val = eval(var_code, the_user_dict)
                                 if val is True:
-                                    val = yes_value
+                                    val = 'Yes'
                                 elif val is False:
                                     val = 'No'
                                 elif val is None:
@@ -5587,7 +5586,7 @@ class Question:
                             for key, var_code in item.items():
                                 val = eval(var_code, the_user_dict)
                                 if val is True:
-                                    val = yes_value
+                                    val = 'Yes'
                                 elif val is False:
                                     val = 'No'
                                 elif isinstance(val, float) and float_formatter is not None:

@@ -2,6 +2,27 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Interview variables"
+    Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
+    And I wait 3 seconds
+    Then I should see the phrase "The fruit."
+    And I wait 3 seconds
+    And I should see the phrase "Fruit is apple."
+
+  Scenario: Test the interview "Checking in"
+    Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "potatoes"
+    And I unfocus
+    And I wait 12 seconds
+    And I set "Favorite food" to "tomatoes"
+    And I unfocus
+    And I wait 12 seconds
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food"
+    And I should see the phrase "potatoes"
+    And I should see the phrase "tomatoes"
+
   Scenario: Test the interview "Test URL args" with argument
     Given I start the interview "docassemble.demo:data/questions/testurlarg.yml&from=moon"
     Then I should see the phrase "You came from the moon."
