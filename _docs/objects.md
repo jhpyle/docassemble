@@ -140,19 +140,32 @@ already defined.
 # <a name="stdclasses"></a>Standard docassemble classes
 
 The classes in this section are automatically available for use in
-**docassemble** interviews (unless you set [`suppress loading util`]).
-
-To use them within a [Python module], include a line like the
-following at the top of your .py file:
-
-{% highlight python %}
-from docassemble.base.util import Individual
-{% endhighlight %}
+**docassemble** interviews.
 
 When you use objects from non-standard packages, you will need to
 include a `modules` block to import the names from the package into
 your interview, so that you can use the objects that are available
 from that package.
+
+Behind the scenes, the classes described in this section are part of
+the [`docassemble.base.util`] module.  By default, a **docassemble**
+interview will effectively add this to the top of your [YAML] file:
+
+{% highlight yaml %}
+modules:
+  - docassemble.base.util
+{% endhighlight %}
+
+You can turn this off by setting [`suppress loading util`] to `True`.
+
+If you are writing a [Python module], you will need to manually import
+the class names from the [`docassemble.base.util`] module.  For
+example, if you want to use the class [`Individual`], you would add
+this to the top of your [Python module] file:
+
+{% highlight python %}
+from docassemble.base.util import Individual
+{% endhighlight %}
 
 ## <a name="DAObject"></a>DAObject
 
