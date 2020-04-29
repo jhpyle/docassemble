@@ -1549,6 +1549,17 @@ adding the following to the definition of a field:
 
 {% include side-by-side.html demo="minlength" %}
 
+The `min`, `max`, `minlength`, and `maxlength` specifiers accept
+[Mako], so you can use [Mako] templating if you need computable
+validation limits.
+
+{% highlight yaml %}
+fields:
+ - Year insurance will expire: insurance_year_end
+   min: |
+     ${ today().year }
+{% endhighlight %}
+
 <a name="validation messages"></a>You can customize the standard
 validation messages that users see.  If you want to customize these
 messages on a server-wide basis, you can edit the [`words`] directive
