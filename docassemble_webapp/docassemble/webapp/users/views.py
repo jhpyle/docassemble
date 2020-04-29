@@ -122,7 +122,7 @@ def edit_user_profile_page(id):
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
-        abort(404)
+        return redirect(url_for('user_list'))
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
         db.session.commit()

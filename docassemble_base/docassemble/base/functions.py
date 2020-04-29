@@ -1809,7 +1809,7 @@ def comma_and_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, (list, dict, set, tuple)):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:

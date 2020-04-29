@@ -560,6 +560,32 @@ class InterviewStatus:
                     the_field.number = str(list_indexno) + '_' + str(the_field.number)
                     if hasattr(the_field, 'saveas'):
                         the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                        if hasattr(the_field, 'disableothers') and the_field.disableothers:
+                            list_of_other_fields = list()
+                            if isinstance(the_field.disableothers, list):
+                                for other_saveas in the_field.disableothers:
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_saveas)))
+                            else:
+                                for other_field in field_list:
+                                    if not hasattr(other_field, 'saveas'):
+                                        continue
+                                    if other_field.number == field.number:
+                                        continue
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_field.saveas)))
+                            the_field.disableothers = list_of_other_fields
+                        if hasattr(the_field, 'uncheckothers') and the_field.uncheckothers:
+                            list_of_other_fields = list()
+                            if isinstance(the_field.uncheckothers, list):
+                                for other_saveas in the_field.uncheckothers:
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_saveas)))
+                            else:
+                                for other_field in field_list:
+                                    if not hasattr(other_field, 'saveas'):
+                                        continue
+                                    if other_field.number == field.number or not (hasattr(other_field, 'inputtype') and other_field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']):
+                                        continue
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_field.saveas)))
+                            the_field.uncheckothers = list_of_other_fields
                     if hasattr(the_field, 'extras'):
                         if 'show_if_var' in the_field.extras:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))

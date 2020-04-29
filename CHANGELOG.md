@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.19] - 2020-04-29
+### Changed
+- If `help` accompanies a `yesno` field, it will be available as a
+  popup accessed from an icon.
+### Fixed
+- GitHub issue when committing to a new branch.
+- Exception when trying to edit a non-existent user.
+- Bug in `comma_and_list()`.
+- The `disable others` and `uncheck others` features did not work
+  correctly in a `list collect`.
+
 ## [1.1.18] - 2020-04-28
 ### Changed
 - The `checkbox export value` feature is no longer documented because

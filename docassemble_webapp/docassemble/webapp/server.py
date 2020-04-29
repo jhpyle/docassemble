@@ -13964,7 +13964,7 @@ def create_playground_package():
                 else:
                     the_branch = 'master'
                 if branch_is_new and the_branch != 'master':
-                    output += "Doing git checkout -b" + the_branch + "\n"
+                    output += "Doing git checkout -b " + the_branch + "\n"
                     try:
                         output += subprocess.check_output(git_prefix + "git checkout -b " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
@@ -13977,18 +13977,18 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git checkout.  " + output)
-                output += "Doing git merge --squash " + tempbranch + "\n"
-                try:
-                    output += subprocess.check_output(git_prefix + "git merge --squash " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("create_playground_package: error running git merge.  " + output)
-                output += "Doing git commit\n"
-                try:
-                    output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("create_playground_package: error running git commit.  " + output)
+                    output += "Doing git merge --squash " + tempbranch + "\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git merge --squash " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git merge.  " + output)
+                    output += "Doing git commit\n"
+                    try:
+                        output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git commit.  " + output)
                 if False:
                     try:
                         output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -24710,8 +24710,8 @@ with app.app_context():
             if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7774:
                 sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
                 os.remove(macro_path)
-            else:
-                sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
+            # else:
+            #     sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
         except Exception as err:
             sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
         import_necessary()
