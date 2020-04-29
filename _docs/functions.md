@@ -27,6 +27,9 @@ indicate which functions you want to import:
 from docassemble.base.util import send_email, quote_paragraphs
 {% endhighlight %}
 
+All of the functions described in this section are available from the
+[`docassemble.base.util`] module.
+
 # <a name="functions"></a>Functions for working with variable values
 
 ## <a name="defined"></a>defined()
