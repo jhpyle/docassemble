@@ -4225,6 +4225,18 @@
       datatype: yesno
     - Turnips: dislikes_turnips
       datatype: noyes
+"fields-yesno-help": |-
+  question: |
+    Please provide the following information.
+  fields:
+    - "What is your favorite food?": favorite_food
+    - note: Check which foods you like.
+    - Apples: likes_apples
+      datatype: yesno
+      help: Round fruit of a tree of the rose family
+    - Turnips: dislikes_turnips
+      datatype: noyes
+      help: Round root with white flesh
 "fields-yesno-uncheck-others": |-
   question: |
     Please provide the following information.
@@ -6222,6 +6234,20 @@
     - Number of seeds: fruit[i].seeds
       datatype: number
   list collect: True
+"list-collect-disable-others": |-
+  question: |
+    Tell me about the fruit.
+  fields:
+    - Fruit name: fruit[i].name.text
+      choices:
+        - Apple
+        - Orange
+        - Grapefruit
+      disable others: True
+    - Fruit name: fruit[i].name.text
+    - Number of seeds: fruit[i].seeds
+      datatype: number
+  list collect: True
 "list-collect-options": |-
   question: |
     Tell me about the fruit.
@@ -6240,6 +6266,21 @@
     Tell me about the fruit.
   fields:
     - Fruit name: fruit[i]
+  list collect: True
+"list-collect-uncheck-others": |-
+  question: |
+    Tell me about the fruit.
+  fields:
+    - Fruit name: fruit[i].name.text
+    - Number of seeds: fruit[i].seeds
+      datatype: number
+    - Sweet: fruit[i].sweet
+      datatype: yesno
+    - Sour: fruit[i].sour
+      datatype: yesno
+    - Neither: fruit[i].savory
+      datatype: yesno
+      uncheck others: True
   list collect: True
 "list-interview": |-
   code: |

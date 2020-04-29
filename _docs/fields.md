@@ -731,6 +731,14 @@ buttons offering choices "Yes," "No," and "I don't know."
 
 {% include side-by-side.html demo="fields-noyesmaybe" %}
 
+<a name="fields yesnohelp"></a>
+
+When you provide [`help`](#help) text for a `yesno` field, the help
+will be available as a popup accessible from a button located to the
+right of the field.
+
+{% include side-by-side.html demo="fields-yesno-help" %}
+
 ## <a name="fields checkboxes"></a>Checkboxes
 
 `datatype: checkboxes` will show the [`choices`](#choices) list as
