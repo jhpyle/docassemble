@@ -754,6 +754,13 @@ your container for the new configuration to take effect.
   database to be backed up by the daily cron job.  This is important
   if the off-site SQL database is large compared to the available disk
   space on the server.  The default value is `true`.
+* <a name="DASQLPING"></a>`DASQLPING`: If your docassemble server runs
+  in an environment in which persistent SQL connections will
+  periodically be severed, you can set `DASQLPING: true` in order to
+  avoid errors.  There is an overhead cost to using this, so only
+  enable this if you get SQL errors when trying to connect after a
+  period of inactivity.  The default is `false`.  See the [`sql ping`]
+  configuration directive.
 * <a name="EC2"></a>`EC2`: Set this to `true` if you are running
   [Docker] on [EC2].  This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
@@ -2170,3 +2177,4 @@ line), as the containers depend on the images.
 [`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
 [`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
 [`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
+[`sql ping`]: {{ site.baseurl }}/docs/config.html#sql ping
