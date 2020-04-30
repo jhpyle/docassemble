@@ -88,10 +88,15 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             pageno = 1
         export_value = None
         if str(field_type) in ('/Btn', "/'Btn'"):
+            export_value = 'Yes'
             try:
-                export_value = list(field['AP']['N'].keys())[0]
+                for key in list(field['AP']['N'].keys()):
+                    if key in ('Off', 'off', 'No', 'no'):
+                        continue
+                    export_value = key
+                    break
             except:
-                export_value = 'Yes'
+                pass
             if value == '/Yes':
                 default = export_value
             else:

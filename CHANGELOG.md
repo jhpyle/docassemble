@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.21] - 2020-04-30
+### Fixed
+- PDF export value issue where two export values are present in the
+  PDF for a checkbox field.
+
 ## [1.1.20] - 2020-04-30
 ### Changed
 - Upgraded LibreOffice to version 6.4.
