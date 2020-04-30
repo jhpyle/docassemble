@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.20] - 2020-04-30
+### Changed
+- Upgraded LibreOffice to version 6.4.
+### Fixed
+- `review` screens shown as part of the interview logic were being
+  treated as actions.
+
 ## [1.1.19] - 2020-04-29
 ### Changed
 - If `help` accompanies a `yesno` field, it will be available as a

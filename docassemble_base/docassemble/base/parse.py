@@ -2588,7 +2588,7 @@ class Question:
             else:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
-                self.need = list(map((lambda x: compile(x, '<need expression>', 'exec')), need_list))
+                self.need = list(map((lambda x: compile(x, '<need expression>', 'eval')), need_list))
                 for x in need_list:
                     self.find_fields_in(x)
             except:
@@ -3615,7 +3615,7 @@ class Question:
             docassemble.base.functions.reconsider(*self.reconsider)
         if self.need is not None:
             for need_code in self.need:
-                exec(need_code, the_user_dict)
+                eval(need_code, the_user_dict)
     def recursive_data_from_code(self, target):
         if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
             new_dict = dict()
@@ -4056,7 +4056,7 @@ class Question:
                 exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
         if self.need is not None:
             for need_code in self.need:
-                exec(need_code, user_dict)
+                eval(need_code, user_dict)
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
@@ -4943,7 +4943,7 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        if self.question_type == 'review' and sought is not None:
+        if self.question_type == 'review' and sought is not None and not hasattr(self, 'review_saveas'):
             if 'event_stack' not in user_dict['_internal']:
                 user_dict['_internal']['event_stack'] = dict()
             session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']

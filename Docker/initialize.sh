@@ -46,6 +46,11 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     pandoc --help &> /dev/null || apt-get -q -y install pandoc
 fi
 
+LIBREOFFICE_VERSION=`libreoffice --version`
+if [[ $LIBREOFFICE_VERSION =~ ^LibreOffice\ 6.3 ]]; then
+    apt-get -q -y install -t buster-backports libreoffice
+fi
+
 PANDOC_VERSION=`pandoc --version | head -n1`
 
 if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
