@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.21](https://github.com/jhpyle/docassemble/releases/tag/v1.1.21) - 2020-04-30
+
+### Fixed
+- PDF export value issue where two export values are present in the
+  PDF for a checkbox field.
+
 ## [1.1.20](https://github.com/jhpyle/docassemble/releases/tag/v1.1.20) - 2020-04-30
 
 ### Changed
