@@ -1166,6 +1166,8 @@ class DAList(DAObject):
             self.hook_on_remove(self.elements[-1])
         result = self.elements.pop(*pargs)
         self._reset_instance_names()
+        if len(self.elements) == 0:
+            self.there_are_any = False
         return result
     def item(self, index):
         """Returns the value for the given index, or a blank value if the index does not exist."""
@@ -1273,8 +1275,7 @@ class DAList(DAObject):
             new_obj_parameters[key] = val
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
         self.elements.append(newobject)
-        if hasattr(self, 'there_are_any'):
-            self.there_are_any = True
+        self.there_are_any = True
         return newobject
     def append(self, *pargs, **kwargs):
         """Adds the arguments to the end of the list."""
@@ -1285,7 +1286,7 @@ class DAList(DAObject):
                 parg.fix_instance_name(parg.instanceName, self.instanceName + '[' + str(len(self.elements)) + ']')
             self.elements.append(parg)
             something_added = True
-        if something_added and len(self.elements) > 0 and hasattr(self, 'there_are_any'):
+        if something_added and len(self.elements) > 0:
             self.there_are_any = True
     def remove(self, *pargs):
         """Removes the given arguments from the list, if they are in the list"""
@@ -1296,7 +1297,7 @@ class DAList(DAObject):
                 self.elements.remove(value)
                 something_removed = True
         self._reset_instance_names()
-        if something_removed and len(self.elements) == 0 and hasattr(self, 'there_are_any'):
+        if something_removed and len(self.elements) == 0:
             self.there_are_any = False
     def _remove_items_by_number(self, *pargs):
         """Removes items from the list, by index number"""
@@ -1493,7 +1494,7 @@ class DAList(DAObject):
             complete_attribute = self.complete_attribute
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
-            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
                 number = self.target_number
@@ -1579,7 +1580,7 @@ class DAList(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
-        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+        if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
         return self.target_number
     def __len__(self):
@@ -2273,7 +2274,7 @@ class DADict(DAObject):
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         self._validate(item_object_type, complete_attribute, keys=keys)
         if number is None and self.ask_number:
-            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
                 number = self.target_number
@@ -2399,9 +2400,13 @@ class DADict(DAObject):
         """Remove a given key from the dictionary and return its value"""
         if pargs[0] in self.elements:
             self.hook_on_remove(self.elements[pargs[0]])
+        if len(self.elements) == 1:
+            self.there_are_any = False
         return self.elements.pop(*pargs)
     def popitem(self):
         """Remove an arbitrary key from the dictionary and return its value"""
+        if len(self.elements) == 1:
+            self.there_are_any = False
         return self.elements.popitem()
     def setdefault(self, *pargs):
         """Set a key to a default value if it does not already exist in the dictionary"""
@@ -2448,7 +2453,7 @@ class DADict(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
-        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+        if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
         return self.target_number
     def __len__(self):
@@ -2779,23 +2784,34 @@ class DASet(DAObject):
         if elem in self.elements:
             self.hook_on_remove(elem)
         self.elements.remove(elem)
+        if len(self.elements) == 0:
+            self.there_are_any = False
     def discard(self, elem):
         """Removes an element from the set if it exists."""
         if elem in self.elements:
             self.hook_on_remove(elem)
         self.elements.discard(elem)
+        if len(self.elements) == 0:
+            self.there_are_any = False
     def pop(self):
         """Remove and return an arbitrary element from the set"""
+        if len(self.elements) == 1:
+            self.there_are_any = False
         return self.elements.pop()
     def add(self, *pargs):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
+        something_added = False
         for parg in pargs:
             if isinstance(parg, (DAList, DASet, abc.Iterable)) and not isinstance(parg, str):
                 for item in parg:
                     self.add(item)
+                    something_added = True
             else:
                 self.elements.add(parg)
+                something_added = True
+        if something_added:
+            self.there_are_any = True
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on
         whether there is only one element in the set or multiple
@@ -2912,7 +2928,7 @@ class DASet(DAObject):
         for elem in sorted(self.elements):
             str(elem)
         if number is None and self.ask_number:
-            if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+            if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
                 number = self.target_number
@@ -2957,7 +2973,7 @@ class DASet(DAObject):
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
             return len(self.elements)
-        if hasattr(self, 'there_are_any') and self.there_are_any == 0:
+        if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
         return self.target_number
     def __len__(self):

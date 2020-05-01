@@ -562,13 +562,12 @@ def get_installed_distributions():
         output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = err.output.decode('utf-8', 'ignore')
-    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + str(output) + "\n")
     sys.stderr.write("get_installed_distributions: pip version:\n" + output)
     try:
-        output = subprocess.check_output(['pip', 'freeze']).decode('utf-8', 'ignore')
+        output = subprocess.check_output(['pip', 'list', '--format=freeze']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = err.output.decode('utf-8', 'ignore')
-    #sys.stderr.write("get_installed_distributions: result of pip freeze was:\n" + str(output) + "\n")
+    #sys.stderr.write("get_installed_distributions: result of pip list --format freeze was:\n" + str(output) + "\n")
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:

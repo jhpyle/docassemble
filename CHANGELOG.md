@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.1.22] - 2020-04-30
+### Changed
+- When a item is added to or removed from a group, the `there_are_any`
+  attribute is updated even if `there_are_any` was not previously
+  defined.
+### Fixed
+- Package update problem due to `pip freeze` changing behavior in
+  version 20.1.
+
 ## [1.1.21] - 2020-04-30
 ### Fixed
 - PDF export value issue where two export values are present in the

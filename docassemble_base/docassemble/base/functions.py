@@ -3405,6 +3405,8 @@ def defined(var):
     str(var)
     if not isinstance(var, str):
         raise Exception("defined() must be given a string")
+    if not re.search(r'[A-Za-z][A-Za-z0-9\_]*', var):
+        raise Exception("defined() must be given a valid Python variable name")
     try:
         eval(var, dict())
         return True
