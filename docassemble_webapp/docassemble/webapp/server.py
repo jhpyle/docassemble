@@ -3213,7 +3213,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if base_name_info[var]['show']:
             names_used.add(var)
     names_used = set([i for i in names_used if not extraneous_var.search(i)])
-    for var in ('_internal', '__object_type'):
+    for var in ('_internal', '__object_type', '_DAOBJECTDEFAULTDA'):
         names_used.discard(var)
     for var in interview.mlfields:
         names_used.discard(var + '.text')
@@ -3271,7 +3271,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         while '.' in the_var:
             the_var = re.sub(r'(.*)\..*$', r'\1', the_var)
             implicitly_defined.add(the_var)
-    for var in ('_internal', '__object_type'):
+    for var in ('_internal', '__object_type', '_DAOBJECTDEFAULTDA'):
         undefined_names.discard(var)
         vocab_set.discard(var)
     for var in [x for x in undefined_names if x.endswith(']')]:
@@ -7330,6 +7330,23 @@ def index(action_argument=None):
       else{
         daTargetDiv = "#dabody";
       }
+      function getFields(){
+        var allFields = [];
+        for (var fieldName in daValLookup){
+          if (daValLookup.hasOwnProperty(fieldName)){
+            allFields.push(fieldName);
+          }
+        }
+        for (var rawFieldName in daVarLookup){
+          if (daVarLookup.hasOwnProperty(rawFieldName)){
+            var fieldName = atob(rawFieldName);
+            if (allFields.indexOf(fieldName) == -1){
+              allFields.push(fieldName);
+            }
+          }
+        }
+        return allFields;
+      }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
           var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -11226,6 +11243,23 @@ def observer():
             }
           }
         }
+      }
+      function getFields(){
+        var allFields = [];
+        for (var fieldName in daValLookup){
+          if (daValLookup.hasOwnProperty(fieldName)){
+            allFields.push(fieldName);
+          }
+        }
+        for (var rawFieldName in daVarLookup){
+          if (daVarLookup.hasOwnProperty(rawFieldName)){
+            var fieldName = atob(rawFieldName);
+            if (allFields.indexOf(fieldName) == -1){
+              allFields.push(fieldName);
+            }
+          }
+        }
+        return allFields;
       }
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
@@ -17361,6 +17395,17 @@ def playground_packages():
         the_pypi_package_name = None
     if github_message is not None and github_url_from_file is not None and github_url_from_file != github_http and github_url_from_file != github_ssh:
         github_message += '  ' + word("This package was originally pulled from") + ' <a target="_blank" href="' + github_as_http(github_url_from_file) + '">' + word('a GitHub repository') + '</a>.'
+    if github_message is not None and old_info.get('github_branch', None) and (github_http or github_url_from_file):
+        html_url = github_http or github_url_from_file
+        commit_code = None
+        current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
+        if os.path.isfile(current_commit_file):
+            with open(current_commit_file, 'rU', encoding='utf-8') as fp:
+                commit_code = fp.read().strip()
+        if commit_code:
+            github_message += '  ' + word('The current branch is %s and the current commit is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>', '<a target="_blank" href="' + html_url + '/commit/' + commit_code + '"><code>' + commit_code[0:7] + '</code></a>')
+        else:
+            github_message += '  ' + word('The current branch is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>',)
     if github_message is not None:
         github_message = Markup(github_message)
     branch = old_info.get('github_branch', None)

@@ -1536,6 +1536,7 @@ class DAList(DAObject):
                 #str(self.__getitem__(the_length))
                 # if item_object_type is not None and complete_attribute is not None:
                 #     getattr(self.__getitem__(the_length), complete_attribute)
+                the_length = len(self.elements)
             if hasattr(self, '_necessary_length'):
                 del self._necessary_length
         elif minimum != 0:

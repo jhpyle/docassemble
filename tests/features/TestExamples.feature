@@ -6800,18 +6800,6 @@ Feature: Example interviews
     Then I should see the phrase "Done with the interview."
     And I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Flash message"
-    Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
-    Then I should see the phrase "What is your favorite food?"
-    And I set "Favorite food" to "soup"
-    And I unfocus
-    And I set "Favorite drink" to "water"
-    And I unfocus
-    And I wait 4 seconds
-    Then I should see the phrase "What? You like SOUP?"
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite food is soup and your favorite drink is water."
-
   Scenario: Test the interview "Redact text Markdown"
     Given I start the interview "docassemble.base:data/questions/examples/redact.yml"
     Then I should see the phrase "Tell me about yourself."

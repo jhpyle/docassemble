@@ -4,7 +4,15 @@ UserMixin = None
 def init_flask():
     global db
     global UserMixin
-    from flask_sqlalchemy import SQLAlchemy
+    import docassemble.webapp.database
+    if docassemble.webapp.database.pool_pre_ping:
+        from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy
+        class SQLAlchemy(_BaseSQLAlchemy):
+            def apply_pool_defaults(self, app, options):
+                super().apply_pool_defaults(app, options)
+                options["pool_pre_ping"] = True
+    else:
+        from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy()
     import flask_user
     UserMixin = flask_user.UserMixin

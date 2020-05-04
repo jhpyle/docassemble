@@ -2,6 +2,18 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Flash message"
+    Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "soup"
+    And I unfocus
+    And I set "Favorite drink" to "water"
+    And I unfocus
+    And I wait 4 seconds
+    Then I should see the phrase "What? You like SOUP?"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food is soup and your favorite drink is water."
+
   Scenario: Test the interview "Interview variables"
     Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
     And I wait 3 seconds

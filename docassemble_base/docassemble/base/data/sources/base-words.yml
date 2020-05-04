@@ -524,6 +524,8 @@
 "That screen is already being controlled by another operator": Null
 "The author is": Null
 "The configuration file was saved.": Null
+"The current branch is %s and the current commit is %s.": Null
+"The current branch is %s.": Null
 "The default project cannot be deleted.": Null
 "The document is available in the following formats:": Null
 "The file you requested does not exist.": Null

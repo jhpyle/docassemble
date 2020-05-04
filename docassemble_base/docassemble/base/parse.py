@@ -4516,7 +4516,10 @@ class Question:
                     for indexno in range(len(iterators)):
                         exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
             else:
-                only_empty_fields_exist = True
+                if hasattr(self, 'fields_saveas'):
+                    only_empty_fields_exist = False
+                else:
+                    only_empty_fields_exist = True
                 commands_to_run = list()
                 for field in self.fields:
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
@@ -7838,7 +7841,7 @@ class DAStrictUndefined(StrictUndefined):
                         self._undefined_name
                     )
                 else:
-                    hint = '%r has got no attribute %r' % (
+                    hint = '%r has no attribute %r' % (
                         object_type_repr(self._undefined_obj),
                         self._undefined_name
                     )
