@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.24](https://github.com/jhpyle/docassemble/releases/tag/v1.1.24) - 2020-05-04
+
+### Fixed
+- Unicode problem with JSON sent from the browser.
+
 ## [1.1.23](https://github.com/jhpyle/docassemble/releases/tag/v1.1.23) - 2020-05-03
 
 ### Added
