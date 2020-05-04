@@ -7515,10 +7515,10 @@ def index(action_argument=None):
         data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         return url;
       }
@@ -7532,10 +7532,10 @@ def index(action_argument=None):
         var data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         $.ajax({
           type: "GET",
@@ -7566,7 +7566,7 @@ def index(action_argument=None):
           xhrFields: {
             withCredentials: true
           },
-          data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -7595,7 +7595,7 @@ def index(action_argument=None):
           xhrFields: {
             withCredentials: true
           },
-          data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -8030,7 +8030,7 @@ def index(action_argument=None):
             }
           }
         });
-        $(form).find("input[name='_visible']").val(btoa(JSON.stringify(visibleElements)));
+        $(form).find("input[name='_visible']").val(btoa(JSON_stringify(visibleElements)));
         $(form).each(function(){
           $(this).find(':input').off('change', daPushChanges);
         });
@@ -8171,7 +8171,7 @@ def index(action_argument=None):
               $('input[name="_files"]').remove();
             }
             else{
-              $('input[name="_files"]').val(btoa(JSON.stringify(newFileList.concat(nullFileList))));
+              $('input[name="_files"]').val(btoa(JSON_stringify(newFileList.concat(nullFileList))));
             }
             for (var i = 0; i < inline_file_list.length; i++){
               fileArray.keys.push(inline_file_list[i])
@@ -8332,11 +8332,19 @@ def index(action_argument=None):
         event.stopPropagation();
         return(false);
       }
+      function JSON_stringify(s){
+         var json = JSON.stringify(s);
+         return json.replace(/[\\u007f-\\uffff]/g,
+            function(c) {
+              return '\\\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+            }
+         );
+      }
       function daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
         $('<input>').attr({
           type: 'hidden',
           name: '_files_inline',
-          value: btoa(JSON.stringify(fileArray))
+          value: btoa(JSON_stringify(fileArray))
         }).appendTo($(form));
         for (var i = 0; i < inline_file_list.length; ++i){
           document.getElementById(inline_file_list[i]).disabled = true;
@@ -11553,6 +11561,14 @@ def observer():
           }
         }
       }
+      function JSON_stringify(s){
+         var json = JSON.stringify(s);
+         return json.replace(/[\\u007f-\\uffff]/g,
+            function(c) {
+              return '\\\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
+            }
+         );
+      }
       function url_action(action, args){
         //redo?
         if (args == null){
@@ -11561,10 +11577,10 @@ def observer():
         data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         return url;
       }
@@ -11579,10 +11595,10 @@ def observer():
         var data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON.stringify(data)))
+          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         $.ajax({
           type: "GET",
@@ -11606,7 +11622,7 @@ def observer():
         $.ajax({
           type: "POST",
           url: locationBar,
-          data: $.param({_action: btoa(JSON.stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -11632,7 +11648,7 @@ def observer():
         $.ajax({
           type: "POST",
           url: locationBar,
-          data: $.param({_action: btoa(JSON.stringify(data)), _next_action_to_set: btoa(JSON.stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);

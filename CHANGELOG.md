@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.24] - 2020-05-04
+### Fixed
+- Unicode problem with JSON sent from the browser.
+
 ## [1.1.23] - 2020-05-03
 ### Added
 - The `getFields()` JavaScript function.
