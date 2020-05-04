@@ -36,12 +36,12 @@ use one of the [third party providers] that provide
 **docassemble**-based interview development platforms.
 
 [Docker] can also be used to deploy even the most complex
-**docassemble** installations.  For example, Amazon's [EC2 Container
-Service] can be used to maintain a cluster of **docassemble** web
-server instances, created from [Docker] images, that communicate with
-a central server.  For information about how to install
-**docassemble** in a multi-server arrangement on [EC2 Container
-Service] ("[ECS]"), see the [scalability] section.
+**docassemble** installations.  For example, [Kubernetes] or Amazon's
+[EC2 Container Service] can be used to maintain a cluster of
+**docassemble** web server instances, created from [Docker] images,
+that communicate with a central server.  For information about how to
+install **docassemble** in a multi-server arrangement, see the
+[scalability] section.
 
 [Docker] is a complex and powerful tool, and the **docassemble**
 documentation is not a substitute for [Docker] documentation.  If you
@@ -619,7 +619,7 @@ to server).
   * `celery`: The [Docker] container will serve as a [Celery] node.
   * `sql`: The [Docker] container will run the central [PostgreSQL] service.
   * `cron`: The [Docker] container will run [scheduled tasks] and
-    other necessary tasks, such as updating SQL tables. 
+    other necessary tasks, such as updating SQL tables.
   * `redis`: The [Docker] container will run the central [Redis] service.
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
@@ -660,8 +660,9 @@ indicated location, **docassemble** will create an initial
 [configuration] file and store it in the indicated location.
 
 * <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
-  using [S3] as a repository for uploaded files, [Playground] files,
-  the [configuration] file, and other information.  This environment
+  using [S3] (or [S3]-compatible object storage service) as a
+  repository for uploaded files, [Playground] files, the
+  [configuration] file, and other information.  This environment
   variable, along with others that begin with `S3`, populates values
   in [`s3` section] of the initial [configuration] file.  If this is
   unset, but [`S3BUCKET`] is set, it will be assumed to be `true`.
@@ -681,7 +682,7 @@ indicated location, **docassemble** will create an initial
   to the [region] you are using (e.g., `us-west-1`, `us-west-2`,
   `ca-central-1`).
 * <a name="S3ENDPOINTURL"></a>`S3ENDPOINTURL`: If you are using an
-  [S3]-compatible data storage service, set `S3ENDPOINTURL` to the URL
+  [S3]-compatible object storage service, set `S3ENDPOINTURL` to the URL
   of the service (e.g., `https://mys3service.com`).
 * <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `true` if you
   are using [Azure blob storage](#persistent azure) as a repository
@@ -888,7 +889,7 @@ your container for the new configuration to take effect.
   if you need to manually specify the port on which the `websockets`
   service runs.  See the [`websockets port`] configuration directive.
 * <a name="USEMINIO"></a>`USEMINIO`: Set this to `true` if you are
-  setting `S3ENDPOINTURL` to point to [MinIO] and you would like the
+  setting [`S3ENDPOINTURL`] to point to [MinIO] and you would like the
   bucket to be created when the container starts.  See the [`use
   minio`] configuration directive.
 * <a name="USECLOUDURLS"></a>`USECLOUDURLS`: Set this to `false` if
@@ -939,7 +940,7 @@ will need to keep in mind.
 
 The existing [configuration] file takes precedence over the
 environment variables that you set using [Docker].
-  
+
 If you want to change the [configuration], and the server is running,
 you can edit the [configuration] using the web interface.
 
@@ -958,7 +959,7 @@ When **docassemble** starts up on a [Docker] container, it:
 * Runs [Let's Encrypt] if the configuration indicates that
   [Let's Encrypt] should be used, and [Let's Encrypt] has not yet been
   configured.
-  
+
 When **docassemble** stops, it saves the [configuration] file, a
 backup of the [PostgreSQL] database, and backups of the [Let's Encrypt]
 configuration.  If you are using [persistent volumes], the information
@@ -979,7 +980,7 @@ shut down the machine with [`docker stop -t 600`].  Then, if you are using
 "letsencrypt.tar.gz" file.  If you are using [Azure blob
 storage](#persistent azure), you can go to the [Azure Portal] and
 delete the "letsencrypt.tar.gz" file.
-  
+
 Also, if a configuration file exists on [S3](#persistent
 s3)/[Azure blob storage](#persistent azure) (`config.yml`) or in a
 [persistent volume], then the values in that configuration will take
@@ -1010,51 +1011,67 @@ data are stored on the [Docker] container, they will be destroyed by
 [`docker rm`].
 
 There are two ways around this problem.  The first, and most
-preferable solution, is to get an account on [Amazon Web Services]
-([AWS]) or [Microsoft Azure].  If you use [AWS], create an [S3 bucket]
-for your data, and then when you launch your container, set the
-[`S3BUCKET`] and associated [environment variables].
+preferable solution, is to use an object storage service.  The
+standard-setting object storage service is [Amazon Web Services]'s
+[S3].  If you use [AWS], you can create an [S3 bucket] for your data,
+and then when you launch your **docassemble** container, set the
+[`S3BUCKET`], [`S3ACCESSKEY`], [`S3SECRETACCESSKEY`], and [`S3REGION`]
+environment variables.
 
-If you use [Microsoft Azure], create an [Azure blob storage] resource,
-and a [blob storage container] within it, and then when you launch
-your container, set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and
-[`AZURECONTAINER`]<span></span> [environment variables].
+If you don't want to use [Amazon Web Services], you can use an
+[S3]-compatible object storage service by setting [`S3ENDPOINTURL`] to
+the URL of the service, along with the [`S3BUCKET`], [`S3ACCESSKEY`],
+and [`S3SECRETACCESSKEY`]<span></span> [environment variables].  There
+are [S3]-compatible object storage services available for [Google
+Cloud], [Wasabi], [Linode], [Vultr], [Digital Ocean], [IBM Cloud],
+[Oracle Cloud], [Scaleway], [Exoscale], and others.  If you are
+operating an on-premises server, you can deploy [MinIO] ([MinIO] is
+configured by default if you deploy **docassemble** [with Kubernetes])
+or [Rook].
+
+In addition to [S3] and [S3]-compatible object storage,
+**docassemble** supports [Azure blob storage].  You can create a [blob
+storage container] inside [Microsoft Azure] and then when you launch
+your container, you set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`],
+and [`AZURECONTAINER`]<span></span> [environment variables].
 
 When [`docker stop -t 600`] is run, **docassemble** will backup the SQL
 database, the [Redis] database, the [configuration], and your uploaded
-files to your [S3 bucket] or [blob storage container].  Then, when you
+files to the [S3 bucket] or [blob storage container].  Then, when you
 issue a [`docker run`] command with [environment variables] pointing
 **docassemble** to your [S3 bucket]/[Azure blob storage] resource,
 **docassemble** will make restore from the backup.  You can [`docker
 rm`] your container and your data will persist in the cloud.
 
-The second way is to use [persistent volumes], which is a feature of
-[Docker].  This will store the data in directories on the [Docker]
-host, so that when you destroy the container, these directories will
-be untouched, and when you start up a new container, it will use the
-saved directories.
+The second method of persistent storage is to use [persistent
+volumes], which is a feature of [Docker].  This will store the data in
+directories on the [Docker] host, so that when you destroy the
+container, these directories will be untouched, and when you start up
+a new container, it will use the saved directories.
 
 These two options are explained in the following subsections.
 
-## <a name="persistent s3"></a>Using S3
+## <a name="persistent s3"></a>Using S3 or S3-compatible
 
-To use [S3] for persistent storage, sign up with
-[Amazon Web Services], go to the [S3 Console], click "Create Bucket,"
+To use [S3] (or an [S3]-compatible] service) for persistent storage,
+you need to obtain credentials and create a bucket.
+
+If you want to use [Amazon Web Services], you would first sign up for
+an [AWS] account, and go to the [S3 Console], click "Create Bucket,"
 and pick a name.  If your site is at docassemble.example.com, a good
 name for the bucket is `docassemble-example-com`.  (Client software
 will have trouble accessing your bucket if it contains `.`
 characters.)  Under "Region," pick the region nearest you.
-
 Then you need to obtain an access key and a secret access key for
 [S3].  To obtain these credentials, go to [IAM Console] and create a
 user with "programmatic access."  Under "Attach existing policies
 directly," find the policy called `AmazonS3FullAccess` and attach it
 to the user.
 
-When you run a **docassemble** [Docker] container, set the
+When you run your **docassemble** [Docker] container, set the
 [configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
-and [`S3SECRETACCESSKEY`].  For example, you might use an `env.list`
-file such as:
+[`S3SECRETACCESSKEY`], and [`S3REGION`].  For example, you might use
+an `env.list` file such as:
 
 {% highlight text %}
 DAHOSTNAME=interviews.example.com
@@ -1076,12 +1093,20 @@ access to an [S3] bucket without the necessity of setting
 [`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`].  In this case, the only
 environment variable you need to pass is [`S3BUCKET`].
 
+If you are using an [S3]-compatible object storage service, you will
+need to set [`S3ENDPOINTURL`] to the URL endpoint of your service,
+which you can find in the service's documentation or in your account
+settings.  You likely will not need to set [`S3REGION`] unless the
+service supports the "region" concept.
+
 These secret access keys will become available to all developers who
 use your **docassemble** server, since they are in the configuration
-file.  If you want to limit access to a particular bucket, you do not
-have to use the `AmazonS3FullAccess` policy when obtaining [S3]
-credentials.  Instead, you can create your own policy with the
-following definition:
+file.
+
+If you are using [AWS] and you want to limit access to a particular
+bucket, you do not have to use the `AmazonS3FullAccess` policy when
+obtaining [S3] credentials.  Instead, you can create your own policy
+with the following definition:
 
 {% highlight json %}
 {
@@ -1609,7 +1634,7 @@ server, the [supervisor] will run the
 `docassemble.webapp.install_certs` module before starting the web
 server.
 
-If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure), 
+If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure),
 this module will copy the files from the `certs/` prefix in your
 bucket/container to `/etc/ssl/docassemble`.  You can use the [S3
 Console] or the [Azure Portal] to create a folder called `certs` and
@@ -2046,6 +2071,7 @@ line), as the containers depend on the images.
 [`LOGSERVER`]: #LOGSERVER
 [`S3BUCKET`]: #S3BUCKET
 [`S3ACCESSKEY`]: #S3ACCESSKEY
+[`S3REGION`]: #S3REGION
 [`S3SECRETACCESSKEY`]: #S3SECRETACCESSKEY
 [`AZURECONTAINER`]: #AZURECONTAINER
 [`AZUREACCOUNTNAME`]: #AZUREACCOUNTNAME
@@ -2178,3 +2204,19 @@ line), as the containers depend on the images.
 [`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
 [`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
 [`sql ping`]: {{ site.baseurl }}/docs/config.html#sql ping
+[with Kubernetes]: https://github.com/jhpyle/charts
+[Rook]: https://rook.io/docs/rook/v0.8/object.html
+[Vultr]: https://www.vultr.com/docs/vultr-object-storage
+[Google Cloud]: https://cloud.google.com/storage/docs/interoperability
+[Wasabi]: https://wasabi.com/s3-compatible-cloud-storage/
+[Linode]: https://www.linode.com/docs/platform/object-storage/how-to-use-object-storage/
+[Digital Ocean]: https://developers.digitalocean.com/documentation/spaces/#aws-s3-compatibility
+[IBM Cloud]: https://cloud.ibm.com/apidocs/cos/cos-compatibility
+[Oracle Cloud]: https://docs.cloud.oracle.com/en-us/iaas/Content/Object/Tasks/s3compatibleapi.htm
+[Scaleway]: https://www.scaleway.com/en/object-storage/
+[Exoscale]: https://www.exoscale.com/object-storage/
+[`S3ENDPOINTURL`]: #S3ENDPOINTURL
+[`use cloud urls`]: {{ site.baseurl }}/docs/config.html#use cloud urls
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[`nginx ssl protocols`]: {{ site.baseurl }}/docs/config.html#nginx ssl protocols
+[Helm]: https://helm.sh/

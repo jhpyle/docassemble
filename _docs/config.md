@@ -7,8 +7,9 @@ short_title: Configuration
 # <a name="configfile"></a>Location of the configuration file
 
 **docassemble** reads its configuration directives from a [YAML] file,
-which by default is located in `/usr/share/docassemble/config/config.yml`.
-If you are using [Docker] and [S3] or [Azure blob storage],
+which by default is located in
+`/usr/share/docassemble/config/config.yml`.  If you are using [Docker]
+with [S3], [S3]-compatible object storage, or [Azure blob storage],
 **docassemble** will attempt to copy the configuration file from your
 [S3] bucket or [Azure blob storage] container before starting.
 
@@ -1247,10 +1248,10 @@ the `user` and `password`.  It will connect to the database called
 `name`.  If you want separate **docassemble** systems to share the
 same database, you can set a `table prefix`.
 
-If you are using [Docker] with [S3] or [Azure blob storage], and you
-omit the `host` or set it to `null`, then **docassemble** will
-automatically find the hostname of the central SQL server in cloud
-storage.
+If you are using [Docker] with [S3], [S3]-compatible object storage,
+or [Azure blob storage], and you omit the `host` or set it to `null`,
+then **docassemble** will automatically find the hostname of the
+central SQL server in cloud storage.
 
 The value of `backup` is only applicable if you are using [Docker] and
 the `host` is off-site.  If `backup` is true (which is the default),
@@ -1312,8 +1313,9 @@ The `uploads` directive indicates the directory in which uploaded files are stor
 uploads: /netmount/files/docassemble/uploads
 {% endhighlight %}
 
-If you are using a [multi-server arrangement] and not using [S3] or
-[Azure blob storage], this needs to point to a central network drive.
+If you are using a [multi-server arrangement] and not using [S3],
+[S3]-compatible object storage, or [Azure blob storage], this needs to
+point to a central network drive.
 
 The default value is `/usr/share/docassemble/files`.
 
@@ -1331,8 +1333,9 @@ but **docassemble** changes it to the value of this directive, or
 packages: /netmount/files/docassemble/local
 {% endhighlight %}
 
-If you are using a [multi-server arrangement] and not using [S3] or
-[Azure blob storage], this needs to point to a central network drive.
+If you are using a [multi-server arrangement] and not using [S3],
+[S3]-compatible object storage, or [Azure blob storage], this needs to
+point to a central network drive.
 
 ## <a name="webapp"></a>Path to WSGI application
 
@@ -1378,7 +1381,7 @@ server.  This is a convenience feature.  Otherwise, you would have to
 manually install the SSL certificates on every new **docassemble** web
 server you create.
 
-The value of `certs` can be a file path, an [Amazon S3]<span></span>
+The value of `certs` can be a file path, an [S3]<span></span>
 [URI] (e.g., `s3://exampledotcom/certs`), or an
 [Azure blob storage]<span></span> [URI] (e.g.,
 `blob://youraccountname/yourcontainername/certs`).  The contents of
@@ -1668,7 +1671,7 @@ error notification email:
 
 Information about errors is also available in the [Logs].
 
-## <a name="session error redirect url"></a>Redirecting user in case of session error 
+## <a name="session error redirect url"></a>Redirecting user in case of session error
 
 If the user tries to access a non-existent session, the default
 behavior is to start a new session in the interview and display an
@@ -2320,10 +2323,10 @@ The default directory is `/usr/share/docassemble/log`.
 If a `log server` is set, **docassemble** will write messages to TCP
 port 514 on that server, and will not write to the `log` directory.
 
-If you are using [Docker] with [S3] or [Azure blob storage], and you
-omit the `log server` or set it to `null`, then **docassemble** will
-automatically find the hostname of the central log server in cloud
-storage.
+If you are using [Docker] with [S3], [S3]-compatible object storage,
+or [Azure blob storage], and you omit the `log server` or set it to
+`null`, then **docassemble** will automatically find the hostname of
+the central log server in cloud storage.
 
 ## <a name="interview delete days"></a>Days of inactivity before interview deletion
 
@@ -2596,9 +2599,10 @@ Always use a trailing slash.
 If this directive is not set, the value of [`root`] will be used to
 create URLs to uploaded files and static files.
 
-Note that if you are using [Azure blob storage] or [S3], the URLs to
-files will point directly to files stored in the cloud, so there would
-be no reason for a **docassemble** file server.
+Note that if you are using [Azure blob storage], [S3]-compatible
+object storage [S3], the URLs to files will point directly to files
+stored in the cloud, so there would be no reason for a **docassemble**
+file server.
 
 ## <a name="google"></a>Google API key
 
@@ -2867,13 +2871,11 @@ ocr languages:
 
 For more information, see the documentation of the [`ocr_file()`] function.
 
-## <a name="aws"></a>Amazon Web Services directives
+## <a name="aws"></a><a name="s3"></a>s3
 
-### <a name="s3"></a>s3
-
-If you are using [Amazon S3] to store shared files, your access keys,
-[bucket] name, and [region name] are in stored in the Configuration
-as follows:
+If you are using [Amazon S3] or an [S3]-compatible object storage
+service to store shared files, your access keys, [bucket] name, and
+[region name] are in stored in the Configuration as follows:
 
 {% highlight yaml %}
 s3:
@@ -2887,7 +2889,8 @@ s3:
 There is also an option under `s3` called `endpoint url` that you can
 set if you are using an [S3]-compatible object storage service. (e.g.,
 `endpoint url: https://mys3service.com`).  By default, [Amazon S3] is
-used.
+used.  If you are using an [S3]-compatible object storage service, the
+`region` directive may not be necessary.
 
 You will need to create the [bucket] before using it; **docassemble**
 will not create it for you.
@@ -2897,9 +2900,10 @@ the Configuration using the web application when you already have a
 server running.  The [S3] configuration is used throughout the boot
 process and the shutdown process.  If you want to start using [S3],
 you should start a new container using [`docker run`] with the
-[`S3BUCKET`], [`S3REGION`], and other `S3` environment variables set.
+[`S3BUCKET`] and other `S3` environment variables set.  For more
+information, see the [Docker section].
 
-### <a name="azure"></a>azure
+## <a name="azure"></a>azure
 
 If you are using [Azure blob storage] to store shared files, enter
 your account name, account key, and container name as follows:
@@ -2915,7 +2919,7 @@ azure:
 You will need to create the container before using it; **docassemble**
 will not create it for you.
 
-### <a name="ec2"></a>ec2
+## <a name="ec2"></a>ec2
 
 If you are running **docassemble** from within an [Amazon EC2]
 instance, or a [Docker] container within such an instance, set this to
@@ -2936,7 +2940,7 @@ one that other web servers can resolve.  If `ec2` is set to `True`,
 then **docassemble** will determine the hostname by calling
 `http://169.254.169.254/latest/meta-data/local-ipv4`.
 
-### <a name="ec2 ip url"></a>ec2 ip url
+## <a name="ec2 ip url"></a>ec2 ip url
 
 If `ec2` is set to `True`, **docassemble** will determine the hostname
 by calling `http://169.254.169.254/latest/meta-data/local-ipv4`.  If
@@ -2948,7 +2952,7 @@ work, you can change the URL that **docassemble** uses by setting the
 ec2 ip url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
-### <a name="kubernetes"></a>kubernetes
+## <a name="kubernetes"></a>kubernetes
 
 If you are running **docassemble** from within a [Kubernetes]
 deployment, add this to your Configuration
@@ -4466,3 +4470,4 @@ cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
 [meta tags]: https://en.wikipedia.org/wiki/Meta_element
 [`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
 [`DASSLPROTOCOLS`]: {{ site.baseurl }}/docs/docker.html#DASSLPROTOCOLS
+[Docker section]: {{ site.baseurl }}/docs/docker.html#persistent s3

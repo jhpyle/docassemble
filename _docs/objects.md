@@ -2716,9 +2716,10 @@ code: |
 To upload a file, set the `files` keyword parameter to a dictionary
 where the keys are the names of the fields the server is expecting and
 the values are references to files.  You can refer to **docassemble**
-file-like objects or references to files in a package (e.g.,
-`'picture_of_fred.png'` or
-`'docassemble.missouri:data/static/picture_of_fred.png'`).
+file-like objects (e.g., [`DAFile`], [`DAStaticFile`]) or references
+to files in a package (e.g., `'picture_of_fred.png'` or
+`'docassemble.missouri:data/static/picture_of_fred.png'`).  File
+system paths are not accepted.
 
 {% highlight yaml %}
 question: |

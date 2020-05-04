@@ -4,6 +4,26 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.23](https://github.com/jhpyle/docassemble/releases/tag/v1.1.23) - 2020-05-03
+
+### Added
+- The `getFields()` JavaScript function.
+
+### Changed
+- A `question` with `fields` that contains a single multiple choice
+  field where the choices are empty is not skipped if the `question`
+  has a `continue button field`.
+- The branch and commit are shown in the Packages page of the
+  Playground when GitHub integration is enabled and the package has a
+  known presence on GitHub.
+- Upgraded Font Awesome to 5.13.0.
+
+### Fixed
+- Infinite loop when a list is gathered and `object_type` is set to a
+  class for which the textual representation or `complete_element` is
+  pre-defined and a set number of items are to be gathered.
+- The `sql ping` feature was not fully implemented.
+
 ## [1.1.22](https://github.com/jhpyle/docassemble/releases/tag/v1.1.22) - 2020-04-30
 
 ### Changed

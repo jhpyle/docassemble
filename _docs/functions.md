@@ -6658,6 +6658,14 @@ variable name must be written exactly as it appears in the underlying
 
 {% include side-by-side.html demo="setField" %}
 
+## <a name="js_getFields"></a>getFields() JavaScript function
+
+The `getFields()` function returns an array of names of the fields on
+the screen that can be used with `val()`, `getField()`, and
+`setField()`.
+
+{% include side-by-side.html demo="getFields" %}
+
 ## <a name="js_url_action"></a>url_action() JavaScript function
 
 The `url_action()` function, like its [Python namesake](#url_action),

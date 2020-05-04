@@ -29,9 +29,9 @@ browser at http://localhost.
 Even if you want to put **docassemble** into production, it is
 recommended that you [install it using Docker] -- ideally on an [EC2]
 virtual machine hosted by [Amazon Web Services].  **docassemble**
-integrates nicely with [AWS] services such as [S3] and
-[Microsoft Azure] services such as [Azure blob storage] for persistent
-storage.
+integrates nicely with [AWS] services such as [S3] and [Microsoft
+Azure] services such as [Azure blob storage] for persistent storage.
+It also supports [S3]-compatible object storage services.
 
 The primary reason you might want to install **docassemble** manually
 on a machine is if you want it to run on a server for which the HTTP
@@ -1068,8 +1068,8 @@ You can also send e-mail without using [SMTP].  If you have a
 [Mailgun] account, you can use the [Mailgun API] or the [SendGrid API]
 from **docassemble** to send mail.  This avoids many of the problems
 with [SMTP].  For instructions on sending e-mail this way, see the
-documentation for the [`mailgun api`] and [`sendgrid api`] directive in the
-[configuration].
+documentation for the [`mailgun api key`] and [`sendgrid api key`]
+directives in the [configuration].
 
 However, if you want to send e-mail using [SMTP], you can use the
 [`mail`] directive in the [configuration] to point **docassemble** to
@@ -1089,15 +1089,19 @@ mail:
 {% endhighlight %}
 
 For this to work, you will need to go into your [Google settings] and
-set "Allow less secure apps" to "ON."
+set "Allow less secure apps" to "ON."  (Gmail may soon discontinue
+support for using their service as an SMTP server, but the example is
+still illustrative.)
 
-Other [SMTP] services include [Amazon SES], [SendGrid], [Mailgun]
-(which offers both [SMTP] and API-based sending methods), and
-[MailChimp].  It is also possible to use an [SMTP] server from [Google
-Apps] if you have a [G Suite] account.
+Other [SMTP] services include [SendGrid], [Mailgun], [MailChimp], and
+[Amazon SES].  It is also possible to use an [SMTP] server from
+[Google Apps] if you have a [G Suite] account.  [SendGrid] and
+[Mailgun] also offer API-based sending methods, which tend to be
+faster; see the [`sendgrid api key`] and [`mailgun api key`]
+configuration directives.
 
 In order to minimize the chances that e-mail you send from these
-services will be flagged as spam, you will need to spend some time
+services will be flagged as spam, you may need to spend some time
 configuring [SPF] records, [DKIM] records, [reverse DNS], and the
 like.
 
@@ -1662,7 +1666,8 @@ All of these system administration headaches can be avoided by
 [Microsoft Application Registration Portal]: https://apps.dev.microsoft.com
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [OneDrive APIs]: https://onedrive.live.com/about/en-us/
-[`mailgun api`]: {{ site.baseurl }}/docs/config.html#mailgun api
+[`mailgun api key`]: {{ site.baseurl }}/docs/config.html#mailgun api
+[`sendgrid api key`]: {{ site.baseurl }}/docs/config.html#sendgrid api
 [Google settings]: https://support.google.com/accounts/answer/6010255
 [will not be maintained]: https://www.python.org/dev/peps/pep-0373/
 [mod_wsgi]: https://modwsgi.readthedocs.io/en/develop/

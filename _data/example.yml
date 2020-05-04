@@ -5552,6 +5552,26 @@
         return false;
       });
     </script>
+"getFields": |-
+  question: |
+    Tell me about your musical tastes.
+  fields:
+    - Best band ever: best_band
+    - Best singer ever: best_singer
+    - Best composer ever: best_composer
+    - Best songwriter ever: best_songwriter
+    - html: |
+        <a href="#" id="decide_for_me" class="btn btn-success">Decide for me</a>
+  script: |
+    <script>
+      $("#decide_for_me").click(function(){
+        var fields = getFields();
+        for (var i = 0; i < fields.length; ++i){
+          setField(fields[i], 'Carly Simon');
+        }
+        return false;
+      });
+    </script>
 "googlechart": |-
   features:
     javascript: https://www.gstatic.com/charts/loader.js
