@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.25](https://github.com/jhpyle/docassemble/releases/tag/v1.1.25) - 2020-05-07
+
+### Added
+- The `if_started` keyword parameter for the `number_gathered()`
+  method.
+
+### Changed
+- If `ask_number` on a `DAList` or `DADict` is `True` and
+  `target_number` is defined, removing an item using the table editing
+  interface will decrease `target_number` by one.
+
 ## [1.1.24](https://github.com/jhpyle/docassemble/releases/tag/v1.1.24) - 2020-05-04
 
 ### Fixed

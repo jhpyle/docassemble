@@ -131,7 +131,7 @@ defines the attribute.  For example, if you write this in a question:
 Remember that ${ trustee.possessive('phone number') } is
 ${ trustee.phone_number }.
 {% endhighlight %}
-    
+
 then in order to ask the question, **docassemble** may ask you for the
 trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
@@ -456,7 +456,7 @@ question: |
 subquestion: |
   % for part in ['address', 'city', 'state', 'zip']:
   Your ${ part } is ${ client.address.attr(part) }.
-  
+
   % endfor
 {% endhighlight %}
 
@@ -589,7 +589,7 @@ This will result in the following five questions being asked:
 
 <a name="DAList.appendObject"></a>The `DAList` operates like a [list]
 in [Python], but it also has some special methods.  When adding a new
-item to the list, you should use the **docassemble**-specific 
+item to the list, you should use the **docassemble**-specific
 `appendObject()` method.  This method is similar to the
 `initializeAttribute()` method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
@@ -647,7 +647,7 @@ Other methods available on a `DAList` are:
   directly to Python's [`sorted()`] function.
 
 {% include side-by-side.html demo="sort" %}
-  
+
 * <a name="DAList.sort_elements"></a>`sort_elements()` - acts like
   `sort()` but does not cause the list to be gathered.
 * <a name="DAList.complete_elements"></a><a
@@ -686,7 +686,7 @@ Other methods available on a `DAList` are:
   Empty text will also result if you try to use attributes on
   the result, so `fruit.item(2).seeds` or
   `fruit.item(2).total_value()` will also result in empty text.
-  
+
 {% include side-by-side.html demo="item" %}
 
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
@@ -716,6 +716,17 @@ Other methods available on a `DAList` are:
   name="DASet.number"></a>`number()` - returns the total number of
   items in the list.  If necessary it will trigger questions that
   ask for all of the items of the list to be populated.
+* <a name="DAList.number_gathered"></a><a
+  name="DADict.number_gathered"></a><a
+  name="DASet.number_gathered"></a>`number_gathered()` - like
+  `number()`, except it will not require that the list be fully
+  gathered before returning a value.  It takes the optional keyword
+  parameter `if_started`, which can be set to `True` if you want to
+  trigger the start of the gathering process if gathering has not
+  started.  Using `number_gathered()` with `if_started` can be helpful
+  on `review` screens because it will prevent the item from being
+  shown if list gathering has not started, but it will not prevent the
+  item from being shown if list gathering has started.
 * <a name="DAList.number_as_word"></a><a
   name="DADict.number_as_word"></a><a
   name="DASet.number_as_word"></a>`number_as_word()` - same as
@@ -1195,7 +1206,7 @@ You might work with `DAFile` objects in the following contexts:
   use an [`objects`] block to create a blank [`DAFile`] object.  Then
   you would call [`.initialize()`](#DAFile.initialize) to give the
   file a name and a presence on the file system.
-  
+
 You can call [`.path()`](#DAFile.path) on a `DAFile` object to get the
 actual file path.  Using the file path, can manipulate the underlying
 file directly in whatever way you want.  However, the `DAFile` object
@@ -1339,7 +1350,7 @@ allows you to set two characteristics of the uploaded document:
   also deleted when the session has been [inactive for a period].  You
   can prevent the deletion of a file by setting the `persistent`
   attribute to `True`.
-  
+
 You can set these attributes with code like this:
 
 {% highlight yaml %}
@@ -1521,7 +1532,7 @@ Then use [`code`] to initialize the object and set the contents:
 {% highlight yaml %}
 code: |
   pdf_file.initialize(extension="pdf")
-  pdf_file.from_url("https://example.com/the_file.pdf") 
+  pdf_file.from_url("https://example.com/the_file.pdf")
 {% endhighlight %}
 
 <a name="DAFile.commit"></a>The `.commit()` method ensures that
@@ -2041,8 +2052,8 @@ the `content` and optional `subject` attributes as the resulting text.
 Note that the text may have [Markdown]<span></span> [markup] in it.
 
 <a name="DALazyTemplate.show"></a>If a template is a variable
-`disclaimer`, the content can be inserted by writing 
-`${ disclaimer }`, `${ disclaimer.content }`, or 
+`disclaimer`, the content can be inserted by writing
+`${ disclaimer }`, `${ disclaimer.content }`, or
 `${ disclaimer.show() }`.  The latter method facilitates the use of
 [`DALazyTemplate`]s and [`DAFile`]s interchangably.
 
@@ -2156,7 +2167,7 @@ interview, like
 use `favorite_fruit` as a key, but if another interview on the system
 used the same key, the interviews would interfere with one another.
 
-<a name="DARedis.set_data"></a><a name="DARedis.get_data"></a>The 
+<a name="DARedis.set_data"></a><a name="DARedis.get_data"></a>The
 `set_data()` and `get_data()` methods act just like the standard
 methods `set()` and `get()`, except that they perform [pickling] and
 unpickling.  This allows you to store and retrieve **docassemble**
@@ -2517,7 +2528,7 @@ The methods of `DAOAuth` that are useful are:
   valid.  It will not cause authorization to be requested.
 * `.delete_credentials()` - this will delete the stored credentials
   from the system.
-  
+
 Here is a longer version of the interview above, demonstrating how to
 add a menu item that allows the users to manage their credentials.
 
@@ -2729,7 +2740,7 @@ fields:
     datatype: file
 ---
 code: |
-  result = web.post('https://api.example.com/image', 
+  result = web.post('https://api.example.com/image',
                     data={'name': user.name.full()},
                     files={'portrait': user.portrait})
 {% endhighlight %}
@@ -2846,7 +2857,7 @@ values:
 
 {% highlight yaml %}
 code: |
-  result = web.post('new_user', 
+  result = web.post('new_user',
                     data={'name': 'Fred'},
                     success_code=204)
 {% endhighlight %}
@@ -2856,7 +2867,7 @@ code 200, it will be treated as unsuccessful.
 
 {% highlight yaml %}
 code: |
-  result = web.post('new_user', 
+  result = web.post('new_user',
                     data={'name': 'Fred'},
                     success_code=[200, 204])
 {% endhighlight %}
@@ -3132,7 +3143,7 @@ create your own services by running something like:
 
 {% highlight python %}
 import apiclient
-import docassemble.base.util 
+import docassemble.base.util
 
 api = docassemble.base.util.DAGoogleAPI()
 http = api.http('https://www.googleapis.com/auth/cloud-translation')
@@ -3185,7 +3196,7 @@ client = api.google_cloud_storage_client()
 
 def make_bucket(bucket_name):
   return client.create_bucket(bucket_name)
-  
+
 def get_bucket(bucket_name):
   return client.get_bucket(bucket_name)
 
@@ -3258,7 +3269,7 @@ The following methods can be used:
 
 Calling `defendant.possessive('fish')` returns "ABC Corporation's
 fish" or "your fish" depending on whether `defendant` is the user.
-  
+
 ### <a name="Person.identified"></a>`.identified()`
 
 Calling `defendant.identified()` returns `True` if `defendant.name.text`
@@ -3753,7 +3764,7 @@ Here is how `full()` and other methods of the `IndividualName` work:
 * <a name="IndividualName.firstlast"></a>`applicant.firstlast()`: "John Adams"
 * <a name="IndividualName.lastfirst"></a>`applicant.lastfirst()`: "Adams, John"
 * <a name="IndividualName.defined"></a>`applicant.defined()`: Returns
-  `True` if the `.first` attribute has been defined yet. 
+  `True` if the `.first` attribute has been defined yet.
 
 The `IndividualName` also uses the attribute `.uses_parts`, which is
 `True` by default.  If `.uses_parts` is set to `False`, then the
@@ -4123,8 +4134,8 @@ value of `.amount()` is also returned when you pass a `Value` to the
 question: |
   The value of your real estate holdings is
   ${ currency(real_estate_holdings) }.
-  
-  An identical way of writing this number is 
+
+  An identical way of writing this number is
   ${ currency(real_estate_holdings.amount()) }.
 {% endhighlight %}
 
@@ -4622,7 +4633,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' °C'
         elif temperature_type == 'Fahrenheit':
             return str(self.oven_temperature) + ' °F'
-        elif temperature_type == 'Kelvin': 
+        elif temperature_type == 'Kelvin':
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
@@ -4677,7 +4688,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' °C'
         elif get_info('temperature_type') == 'Fahrenheit':
             return str(self.oven_temperature) + ' °F'
-        elif get_info('temperature_type') == 'Kelvin': 
+        elif get_info('temperature_type') == 'Kelvin':
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
@@ -4729,7 +4740,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' °C'
         elif this_thread.temperature_type == 'Fahrenheit':
             return str(self.oven_temperature) + ' °F'
-        elif this_thread.temperature_type == 'Kelvin': 
+        elif this_thread.temperature_type == 'Kelvin':
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
@@ -4787,7 +4798,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' °C'
         elif type == 'Fahrenheit':
             return str(self.oven_temperature) + ' °F'
-        elif type == 'Kelvin': 
+        elif type == 'Kelvin':
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
@@ -5146,7 +5157,7 @@ url = alchemy_url('demo db')
 # Build the "engine" for connecting to the SQL server, using the URL for the database.
 engine = create_engine(url)
 
-# Create the tables 
+# Create the tables
 Base.metadata.create_all(engine)
 
 # Get SQLAlchemy ready
@@ -5214,7 +5225,7 @@ class Bank(Person, SQLObject):
         results = list()
         for db_entry in self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
             results.append(Customer.by_id(db_entry.customer_id))
-        return results                
+        return results
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -5546,7 +5557,7 @@ code: |
   customer.db_read()
   # customer is no longer nascent
   customer.name.first
-  # this does not trigger the asking of a question, because 
+  # this does not trigger the asking of a question, because
   # customer.name.first is defined as 'John'
 {% endhighlight %}
 
@@ -5562,14 +5573,14 @@ code: |
   customer.ssn = '545-23-6552'
   # customer is still nascent
   customer.db_save()
-  # this will return without doing anything, because a 
+  # this will return without doing anything, because a
   # customer with that SSN does not exist, and the
   # customer's first name is not yet known.
   # The customer is still nascent.
   customer.name.first = 'Jane'
   customer.name.last = 'Smith'
   customer.db_save()
-  # Since the required columns are now defined, the customer 
+  # Since the required columns are now defined, the customer
   # object is no longer nascent.  The record now exists in the database.
 {% endhighlight %}
 
@@ -5779,7 +5790,7 @@ current state of the [SQL] table.
 <a name="SQLObject._nascent"></a>If the object is nascent, the
 `_nascent` attribute will be set to `True`.  This attribute is `True`
 when the object is first initialized, and it is set to `False` when
-the object acquires an [`id`]. 
+the object acquires an [`id`].
 
 <a name="SQLObject.id"></a>When the object is connected with the [SQL]
 table, the `id` attribute is set to the integer ID of the record in
@@ -5806,7 +5817,7 @@ first and only positional parameter is the name of the column.  The
 method should return the value from [Python] land that corresponds
 with the given column name.
 
-<a name="SQLObject.db_set"></a>The `db_set()` method is called by 
+<a name="SQLObject.db_set"></a>The `db_set()` method is called by
 [`SQLObject`] code when it needs to populate information in [Python]
 land based on the values in a row in a [SQL] table.  The two
 positional parameters are the column name and a data value.  Based on
@@ -6139,7 +6150,7 @@ the `_uid` of the table rather than the `id`.
 [Google Drive API]: https://developers.google.com/drive/
 [`httplib2.Http()`]: http://httplib2.readthedocs.io/en/latest/libhttplib2.html#httplib2.Http
 [`ServiceAccountCredentials`]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html#oauth2client.service_account.ServiceAccountCredentials
-[oauth2client.service_account]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html 
+[oauth2client.service_account]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html
 [gspread]: https://gspread.readthedocs.io/en/latest/
 [Cloud Translation API Client Library]: https://cloud.google.com/translate/docs/reference/libraries#client-libraries-install-python
 [`google-api-python-client`]: https://github.com/google/google-api-python-client/
