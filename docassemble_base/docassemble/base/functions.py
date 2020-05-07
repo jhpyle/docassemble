@@ -3074,6 +3074,8 @@ def process_action():
                     del this_thread.current_info['action_list'].there_is_another
                 if hasattr(this_thread.current_info['action_list'], '_necessary_length'):
                     del this_thread.current_info['action_list']._necessary_length
+                if hasattr(this_thread.current_info['action_list'], 'ask_number') and this_thread.current_info['action_list'].ask_number and hasattr(this_thread.current_info['action_list'], 'target_number') and int(this_thread.current_info['action_list'].target_number) > 0:
+                    this_thread.current_info['action_list'].target_number = int(this_thread.current_info['action_list'].target_number) - 1
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + str(err))
                 try:
@@ -3096,6 +3098,8 @@ def process_action():
                     del this_thread.current_info['action_dict'].there_is_another
                 if len(this_thread.current_info['action_dict'].elements) == 0 and hasattr(this_thread.current_info['action_dict'], 'there_are_any'):
                     this_thread.current_info['action_dict'].there_are_any = False
+                if hasattr(this_thread.current_info['action_dict'], 'ask_number') and this_thread.current_info['action_dict'].ask_number and hasattr(this_thread.current_info['action_dict'], 'target_number') and int(this_thread.current_info['action_dict'].target_number) > 0:
+                    this_thread.current_info['action_dict'].target_number = int(this_thread.current_info['action_dict'].target_number) - 1
             except Exception as err:
                 logmessage("process_action: _da_dict_remove error: " + str(err))
                 try:

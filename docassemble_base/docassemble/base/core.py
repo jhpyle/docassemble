@@ -1415,8 +1415,10 @@ class DAList(DAObject):
         if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
             return True
         return False
-    def number_gathered(self):
+    def number_gathered(self, if_started=False):
         """Returns the number of elements in the list that have been gathered so far."""
+        if if_started and not self.gathering_started():
+            self._trigger_gather()
         return len(self.elements)
     def current_index(self):
         """Returns the index number of the last element added to the list, or 0 if no elements have been added."""
@@ -2176,8 +2178,10 @@ class DADict(DAObject):
         if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
             return True
         return False
-    def number_gathered(self):
+    def number_gathered(self, if_started=False):
         """Returns the number of elements in the list that have been gathered so far."""
+        if if_started and not self.gathering_started():
+            self._trigger_gather()
         return len(self.elements)
     def number_as_word(self, language=None):
         """Returns the number of keys in the dictionary, spelling out the number if ten
@@ -2905,8 +2909,10 @@ class DASet(DAObject):
         if hasattr(self, 'gathered') or hasattr(self, 'there_are_any') or len(self.elements) > 0:
             return True
         return False
-    def number_gathered(self):
+    def number_gathered(self, if_started=False):
         """Returns the number of elements in the list that have been gathered so far."""
+        if if_started and not self.gathering_started():
+            self._trigger_gather()
         return len(self.elements)
     def number_as_word(self, language=None):
         """Returns the number of items in the set, spelling out the number if
