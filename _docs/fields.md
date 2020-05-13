@@ -1643,7 +1643,7 @@ Instead of creating a separate module file, you can also use an anonymous
 ([Lambda](https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions))
 function as the value of the `validate` field modifier. This may be useful if your
 `validate` function is very simple. It is common to use `x` as the variable name in
-a Lambda expression, but note that this is reserved name in docassemble, so you 
+a Lambda expression, but note that this is a reserved name in docassemble, so you 
 should use a different variable name, such as `y`.
 
 {% highlight yaml %}
