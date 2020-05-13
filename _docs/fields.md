@@ -1639,6 +1639,25 @@ see if the value does not validate.  If 4 does divide the input value
 by a whole number, the function returns `True`, which indicates that
 the input is valid.
 
+Instead of creating a separate module file, you can also use an anonymous 
+([Lambda](https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions))
+function as the value of the `validate` field modifier. This may be useful if your
+`validate` function is very simple. It is common to use `x` as the variable name in
+a Lambda expression, but note that this is reserved name in docassemble, so you 
+should use a different variable name, such as `y`.
+
+{% highlight yaml %}
+---
+question: |
+  Tell us some vital statistics
+fields:
+  - Weight: weight
+    validate: |
+      lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 180 pounds")
+  - Height: height
+      lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 6 feet 1 inch")  
+{% endhighlight %}
+
 Note that the `validate` field modifier is not available for use with
 fields having `datatype: checkboxes`.  (However, note that you can use
 [`minlength`] and [`maxlength`] to require a certain number of
@@ -1649,7 +1668,9 @@ can only test for characteristics inherent in the variable being
 validated; they cannot compare the variable to other variables.
 
 <a name="validation code"></a>You can get around this restriction
-using `validation code`.
+using `validation code`. Rather than showing an inline validation
+error, `validation code` will create a pop-up error for the question
+as a whole.
 
 {% include demo-side-by-side.html demo="validation-code" %}
 
