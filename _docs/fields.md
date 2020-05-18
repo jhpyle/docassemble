@@ -1160,14 +1160,21 @@ unless you want to.
 
 {% include side-by-side.html demo="optional-field" %}
 
-Instead of writing `True` or `False`, you can write [Python] code.
-This code will be evaluated for whether it turns out to be true or
-false.  For example, instead of `True` or `False`, you could use the
-name of a variable that is defined by a [`yesno`] question (as long as
-that variable was defined before the screen loads; the red asterisk
-cannot be toggled in real time within the browser).
+Instead of writing `True` or `False`, you can write a [Python
+expression].  This expression will be evaluated for whether it turns
+out to be true or false.  For example, instead of `True` or `False`,
+you could use the name of a variable that is defined by a [`yesno`]
+question.
 
 {% include side-by-side.html demo="required-code" %}
+
+Instead of using a true/false variable, you could use a conditional
+expression such as `favorite_fruit == 'apple'`.
+
+Note that the [Python expression] is evaluated on the server, before
+the screen loads in the browser.  Whether a field is required or not
+cannot be controlled in real time when the user is looking at the
+screen.
 
 ## <a name="hint"></a>`hint`
 
