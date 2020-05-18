@@ -23,7 +23,7 @@ Feature: Demonstration interview
     Then I should see the phrase "I understand that you live in Springfield. Were you injured in Pennsylvania?"
     And I click the button "Yes"
     Then I should see the phrase "When did your injury take place?"
-    And I set "Date of Injury" to "05/05/2015"
+    And I set "Date of Injury" to "05/05/2018"
     And I click the button "Continue"
     Then I should see the phrase "What is your name?"
     And I set "First Name" to "Ğŕëáť"

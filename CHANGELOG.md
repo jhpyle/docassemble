@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.26] - 2020-05-17
+### Fixed
+- Duplicative `under` text when `attachment` is used.
+- Error when reading certain types of PDF files.
+
 ## [1.1.25] - 2020-05-07
 ### Added
 - The `if_started` keyword parameter for the `number_gathered()`

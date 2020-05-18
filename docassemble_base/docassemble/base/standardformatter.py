@@ -113,7 +113,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
 #     if status.subquestionText:
 #         output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
 #     output += '\n      <div id="dasigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
-#     if 'underText'status.extras:
+#     if 'underText' in status.extras:
 #         output += markdown_to_html(status.extras['underText'], trim=True)
 #     output += "\n      </div>"
 #     output += """
@@ -516,6 +516,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     varnames = dict()
     onchange = list()
     autocomplete_id = list()
+    showUnderText = 'underText' in status.extras and len(status.attachments) == 0;
     if status.using_navigation == 'vertical':
         grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
@@ -652,7 +653,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         else:
             output += '\n              <div id="dasigmidpart" class="dasigmidpart"></div>'
         output += '\n              <div id="dasigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
-        if 'underText' in status.extras:
+        if showUnderText:
             output += '                <div class="d-none d-md-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-md-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         output += """
@@ -688,7 +689,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += help_button
         output += '\n                </div></fieldset>\n'
         #output += question_name_tag(status.question)
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -714,7 +715,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += additional_buttons_after
         output += help_button
         output += '\n                </div></fieldset>\n'
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -793,7 +794,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         else:
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + resume_button_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1244,7 +1245,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         else:
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         if status.extras.get('list_collect_is_final', False):
@@ -1271,7 +1272,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <fieldset class="da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1477,7 +1478,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += help_button
             output += '                </div></fieldset>\n'
         #output += question_name_tag(status.question)
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1496,7 +1497,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += status.submit
             output += '                <fieldset class="da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + additional_buttons_after + help_button + '</div></fieldset>\n'
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
     else:
         output += status.pre
@@ -1510,7 +1511,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '                <fieldset class="da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
-        if 'underText' in status.extras:
+        if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
         output += '            </form>\n'

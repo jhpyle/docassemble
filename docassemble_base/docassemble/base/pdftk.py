@@ -82,7 +82,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                 value = bytes(str(value), encoding='utf-8')
             value = remove_nonprintable_bytes_limited(value)
         #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
-        if page is not None:
+        if page is not None and hasattr(page, 'objid'):
             pageno = id_to_page[page.objid]
         else:
             pageno = 1
