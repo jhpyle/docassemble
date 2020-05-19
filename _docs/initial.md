@@ -109,8 +109,6 @@ interview-level default value in place of the system-wide
 
 <a name="exit label"></a>If `exit label` is provided, the given text
 will be used in place of the word "Exit" on the "Exit" menu option.
-This text is passed through the [`word()`] function, so that it can be
-translated into different languages.
 
 <a name="unlisted"></a>If you set `unlisted: True` for an interview
 that has an entry in the [`dispatch`] list in your [configuration],
