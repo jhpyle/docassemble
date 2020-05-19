@@ -306,7 +306,7 @@
             aria = 'tabindex="0" role="' + type + '" aria-checked="' + selected + '" aria-label="' + aria_label + '"';
 
         if( label == true && icon == true){
-            block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
+            block = '<label class="btn-light" for="' + input_id + '" ' + 'aria-label="' + aria_label + '"' + '>' +
                 '<span class="labelauty-unchecked-image text-muted">' + uncheck_icon + '</span>' +
                 '<span class="labelauty-unchecked">' + decode_html(unchecked_message) + '</span>' +
                 '<span class="labelauty-checked-image"><i class="fas fa-check fa-fw"></i></span>' +
@@ -314,13 +314,13 @@
                 '</label>';
         }
         else if( label == true ){
-            block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
+            block = '<label class="btn-light" for="' + input_id + '" ' + 'aria-label="' + aria_label + '"' + '>' +
                 '<span class="labelauty-unchecked">' + decode_html(unchecked_message) + '</span>' +
                 '<span class="labelauty-checked">' + decode_html(checked_message) + '</span>' +
                 '</label>';
         }
         else{
-            block = '<label class="btn-light" for="' + input_id + '" ' + aria + '>' +
+            block = '<label class="btn-light" for="' + input_id + '" ' + 'aria-label="' + aria_label + '"' + '>' +
                 '<span class="labelauty-unchecked-image text-muted">' + uncheck_icon + '</span>' +
                 '<span class="labelauty-checked-image"><i class="fas fa-check fa-fw"></i></span>' +
                 '</label>';
