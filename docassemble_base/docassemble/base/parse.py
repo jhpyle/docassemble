@@ -4370,7 +4370,7 @@ class Question:
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = dict()
-                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
                     for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
@@ -4850,7 +4850,7 @@ class Question:
                         if 'show_if_js' in field.extras:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = dict()
-                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
                         for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:

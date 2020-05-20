@@ -2017,7 +2017,7 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="da-embed-checkbox-wrapper">'
             else:
-                output += '<fieldset class="da-field-checkboxes"><legend class="sr-only">' + word('Checkboxes:') + '</legend>'
+                output += '<fieldset class="da-field-checkboxes" role="group"><legend class="sr-only">' + word('Checkboxes:') + '</legend>'
             for pair in pairlist:
                 if 'image' in pair:
                     the_icon = icon_html(status, pair['image']) + ' '
@@ -2120,7 +2120,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '</span>'
             else:
                 default_selected = False
-                output += '<fieldset class="da-field-radio"><legend class="sr-only">' + word('Choices:') + '</legend>'
+                output += '<fieldset class="da-field-radio" role="radiogroup"><legend class="sr-only">' + word('Choices:') + '</legend>'
                 for pair in pairlist:
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
@@ -2223,7 +2223,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if embedded:
                     output += '<span class="da-embed-radio-wrapper">'
                 else:
-                    output += '<fieldset class="da-field-radio"><legend class="sr-only">' + word('Choices:') + '</legend>'
+                    output += '<fieldset class="da-field-radio" role="radiogroup"><legend class="sr-only">' + word('Choices:') + '</legend>'
                 if field.sign > 0:
                     for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no())]:
                         formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)

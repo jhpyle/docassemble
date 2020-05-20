@@ -22709,7 +22709,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
-    interview_status.exit_label = title_info.get('exit label', 'Exit')
+    interview_status.exit_label = title_info.get('exit label', word('Exit'))
     interview_status.title = title_info.get('full', default_title)
     interview_status.display_title = title_info.get('logo', interview_status.title)
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
