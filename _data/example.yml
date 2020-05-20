@@ -11472,6 +11472,16 @@
   question: |
     Is Topeka the capital of Kansas?
   yesnomaybe: topeka_is_capital_of_kansas
+  ---
+  question: |
+    % if topeka_is_capital_of_kansas:
+    You were right that Topeka is the capital of Kansas.
+    % elif topeka_is_capital_of_kansas is None:
+    You should know your state capitals!
+    % else:
+    Actually, Topeka is the capital of Kansas.
+    % endif
+  mandatory: True
 "zip-file": |-
   objects:
     - coins_picture: DAStaticFile.using(filename='coins36.png')

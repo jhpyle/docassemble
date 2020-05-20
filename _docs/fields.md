@@ -101,15 +101,18 @@ represents the absence of a value.
 
 {% include side-by-side.html demo="yesnomaybe" %}
 
-<!-- How do you make the context of the example above bigger? I think the on-screen
-demo needs to include testing for Maybe answers. -->
+Note that both `False` and `None` are considered to be "false" values
+in [Python].  So if you write:
 
-In most places you use a `yesnomaybe` answer, an "I don't know" response will be 
-treated the same as a "No" response. For example, `if my_variable:` will have
-the same results if `my_variable` has the value `False` or `None`.
+{% highlight text %}
+% if not topeka_is_capital_of_kansas:
+You are a dummy!
+% endif
+{% endhighlight %}
 
-If you need to test specifically for it being "I don't know", you can
-use the expression `my_variable is None`, as in the example interview above.
+then the phrase "You are a dummy!" will be shown both if the value is
+`False` and also if the value is `None`.  If you need to test
+specifically for the "I don't know" answer, use `is None`.
 
 ## <a name="field with buttons"></a>Multiple choice buttons
 
