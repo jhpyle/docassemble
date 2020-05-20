@@ -1954,6 +1954,8 @@ class Individual(Person):
             self.name.uses_parts = False
             self.name.text = kwargs['name']
         return super().init(*pargs, **kwargs)
+    def familiar(self):
+        return self.name.familiar()
     def get_parents(self, tree, create=False):
         return self.get_relation('child', tree, create=create)
     def get_spouse(self, tree, create=False):
