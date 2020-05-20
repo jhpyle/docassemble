@@ -1955,6 +1955,7 @@ class Individual(Person):
             self.name.text = kwargs['name']
         return super().init(*pargs, **kwargs)
     def familiar(self):
+        """Returns the individual's familiar name."""
         return self.name.familiar()
     def get_parents(self, tree, create=False):
         return self.get_relation('child', tree, create=create)

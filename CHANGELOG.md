@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.27] - 2020-05-19
+### Fixed
+- Issue with `js show if` and `list collect`.
+
 ## [1.1.26] - 2020-05-17
 ### Fixed
 - Duplicative `under` text when `attachment` is used.
