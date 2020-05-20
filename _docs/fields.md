@@ -101,6 +101,16 @@ represents the absence of a value.
 
 {% include side-by-side.html demo="yesnomaybe" %}
 
+<!-- How do you make the context of the example above bigger? I think the on-screen
+demo needs to include testing for Maybe answers. -->
+
+In most places you use a `yesnomaybe` answer, an "I don't know" response will be 
+treated the same as a "No" response. For example, `if my_variable:` will have
+the same results if `my_variable` has the value `False` or `None`.
+
+If you need to test specifically for it being "I don't know", you can
+use the expression `my_variable is None`, as in the example interview above.
+
 ## <a name="field with buttons"></a>Multiple choice buttons
 
 A [`question`] block with `buttons` will set the variable
