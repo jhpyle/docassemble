@@ -1976,10 +1976,10 @@ class DADict(DAObject):
         return True
     def true_values(self):
         """Returns the keys for which the corresponding value is True."""
-        return DAList(elements=[key for key, value in self._sorted_items() if value is True])
+        return DAList(elements=[key for key, value in self.items() if value is True])
     def false_values(self):
         """Returns the keys for which the corresponding value is False."""
-        return DAList(elements=[key for key, value in self._sorted_items() if value is False])
+        return DAList(elements=[key for key, value in self.items() if value is False])
     def _sorted_items(self):
         return sorted(self.items())
     def _sorted_elements_items(self):
