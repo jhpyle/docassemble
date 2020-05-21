@@ -89,9 +89,10 @@ bird has 2 feet
 The keys of a dictionary are unique.  Setting `feet['rabbit'] = 4`
 will add a new entry to the above dictionary, whereas setting
 `feet['dog'] = 3` will change the existing entry for `'dog'`.  The
-items in a dictionary are stored in no particular order; [Python] will
-not remember the order in which you add them.  (See the
-[`DAOrderedDict`] for an alternative to this.)
+items in a dictionary are "unordered," so if you want to loop through
+them in a particular order, you will need to take special steps to
+ensure the items appear in that order, such as keeping a separate
+[list] of the keys in your desired order.
 
 In **docassemble**, dictionaries are typically [objects] of type
 [`DADict`], which behave much like [Python dict]s.
