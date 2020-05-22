@@ -6069,7 +6069,11 @@ def index(action_argument=None):
                     user_dict['_internal']['steps'] = steps
                     changed = True
             except Exception as errMess:
-                error_messages.append(("error", "Error: " + str(errMess)))
+                try:
+                    sys.stderr.write(errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
+                except:
+                    pass
+                error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
     if '_next_action_to_set' in post_data:
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
     else:
@@ -6550,9 +6554,9 @@ def index(action_argument=None):
             exec(the_string, user_dict)
             changed = True
         except Exception as errMess:
-            error_messages.append(("error", "Error: " + str(errMess)))
+            error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
             try:
-                logmessage("Error: " + str(errMess))
+                logmessage("Tried to run " + the_string + " and got error " + errMess.__class__.__name__ + ": " + str(errMess))
             except:
                 pass
         if is_object:
@@ -6718,8 +6722,11 @@ def index(action_argument=None):
                                 exec(the_string, user_dict)
                                 changed = True
                             except Exception as errMess:
-                                sys.stderr.write("Error: " + str(errMess) + "\n")
-                                error_messages.append(("error", "Error: " + str(errMess)))
+                                try:
+                                    sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after trying to run " + the_string + "\n")
+                                except:
+                                    pass
+                                error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
                     else:
                         try:
                             file_field = from_safeid(var_to_store)
@@ -6737,8 +6744,8 @@ def index(action_argument=None):
                             exec(the_string, user_dict)
                             changed = True
                         except Exception as errMess:
-                            sys.stderr.write("Error: " + str(errMess) + "\n")
-                            error_messages.append(("error", "Error: " + str(errMess)))
+                            sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string + "\n")
+                            error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if '_files' in post_data or (STRICT_MODE and (not disregard_input) and len(field_info['files']) > 0):
             if STRICT_MODE:
                 file_fields = field_info['files']
@@ -6846,8 +6853,8 @@ def index(action_argument=None):
                                     exec(the_string, user_dict)
                                     changed = True
                                 except Exception as errMess:
-                                    sys.stderr.write("Error: " + str(errMess) + "\n")
-                                    error_messages.append(("error", "Error: " + str(errMess)))
+                                    sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string + "\n")
+                                    error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
                     else:
                         try:
                             file_field = from_safeid(var_to_store)
@@ -6867,8 +6874,8 @@ def index(action_argument=None):
                             exec(the_string, user_dict)
                             changed = True
                         except Exception as errMess:
-                            sys.stderr.write("Error: " + str(errMess) + "\n")
-                            error_messages.append(("error", "Error: " + str(errMess)))
+                            sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string + "\n")
+                            error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if validated:
             if 'informed' in request.form:
                 user_dict['_internal']['informed'][the_user_id] = dict()
@@ -16385,7 +16392,7 @@ def pull_playground_package():
             if form.github_url.data and form.pypi.data:
                 flash(word("You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank."), 'error')
             elif form.github_url.data:
-                return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=form.github_url.data, branch=form.github_branch.data))
+                return redirect(url_for('playground_packages', project=current_project, pull='1', github_url=re.sub(r'/*$', '', str(form.github_url.data).strip()), branch=form.github_branch.data))
             elif form.pypi.data:
                 return redirect(url_for('playground_packages', project=current_project, pull='1', pypi=form.pypi.data))
         if form.cancel.data:
@@ -16451,7 +16458,7 @@ def get_git_branches():
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
         github_auth = None
-    repo_name = request.args['url']
+    repo_name = re.sub(r'/*$', '', request.args['url'].strip())
     m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
     if m:
         access_token = m.group(1)

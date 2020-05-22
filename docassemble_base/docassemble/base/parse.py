@@ -564,7 +564,7 @@ class InterviewStatus:
                             list_of_other_fields = list()
                             if isinstance(the_field.disableothers, list):
                                 for other_saveas in the_field.disableothers:
-                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_saveas)))
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', other_saveas))
                             else:
                                 for other_field in field_list:
                                     if not hasattr(other_field, 'saveas'):
@@ -1183,7 +1183,7 @@ def recursive_textobject(target, question):
         return new_set
     return TextObject(str(target), question=question)
 
-def recursive_eval_textobject(target, the_user_dict, question, tpl):
+def recursive_eval_textobject(target, the_user_dict, question, tpl, skip_undefined):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
         for key, val in target.items():
@@ -1202,7 +1202,13 @@ def recursive_eval_textobject(target, the_user_dict, question, tpl):
     if isinstance(target, (bool, NoneType)):
         return target
     if isinstance(target, TextObject):
-        text = target.text(the_user_dict)
+        if skip_undefined:
+            try:
+                text = target.text(the_user_dict)
+            except:
+                text = ''
+        else:
+            text = target.text(the_user_dict)
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
@@ -4009,6 +4015,16 @@ class Question:
                     self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
+            if 'skip undefined' in target:
+                if isinstance(target['skip undefined'], bool):
+                    options['skip_undefined'] = target['skip undefined']
+                elif isinstance(target['skip undefined'], str):
+                    options['skip_undefined'] = compile(target['skip undefined'], '<skip undefined expression>', 'eval')
+                    self.find_fields_in(target['skip undefined'])
+                else:
+                    raise DAError('Unknown data type in attachment skip undefined.' + self.idebug(target))
+            else:
+                options['skip_undefined'] = False;
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -4799,7 +4815,7 @@ class Question:
                         if process_list_collect:
                             saveas_to_use = from_safeid(field.saveas)
                         else:
-                            saveas_to_use = substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators)
+                            saveas_to_use = substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators, last_only=True)
                         if field.number not in selectcompute:
                             raise DAError("datatype was set to object but no code or selections was provided")
                         string = "_internal['objselections'][" + repr(saveas_to_use) + "] = dict()"
@@ -5484,7 +5500,7 @@ class Question:
                         if isinstance(attachment['options']['fields'], str):
                             result['field_data'] = the_user_dict
                         else:
-                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'])
+                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'], attachment['options']['skip_undefined'])
                             new_field_data = dict()
                             if isinstance(the_field_data, list):
                                 for item in the_field_data:
@@ -5495,7 +5511,13 @@ class Question:
                         result['field_data']['_codecs'] = codecs
                         result['field_data']['_array'] = array
                         if 'code' in attachment['options']:
-                            additional_dict = eval(attachment['options']['code'], the_user_dict)
+                            if attachment['options']['skip_undefined']:
+                                try:
+                                    additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                except:
+                                    additional_dict = {}
+                            else:
+                                additional_dict = eval(attachment['options']['code'], the_user_dict)
                             if isinstance(additional_dict, dict):
                                 for key, val in additional_dict.items():
                                     if isinstance(val, float) and float_formatter is not None:
@@ -5508,14 +5530,26 @@ class Question:
                                 raise DAError("code in an attachment returned something other than a dictionary")
                         if 'raw code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['raw code dict'].items():
-                                val = eval(var_code, the_user_dict)
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        val = eval(var_code, the_user_dict)
+                                    except:
+                                        val = ''
+                                else:
+                                    val = eval(var_code, the_user_dict)
                                 if isinstance(val, float) and float_formatter is not None:
                                     result['field_data'][varname] = float_formatter % val
                                 else:
                                     result['field_data'][varname] = val
                         if 'code dict' in attachment['options']:
                             for varname, var_code in attachment['options']['code dict'].items():
-                                val = eval(var_code, the_user_dict)
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        val = eval(var_code, the_user_dict)
+                                    except:
+                                        val = ''
+                                else:
+                                    val = eval(var_code, the_user_dict)
                                 if isinstance(val, float) and float_formatter is not None:
                                     result['field_data'][varname] = float_formatter % val
                                 elif isinstance(val, RawValue):
@@ -5533,7 +5567,13 @@ class Question:
                         the_fields = attachment['options']['fields']
                     for item in the_fields:
                         for key, val in item.items():
-                            answer = val.text(the_user_dict).rstrip()
+                            if attachment['options']['skip_undefined']:
+                                try:
+                                    answer = val.text(the_user_dict).rstrip()
+                                except:
+                                    answer = ''
+                            else:
+                                answer = val.text(the_user_dict).rstrip()
                             if answer == 'True':
                                 answer = 'Yes'
                             elif answer == 'False':
@@ -5551,7 +5591,13 @@ class Question:
                             else:
                                 result['data_strings'].append((key, answer))
                     if 'code' in attachment['options']:
-                        additional_fields = eval(attachment['options']['code'], the_user_dict)
+                        if attachment['options']['skip_undefined']:
+                            try:
+                                additional_fields = eval(attachment['options']['code'], the_user_dict)
+                            except:
+                                additional_fields = []
+                        else:
+                            additional_fields = eval(attachment['options']['code'], the_user_dict)
                         if not isinstance(additional_fields, list):
                             additional_fields = [additional_fields]
                         for item in additional_fields:
@@ -5585,7 +5631,13 @@ class Question:
                             if not isinstance(item, dict):
                                 raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.items():
-                                val = eval(var_code, the_user_dict)
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        val = eval(var_code, the_user_dict)
+                                    except:
+                                        val = ''
+                                else:
+                                    val = eval(var_code, the_user_dict)
                                 if val is True:
                                     val = 'Yes'
                                 elif val is False:
@@ -5613,7 +5665,13 @@ class Question:
                             if not isinstance(item, dict):
                                 raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
                             for key, var_code in item.items():
-                                val = eval(var_code, the_user_dict)
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        val = eval(var_code, the_user_dict)
+                                    except:
+                                        val = ''
+                                else:
+                                    val = eval(var_code, the_user_dict)
                                 if val is True:
                                     val = 'Yes'
                                 elif val is False:
@@ -7404,17 +7462,21 @@ class Interview:
             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 
-def substitute_vars(var, is_generic, the_x, iterators):
+def substitute_vars(var, is_generic, the_x, iterators, last_only=False):
     if is_generic:
         if the_x != 'None' and hasattr(the_x, 'instanceName'):
             var = re.sub(r'^x\b', the_x.instanceName, var)
     if len(iterators):
-        for indexno in range(len(iterators)):
-            #the_iterator = iterators[indexno]
-            #if isinstance(the_iterator, str) and re.match(r'^-?[0-9]+$', the_iterator):
-            #    the_iterator = int(the_iterator)
-            #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+        if last_only:
+            indexno = len(iterators) - 1
             var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + str(iterators[indexno]) + ']', var)
+        else:
+            for indexno in range(len(iterators)):
+                #the_iterator = iterators[indexno]
+                #if isinstance(the_iterator, str) and re.match(r'^-?[0-9]+$', the_iterator):
+                #    the_iterator = int(the_iterator)
+                #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+                var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + str(iterators[indexno]) + ']', var)
     return var
 
 def reproduce_basics(interview, new_interview):

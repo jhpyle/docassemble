@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.28] - 2020-05-21
+### Added
+- The `skip undefined` option for `pdf template file`
+### Fixed
+- Issue with nested `datatype: object` fields in a `list collect`.
+- Issue with `disable others` referring to a list in a `list collect`.
+
 ## [1.1.27] - 2020-05-19
 ### Fixed
 - Issue with `js show if` and `list collect`.
