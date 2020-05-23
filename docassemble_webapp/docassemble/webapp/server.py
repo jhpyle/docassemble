@@ -21739,7 +21739,7 @@ def api_user_by_id(user_id):
             make_user_inactive(user_id=user_id)
         return ('', 204)
     elif request.method == 'POST':
-        if current_user.id != user_id or not current_user.has_role('admin', 'advocate'):
+        if not (current_user.has_role('admin', 'advocate') or current_user.id != user_id):
             return jsonify_with_status("You must have admin or advocate privileges to edit user information.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
