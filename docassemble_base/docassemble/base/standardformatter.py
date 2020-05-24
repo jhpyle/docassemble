@@ -14,6 +14,8 @@ import random
 import sys
 import codecs
 import datetime
+from io import StringIO
+from html.parser import HTMLParser
 
 STRICT_MODE = daconfig.get('restrict input variables', False)
 DECORATION_SIZE = daconfig.get('decoration size', 2.0)
@@ -1018,7 +1020,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [the_saveas]])
                     for y in uncheck_list + [the_saveas]:
                         validation_rules['rules'][y]['checkone'] = [1, the_query]
-                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([status.labels[field.number]]))
+                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple(strip_tags([status.labels[field.number]])))
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
@@ -1071,12 +1073,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             validation_rules['rules']['_ignore' + str(field.number)]['checkatleast'] = [str(field.number), 1]
                         if status.extras['nota'][field.number] is True:
                             formatted_item = word("None of the above")
+                            unescaped_item = formatted_item
                         else:
                             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                                 formatted_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=True, escape=False, do_terms=False)
                             else:
                                 formatted_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
-                        validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([formatted_item])))
+                            unescaped_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=False, escape=False, do_terms=False)
+                        validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)])))
                     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                     validation_rules['ignore'] = None
@@ -2551,3 +2555,20 @@ def option_escape(the_string):
     the_string = re.sub(r'\<', '&lt;', the_string)
     the_string = re.sub(r'\>', '&gt;', the_string)
     return the_string
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.text = StringIO()
+    def handle_data(self, d):
+        self.text.write(d)
+    def get_data(self):
+        return self.text.getvalue()
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
