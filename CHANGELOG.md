@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.29] - 2020-05-27
+### Fixed
+- Issue with `set_save_status()`.
+- Issue with checkbox validation text when the "none of the above"
+  choice contained HTML.
+- Bug prevented `admin` users from changing other users' information
+  with the API.
+
 ## [1.1.28] - 2020-05-21
 ### Added
 - The `skip undefined` option for `pdf template file`

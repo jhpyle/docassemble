@@ -541,7 +541,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         datatypes[safeid(status.question.fields_saveas)] = "boolean"
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'link ' + BUTTON_CLASS + ' daquestionbackbutton" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
+        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'link ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
         if status.extras['back button label text'] is not None:
             back_button += status.extras['back button label text']
         else:
@@ -554,7 +554,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'info ' + BUTTON_CLASS + '" id="daquestionhelpbutton"><span>' + help_label + '</span></button>'
+        help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'info ' + BUTTON_CLASS + '  danonsubmit" id="daquestionhelpbutton"><span>' + help_label + '</span></button>'
     else:
         help_button = ''
     if 'action_buttons' in status.extras:
@@ -580,9 +580,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 js_data = ''
             status.linkcounter += 1
             if item['placement'] == 'before':
-                additional_buttons_before += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
+                additional_buttons_before += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
             else:
-                additional_buttons_after += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
+                additional_buttons_after += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
     else:
         additional_buttons_before = ''
         additional_buttons_after = ''
@@ -638,7 +638,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += the_progress_bar
     if status.question.question_type == "signature":
         if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-            back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'link dasignav-left dasignavbutton daquestionbackbutton"><span>' + status.question.back() + '</span></button>'
+            back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'link dasignav-left dasignavbutton daquestionbackbutton danonsubmit"><span>' + status.question.back() + '</span></button>'
         else:
             back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + 'warning dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
         output += '            <div class="dasigpage" id="dasigpage">\n              <div class="dasigshowsmallblock dasigheader d-block d-md-none" id="dasigheader">\n                <div class="dasiginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + 'primary dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                  <div id="dasigtitle" class="dasigtitle">'
@@ -1020,7 +1020,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in uncheck_list + [the_saveas]])
                     for y in uncheck_list + [the_saveas]:
                         validation_rules['rules'][y]['checkone'] = [1, the_query]
-                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple(strip_tags([status.labels[field.number]])))
+                        validation_rules['messages'][y]['checkone'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(status.labels[field.number])]))
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])

@@ -1341,7 +1341,7 @@ class Address(DAObject):
         return super().init(*pargs, **kwargs)
     def __str__(self):
         return(str(self.block()))
-    def on_one_line(self, include_unit=False, omit_default_country=True, language=None, show_country=None):
+    def on_one_line(self, include_unit=True, omit_default_country=True, language=None, show_country=None):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
@@ -1387,7 +1387,7 @@ class Address(DAObject):
         if address is None:
             if self.geolocated:
                 return self.geolocate_success
-            the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+            the_address = self.on_one_line(omit_default_country=False)
         else:
             the_address = address
         #logmessage("geolocate: trying to geolocate " + str(the_address))

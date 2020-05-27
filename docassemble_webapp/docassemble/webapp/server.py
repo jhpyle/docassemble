@@ -6064,10 +6064,7 @@ def index(action_argument=None):
             process_set_variable(file_field, user_dict, vars_set, old_values)
             try:
                 exec(the_string, user_dict)
-                if not changed:
-                    steps += 1
-                    user_dict['_internal']['steps'] = steps
-                    changed = True
+                changed = True
             except Exception as errMess:
                 try:
                     sys.stderr.write(errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
@@ -7151,6 +7148,8 @@ def index(action_argument=None):
         advance_progress(user_dict, interview)
     title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     if save_status != 'ignore':
+        if save_status == 'overwrite':
+            changed = False
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
@@ -8420,16 +8419,11 @@ def index(action_argument=None):
         if (e.which == 13){
           if (daShowingHelp == 0){
             var tag = $( document.activeElement ).prop("tagName");
-            if ($("#daform button.daquestionbackbutton").length > 0 && (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON")){
-              e.preventDefault();
-              e.stopPropagation();
-              return false;
-            }
             if (tag != "INPUT" && tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
               e.preventDefault();
               e.stopPropagation();
-              if ($("#daform .da-field-buttons button").length == 1){
-                $("#daform .da-field-buttons button").click();
+              if ($("#daform .da-field-buttons button").not('.danonsubmit').length == 1){
+                $("#daform .da-field-buttons button").not('.danonsubmit').click();
               }
               return false;
             }
