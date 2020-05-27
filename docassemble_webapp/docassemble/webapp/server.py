@@ -22625,7 +22625,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         except Exception as err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
-            raise Exception("Unable to obtain interview dictionary")
+            raise Exception("Unable to obtain interview dictionary: " + str(err))
     try:
         the_section = user_dict['nav'].get_section()
         the_section_display = user_dict['nav'].get_section(display=True)

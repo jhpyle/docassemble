@@ -18,6 +18,7 @@ import time
 import stat
 import mimetypes
 import tempfile
+from docassemble.base.error import DAError
 
 NoneType = type(None)
 

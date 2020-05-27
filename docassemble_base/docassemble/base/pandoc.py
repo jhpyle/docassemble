@@ -18,6 +18,7 @@ import mimetypes
 import convertapi
 import requests
 import urllib.request
+from docassemble.base.error import DAError
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')

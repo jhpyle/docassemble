@@ -23,6 +23,7 @@ import traceback
 import subprocess
 from requests.utils import quote
 from docassemble.webapp.files import SavedFile
+from docassemble.base.error import DAError
 
 if os.environ.get('SUPERVISOR_SERVER_URL', None):
     USING_SUPERVISOR = True
