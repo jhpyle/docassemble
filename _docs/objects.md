@@ -3963,8 +3963,8 @@ the city, state, and zip code, as a single line of text.
 
 It takes two optional keyword parameters:
 
-* `include_unit` - Default value is `False`.  Set to `True` if you want
-  the unit number to be included.
+* `include_unit` - Default value is `True`.  Set to `False` if you
+  don't want the unit number to be included.
 * `show_country` - Default value is `None`.  Set to `True` if you
   always want the country to be shown.  Set to `False` if you never
   want the country to be shown.  Set to `None` if you want the country
