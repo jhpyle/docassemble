@@ -1264,7 +1264,9 @@ variables`.  In other cases, you will need to manually format your
 numbers, for example by writing something like `${ '%.3f' %
 ounces_of_gold }`.
 
-<a name="skip undefined"></a>If you want to assemble a PDF with `pdf
+## <a name="skip undefined"></a>Skip undefined variables when assembling documents
+
+If you want to assemble a PDF with `pdf
 template file` and produce a file even if some of the variables needed
 for the fields are undefined, set `skip undefined` to `True`.  If
 `skip undefined` is true, then blanks will be substituted for any
