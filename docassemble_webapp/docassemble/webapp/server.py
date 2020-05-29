@@ -10312,7 +10312,7 @@ def index(action_argument=None):
         for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
                 continue
-            phrase = to_text(interview_status.screen_reader_text[question_type]) #.encode('utf-8')
+            phrase = to_text(interview_status.screen_reader_text[question_type])
             if (not phrase) or len(phrase) < 10:
                 phrase = "The sky is blue."
             phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)

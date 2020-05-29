@@ -2170,7 +2170,15 @@ class Question:
                 data['include'] = [data['include']]
             if isinstance(data['include'], list):
                 for questionPath in data['include']:
-                    self.interview.read_from(interview_source_from_string(questionPath, context_interview=self.interview))
+                    if ':' in questionPath:
+                        self.interview.read_from(interview_source_from_string(questionPath))
+                    else:
+                        new_source = self.from_source.append(questionPath)
+                        if new_source is None:
+                            new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath))
+                            if new_source is None:
+                                raise DAError('Question file ' + questionPath + ' not found')
+                        self.interview.read_from(new_source)
             else:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
         if 'action buttons' in data:
@@ -5783,11 +5791,6 @@ def interview_source_from_string(path, **kwargs):
     if re.search(r'^https*://', path):
         new_source = InterviewSourceURL(path=path)
         if new_source.update():
-            return new_source
-    context_interview = kwargs.get('context_interview', None)
-    if context_interview is not None:
-        new_source = context_interview.source.append(path)
-        if new_source is not None:
             return new_source
     #sys.stderr.write("Trying to find " + path + "\n")
     for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:

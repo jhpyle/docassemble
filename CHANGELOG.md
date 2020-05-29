@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.30] - 2020-05-29
+### Fixed
+- Issue with screen reader and labels containing HTML codes.
+- Issue with nested question file inclusion.
+
 ## [1.1.29] - 2020-05-27
 ### Fixed
 - Issue with `set_save_status()`.

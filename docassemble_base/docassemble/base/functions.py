@@ -2893,8 +2893,6 @@ def package_data_filename(the_file):
 
 def package_question_filename(the_file):
     parts = the_file.split(":")
-    #if len(parts) == 1:
-    #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
