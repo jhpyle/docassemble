@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.31](https://github.com/jhpyle/docassemble/releases/tag/v1.1.31) - 2020-05-29
+
+### Fixed
+- Issue with nested question file inclusion change in 1.1.30.
+
+## [1.1.30](https://github.com/jhpyle/docassemble/releases/tag/v1.1.30) - 2020-05-29
+
+### Fixed
+- Issue with screen reader and labels containing HTML codes.
+- Issue with nested question file inclusion.
+
 ## [1.1.29](https://github.com/jhpyle/docassemble/releases/tag/v1.1.29) - 2020-05-27
 
 ### Fixed
