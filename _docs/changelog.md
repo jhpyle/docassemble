@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.32](https://github.com/jhpyle/docassemble/releases/tag/v1.1.32) - 2020-05-30
+
+### Fixed
+- Issue with `objects_from_file()`.
+
 ## [1.1.31](https://github.com/jhpyle/docassemble/releases/tag/v1.1.31) - 2020-05-29
 
 ### Fixed
