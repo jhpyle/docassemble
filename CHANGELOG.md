@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.31] - 2020-05-29
+### Fixed
+- Issue with nested question file inclusion change in 1.1.30.
+
 ## [1.1.30] - 2020-05-29
 ### Fixed
 - Issue with screen reader and labels containing HTML codes.

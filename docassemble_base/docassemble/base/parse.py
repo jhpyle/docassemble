@@ -300,6 +300,7 @@ class InterviewSourceFile(InterviewSource):
         if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
             new_source = InterviewSourceFile()
             new_source.path = path
+            new_source.directory = self.directory
             new_source.basename = path
             new_source.filepath = new_file
             new_source.playground = self.playground
@@ -336,6 +337,7 @@ class InterviewSourceURL(InterviewSource):
         if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
             new_source = InterviewSourceFile()
             new_source.path = path
+            new_source.directory = self.directory
             new_source.filepath = new_file
             if new_source.update():
                 return(new_source)
