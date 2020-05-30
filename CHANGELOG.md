@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.32] - 2020-05-30
+### Fixed
+- Issue with `objects_from_file()`.
+
 ## [1.1.31] - 2020-05-29
 ### Fixed
 - Issue with nested question file inclusion change in 1.1.30.

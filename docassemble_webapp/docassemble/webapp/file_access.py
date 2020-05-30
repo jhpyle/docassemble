@@ -169,6 +169,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
         #logmessage(str(file_reference) + " is not a URL")
         result = dict()
         question = kwargs.get('question', None)
+        manual_package = kwargs.get('package', None)
         folder = kwargs.get('folder', None)
         the_package = None
         parts = file_reference.split(':')
@@ -176,6 +177,8 @@ def get_info_from_file_reference(file_reference, **kwargs):
             the_package = None
             if question is not None:
                 the_package = question.from_source.package
+            elif manual_package is not None:
+                the_package = manual_package
             if the_package is None:
                 the_package = docassemble.base.functions.get_current_package()
             if folder is None:

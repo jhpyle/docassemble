@@ -6394,7 +6394,7 @@ class Interview:
                             for keyvalue in question.objects_from_file:
                                 for variable, the_file in keyvalue.items():
                                     exec(import_core, user_dict)
-                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ')'
+                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)

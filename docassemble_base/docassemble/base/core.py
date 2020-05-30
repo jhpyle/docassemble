@@ -4276,7 +4276,7 @@ def setify(item, output=set()):
         output.add(item)
     return output
 
-def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_objects=False):
+def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_objects=False, package=None):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
     #from docassemble.base.core import DAObject, DAList, DADict, DASet
     if isinstance(file_ref, DAFileCollection):
@@ -4299,7 +4299,9 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
     else:
         thename = name
     #logmessage("objects_from_file: thename is " + str(thename))
-    file_info = server.file_finder(file_ref, folder='sources')
+    if package is None:
+        package = docassemble.base.functions.this_thread.current_question.package
+    file_info = server.file_finder(file_ref, folder='sources', package=package)
     if file_info is None or 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
     if thename is None:
