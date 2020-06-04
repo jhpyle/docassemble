@@ -10440,8 +10440,10 @@ def index(action_argument=None):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
         output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
+        if interview_status.question.from_source.path != interview.source.path:
+            output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + interview_status.question.from_source.path +")</small></p>\n"
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
-            output += word('unavailable')
+            output += '          <p>' + word('unavailable') + '</p>'
         else:
             output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
         if len(interview_status.seeking) > 1:

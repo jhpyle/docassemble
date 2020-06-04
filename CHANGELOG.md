@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.33] - 2020-06-03
+### Changed
+- `help` can be added to `note` and `html` fields.
+### Fixed
+- Support for icons in terms.
+
 ## [1.1.32] - 2020-05-30
 ### Fixed
 - Issue with `objects_from_file()`.

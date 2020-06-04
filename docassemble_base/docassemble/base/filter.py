@@ -922,6 +922,9 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             alt_text = ''
     else:
         alt_text = ''
+    return image_url(file_reference, alt_text, width, emoji=emoji, question=question, playground=playground)
+
+def image_url(file_reference, alt_text, width, emoji=False, question=None, playground=False):
     file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype'] is not None:
         if re.search(r'^audio', file_info['mimetype']):
@@ -955,6 +958,9 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
                 server.fg_make_png_for_pdf_path(file_info['path'] + ".pdf", 'screen', page=1)
+                if re.match(r'[0-9]+', str(file_reference)):
+                    sf = server.SavedFile(int(file_reference), fix=True)
+                    sf.finalize()
             if 'pages' not in file_info:
                 try:
                     reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
@@ -1149,7 +1155,7 @@ def emoji_html(text, status=None, question=None, images=None):
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
-        return("[EMOJI " + images[text].get_reference() + ', 1em]')
+        return image_url(images[text].get_reference(), word('icon'), '1em', emoji=True, question=question)
     icons_setting = docassemble.base.functions.get_config('default icons', None)
     if icons_setting == 'font awesome':
         m = re.search(r'^(fa[a-z])-fa-(.*)', text)
@@ -1238,8 +1244,6 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                         #logmessage("Searching for term " + term + " in " + a + "\n")
                         a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                         #logmessage("string is now " + str(a) + "\n")
-    if status is not None and question.interview.scan_for_emojis:
-        a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), a)
     a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
     #logmessage("before: " + a)
     if use_pandoc:
@@ -1273,6 +1277,8 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[lang], status=status, question=question)), result)
         elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
             result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
+    if status is not None and question.interview.scan_for_emojis:
+        result = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = re.sub(r'</p>\s*<p>', ' ', result[3:-4])

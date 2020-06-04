@@ -4923,10 +4923,10 @@ class Question:
                                             defaults[field.number] = field.default
                                     elif hasattr(field, 'extras') and 'default' in field.extras:
                                         defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
-                        if hasattr(field, 'helptext'):
-                            helptexts[field.number] = field.helptext.text(user_dict)
                         if hasattr(field, 'hint'):
                             hints[field.number] = field.hint.text(user_dict)
+                    if hasattr(field, 'helptext'):
+                        helptexts[field.number] = field.helptext.text(user_dict)
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
