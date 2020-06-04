@@ -10440,7 +10440,7 @@ def index(action_argument=None):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
         output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
-        if interview_status.question.from_source.path != interview.source.path:
+        if interview_status.question.from_source.path != interview.source.path and interview_status.question.from_source.path is not None:
             output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + interview_status.question.from_source.path +")</small></p>\n"
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
             output += '          <p>' + word('unavailable') + '</p>'
@@ -10620,7 +10620,7 @@ def get_history(interview, interview_status):
                     output += "          <h5>Tried to load objects" + the_time + "</h5>\n"
                 elif stage['reason'] == 'result of multiple choice':
                     output += "          <h5>Followed the result of multiple choice selection" + the_time + "</h5>\n"
-                if stage['question'].from_source.path != interview.source.path:
+                if stage['question'].from_source.path != interview.source.path and stage['question'].from_source.path is not None:
                     output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
                 if (not hasattr(stage['question'], 'source_code')) or stage['question'].source_code is None:
                     output += word('(embedded question, source code not available)')

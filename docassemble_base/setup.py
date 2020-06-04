@@ -82,7 +82,7 @@ install_requires = [
     "google-auth-oauthlib==0.4.1",
     "google-i18n-address==2.3.5",
     "guess-language-spirit==0.5.3",
-    "httplib2==0.14.0",
+    "httplib2==0.18.0",
     "idna==2.8",
     "importlib-metadata==0.23",
     "itsdangerous==1.1.0",
