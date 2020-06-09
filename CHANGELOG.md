@@ -2,6 +2,10 @@
 
 ## [1.1.34] - 2020-06-08
 ### Fixed
+- Force uninstall of pdfminer3k.
+
+## [1.1.34] - 2020-06-08
+### Fixed
 - Error with `objects_from_file()`.
 
 ## [1.1.33] - 2020-06-04

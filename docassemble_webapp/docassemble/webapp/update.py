@@ -145,6 +145,10 @@ def check_for_updates(doing_startup=False):
         sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
         uninstall_package(DummyPackage('pdfminer'))
         changed = True
+    if 'pdfminer3k' in here_already:
+        sys.stderr.write("check_for_updates: uninstalling pdfminer3k\n")
+        uninstall_package(DummyPackage('pdfminer3k'))
+        changed = True
     if 'py-bcrypt' in here_already:
         sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
         uninstall_package(DummyPackage('py-bcrypt'))
