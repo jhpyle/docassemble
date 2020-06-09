@@ -16756,7 +16756,7 @@ def playground_packages():
             http = credentials.authorize(httplib2.Http())
             resp, content = http.request("https://api.github.com/user", "GET")
             if int(resp['status']) == 200:
-                info = json.loads(content.decode())
+                info = json.loads(content.decode('utf-8', 'ignore'))
                 github_user_name = info.get('login', None)
                 github_author_name = info.get('name', None)
                 github_email = info.get('email', None)
@@ -16765,7 +16765,7 @@ def playground_packages():
             if github_email is None:
                 resp, content = http.request("https://api.github.com/user/emails", "GET")
                 if int(resp['status']) == 200:
-                    info = json.loads(content.decode())
+                    info = json.loads(content.decode('utf-8', 'ignore'))
                     for item in info:
                         if item.get('email', None) and item.get('visibility', None) != 'private':
                             github_email = item['email']

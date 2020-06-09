@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.34] - 2020-06-08
+### Fixed
+- Error with `objects_from_file()`.
+
 ## [1.1.33] - 2020-06-04
 ### Changed
 - `help` can be added to `note` and `html` fields.

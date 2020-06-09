@@ -4299,7 +4299,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
     else:
         thename = name
     #logmessage("objects_from_file: thename is " + str(thename))
-    if package is None:
+    if package is None and docassemble.base.functions.this_thread.current_question is not None:
         package = docassemble.base.functions.this_thread.current_question.package
     file_info = server.file_finder(file_ref, folder='sources', package=package)
     if file_info is None or 'path' not in file_info:
