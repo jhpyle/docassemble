@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.37] - 2020-06-10
+### Fixed
+- Attempt to force reinstall of pdfminer.six.
+
 ## [1.1.36] - 2020-06-10
 ### Fixed
 - Another attempt to force uninstall of pdfminer3k.
