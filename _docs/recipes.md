@@ -1137,6 +1137,14 @@ you should use `${ client.possessive('object') }` to generate either
 Any of the language functions can be modified with `capitalize=True` if
 they are being used at the start of a sentence.
 
+# <a name="read before signing"></a>Allow user to read a document before signing it
+
+This interview uses [`depends on`] to force the reassembly of a
+document after the user has viewed a draft version with a "sign here"
+sticker in place of the signature.
+
+{% include demo-side-by-side.html demo="signature-preview" %}
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on

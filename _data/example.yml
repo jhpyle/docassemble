@@ -8258,6 +8258,33 @@
         - "grantee": friend
         - "collection": prized_collection
         - "signature": user.signature
+"pdf-fill-skip-undefined": |-
+  question: |
+    Here is your PDF form
+  subquestion: |
+    Note that the `user.organization`
+    and `likes_oranges` variables are
+    not defined, but the document was
+    assembled anyway.
+  attachment:
+    name: A filled-in form
+    filename: filled-form
+    pdf template file: sample-form.pdf
+    skip undefined: True
+    fields:
+      - Your Name: |
+          ${ user }
+      - Your Organization: |
+          ${ user.organization }
+      - Apple Checkbox: |
+          ${ likes_apples }
+      - Orange Checkbox: |
+          ${ likes_oranges }
+      - Pear Checkbox: |
+          ${ likes_pears }
+      - Toast Checkbox: |
+          ${ likes_toast }
+  mandatory: True
 "pdf-template-alt-1": |-
   mandatory: True
   question: Here is your document.
@@ -12887,6 +12914,89 @@
   signature: user.signature
   under: |
     ${ user }
+"signature-preview": |-
+  objects:
+    - user: Individual
+    - friend: Individual
+  ---
+  mandatory: True
+  code: |
+    user.name.first
+    friend.name.first
+    prized_collection
+    draft_screen_shown
+    user.signature
+    document_finalized
+    final_screen
+  ---
+  attachment:
+    variable name: instrument
+    name: Transfer of Ownership
+    filename: Transfer-of-Ownership
+    pdf template file: |
+      Transfer-of-Ownership.pdf
+    fields:
+      - "grantor": ${ user }
+      - "grantee": ${ friend }
+      - "collection": ${ prized_collection }
+      - "signature": ${ user.signature if final else "[FILE sign-here.png]" }
+  # If the variable "final" changes,
+  # the document needs to be reassembled
+  depends on: final
+  ---
+  # What it means for the document
+  # to be finalized
+  code: |
+    # Put the document into final mode
+    final = True
+    # Submit the document somewhere
+    # send_email(...)
+    # Prevent duplicate submissions
+    prevent_going_back()
+    document_finalized = True
+  ---
+  # Set an initial value for final
+  code: |
+    final = False
+  ---
+  question: |
+    What is your name?
+  fields:
+    - First Name: user.name.first
+    - Last Name: user.name.last
+  ---
+  question: |
+    What is your best friend's name?
+  fields:
+    - First Name: friend.name.first
+    - Last Name: friend.name.last
+  ---
+  question: What objects do you collect?
+  fields:
+    - Collection: prized_collection
+      hint: baseball cards, fine china
+  ---
+  question: |
+    Please sign your name below.
+  signature: user.signature
+  under: |
+    ${ user }
+  ---
+  question: Your draft document
+  subquestion: |
+    Please review the attached document and
+    press Continue if you agree to sign it.
+  continue button field: draft_screen_shown
+  attachment code: instrument
+  ---
+  event: final_screen
+  question: Congratulations!
+  subquestion: |
+    You have now transferred everything
+    you own to ${ friend }.
+
+    Here is your signed document.
+  attachment code: instrument
 "signature-template": "objects:\n  - signer: DAList.using(object_type=Individual,\
   \ there_are_any=True)\n---\nquestion: |\n  Is there another signer?\nyesno: signer.there_is_another\n\
   ---\nquestion: |\n  Tell me about the ${ ordinal(i) } signer.\nfields:\n  - First\

@@ -1606,6 +1606,11 @@ On the server that hosts the demonstration interviews, the [`debug`
 directive] is `True`, so the "Source" link is normally shown.  Setting
 `debug: False` makes the "Source" link disappear.
 
+Note that if you are running an interview in the [Playground], the
+"Source" link is always shown, because the [Playground] is a
+development and testing environment.  You will need to install your
+package to see the effect of the `debug` feature.
+
 ## <a name="centered"></a>Whether interview is centered
 
 If you do not want your interview questions to be centered on the
