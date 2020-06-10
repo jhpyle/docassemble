@@ -88,6 +88,9 @@ def check_for_updates(doing_startup=False):
     num_deleted = Package.query.filter_by(name='pdfminer').delete()
     if num_deleted > 0:
         db.session.commit()
+    num_deleted = Package.query.filter_by(name='pdfminer3k').delete()
+    if num_deleted > 0:
+        db.session.commit()
     num_deleted = Package.query.filter_by(name='py-bcrypt').delete()
     if num_deleted > 0:
         db.session.commit()

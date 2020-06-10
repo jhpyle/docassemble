@@ -1,6 +1,10 @@
 # Change Log
 
-## [1.1.34] - 2020-06-08
+## [1.1.36] - 2020-06-10
+### Fixed
+- Another attempt to force uninstall of pdfminer3k.
+
+## [1.1.35] - 2020-06-08
 ### Fixed
 - Force uninstall of pdfminer3k.
 
