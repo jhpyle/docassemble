@@ -903,6 +903,11 @@ contains newlines, the newlines will show up as spaces in the DOCX
 file.  Also, if the text contains [Markdown] formatting, it will be
 inserted into the DOCX file literally.
 
+If you text that you want to insert contains newlines, and you want
+the newlines to be reflected in the DOCX file as manual line breaks,
+write `{% raw %}{{ the_variable | manual_line_breaks }}{% endraw %}`
+instead.
+
 If the text that you want to insert contains [Markdown] formatting,
 and you want that formatting to be translated into DOCX formatting,
 insert it using `markdown` [Jinja2] filter.

@@ -1332,7 +1332,7 @@ Data:
    the interview is not returned in response to the request.  You may
    wish to set `question` to `0` if you want to change the interview
    dictionary, but you do not want to trigger any side effects by
-   causing the interview to be evaluated.
+   causing the interview to be evaluated.  The default is `1`.
  - `advance_progress_meter` (optional): if set to `1`, then the
    progress meter will be advanced.  The default is not to advance the
    progress meter.  The `advance_progress_meter` parameter is not

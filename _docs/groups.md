@@ -1426,9 +1426,9 @@ The available keys for the dictionary are:
   not be expanded.  (This is the same as the value for the shorthand
   version of `list collect` discussed above.)  If `list collect` is a
   dictionary and `enable` is omitted, the default value is `True`.
-* `label`: this can be set to a text label for each item on the
-  screen.  If it is "Fruit," the items will be labeled "Fruit 1,"
-  "Fruit 2," etc.  [Mako] templating can be used.
+* `label`: this can be set to a [Mako] text label for each item on the
+  screen.  If it is `Fruit ${ i + 1 },` the items will be labeled
+  "Fruit 1," "Fruit 2," etc.
 * `is final`: this can be `True`, `False`, or [Python] code that
   evaluates to a true or false value.  If the value is true, then the
   `there_is_another` attribute will be set to `True` when the user
@@ -1443,6 +1443,9 @@ The available keys for the dictionary are:
   user is allowed to delete existing items from the list.  If it is
   false, the user will not see any "Delete" buttons except on items
   that appear because the user clicked the "Add another" button.
+* `add another label`: you can set this to text that will used of "Add
+  another" for the button that adds another item to the list.  The
+  default text can be globally changed using the [`words`] feature.
 
 Here is an example:
 
@@ -1694,3 +1697,4 @@ after it is defined.
 [edits]: #editing
 [`income.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/income.py
 [Subclassing]: https://www.codesdope.com/python-subclass-of-a-class/
+[`words`]: {{ site.baseurl }}/docs/config.html#words

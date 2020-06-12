@@ -6279,8 +6279,9 @@
     enable: not fruit.has_been_gathered()
     is final: False
     allow delete: False
+    add another label: Add more
     label: |
-      ${ fruit_name }
+      ${ fruit_name } ${ i+1 }.
 "list-collect-string": |-
   question: |
     Tell me about the fruit.
@@ -8107,7 +8108,6 @@
 "pdf-concatenate": |-
   objects:
     - static_file: DAStaticFile.using(filename='star.pdf')
-    - output_file: DAFileCollection
   ---
   attachment:
     variable name: assembled_file
