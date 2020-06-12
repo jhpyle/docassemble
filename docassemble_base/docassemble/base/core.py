@@ -1903,9 +1903,9 @@ class DADict(DAObject):
                 value._reset_gathered_recursively()
         return super()._reset_gathered_recursively()
     def all_false(self, *pargs, **kwargs):
-        """Returns True if the values of all keys are False.  If one or more
+        """Returns True if the values of all keys are false.  If one or more
         keys are provided as arguments, returns True if all of the
-        values of those keys are False.  If the optional keyword
+        values of those keys are false.  If the optional keyword
         argument 'exclusive' is True, returns True only if those keys
         are the only false values.
 
@@ -1919,7 +1919,7 @@ class DADict(DAObject):
                 the_list.append(parg)
         if len(the_list) == 0:
             for key, value in self._sorted_elements_items():
-                if value is not False:
+                if value:
                     return False
             self._trigger_gather()
             return True
@@ -1928,10 +1928,10 @@ class DADict(DAObject):
                 return False
         for key, value in self._sorted_elements_items():
             if key in the_list:
-                if value is not False:
+                if value:
                     return False
             else:
-                if exclusive and value is False:
+                if exclusive and not value:
                     return False
         self._trigger_gather()
         return True
@@ -1942,9 +1942,9 @@ class DADict(DAObject):
         """Returns the opposite of all_true()."""
         return not self.all_true(*pargs, **kwargs)
     def all_true(self, *pargs, **kwargs):
-        """Returns True if the values of all keys are True.  If one or more
+        """Returns True if the values of all keys are true.  If one or more
         keys are provided as arguments, returns True if all of the
-        values of those keys are True.  If the optional keyword
+        values of those keys are true.  If the optional keyword
         argument 'exclusive' is True, returns True only if those keys
         are the only true values.
 
@@ -1958,7 +1958,7 @@ class DADict(DAObject):
                 the_list.append(parg)
         if len(the_list) == 0:
             for key, value in self._sorted_elements_items():
-                if value is not True:
+                if not value:
                     return False
             self._trigger_gather()
             return True
@@ -1967,19 +1967,19 @@ class DADict(DAObject):
                 return False
         for key, value in self._sorted_elements_items():
             if key in the_list:
-                if value is not True:
+                if not value:
                     return False
             else:
-                if exclusive and value is True:
+                if exclusive and value:
                     return False
         self._trigger_gather()
         return True
     def true_values(self):
-        """Returns the keys for which the corresponding value is True."""
-        return DAList(elements=[key for key, value in self._sorted_items() if value is True])
+        """Returns the keys for which the corresponding value is true."""
+        return DAList(elements=[key for key, value in self._sorted_items() if value])
     def false_values(self):
-        """Returns the keys for which the corresponding value is False."""
-        return DAList(elements=[key for key, value in self._sorted_items() if value is False])
+        """Returns the keys for which the corresponding value is false."""
+        return DAList(elements=[key for key, value in self._sorted_items() if not value])
     def _sorted_items(self):
         return sorted(self.items())
     def _sorted_elements_items(self):

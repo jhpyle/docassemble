@@ -823,6 +823,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         field_list = status.get_field_list()
         status.saveas_to_use = dict()
         status.saveas_by_number = dict()
+        seen_first = False
         for field in field_list:
             if 'html' in status.extras and field.number in status.extras['html']:
                 note_fields[field.number] = status.extras['html'][field.number].rstrip()
@@ -921,25 +922,40 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     field_class = ' da-field-container da-field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
                     if hasattr(field, 'collect_type'):
+                        if not seen_first:
+                            if len(status.extras['list_collect'].elements) <= 1:
+                                class_of_first = ' dainvisible da-first-delete'
+                            else:
+                                class_of_first = ''
+                            seen_first = True
+                        else:
+                            class_of_first = ''
+                    if hasattr(field, 'collect_type'):
                         if 'list_minimum' in status.extras and field.collect_number < status.extras['list_minimum']:
                             hide_delete = True
                         else:
                             hide_delete = False
                         if status.extras['list_collect_allow_delete'] and not hide_delete:
-                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dacollectremoveexisting"><i class="fas fa-trash"></i> ' + word("Delete") + '</button>'
+                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dacollectremoveexisting' + class_of_first + '"><i class="fas fa-trash"></i> ' + word("Delete") + '</button>'
                         else:
                             da_remove_existing = ''
                         list_message = status.extras['list_message'][field.collect_number]
                         if list_message == '':
                             list_message = str(field.collect_number + 1) + '.'
+                        else:
+                            list_message = markdown_to_html(list_message, status=status, trim=True, escape=False, do_terms=True)
+                        if status.extras['list_collect_add_another_label']:
+                            add_another = status.extras['list_collect_add_another_label']
+                        else:
+                            add_another = word("Add another")
                         if field.collect_type == 'extraheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dainvisible dacollectremove"><i class="fas fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'success dacollectadd"><i class="fas fa-plus-circle"></i> ' + word("Add another") + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dainvisible dacollectremove"><i class="fas fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'success dacollectadd"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'postheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
                         elif field.collect_type == 'extrapostheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
                         elif field.collect_type == 'extrafinalpostheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + 'success"><i class="fas fa-plus-circle"></i> ' + word("Add another") + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + 'success"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'firstheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                         else:

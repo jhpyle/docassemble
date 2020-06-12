@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.38] - 2020-06-11
+### Added
+- The `add another label` option for `list collect`.
+- The `manual_line_breaks` Jinja2 filter.
+### Changed
+- The `.all_false()` and related `DADict` methods reflect Python
+  notions of true and false values rather than literal equivalence of
+  the values to `True` or `False`.
+- Sessions that were created using the API will now appear immediately
+  in My Interviews.
+
 ## [1.1.37] - 2020-06-10
 ### Fixed
 - Attempt to force reinstall of pdfminer.six.

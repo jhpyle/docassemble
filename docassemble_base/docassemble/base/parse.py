@@ -1641,6 +1641,8 @@ class Question:
                     self.list_collect_allow_append = compile(str(data['list collect']['allow append']), '<list collect allow append code>', 'eval')
                 if 'allow delete' in data['list collect']:
                     self.list_collect_allow_delete = compile(str(data['list collect']['allow delete']), '<list collect allow delete code>', 'eval')
+                if 'add another label' in data['list collect']:
+                    self.list_collect_add_another_label = TextObject(definitions + str(data['list collect']['add another label']), question=self)
             else:
                 raise DAError("Invalid data under list collect." + self.idebug(data))
         if 'mandatory' in data:
@@ -4477,6 +4479,10 @@ class Question:
                     extras['list_collect_allow_delete'] = eval(self.list_collect_allow_delete, user_dict)
                 else:
                     extras['list_collect_allow_delete'] = True
+                if hasattr(self, 'list_collect_add_another_label'):
+                    extras['list_collect_add_another_label'] = self.list_collect_add_another_label.text(user_dict)
+                else:
+                    extras['list_collect_add_another_label'] = None
                 extras['list_iterator'] = m.group(2)
                 the_list = eval(the_list_varname, user_dict)
                 if not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
@@ -7941,6 +7947,7 @@ def custom_jinja_env():
     env.filters['add_separators'] = docassemble.base.functions.add_separators
     env.filters['inline_markdown'] = inline_markdown_filter
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
+    env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
     env.filters['RichText'] = docassemble.base.file_docx.RichText
     return env
 

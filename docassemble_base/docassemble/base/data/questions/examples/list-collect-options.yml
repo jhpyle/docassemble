@@ -24,8 +24,9 @@ list collect:
   enable: not fruit.has_been_gathered()
   is final: False
   allow delete: False
+  add another label: Add more
   label: |
-    ${ fruit_name }
+    ${ fruit_name } ${ i+1 }.
 ---
 question: |
   Are there any more fruit?

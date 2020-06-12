@@ -1823,6 +1823,13 @@ def comma_and_list_en(*pargs, **kwargs):
     else:
         return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
 
+def manual_line_breaks(text):
+    """Replaces newlines with manual line breaks."""
+    if this_thread.evaluation_context == 'docx':
+        return re.sub(r' *\r?\n *', '</w:t><w:br/><w:t xml:space="preserve">', str(text))
+    else:
+        return re.sub(r' *\r?\n *', ' [BR] ', str(text))
+
 def add_separators_en(*pargs, **kwargs):
     """Accepts a list and returns a list, with semicolons after each item,
     except "and" after the penultimate item and a period after the

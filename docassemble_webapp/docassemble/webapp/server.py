@@ -9240,6 +9240,7 @@ def index(action_argument=None):
             $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
             $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
             $(this).addClass("dainvisible");
+            $(".da-first-delete").removeClass("dainvisible");
             rationalizeListCollect();
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
           }
@@ -22595,6 +22596,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, request=None):
     else:
         encrypted = True
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=encrypted, changed=False, steps=1)
+    save_user_dict_key(session_id, yaml_filename)
     release_lock(session_id, yaml_filename)
     return (encrypted, session_id)
 
