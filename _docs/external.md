@@ -237,7 +237,7 @@ documentation] that read data from a [Google Sheet] and write data to
 a [Google Sheet].
 
 [JSON]: https://en.wikipedia.org/wiki/JSON
-[`requests`]: http://docs.python-requests.org/en/master/
+[`requests`]: https://requests.readthedocs.io/en/master/
 [`gettime.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/gettime.py
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo/docassemble/demo
 [Python module]: https://docs.python.org/3/tutorial/modules.html
