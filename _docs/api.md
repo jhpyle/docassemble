@@ -892,7 +892,7 @@ sessions, regardless of user, are deleted.
 See also the [`/api/user/interviews`](#user_interview_delete) method
 and the [`/api/user/<user_id>/interviews`](#user_user_id_interviews_delete) method.
 
-## <a name="user_interviews"></a>List interviews of the user
+## <a name="user_interviews"></a>List interview sessions of the user
 
 Description: Provides a filterable list of interview sessions stored
 on the system where the owner of the API is associated with the session.

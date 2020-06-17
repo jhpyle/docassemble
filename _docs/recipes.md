@@ -1145,6 +1145,18 @@ sticker in place of the signature.
 
 {% include demo-side-by-side.html demo="signature-preview" %}
 
+# <a name="multisignature"></a>Gathering multiple signatures on a document
+
+This interview sends a document out for signature to an arbitrary
+number of signers, and then e-mails the document to the original user
+when all signatures have been provided.
+
+{% include demo-side-by-side.html demo="multi-signature" %}
+
+This interview is somewhat complicated, but there are security reasons
+for the use of complicated features; otherwise signers could
+manipulate URLs and sign on behalf of other people.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on

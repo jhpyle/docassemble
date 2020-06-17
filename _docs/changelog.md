@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.39](https://github.com/jhpyle/docassemble/releases/tag/v1.1.39) - 2020-06-17
+
+### Fixed
+- Issue with `interview_url_action()` and `force_ask()`.
+- Upgraded `docxtpl` and `docx`.
+
 ## [1.1.38](https://github.com/jhpyle/docassemble/releases/tag/v1.1.38) - 2020-06-11
 
 ### Added

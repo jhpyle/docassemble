@@ -3464,7 +3464,8 @@ otherwise it returns `False`.
 
 ### <a name="Individual.age_in_years"></a>`.age_in_years()`
 
-`user.age_in_years()` the `user`'s age in years as a whole number.
+`user.age_in_years()` returns the `user`'s age in years as a whole
+number.
 
 There are two optional arguments that modify the method's behavior:
 
@@ -3483,6 +3484,12 @@ the individual's age based on the [`birthdate`] attribute, which will
 be interpreted as a date.  The [`birthdate`] attribute can be a date
 expressed in text, as it would be if it was defined by a [date field],
 or it can be a [`datetime`] object.
+
+### <a name="Individual.age_in_months"></a>`.age_in_months()`
+
+The `age_in_months()` method is like `age_in_years()`, except the
+`age` attribute is not considered, and the result is a number of
+months instead of a number of years.
 
 ### <a name="Individual.first_name_hint"></a><a name="Individual.last_name_hint"></a>`.first_name_hint()` and `.last_name_hint()`
 
