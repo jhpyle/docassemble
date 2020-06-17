@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.1.39] - 2020-06-18
+## [1.1.39] - 2020-06-17
 ### Fixed
 - Issue with `interview_url_action()` and `force_ask()`.
 - Upgraded `docxtpl` and `docx`.

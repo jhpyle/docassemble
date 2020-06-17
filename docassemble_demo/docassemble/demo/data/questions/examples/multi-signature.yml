@@ -3,7 +3,7 @@ metadata:
   short: Signature
   documentation: https://docassemble.org/docs/recipes.html#multisignature
   example start: 1
-  example end: 10
+  example end: 37
 ---
 objects:
   - user: Person
@@ -65,7 +65,7 @@ question: |
   address
   % if i == 0:
   of a
-  % else:  
+  % else:
   of the ${ ordinal(i) }
   % endif
   witness who can attest that
@@ -177,10 +177,8 @@ attachment:
   variable name: statement
 ---
 event: unauthorized
-question: |
-  Unauthorized
-#code: |
-#  response('Page not found', response_code=404)
+code: |
+  response('Page not found', response_code=404)
 ---
 event: status_page
 code: |
@@ -288,7 +286,7 @@ subquestion: |
 
       % else:
   ${ witness } has not signed yet.
-  
+
       % endif
     % endfor
   % endif
