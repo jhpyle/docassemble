@@ -53,7 +53,7 @@ install_requires = [
     "Flask==1.1.1",
     "Flask-Babel==1.0.0",
     "Flask-Cors==3.0.8",
-    "docassemblekvsession==0.1",
+    "docassemblekvsession==0.2",
     "Flask-Login==0.4.1",
     "Flask-Mail==0.9.1",
     "Flask-SocketIO==4.2.1",

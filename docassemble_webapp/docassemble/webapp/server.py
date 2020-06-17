@@ -3728,7 +3728,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             if current_user.is_authenticated and not current_user.is_anonymous and current_user.email:
                 unique_id = str(current_user.email)
             else:
-                unique_id = random_string(10)
+                unique_id = app.session_interface.manual_save_session(app, session).decode()[5:15]
         #logmessage("unique id is " + unique_id)
     if secret is not None:
         secret = str(secret)

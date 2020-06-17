@@ -149,9 +149,13 @@ def check_for_updates(doing_startup=False):
         uninstall_package(DummyPackage('pdfminer3k'))
         changed = True
     if 'pdfminer.six' in here_already:
-        sys.stderr.write("check_for_updates: reinstalling pdfminer.six\n")
-        uninstall_package(DummyPackage('pdfminer.six'))
-        install_package(DummyPackage('pdfminer.six'))
+        try:
+            from pdfminer.pdfparser import PDFParser
+            from pdfminer.pdfdocument import PDFDocument
+        except:
+            sys.stderr.write("check_for_updates: reinstalling pdfminer.six\n")
+            uninstall_package(DummyPackage('pdfminer.six'))
+            install_package(DummyPackage('pdfminer.six'))
     else:
         sys.stderr.write("check_for_updates: installing pdfminer.six\n")
         install_package(DummyPackage('pdfminer.six'))
