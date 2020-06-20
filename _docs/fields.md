@@ -1005,7 +1005,7 @@ class SSN(CustomDataType):
     input_class = 'da-ssn'
     javascript = """\
 $.validator.addMethod('ssn', function(value, element, params){
-  return /^[0-9]{3}\-?[0-9]{2}\-?[0-9]{4}$/.test(value);
+  return /^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$/.test(value);
 });
 """
     jq_rule = 'ssn'
@@ -1522,6 +1522,29 @@ and the variable name using the `field` key.
 
 {% include side-by-side.html demo="label" %}
 
+## <a name="field metadata"></a>`field metadata`
+
+The `field metadata` field modifier allows you to associate custom
+metadata with a field.  You can use any format [YAML] will accept, and
+you can use [Mako] in text.  The metadata will appear within the [JSON]
+representation of the [`question`].
+
+{% highlight yaml %}
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    field metadata:
+      importance: extreme
+      accomplices:
+        - vegetables
+        - legumes
+      description: |
+        This is critical for
+        national security.
+      quota: ${ fruit_limit - 4 }
+{% endhighlight %}
+
 # <a name="misc features"><a>Special features
 
 ## <a name="emptychoices"></a>When the list of choices is empty
@@ -1730,6 +1753,13 @@ validation code: |
     user.has_negative_income = True
     user.income = 0
 {% endhighlight %}
+
+By default, an error message raised by `validation code` is placed at
+the top of the screen.  If you want the message to be placed next to a
+specific field on the screen, you can call `validation_error()` with
+the optional keyword argument `field` set to the name of the field.
+
+{% include demo-side-by-side.html demo="phone-number-2" %}
 
 ## <a name="address autocomplete"></a>Address autocomplete
 

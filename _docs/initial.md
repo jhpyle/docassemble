@@ -1787,11 +1787,11 @@ code: |
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
 If you are a web developer and you know how to write [HTML],
-[Javascript], and [CSS], you can embed [HTML] in your interview text.
-You can also bring [Javascript] and [CSS] files into the user's
+[JavaScript], and [CSS], you can embed [HTML] in your interview text.
+You can also bring [JavaScript] and [CSS] files into the user's
 browser.
 
-For example, the following interview brings in a [Javascript] file,
+For example, the following interview brings in a [JavaScript] file,
 [`my-functions.js`], and a [CSS] file, [`my-styles.css`], into the
 user's browser.  These files are located in the `data/static` folder
 of the same [package] in which the interview is located.
@@ -1815,11 +1815,11 @@ The contents of [`my-styles.css`] are:
 {% endhighlight %}
 
 You can write whatever you want in these files; they will simply be
-loaded by the user's browser.  Note that your Javascript files will be
+loaded by the user's browser.  Note that your [JavaScript] files will be
 loaded after [jQuery] is loaded, so your code can use [jQuery], as
 this example does.
 
-If you have Javascript code that you want to run after each screen of
+If you have [JavaScript] code that you want to run after each screen of
 the interview is loaded, attach a [jQuery] event handler to `document`
 for the event `daPageLoad`, which is a **docassemble**-specific event
 that is triggered after each screen loads.  (Since **docassemble**
@@ -1829,7 +1829,7 @@ first loads, but not every time the user sees a new screen.)  The
 example above demonstrates this; every time the page loads, the code
 will replace the contents of any element with the class `groovy`.
 
-This example demonstrates bringing in [CSS] and [Javascript] files that
+This example demonstrates bringing in [CSS] and [JavaScript] files that
 are located in the `data/static` directory of the same package as the
 interview.  You can also refer to files in other packages:
 
@@ -1858,7 +1858,7 @@ features:
     - https://cdnjs.cloudflare.com/ajax/libs/offline-js/0.7.18/offline.min.js
 {% endhighlight %}
 
-If you want to include [CSS] or [Javascript] code in a specific
+If you want to include [CSS] or [JavaScript] code in a specific
 question, rather than in all questions of your interview you can use
 the [`script`] and [`css`] modifiers.
 
@@ -2131,6 +2131,25 @@ field, you can use `default date min` and/or `default date max`.
 If you want to use a computed value, you need to specify a [`min`] or
 [`max`] on the field.
 
+## <a name="send question data"></a>Whether data about the question should be sent to the browser
+
+When a **docassemble** interview loads in a user's browser, the user
+typically sees a [`question`].  If the user appends `&json=1` to the
+URL, the user can see a [JSON] representation of the current
+[`question`].  The [`/api/session/question` API endpoint] also
+provides a [JSON] representation of a question.
+
+If you want this data to be available in the [JavaScript] environment,
+you can set `send question data` in `features` to `True`.
+
+{% highlight yaml %}
+features:
+  send question data: True
+{% endhighlight %}
+
+Then, the data structure respresenting the current question will be
+available as the [JavaScript] variable `daQuestionData`.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
@@ -2172,7 +2191,7 @@ If you want to use a computed value, you need to specify a [`min`] or
 [`code` block]: {{ site.baseurl}}/docs/code.html
 [`code` blocks]: {{ site.baseurl}}/docs/code.html
 [`reconsider` modifier]: {{ site.baseurl}}/docs/logic.html#reconsider
-[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
@@ -2349,3 +2368,4 @@ If you want to use a computed value, you need to specify a [`min`] or
 [Jekyll]: https://jekyllrb.com/
 [GitHub Pages]: https://pages.github.com/
 [GitHub repository]: {{ site.github.repository_url }}
+[`/api/session/question` API endpoint]: {{ site.baseurl}}/docs/api.html#session_question

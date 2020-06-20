@@ -1157,6 +1157,16 @@ This interview is somewhat complicated, but there are security reasons
 for the use of complicated features; otherwise signers could
 manipulate URLs and sign on behalf of other people.
 
+# <a name="phonenumber"></a>Validating international phone numbers
+
+Here is a simple way to validate international phone numbers.
+
+{% include demo-side-by-side.html demo="phone-number" %}
+
+Here is a way to validate international phone numbers using a single screen.
+
+{% include demo-side-by-side.html demo="phone-number-2" %}
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on

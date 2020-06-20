@@ -68,6 +68,26 @@ for the `<body>` of the screen of a question.
 
 {% include side-by-side.html demo="css-class" %}
 
+# <a name="question metadata"></a>The `question metadata` specifier
+
+The optional `question metadata` specifier allows you to associate
+custom metadata with a `question`.  You can use any format [YAML] will
+accept, and you can use [Mako] in text.  The metadata will appear in the
+[JSON] representation of the `question`.
+
+{% highlight yaml %}
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+question metadata:
+  inspiration: Sophocles
+  antagonists:
+    - Frozen vegetables
+    - Roasted tree nuts
+    - ${ favorite_automobile }
+{% endhighlight %}
+
 # Using questions to set variables
 
 Here is a brief summary of the types of questions that can be asked.
@@ -538,3 +558,4 @@ For more information about each method, see its documentation.
 [`question help button`]: {{ site.baseurl }}/docs/initial.html#question help button
 [`title url`]: {{ site.baseurl }}/docs/initial.html#title url
 [`title url opens in other window`]: {{ site.baseurl }}/docs/initial.html#title url opens in other window
+[JSON]: https://en.wikipedia.org/wiki/JSON

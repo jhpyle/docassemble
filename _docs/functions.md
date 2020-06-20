@@ -4293,6 +4293,11 @@ However, note that [lambda functions] can be confusing to people who
 don't have a good knowledge of [Python], so you might want to keep
 them out of your interview files.
 
+`validation_error()` accepts an optional keyword argument `field`,
+which should refer to a variable name on the screen.  If you call
+`validation_error()` from [`validation code`] and reference a `field`,
+the error message will be placed next to the indicated field.
+
 ## <a name="server_capabilities"></a>server_capabilities()
 
 The `server_capabilities()` function returns a dictionary indicating

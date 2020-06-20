@@ -266,8 +266,8 @@ runs in the background are written to the `worker.log` file, not the
 
 The `background_response()` function terminates a background process
 and returns information.  In can be called both from [background
-tasks] and from [`check in`] code (which is explained [later](#check
-in)).  It does different things depending on the context.
+tasks] and from [`check in`] code (which is explained later).  It does
+different things depending on the context.
 
 When called from a [background task], the information you give it can
 be accessed from foreground code by using the `.get()` method on the

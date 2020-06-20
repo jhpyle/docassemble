@@ -3374,14 +3374,15 @@ if the `.mobile_number` attribute exists; it will not cause
 the question to be asked.  If the `.mobile_number` attribute does not
 exist, it will use `defendant.phone_number`.
 
-The method formats the phone number in [E.164] format.  It will make
-use of `defendant.country` to format the phone number, since the
-[E.164] format contains the international [country calling code] of
-the phone number.  If the `.country` attribute is not defined,
-`.address.country` will be tried, but if that is not defined either,
-the method will call [`get_country()`].  The country is expected to be
-a two-letter, capitalized abbreviation of a country ([ISO 3166-1
-alpha-2] format).
+The method formats the phone number in [E.164] format.  The method
+accepts an optional keyword parameter `country`, which will be used to
+format the phone number, since the [E.164] format contains the
+international [country calling code] of the phone number.  If a
+`country` is not provided, `defendant.country` is used, If the
+`.country` attribute is not defined, `.address.country` will be tried,
+but if that is not defined either, the method will call
+[`get_country()`].  The country is expected to be a two-letter,
+capitalized abbreviation of a country ([ISO 3166-1 alpha-2] format).
 
 If a `mobile_number` attribute exists and a `uses_whatsapp` number
 also exists and is `True`, then [WhatsApp] will be used to send messages

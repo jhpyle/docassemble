@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.40](https://github.com/jhpyle/docassemble/releases/tag/v1.1.40) - 2020-06-19
+
+### Added
+- `question metadata`, `field metadata`, and the `send question data`
+  option under `features`.
+- The `country` keyword parameter for `.sms_number()`.
+- The `field` keyword parameter for `validation_error()`.
+
 ## [1.1.39](https://github.com/jhpyle/docassemble/releases/tag/v1.1.39) - 2020-06-17
 
 ### Fixed
