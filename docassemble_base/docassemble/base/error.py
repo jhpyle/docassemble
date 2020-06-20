@@ -17,7 +17,9 @@ class DAError(Exception):
 
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
-    pass
+    def __init__(self, *pargs, field=None):
+        self.field = field
+        return super().__init__(*pargs)
 
 class CodeExecute(Exception):
     def __init__(self, compute, question):

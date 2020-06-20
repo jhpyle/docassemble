@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.40] - 2020-06-19
+### Added
+- `question metadata`, `field metadata`, and the `send question data`
+  option under `features`.
+- The `country` keyword parameter for `.sms_number()`.
+- The `field` keyword parameter for `validation_error()`.
+
 ## [1.1.39] - 2020-06-17
 ### Fixed
 - Issue with `interview_url_action()` and `force_ask()`.

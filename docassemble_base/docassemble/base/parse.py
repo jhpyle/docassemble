@@ -665,6 +665,8 @@ class InterviewStatus:
         for param in ('rightText', 'underText', 'cssClass', 'back_button_label', 'css', 'script'):
             if param in self.extras and isinstance(self.extras[param], str):
                 result[param] = self.extras[param].rstrip()
+        if 'questionMetadata' in self.extras:
+            result['question_metadata'] = self.extras['questionMetadata']
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
             video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
@@ -750,7 +752,7 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
                 if key in self.extras and field.number in self.extras[key]:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
@@ -1215,6 +1217,49 @@ def recursive_eval_textobject(target, the_user_dict, question, tpl, skip_undefin
     else:
         raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
 
+def recursive_textobject_or_primitive(target, question):
+    if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
+        new_dict = dict()
+        for key, val in target.items():
+            new_dict[key] = recursive_textobject_or_primitive(val, question)
+        return new_dict
+    if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_textobject_or_primitive(val, question))
+        return new_list
+    if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_textobject_or_primitive(val, question))
+        return new_set
+    if isinstance(target, (int, bool, float, NoneType)):
+        return target
+    return TextObject(str(target), question=question)
+
+def recursive_eval_textobject_or_primitive(target, the_user_dict):
+    if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
+        new_dict = dict()
+        for key, val in target.items():
+            new_dict[key] = recursive_eval_textobject_or_primitive(val, the_user_dict)
+        return new_dict
+    if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_eval_textobject_or_primitive(val, the_user_dict))
+        return new_list
+    if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_eval_textobject_or_primitive(val, the_user_dict))
+        return new_set
+    if isinstance(target, (bool, int, float, NoneType)):
+        return target
+    if isinstance(target, TextObject):
+        return target.text(the_user_dict)
+    else:
+        raise DAError("recursive_eval_textobject_or_primitive: expected a TextObject, but found a " + str(type(target)))
+
 def fix_quotes(match):
     instring = match.group(1)
     n = len(instring)
@@ -1359,7 +1404,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata'):
                     logmessage("Ignoring unknown dictionary key " + key + "." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -1425,6 +1470,8 @@ class Question:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'labels above fields' in data['features']:
                 self.interview.options['labels above'] = True if data['features']['labels above fields'] else False
+            if 'send question data' in data['features']:
+                self.interview.options['send question data'] = True if data['features']['send question data'] else False
             if 'checkin interval' in data['features']:
                 if not isinstance(data['features']['checkin interval'], int):
                     raise DAError("A features section checkin interval entry must be an integer." + self.idebug(data))
@@ -2474,6 +2521,8 @@ class Question:
                 self.other_fields_used.add(data['signature'])
         elif 'required' in data:
             raise DAError("The required modifier can only be used on a signature block" + self.idebug(data))
+        if 'question metadata' in data:
+            self.question_metadata = recursive_textobject_or_primitive(data['question metadata'], self)
         if 'under' in data:
             self.undertext = TextObject(definitions + str(data['under']), question=self)
         if 'right' in data:
@@ -3150,6 +3199,10 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                            elif key == 'field metadata':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras'][key] = recursive_textobject_or_primitive(field[key], self)
                             elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -4167,6 +4220,8 @@ class Question:
             for item in extras['action_buttons']:
                 if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
                     raise DAError("color in action buttons not valid: " + repr(color))
+        if hasattr(self, 'question_metadata'):
+            extras['questionMetadata'] = recursive_eval_textobject_or_primitive(self.question_metadata, user_dict)
         if hasattr(self, 'css_class') and self.css_class is not None:
             extras['cssClass'] = self.css_class.text(user_dict)
         elif 'css class' in user_dict['_internal'] and user_dict['_internal']['css class'] is not None:
@@ -4399,6 +4454,20 @@ class Question:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = dict()
                         extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
+                    if 'field metadata' in field.extras:
+                        if 'field metadata' not in extras:
+                            extras['field metadata'] = dict()
+                        if skip_undefined:
+                            try:
+                                extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
+                            except LazyNameError:
+                                raise
+                            except Exception as err:
+                                if self.interview.debug:
+                                    logmessage("Exception in field metadata: " + err.__class__.__name__ + ": " + str(err))
+                                continue
+                        else:
+                            extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
                     for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
@@ -4883,6 +4952,10 @@ class Question:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = dict()
                             extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
+                        if 'field metadata' in field.extras:
+                            if 'field metadata' not in extras:
+                                extras['field metadata'] = dict()
+                            extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
                         for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:

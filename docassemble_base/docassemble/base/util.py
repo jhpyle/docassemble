@@ -1830,7 +1830,7 @@ class Person(DAObject):
             return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language))
         else:
             return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language))
-    def sms_number(self):
+    def sms_number(self, country=None):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
             the_number = self.mobile_number
@@ -1838,13 +1838,14 @@ class Person(DAObject):
                 the_number = 'whatsapp:' + str(self.mobile_number)
         else:
             the_number = self.phone_number
-        if hasattr(self, 'country'):
-            the_country = self.country
-        elif hasattr(self, 'address') and hasattr(self.address, 'country'):
-            the_country = self.address.country
-        else:
-            the_country = get_country()
-        return phone_number_in_e164(the_number, country=the_country)
+        if country is None:
+            if hasattr(self, 'country'):
+                country = self.country
+            elif hasattr(self, 'address') and hasattr(self.address, 'country'):
+                country = self.address.country
+            else:
+                country = get_country()
+        return phone_number_in_e164(the_number, country=country)
     def facsimile_number(self, country=None):
         """Returns the person's fax_number, formatted appropriately."""
         the_number = self.fax_number
@@ -2957,9 +2958,12 @@ def zip_file(*pargs, **kwargs):
     zip_file.commit()
     return zip_file
 
-def validation_error(message):
-    """Raises a validation error with a given message"""
-    raise DAValidationError(message)
+def validation_error(message, field=None):
+    """Raises a validation error with a given message, optionally
+    associated with a field.
+
+    """
+    raise DAValidationError(message, field=field)
 
 def invalid_variable_name(varname):
     if not isinstance(varname, str):

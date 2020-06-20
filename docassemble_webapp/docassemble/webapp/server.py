@@ -6096,6 +6096,7 @@ def index(action_argument=None):
                         break
     else:
         the_question = None
+    key_to_orig_key = dict()
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
             continue
@@ -6107,12 +6108,15 @@ def index(action_argument=None):
             if orig_key in known_varnames:
                 if not (known_varnames[orig_key] in post_data and post_data[known_varnames[orig_key]] != '' and post_data[orig_key] == ''):
                     post_data[known_varnames[orig_key]] = post_data[orig_key]
+                    key_to_orig_key[from_safeid(known_varnames[orig_key])] = orig_key
             else:
                 m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
                 if m:
                     base_orig_key = safeid(m.group(1))
                     if base_orig_key in known_varnames:
-                        full_key = safeid(myb64unquote(known_varnames[base_orig_key]) + m.group(2))
+                        the_key = myb64unquote(known_varnames[base_orig_key]) + m.group(2)
+                        key_to_orig_key[the_key] = orig_key
+                        full_key = safeid(the_key)
                         post_data[full_key] = post_data[orig_key]
         if key.endswith('.gathered'):
             objname = re.sub(r'\.gathered$', '', key)
@@ -6559,6 +6563,8 @@ def index(action_argument=None):
         if is_object:
             if '__DANEWOBJECT' in user_dict:
                 del user_dict['__DANEWOBJECT']
+        if key not in key_to_orig_key:
+            key_to_orig_key[key] = orig_key
     if validated and special_question is None and not disregard_input:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
@@ -6714,6 +6720,7 @@ def index(action_argument=None):
                                 inline_files_processed.append(file_field)
                             else:
                                 the_string = file_field + " = None"
+                            key_to_orig_key[file_field] = orig_file_field
                             process_set_variable(file_field, user_dict, vars_set, old_values)
                             try:
                                 exec(the_string, user_dict)
@@ -6736,6 +6743,7 @@ def index(action_argument=None):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
                         the_string = file_field + " = None"
+                        key_to_orig_key[file_field] = orig_file_field
                         process_set_variable(file_field, user_dict, vars_set, old_values)
                         try:
                             exec(the_string, user_dict)
@@ -6769,6 +6777,7 @@ def index(action_argument=None):
                     break
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
+                key_to_orig_key[file_field] = orig_file_field
             if not has_invalid_fields:
                 initial_string = 'import docassemble.base.core'
                 try:
@@ -6947,7 +6956,10 @@ def index(action_argument=None):
                 logmessage(the_error_message)
                 if the_error_message == '':
                     the_error_message = word("Please enter a valid value.")
-                error_messages.append(("error", the_error_message))
+                if isinstance(validation_error, DAValidationError) and isinstance(validation_error.field, str) and validation_error.field in key_to_orig_key:
+                    field_error[key_to_orig_key[validation_error.field]] = the_error_message
+                else:
+                    error_messages.append(("error", the_error_message))
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated:
@@ -8449,6 +8461,9 @@ def index(action_argument=None):
           clearTimeout(daDisable);
         }
         daCsrf = data.csrf_token;
+        if (data.question_data){
+          daQuestionData = data.question_data;
+        }
         if (data.action == 'body'){""" + forceFullScreen + """
           if ("activeElement" in document){
             document.activeElement.blur();
@@ -10189,6 +10204,8 @@ def index(action_argument=None):
         for info in docassemble.base.functions.custom_types.values():
             if isinstance(info['javascript'], str):
                 the_js += "\n" + indent_by(info['javascript'].strip(), 6).rstrip()
+        if interview_status.question.interview.options.get('send question data', False):
+            the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
         scripts += """
     <script type="text/javascript" charset="utf-8">
 """ + the_js + """
@@ -10479,7 +10496,10 @@ def index(action_argument=None):
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
+        if interview_status.question.interview.options.get('send question data', False):
+            response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict, question_data=interview_status.as_data(user_dict))
+        else:
+            response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         if response_wrapper:
             response_wrapper(response)
         if return_fake_html:
