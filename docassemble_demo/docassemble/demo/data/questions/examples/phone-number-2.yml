@@ -3,7 +3,7 @@ metadata:
   short: Phone
   documentation: "https://docassemble.org/docs/recipes.html#phonenumber"
   example start: 1
-  example end: 3
+  example end: 4
 ---
 objects:
   - user: Individual
@@ -34,6 +34,10 @@ validation code: |
   else:
     if not phone_number_is_valid(user.mobile_number):
       validation_error('Please enter a valid phone number.', field='user.mobile_number')
+---
+code: |
+  if not user.phone_international:
+    user.phone_country = 'US'
 ---
 mandatory: True
 question: |
