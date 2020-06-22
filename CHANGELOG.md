@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.41] - 2020-06-22
+### Fixed
+- Bug in `recursive_eval_textobject()`.
+
 ## [1.1.40] - 2020-06-19
 ### Added
 - `question metadata`, `field metadata`, and the `send question data`
