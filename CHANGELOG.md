@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.42] - 2020-06-25
+### Added
+- Aliases for JavaScript functions that have the `da` prefix.
+### Fixed
+- Jinja2 filter was converting Python built-in types to strings.
+
 ## [1.1.41] - 2020-06-22
 ### Fixed
 - Bug in `recursive_eval_textobject()`.

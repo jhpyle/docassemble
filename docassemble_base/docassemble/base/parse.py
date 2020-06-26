@@ -7943,6 +7943,8 @@ def ampersand_filter(value):
         return value
     if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate'):
         return str(value)
+    if isinstance(value, (int, bool, float, NoneType)):
+        return value
     if not isinstance(value, str):
         value = str(value)
     if '<w:r>' in value or '</w:t>' in value:

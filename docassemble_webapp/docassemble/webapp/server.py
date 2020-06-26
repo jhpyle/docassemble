@@ -7365,6 +7365,7 @@ def index(action_argument=None):
         }
         return allFields;
       }
+      var daGetFields = getFields;
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
           var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -7391,8 +7392,9 @@ def index(action_argument=None):
         }
         return elem;
       }
+      var daGetField = getField;
       function setField(fieldName, val){
-        var elem = getField(fieldName);
+        var elem = daGetField(fieldName);
         if (elem == null){
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
@@ -7435,8 +7437,9 @@ def index(action_argument=None):
           }
         }
       }
+      var daSetField = setField;
       function val(fieldName){
-        var elem = getField(fieldName);
+        var elem = daGetField(fieldName);
         if (elem == null){
           return null;
         }
@@ -7472,6 +7475,7 @@ def index(action_argument=None):
         }
         return theVal;
       }
+      var da_val = val;
       function daFormAsJSON(){
         var formData = $("#daform").serializeArray();
         var data = Object();
@@ -7526,6 +7530,7 @@ def index(action_argument=None):
           }
         }
       }
+      var da_flash = flash;
       function url_action(action, args){
         if (args == null){
           args = {};
@@ -7540,6 +7545,7 @@ def index(action_argument=None):
         }
         return url;
       }
+      var da_url_action = url_action;
       function action_call(action, args, callback){
         if (args == null){
             args = {};
@@ -7570,6 +7576,7 @@ def index(action_argument=None):
           }
         });
       }
+      var da_action_call = action_call;
       var url_action_call = action_call;
       function action_perform(action, args){
         if (args == null){
@@ -7598,6 +7605,7 @@ def index(action_argument=None):
           dataType: 'json'
         });
       }
+      var da_action_perform = action_perform;
       var url_action_perform = action_perform;
       function action_perform_with_next(action, args, next_data){
         //console.log("action_perform_with_next: " + action + " | " + next_data)
@@ -7627,6 +7635,7 @@ def index(action_argument=None):
           dataType: 'json'
         });
       }
+      var da_action_perform_with_next = action_perform_with_next;
       var url_action_perform_with_next = action_perform_with_next;
       function get_interview_variables(callback){
         if (callback == null){
@@ -7647,6 +7656,7 @@ def index(action_argument=None):
           }
         });
       }
+      var da_get_interview_variables = get_interview_variables;
       function daInformAbout(subject, chatMessage){
         if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
           return;
@@ -8608,7 +8618,7 @@ def index(action_argument=None):
       function daReviewAction(e){
         //action_perform_with_next($(this).data('action'), null, daNextAction);
         var info = $.parseJSON(atob($(this).data('action')));
-        action_perform(info['action'], info['arguments']);
+        da_action_perform(info['action'], info['arguments']);
         e.preventDefault();
         return false;
       }
@@ -8776,7 +8786,7 @@ def index(action_argument=None):
               else if (command.extra == 'fields'){
                 for (var key in command.value){
                   if (command.value.hasOwnProperty(key)){
-                    setField(key, command.value[key]);
+                    daSetField(key, command.value[key]);
                   }
                 }
               }
@@ -8990,10 +9000,10 @@ def index(action_argument=None):
             globalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
-            flash(message.message, message.priority);
+            da_flash(message.message, message.priority);
           }
           else{
-            flash(message.message, 'info');
+            da_flash(message.message, 'info');
           }
         }
       }
@@ -9092,7 +9102,7 @@ def index(action_argument=None):
           daFetchAjaxTimeoutRunning = true;
           daFetchAjaxTimeoutFetchAfter = false;
         }
-        action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
+        da_action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
           wordStart = $(elem).val();
           if (typeof data == "object"){
             var upperWordStart = wordStart.toUpperCase()
@@ -9512,7 +9522,7 @@ def index(action_argument=None):
         });
         $(".danavlinks a.daclickable").click(function(e){
           var the_key = $(this).data('key');
-          action_perform("_da_priority_action", {_action: the_key});
+          da_action_perform("_da_priority_action", {_action: the_key});
           e.preventDefault();
           return false;
         });
@@ -11293,6 +11303,7 @@ def observer():
         }
         return allFields;
       }
+      var daGetFields = getFields;
       function getField(fieldName){
         if (typeof daValLookup[fieldName] == "undefined"){
           var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -11319,8 +11330,9 @@ def observer():
         }
         return elem;
       }
+      var daGetField = getField;
       function setField(fieldName, val){
-        var elem = getField(fieldName);
+        var elem = daGetField(fieldName);
         if (elem == null){
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
@@ -11363,6 +11375,7 @@ def observer():
           }
         }
       }
+      var daSetField = setField;
       function val(fieldName){
         var elem = getField(fieldName);
         if (elem == null){
@@ -11400,6 +11413,7 @@ def observer():
         }
         return theVal;
       }
+      var da_val = val;
       window.daTurnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
@@ -11585,6 +11599,7 @@ def observer():
           }
         }
       }
+      var da_flash = flash;
       function JSON_stringify(s){
          var json = JSON.stringify(s);
          return json.replace(/[\\u007f-\\uffff]/g,
@@ -11608,6 +11623,7 @@ def observer():
         }
         return url;
       }
+      var da_url_action = url_action;
       function action_call(action, args, callback){
         //redo?
         if (args == null){
@@ -11635,6 +11651,7 @@ def observer():
           }
         });
       }
+      var da_action_call = action_call;
       var url_action_call = action_call;
       function action_perform(action, args){
         //redo
@@ -11660,6 +11677,7 @@ def observer():
           dataType: 'json'
         });
       }
+      var da_action_perform = action_perform;
       var url_action_perform = action_perform;
       function action_perform_with_next(action, args, next_data){
         //redo
@@ -11686,6 +11704,7 @@ def observer():
           dataType: 'json'
         });
       }
+      var da_action_perform_with_next = action_perform_with_next;
       var url_action_perform_with_next = action_perform_with_next;
       function get_interview_variables(callback){
         if (callback == null){
@@ -11702,6 +11721,7 @@ def observer():
           }
         });
       }
+      var da_get_interview_variables = get_interview_variables;
       function daInitialize(doScroll){
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
@@ -18790,6 +18810,7 @@ def server_error(the_error):
           }, 3000);
         }
       }
+      var da_flash = flash;
       function daShowNotifications(){
         var n = daMessageLog.length;
         for (var i = 0; i < n; i++){
@@ -18801,10 +18822,10 @@ def server_error(the_error):
             globalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
-            flash(message.message, message.priority);
+            da_flash(message.message, message.priority);
           }
           else{
-            flash(message.message, 'info');
+            da_flash(message.message, 'info');
           }
         }
       }
