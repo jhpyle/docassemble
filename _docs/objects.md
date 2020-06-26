@@ -270,8 +270,8 @@ The problem here is that the `list_of_fruits` and `list_of_vegetables`
 objects, as well as their subobjects, will not have the right
 intrinsic names.
 
-In some situations, you can wrote `foo = DAObject()` instead of `foo =
-DAObject('foo'), and it will automatically figure out the instance
+In some situations, you can write `foo = DAObject()` instead of `foo =
+DAObject('foo')`, and it will automatically figure out the instance
 name, but this is fragile, and under certain circumstances it can
 fail, and it will fall back to giving the object a random instrinsic
 name.  To avoid this problem, you can always set the intrinsic name of
@@ -6254,3 +6254,4 @@ the `_uid` of the table rather than the `id`.
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [Google's internationalization standards]: https://github.com/mirumee/google-i18n-address
 [`verb_present()`]: {{ site.baseurl }}/docs/functions.html#verb_present
+[SpaceX]: https://www.spacex.com/

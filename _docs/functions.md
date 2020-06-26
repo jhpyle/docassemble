@@ -6634,6 +6634,10 @@ after three seconds.
 If you only want to clear the messages, you can run
 `flash(null, null, true)`.
 
+You can also access this function under the name `da_flash()`, which
+can be useful if you are embedding **docassemble** and there is a name
+conflict.
+
 ## <a name="js_val"></a>val() JavaScript function
 
 If you need the value of one of the variables on the screen, you can
@@ -6645,6 +6649,10 @@ appears in the underlying [`question`].
 
 This function is essential for using the [`js show if`] feature.
 
+You can also access this function under the name `da_val()`, which can
+be useful if you are embedding **docassemble** and there is a name
+conflict.
+
 ## <a name="js_getField"></a>getField() JavaScript function
 
 The `getField()` function is similar to `val()`, except that instead
@@ -6652,6 +6660,10 @@ of returning the value of the input element, it returns the element
 itself.
 
 {% include side-by-side.html demo="getField" %}
+
+You can also access this function under the name `daGetField()`, which
+can be useful if you are embedding **docassemble** and there is a name
+conflict.
 
 ## <a name="js_setField"></a>setField() JavaScript function
 
@@ -6663,6 +6675,10 @@ variable name must be written exactly as it appears in the underlying
 
 {% include side-by-side.html demo="setField" %}
 
+You can also access this function under the name `daSetField()`, which
+can be useful if you are embedding **docassemble** and there is a name
+conflict.
+
 ## <a name="js_getFields"></a>getFields() JavaScript function
 
 The `getFields()` function returns an array of names of the fields on
@@ -6670,6 +6686,10 @@ the screen that can be used with `val()`, `getField()`, and
 `setField()`.
 
 {% include side-by-side.html demo="getFields" %}
+
+You can also access this function under the name `daGetFields()`, which
+can be useful if you are embedding **docassemble** and there is a name
+conflict.
 
 ## <a name="js_url_action"></a>url_action() JavaScript function
 
@@ -6680,6 +6700,10 @@ parameter is an object containing the arguments to provide to the
 action (to be read with [`action_argument()`]).
 
 {% include side-by-side.html demo="js_url_action" %}
+
+You can also access this function under the name `da_url_action()`,
+which can be useful if you are embedding **docassemble** and there is
+a name conflict.
 
 ## <a name="js_url_action_perform"></a><a name="js_action_perform"></a>action_perform() JavaScript function
 
@@ -6695,6 +6719,10 @@ The [JavaScript] function takes two arguments:
 2. An object containing arguments to pass to the [action].  In your
    interview, you can use the [`action_argument()`] function to read
    these values.
+
+You can also access this function under the name
+`da_action_perform()`, which can be useful if you are embedding
+**docassemble** and there is a name conflict.
 
 ## <a name="js_url_action_call"></a><a name="js_action_call"></a>action_call() JavaScript function
 
@@ -6725,6 +6753,10 @@ classes.
 Note that [Ajax] interactions with the interview are possible without
 writing any [JavaScript] code; see the [`check in` feature].
 
+You can also access this function under the name `da_action_call()`,
+which can be useful if you are embedding **docassemble** and there is
+a name conflict.
+
 ## <a name="js_get_interview_variables"></a>get_interview_variables() JavaScript function
 
 If you would like to work with all of the variables in the interview
@@ -6754,6 +6786,10 @@ get_interview_variables(function(data){
   }
 });
 {% endhighlight %}
+
+You can also access this function under the name
+`da_get_interview_variables()`, which can be useful if you are
+embedding **docassemble** and there is a name conflict.
 
 ## <a name="js_daPageLoad"></a>Running Javascript at page load time
 
