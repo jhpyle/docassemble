@@ -1,5 +1,5 @@
 from docassemble.base.functions import word, get_currency_symbol, url_action, comma_and_list, server, custom_types
-from docassemble.base.util import format_date
+from docassemble.base.util import format_date, format_datetime
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
@@ -383,7 +383,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                 qoutput += "\n" + word('Type a time.')
             else:
                 qoutput += "\n" + word('Type a time, or type skip.')
-        elif hasattr(field, 'datatype') and field.datatype in ['datetime']:
+        elif hasattr(field, 'datatype') and field.datatype in ['datetime', 'datetime-local']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
             if status.extras['required'][field.number]:
@@ -1141,7 +1141,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
                     validation_rules['messages'][the_saveas]['time'] = field.validation_message('time', status, word("You need to enter a valid time."))
-                if field.datatype == 'datetime':
+                if field.datatype in ['datetime', 'datetime-local']:
                     validation_rules['rules'][the_saveas]['datetime'] = True
                     validation_rules['messages'][the_saveas]['datetime'] = field.validation_message('datetime', status, word("You need to enter a valid date and time."))
                 if field.datatype == 'email':
@@ -2002,7 +2002,7 @@ def input_for(status, field, wide=False, embedded=False):
             extra_class += ' dadate-embedded'
         if hasattr(field, 'datatype') and field.datatype == 'time':
             extra_class += ' datime-embedded'
-        if hasattr(field, 'datatype') and field.datatype == 'datetime':
+        if hasattr(field, 'datatype') and field.datatype in ['datetime', 'datetime-local']:
             extra_class += ' dadate-embedded'
         if inline_width is not None:
             extra_style = ' style="min-width: ' + str(inline_width) + '"'
@@ -2462,8 +2462,15 @@ def input_for(status, field, wide=False, embedded=False):
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
                 default_val = defaultvalue
             elif isinstance(defaultvalue, datetime.datetime):
-                defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
-                default_val = format_date(defaultvalue, format='yyyy-MM-dd')
+                if field.datatype == 'datetime':
+                    defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
+                    default_val = format_date(defaultvalue, format='yyyy-MM-dd HH:mm')
+                elif field.datatype == 'datetime-local':
+                    defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
+                    default_val = format_date(defaultvalue, format='yyyy-MM-dd HH:mm')
+                else:
+                    defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
+                    default_val = format_date(defaultvalue, format='yyyy-MM-dd')
             else:
                 defaultstring = ''
                 default_val = ''
@@ -2481,9 +2488,22 @@ def input_for(status, field, wide=False, embedded=False):
                     the_date = format_date(defaultvalue, format='yyyy-MM-dd')
                     if the_date != word("Bad date"):
                         defaultvalue = the_date
+                elif field.datatype == 'datetime':
+                    the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
+                    if the_date != word("Bad date"):
+                        defaultvalue = the_date
+                elif field.datatype == 'datetime-local':
+                    the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
+                    if the_date != word("Bad date"):
+                        defaultvalue = the_date
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
             elif isinstance(defaultvalue, datetime.datetime):
-                defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
+                if field.datatype == 'datetime':
+                    defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
+                elif field.datatype == 'datetime-local':
+                    defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
+                else:
+                    defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
             else:
                 defaultstring = ''
             input_type = field.datatype

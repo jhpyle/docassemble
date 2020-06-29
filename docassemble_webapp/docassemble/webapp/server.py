@@ -6274,7 +6274,7 @@ def index(action_argument=None):
                 else:
                     data = "False"
                     test_data = False
-            elif known_datatypes[real_key] in ('date', 'datetime'):
+            elif known_datatypes[real_key] in ('date', 'datetime', 'datetime-local'):
                 if isinstance(data, str):
                     data = data.strip()
                     if data != '':

@@ -1433,7 +1433,7 @@ class DAList(DAObject):
         """Returns a list of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = list()
+        items = DAList(self.instanceName)
         for item in self.elements:
             if item is None:
                 continue
@@ -1446,6 +1446,7 @@ class DAList(DAObject):
                 except:
                     continue
             items.append(item)
+        items.gathered = True
         return items
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:

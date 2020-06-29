@@ -6394,7 +6394,7 @@ class Interview:
                         exec('from ' + str(question.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
-            if question.question_type == 'reset': #, 'template', 'table'
+            if question.question_type == 'reset':
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
