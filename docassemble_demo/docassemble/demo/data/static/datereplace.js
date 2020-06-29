@@ -3,10 +3,13 @@ $(document).on('daPageLoad', function(){
 	var dateElement = this;
 	$(dateElement).hide();
 	$(dateElement).attr('type', 'hidden');
-	var parentElement = $('<div>');
-	var yearElement = $('<select>');
-	var monthElement = $('<select>');
-	var dayElement = $('<select>');
+	var parentElement = $('<div class="form-row">');
+	var yearParent = $('<div class="col">');
+	var monthParent = $('<div class="col">');
+	var dayParent = $('<div class="col">');
+	var yearElement = $('<select class="form-control">');
+	var monthElement = $('<select class="form-control">');
+	var dayElement = $('<select class="form-control">');
 	var today = new Date();
 	var dateEntered;
 	if ($(dateElement).val()){
@@ -18,7 +21,7 @@ $(document).on('daPageLoad', function(){
 	}
 	var opt = $("<option>");
 	opt.val("");
-	opt.text("--");
+	opt.text("Month");
 	monthElement.append(opt);
 	for(var month=0; month < 12; month++){
 	    opt = $("<option>");
@@ -37,7 +40,7 @@ $(document).on('daPageLoad', function(){
 	}
 	opt = $("<option>");
 	opt.val("");
-	opt.text("--");
+	opt.text("Day");
 	dayElement.append(opt);
 	for(var day=1; day <= 31; day++){
 	    var opt = $("<option>");
@@ -55,7 +58,7 @@ $(document).on('daPageLoad', function(){
 	}
 	opt = $("<option>");
 	opt.val("");
-	opt.text("--");
+	opt.text("Year");
 	yearElement.append(opt);
 	for(var year=today.getFullYear(); year > today.getFullYear() - 50; year--){
 	    opt = $("<option>");
@@ -70,9 +73,12 @@ $(document).on('daPageLoad', function(){
 	    $(dateElement).val($(yearElement).val() + '-' + $(monthElement).val() + '-' + $(dayElement).val());
 	}
 	$(dateElement).before(parentElement);
-	$(parentElement).append(monthElement);
-	$(parentElement).append(dayElement);
-	$(parentElement).append(yearElement);
+	$(monthParent).append(monthElement);
+	$(parentElement).append(monthParent);
+	$(dayParent).append(dayElement);
+	$(parentElement).append(dayParent);
+	$(yearParent).append(yearElement);
+	$(parentElement).append(yearParent);
 	yearElement.on('change', updateDate);
 	monthElement.on('change', updateDate);
 	dayElement.on('change', updateDate);
