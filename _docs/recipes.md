@@ -1167,6 +1167,18 @@ Here is a way to validate international phone numbers using a single screen.
 
 {% include demo-side-by-side.html demo="phone-number-2" %}
 
+# <a name="customdate"></a>Customizing the date input
+
+If you don't like the way that web browsers implement date inputs, you
+can customize the way dates are displayed.
+
+{% include demo-side-by-side.html demo="customdate" %}
+
+This interview uses a [JavaScript] file [`datereplace.js`].  The
+[JavaScript] converts a regular date input element into a hidden
+element and then adds name-less elements to the [DOM].  This approach
+preserves default values.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
@@ -1182,6 +1194,7 @@ Here is a way to validate international phone numbers using a single screen.
 [supported accounts and settlement currencies]: https://stripe.com/docs/payouts#supported-accounts-and-settlement-currencies
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`exhibit_insert.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/exhibit_insert.docx
+[`datereplace.js`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/datereplace.js
 [`pdf_concatenate()`]: {{ site.baseurl }}/docs/functions.html#pdf_concatenate
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [`action_button_html()`]: {{ site.baseurl }}/docs/functions.html#action_button_html

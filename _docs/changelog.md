@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.43](https://github.com/jhpyle/docassemble/releases/tag/v1.1.43) - 2020-06-28
+
+### Changed
+- The `complete_elements()` method now returns a `DAList`.  Note that
+  this may break existing code that uses `complete_elements()`.  To
+  get a plain list of the complete elements, use
+  `complete_elements().elements`.
+- Spanish ordinal numbers removed.
+
 ## [1.1.42](https://github.com/jhpyle/docassemble/releases/tag/v1.1.42) - 2020-06-25
 
 ### Added

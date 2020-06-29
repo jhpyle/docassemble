@@ -11718,6 +11718,15 @@
 "custody": |-
   objects:
     - has_standing: DADict.using(auto_gather=False)
+"customdate": |-
+  features:
+    javascript: datereplace.js
+  ---
+  question: |
+    When were you born?
+  fields:
+    - Date of birth: date_of_birth
+      datatype: date
 "discovery": |-
   template: discovery['rent records']
   content: |
@@ -12449,7 +12458,7 @@
   code: |
     people = ([boss] if defined('boss') and boss.name.defined() else []) \
            + ([employee] if defined('employee') and employee.name.defined() else []) \
-           + customers.complete_elements()
+           + customers.complete_elements().elements
   ---
   reconsider:
     - people
