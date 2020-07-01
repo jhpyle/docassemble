@@ -303,6 +303,24 @@ The second and subsequent arguments to `force_ask()` can specify
 action will be run.  (Internally, **docassemble** uses the [actions]
 mechanism to force the interview to ask these questions.)
 
+If you give `force_ask()` the name of a variable that no [`question`]
+can define, then `force_ask()` will quietly ignore it.  Thus you can
+use conditional logic within a `force_ask()` sequence by adding [`if`]
+modifiers to each [`question`] that specify under what conditions the
+[`question`] should be asked.
+
+In addition to giving `force_ask()` variables and actions, you can
+give it a dictionary containing a special command.
+
+* `force_ask('favorite_fruit', {'recompute': 'dessert_cost'}, 'favorite_vegetable')`
+* `force_ask('favorite_fruit', {'recompute': ['dessert_cost', 'breakfast_cost']}, 'favorite_vegetable')`
+* `force_ask('favorite_fruit', {'recompute': ['dessert_cost', 'breakfast_cost']}, 'favorite_vegetable')`
+* `force_ask('favorite_fruit', {'set': {'fruit_known': True}}, 'favorite_vegetable')`
+* `force_ask('favorite_fruit', 'favorite_vegetable', {'set': [{'fruit_known': True}, {'vegetable_known': True}]})`
+
+For more information on how these data structures work, see the
+subsection on [customizing the display of `review` options].
+
 A function that is related to `force_ask()` is [`force_gather()`].
 [`force_gather()`] cannot force the-reasking of a question to define a
 variable that has already been defined, but it does not have the
@@ -310,16 +328,9 @@ limitations on question types that `force_ask()` has.
 
 ## <a name="force_gather"></a>force_gather()
 
-The `force_gather()` function is similar to [`force_ask()`], except it
-is not only asks a question, but changes the [interview logic] so that
-the first priority of the [interview logic] is to define the given
-variable or variables.
-
-In addition to doing what [`force_ask()`] does, `force_gather()`
-engages the assistance of the [`process_action()`] function to make
-sure that the variable is defined.  The [`process_action()`] function,
-which runs every time the screen loads, will not finish until the
-variable is defined.
+The `force_gather()` function is very similar to [`force_ask()`],
+except it affects the interview logic for all users of the interview,
+not just the current user.
 
 {% include side-by-side.html demo="force-gather" %}
 
@@ -7262,3 +7273,4 @@ $(document).on('daPageLoad', function(){
 [Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
 [e-mail sending]: {{ site.baseurl }}/docs/config.html#mail
 [user variables]: https://documentation.mailgun.com/en/latest/user_manual.html#attaching-data-to-messages
+[`if`]: {{ site.baseurl }}/docs/modifiers.html#if

@@ -11715,6 +11715,57 @@
     - Fruit: favorite_fruit
       datatype: object
       choices: fruits
+"courtfile": "objects:\n  - user: Individual\n  - court_filing_unit: DAEmailRecipient.using(name='Prothonotary\
+  \ of the Court', address='jpyle@docassemble.org')\n---\nquestion: |\n  Please provide\
+  \ your name and\n  e-mail address.\nfields:\n  - First Name: user.name.first\n \
+  \ - Last Name: user.name.last\n  - E-mail address: user.email\n    datatype: email\n\
+  ---\nquestion: |\n  What is your favorite fruit?\nfields:\n  - Fruit: user.favorite_fruit\n\
+  ---\nattachment:\n  name: |\n    Praecipe to Declare Favorite Fruit\n  filename:\
+  \ Praecipe_Favorite_Fruit_${ space_to_underscore(user) }\n  content: |\n    [BOLDCENTER]\
+  \ Praecipe to Declare\n    Favorite Fruit\n\n    I, ${ user }, on ${ today() },\
+  \ hereby\n    inform all interested parties that my\n    favorite fruit is\n   \
+  \ ${ user.favorite_fruit }.\n  variable name: court_document\n---\nmandatory: True\n\
+  question: |\n  Your Praecipe to Declare Favorite Fruit\nsubquestion: |\n  % if task_performed('filed_in_court'):\n\
+  \  You have filed your **Praecipe to Declare\n  Favorite Fruit** in court.\n  \n\
+  \  Follow up with the court if you have\n  any questions about the legal process.\n\
+  \  % else:\n  When you are ready to file your Praecipe\n  to Declare Favorite Fruit\
+  \ in court, press\n  this button.\n  \n  ${ action_button_html(url_action('filing_process'),\n\
+  \                        label='Submit this to the court',\n                   \
+  \     size='md',\n                        color='warning') }\n\n  Until then, take\
+  \ your time and look\n  over the document to make sure you\n  really want to file\
+  \ it.\n  % endif\nattachment code: court_document\n---\nevent: filing_process\n\
+  code: |\n  if task_performed('filed_in_court'):\n    # This is unlikely to happen\
+  \ but\n    # still worth protecting against.\n    log('You have already filed the\
+  \ document.', 'danger')\n  else:\n    force_ask('wants_to_file',\n             \
+  \ 'email_address_confirmed',\n              'really_wants_to_file',\n          \
+  \    {'recompute': ['document_filed']},\n              'end_of_filing_process')\n\
+  ---\nquestion: |\n  Are you completely and totally\n  sure you want to file your\
+  \ Praecipe\n  to Declare Favorite Fruit?\nsubquestion: |\n  Once you file your Praecipe,\
+  \ you\n  can't take it back.\nfield: wants_to_file\nbuttons:\n  - \"Yes, I am sure\
+  \ I want to file.\": True\n  - \"On second thought, I am not ready\": False\n---\n\
+  if: wants_to_file\nquestion: |\n  What is your e-mail address?\nsubquestion: |\n\
+  \  I am going to e-mail your document\n  to the court.  I need to cc you on\n  the\
+  \ e-mail so you have it for your\n  records.\n\n  Please confirm that this is your\n\
+  \  e-mail address.\nfields:\n  - E-mail: user.email\ncontinue button field: email_address_confirmed\n\
+  ---\nif: wants_to_file\nquestion: |\n  Are you completely and totally sure\n  beyond\
+  \ a shadow of a doubt that you\n  wish to file your Praecipe in court?\nsubquestion:\
+  \ |\n  You can [take one last look at it]\n  before submitting.\n\n  [take one last\
+  \ look at it]: ${ court_document.pdf.url_for() }\nfield: really_wants_to_file\n\
+  buttons:\n  - \"Submit the document now\": True\n  - \"Get me out of here!\": False\n\
+  ---\ntemplate: filing_template\nsubject: |\n  E-filing: Praecipe to Declare\n  Favorite\
+  \ Fruit on behalf of\n  ${ user }\ncontent: |\n  To the Prothonotary:\n\n  Please\
+  \ accept the attached\n  Praecipe to Declare Favorite Fruit,\n  which I am filing\
+  \ on behalf of\n  ${ user }.\n\n  Thank you,\n\n  A local docassemble server\n\n\
+  \  Cc: ${ user } via e-mail at ${ user.email }\n---\ncode: |\n  if wants_to_file\
+  \ and really_wants_to_file:\n    document_filed = send_email(to=court_filing_unit,\n\
+  \                                cc=user,\n                                template=filing_template,\n\
+  \                                attachments=court_document,\n                 \
+  \               task='filed_in_court')\n    if document_filed:\n      prevent_going_back()\n\
+  \    else:\n      log('There was a problem with the e-mail system.  Your document\
+  \ was not filed.', 'danger')\n  else:\n    document_filed = False\n---\nif: wants_to_file\
+  \ and really_wants_to_file and document_filed\nquestion: |\n  Congratulations!\n\
+  subquestion: |\n  Your document is now on its way to the\n  court.\ncontinue button\
+  \ field: end_of_filing_process"
 "custody": |-
   objects:
     - has_standing: DADict.using(auto_gather=False)

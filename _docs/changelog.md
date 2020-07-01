@@ -4,7 +4,7 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.1.43](https://github.com/jhpyle/docassemble/releases/tag/v1.1.43) - 2020-06-28
+## [1.1.43](https://github.com/jhpyle/docassemble/releases/tag/v1.1.43) - 2020-06-30
 
 ### Changed
 - The `complete_elements()` method now returns a `DAList`.  Note that
@@ -12,6 +12,10 @@ short_title: Change Log
   get a plain list of the complete elements, use
   `complete_elements().elements`.
 - Spanish ordinal numbers removed.
+- Upgraded jQuery and jQuery Validation Plugin.
+
+### Fixed
+- Possible fix to iframe reloading issue.
 
 ## [1.1.42](https://github.com/jhpyle/docassemble/releases/tag/v1.1.42) - 2020-06-25
 

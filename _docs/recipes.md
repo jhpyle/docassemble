@@ -1179,6 +1179,39 @@ This interview uses a [JavaScript] file [`datereplace.js`].  The
 element and then adds name-less elements to the [DOM].  This approach
 preserves default values.
 
+# <a name="side processes"></a>Running side processes outside of the interview logic
+
+Normally, the order of questions in a **docassemble** interview is
+determined by the interview logic: questions are asked to obtain the
+definitions of undefined variables, and the interview ends when all
+the necessary variables have been defined.
+
+Sometimes, however, you might want to send the user through a logical
+process that is not driven by the need to definitions of undefined
+variables.  For example, you might want to:
+
+* Ask a series of questions again to make sure the user has a second
+  chance to get the answers right;
+* Ask the user specific follow-up questions after the user makes an
+  edit to an answer.
+* Give the user the option of going through a process one or more
+  times.
+
+The following interview is an example of the latter.  At the end of
+the interview logic, the user has the option of pressing a button in
+order to go through a repeatable multi-step process that contains
+conditional logic.
+
+{% include demo-side-by-side.html demo="courtfile" %}
+
+This takes advantage of an important feature of [`force_ask()`].  If
+you give [`force_ask()`] a variable and there is no question in the
+interview [YAML] that can be asked in order to define that variable,
+then [`force_ask()`] will ignore that variable.  The call to
+[`force_ask()`] lists all of the questions that might be asked in the
+process, and the [`if`] modifiers are used to indicate under what
+conditions the questions should be asked.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
@@ -1205,6 +1238,7 @@ preserves default values.
 [`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
 [`json_response()`]: {{ site.baseurl }}/docs/functions.html#json_response
 [`id`]: {{ site.baseurl }}/docs/modifiers.html#id
+[`if`]: {{ site.baseurl }}/docs/modifiers.html#if
 [CSS custom class]: {{ site.baseurl}}/docs/initial.html#css customization
 [Running Javascript at page load time]: {{ site.baseurl }}/docs/functions.html#js_daPageLoad
 [custom front ends]: {{ site.baseurl }}/docs/frontend.html
@@ -1242,3 +1276,4 @@ preserves default values.
 [mail merge example]: #mail merge
 [generic-document.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/generic-document.docx
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[`force_ask()`]: {{ site.baseurl }}/docs/force_ask.html#force_ask
