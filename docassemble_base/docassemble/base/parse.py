@@ -6969,7 +6969,10 @@ class Interview:
                         if skip_question:
                             continue
                     if self.debug:
-                        seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
+                        if question.question_type in ('signature', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'multiple_choice', 'settrue', 'fields', 'review', 'deadend'):
+                            seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
+                        else:
+                            seeking.append({'question': question, 'reason': 'running', 'time': time.time()})
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)

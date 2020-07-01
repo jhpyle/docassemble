@@ -36,7 +36,6 @@ else:
 
 REQUIRE_IDEMPOTENT = not daconfig.get('allow non-idempotent questions', True)
 STRICT_MODE = daconfig.get('restrict input variables', False)
-
 PACKAGE_PROTECTION = daconfig.get('package protection', True)
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
@@ -7304,6 +7303,13 @@ def index(action_argument=None):
       var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
+      var daIframeEmbed;
+      if ( window.location !== window.parent.location ) {
+        daIframeEmbed = true;
+      }
+      else {
+        daIframeEmbed = false;
+      }
       var daJsEmbed = """ + (json.dumps(js_target) if is_js else 'false') + """;
       var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
@@ -8496,7 +8502,7 @@ def index(action_argument=None):
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
           //console.log("daProcessAjax: pushing " + daSteps);
-          if (!daJsEmbed){
+          if (!daJsEmbed && !daIframeEmbed){
             if (history.state != null && daSteps > history.state.steps){
               history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, locationBar + "#page" + daSteps);
             }
@@ -9330,7 +9336,9 @@ def index(action_argument=None):
           if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
-            $(this).val(cleanNum);
+            if (cleanNum != 'NaN') {
+              $(this).val(cleanNum);
+            }
           }
         });
         if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
@@ -9994,7 +10002,7 @@ def index(action_argument=None):
       $(document).ready(function(){
         daInitialize(1);
         //console.log("ready: replaceState " + daSteps);
-        if (!daJsEmbed){
+        if (!daJsEmbed && !daIframeEmbed){
           history.replaceState({steps: daSteps}, "", locationBar + "#page" + daSteps);
         }
         var daReloadAfter = """ + str(int(reload_after)) + """;
@@ -10625,14 +10633,15 @@ def get_history(interview, interview_status):
     else:
         has_question = False
     index = 0
-    if len(interview_status.seeking):
+    seeking_len = len(interview_status.seeking)
+    if seeking_len:
         starttime = interview_status.seeking[0]['time']
         for stage in interview_status.seeking:
             index += 1
-            if index < len(interview_status.seeking) and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] == 'asking' and interview_status.seeking[index]['question'] is stage['question']:
+            if index < seeking_len and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] in ('asking', 'running') and interview_status.seeking[index]['question'] is stage['question'] and 'question' in stage and 'reason' in stage and stage['reason'] == 'considering':
                 continue
             the_time = " at %.5fs" % (stage['time'] - starttime)
-            if 'question' in stage and 'reason' in stage and (has_question is False or stage['question'] is not interview_status.question):
+            if 'question' in stage and 'reason' in stage and (has_question is False or index < (seeking_len - 1) or stage['question'] is not interview_status.question):
                 if stage['reason'] == 'initial':
                     output += "          <h5>Ran initial code" + the_time + "</h5>\n"
                 elif stage['reason'] == 'mandatory question':
@@ -10641,8 +10650,10 @@ def get_history(interview, interview_status):
                     output += "          <h5>Tried to run mandatory code" + the_time + "</h5>\n"
                 elif stage['reason'] == 'asking':
                     output += "          <h5>Tried to ask question" + the_time + "</h5>\n"
+                elif stage['reason'] == 'running':
+                    output += "          <h5>Tried to run block" + the_time + "</h5>\n"
                 elif stage['reason'] == 'considering':
-                    output += "          <h5>Considered asking question" + the_time + "</h5>\n"
+                    output += "          <h5>Considered using block" + the_time + "</h5>\n"
                 elif stage['reason'] == 'objects from file':
                     output += "          <h5>Tried to load objects from file" + the_time + "</h5>\n"
                 elif stage['reason'] == 'data':
@@ -10894,7 +10905,8 @@ def redirect_to_interview(dispatch):
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = yaml_filename
-    arguments['new_session'] = '1'
+    if 'session' not in arguments:
+        arguments['new_session'] = '1'
     request.args = arguments
     return index()
 
@@ -12038,7 +12050,6 @@ def observer():
                 var scripts = tempDiv.getElementsByTagName('script');
                 for (var i = 0; i < scripts.length; i++){
                   if (scripts[i].src != ""){
-                    //console.log("Added script to head");
                     daAddScriptToHead(scripts[i].src);
                   }
                   else{
@@ -20246,10 +20257,10 @@ def _on_password_change(sender, user, **extra):
     #logmessage("on password change")
     fix_secret(user=user)
 
-@user_reset_password.connect_via(app)
-def _on_password_reset(sender, user, **extra):
-    #logmessage("on password reset")
-    fix_secret(user=user)
+# @user_reset_password.connect_via(app)
+# def _on_password_reset(sender, user, **extra):
+#     #logmessage("on password reset")
+#     fix_secret(user=user)
 
 @user_registered.connect_via(app)
 def on_register_hook(sender, user, **extra):

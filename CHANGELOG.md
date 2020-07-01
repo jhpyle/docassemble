@@ -1,12 +1,15 @@
 # Change Log
 
-## [1.1.43] - 2020-06-28
+## [1.1.43] - 2020-06-30
 ### Changed
 - The `complete_elements()` method now returns a `DAList`.  Note that
   this may break existing code that uses `complete_elements()`.  To
   get a plain list of the complete elements, use
   `complete_elements().elements`.
 - Spanish ordinal numbers removed.
+- Upgraded jQuery and jQuery Validation Plugin.
+### Fixed
+- Possible fix to iframe reloading issue.
 
 ## [1.1.42] - 2020-06-25
 ### Added

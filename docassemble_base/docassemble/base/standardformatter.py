@@ -1955,7 +1955,6 @@ def add_validation(extra_scripts, validation_rules, field_error):
   daValidationRules.invalidHandler = daInvalidHandler;
   daValidationRules.onfocusout = daInjectTrim($.validator.defaults.onfocusout);
   if ($("#daform").length > 0){
-    //console.log("Running validator")
     var daValidator = $("#daform").validate(daValidationRules);""" + error_show + """
   }
 </script>""")
