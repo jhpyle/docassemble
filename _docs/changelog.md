@@ -4,6 +4,38 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.44](https://github.com/jhpyle/docassemble/releases/tag/v1.1.44) - 2020-07-05
+
+### Changed
+- The `interview_list()` function, when called without an `action`,
+  now uses pagination and returns a tuple instead of a list.  Note
+  that this change is not backwards-compatible, so you will need to
+  change any code that you have that calls `interview_list()`.
+- The `get_user_list()` function now uses pagination and returns a
+  tuple instead of a list.  Note that this change is not
+  backwards-compatible, so you will need to change any code that you
+  have that calls `interview_list()`.
+- The `/api/interviews`, `/api/user/interviews`,
+  `/api/user/<user_id>/interviews`, and `/api/user_list` GET endpoints
+  of the API now use pagination and return a dictionary, not a list.
+  Note that this change is not backwards-compatible, so you will need
+  to change any code that you have that uses these APIs.
+- Removed the `PY2`, `string_types`, and `text_type` names from
+  `docassemble.base.util`.
+
+### Added
+- The `persistent` optional keyword parameter for
+  `mark_task_as_performed()` and related functions.
+- The `task_persistent` optional keyword parameter for `send_email()`,
+  `send_sms()`, and the `DAWeb` methods.
+
+### Fixed
+- Issue with encryption in functions launched during the loading of
+  the first page of an interview session.
+- Issue with multi-server configurations and the order in which
+  container software is updated that can result in some containers
+  unable to start.
+
 ## [1.1.43](https://github.com/jhpyle/docassemble/releases/tag/v1.1.43) - 2020-06-30
 
 ### Changed

@@ -386,7 +386,6 @@ The following names are imported automatically:
 * [`Name`]
 * [`OfficeList`]
 * [`Organization`]
-* [`PY2`]
 * [`PeriodicFinancialList`]
 * [`PeriodicValue`]
 * [`Person`]
@@ -548,12 +547,10 @@ The following names are imported automatically:
 * [`state_name`]
 * [`states_list`]
 * [`static_image`]
-* [`string_types`]
 * [`subdivision_type`]
 * [`task_not_yet_performed`]
 * [`task_performed`]
 * [`terminate_sms_session`]
-* [`text_type`]
 * [`times_task_performed`]
 * [`timezone_list`]
 * [`title_case`]
@@ -866,7 +863,6 @@ internal names include:
 [`Name`]: {{ site.baseurl }}/docs/objects.html#Name
 [`OfficeList`]: {{ site.baseurl }}/docs/objects.html#OfficeList
 [`Organization`]: {{ site.baseurl }}/docs/objects.html#Organization
-[`PY2`]: https://pythonhosted.org/six/#six.PY2
 [`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
 [`PeriodicFinancialList`]: {{ site.baseurl }}/docs/objects.html#PeriodicFinancialList
 [`PeriodicValue`]: {{ site.baseurl }}/docs/objects.html#PeriodicValue

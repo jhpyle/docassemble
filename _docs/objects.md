@@ -2272,6 +2272,14 @@ For a storage object `mystore`, you can set `mystore.base` to:
   where, for example, two developers both use `'prefs'` as the key for
   a common data store, and there are conflicts between the way that
   the objects are used.
+* `'session'` - The prefix will be based on a combination of the
+  interview name (e.g.,
+  `docassemble.demo:data/questions/questions.yml`) and the session ID.
+  By default, the objects will be encrypted.  In this mode, the
+  objects will be specific to the session, meaning that if the user
+  presses the back button, the value of the objects will be
+  preserved.  However, if the user restarts the session, the session
+  ID will change, so the saved objects will be unavailable.
 * `'global'` - Effectively, this means there is no prefix.  From any
   interview on your server, regardless of who the user is, calling
   `mystore.get('fruit')` will retrieve the same object.
@@ -2918,6 +2926,10 @@ The `DAWebError` object has the following attributes:
 * `data`: the data that were were sent in the body of the request (if applicable)
 * `task`: the task that would have been marked as completed if the
   request was successful
+* `task_persistent`: if you set a `task`, you can optionally set
+  the "persistence" of the task by setting this to `True` or a value
+  like `'user'`.  For more information, see the documentation for the
+  [task-related functions].
 * `headers`: the headers that were sent in the request
 * `status_code`: the status code of the response, or -1 if there no
   response (e.g., because of a network error)
@@ -6255,3 +6267,4 @@ the `_uid` of the table rather than the `id`.
 [Google's internationalization standards]: https://github.com/mirumee/google-i18n-address
 [`verb_present()`]: {{ site.baseurl }}/docs/functions.html#verb_present
 [SpaceX]: https://www.spacex.com/
+[task-related functions]: {{ site.baseurl }}/docs/functions.html#tasks

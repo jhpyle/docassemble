@@ -671,7 +671,7 @@ result in a new session being started; instead, the original session
 will be resumed.
 
 The [`hidden`] specifier means that sessions in this interview will be
-hidden on the "My Interviews" page.
+hidden on the [My Interviews] page.
 
 It is a good practice to make your "administrative" interviews simple
 so that they feel more like control panels than interviews.  For
@@ -684,12 +684,12 @@ for navigating from screen to screen.
 ## <a name="resume interview after login"></a>Always go back to the current interview after logging in
 
 If a user starts an interview as an anonymous user and then registers
-or logs in, they generally be taken to the "My Interviews" page.
+or logs in, they generally be taken to the [My Interviews] page.
 However, if the interview session they started is their only interview
-session, then the "My Interviews" page is skipped and the user is sent
+session, then the [My Interviews] page is skipped and the user is sent
 right back into the interview they had started.
 
-The "My Interviews" page is shown to users with more than one session
+The [My Interviews] page is shown to users with more than one session
 because it resolves confusion for users who may have visited the
 interview for purposes of resuming an existing interview session, but
 finding themselves not logged in, they log in.  Some users may expect
@@ -709,12 +709,12 @@ The default value is `False`.
 
 If `resume interview after login` is set to `True`, users who start
 out conducting an interview as an anonymous user and then log in will
-not be sent to the "My Interviews" page, but will be redirected back
+not be sent to the [My Interviews] page, but will be redirected back
 into the interview they just started.
 
 ## <a name="auto resume interview"></a>Automatically resuming or starting an interview
 
-The "My Interviews" page at `/interviews` normally displays a list of
+The [My Interviews] page at `/interviews` normally displays a list of
 the user's interview sessions.  By default, users are directed to
 `/interviews` when they log in.
 
@@ -736,12 +736,12 @@ will be redirected to their first interview session involving the
 they have no such session, a new session will
 
 If you set an `auto resume interview`, you may wish to set [`show
-interviews link`] to `False` if the "My Interviews" menu is not useful
+interviews link`] to `False` if the [My Interviews] menu is not useful
 on your server.
 
 ## <a name="page after login"></a>Customizing the page that appears after login
 
-By default, the user is directed to the "My Interviews" page after
+By default, the user is directed to the [My Interviews] page after
 logging in.  This can be customized with the `page after login`
 directive:
 
@@ -1271,6 +1271,28 @@ sql ping: True
 
 There is an overhead cost to using this, so only enable this if you
 get SQL errors when trying to connect after a period of inactivity.
+
+## <a name="variables snapshot db"></a>SQL database for storing snapshots of interview answers
+
+You can use the [`store_variables_snapshot()`] function to save
+unencrypted interview answers in [JSON] format to rows in a SQL
+database.  By default, the SQL database that
+[`store_variables_snapshot()`] uses is the same as the database
+configured with [`db`].  However, you can use a separate database
+by specifying a `variables snapshot db` in your Configuration.
+
+{% highlight yaml %}
+variables snapshot db:
+  name: snapshots
+  user: docassemble
+  password: abc123
+{% endhighlight %}
+
+The format is the same as that of [`db`].  It is recommended that you
+use [PostgreSQL] for the database that stores variable snapshots,
+because if you do, then **docassemble** will use the [JSONB] data type
+for the [JSON] version of the interview answers, which will enable
+fast and convenient querying of the data.
 
 ## <a name="appname"></a><a name="brandname"></a>Branding
 
@@ -2120,7 +2142,7 @@ link.
 ## <a name="show interviews link"></a>Hiding the "my interviews" link
 
 If the `show interviews link` directive is set to `False`, logged-in
-users will not see a "My Interviews" link in the web app menu.
+users will not see a [My Interviews] link in the web app menu.
 
 {% highlight yaml %}
 show interviews link: False
@@ -4153,6 +4175,18 @@ cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
 `allow embedding` is set to `'Lax'`, the cookies will be sent with the
 [SameSite] flag set to `'Lax'`.  The default is `'Lax'`.
 
+# <a name="pagination limit"></a>Pagination limit
+
+The [API]({{ site.baseurl }}/docs/api.html), the [My Interviews] page,
+and the [user list] page employ pagination when providing a long list
+of items.  By default, 100 items are returned per page.  This number
+can be changed to a number between 2 and 1000 using the `pagination
+limit` directive.
+
+{% highlight yaml %}
+pagination limit: 50
+{% endhighlight %}
+
 [SameSite]: https://www.chromestatus.com/feature/5088147346030592
 [VoiceRSS]: http://www.voicerss.org/
 [Flask]: http://flask.pocoo.org/
@@ -4475,3 +4509,8 @@ cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
 [`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
 [`DASSLPROTOCOLS`]: {{ site.baseurl }}/docs/docker.html#DASSLPROTOCOLS
 [Docker section]: {{ site.baseurl }}/docs/docker.html#persistent s3
+[`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
+[`db`]: #db
+[JSONB]: https://www.postgresql.org/docs/current/functions-json.html
+[user list]: {{ site.baseurl }}/docs/admin.html#user list
+[My Interviews]: {{ site.baseurl }}/docs/admin.html#my interviews

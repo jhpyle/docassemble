@@ -124,6 +124,19 @@ You can also send the API key in an HTTP header called `X-API-Key`:
 curl -H "X-API-Key: H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
 {% endhighlight %}
 
+In Python:
+
+{% highlight python %}
+import sys
+import requests
+headers = {'X-API-Key': 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'}
+
+r = requests.get('http://localhost/api/list', headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+info = r.json()
+{% endhighlight %}
+
 By default, all API endpoints return headers to facilitate [Cross-Origin Resource
 Sharing] ([CORS]), such as:
 
@@ -147,11 +160,55 @@ server-side libraries do not impose these restrictions, but you will
 encounter them if you try to use them from a web browser.
 
 If you do call the API from a web browser, note that the API key will
-be visible to the user.  Make sure that the owner of any API key you
-share in a web browser does not have any special privileges.
+be discoverable by the user.  Make sure that the owner of any API key
+you share in a web browser does not have any special privileges.
 Possessing the API key of a basic user does not give someone greater
 privileges than they would have if they used the standard web
-interface.
+interface, but it does give the holder an easier way to automate the
+use of your system.  Another way to call the API from a web browser is
+to use a [serverless function] that knows the API key and acts as an
+intermediary.  The web browser would make requests to the serverless
+function, which in turn would make requests to the **docassemble**
+server and return results.
+
+## <a name="pagination"></a>How to use methods that return paginated results
+
+API endpoints that return a potentially long list of things use
+pagination.  The maximum number of records returns is 100 by default
+and is configurable with the [`pagination limit`] Configuration
+directive.
+
+When you call an API that uses pagination, the result will be a [JSON]
+dictionary containing two items: `items`, which is a list of the
+results of the API call, and `next_id`.  If there are no additional
+records to be retrieved, `next_id` will be `null`.  If additional
+records exist and you want to retrieve them, you need to call the API
+again with the same parameters, but with the `next_id` parameter set
+to the value of `next_id` that the previous call to the API returned.
+
+For example, you could call the API inside of a `while` loop:
+
+{% highlight python %}
+import sys
+import requests
+headers = {'X-API-Key': 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'}
+
+all_users = []
+next_id = ''
+while True:
+    r = requests.get('https://docassemble.example.com/api/user_list', params={'next_id': next_id}, headers=headers)
+    if r.status_code != 200:
+        sys.exit(r.text)
+    info = r.json()
+    all_users.extend(info['items'])
+    if info['next_id']:
+        next_id = info['next_id']
+    else:
+        break
+{% endhighlight %}
+
+If you set `next_id` to the empty string or do not set it at all, the
+API will return the first page of results.
 
 # <a name="functions"></a>Available API functions
 
@@ -214,6 +271,8 @@ Body of response: a [JSON] object with the following keys:
 ## <a name="user_list"></a>List of users
 
 Description: Provides a list of registered users on the system.
+Since the number of users may be too long to retrieve in a single API
+call, pagination is used.
 
 Path: `/api/user_list`
 
@@ -225,6 +284,9 @@ Parameters:
    `X-API-Key` cookie or header).
  - `include_inactive` (optional): set to `1` if inactive users should
    be included in the list.
+ - `next_id` (optional): the ID that can be provided to retrieve the
+   next page of results.  See the [pagination] section for more
+   information.
 
 Required privileges:
  - `admin` or
@@ -236,7 +298,8 @@ Responses on failure:
 
 Response on success: [200]
 
-Body of response: a [JSON] list of objects with the following keys:
+Body of response: a [JSON] dictionary containing the keys `items` and
+`next_id`. `items` is a list of objects with the following keys:
 
  - `active`: whether the user is active.  This is only included if the
    `include_inactive` parameter is set.
@@ -252,6 +315,8 @@ Body of response: a [JSON] list of objects with the following keys:
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
+
+For instructions on how to use `next_id`, see the [pagination] section.
 
 ## <a name="user_retrieve"></a>Retrieve user information by username
 
@@ -794,7 +859,8 @@ Body of response: empty.
 ## <a name="interviews"></a>List interview sessions on the system
 
 Description: Provides a filterable list of interview sessions that are
-stored on the system.
+stored on the system.  Since the number of sessions may be too long to
+retrieve in a single API call, [pagination] is used.
 
 Path: `/api/interviews`
 
@@ -815,6 +881,9 @@ Parameters:
    only the interview session with the given session ID.
  - `include_dictionary` (optional): set to `1` if you want a [JSON]
    version of the interview dictionary to be returned.
+ - `next_id` (optional): the ID that can be provided to retrieve the
+   next page of results.  See the [pagination] section for more
+   information.
 
 Required privileges:
 - `admin` or
@@ -827,7 +896,8 @@ Responses on failure:
 
 Response on success: [200]
 
-Body of response: a [JSON] list of objects representing interview
+Body of response: a [JSON] dictionary containing the keys `items` and
+`next_id`. `items` is a list of objects representing interview
 sessions, where each object has the following keys:
 
 - `email`: The e-mail address of the user.
@@ -852,6 +922,8 @@ sessions, where each object has the following keys:
   read.  This will be `false` if the interview is encrypted and the
   `secret` is missing or does not match the encryption key used by the
   interview.
+
+For instructions on how to use `next_id`, see the [pagination] section.
 
 ## <a name="interviews_delete"></a>Delete interview sessions on the system
 
@@ -895,11 +967,18 @@ and the [`/api/user/<user_id>/interviews`](#user_user_id_interviews_delete) meth
 ## <a name="user_interviews"></a>List interview sessions of the user
 
 Description: Provides a filterable list of interview sessions stored
-on the system where the owner of the API is associated with the session.
+on the system where the owner of the API is associated with the
+session.  Since the number of sessions may be too long to retrieve in
+a single API call, [pagination] is used.
 
 Path: `/api/user/interviews`
 
 Method: [GET]
+
+Parameters:
+ - `next_id` (optional): the ID that can be provided to retrieve the
+   next page of results.  See the [pagination] section for more
+   information.
 
 Required privileges: None.
 
@@ -929,7 +1008,9 @@ there is only one user associated with the interview.
 ## <a name="user_user_id_interviews"></a>List interview sessions of another user
 
 Description: Provides a filterable list of interview sessions stored
-on the system where the user with the given user ID started the interview.
+on the system where the user with the given user ID started the
+interview.  Since the number of sessions may be too long to retrieve
+in a single API call, [pagination] is used.
 
 Path: `/api/user/<user_id>/interviews`
 
@@ -944,6 +1025,9 @@ Parameters:
    retrieve only those sessions for a given interview file.
  - `tag` (optional): set to a tag if you want to retrieve only those
    interview sessions with the given tag.
+ - `next_id` (optional): the ID that can be provided to retrieve the
+   next page of results.  See the [pagination] section for more
+   information.
 
 Required privileges: `admin` or `advocate`, or `user_id` is the same
 as the user ID of the API owner.
@@ -2528,3 +2612,6 @@ function.
 [Get list of fields from PDF/DOCX template]: {{ site.baseurl }}/docs/admin.html#pdf fields
 [Microsoft Word sidebar]: {{ site.baseurl }}/docs/playground.html#word addin
 [images]: {{ site.baseurl }}/docs/initial.html#im
+[pagination]: #pagination
+[`pagination limit`]: {{ site.baseurl }}/docs/config.html#pagination limit
+[serverless function]: https://en.wikipedia.org/wiki/Serverless_computing
