@@ -1,5 +1,4 @@
 import types
-from six import string_types, text_type, PY2
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
@@ -23,15 +22,10 @@ from docassemble.base.generate_key import random_string
 import locale
 import decimal
 import docassemble.base.astparser
-if PY2:
-    from urllib import quote as urllibquote
-    FileType = file
-    equals_byte = '='
-else:
-    from urllib.parse import quote as urllibquote
-    from io import IOBase
-    FileType = IOBase
-    equals_byte = bytes('=', 'utf-8')
+from urllib.parse import quote as urllibquote
+from io import IOBase
+FileType = IOBase
+equals_byte = bytes('=', 'utf-8')
 import codecs
 import copy
 import base64
@@ -53,7 +47,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot']
 
 # debug = False
 # default_dialect = 'us'
@@ -1006,19 +1000,6 @@ nice_numbers = {
     }
 }
 
-# def basic_url_of(*pargs, **kwargs):
-#     """Returns a URL to a file within a docassemble package."""
-#     return pargs[0]
-
-# the_url_func = basic_url_of
-
-# def url_of(*pargs, **kwargs):
-#     """Returns a URL to a file within a docassemble package."""
-#     return the_url_func(*pargs, **kwargs)
-
-# def basic_write_record(key, data):
-#     return None
-
 class WebFunc:
     pass
 server = WebFunc()
@@ -1026,92 +1007,93 @@ server = WebFunc()
 def null_func(*pargs, **kwargs):
     return None
 
-server.write_record = null_func
-server.read_records = null_func
-server.delete_record = null_func
-server.url_for = null_func
-server.generate_csrf = null_func
-server.bg_action = null_func
-server.worker_convert = null_func
-server.chat_partners_available = null_func
+server.SavedFile = null_func
 server.absolute_filename = null_func
-server.save_numbered_file = null_func
-server.send_mail = null_func
-server.file_finder = null_func
-server.url_finder = null_func
-server.user_id_dict = null_func
-server.get_user_object = null_func
-server.sms_body = null_func
-server.get_sms_session = null_func
-server.initiate_sms_session = null_func
-server.terminate_sms_session = null_func
+server.add_privilege = null_func
+server.add_user_privilege = null_func
+server.alchemy_url = null_func
 server.applock = null_func
+server.bg_action = null_func
+server.button_class_prefix = 'btn-'
+server.chat_partners_available = null_func
+server.chord = null_func
+server.create_user = null_func
+server.daconfig = dict()
 server.debug = False
+server.debug_status = False
+server.default_country = 'US'
 server.default_dialect = 'us'
 server.default_language = 'en'
 server.default_locale = 'US.utf8'
-server.default_country = 'US'
-server.server_redis = None
-server.server_redis_user = None
-server.twilio_config = dict()
-server.daconfig = dict()
 try:
     server.default_timezone = tzlocal.get_localzone().zone
 except:
     server.default_timezone = 'America/New_York'
-
-# class NullWebFunc:
-#     def write_record(*pargs, **kwargs):
-#         return None
-#     def read_records(*pargs, **kwargs):
-#         return None
-#     def delete_record(*pargs, **kwargs):
-#         return None
-#     def url_for(*pargs, **kwargs):
-#         return None
-#     def generate_csrf(*pargs, **kwargs):
-#         sys.stderr.write("Generating csrf\n")
-#         return None
-#     def bg_action(*pargs, **kwargs):
-#         return None
-#     def worker_convert(*pargs, **kwargs):
-#         return None
-#     def chat_partners(*pargs, **kwargs):
-#         return dict(peer=0, help=0)
-#     def absolute_filename(*pargs, **kwargs):
-#         return None
-#     def save_numbered_file(*pargs, **kwargs):
-#         return None
-#     def send_mail(*pargs, **kwargs):
-#         return None
-#     def absolute_filename(*pargs, **kwargs):
-#         return None
-#     def file_finder(*pargs, **kwargs):
-#         return None
-#     def url_finder(*pargs, **kwargs):
-#         return None
-#     def user_id_dict(*pargs, **kwargs):
-#         return None
-#     def __init__(self):
-#         self.debug = False
-#         self.default_dialect = 'us'
-#         self.default_language = 'en'
-#         self.default_locale = 'US.utf8'
-#         self.default_country = 'US'
-#         self.server_redis = None
-#         try:
-#             self.default_timezone = tzlocal.get_localzone().zone
-#         except:
-#             self.default_timezone = 'America/New_York'
-#         self.daconfig = dict()
-
-# write_record = server.write_record
-# read_records = server.read_records
-# delete_record = server.delete_record
-# url_of = server.url_finder
-# get_sms_session = server.get_sms_session
-# initiate_sms_session = server.initiate_sms_session
-# terminate_sms_session = server.terminate_sms_session
+server.delete_answer_json = null_func
+server.delete_record = null_func
+server.fg_make_pdf_for_word_path = null_func
+server.fg_make_png_for_pdf = null_func
+server.fg_make_png_for_pdf_path = null_func
+server.file_finder = null_func
+server.file_number_finder = null_func
+server.file_privilege_access = null_func
+server.file_set_attributes = null_func
+server.file_user_access = null_func
+server.fix_pickle_obj = null_func
+server.generate_csrf = null_func
+server.get_chat_log = null_func
+server.get_ext_and_mimetype = null_func
+server.get_new_file_number = null_func
+server.get_privileges_list = null_func
+server.get_question_data = null_func
+server.get_secret = null_func
+server.get_session_variables = null_func
+server.get_short_code = null_func
+server.get_sms_session = null_func
+server.get_user_info = null_func
+server.get_user_list = null_func
+server.get_user_object = null_func
+server.go_back_in_session = null_func
+server.hostname = 'localhost'
+server.initiate_sms_session = null_func
+server.interview_menu = null_func
+server.main_page_parts = dict()
+server.make_png_for_pdf = null_func
+server.make_user_inactive = null_func
+server.navigation_bar = null_func
+server.ocr_finalize = null_func
+server.ocr_page = null_func
+server.path_from_reference = null_func
+server.read_answer_json = null_func
+server.read_records = null_func
+server.remove_privilege = null_func
+server.remove_user_privilege = null_func
+server.retrieve_emails = null_func
+server.save_numbered_file = null_func
+server.send_fax = null_func
+server.send_mail = null_func
+server.server_redis = None
+server.server_redis_user = None
+server.server_sql_defined = null_func
+server.server_sql_delete = null_func
+server.server_sql_get = null_func
+server.server_sql_keys = null_func
+server.server_sql_set = null_func
+server.set_session_variables = null_func
+server.set_user_info = null_func
+server.sms_body = null_func
+server.task_ready = null_func
+server.terminate_sms_session = null_func
+server.twilio_config = dict()
+server.url_finder = null_func
+server.url_for = null_func
+server.user_id_dict = null_func
+server.user_interviews = null_func
+server.variables_snapshot_connection = null_func
+server.wait_for_task = null_func
+server.worker_convert = null_func
+server.write_answer_json = null_func
+server.write_record = null_func
 
 def write_record(key, data):
     """Stores the data in a SQL database for later retrieval with the
@@ -2706,6 +2688,20 @@ def variables_as_json(include_internal=False):
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True, include_internal=include_internal)
 
+def store_variables_snapshot(data=None, include_internal=False, key=None, persistent=False):
+    """Stores a snapshot of the interview answers in non-encrypted JSON format."""
+    session = get_uid()
+    filename = this_thread.current_info.get('yaml_filename', None)
+    if session is None or filename is None:
+        raise DAError("store_variables_snapshot: could not identify the session")
+    if key is not None and not isinstance(key, str):
+        raise DAError("store_variables_snapshot: key must be a string")
+    if data is None:
+        the_data = serializable_dict(get_user_dict(), include_internal=include_internal)
+    else:
+        the_data = safe_json(data)
+    server.write_answer_json(session, filename, the_data, tags=key, persistent=True if persistent else False)
+
 def all_variables(simplify=True, include_internal=False, special=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     if special == 'titles':
@@ -3252,6 +3248,9 @@ def url_action(action, **kwargs):
 def myb64quote(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
 
+def myb64unquote(text):
+    return codecs.decode(repad_byte(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8')
+
 # def set_debug_status(new_value):
 #     global debug
 #     debug = new_value
@@ -3593,40 +3592,6 @@ def single_paragraph(text):
 def quote_paragraphs(text):
     """Adds Markdown to quote all paragraphs in the text."""
     return '> ' + single_newline.sub('\n> ', str(text).strip())
-
-def task_performed(task):
-    """Returns True if the task has been performed at least once, otherwise False."""
-    ensure_definition(task)
-    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
-        return True
-    return False
-
-def task_not_yet_performed(task):
-    """Returns True if the task has never been performed, otherwise False."""
-    ensure_definition(task)
-    if task_performed(task):
-        return False
-    return True
-
-def mark_task_as_performed(task):
-    """Increases by 1 the number of times the task has been performed."""
-    ensure_definition(task)
-    if not task in this_thread.internal['tasks']:
-        this_thread.internal['tasks'][task] = 0
-    this_thread.internal['tasks'][task] += 1
-    return this_thread.internal['tasks'][task]
-
-def times_task_performed(task):
-    """Returns the number of times the task has been performed."""
-    ensure_definition(task)
-    if not task in this_thread.internal['tasks']:
-        return 0
-    return this_thread.internal['tasks'][task]
-
-def set_task_counter(task, times):
-    """Allows you to manually set the number of times the task has been performed."""
-    ensure_definition(task, times)
-    this_thread.internal['tasks'][task] = times
 
 def set_live_help_status(availability=None, mode=None, partner_roles=None):
     """Defines whether live help features are available, the mode of chat,
@@ -4008,7 +3973,7 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return codecs.decode(repad_byte(bytearray(var, encoding='utf-8')), 'base64').decode('utf-8')
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False, next_id=None):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all' or session is not None:
@@ -4021,6 +3986,19 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
             raise DAError("interview_list: invalid action")
         if action == 'delete' and (filename is None or session is None):
             raise DAError("interview_list: a filename and session must be provided when delete is the action.")
+        if action is None:
+            if next_id is not None:
+                try:
+                    start_id = int(myb64unquote(next_id))
+                    assert start_id >= 0
+                except:
+                    raise DAError("interview_list: invalid next_id.")
+            else:
+                start_id = None
+            (the_list, start_id) = server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id)
+            if start_id is None:
+                return (the_list, None)
+            return (the_list, myb64quote(str(start_id)))
         return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared)
     return None
 
@@ -4028,10 +4006,18 @@ def interview_menu(*pargs, **kwargs):
     """Returns the list of interviews that is offered at /list."""
     return server.interview_menu(*pargs, **kwargs)
 
-def get_user_list(include_inactive=False):
+def get_user_list(include_inactive=False, next_id=None):
     """Returns a list of users on the system."""
     if this_thread.current_info['user']['is_authenticated']:
-        return server.get_user_list(include_inactive=include_inactive)
+        if next_id is not None:
+            try:
+                start_id = int(myb64unquote(next_id))
+                assert start_id >= 0
+            except:
+                raise DAError("get_user_list: invalid next_id.")
+        else:
+            start_id = None
+        return server.get_user_list(include_inactive=include_inactive, start_id=start_id)
     return None
 
 def manage_privileges(*pargs):

@@ -198,6 +198,13 @@ def load(**kwargs):
         except:
             config_error("Invalid session lifetime seconds.")
             del daconfig['session lifetime seconds']
+    if 'pagination limit' in daconfig:
+        try:
+            assert isinstance(daconfig['pagination limit'], int)
+            assert daconfig['pagination limit'] > 1
+            assert daconfig['pagination limit'] < 1001
+        except:
+            daconfig['pagination limit'] = 100
     if 'page after login' in daconfig:
         if isinstance(daconfig['page after login'], str):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]

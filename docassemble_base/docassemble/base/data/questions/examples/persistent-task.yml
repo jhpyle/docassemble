@@ -1,0 +1,36 @@
+metadata:
+  title: Persistent task results
+  short: Persistent
+  documentation: "https://docassemble.org/docs/functions.html#tasks"
+  example start: 1
+  example end: 4
+---
+default screen parts:
+  under: |
+    % if task_performed('fruit_gathered', persistent=True):
+    The task has been performed.
+    % else:
+    The task has not been performed.
+    % endif
+---
+mandatory: True
+code: |
+  favorite_fruit
+  mark_task_as_performed('fruit_gathered', persistent=True)
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  Note whether the task has been 
+  performed yet.
+fields:
+  - Fruit: favorite_fruit
+---
+event: final_screen
+question: |
+  You like ${ favorite_fruit }
+subquestion: |
+  Press the Back button and 
+  then notice whether the task 
+  has been performed.

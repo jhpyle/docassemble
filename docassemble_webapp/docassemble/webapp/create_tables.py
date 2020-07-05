@@ -9,7 +9,7 @@ from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog
-from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage
+from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage, JsonStorage
 
 import docassemble.webapp.core.models
 from docassemble.webapp.packages.models import Package

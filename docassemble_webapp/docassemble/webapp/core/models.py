@@ -1,7 +1,9 @@
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, dbtableprefix
+from docassemble.webapp.database import dbprefix
 from sqlalchemy import true, false
 import docassemble.webapp.users.models
+# from sqlalchemy.dialects.postgresql.json import JSONB
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
@@ -113,3 +115,16 @@ class GlobalObjectStorage(db.Model):
     encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+
+# class JsonStorage(db.Model):
+#     __tablename__ = dbtableprefix + "jsonstorage"
+#     id = db.Column(db.Integer(), primary_key=True)
+#     filename = db.Column(db.String(255), index=True)
+#     key = db.Column(db.String(250), index=True)
+#     if dbprefix.startswith('postgresql'):
+#         data = db.Column(JSONB)
+#     else:
+#         data = db.Column(db.Text())
+#     tags = db.Column(db.Text())
+#     modtime = db.Column(db.DateTime(), server_default=db.func.now())
+#     persistent = db.Column(db.Boolean(), nullable=False, server_default=false())

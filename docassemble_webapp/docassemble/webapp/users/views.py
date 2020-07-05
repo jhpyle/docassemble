@@ -5,11 +5,11 @@ from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 #import docassemble.webapp.daredis
-from docassemble.base.functions import word, debug_status, get_default_timezone
+from docassemble.base.functions import word, debug_status, get_default_timezone, myb64quote, myb64unquote
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 from docassemble.base.generate_key import random_alphanumeric
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, not_
 
 import random
 import string
@@ -20,6 +20,8 @@ import email.utils
 import json
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+PAGINATION_LIMIT = daconfig.get('pagination limit', 100)
+PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required
@@ -49,14 +51,31 @@ def privilege_list():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route('/userlist', methods=['GET', 'POST'])
+@app.route('/userlist', methods=['GET'])
 @login_required
 @roles_required('admin')
 def user_list():
+    page = request.args.get('page', None)
+    if page:
+        try:
+            page = int(page) - 1
+            assert page >= 0
+        except:
+            page = 0
+    else:
+        page = 0
     users = list()
-    for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
-        if user.nickname == 'cron' or user.social_id.startswith('disabled$'):
-            continue
+    user_query = db.session.query(UserModel).options(db.joinedload('roles')).filter(UserModel.nickname != 'cron', not_(UserModel.social_id.like('disabled$%'))).order_by(UserModel.id)
+    if page > 0:
+        user_query = user_query.offset(PAGINATION_LIMIT*page)
+    user_query = user_query.limit(PAGINATION_LIMIT_PLUS_ONE)
+    results_in_query = 0
+    there_are_more = False
+    for user in user_query:
+        results_in_query += 1
+        if results_in_query == PAGINATION_LIMIT_PLUS_ONE:
+            there_are_more = True
+            break
         role_names = [y.name for y in user.roles]
         if 'admin' in role_names:
             high_priv = 'admin'
@@ -85,7 +104,12 @@ def user_list():
         else:
             is_active = False
         users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
-    response = make_response(render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users), 200)
+    if there_are_more:
+        next_page = page + 2
+    else:
+        next_page = None
+    prev_page = page
+    response = make_response(render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users, prev_page=prev_page, next_page=next_page), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
