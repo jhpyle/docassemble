@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.45](https://github.com/jhpyle/docassemble/releases/tag/v1.1.45) - 2020-07-05
+
+### Fixed
+- Error in table creation module.
+
 ## [1.1.44](https://github.com/jhpyle/docassemble/releases/tag/v1.1.44) - 2020-07-05
 
 ### Changed
