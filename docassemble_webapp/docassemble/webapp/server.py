@@ -5057,6 +5057,8 @@ def checkin():
     if secret is not None:
         secret = str(secret)
     if current_user.is_anonymous:
+        if 'tempuser' not in session:
+            return jsonify(success=False)
         the_user_id = 't' + str(session['tempuser'])
         auth_user_id = None
         temp_user_id = int(session['tempuser'])
@@ -21680,7 +21682,7 @@ def api_user_list():
         next_id = safeid(str(start_id))
     return jsonify(dict(next_id=next_id, items=user_list))
 
-def get_user_info(user_id=None, email=None):
+def get_user_info(user_id=None, email=None, case_sensitive=False):
     if current_user.is_anonymous:
         raise Exception("You cannot call get_user_info() unless you are logged in")
     if user_id is None and email is None:
@@ -21692,7 +21694,10 @@ def get_user_info(user_id=None, email=None):
     if user_id is not None:
         user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
     else:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
+        if case_sensitive:
+            user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
+        else:
+            user = UserModel.query.options(db.joinedload('roles')).filter(UserModel.email.ilike(email)).first()
     if user is None or user.social_id.startswith('disabled$'):
         return None
     for role in user.roles:
@@ -21812,8 +21817,9 @@ def api_user_info():
         return jsonify_with_status("Access denied.", 403)
     if 'username' not in request.args:
         return jsonify_with_status("An e-mail address must be supplied.", 400)
+    case_sensitive = true_or_false(request.args.get('case_sensitive', False))
     try:
-        user_info = get_user_info(email=request.args['username'])
+        user_info = get_user_info(email=request.args['username'], case_sensitive=case_sensitive)
     except Exception as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
