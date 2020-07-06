@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.48](https://github.com/jhpyle/docassemble/releases/tag/v1.1.48) - 2020-07-06
+
+### Fixed
+- The `/api/user_info` API endpoint and the `get_user_info()` function
+  now do case insensitive searches for e-mail addresses.
+
 ## [1.1.47](https://github.com/jhpyle/docassemble/releases/tag/v1.1.47) - 2020-07-05
 
 ### Added
