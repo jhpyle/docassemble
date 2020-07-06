@@ -6102,15 +6102,16 @@ change in one place.
 ## <a name="store_variables_snapshot"></a>Storing interview answer snapshots in unencrypted JSON format in SQL
 
 If you want to "run reports" on the interview answers of multiple
-sessions you can use `store_variables_snapshot()` in your interview
+sessions, you can use `store_variables_snapshot()` in your interview
 logic to save an unencrypted copy of the interview answers in [JSON]
-format.  If you use [PostgreSQL], you can conveniently run SQL queries
-on the contents of interview answers.  Using [PostgreSQL] syntax for
-working with [JSON] data, you can extract, filter, and order by
-specific variables embedded in the interview answers of sessions.
+format to a SQL table.  If you use [PostgreSQL], you can
+conveniently run SQL queries on the contents of interview answers.
+Using [PostgreSQL] syntax for working with [JSON] data, you can
+extract, filter, and order by specific variables embedded in the
+interview answers of sessions.
 
 Here is an example of an interview that asks the user a question and
-then saves the interview answers in JSON format to a SQL table.  Then,
+then saves the interview answers in [JSON] format to a SQL table.  Then,
 using a function `analyze()` that was defined in the
 [`read_snapshot.py`] module, the final question of the interview reads
 the interview answers of all sessions that have been completed on this
@@ -6143,42 +6144,46 @@ The `analyze()` function imports the `variables_snapshot_connection()`
 function from [`docassemble.base.util`] and calls it in order to get a
 SQL connection object.  If your database is [PostgreSQL], this will be
 a [`psycopg2`] connection object.  Note that
-`variables_snapshot_connection()` is not automatically available for
-use inside interview [YAML] the way `store_variables_snapshot()` is.
-If you tried to call `variables_snapshot_connection()` from inside of
-a [`code`] block, you would get an error.  Always call
+`variables_snapshot_connection()` is not available for use inside
+interview [YAML] the way `store_variables_snapshot()` is.  If you
+tried to call `variables_snapshot_connection()` from inside of a
+[`code`] block, you would get an error.  Always call
 `variables_snapshot_connection()` from a function or method defined in
 a [Python module].
 
 When using [PostgreSQL], the data type used for the [JSON] `data` is
 [JSONB].  This allows for the use of the special [PostgreSQL]
-operators `->` and `->>` to probe inside the data structure.  For more
-information, see the documentation for the [JSONB] data type.
+operators `->` and `->>` to efficiently probe inside the data
+structure.  For more information on how these operators work, see the
+documentation for the [JSONB] data type.
 
-The [JSON] snapshot is tied to the interview session.  When the
-session is deleted, the snapshot is deleted.
+Note that the [JSON] snapshots created by `store_variables_snapshot()`
+are tied to the underlying interview session.  When the session is
+deleted, the snapshot is deleted.  (However, see the discussion of
+`persistent` below.)
 
 If you call `store_variables_snapshot()` multiple times, each time you
 will overwrite the stored [JSON] snapshot of the interview answers.
+(However, see the discussion of `key` below.)
 
 Note that the snapshot is a copy of the interview answers, not the
 interview answers themselves.  The [JSON] snapshot does not
-automatically sync with the current state of the interview answers.
-The interview answers are stored in a Python-specific object format,
-not [JSON]; it is not possible for [JSON] to serve as the format for
-**docassemble** interview answers because **docassemble** allows for
-interview answers to contain complex data structures of objects and
-object references.  The conversion from Python objects to [JSON] is
-one-way, and is a simplification; Python objects cannot be recreated
-from [JSON].
+automatically synchronize with the current state of the interview
+answers.  In **docassemble**, the interview answers are stored in a
+Python-specific object format, not [JSON]; it is not possible for
+[JSON] to serve as the format for **docassemble** interview answers
+because **docassemble** allows interview answers to contain complex
+data structures containing [Python] objects and object references.
+The conversion from Python objects to [JSON] is one-way, and is a
+simplification; Python objects cannot be recreated from [JSON].
 
 Because of this, the `store_variables_snapshot()` is not as useful as
-other data storage options for many use cases.  You should use
+other data storage options for many applications.  You should use
 `store_variables_snapshot()` if you want to run SQL queries on
-multiple sessions belonging to different users, but you should use
-other methods, such as [`DAStore`], for storing global data structures.
+multiple sessions belonging to different users.  You should use other
+methods, such as [`DAStore`], for storing reusable global data.
 
-The `store_variables_snapshot()` takes two optional keyword
+The `store_variables_snapshot()` accepts the optional keyword
 parameters, `key`, `persistent`, `include_internal`, and `data`.
 
 If you want to save multiple snapshots during the course of the
@@ -6206,40 +6211,40 @@ smaller population of users who finished.  The `key` is similar to a
 key in [Redis]; it uniquely identifies a snapshot within the interview
 session.
 
-If you do not what the interview snapshot (or snapshots) to be deleted
-when the session is deleted, call `store_variables_snapshot()` with
-`persistent=True`.  Note that this means that if a user restarts an
-interview session, the user may have multiple sessions in [JSON] data
-table.
+If you do not want the interview snapshot (or snapshots) to be deleted
+when the session is deleted, call
+`store_variables_snapshot(persistent=True)`.  Note that this means
+that if a user restarts an interview session, the user may have
+multiple sessions in [JSON] data table.
 
 By default, `store_variables_snapshot()` does not save the "internal"
 portion of the interview answers; this is a data structure under the
-`_internal` key that **docassemble** reserves for internal use.  The
-structure is not documented and the structure may change at any time,
-but you are welcome to use it at your own risk.  If you want to
-include the `_internal` data in the [JSON] snapshot, call
+`_internal` key that **docassemble** uses internally.  (The data
+structure is not documented and the design may change at any time, but
+you are welcome to use it at your own risk.)  If you want to include
+the `_internal` data in the [JSON] snapshot, call
 `store_variables_snapshot()` with `include_internal=True`.
 
-You can save something other than the interview answers with
-`store_variables_snapshot()` by setting the optional keyword parameter
-`data`.  You can set `data` to a Python data structure, and it will be
+`store_variables_snapshot()` can store something other than the
+interview answers if you set the optional keyword parameter `data`.
+You can set `data` to any Python data structure, and it will be
 serialized to [JSON] and stored in place of the data structure
 representing the interview answers.
 
 While the example above shows how the [JSON] data table can be queried
-from within an interview, it is anticipated that you will find it most
-useful to query the data tables from outside of **docassemble**.  You
-can set up your server to use an external SQL database, and then query
-the `jsonstorage` table using the credentials for the **docassemble**
-SQL database.  However, there are a lot of other tables in this
-database, and it may be preferable to use a separate database for
-[JSON] snapshots.  If you define a [`variables snapshot db`] in your
-[Configuration], a `jsonstorage` table will be created in that
-database, and `store_variables_snapshot()` and
-`variables_snapshot_connection()` will use this database instead of
-the default **docassemble** database.
+from within an interview, you will probably find that it is easiest to
+query the data tables from outside of **docassemble**.  You can set up
+your server's [`db`] configuration to use an external SQL database,
+and then query the `jsonstorage` table in that database using the
+credentials for the **docassemble** SQL database.  However, there are
+many other tables in this database, and it may be preferable to use a
+separate database for [JSON] snapshots.  If you define a [`variables
+snapshot db`] in your [Configuration], a `jsonstorage` table will be
+created in the referenced database, and `store_variables_snapshot()`
+and `variables_snapshot_connection()` will use this database instead
+of the default **docassemble** database.
 
-The columns in the `jsonstorage` table as as follows.
+The columns in the `jsonstorage` table are as follows.
 
 * `id` - a unique integer ID for the row
 * `filename` - the YAML filename of the interview
@@ -6253,15 +6258,15 @@ The columns in the `jsonstorage` table as as follows.
   is deleted.
 
 Note that there is no [API] for querying the [JSON] data.  The best
-way to access the data is through [PostgreSQL] because it provides an
-extremely powerful and flexible query language.
+way to access the data is by using a [PostgreSQL] client because it
+provides an extremely powerful and flexible query language.
 
 Note that unlike [`DAStore`], `store_variables_snapshot()` cannot use
-server-side encryption to protect the data.  So if the interview
-itself uses server-side encryption, calling
-`store_variables_snapshot()` will effectively defeat the purpose of
-server-side encryption by storing user data in a way that would allow
-anyone with shell access on the server to read the data.
+server-side encryption.  If the interview itself uses server-side
+encryption, calling `store_variables_snapshot()` will effectively
+defeat the purpose of server-side encryption by storing user data in a
+way that would allow anyone with shell access on the server to read
+the data.
 
 ### Advanced SQL storage
 
