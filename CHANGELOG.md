@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.46] - 2020-07-05
+### Fixed
+- Error in restart module.
+
 ## [1.1.45] - 2020-07-05
 ### Fixed
 - Error in table creation module.
