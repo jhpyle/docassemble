@@ -1,0 +1,37 @@
+metadata:
+  title: Interview answers snapshot
+  short: Snapshot
+  documentation: "https://docassemble.org/docs/functions.html#store_variables_snapshot"
+  example start: 1
+  example end: 4
+---
+modules:
+  - .read_snapshot
+---
+mandatory: True
+code: |
+  favorite_fruit
+  store_variables_snapshot()
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+event: final_screen
+question: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+subquestion: |
+  Here is a summary of fruits
+  and how many people like them.
+
+  % for fruit, count in sorted(analyze().items(), key=lambda y: y[1], reverse=True):
+  * **${ fruit }**:
+    % if count == 1:
+    1 person
+    % else:
+    ${ count } people
+    % endif
+  % endfor

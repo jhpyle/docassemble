@@ -4964,7 +4964,7 @@ def health_check():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route("/checkout", methods=['POST', 'GET'])
+@app.route("/checkout", methods=['POST'])
 def checkout():
     try:
         manual_checkout(manual_filename=request.args['i'])
@@ -24507,7 +24507,7 @@ def handle_csrf_error(the_error):
     if request.method == 'POST':
         if 'ajax' in request.form and int(request.form['ajax']):
             flash(word("Input not processed because the page expired."), "success")
-            return jsonify(dict(action='reload'))
+            return jsonify(dict(action='reload', reason='csrf_error'))
         try:
             referer = str(request.referrer)
         except:

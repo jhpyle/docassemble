@@ -27,6 +27,13 @@ install|hostname|text||
 install|version|integer||
 install|packageversion|text||
 install|package_id|integer||
+jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
+jsonstorage|filename|character varying|255|
+jsonstorage|key|character varying|250|
+jsonstorage|data|jsonb||
+jsonstorage|tags|text||
+jsonstorage|modtime|timestamp without time zone||now()
+jsonstorage|persistent|boolean||false
 role|id|integer||nextval('role_id_seq'::regclass)
 role|name|character varying|50|
 role|description|character varying|255|
