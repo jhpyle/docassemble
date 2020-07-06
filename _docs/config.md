@@ -4097,6 +4097,61 @@ system that is not accessible from the user's network.
 
 The default is to serve files from the **docassemble** application server.
 
+## <a name="admin full width"></a>Wide-screen appearance of administrative screens
+
+By default, **docassemble** uses the [Bootstrap] `container` class for
+administrative screens, which is responsive but fixed-width at
+particular breakpoints.  If you want to use the [Bootstrap]
+`container-fluid` class instead, set:
+
+{% highlight yaml %}
+admin full width: True
+{% endhighlight %}
+
+This will result in full width screens.
+
+## <a name="wrap lines in playground"></a>Line wrapping in the Playground
+
+By default, the editor in the Playground will wrap long lines.  To see
+whether a line is wrapped, you can look at the line number.  To
+turn off line wrapping, set:
+
+{% highlight yaml %}
+wrap lines in playground: False
+{% endhighlight %}
+
+## <a name="allow embedding"></a>Allowing interviews to be embedded in another site
+
+By default, cookies will be sent with the [SameSite] flag set to
+`Lax`, so that cookies will not work if the address in the location
+bar does not match the address of the **docassemble** server.  This
+will prevent the embedding of a **docassemble** interview in a
+third-party site.  To enable embedding, set `allow embedding` to
+`True`.
+
+{% highlight yaml %}
+allow embedding: True
+{% endhighlight %}
+
+If `allow embedding` is `True`, cookies will be sent with the
+[SameSite] flag set to `'None'`.  If `allow embedding` is `False`, the
+cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
+`allow embedding` is set to `'Lax'`, the cookies will be sent with the
+[SameSite] flag set to `'Lax'`.  The default is `'Lax'`.
+
+## <a name="pagination limit"></a>Pagination limit
+
+The [API]({{ site.baseurl }}/docs/api.html), the [My Interviews] page,
+and the [user list] page employ pagination when providing a long list
+of items.  By default, 100 items are returned per page.  This number
+can be changed to a number between 2 and 1000 using the `pagination
+limit` directive.
+
+{% highlight yaml %}
+pagination limit: 50
+{% endhighlight %}
+
+
 # <a name="get_config"></a>Adding your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -4132,60 +4187,6 @@ Note that the configuration file needs to be readable and writable by
 the web server, but should not be readable by other users of the
 system because it may contain sensitive information, such as Google
 and Facebook API keys.
-
-# <a name="admin full width"></a>Wide-screen appearance of administrative screens
-
-By default, **docassemble** uses the [Bootstrap] `container` class for
-administrative screens, which is responsive but fixed-width at
-particular breakpoints.  If you want to use the [Bootstrap]
-`container-fluid` class instead, set:
-
-{% highlight yaml %}
-admin full width: True
-{% endhighlight %}
-
-This will result in full width screens.
-
-# <a name="wrap lines in playground"></a>Line wrapping in the Playground
-
-By default, the editor in the Playground will wrap long lines.  To see
-whether a line is wrapped, you can look at the line number.  To
-turn off line wrapping, set:
-
-{% highlight yaml %}
-wrap lines in playground: False
-{% endhighlight %}
-
-# <a name="allow embedding"></a>Allowing interviews to be embedded in another site
-
-By default, cookies will be sent with the [SameSite] flag set to
-`Lax`, so that cookies will not work if the address in the location
-bar does not match the address of the **docassemble** server.  This
-will prevent the embedding of a **docassemble** interview in a
-third-party site.  To enable embedding, set `allow embedding` to
-`True`.
-
-{% highlight yaml %}
-allow embedding: True
-{% endhighlight %}
-
-If `allow embedding` is `True`, cookies will be sent with the
-[SameSite] flag set to `'None'`.  If `allow embedding` is `False`, the
-cookies will be sent with the [SameSite] flag set to `'Strict'`.  If
-`allow embedding` is set to `'Lax'`, the cookies will be sent with the
-[SameSite] flag set to `'Lax'`.  The default is `'Lax'`.
-
-# <a name="pagination limit"></a>Pagination limit
-
-The [API]({{ site.baseurl }}/docs/api.html), the [My Interviews] page,
-and the [user list] page employ pagination when providing a long list
-of items.  By default, 100 items are returned per page.  This number
-can be changed to a number between 2 and 1000 using the `pagination
-limit` directive.
-
-{% highlight yaml %}
-pagination limit: 50
-{% endhighlight %}
 
 [SameSite]: https://www.chromestatus.com/feature/5088147346030592
 [VoiceRSS]: http://www.voicerss.org/
