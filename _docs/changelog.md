@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.47](https://github.com/jhpyle/docassemble/releases/tag/v1.1.47) - 2020-07-05
+
+### Added
+- The `store_variables_snapshot()` function.
+
+## [1.1.46](https://github.com/jhpyle/docassemble/releases/tag/v1.1.46) - 2020-07-05
+
+### Fixed
+- Error in restart module.
+
 ## [1.1.45](https://github.com/jhpyle/docassemble/releases/tag/v1.1.45) - 2020-07-05
 
 ### Fixed
@@ -26,7 +36,8 @@ short_title: Change Log
   Note that this change is not backwards-compatible, so you will need
   to change any code that you have that uses these APIs.
 - Removed the `PY2`, `string_types`, and `text_type` names from
-  `docassemble.base.util`.
+  `docassemble.base.util`.  Note that if you have used any of these,
+  this change may break your code.
 
 ### Added
 - The `persistent` optional keyword parameter for

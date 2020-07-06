@@ -5914,7 +5914,7 @@
   question: |
     My interviews
   subquestion: |
-    % for interview in interview_list():
+    % for interview in interview_list()[0]:
     * ${ interview['title'] }
       started at
       ${ interview['starttime'] }.
@@ -8367,6 +8367,14 @@
     % else:
     Get a job!
     % endif
+"persistent-task": "default screen parts:\n  under: |\n    % if task_performed('fruit_gathered',\
+  \ persistent=True):\n    The task has been performed.\n    % else:\n    The task\
+  \ has not been performed.\n    % endif\n---\nmandatory: True\ncode: |\n  favorite_fruit\n\
+  \  mark_task_as_performed('fruit_gathered', persistent=True)\n  final_screen\n---\n\
+  question: |\n  What is your favorite fruit?\nsubquestion: |\n  Note whether the\
+  \ task has been \n  performed yet.\nfields:\n  - Fruit: favorite_fruit\n---\nevent:\
+  \ final_screen\nquestion: |\n  You like ${ favorite_fruit }\nsubquestion: |\n  Press\
+  \ the Back button and \n  then notice whether the task \n  has been performed."
 "postpopulate-list": |-
   objects:
     - user: Individual
@@ -9857,14 +9865,12 @@
     if not user_logged_in():
       response(url=url_of('login'))
     if interface() == 'json':
-      for interview in interview_list():
-        if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
-          response(url=interview_url(i=interview['filename'], session=interview['session'], local=True, json=1))
+      for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml')[0]:
+        response(url=interview_url(i=interview['filename'], session=interview['session'], local=True, json=1))
       response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True, json=1))
     else:
-      for interview in interview_list():
-        if interview['filename'] == 'docassemble.demo:data/questions/questions.yml':
-          response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
+      for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml')[0]:
+        response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
       response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
