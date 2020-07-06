@@ -4017,7 +4017,10 @@ def get_user_list(include_inactive=False, next_id=None):
                 raise DAError("get_user_list: invalid next_id.")
         else:
             start_id = None
-        return server.get_user_list(include_inactive=include_inactive, start_id=start_id)
+        (the_list, start_id) = server.get_user_list(include_inactive=include_inactive, start_id=start_id)
+        if start_id is None:
+            return (the_list, None)
+        return (the_list, myb64quote(str(start_id)))
     return None
 
 def manage_privileges(*pargs):

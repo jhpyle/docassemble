@@ -24634,7 +24634,7 @@ if not os.access(WEBAPP_PATH, os.W_OK):
 
 from docassemble.webapp.daredis import r, r_user
 
-#from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
+from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
 
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
@@ -24683,11 +24683,11 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          main_page_parts=main_page_parts,
                                          SavedFile=SavedFile,
                                          path_from_reference=path_from_reference,
-                                         button_class_prefix=app.config['BUTTON_STYLE'])
-                                         # write_answer_json=write_answer_json,
-                                         # read_answer_json=read_answer_json,
-                                         # delete_answer_json=delete_answer_json,
-                                         # variables_snapshot_connection=variables_snapshot_connection)
+                                         button_class_prefix=app.config['BUTTON_STYLE'],
+                                         write_answer_json=write_answer_json,
+                                         read_answer_json=read_answer_json,
+                                         delete_answer_json=delete_answer_json,
+                                         variables_snapshot_connection=variables_snapshot_connection)
 
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
