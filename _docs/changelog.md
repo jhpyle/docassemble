@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.49](https://github.com/jhpyle/docassemble/releases/tag/v1.1.49) - 2020-07-07
+
+### Fixed
+- Additional input validation on parameters passed to APIs.
+
 ## [1.1.48](https://github.com/jhpyle/docassemble/releases/tag/v1.1.48) - 2020-07-06
 
 ### Fixed

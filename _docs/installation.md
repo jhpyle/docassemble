@@ -931,9 +931,9 @@ Make a note of the "Value" of the secret you just created.
 
 Using the sidebar, navigate to "API permissions" and click "Add a
 permission."  Click the box for "Microsoft Graph," then click the box
-for "Application permissions."  Under "Files," check the checkbox for
+for "Delegated permissions."  Under "Files," check the checkbox for
 `Files.ReadWrite.All`.  Under "User," check the checkbox for
-`User.Read.All`.  Then click "Add permissions."
+`User.Read`.  Then click "Add permissions."
 
 Using the sidebar, navigate to "Branding."  Upload a logo (square
 image files work best) and enter URLs for your home page, terms of
