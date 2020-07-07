@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.49] - 2020-07-07
+### Fixed
+- Additional input validation on parameters passed to APIs.
+
 ## [1.1.48] - 2020-07-06
 ### Fixed
 - The `/api/user_info` API endpoint and the `get_user_info()` function

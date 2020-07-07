@@ -21685,8 +21685,13 @@ def api_user_list():
 def get_user_info(user_id=None, email=None, case_sensitive=False):
     if current_user.is_anonymous:
         raise Exception("You cannot call get_user_info() unless you are logged in")
+    if user_id is not None:
+        assert isinstance(user_id, int)
     if user_id is None and email is None:
         user_id = current_user.id
+    if email is not None:
+        assert isinstance(email, str)
+        email = email.strip()
     if not (current_user.has_role('admin', 'advocate')):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
             raise Exception("You cannot call get_user_info() unless you are an administrator or advocate")
@@ -21717,6 +21722,8 @@ def make_user_inactive(user_id=None, email=None):
     if user_id is not None:
         user = UserModel.query.filter_by(id=user_id).first()
     else:
+        assert isinstance(email, str)
+        email = email.strip()
         user = UserModel.query.filter_by(email=email).first()
     if user is None:
         raise Exception("User not found")
@@ -21782,7 +21789,7 @@ def api_create_user():
     info = dict()
     for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
         if key in post_data:
-            info[key] = post_data[key]
+            info[key] = post_data[key].strip()
     if 'privileges' in post_data and isinstance(post_data['privileges'], list):
         role_list = post_data['privileges']
     else:
@@ -21800,7 +21807,7 @@ def api_create_user():
     for role_name in role_list:
         if role_name not in valid_role_names:
             return jsonify_with_status("Invalid privilege name.  " + role_name + " is not an existing privilege.", 400)
-    password = post_data.get('password', random_alphanumeric(10))
+    password = post_data.get('password', random_alphanumeric(10)).strip()
     if len(password) < 4 or len(password) > 254:
         return jsonify_with_status("Password too short or too long", 400)
     try:
@@ -22082,9 +22089,10 @@ def create_user(email, password, privileges=None, info=None):
         raise Exception("You cannot call create_user() unless you are logged in")
     if not (current_user.has_role('admin')):
         raise Exception("You cannot call create_user() unless you are an administrator")
+    email = email.strip()
+    password = str(password).strip()
     if len(password) < 4 or len(password) > 254:
         raise Exception("Password too short or too long")
-    password = str(password)
     role_dict = dict()
     if privileges is None:
         privileges = list()
