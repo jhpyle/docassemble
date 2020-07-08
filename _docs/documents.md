@@ -897,54 +897,42 @@ to pass variables to a DOCX template.  In order to pass variables in
 
 ## <a name="markdown to docx"></a>Inserting multi-line or formatted text into a single field in a DOCX file
 
-If you insert text into a [`docx template file`] using `{% raw %}{{
-the_variable }}{% endraw %}`, and the the text you are inserting
-contains newlines, the newlines will show up as spaces in the DOCX
-file.  Also, if the text contains [Markdown] formatting, it will be
-inserted into the DOCX file literally.
+### Turn double line breaks into paragraphs
 
-If you text that you want to insert contains newlines, and you want
-the newlines to be reflected in the DOCX file as manual line breaks,
-write `{% raw %}{{ the_variable | manual_line_breaks }}{% endraw %}`
-instead.
+If you want to insert text that contains line breaks and have them
+reflected as new paragraphs inside the [`docx template file`], you
+probably want to use the `{% raw %}{{p the_variable \| markdown }}
+{% endraw %}` filter. This will transform two line breaks into
+paragraph markers, which is most likely to match the appearance
+of your user's input in a `datatype: area` field.
 
-If the text that you want to insert contains [Markdown] formatting,
-and you want that formatting to be translated into DOCX formatting,
-insert it using `markdown` [Jinja2] filter.
+This will also apply **bold** and _italic_ text format indicators, 
+and other [Markdown] formatting characters such as numbered and 
+bulleted lists, into the appropriate format inside the 
+[`docx template file`].
 
-There are two versions of the `markdown` [Jinja2] filter.  Originally,
-the `markdown` filter inserted character-level text; it could change
-paragraph-level formatting like indentation.  However, since
-[Markdown] has paragraph-level formatting features such as bullet
-lists, numbered lists, block quotes, and paragraph breaks, a new
-version of the `markdown` [Jinja2] filter was developed that inserts
-paragraph-level text.  Under the rules of [`python-docx-template`],
-you need to use the prefix `{% raw %}{{r{% endraw %}` for
-character-level text and `{% raw %}{{p{% endraw %}` for
-paragraph-level text.
+In either case, to use this style of paragraph transformation, ensure that 
+[`new markdown to docx`] is set to `True` in your [Configuration].
+This is the default in newer docassemble installations.
 
-The default behavior of **docassemble** is the original setting, where
-you need to write:
+### Turn single line breaks into paragraphs
 
-> {% raw %}{{r the_text \| markdown }}{% endraw %}
+Note that according to the [Markdown] standard, a single newline does
+not break a paragraph; you need two newlines to break a paragraph.  If
+you want to convert single newlines into paragraphs breaks, there is
+another [Jinja2] filter that can help.  Instead of writing `{% raw %}
+{{p the_text | markdown }}{% endraw %}`, write `{% raw %}
+{{p the_text | paragraphs | markdown }}{% endraw %}`.  The `paragraphs`
+filter runs the text through the [`single_to_double_newlines()`]
+function.
 
-The text `the_text` will be treated as [Markdown] and formatting will
-be applied to the inserted text to replicate the [Markdown]
-formatting, using character-level formatting like bold, italic, and
-manual newlines.
+This also relies on the [`new markdown to docx`] configuration option.
 
-If you set [`new markdown to docx`] to `True` in your [Configuration]
-(which is recommended), the `markdown` filter assumes that you are
-inserting one or more paragraphs, so you need to write:
-
-> {% raw %}{{p the_text \| markdown }}{% endraw %}
-
-The text in `the_text` will be inserted as separate paragraphs in the
-.docx, using the default DOCX style.
+### Apply Markdown formatting inside a single paragraph
 
 If you have set [`new markdown to docx`] but you want to insert
-[Markdown]-formatted text within a paragraph, you can use the
-`inline_markdown` filter:
+[Markdown]-formatted text within a paragraph (instead of creating
+multiple paragraphs), you can use the `inline_markdown` filter:
 
 > {% raw %}{{r the_text \| inline_markdown }}{% endraw %}
 
@@ -953,13 +941,22 @@ characters into the existing paragraph.  If the [Markdown] contains
 paragraph breaks, the paragraph breaks will be manual newlines rather
 than actual paragraph breaks.
 
-Note that according to the [Markdown] standard, a single newline does
-not break a paragraph; you need two newlines to break a paragraph.  If
-you want to convert single newlines into paragraphs breaks, there is
-another [Jinja2] filter that can help.  Instead of writing `the_text |
-markdown`, write `the_text | paragraphs | markdown`.  The `paragraphs`
-filter runs the text through the [`single_to_double_newlines()`]
-function.
+### Do not transform line breaks or apply Markdown formatting
+
+If you insert text into a [`docx template file`] using `{% raw %}{{
+the_variable }}{% endraw %}`, without the `p` and the `markdown` 
+filter, and the text you are inserting contains newlines, the 
+newlines will show up as spaces in the DOCX file.  Also, if the 
+text contains [Markdown] formatting, it will be inserted into the 
+DOCX file literally.
+
+If you do not want paragraph markers and do not want other [Markdown]
+styles to be applied, but you do want to have the line breaks 
+preserved as manual line breaks, write 
+`{% raw %}{{ the_variable | manual_line_breaks }}{% endraw %}`
+instead.
+
+### The richtext filter
 
 Another way to insert formatted text using [Jinja2] is to use the
 "rich text" feature of [`python-docx-template`].  The `RichText`
@@ -973,6 +970,24 @@ Using this filter, any newline (`\n`) in `animal` will be converted
 into a manual line break and any `\a` character will be converted into
 a paragraph break.  When using `RichText`, you must always use the `r`
 prefix, `{% raw %}{{r ... }}{% endraw %}`.
+
+### Original behavior of the Markdown filter (deprecated)
+
+There are two versions of the `markdown` [Jinja2] filter. 
+
+The default behavior of **docassemble** used to be the original setting, 
+where you need to write:
+
+> {% raw %}{{r the_text \| markdown }}{% endraw %}
+
+The text `the_text` will be treated as [Markdown] and formatting will
+be applied to the inserted text to replicate the [Markdown]
+formatting, using character-level formatting like bold, italic, and
+manual newlines.
+
+If the [`new markdown to docx`] is set to `True` in your [Configuration],
+this behavior will no longer work. There is no reason to use this line
+break style other than backwards compatibility for older templates.
 
 ## <a name="macros"></a>Inserting blocks of text more than once in a document
 
