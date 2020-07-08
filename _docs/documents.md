@@ -911,6 +911,9 @@ and other [Markdown] formatting characters such as numbered and
 bulleted lists, into the appropriate format inside the 
 [`docx template file`].
 
+Please note that `{% raw %}{{p }}{% endraw %}` always **replaces** the current
+paragraph.
+
 In either case, to use this style of paragraph transformation, ensure that 
 [`new markdown to docx`] is set to `True` in your [Configuration].
 This is the default in newer docassemble installations.
