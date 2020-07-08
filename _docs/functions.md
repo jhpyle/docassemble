@@ -6117,7 +6117,7 @@ using a function `analyze()` that was defined in the
 the interview answers of all sessions that have been completed on this
 interview on the server and summarizes the results.
 
-{% include side-by-side.html demo="snapshot" %}
+{% include demo-side-by-side.html demo="snapshot" %}
 
 The contents of the [`read_snapshot.py`] module are as follows.
 
