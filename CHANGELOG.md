@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.1.50] - 2020-07-21
+### Added
+- Feature for viewing names in an interview and the YAML blocks
+  associated with them.
+### Fixed
+- Missing `.copy()` method for `DAList`.
+- The `init()` method of the `DAFileCollection` class did not accept
+  arbitrary parameters.
+- Fully qualified image URLs now work in e-mail HTML.
+
 ## [1.1.49] - 2020-07-07
 ### Fixed
 - Additional input validation on parameters passed to APIs.

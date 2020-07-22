@@ -1096,6 +1096,9 @@ class DAList(DAObject):
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
+    def copy(self):
+        """Returns a copy of the list."""
+        return self.elements.copy()
     def filter(self, *pargs, **kwargs):
         """Returns a filtered version of the list containing only items with particular values of attributes."""
         self._trigger_gather()
@@ -3556,6 +3559,7 @@ class DAFileCollection(DAObject):
     """
     def init(self, *pargs, **kwargs):
         self.info = dict()
+        super().init(*pargs, **kwargs)
     def _extension_list(self):
         if hasattr(self, 'info') and 'formats' in self.info:
             return self.info['formats']

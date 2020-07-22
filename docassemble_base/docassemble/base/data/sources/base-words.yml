@@ -98,6 +98,7 @@
 "Current": Null
 "day": Null
 "Decorations": Null
+"defined by": Null
 "Defined in": Null
 "definitions of words": Null
 "Delete Account": Null
@@ -168,6 +169,7 @@
 "Existing template files": Null
 "exit": Null
 "Exit": Null
+"Failed to load report": Null
 "false": Null
 "File could not be converted: ": Null
 "File deleted.": Null
@@ -227,6 +229,8 @@
 "Incorrect Email and/or Password": Null
 "Incorrect Password": Null
 "Incorrect %(username_or_email)s and/or Password": Null
+"in mako": Null
+"in": Null
 "Input box": Null
 "Input not processed because the page expired.": Null
 "Input not processed because the question changed.  Please continue.": Null
@@ -274,12 +278,14 @@
 "Listen": Null
 "Live chat is available": Null
 "Live chat": Null
+"Loading . . .": Null
 "Loading.  Please wait . . . ": Null
 "Logs": Null
 "Manage account": Null
 "Markdown": Null
 "means the name is located in this file": Null
 "means the name may be located in a file included by reference, such as:": Null
+"mentioned in": Null
 "menu items": Null
 "menu": Null
 "Menu": Null

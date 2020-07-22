@@ -105,7 +105,7 @@
 {%- endblock %}
 {% block rightside %}
             <div id="playgroundbox" class="card bg-light playgroundbox mt-1">
-              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></div>
+              <div class="card-header">{{ word('Names from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="badge badge-secondary da-larger-badge" data-toggle="modal" href="" id="daVariablesReportLauncher" data-target="#daVariablesReport"><i class="fas fa-list"></i></a></div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}
                 </table>
@@ -114,4 +114,22 @@
 {%- endblock %}
 {% block bottompart %}
 {{ example_html }}
+<div class="modal" id="daVariablesReport" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ word("Names and questions") }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>{{ word("Loading . . .") }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ word("Close") }}</button>
+      </div>
+    </div>
+  </div>
+</div>
 {%- endblock %}

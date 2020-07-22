@@ -17897,6 +17897,65 @@ function variablesReady(){
 """
     return output
 
+@app.route("/varsreport", methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def variables_report():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
+    playground = SavedFile(current_user.id, fix=True, section='playground')
+    the_file = request.args.get('file', None)
+    current_project = request.args.get('project', 'default')
+    the_directory = directory_for(playground, current_project)
+    files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    if len(files) == 0:
+        return jsonify(success=False, reason=1)
+    if the_file is None or the_file not in files:
+        return jsonify(success=False, reason=2)
+    interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file)
+    interview_source.set_testing(True)
+    interview = interview_source.get_interview()
+    ensure_ml_file_exists(interview, the_file, current_project)
+    yaml_file = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_file, req=request, action=None))
+    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
+    results = list()
+    result_dict = dict()
+    for name in vocab_list:
+        if name in ('x', 'row_item', 'i', 'j', 'k', 'l', 'm', 'n') or name.startswith('x.') or name.startswith('x[') or name.startswith('row_item.'):
+            continue
+        result = dict(name=name, questions=list())
+        results.append(result)
+        result_dict[name] = result
+    for question in interview.questions_list:
+        names_seen = dict()
+        for the_type, the_set in (('in mako', question.mako_names), ('mentioned in', question.names_used), ('defined by', question.fields_used)):
+            for name in the_set:
+                the_name = name
+                subnames = [the_name]
+                while True:
+                    if re.search(r'\[[^\]]\]$', the_name):
+                        the_name = re.sub(r'\[[^\]]\]$', '', the_name)
+                    elif '.' in the_name:
+                        the_name = re.sub(r'\.[^\.]*$', '', the_name)
+                    else:
+                        break
+                    subnames.append(the_name)
+                logmessage("name is %s and subnames is %s" % (name, repr(subnames)))
+                on_first = True
+                for subname in subnames:
+                    if the_type == 'defined by' and not on_first:
+                        the_type = 'mentioned in'
+                    on_first = False
+                    if subname not in result_dict:
+                        continue
+                    if subname not in names_seen:
+                        names_seen[subname] = dict(yaml_file=question.from_source.path, source_code=question.source_code.strip(), usage=list())
+                        result_dict[subname]['questions'].append(names_seen[subname])
+                    if the_type not in names_seen[subname]['usage']:
+                        names_seen[subname]['usage'].append(the_type)
+    return jsonify(success=True, yaml_file=yaml_file, items=results)
+
 @app.route('/playgroundvariables', methods=['POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -18479,6 +18538,79 @@ function activateExample(id, scroll){
   $("#da-example-source-after").addClass("dainvisible");
 }
 
+function daFetchVariableReportCallback(data){
+  var translations = """ + json.dumps({'in mako': word("in mako"), 'mentioned in': word("mentioned in"), 'defined by': word("defined by")}) + """;
+  var modal = $("#daVariablesReport .modal-body");
+  if (modal.length == 0){
+    console.log("No modal body on page");
+    return;
+  }
+  if (!data.success){
+    $(modal).html('<p>""" + word("Failed to load report") + """</p>');
+    return;
+  }
+  var yaml_file = data.yaml_file;
+  console.log(yaml_file)
+  modal.empty();
+  var accordion = $('<div>');
+  accordion.addClass("accordion");
+  accordion.attr("id", "varsreport");
+  var n = data.items.length;
+  for (var i = 0; i < n; ++i){
+    var item = data.items[i];
+    if (item.questions.length){
+      var card = $('<div>');
+      card.addClass("card");
+      var cardHeader = $('<div>');
+      cardHeader.addClass("card-header");
+      cardHeader.attr("id", "cardheader" + i);
+      cardHeader.html('<h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button></h2>');
+      card.append(cardHeader);
+      var collapse = $("<div>");
+      collapse.attr("id", "collapse" + i);
+      collapse.attr("aria-labelledby", "cardheader" + i);
+      collapse.data("parent", "#varsreport");
+      collapse.addClass("collapse");
+      var cardBody = $("<div>");
+      cardBody.addClass("card-body");
+      var m = item.questions.length;
+      for (var j = 0; j < m; j++){
+        var h5 = $("<h5>");
+        h5.html(item.questions[j].usage.map(x => translations[x]).join(','));
+        var pre = $("<pre>");
+        pre.html(item.questions[j].source_code);
+        cardBody.append(h5);
+        cardBody.append(pre);
+        if (item.questions[j].yaml_file != yaml_file){
+          var p = $("<p>");
+          p.html(""" + json.dumps(word("from")) + """ + ' ' + item.questions[j].yaml_file);
+          cardBody.append(p);
+        }
+      }
+      collapse.append(cardBody);
+      card.append(collapse);
+      accordion.append(card);
+    }
+  }
+  modal.append(accordion);
+}
+
+function daFetchVariableReport(){
+  url = """ + json.dumps(url_for('variables_report', project=current_project)) + """ + "&file=" + currentFile;
+  $("#daVariablesReport .modal-body").html('<p>""" + word("Loading . . .") + """</p>');
+  $.ajax({
+    type: "GET",
+    url: url,
+    success: daFetchVariableReportCallback,
+    xhrFields: {
+      withCredentials: true
+    },
+    error: function(xhr, status, error){
+      $("#daVariablesReport .modal-body").html('<p>""" + word("Failed to load report") + """</p>');
+    }
+  });
+}
+
 function saveCallback(data){
   if (data.action && data.action == 'reload'){
     location.reload(true);
@@ -18720,7 +18852,7 @@ $( document ).ready(function() {
     page_title = word("Playground")
     if current_project != 'default':
         page_title += " / " + current_project
-    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(current_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200)
+    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(current_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 

@@ -2432,7 +2432,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if template is not None:
         if subject is None or subject == '':
             subject = template.subject
-        body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
+        body_html = '<html><body>' + template.content_as_html(external=True) + '</body></html>'
         if body is None:
             body = BeautifulSoup(body_html, "html.parser").get_text('\n')
         if html is None:
