@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.51](https://github.com/jhpyle/docassemble/releases/tag/v1.1.51) - 2020-07-27
+
+### Fixed
+- `signature` blocks did not support `continue button field`.
+- Translation system had gaps due to the integration with Flask-User's
+  translation system not working as intended.
+- Inconsistent behavior of `force_ask()` depending on the first item.
+
 ## [1.1.50](https://github.com/jhpyle/docassemble/releases/tag/v1.1.50) - 2020-07-21
 
 ### Added

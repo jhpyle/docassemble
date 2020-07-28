@@ -402,6 +402,8 @@ The aspects of the page that can be manipulated are:
   has one or more submit buttons.  This is empty by default.
 * `post`: text that appears after the content of a page.  This is
   empty by default.
+* `footer`: text that appears at the bottom of the screen, in a 60px
+  tall box with the [Bootstrap] `light` color.
 * `extra css`: raw [HTML] tags that you can insert into the `<head>` of the
   page, usually to incorporate [CSS] files.  This is empty by default.
 * `extra javascript`: raw [HTML] tags that you can insert at the end
@@ -443,7 +445,8 @@ page of the site, including administrative pages and interview pages,
 you can use the [`global css`] and [`global javascript`] directives.
 
 <a name="main page pre"></a><a name="main page submit"></a><a
-name="main page post"></a>The `main page` directive is special because
+name="main page post"></a><a name="main page footer"></a>The
+`main page` directive is special because
 it relates to actual interviews, which are different from
 administrative pages.  The directives that work with the `main
 page` prefix are:
@@ -455,6 +458,7 @@ page` prefix are:
 * `main page help label`
 * `main page logo`
 * `main page post`
+* `main page footer`
 * `main page pre`
 * `main page resume button label`
 * `main page right`
@@ -4408,9 +4412,6 @@ and Facebook API keys.
 [disable registration]: #allow registration
 [LDAP]: https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol
 [Active Directory]: https://en.wikipedia.org/wiki/Active_Directory
-[`pre`]: {{ site.baseurl }}/docs/initial.html#pre
-[`submit`]: {{ site.baseurl }}/docs/initial.html#submit
-[`post`]: {{ site.baseurl }}/docs/initial.html#post
 [`show interviews link`]: #show interviews link
 [`BEHINDHTTPSLOADBALANCER`]: {{ site.baseurl }}/docs/docker.html#BEHINDHTTPSLOADBALANCER
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME

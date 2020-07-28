@@ -213,7 +213,7 @@ latter error is shown on the screen in the usual fashion.
 See [`error help`] and [`verbose error messages`] for other ways to
 customize error messages.
 
-<a name="pre"></a><a name="submit"></a><a name="post"></a>The
+<a name="pre"></a><a name="submit"></a><a name="post"></a><a name="footer"></a>The
 [`metadata`] block also accepts specifiers for default content to be
 inserted into various parts of the screen.
 
