@@ -59,7 +59,7 @@ install_requires = [
     "Flask-SocketIO==4.2.1",
     "Flask-SQLAlchemy==2.4.1",
     "Flask-WTF==0.14.3",
-    "Docassemble-Flask-User==0.6.21",
+    "Docassemble-Flask-User==0.6.22",
     "future==0.18.1",
     "gcs-oauth2-boto-plugin==2.5",
     "geographiclib==1.50",

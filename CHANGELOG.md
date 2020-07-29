@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.53] - 2020-07-29
+### Fixed
+- Error in Docassemble-Flask-User dependency.
+
 ## [1.1.52] - 2020-07-29
 ### Fixed
 - Moved evaluation of section information to post-assembly when
