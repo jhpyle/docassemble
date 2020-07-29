@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.52](https://github.com/jhpyle/docassemble/releases/tag/v1.1.52) - 2020-07-29
+
+### Fixed
+- Moved evaluation of section information to post-assembly when
+  getting question data.
+
 ## [1.1.51](https://github.com/jhpyle/docassemble/releases/tag/v1.1.51) - 2020-07-28
 
 ### Added
