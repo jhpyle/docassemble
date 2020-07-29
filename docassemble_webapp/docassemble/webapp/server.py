@@ -23008,14 +23008,6 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             if use_lock:
                 release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary: " + str(err))
-    try:
-        the_section = user_dict['nav'].get_section()
-        the_section_display = user_dict['nav'].get_section(display=True)
-        the_sections = user_dict['nav'].get_sections()
-    except:
-        the_section = None
-        the_section_display = None
-        the_sections = list()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     ci = current_info(yaml=yaml_filename, req=request, secret=secret)
     ci['session'] = session_id
@@ -23043,6 +23035,14 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
+    try:
+        the_section = user_dict['nav'].get_section()
+        the_section_display = user_dict['nav'].get_section(display=True)
+        the_sections = user_dict['nav'].get_sections()
+    except:
+        the_section = None
+        the_section_display = None
+        the_sections = list()
     if advance_progress_meter:
         if interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
