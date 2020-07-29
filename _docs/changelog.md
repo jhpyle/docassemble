@@ -4,13 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.1.51](https://github.com/jhpyle/docassemble/releases/tag/v1.1.51) - 2020-07-27
+## [1.1.51](https://github.com/jhpyle/docassemble/releases/tag/v1.1.51) - 2020-07-28
+
+### Added
+- The `footer` screen part.
+- `terms` and `autoterms` are now included in JSON question data.
 
 ### Fixed
 - `signature` blocks did not support `continue button field`.
-- Translation system had gaps due to the integration with Flask-User's
-  translation system not working as intended.
-- Inconsistent behavior of `force_ask()` depending on the first item.
+- System message translation system had gaps due to the integration
+  with Flask-User's translation system not working as intended.
+- Inconsistent behavior of `force_ask()` depending on whether an item
+  was listed first or not.
 
 ## [1.1.50](https://github.com/jhpyle/docassemble/releases/tag/v1.1.50) - 2020-07-21
 

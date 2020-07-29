@@ -444,6 +444,14 @@ If you want to include the same [CSS] or [JavaScript] files in every
 page of the site, including administrative pages and interview pages,
 you can use the [`global css`] and [`global javascript`] directives.
 
+If you want to set a `footer` that is available on all pages, you can
+set `global footer` instead of `start page footer` and `interview page
+footer`, etc.  In the context of an interview, you can set the
+`footer` [screen part] to `off` in order to turn off the `global
+footer` or the `main page footer`.  You can also set the `main page
+footer` to `off` if you have a `global footer` that you do not want to
+appear during interviews.
+
 <a name="main page pre"></a><a name="main page submit"></a><a
 name="main page post"></a><a name="main page footer"></a>The
 `main page` directive is special because
@@ -4444,6 +4452,7 @@ and Facebook API keys.
 [translates system phrases]: {{ site.baseurl }}/docs/admin.html#translate
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
+[screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
 [ConvertAPI]: https://www.convertapi.com
 [CloudConvert]: https://cloudconvert.com
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file

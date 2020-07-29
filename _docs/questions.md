@@ -416,7 +416,9 @@ results with different screen sizes.
 * The `post` area is below everything except for image attributions,
   which are below the `post` area.
 * The `footer` area is at the bottom of the screen, in a 60px tall box
-  with the Bootstrap `light` color.
+  with the Bootstrap `light` color.  If a `global footer` or `main
+  page footer` is defined in the [Configuration], you can turn off the
+  default footer by setting the `footer` area to `off`.
 * The `exit link` is not a visible component, but rather a value that
   is either `exit` or `leave`.  It controls the operation of the exit
   link in the upper right corner, which is present if [`show login`]
