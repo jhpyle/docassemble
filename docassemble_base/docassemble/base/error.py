@@ -55,23 +55,16 @@ class ForcedNameError(NameError):
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in the_user_dict:
                 the_context[var_name] = the_user_dict[var_name]
-        if isinstance(the_args[0], dict):
-            if 'action' in the_args[0] and (len(the_args[0]) == 1 or 'arguments' in the_args[0]):
-                self.name = the_args[0]['action']
-                self.arguments = the_args[0].get('arguments', dict())
-                self.context = the_context
+        if isinstance(the_args[0], str):
+            first_is_plain = True
         else:
-            self.name = the_args[0]
-            self.arguments = None
-            self.context = the_context
-        if kwargs.get('gathering', False):
-            self.next_action = None
-            return
+            first_is_plain = False
         self.next_action = list()
         while len(the_args):
             arg = the_args.pop(0)
             if isinstance(arg, dict):
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
+                    arg['context'] = dict()
                     self.set_action(arg)
                 elif len(arg) == 1 and ('undefine' in arg or 'invalidate' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:
@@ -119,15 +112,19 @@ class ForcedNameError(NameError):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + ".")
                             clean_list.append(undef_saveas)
                         if command == 'invalidate':
-                            self.next_action.append(dict(action='_da_invalidate', arguments=dict(variables=clean_list), context=the_context))
+                            self.set_action(dict(action='_da_invalidate', arguments=dict(variables=clean_list), context=the_context))
                         else:
-                            self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
+                            self.set_action(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
                         if command == 'recompute':
                             self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list), context=the_context))
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
                 self.set_action(dict(action=arg, arguments=dict(), context=the_context))
+        if kwargs.get('gathering', False):
+            self.next_action = None
+        if first_is_plain:
+            self.arguments = None
     def set_action(self, data):
         if not hasattr(self, 'name'):
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):

@@ -47,7 +47,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot']
 
 # debug = False
 # default_dialect = 'us'
@@ -234,6 +234,34 @@ def device(ip=False):
         response = None
     return response
 
+def parse_accept_language(language_header, restrict=True):
+    ok_languages = set()
+    for lang in word_collection.keys():
+        ok_languages.add(lang)
+    languages = list()
+    for item in language_header.split(','):
+        q = 1.0
+        lang = item.strip()
+        if ';' in lang:
+            parts = item.split(';')
+            lang = parts[0]
+            q = parts[1]
+            try:
+                q = float(re.sub(r'^q=', '', q, flags=re.IGNORECASE))
+            except:
+                q = 1.0
+
+        parts = re.split('-|_', lang)
+
+        languages.append([parts[0].strip().lower(), q])
+    output = list()
+    for item in sorted(languages, key=lambda y: y[1], reverse=True):
+        if restrict and item[0] not in ok_languages:
+            continue
+        if item[0] not in output:
+            output.append(item[0])
+    return output
+
 def language_from_browser(*pargs):
     """Attempts to determine the user's language based on information supplied by the user's web browser."""
     if len(pargs) > 0:
@@ -242,7 +270,11 @@ def language_from_browser(*pargs):
     else:
         restrict = False
     if 'headers' in this_thread.current_info:
-        langs = [entry.split(";")[0].strip() for entry in this_thread.current_info['headers'].get('Accept-Language', '').lower().split(",")]
+        language_header = this_thread.current_info['headers'].get('Accept-Language', None)
+        if language_header is not None:
+            langs = parse_accept_language(language_header, restrict=False)
+        else:
+            return None
     else:
         return None
     for lang in langs:
@@ -1522,6 +1554,59 @@ def roman(num, case=None):
 def words():
     return word_collection[this_thread.language]
 
+class LazyWord:
+    def __init__(self, *args, **kwargs):
+        if len(kwargs):
+            self.original = args[0] % kwargs
+        else:
+            self.original = args[0]
+    def __mod__(self, other):
+        return word(self.original) % other
+    def __str__(self):
+        return word(self.original)
+
+class LazyArray:
+    def __init__(self, array):
+        self.original = array
+    def compute(self):
+        return [word(item) for item in self.original]
+    def copy(self):
+        return self.compute().copy()
+    def pop(self, *pargs):
+        return str(self.original.pop(*pargs))
+    def __add__(self, other):
+        return self.compute() + other
+    def index(self, *pargs, **kwargs):
+        return self.compute().index(*pargs, **kwargs)
+    def clear(self):
+        self.original = list()
+    def append(self, other):
+        self.original.append(other)
+    def remove(self, other):
+        self.original.remove(other)
+    def extend(self, other):
+        self.original.extend(other)
+    def __contains__(self, item):
+        return self.compute().__contains__(item)
+    def __iter__(self):
+        return self.compute().__iter__()
+    def __len__(self):
+        return self.compute().__len__()
+    def __delitem__(self, index):
+        self.original.__delitem__(index)
+    def __reversed__(self):
+        return self.compute().__reversed__()
+    def __setitem__(self, index, value):
+        return self.original.__setitem__(index, value)
+    def __getitem__(self, index):
+        return self.compute()[index]
+    def __str__(self):
+        return str(self.compute())
+    def __repr__(self):
+        return repr(self.compute())
+    def __eq__(self, other):
+        return self.original == other
+
 def word(the_word, **kwargs):
     """Returns the word translated into the current language.  If a translation
     is not known, the input is returned."""
@@ -1534,6 +1619,8 @@ def word(the_word, **kwargs):
         the_word = 'no'
     elif the_word is None:
         the_word = "I don't know"
+    if isinstance(the_word, LazyWord):
+        the_word = the_word.original
     try:
         the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
@@ -2967,7 +3054,7 @@ def process_action():
                 else:
                     #logmessage("process_action: forcing a nameerror")
                     this_thread.misc['forgive_missing_question'] = [event_info['action']] #restore
-                    force_ask_nameerror(event_info['action'])
+                    force_ask(event_info['action'])
                     #logmessage("process_action: done with trying")
         #logmessage("process_action: returning")
         if 'forgive_missing_question' in this_thread.misc:

@@ -1,6 +1,8 @@
+"404 Not Found": Null
 "Access organizational repositories": Null
 "Access shared repositories": Null
 "Account did not exist.": Null
+"Account disabled": Null
 "A chat message has arrived.": Null
 "A confirmation email has been sent to %(email)s with instructions to complete your registration.": Null
 "Action": Null
@@ -8,14 +10,23 @@
 "Activate chat": Null
 "Active File": Null
 "Active": Null
+"Actual": Null
+"Add a new privilege": Null
+"Add a New Project": Null
 "Add an item": Null
 "Add another": Null
+"Add a user": Null
 "Add Email": Null
 "Add": Null
 "Add Privilege": Null
 "Add User": Null
 "Administrator": Null
+"Administrator privilege": Null
+"Advocate privilege": Null
 "a GitHub repository": Null
+"Allowed sites": Null
+"Already registered?": Null
+"Already registered? Sign in.": Null
 "and enter the code": Null
 "and": Null
 "An e-mail address is required.": Null
@@ -23,6 +34,9 @@
 "Anonymous": Null
 "anonymous visitor": Null
 "Answer here": Null
+"An uploaded JSON file": Null
+"API key": Null
+"API keys": Null
 "API Keys": Null
 "Apply": Null
 "App": Null
@@ -44,11 +58,14 @@
 "Authentication": Null
 "Author E-mail": Null
 "Author Name": Null
+"Autocomplete": Null
+"Available for chat": Null
 "Available interviews": Null
 "Available Interviews": Null
 "Available": Null
 "back": Null
 "Back": Null
+"Back to Playground": Null
 "Back to profile": Null
 "Back to question": Null
 "Bad date": Null
@@ -68,12 +85,18 @@
 "Check box": Null
 "Check if applicable": Null
 "Choices:": Null
+"Choose file": Null
 "Classes": Null
 "Clear": Null
 "Click here to confirm your e-mail": Null
 "Click here to get help over the phone.": Null
+"click here to reset it": Null
 "Click if you want the user to be able to call you.": Null
+"Click interview title to resume an interview you already started.": Null
+"Click to change your status to available": Null
+"Click to change your status to not available": Null
 "Click to try this interview": Null
+"Close": Null
 "Commit message": Null
 "Commit": Null
 "Configuration not updated.": Null
@@ -83,25 +106,39 @@
 "Configuration YAML": Null
 "Configure": Null
 "Confirmation Date": Null
+"Confirm your email": Null
 "Connected to Google Drive": Null
 "Connected to OneDrive": Null
+"Connected to server.": Null
+"Connect": Null
 "Continue": Null
 "Control": Null
+"Convert to .md": Null
+"Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground or the sources folder of a package.": Null
 "could not connect to Google Drive": Null
 "could not connect to OneDrive": Null
 "Could not create new key": Null
 "Country code": Null
 "Country Code": Null
+"Create a new file": Null
+"Create a new interview": Null
+"Create a new package": Null
+"Create a new project": Null
+"Create an interview with the wizard": Null
 "Created new Markdown file called ": Null
 "Create": Null
 "Create Package": Null
 "Current": Null
 "day": Null
 "Decorations": Null
+"Default Playground": Null
 "defined by": Null
 "Defined in": Null
 "definitions of words": Null
+"Delete account and shared sessions": Null
+"Delete account but keep shared sessions": Null
 "Delete Account": Null
+"Delete All": Null
 "Deleted file: ": Null
 "Deleted interview": Null
 "Deleted interviews": Null
@@ -110,10 +147,13 @@
 "delete my account": Null
 "Delete": Null
 "Delete project": Null
+"Delete this package from the Playground": Null
 "Dependencies": Null
 "Description": Null
 "Developer Access": Null
+"Developer privilege": Null
 "Disable": Null
+"Disable two-factor authentication": Null
 "Display the menu": Null
 "Docassemble Office Add-in": Null
 "Docassemble Playground": Null
@@ -121,13 +161,25 @@
 "Document": Null
 "Done": Null
 "-- Do not link --": Null
+"Do not stop your web browser.": Null
 "Download all documents as a ZIP file": Null
+"Download all files": Null
 "Download All": Null
+"Download an interview phrase translation file": Null
 "Download": Null
+"Download Office add-in manifest file": Null
+"Download the current package": Null
 "Download this document as a ZIP file": Null
+"Download this file": Null
+"Download this log file": Null
+"Draft translation of system phrases": Null
+"Edit another file": Null
+"Edit another interview": Null
+"Edit another package": Null
 "Edit API Key": Null
 "Edit module files": Null
 "Edit": Null
+"Edit privileges": Null
 "Edit source files": Null
 "Edit text files": Null
 "Edit User Profile": Null
@@ -152,6 +204,7 @@
 "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
 "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
 "Enter the name of the new project you want to create.": Null
+"Erase existing data for each model before importing": Null
 "Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
@@ -161,6 +214,7 @@
 "Error reading JSON file from package.  File did not exist.": Null
 "Error reading JSON file.  Not a valid JSON file.": Null
 "Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
+"Errors": Null
 "ERROR: you cannot insert a table into a .docx document": Null
 "Every Two Weeks": Null
 "Existing module files": Null
@@ -174,11 +228,16 @@
 "File could not be converted: ": Null
 "File deleted.": Null
 "File format not understood: ": Null
+"File name": Null
 "File Name": Null
 "File not deleted.  There was an error.": Null
 "File not found: ": Null
+"File": Null
+"Files": Null
 "File Text": Null
 "File to upload": Null
+"Filter by tag": Null
+"Filter for": Null
 "Filter For": Null
 "First name": Null
 "First subdivision": Null
@@ -186,62 +245,95 @@
 "Floor": Null
 "f": Null
 "Folder": Null
+"Folders": Null
 "for debugging PDF output": Null
 "for downloading": Null
 "for editing; requires Microsoft Word or compatible application": Null
 "for editing; requires Microsoft Word, Wordpad, or similar application": Null
+"Forgot password": Null
+"Forgot Password": Null
+"Forgot your Password?": Null
+"Formula": Null
 "for printing; requires Adobe Reader or similar application": Null
 "from": Null
 "Functions": Null
 "Get help through live chat by clicking here.": Null
+"Get list of fields from PDF/DOCX template": Null
 "Get package": Null
 "Get template": Null
 "GitHub Branch": Null
+"GitHub integration": Null
 "GitHub Integration": Null
 "GitHub integration was successfully configured.": Null
 "GitHub integration was successfully disconnected.": Null
 "GitHub": Null
 "GitHub URL": Null
+"Global models": Null
+"Global": Null
 "Go back to the main Playground page": Null
 "Go back to the previous question": Null
 "Go": Null
 "Google Drive is not configured": Null
 "Google Drive is not linked.": Null
 "Google Drive": Null
+"Google Drive synchronization": Null
+"Google Drive Sync": Null
+"Google Drive Test": Null
 "Help is available for this question": Null
 "Help is available": Null
 "Help": Null
 "Help with this question": Null
 "he": Null
+"Here is some content after the interview.": Null
+"Here is some content before the interview.": Null
+"Here is the start of a YAML file you can import with a 'words' directive in your Configuration.": Null
 "Here is your document.": Null
 "her": Null
 "Hide context of example": Null
+"Hide entries that are already classified": Null
+"Hide import controls": Null
 "him": Null
+"History": Null
 "Home Page": Null
 "How question came to be asked": Null
 "How this question came to be asked": Null
+"How would you like the data to be imported?": Null
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
 "icon": Null
 "I do not understand what you mean by": Null
 "I don't know": Null
+"If you did not initiate this confirmation, you may safely ignore this email.": Null
+"If you did not initiate this password change,": Null
+"If you did not initiate this password reset, you may safely ignore this email.": Null
+"If you did not initiate this registration, you may safely ignore this email.": Null
+"If you did not initiate this username change, please": Null
+"If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground.": Null
+"If you initiated this confirmation, please click on the link below:": Null
+"If you initiated this registration, please click on the link below:": Null
+"If you initiated this registration, please click on the link below to sign in to your existing account:": Null
+"If you initiated this request, please click on the link below:": Null
 "Import method": Null
 "Import": Null
+"Import training data from a JSON file": Null
 "Incorrect Email and/or Password": Null
 "Incorrect Password": Null
 "Incorrect %(username_or_email)s and/or Password": Null
 "in mako": Null
-"in": Null
 "Input box": Null
 "Input not processed because the page expired.": Null
 "Input not processed because the question changed.  Please continue.": Null
 "Input not processed.  Please try again.": Null
+"Input": Null
 "Insert": Null
 "Install": Null
+"Install or update a package": Null
 "Install package on this server also": Null
+"Install package on this server": Null
 "interview answers cannot be decrypted": Null
 "Interview answers cannot be decrypted": Null
 "Interview files": Null
 "Interview": Null
+"Interview:": Null
 "Interviews": Null
 "in the": Null
 "Invalid confirmation token.": Null
@@ -254,6 +346,7 @@
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
 "Invitations have been sent.": Null
+"Invite a user": Null
 "Invite!": Null
 "Invite": Null
 "Invite User": Null
@@ -265,6 +358,9 @@
 "is not a valid time.": Null
 "is not a whole number.": Null
 "is not within the range.": Null
+"Items in the Playground other than interviews": Null
+"Items in the training set": Null
+"Items": Null
 "it": Null
 "Jinja2 help template": Null
 "Join": Null
@@ -273,15 +369,21 @@
 "Last name": Null
 "Leave": Null
 "License": Null
+"Linked folder": Null
 "link": Null
 "Links": Null
 "Listen": Null
+"List of ISO-639-1 language codes": Null
 "Live chat is available": Null
 "Live chat": Null
 "Loading . . .": Null
 "Loading.  Please wait . . . ": Null
+"Log": Null
 "Logs": Null
 "Manage account": Null
+"Manage Emails": Null
+"Manage Projects": Null
+"Manually add a training item": Null
 "Markdown": Null
 "means the name is located in this file": Null
 "means the name may be located in a file included by reference, such as:": Null
@@ -290,7 +392,9 @@
 "menu": Null
 "Menu": Null
 "Menu:": Null
+"Merge new data into existing data": Null
 "Methods": Null
+"Models": Null
 "Modules available in Playground": Null
 "Modules defined": Null
 "Modules": Null
@@ -299,12 +403,15 @@
 "Move down": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
+"Must be in E.164 format.  U.S. phone numbers begin with +1.": Null
 "My Interviews": Null
 "My Playground": Null
 "Name": Null
 "Name of new branch": Null
 "Name of new privilege is required": Null
 "Name of new privilege": Null
+"Names and questions": Null
+"Names from": Null
 "n/a": Null
 "New API Key": Null
 "(New branch)": Null
@@ -313,6 +420,8 @@
 "New conversation above": Null
 "New conversation below": Null
 "(New file)": Null
+"New here?  Register.": Null
+"New here? Register.": Null
 "New message above": Null
 "New message below": Null
 "New Name": Null
@@ -321,12 +430,16 @@
 "New Password": Null
 "New project": Null
 "New Username": Null
+"Next": Null
+"Next result": Null
 "Next will be": Null
 "Nickname": Null
 "n": Null
 "No access code was entered.": Null
 "No administrators could be found.": Null
 "No data existed in training set.  JSON file not created.": Null
+"No files have been uploaded yet.": Null
+"No models were found.": Null
 "none": Null
 "None of the above": Null
 "no": Null
@@ -334,12 +447,15 @@
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
 "Not authorized": Null
+"Not available for chat": Null
 "Note: it is a best practice to tag every mandatory block with an id.": Null
 "Note: more than one block uses id": Null
 "Note": Null
 "Note: only users with e-mail/password accounts can be given admin privileges.": Null
 "Note that if you connect to a Google Drive folder, you will disable your connection to OneDrive.": Null
 "Note that if you connect to a OneDrive folder, you will disable your connection to Google Drive.": Null
+"Note that you can use a DOCX template file directly; 'fields' is only necessary in the rare case when the variable names in your DOCX file do not correspond with the variable names in your interview.": Null
+"Not Found": Null
 ".": Null
 "?": Null
 "Observation": Null
@@ -354,14 +470,22 @@
 "OneDrive is not configured": Null
 "OneDrive is not linked.": Null
 "OneDrive": Null
+"OneDrive synchronization": Null
 "One or more e-mail addresses (separated by newlines)": Null
+"Only the last 30 lines are shown.  Download the file to see the previous lines.": Null
+"Open another log file": Null
 "operator": Null
 "operators": Null
 "Organization": Null
 "Original Name": Null
+"or": Null
 "or type skip to leave blank.": Null
+"Or you can specify a:": Null
+"Or you can upload a:": Null
+"Other settings": Null
 "other user": Null
 "other users": Null
+"Overrides": Null
 "Package created": Null
 "Package did not exist": Null
 "Package Management": Null
@@ -413,10 +537,19 @@
 "Please send one or more images.": Null
 "Please send one or more images, or type skip.": Null
 "Please upload a file with a valid file format.": Null
+"Please wait.  File is being uploaded": Null
+"Please wait.  Files are syncing.": Null
+"Please wait.  Interview will start when sync is complete.": Null
+"Please wait.": Null
+"Please wait.  Packages are updating.  The screen will refresh when the process is complete.  This may take several minutes.": Null
+"Please wait.  System is restarting.": Null
 "Possibly not defined": Null
 "Possibly not used": Null
+"Prediction": Null
 "Press one of the following buttons:": Null
+"Press the Publish button to publish the package on PyPI.": Null
 "Preview": Null
+"Previous result": Null
 "Privilege": Null
 "Privileges": Null
 "Problem detected.": Null
@@ -424,13 +557,17 @@
 "Profile Page": Null
 "Project name cannot begin with a number": Null
 "Project name is required": Null
+"Project": Null
 "Projects": Null
 "published on GitHub": Null
 "published on PyPI": Null
 "Publish": Null
 "Publish on PyPI also": Null
+"Publish on PyPI": Null
+"Pull a package from GitHub or PyPI into the Playground": Null
 "Pull GitHub or PyPI Package": Null
 "Pull": Null
+"Push a commit to GitHub": Null
 "Pushed commit to GitHub.": Null
 "PyPI": Null
 "PyPI package": Null
@@ -439,56 +576,99 @@
 "question": Null
 "Question": Null
 "quit": Null
+"Readability": Null
 "README file": Null
 "Read this screen out loud": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
+"Refresh": Null
+"Register for an account on": Null
 "Register": Null
+"Register with Auth0": Null
+"Register with Azure": Null
+"Register with Facebook": Null
+"Register with Google": Null
+"Register with Twitter": Null
+"Register with your mobile phone": Null
 "Registration is invite only": Null
+"remaining on disk": Null
 "Remember me": Null
 "Remove": Null
 "Rename": Null
 "Rename project": Null
 "Reorder by moving down": Null
 "Reorder by moving up": Null
+"Replace each instance of Null with a quoted translation.": Null
+"Request Developer Account": Null
+"Resend Confirmation Email": Null
 "Resend email confirmation email": Null
+"Reset e-mail confirmation": Null
+"Reset password": Null
+"Reset Password": Null
 "Restarting": Null
 "Restart": Null
+"Resume an interview": Null
 "Resume": Null
+"Retry": Null
+"Return": Null
 "Retype New Password": Null
 "Retype Password": Null
 "Role": Null
 "Room": Null
 "Running in other tab.": Null
+"Run": Null
 "Save and Run": Null
 "Save changes": Null
 "Saved at": Null
+"Saved": Null
 "Save": Null
+"Save your changes": Null
+"Save your changes to the package information": Null
 "Scan": Null
 "Scan the barcode with your phone's authenticator app and enter the verification code.": Null
+"Score": Null
 "Search": Null
+"Second factor authentication": Null
 "Second subdivision": Null
 "Second Subdivision": Null
 "Section": Null
 "Security Method": Null
+"Select a package": Null
 "Select a value between": Null
 "Select box": Null
 "Select file": Null
 "Select...": Null
 "Select one": Null
 "Select the folder from your OneDrive that you want to be synchronized with the Playground.": Null
+"Select zero or more files": Null
+"Select zero or more packages": Null
 "Send confirmation email": Null
+"Send Confirmation E-mail": Null
 "Send": Null
 "Send reset password email": Null
 "Server did not respond to request for update.": Null
+"Sessions": Null
+"Share": Null
 "she": Null
+"Show all": Null
 "Show attributes": Null
 "Show context of example": Null
+"Show entries that are already classified": Null
+"Show import controls": Null
+"Showing interviews tagged with:": Null
+"Show report of names and associated questions": Null
 "Show variables and values": Null
+"sign in": Null
 "Sign in": Null
+"Sign in.": Null
 "Sign In": Null
 "Sign in or sign up to save answers": Null
 "Sign in to save answers": Null
+"Sign in with Auth0": Null
+"Sign in with Azure": Null
+"Sign in with Facebook": Null
+"Sign in with Google": Null
+"Sign in with Twitter": Null
 "Sign in with your mobile phone": Null
 "Sign Out": Null
 "Sign Your Name": Null
@@ -510,8 +690,10 @@
 "Source files": Null
 "Source Files": Null
 "Source": Null
+"Sources": Null
 "Special Page": Null
 "Special variable": Null
+"Started": Null
 "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
 "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
 "Static files": Null
@@ -519,14 +701,24 @@
 "Stop Controlling": Null
 "Stop Observing": Null
 "Submit": Null
+"(%s uncompressed)": Null
+"Sync and Run": Null
 "Synchronizing": Null
+"Synchronizing with Google Drive": Null
+"Synchronizing with OneDrive": Null
+"Sync": Null
+"Sync with Google Drive": Null
+"Sync with OneDrive": Null
 "system": Null
 "System": Null
+"Tags": Null
 "Telephone assistance": Null
 "Template files": Null
 "Templates": Null
 "Terms used in this question:": Null
 "Terms used:": Null
+"Test": Null
+"Thank you for registering with": Null
 "That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
 "The author is": Null
@@ -535,10 +727,14 @@
 "The current branch is %s.": Null
 "The default project cannot be deleted.": Null
 "The document is available in the following formats:": Null
+"The file was uploaded to the Templates folder.": Null
 "The file you requested does not exist.": Null
 "The following document has been created for you.": Null
 "The following documents have been created for you.": Null
+"The following errors were detected in your Configuration.": Null
+"The following overrides were applied.": Null
 "The information was saved.": Null
+"The JSON file in the package": Null
 "The key no longer exists": Null
 "The key was deleted": Null
 "The link has expired.": Null
@@ -553,20 +749,26 @@
 "The package was unpacked into the Playground.": Null
 "The package you specified could not be downloaded from PyPI as a tar.gz file.": Null
 "The package you specified could not be downloaded from PyPI.": Null
+"The phone number is not in E.164 format (e.g. +12025551212)": Null
+"The Playground is synchronizing with Google Drive.": Null
 "The previously selected OneDrive folder does not exist.": Null
 "The previously selected OneDrive folder was deleted.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "The project name %s is not available.": Null
+"The README.md file for the package": Null
+"There are no active sessions.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
 "The regular expression you provided could not be parsed.": Null
 "There is already a username and password on this system with the e-mail address": Null
+"The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.": Null
 "There was an error.": Null
 "There was an error updating the packages.": Null
 "There was an error with the synchronization.": Null
 "There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved.": Null
 "There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
+"There was a problem uploading the file.": Null
 "The role could not be deleted.": Null
 "The synchronization was not successful.": Null
 "The synchronization was successful.": Null
@@ -582,6 +784,7 @@
 "This Email is already in use. Please try another one.": Null
 "This field is required.": Null
 "This image file does not exist": Null
+"This is my custom interview page.": Null
 "This package is not yet published on PyPI.": Null
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null
@@ -589,15 +792,18 @@
 "This Username is already in use. Please try another one.": Null
 "Thumbnail image of document": Null
 "Time Zone": Null
+"Title": Null
 "t": Null
 "Token": Null
 "to proceed.": Null
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
+"Trainer privilege": Null
 "Training data were successfully imported.": Null
 "Train machine learning models": Null
 "Train": Null
 "Translate": Null
+"Translate system phrases into another language": Null
 "true": Null
 "Turn off chat": Null
 "Twice Per Month": Null
@@ -644,21 +850,31 @@
 "Unable to send verification code.": Null
 "unavailable": Null
 "Unblock": Null
+"Unclassified items in the training set": Null
 "Undefined names": Null
 "Undelete": Null
+"Uninstall": Null
 "Unit": Null
 "Unknown": Null
 "Unnamed User": Null
 "Untitled": Null
 "Update": Null
+"Update or uninstall an existing package": Null
 "Updating": Null
+"Updating packages": Null
+"Upgrade docassemble": Null
+"Upgrade": Null
+"Upload a package ZIP file to the Playground": Null
 "Upload a Python module": Null
 "Upload a source file": Null
 "Upload a static file": Null
 "Upload a template file": Null
+"Upload a YAML file to the Playground": Null
 "Upload": Null
 "Upload successful": Null
+"Upload this .docx file to the Templates folder": Null
 "URL": Null
+"Use a different server": Null
 "Used in": Null
 "Use Package": Null
 "User List": Null
@@ -671,12 +887,15 @@
 "%(username_or_email)s does not exist": Null
 "user": Null
 "User": Null
+"User profile": Null
 "User Profile": Null
 "Uses two-factor authentication": Null
 "Using Jinja2": Null
+"(using your email address) and change your password.": Null
 "Utilities": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
+"Variables, etc. from": Null
 "Variables": Null
 "Verification code": Null
 "Verify": Null
@@ -690,14 +909,19 @@
 "Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
 "WARNING!  If you press Delete, the contents of the %s project will be permanently deleted.": Null
 "was saved at": Null
+"We have received your password reset request.": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
 "We were unable to submit your request.": Null
+"What file do you want to import?": Null
+"When you type inside Jinja2 brackets, auto-complete options will appear here.": Null
+"Wizard": Null
 "Would you like to reconfigure two-factor authentication?": Null
 "x": Null
 "year": Null
 "yes": Null
 "Yes": Null
 "y": Null
+"You are available for the following roles: ": Null
 "You are not allowed to access this interview.": Null
 "You are not authorized to access": Null
 "You are now set up with two factor authentication.": Null
@@ -709,14 +933,17 @@
 "You cannot rename the default Playground project": Null
 "You cannot take away your own admin privilege.": Null
 "You cannot type more than %s characters.": Null
+"You can provide a:": Null
 "You can type link1, etc. to visit a link": Null
 "You can type link1 to visit the link": Null
 "You can type menu1, etc. to select a menu item": Null
 "You can type menu1 to select the menu item": Null
 "You can type question to read the question again.": Null
 "You can upload a file here": Null
+"You do not have any API keys yet.": Null
 "You do not have permission to access '%(url)s'.": Null
 "You do not have permission to install this package.": Null
+"You have been invited to join": Null
 "You have made too many login attempts.": Null
 "You have registered successfully.": Null
 "You have signed in successfully.": Null
@@ -761,6 +988,7 @@
 "Your account no longer uses two-factor authentication.": Null
 "Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.": Null
 "Your confirmation token has expired.": Null
+"Your docassemble server": Null
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null
@@ -771,13 +999,16 @@
 "Your email address": Null
 "Your email has been confirmed.": Null
 "Your GitHub integration has already been configured.": Null
+"Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it.": Null
 "Your GitHub settings were saved.": Null
 "Your information was saved.": Null
 "Your IP address is": Null
 "Your new API key, known internally as %s, is %s": Null
+"Your password has been changed.": Null
 "Your password has been changed successfully.": Null
 "Your password has been reset successfully.": Null
 "Your password is insecure and needs to be changed": Null
+"Your phone #": Null
 "Your Playground is connected to your Google Drive.": Null
 "Your Playground is connected to your OneDrive.": Null
 "Your request was submitted.": Null
@@ -785,6 +1016,8 @@
 "Your reset password token is invalid.": Null
 "Your screen is being controlled by an operator.": Null
 "yourself": Null
+"Your status: ": Null
+"Your username has been changed.": Null
 "Your username has been changed to '%(username)s'.": Null
 "Your verification code is invalid or expired.  Please try again.": Null
 "Your verification code is": Null
@@ -792,4 +1025,6 @@
 "Your verification code was invalid or expired.": Null
 "Your verification code was missing or expired": Null
 "Your version is": Null
+"You will need to confirm your email next.": Null
+"You will need to confirm your email to start using": Null
 "Zip File": Null

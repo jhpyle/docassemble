@@ -64,7 +64,7 @@
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', v=config['DA_VERSION']) }}{% endif %}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/app.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
-  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar">
+  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">
       <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %}">
         {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
@@ -148,6 +148,14 @@
     {%- block main %}{% endblock %}
     {%- block bottom %}{% endblock %}
     </div>
+    {%- if footer_content %}
+    <footer class="bg-light dafooter">
+      <div class="container">
+        {{ footer_content }}
+      </div>
+    </footer>
+    {% endif %}
+
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
       var daWhichButton = null;

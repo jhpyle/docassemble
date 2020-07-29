@@ -1,13 +1,14 @@
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from flask import make_response, redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
-from flask_user import current_user, login_required, roles_required, emails
+from docassemble_flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 #import docassemble.webapp.daredis
 from docassemble.base.functions import word, debug_status, get_default_timezone, myb64quote, myb64unquote
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
+from docassemble.webapp.translations import setup_translation
 from docassemble.base.generate_key import random_alphanumeric
 from sqlalchemy import or_, and_, not_
 
@@ -27,6 +28,7 @@ PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 @login_required
 @roles_required('admin')
 def privilege_list():
+    setup_translation()
     output = """\
     <table class="table">
       <thead>
@@ -55,6 +57,7 @@ def privilege_list():
 @login_required
 @roles_required('admin')
 def user_list():
+    setup_translation()
     page = request.args.get('page', None)
     if page:
         try:
@@ -117,6 +120,7 @@ def user_list():
 @login_required
 @roles_required('admin')
 def delete_privilege(id):
+    setup_translation()
     role = Role.query.filter_by(id=id).first()
     user_role = Role.query.filter_by(name='user').first()
     if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
@@ -143,6 +147,7 @@ def delete_privilege(id):
 @login_required
 @roles_required('admin')
 def edit_user_profile_page(id):
+    setup_translation()
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
@@ -232,6 +237,7 @@ def edit_user_profile_page(id):
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
 def add_privilege():
+    setup_translation()
     form = NewPrivilegeForm(request.form, obj=current_user)
 
     if request.method == 'POST' and form.validate():
@@ -253,6 +259,7 @@ def add_privilege():
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():
+    setup_translation()
     the_tz = current_user.timezone if current_user.timezone else get_default_timezone()
     if current_user.social_id and current_user.social_id.startswith('phone$'):
         form = PhoneUserProfileForm(request.form, obj=current_user)
@@ -283,6 +290,7 @@ def _endpoint_url(endpoint):
 @roles_required('admin')
 def invite():
     """ Allows users to send invitations to register an account """
+    setup_translation()
     user_manager = current_app.user_manager
 
     next = request.args.get('next',
@@ -357,6 +365,7 @@ def invite():
 @login_required
 @roles_required('admin')
 def user_add():
+    setup_translation()
     user_role = Role.query.filter_by(name='user').first()
     add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
     add_form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]

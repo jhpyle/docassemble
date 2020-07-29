@@ -1,3 +1,4 @@
+{%- set footer_content = get_part('interview page footer', get_part('global footer')) %}
 {%- set page_title = get_part('interview page title', word('Interviews')) %}
 {%- set tab_title = get_part('interview page tab title', word('Interviews')) %}
 {%- set extra_css = get_part('interview page extra css') %}
@@ -74,7 +75,7 @@
                   </ul>
                 </nav>
               </div>
-            <div>
+            </div>
             {%- endif %}
 
 {{ get_part('interview page post') }}

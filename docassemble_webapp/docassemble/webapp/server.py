@@ -242,7 +242,7 @@ def _get_safe_next_param(param_name, default_endpoint):
 #             and not current_app.user_manager.enable_login_without_confirm_email \
 #             and not user.has_confirmed_email():
 #         url = url_for('user.resend_confirm_email')
-#         flash(flask_user.translations.gettext('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.', url=url), 'error')
+#         flash(docassemble_flask_user.translations.gettext('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.', url=url), 'error')
 #         return redirect(url_for('user.login'))
 
 #     login_user(user, remember=remember_me)
@@ -263,8 +263,8 @@ def custom_resend_confirm_email():
         email = form.email.data
         user, user_email = user_manager.find_user_by_email(email)
         if user:
-            flask_user.views._send_confirm_email(user, user_email)
-        return redirect(flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
+            docassemble_flask_user.views._send_confirm_email(user, user_email)
+        return redirect(docassemble_flask_user.views._endpoint_url(user_manager.after_resend_confirm_email_endpoint))
     response = make_response(user_manager.render_function(user_manager.resend_confirm_email_template, form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -328,12 +328,12 @@ def custom_register():
         email_taken = False
         if daconfig.get('confirm registration', False):
             try:
-                flask_user.forms.unique_email_validator(register_form, register_form.email)
+                docassemble_flask_user.forms.unique_email_validator(register_form, register_form.email)
             except wtforms.ValidationError:
                 email_taken = True
         if email_taken:
             flash(word('A confirmation email has been sent to %(email)s with instructions to complete your registration.' % {'email': register_form.email.data}), 'success')
-            subject, html_message, text_message = flask_user.emails._render_email(
+            subject, html_message, text_message = docassemble_flask_user.emails._render_email(
                 'flask_user/emails/reregistered',
                 app_name=app.config['APP_NAME'],
                 sign_in_link=url_for('user.login', _external=True))
@@ -429,7 +429,7 @@ def custom_register():
         if user_manager.send_registered_email:
             try:
                 # Send 'registered' email
-                flask_user.views._send_registered_email(user, user_email, require_email_confirmation)
+                docassemble_flask_user.views._send_registered_email(user, user_email, require_email_confirmation)
             except Exception as e:
                 # delete new User object if send fails
                 db_adapter.delete_object(user)
@@ -437,7 +437,7 @@ def custom_register():
                 raise
 
         # Send user_registered signal
-        flask_user.signals.user_registered.send(current_app._get_current_object(),
+        docassemble_flask_user.signals.user_registered.send(current_app._get_current_object(),
                                                 user=user,
                                                 user_invite=user_invite)
 
@@ -463,7 +463,7 @@ def custom_register():
                         return redirect(url_for('mfa_sms_setup'))
                     else:
                         return redirect(url_for('mfa_choose'))
-            return flask_user.views._do_login_user(user, safe_reg_next)
+            return docassemble_flask_user.views._do_login_user(user, safe_reg_next)
         else:
             return redirect(url_for('user.login') + '?next=' + urllibquote(safe_reg_next))
 
@@ -561,7 +561,7 @@ def custom_login():
                 url = url_for('user.resend_confirm_email', email=user.email)
                 flash(word('You cannot log in until your e-mail address has been confirmed.') + '<br><a href="' + url + '">' + word('Click here to confirm your e-mail') + '</a>.', 'error')
                 return redirect(url_for('user.login'))
-            return add_secret_to(flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
+            return add_secret_to(docassemble_flask_user.views._do_login_user(user, safe_next, login_form.remember_me.data))
     if is_json:
         return jsonify(action='login', csrf_token=generate_csrf())
     # if 'officeaddin' in safe_next:
@@ -606,7 +606,7 @@ def logout():
             next = get_base_url() + next
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
     set_cookie = False
-    flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+    docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session()
     session.clear()
@@ -732,19 +732,12 @@ from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
-import flask_user.translations
-def word_with_format(string, **variables):
-    new_string = word(string)
-    if new_string == string:
-        return flask_user.translations.gettext(string, **variables)
-    return word(string) % variables
-flask_user.translations._ = word_with_format
-flask_user.translations.lazy_gettext = word_with_format
-from flask_user import UserManager, SQLAlchemyAdapter
+from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 from flask_cors import cross_origin
 from flask_wtf.csrf import CSRFError
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
+from docassemble.webapp.translations import setup_translation
 user_manager = UserManager()
 user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator)
 from flask_login import LoginManager
@@ -809,17 +802,15 @@ from pygments.lexers import YamlLexer, PythonLexer
 from pygments.formatters import HtmlFormatter
 from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g, make_response
 from flask_login import login_user, logout_user, current_user
-from flask_user import login_required, roles_required
-from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
+from docassemble_flask_user import login_required, roles_required
+from docassemble_flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, RenameProject, DeleteProject, NewProject
-
-import flask_user.signals
-import flask_user.views
-import flask_user.emails
-import flask_user.forms
-flask_user.views._ = word_with_format
-flask_user.forms._ = word_with_format
+import docassemble_flask_user.signals
+import docassemble_flask_user.emails
+import docassemble_flask_user.views
+import docassemble_flask_user.forms
+from docassemble.webapp.translations import setup_translation
 
 import wtforms
 import werkzeug.utils
@@ -1011,8 +1002,16 @@ else:
     app.config['BUTTON_STYLE'] = 'btn-'
 
 page_parts = dict()
+if 'global footer' in daconfig:
+    if type(daconfig['global footer']) is dict:
+        page_parts['global footer'] = dict()
+        for lang, val in daconfig['global footer'].items():
+            page_parts['global footer'][lang] = Markup(val)
+    else:
+        page_parts['global footer'] = {'*': Markup(str(daconfig['global footer']))}
+
 for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
-    for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post'):
+    for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer'):
         key = page_key + ' ' + part_key
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -1024,7 +1023,7 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
 
 main_page_parts = dict()
 lang_list = set()
-for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page resume button label'):
+for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page resume button label'):
     if key in daconfig and type(daconfig[key]) is dict:
         for lang in daconfig[key]:
             lang_list.add(lang)
@@ -1032,7 +1031,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -4347,7 +4346,7 @@ def mfa_setup():
                 del session['next']
             else:
                 next_url = url_for('interview_list', from_login='1')
-            return flask_user.views._do_login_user(user, next_url, False)
+            return docassemble_flask_user.views._do_login_user(user, next_url, False)
         flash(word("You are now set up with two factor authentication."), 'success')
         return redirect(url_for('user_profile_page'))
     otp_secret = pyotp.random_base32()
@@ -4375,6 +4374,7 @@ def mfa_setup():
 @login_required
 @app.route('/mfa_reconfigure', methods=['POST', 'GET'])
 def mfa_reconfigure():
+    setup_translation()
     if not app.config['USE_MFA'] or not current_user.has_role(*app.config['MFA_ROLES']) or not current_user.social_id.startswith('local'):
         return ('File not found', 404)
     user = load_user(current_user.id)
@@ -4514,7 +4514,7 @@ def mfa_verify_sms_setup():
                     del session['next']
                 else:
                     next_url = url_for('interview_list', from_login='1')
-                return flask_user.views._do_login_user(user, next_url, False)
+                return docassemble_flask_user.views._do_login_user(user, next_url, False)
             flash(word("You are now set up with two factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
     return render_template('flask_user/mfa_verify_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word('We just sent you a text message with a verification code.  Enter the verification code to proceed.'))
@@ -4575,7 +4575,7 @@ def mfa_login():
                     return redirect(url_for('user.login'))
             elif failed_attempts is not None:
                 r.delete(fail_key)
-        return flask_user.views._do_login_user(user, safe_next, False)
+        return docassemble_flask_user.views._do_login_user(user, safe_next, False)
     description = word("This account uses two-factor authentication.")
     if user.otp_secret.startswith(':phone:'):
         description += "  " + word("Please enter the verification code from the text message we just sent you.")
@@ -4681,6 +4681,7 @@ def github_menu():
         return ('File not found', 404)
     if not app.config['USE_GITHUB']:
         return ('File not found', 404)
+    setup_translation()
     form = GitHubForm(request.form)
     if request.method == 'POST':
         if form.configure.data:
@@ -4705,9 +4706,9 @@ def github_menu():
             info = json.loads(uses_github)
             form.shared.data = info['shared']
             form.orgs.data = info['orgs']
-        description = "Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it."
+        description = word("Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it.")
     else:
-        description = "If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground."
+        description = word("If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground.")
     return render_template('pages/github.html', form=form, version_warning=None, title=word("GitHub Integration"), tab_title=word("GitHub"), page_title=word("GitHub"), description=description, uses_github=uses_github, bodyclass='daadminbody')
 
 @app.route('/github_configure', methods=['POST', 'GET'])
@@ -4718,6 +4719,7 @@ def github_configure():
         return ('File not found', 404)
     if not app.config['USE_GITHUB']:
         return ('File not found', 404)
+    setup_translation()
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -4782,6 +4784,7 @@ def github_unconfigure():
         return ('File not found', 404)
     if not app.config['USE_GITHUB']:
         return ('File not found', 404)
+    setup_translation()
     storage = RedisCredStorage(app='github')
     credentials = storage.get()
     if not credentials or credentials.invalid:
@@ -4832,6 +4835,7 @@ def github_unconfigure():
 def github_oauth_callback():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     failed = False
     if not app.config['USE_GITHUB']:
         logmessage('github_oauth_callback: server does not use github')
@@ -4938,7 +4942,7 @@ def exit_logout():
             manual_checkout(manual_filename=yaml_filename)
             reset_user_dict(session_info['uid'], yaml_filename)
     if current_user.is_authenticated:
-        flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+        docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
         logout_user()
     session.clear()
     response = redirect(the_exit_page)
@@ -5434,6 +5438,7 @@ def title_converter(content, part, status):
 @login_required
 @roles_required(['admin', 'developer'])
 def test_embed():
+    setup_translation()
     yaml_filename = request.args.get('i', final_default_yaml_filename)
     user_dict = fresh_dictionary()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -7027,7 +7032,7 @@ def index(action_argument=None):
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7043,7 +7048,7 @@ def index(action_argument=None):
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if current_user.is_authenticated:
-            flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+            docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
         delete_session()
         session.clear()
@@ -7052,14 +7057,14 @@ def index(action_argument=None):
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         return response
     will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
         response = do_refresh(is_ajax, yaml_filename)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7068,7 +7073,7 @@ def index(action_argument=None):
         sys.stderr.write("Redirecting because of a signin.\n")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7077,7 +7082,7 @@ def index(action_argument=None):
         sys.stderr.write("Redirecting because of a register.\n")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7089,7 +7094,7 @@ def index(action_argument=None):
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7102,7 +7107,7 @@ def index(action_argument=None):
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
-                fake_up(response)
+                fake_up(response, interview_language)
             if response_wrapper:
                 response_wrapper(response)
             return response
@@ -7127,7 +7132,7 @@ def index(action_argument=None):
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
-                fake_up(response)
+                fake_up(response, interview_language)
             if response_wrapper:
                 response_wrapper(response)
             return response
@@ -7178,7 +7183,7 @@ def index(action_argument=None):
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
         if return_fake_html:
-            fake_up(response_to_send)
+            fake_up(response_to_send, interview_language)
         if response_wrapper:
             response_wrapper(response_to_send)
         return response_to_send
@@ -7189,7 +7194,7 @@ def index(action_argument=None):
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
-            flash_content += '<div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>'
+            flash_content += '<div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + str(message) + '</div>'
         flash_content += '</div>'
     if 'reload_after' in interview_status.extras:
         reload_after = 1000 * int(interview_status.extras['reload_after'])
@@ -10236,7 +10241,7 @@ def index(action_argument=None):
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
     else:
-        interview_language = DEFAULT_LANGUAGE
+        interview_language = current_language
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
     interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
@@ -10251,6 +10256,11 @@ def index(action_argument=None):
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
+    interview_status.footer = title_info.get('footer', the_main_page_parts['main page footer'] or get_part('global footer'))
+    if interview_status.footer:
+        interview_status.footer = re.sub(r'</?p.*?>', '', str(interview_status.footer), flags=re.IGNORECASE).strip()
+        if interview_status.footer == 'off':
+            interview_status.footer = ''
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
@@ -10273,6 +10283,8 @@ def index(action_argument=None):
         bodyclass += ' ' + re.sub(r'[^A-Za-z0-9\_]+', '-', interview_status.extras['cssClass'])
     elif hasattr(interview_status.question, 'id'):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
+    if interview_status.footer:
+        bodyclass += ' da-pad-for-footer'
     if debug_mode:
         interview_status.screen_reader_text = dict()
     if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
@@ -10366,11 +10378,11 @@ def index(action_argument=None):
                                           ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
                                           ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
                                           ('Readability Consensus', textstat.text_standard(phrase))]
-        readability_report = '          <h3>Readability</h3>\n'
+        readability_report = '          <h3>' + word("Readability") + '</h3>\n'
         for question_type in ('question', 'help'):
             if question_type in readability:
                 readability_report += '          <table style="display: none;" class="table" id="dareadability-' + question_type +'">' + "\n"
-                readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
+                readability_report += '            <tr><th>' + word("Formula") + '</th><th>' + word("Score") + '</th></tr>' + "\n"
                 for read_type, value in readability[question_type]:
                     readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
                 readability_report += '          </table>' + "\n"
@@ -10493,8 +10505,16 @@ def index(action_argument=None):
         output += '        </div>' + "\n"
         output += '      </div>' + "\n"
     output += '    </div>'
+    if interview_status.footer:
+        output += """
+    <footer class="bg-light dafooter">
+      <div class="container">
+        """ + interview_status.footer + """
+      </div>
+    </footer>
+"""
     if not is_ajax:
-        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>" + "\n  </body>\n</html>"
+        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>\n  </body>\n</html>"
     if True:
         key = 'da:html:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         pipe = r.pipeline()
@@ -10526,7 +10546,7 @@ def index(action_argument=None):
         if response_wrapper:
             response_wrapper(response)
         if return_fake_html:
-            fake_up(response)
+            fake_up(response, interview_language)
     elif is_js:
         output = the_js + "\n" + append_javascript
         if 'global css' in daconfig:
@@ -10601,8 +10621,8 @@ def add_permissions_for_field(the_field, interview_status, files_to_process):
                 for (filename, file_number, mimetype, extension) in files_to_process:
                     file_privilege_access(file_number, allow=permissions['allow_privileges'])
 
-def fake_up(response):
-    response.set_data('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
+def fake_up(response, interview_language):
+    response.set_data('<!DOCTYPE html><html lang="' + interview_language + '"><head><meta charset="utf-8"><title>Response</title></head><body><pre>ABCDABOUNDARYSTARTABC' + codecs.encode(response.get_data(), 'base64').decode() + 'ABCDABOUNDARYENDABC</pre></body></html>')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
 
 def add_action_to_stack(interview_status, user_dict, action, arguments):
@@ -10724,6 +10744,14 @@ def utility_processor():
     if 'language' in session:
         docassemble.base.functions.set_language(session['language'])
         lang = session['language']
+    elif 'Accept-Language' in request.headers:
+        langs = docassemble.base.functions.parse_accept_language(request.headers['Accept-Language'])
+        if len(langs) > 0:
+            docassemble.base.functions.set_language(langs[0])
+            lang = langs[0]
+        else:
+            docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
+            lang = DEFAULT_LANGUAGE
     else:
         docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
         lang = DEFAULT_LANGUAGE
@@ -10856,6 +10884,7 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
 def interview_start():
     if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
         return redirect(url_for('user.login', next=url_for('interview_start', **request.args)))
+    setup_translation()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
@@ -11169,6 +11198,7 @@ def do_serve_uploaded_pagescreen(number, page, download=False):
 @login_required
 @roles_required(['admin', 'advocate'])
 def visit_interview():
+    setup_translation()
     i = request.args.get('i', None)
     uid = request.args.get('uid', None)
     userid = request.args.get('userid', None)
@@ -11192,6 +11222,7 @@ def visit_interview():
 @login_required
 @roles_required(['admin', 'advocate'])
 def observer():
+    setup_translation()
     session['observer'] = 1
     i = request.args.get('i', None)
     uid = request.args.get('uid', None)
@@ -12146,7 +12177,7 @@ def observer():
     page_title = word('Observation')
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
     output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
-    output += '\n    <title>' + page_title + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar') + '">\n  <div id="dabody">\n  '
+    output += '\n    <title>' + page_title + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar da-pad-for-footer') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
     output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
     response = make_response(output.encode('utf-8'), '200 OK')
@@ -12163,6 +12194,7 @@ def decode_dict(the_dict):
 @login_required
 @roles_required(['admin', 'advocate'])
 def monitor():
+    setup_translation()
     if request.method == 'GET' and needs_to_change_password():
         return redirect(url_for('user.change_password', next=url_for('monitor')))
     session['monitor'] = 1
@@ -13299,6 +13331,7 @@ def monitor():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_wait():
+    setup_translation()
     next_url = request.args.get('next', url_for('update_package'))
     my_csrf = generate_csrf()
     script = """
@@ -13416,6 +13449,7 @@ def update_package_wait():
 def update_package_ajax():
     if 'taskwait' not in session:
         return jsonify(success=False)
+    setup_translation()
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
     if result.ready():
         #if 'taskwait' in session:
@@ -13487,6 +13521,7 @@ def get_package_name_from_zip(zippath):
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
+    setup_translation()
     if not app.config['ALLOW_UPDATES']:
         return ('File not found', 404)
     if 'taskwait' in session:
@@ -13709,6 +13744,7 @@ def update_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_playground_package():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     fix_package_folder()
@@ -14186,6 +14222,7 @@ def create_playground_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_package():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     form = CreatePackageForm(request.form)
@@ -14458,6 +14495,7 @@ class Fruit(DAObject):
 @login_required
 @roles_required(['admin', 'developer'])
 def restart_page():
+    setup_translation()
     script = """
     <script>
       function daRestartCallback(data){
@@ -14488,6 +14526,7 @@ def restart_page():
 @login_required
 @roles_required(['admin', 'developer'])
 def playground_poll():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     script = """
@@ -14606,6 +14645,7 @@ class RedisCredStorage(oauth2client.client.Storage):
 @login_required
 @roles_required(['admin', 'developer'])
 def google_drive_callback():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     for key in request.args:
@@ -14787,6 +14827,7 @@ def trash_gd_file(section, filename, current_project):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_google_drive():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -14812,6 +14853,7 @@ def sync_with_google_drive():
 @login_required
 @roles_required(['admin', 'developer'])
 def gd_sync_wait():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -14918,6 +14960,7 @@ def gd_sync_wait():
 @login_required
 @roles_required(['admin', 'developer'])
 def onedrive_callback():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     for key in request.args:
@@ -15196,6 +15239,7 @@ def trash_od_file(section, filename, current_project):
 @login_required
 @roles_required(['admin', 'developer'])
 def sync_with_onedrive():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -15221,6 +15265,7 @@ def sync_with_onedrive():
 @login_required
 @roles_required(['admin', 'developer'])
 def od_sync_wait():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -15347,6 +15392,7 @@ def add_br(text):
 def checkin_sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -15378,6 +15424,7 @@ def checkin_sync_with_google_drive():
 def checkin_sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     if 'taskwait' not in session:
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
@@ -15407,6 +15454,7 @@ def checkin_sync_with_onedrive():
 @login_required
 @roles_required(['admin', 'developer'])
 def google_drive_page():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     if app.config['USE_GOOGLE_DRIVE'] is False:
@@ -15534,6 +15582,7 @@ def gd_fix_subdirs(service, the_folder):
 @login_required
 @roles_required(['admin', 'developer'])
 def onedrive_page():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     if app.config['USE_ONEDRIVE'] is False:
@@ -15668,6 +15717,7 @@ def od_fix_subdirs(http, the_folder):
 @login_required
 @roles_required(['admin'])
 def config_page():
+    setup_translation()
     form = ConfigForm(request.form)
     content = None
     ok = True
@@ -15722,6 +15772,7 @@ def config_page():
 @login_required
 @roles_required(['developer', 'admin'])
 def view_source():
+    setup_translation()
     source_path = request.args.get('i', None)
     current_project = get_current_project()
     if source_path is None:
@@ -15773,6 +15824,7 @@ def playground_static(current_project, userid, filename):
 def playground_modules(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     try:
         attach = int(request.args.get('attach', 0))
@@ -15800,6 +15852,7 @@ def playground_modules(current_project, userid, filename):
 def playground_sources(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     try:
         attach = int(request.args.get('attach', 0))
     except:
@@ -15829,6 +15882,7 @@ def playground_template(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
+    setup_translation()
     try:
         attach = int(request.args.get('attach', 0))
     except:
@@ -15855,6 +15909,7 @@ def playground_template(current_project, userid, filename):
 def playground_download(current_project, userid, filename):
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     #filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
     area = SavedFile(userid, fix=True, section='playground')
     the_directory = directory_for(area, current_project)
@@ -15874,6 +15929,7 @@ def playground_download(current_project, userid, filename):
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
 def playground_office_functionfile():
+    docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     response = make_response(render_template('pages/officefunctionfile.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200)
@@ -15882,6 +15938,7 @@ def playground_office_functionfile():
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
 def playground_office_taskpane():
+    docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     defaultDaServer = url_for('rootindex', _external=True)
@@ -15893,6 +15950,7 @@ def playground_office_taskpane():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -15974,6 +16032,7 @@ def cloud_trash(use_gd, use_od, section, the_file, current_project):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -16438,6 +16497,7 @@ def playground_files():
 @login_required
 @roles_required(['developer', 'admin'])
 def pull_playground_package():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
@@ -16648,6 +16708,7 @@ def fix_package_folder():
 def playground_packages():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     fix_package_folder()
     current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
@@ -17903,6 +17964,7 @@ function variablesReady(){
 def variables_report():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_file = request.args.get('file', None)
     current_project = request.args.get('project', 'default')
@@ -17941,7 +18003,6 @@ def variables_report():
                     else:
                         break
                     subnames.append(the_name)
-                logmessage("name is %s and subnames is %s" % (name, repr(subnames)))
                 on_first = True
                 for subname in subnames:
                     if the_type == 'defined by' and not on_first:
@@ -17963,6 +18024,7 @@ def playground_variables():
     current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_directory = directory_for(playground, current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -18028,6 +18090,7 @@ def assign_opacity(files):
 def playground_page_run():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     current_project = get_current_project()
     the_file = request.args.get('file')
     if the_file:
@@ -18077,6 +18140,7 @@ def delete_project(user_id, project_name):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_project():
+    setup_translation()
     if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
         use_od = False
     else:
@@ -18225,6 +18289,7 @@ def delete_variable_file(current_project):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
+    setup_translation()
     current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
@@ -18862,6 +18927,7 @@ def page_not_found_error(the_error):
 
 @app.errorhandler(Exception)
 def server_error(the_error):
+    setup_translation()
     if hasattr(the_error, 'interview') and the_error.interview.debug and hasattr(the_error, 'interview_status'):
         the_history = get_history(the_error.interview, the_error.interview_status)
     else:
@@ -19132,6 +19198,7 @@ def logfile(filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def logs():
+    setup_translation()
     form = LogForm(request.form)
     use_zip = request.args.get('zip', None)
     if LOGSERVER is None and use_zip:
@@ -19233,6 +19300,7 @@ def logs():
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required
 def request_developer():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     from docassemble.webapp.users.forms import RequestDeveloperForm
@@ -19345,6 +19413,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
 @login_required
 @roles_required(['admin', 'developer'])
 def utilities():
+    setup_translation()
     form = Utilities(request.form)
     fields_output = None
     word_box = None
@@ -19578,6 +19647,7 @@ def ml_prefix(the_package, the_file):
 @login_required
 @roles_required(['admin', 'developer', 'trainer'])
 def train():
+    setup_translation()
     the_package = request.args.get('package', None)
     the_file = request.args.get('file', None)
     the_group_id = request.args.get('group_id', None)
@@ -20228,6 +20298,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
+    setup_translation()
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
@@ -20409,6 +20480,7 @@ def login_or_register(sender, user, source, **extra):
         session['user_id'] = user.id
     if user.language:
         session['language'] = user.language
+        docassemble.base.functions.set_language(user.language)
 
 def update_last_login(user):
     user.last_login = datetime.datetime.utcnow()
@@ -20483,6 +20555,7 @@ def fax_callback():
 @app.route("/voice", methods=['POST', 'GET'])
 @csrf.exempt
 def voice():
+    docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     resp = twilio.twiml.voice_response.VoiceResponse()
     if twilio_config is None:
         logmessage("voice: ignoring call to voice because Twilio not enabled")
@@ -20517,6 +20590,7 @@ def voice():
 @app.route("/digits", methods=['POST', 'GET'])
 @csrf.exempt
 def digits():
+    docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     resp = twilio.twiml.voice_response.VoiceResponse()
     if twilio_config is None:
         logmessage("digits: ignoring call to digits because Twilio not enabled")
@@ -20636,6 +20710,7 @@ def sms():
     return Response(str(resp), mimetype='text/xml')
 
 def do_sms(form, base_url, url_root, config='default', save=True):
+    docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     resp = twilio.twiml.messaging_response.MessagingResponse()
     special_messages = list()
     if twilio_config is None:
@@ -21513,6 +21588,7 @@ def get_user_list(include_inactive=False, start_id=None):
 @login_required
 @roles_required(['admin', 'developer'])
 def translation_file():
+    setup_translation()
     form = Utilities(request.form)
     yaml_filename = form.interview.data
     if yaml_filename is None or not re.search(r'\S', yaml_filename):
@@ -23027,6 +23103,11 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
+    interview_status.footer = title_info.get('footer', the_main_page_parts['main page footer'] or get_part('global footer'))
+    if interview_status.footer:
+        interview_status.footer = re.sub(r'</?p.*?>', '', str(interview_status.footer), flags=re.IGNORECASE).strip()
+        if interview_status.footer == 'off':
+            interview_status.footer = ''
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if steps is None:
@@ -23977,6 +24058,7 @@ def api_interview_data():
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
 def manage_api():
+    setup_translation()
     if not current_user.has_role(*daconfig.get('api privileges', ['admin', 'developer'])):
         return ('File not found', 404)
     form = APIKey(request.form)
@@ -24651,6 +24733,7 @@ def applock(action, application):
 @app.errorhandler(CSRFError)
 def handle_csrf_error(the_error):
     if request.method == 'POST':
+        setup_translation()
         if 'ajax' in request.form and int(request.form['ajax']):
             flash(word("Input not processed because the page expired."), "success")
             return jsonify(dict(action='reload', reason='csrf_error'))

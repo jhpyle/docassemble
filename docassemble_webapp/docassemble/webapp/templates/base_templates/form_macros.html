@@ -1,7 +1,7 @@
 {% macro render_file_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False) -%}
 <div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if label_visible %}
-  {% if not label %}{% set label=field.label.text|word %}{% endif %}
+  {% if not label %}{% set label=field.label.text %}{% endif %}
   <label for="{{ field.id }}">{{ label|safe }}</label>
   {% endif %}
   <div class="custom-file">
@@ -16,7 +16,7 @@
 {% macro render_field(field, type=None, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, prelabel=None) %}
 <div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if field.type != 'HiddenField' and label_visible %}
-  {%- if not label %}{% set label=field.label.text|word %}{% endif %}
+  {%- if not label %}{% set label=field.label.text %}{% endif %}
   <label for="{{ field.id }}">{{ label|safe }}</label>
   {%- endif %}
   {%- if prelabel %}
@@ -46,7 +46,7 @@
 {%- if not extra_class %}{% set extra_class='' %}{% endif %}
 <div class="input-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}{{ extra_class }}">
   {%- if field.type != 'HiddenField' and label_visible %}
-  {%- if not label %}{% set label=field.label.text|word %}{% endif %}
+  {%- if not label %}{% set label=field.label.text %}{% endif %}
   <div class="input-group-prepend">
     <div class="input-group-text">
     {{ label|safe }}
@@ -69,7 +69,7 @@
 {%- endmacro %}
 
 {% macro render_checkbox_field(field, label=None) %}
-{%- if not label %}{% set label=field.label.text|word %}{% endif %}
+{%- if not label %}{% set label=field.label.text %}{% endif %}
 <div class="form-group">
   <div class="form-check">
     {{ field(type='checkbox', class='form-check-input', **kwargs) }}
@@ -126,14 +126,14 @@
 
 {% macro render_submit_field(field, label=None, id=None, tabindex=None, class=None, title=None, style=None, data=None) %}
     {%- if not class %}{% set class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'] %}{% endif %}
-    {%- if not label %}{% set label=field.label.text|word %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if style %} style="{{ style }}"{% endif %}{% if data %}{% for key in data %} data-{{ key }}="{{ data[key] }}"{% endfor %}{% endif %}>{{label}}</button>
+    {%- if not label %}{% set label=field.label.text %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}{% if title %} title="{{ title }}"{% endif %}{% if style %} style="{{ style }}"{% endif %}{% if data %}{% for key in data %} data-{{ key }}="{{ data[key] }}"{% endfor %}{% endif %}>{{label}}</button>
 {%- endmacro %}
 
 {% macro myrender_field(field, label=None, label_visible=True, right_url=None, right_label=None) %}
     <div class="control-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
       {%- if field.type != 'HiddenField' and label_visible %}
         {%- if not label %}
-          {%- set label=field.label.text|word %}
+          {%- set label=field.label.text %}
         {%- endif %}
       <label for="{{ field.id }}">{{ label|safe }}</label>
         {%- endif %}
@@ -149,7 +149,7 @@
 {%- endmacro %}
 
 {% macro myrender_submit_field(field, label=None, tabindex=None, id=None) %}
-    {%- if not label %}{% set label=field.label.text|word %}{% endif %}
+    {%- if not label %}{% set label=field.label.text %}{% endif %}
     <button type="submit" {% if id %}id="{{ id }}" {% endif %}class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{ label }}</button>
 {%- endmacro %}
 

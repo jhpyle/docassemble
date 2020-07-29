@@ -1,3 +1,4 @@
+{%- set footer_content = get_part('login page footer', get_part('global footer')) %}
 {%- set page_title = get_part('login page title', word('Sign in')) %}
 {%- set tab_title = get_part('login page tab title', word('Sign in')) %}
 {%- if extra_css is not defined %}
@@ -72,7 +73,7 @@
             </div>
           </form>
           {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
-          <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
+          <p style="padding: 15px 15px 5px 15px;"><strong>{{ word('or') }}</strong></p>
           {%- endif %}
           {%- endif %}
           {%- if config['USE_PHONE_LOGIN'] %}

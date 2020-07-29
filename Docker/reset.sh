@@ -33,6 +33,7 @@ if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
 	supervisorctl --serverurl http://localhost:9001 start rabbitmq || exit 1
     fi
+    sleep 1
     supervisorctl --serverurl http://localhost:9001 start celery || exit 1
 fi
 

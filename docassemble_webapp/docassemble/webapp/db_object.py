@@ -14,8 +14,8 @@ def init_flask():
     else:
         from flask_sqlalchemy import SQLAlchemy
     db = SQLAlchemy()
-    import flask_user
-    UserMixin = flask_user.UserMixin
+    import docassemble_flask_user
+    UserMixin = docassemble_flask_user.UserMixin
     return db
 
 def init_sqlalchemy():

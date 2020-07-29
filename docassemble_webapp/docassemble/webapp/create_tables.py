@@ -18,7 +18,7 @@ from sqlalchemy import create_engine, MetaData
 #import random
 #import string
 from docassemble.base.generate_key import random_alphanumeric
-from flask_user import UserManager, SQLAlchemyAdapter
+from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 import pkg_resources
 import os
 from docassemble.webapp.database import alchemy_connection_string, dbtableprefix

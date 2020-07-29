@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.51] - 2020-07-28
+### Added
+- The `footer` screen part.
+- `terms` and `autoterms` are now included in JSON question data.
+### Fixed
+- `signature` blocks did not support `continue button field`.
+- System message translation system had gaps due to the integration
+  with Flask-User's translation system not working as intended.
+- Inconsistent behavior of `force_ask()` depending on whether an item
+  was listed first or not.
+
 ## [1.1.50] - 2020-07-21
 ### Added
 - Feature for viewing names in an interview and the YAML blocks

@@ -162,7 +162,7 @@ install_requires = [
     "uritemplate==3.0.0",
     "urllib3==1.25.6",
     "us==1.0.0",
-    "user-agents==2.0",
+    "user-agents==2.1",
     "wcwidth==0.1.7",
     "webencodings==0.5.1",
     "Werkzeug==1.0.0",
