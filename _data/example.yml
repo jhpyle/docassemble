@@ -11784,6 +11784,52 @@
   fields:
     - Date of birth: date_of_birth
       datatype: date
+"demo-multi-sign": |-
+  include:
+    - docassemble.demo:data/questions/sign.yml
+  ---
+  objects:
+    - user: Person
+    - witnesses: DAList.using(object_type=Person, there_are_any=True)
+    - sign: SigningProcess.using(documents='statement')
+  ---
+  mandatory: True
+  code: |
+    user.name.text
+    user.favorite_fruit
+    witnesses.gather()
+    sign.out_for_signature()
+    final_screen
+  ---
+  attachment:
+    name: |
+      ${ user.possessive('Declaration of Favorite Fruit') }
+    filename: |
+      fruit_declaration_${ space_to_underscore(user) }
+    docx template file: declaration_of_favorite_fruit.docx
+    variable name: statement
+  ---
+  reload: 60
+  event: final_screen
+  question: |
+    % if sign.all_signatures_in():
+    Your document is ready.
+    % else:
+    Your document is out for signature.
+    % endif
+  subquestion: |
+    % if not sign.all_signatures_in():
+    You will receive an e-mail
+    when your document has been
+    signed by all parties.
+    % endif
+  attachment code: |
+    sign.list_of_documents(refresh=True)
+"demo-multi-sign-2": |-
+  objects:
+    - user: Person
+    - witnesses: DAList.using(object_type=Person, there_are_any=True)
+    - sign: SigningProcess.using(documents=['statement', 'certificate_of_service'])
 "discovery": |-
   template: discovery['rent records']
   content: |
@@ -13338,23 +13384,6 @@
   code: |
     multi_user = True
     signature = '(Your signature will go here)'
-  ---
-  mandatory: True
-  code: |
-    intro_seen
-    email_address
-    template_file
-    notified_of_url
-    agrees_to_sign
-    signature_reset
-    signature
-    document_emailed
-    final_screen
-  ---
-  code: |
-    notified_of_url = True
-    prevent_going_back()
-    force_ask('screen_with_link')
 "signature-diversion": |-
   question: |
     Sign your name

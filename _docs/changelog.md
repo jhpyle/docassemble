@@ -4,6 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.54](https://github.com/jhpyle/docassemble/releases/tag/v1.1.54) - 2020-08-04
+
+### Added
+- The `attr_name()` method of the `DAObject` class.
+- The `dry_run` keyword parameter for `send_email()` and `send_sms()`.
+
+### Changed
+- The `str` keyword parameter when initializing a `DAEmpty` object.
+- New recipe for gathering multiple signatures; uses a modular
+  approach.
+
+### Fixed
+- Missing control for `capitalize` in some language functions.
+- SendGrid fails when subject line is empty string.
+- The `temporary` and `once_temporary` keyword parameters for
+  `interview_url_action()` were not working.
+- Problem with running interviews in a different tab in Playground on
+  Chrome.
+
 ## [1.1.53](https://github.com/jhpyle/docassemble/releases/tag/v1.1.53) - 2020-07-29
 
 ### Fixed

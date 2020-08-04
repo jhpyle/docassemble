@@ -167,393 +167,6 @@ this to the top of your [Python module] file:
 from docassemble.base.util import Individual
 {% endhighlight %}
 
-## <a name="DAObject"></a>DAObject
-
-All **docassemble** objects are instances of the `DAObject` class.
-`DAObject`s are different from normal [Python objects] because they
-have special features that allow their attributes to be set by
-**docassemble** questions.  If `fruit` is an ordinary [Python object]
-and you refer to `fruit.seeds` when `seeds` is not an existing
-attribute of `fruit`, [Python] will generate an [AttributeError].  But
-if `fruit` is a `DAObject`, **docassemble** will intercept that error
-and look for a [`question`] or [`code`] block that offers to define
-`fruit.seeds`.  Or, if that does not work, it will look for a
-[`generic object`] block that offers to define `x.seeds` for a `DAObject`.
-
-From the interview developer's perspective, `DAObject`s can be treated
-like ordinary [Python objects] in most ways, but there are exceptions.
-
-An important characteristic of all [`DAObject`]s is that they have
-intrinsic names.  If you do:
-
-{% highlight yaml %}
-objects:
-  - foo: DAObject
-{% endhighlight %}
-
-then `foo.instanceName` will be `'foo'`.  The object knows its own
-name.  This is not a standard feature of [Python] objects, but a
-feature added by **docassemble**.
-
-Since `foo` is a [Python] object, you can create other names
-for the same object, but the `instanceName` attribute will not change.
-
-{% highlight python %}
->>> from docassemble.base.util import DAObject
->>> foo = DAObject('foo')
->>> foo.instanceName
-'foo'
->>> foo.seeds = 4
->>> foo.seeds
-4
->>> bar = foo
->>> bar.instanceName
-'foo'
->>> bar.seeds += 1
->>> foo.seeds
-5
-{% endhighlight %}
-
-The fact that each [`DAObject`] has only one intrinsic name can lead
-to confusion in interviews if you are not careful.  For example,
-suppose you try the following:
-
-{% include side-by-side.html demo="branch-error" %}
-
-This will result in the following error:
-
-> There was a reference to a variable 'long_branch.length' that could
-> not be looked up in the question file or in any of the files
-> incorporated by reference into the question file.
-
-You might think, "hey, why doesn't my interview ask the question that
-sets `tree.branch.length`?"  The reason is that `tree.branch` is just
-an alias for `long_branch`, and the object knows itself only as
-`long_branch`.  Thus, when the interview needs a definition for the
-`.length` attribute of this object, it will look for
-`long_branch.length`.
-
-If you had a question that defined `long_branch.length` or a
-[`generic object`] question for the `x.length` where `x` is a
-[`DAObject`], then the interview would use that question.  However,
-the interview is not able to search for the length of the branch using
-`tree.branch.length` since the intrinsic name of the object is
-`long_branch`, not `tree.branch`.
-
-This will work as intended:
-
-{% include side-by-side.html demo="branch-no-error" %}
-
-You also need to be careful about intrinsic names if you [write your
-own functions].  For example, assume you wrote a [Python module]
-containing:
-
-{% highlight python %}
-from docassemble.base.util import DAList, Thing
-
-def build_list():
-    the_list = DAList('the_list', object_type=Thing)
-    for indexno in range(4):
-        the_list.appendObject()
-    return the_list
-{% endhighlight %}
-
-Assume you then created some lists in your interview:
-
-{% highlight yaml %}
-code: |
-  list_of_fruits = build_list()
-  list_of_vegetables = build_list()
-{% endhighlight %}
-
-The problem here is that the `list_of_fruits` and `list_of_vegetables`
-objects, as well as their subobjects, will not have the right
-intrinsic names.
-
-In some situations, you can write `foo = DAObject()` instead of `foo =
-DAObject('foo')`, and it will automatically figure out the instance
-name, but this is fragile, and under certain circumstances it can
-fail, and it will fall back to giving the object a random instrinsic
-name.  To avoid this problem, you can always set the intrinsic name of
-an object at the time you create it by passing the intrinsic name you
-want to use as the first parameter.
-
-Thus, you can do:
-
-{% highlight python %}
-def build_list(list_name):
-    the_list = DAList(list_name, object_type=Thing)
-    for indexno in range(4):
-        the_list.appendObject()
-    return the_list
-{% endhighlight %}
-
-And then this will work:
-
-{% highlight yaml %}
-code: |
-  list_of_fruits = build_list('list_of_fruits')
-  list_of_vegetables = build_list('list_of_vegetables')
-{% endhighlight %}
-
-The requirement of making sure your objects are aware of their names
-is inconvenient, but necessary.  [Python] has no built-in system by
-which a variable can know its own name.  In **docassemble**, it is
-necessary for objects to know their own names so that when your
-[interview logic] refers to an undefined object attribute, list element,
-or dictionary key, **docassemble** knows what [`question`] or [`code`]
-block to use to obtain a definition of the undefined variable.
-
-One of the useful things about `DAObject`s is that you can write
-[`generic object`] questions that work in a wide variety of
-circumstances because the questions can use the variable name itself
-when forming the text of the question to ask the user.
-
-<a name="DAObject.object_name"></a>If you refer to a `DAObject` in a
-[Mako] template (or reduce it to text with Python's [str() function]),
-this will have the effect of calling the [`object_name()`] method,
-which attempts to return a human-friendly name for the object.
-
-For example:
-
-{% include side-by-side.html demo="daobject" %}
-
-Although there is only one question for `x.color`, this question
-generates both "What is the color of the turnip?" and "What is the
-color of the front gate in the park?"  This is because [`object_name()`]
-is implicitly called and it turns `park.front_gate` into "front gate
-in the park."
-
-The [`object_name()`] method is multi-lingual-friendly.  By using
-`docassemble.base.util.update_word_collection()`, you can provide
-non-English translations for words that come from variable names, such
-as "turnip," "park," and "front gate."  By using
-[`docassemble.base.util.update_language_function()`], you can define a
-non-English version of the `a_in_the_b()` function, which
-[`object_name()`] uses to convert an attribute name like
-`park.front_gate` into "front gate in the park."  (It calls
-`a_in_the_b('front gate', 'park')`.)  So in a Spanish interview,
-`park.front_gate.object_name()` would return "puerta de entrada en el
-parque."  (The Spanish version of `a_in_the_b()` will be more
-complicated than the English version because it will need to determine
-the gender of the second argument.)
-
-<a name="DAObject.object_possessive"></a>A related method of
-`DAObject` is `object_possessive()`.  Calling
-`turnip.object_possessive('leaves')` will return `the turnip's
-leaves`.  Calling `park.front_gate.object_possessive('latch')` will
-return `the latch of the front gate in the park`.
-
-The `DAObject` is the most basic object, and all other **docassemble**
-objects inherit from it.  These objects will have different methods
-and behaviors.  For example, if `friend` is an [`Individual`], calling
-`${ friend }` in a [Mako] template will not return
-`friend.object_name()`; rather, it will return `friend.full_name()`,
-which may require asking the user for the `friend`'s name.
-
-<a name="DAObject.initializeAttribute"></a>A [`DAObject`] can have any
-attributes you want to give it.  When those attributes are objects
-themselves, you need to use the `initializeAttribute()` method.
-
-One way to initialize attributes of an object is to use [Python] code:
-
-{% highlight yaml %}
-objects:
-  - fish: DAObject
----
-code: |
-  fish.best_friend = DAObject()
-{% endhighlight %}
-
-Under many circumstances, this works, and the variable on the left
-will be assigned a correct `instanceName`.
-
-However, **docassemble**'s system for setting the `instanceName`
-in circumstances like this relies on hacking the internals of
-[Python].  It is not guaranteed to work in all circumstances.  A safe
-way to define attributes is as follows:
-
-{% highlight yaml %}
-objects:
-  - fish: DAObject
----
-sets: fish.best_friend
-code: |
-  fish.initializeAttribute('best_friend', DAObject)
-{% endhighlight %}
-
-The first argument to `initializeAttribute` is the attribute name, as
-quoted text.  The second argument is the name of the object the
-attribute should be (not quoted).
-
-It is necessary to modify the [`code`] block with [`sets`] because
-**docassemble** needs help figuring out that the code block
-offers to define `fish.best_friend`.
-
-The `initializeAttribute()` method returns the object it just
-initialized.
-
-<a name="DAObject.reInitializeAttribute"></a>The
-[`initializeAttribute()`] method will have no effect if the attribute
-is already defined.  If you want to force the setting of an attribute
-in situations when the attribute is already defined, use
-`reInitializeAttribute()` instead of [`initializeAttribute()`], and it
-will overwrite the attribute.  The `reInitializeAttribute()` method
-returns the object it just reinitialized.
-
-Another way to define object attributes is to use the [`objects`]
-block.
-
-{% highlight yaml %}
-objects:
-  - fish: DAObject
-  - fish.best_friend: DAObject
-{% endhighlight %}
-
-You can even use [`objects`] with the [`generic object`] modifier:
-
-{% highlight yaml %}
-generic object: Person
-objects: |
-  - x.principal_place_of_business: City
-{% endhighlight %}
-
-This will ensure that the `principal_place_of_business` of an
-[`Individual`] or [`Organization`] is always a [`City`].
-
-The [`DAObject`] provides some convenience functions for working with
-object attributes.
-
-<a name="DAObject.attribute_defined"></a>The `attribute_defined()`
-method will return `True` or `False` depending on whether the given
-attribute is defined.  The attribute name must be provided as quoted
-text.  For example:
-
-{% highlight yaml %}
-objects:
-  - client: Individual
----
-mandatory: True
-question: |
-  % if client.address.attribute_defined('city'):
-  You live in ${ client.address.city }.
-  % else:
-  I don't know where you live.
-  % endif
-{% endhighlight %}
-
-<a name="DAObject.attr"></a>The `attr()` method will return the value
-of the given attribute.  The attribute must be provided as text.
-(E.g., `client.address.attr('city')`.)  If the attribute is not
-defined, `None` will be returned.  This can be useful if you have
-several attributes but you want to access them programmatically.  For
-example:
-
-{% highlight yaml %}
-mandatory: True
-question: |
-  Your address.
-subquestion: |
-  % for part in ['address', 'city', 'state', 'zip']:
-  Your ${ part } is ${ client.address.attr(part) }.
-
-  % endfor
-{% endhighlight %}
-
-Note that because `None` is returned when the attribute is not
-defined, this method will not trigger a process of retrieving a
-definition for the attribute.  If you want to trigger this process,
-use the built-in [Python] function [`getattr()`].
-
-{% highlight yaml %}
-code: |
-  for characteristic in ['eye_color', 'hair_color', 'weight']:
-    getattr(client.child[i], characteristic)
-  client.child[i].complete = True
-{% endhighlight %}
-
-As discussed below, the [`Individual`] object has interesting methods
-related to pronouns.  These methods are universal, so you can use them
-on any [`DAObject`].
-
-<a name="DAObject.delattr"></a>If you want to delete attributes of a
-[`DAObject`], where the attributes may or may not be defined, you can
-use the `delattr()` method.
-
-{% highlight yaml %}
-client.delattr('birthdate')
-{% endhighlight %}
-
-You can also give it multiple attribute names.
-
-{% highlight yaml %}
-client.delattr('birthdate', 'sibling_count')
-{% endhighlight %}
-
-<a name="DAObject.invalidate_attr"></a>The `invalidate_attr()` method
-is like the `delattr()` method, except it remembers the values of the
-attributes in order to present them as default values to the user when
-the [`question`] that defines the attribute is asked again.
-
-<a name="DAObject.pronoun"></a><a
-name="DAObject.pronoun_objective"></a><a
-name="DAObject.pronoun_subjective"></a><a
-name="DAObject.pronoun_possessive"></a>If the object is a generic
-[`DAObject`], or a subclass of [`DAObject`] that does not have any
-special pronoun behavior, then the `.pronoun()`,
-`.pronoun_subjective()`, and `.pronoun_objective()` methods all return
-`'it'`.  The `.pronoun_possessive()` method returns `'its'` followed
-by the argument.  For example, `thing.pronoun_possessive('reason')`
-returns `'its reason'`.
-
-<a name="DAObject.as_serializable"></a>The `.as_serializable()` method
-returns a representation of the object and its attributes.  Objects
-are converted to [Python dict]s, so that they can be serialized to
-[JSON].  The conversion is not reversible, and much information cannot
-be converted.  Nevertheless, this can be a useful way to access
-information in your objects in other systems.  See also the
-[`all_variables()`] function.
-
-<a name="DAObject.copy_shallow"></a>The `copy_shallow()` method
-creates a copy of the object and gives it a new intrinsic name.
-
-{% highlight python %}
-new_object = old_object.copy_shallow('new_object')
-{% endhighlight %}
-
-The copy is "shallow," which means that while `new_object` will be a
-new object with its own separate existence, sub-objects of the new
-object will simply be references to corresponding sub-objects of the
-original object.
-
-{% highlight python %}
->>> new_object is old_object
-False
->>> new_object.sub_object is old_object.sub_object
-True
-{% endhighlight %}
-
-{% include side-by-side.html demo="copy-shallow" %}
-
-<a name="DAObject.copy_deep"></a>The `copy_deep()` method creates a
-copy of the object its sub-objects and gives it, and all of its
-sub-objects, new intrinsic names.
-
-{% highlight python %}
-new_object = old_object.copy_deep('new_object')
-{% endhighlight %}
-
-Because the copy is "deep," each sub-object has a separate existence:
-
-{% highlight python %}
->>> new_object is old_object
-False
->>> new_object.sub_object is old_object.sub_object
-False
-{% endhighlight %}
-
-{% include side-by-side.html demo="copy-deep" %}
-
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
@@ -978,6 +591,422 @@ The `DAList` uses the following attributes:
 
 For more information about gathering items using [`DAList`] objects,
 see the section on [groups].
+
+## <a name="DAObject"></a>DAObject
+
+All **docassemble** objects are instances of the `DAObject` class.
+`DAObject`s are different from normal [Python objects] because they
+have special features that allow their attributes to be set by
+**docassemble** questions.  If `fruit` is an ordinary [Python object]
+and you refer to `fruit.seeds` when `seeds` is not an existing
+attribute of `fruit`, [Python] will generate an [AttributeError].  But
+if `fruit` is a `DAObject`, **docassemble** will intercept that error
+and look for a [`question`] or [`code`] block that offers to define
+`fruit.seeds`.  Or, if that does not work, it will look for a
+[`generic object`] block that offers to define `x.seeds` for a `DAObject`.
+
+From the interview developer's perspective, `DAObject`s can be treated
+like ordinary [Python objects] in most ways, but there are exceptions.
+
+An important characteristic of all [`DAObject`]s is that they have
+intrinsic names.  If you do:
+
+{% highlight yaml %}
+objects:
+  - foo: DAObject
+{% endhighlight %}
+
+then `foo.instanceName` will be `'foo'`.  The object knows its own
+name.  This is not a standard feature of [Python] objects, but a
+feature added by **docassemble**.
+
+Since `foo` is a [Python] object, you can create other names
+for the same object, but the `instanceName` attribute will not change.
+
+{% highlight python %}
+>>> from docassemble.base.util import DAObject
+>>> foo = DAObject('foo')
+>>> foo.instanceName
+'foo'
+>>> foo.seeds = 4
+>>> foo.seeds
+4
+>>> bar = foo
+>>> bar.instanceName
+'foo'
+>>> bar.seeds += 1
+>>> foo.seeds
+5
+{% endhighlight %}
+
+The fact that each [`DAObject`] has only one intrinsic name can lead
+to confusion in interviews if you are not careful.  For example,
+suppose you try the following:
+
+{% include side-by-side.html demo="branch-error" %}
+
+This will result in the following error:
+
+> There was a reference to a variable 'long_branch.length' that could
+> not be looked up in the question file or in any of the files
+> incorporated by reference into the question file.
+
+You might think, "hey, why doesn't my interview ask the question that
+sets `tree.branch.length`?"  The reason is that `tree.branch` is just
+an alias for `long_branch`, and the object knows itself only as
+`long_branch`.  Thus, when the interview needs a definition for the
+`.length` attribute of this object, it will look for
+`long_branch.length`.
+
+If you had a question that defined `long_branch.length` or a
+[`generic object`] question for the `x.length` where `x` is a
+[`DAObject`], then the interview would use that question.  However,
+the interview is not able to search for the length of the branch using
+`tree.branch.length` since the intrinsic name of the object is
+`long_branch`, not `tree.branch`.
+
+This will work as intended:
+
+{% include side-by-side.html demo="branch-no-error" %}
+
+You also need to be careful about intrinsic names if you [write your
+own functions].  For example, assume you wrote a [Python module]
+containing:
+
+{% highlight python %}
+from docassemble.base.util import DAList, Thing
+
+def build_list():
+    the_list = DAList('the_list', object_type=Thing)
+    for indexno in range(4):
+        the_list.appendObject()
+    return the_list
+{% endhighlight %}
+
+Assume you then created some lists in your interview:
+
+{% highlight yaml %}
+code: |
+  list_of_fruits = build_list()
+  list_of_vegetables = build_list()
+{% endhighlight %}
+
+The problem here is that the `list_of_fruits` and `list_of_vegetables`
+objects, as well as their subobjects, will not have the right
+intrinsic names.
+
+In some situations, you can write `foo = DAObject()` instead of `foo =
+DAObject('foo')`, and it will automatically figure out the instance
+name, but this is fragile, and under certain circumstances it can
+fail, and it will fall back to giving the object a random instrinsic
+name.  To avoid this problem, you can always set the intrinsic name of
+an object at the time you create it by passing the intrinsic name you
+want to use as the first parameter.
+
+Thus, you can do:
+
+{% highlight python %}
+def build_list(list_name):
+    the_list = DAList(list_name, object_type=Thing)
+    for indexno in range(4):
+        the_list.appendObject()
+    return the_list
+{% endhighlight %}
+
+And then this will work:
+
+{% highlight yaml %}
+code: |
+  list_of_fruits = build_list('list_of_fruits')
+  list_of_vegetables = build_list('list_of_vegetables')
+{% endhighlight %}
+
+The requirement of making sure your objects are aware of their names
+is inconvenient, but necessary.  [Python] has no built-in system by
+which a variable can know its own name.  In **docassemble**, it is
+necessary for objects to know their own names so that when your
+[interview logic] refers to an undefined object attribute, list element,
+or dictionary key, **docassemble** knows what [`question`] or [`code`]
+block to use to obtain a definition of the undefined variable.
+
+One of the useful things about `DAObject`s is that you can write
+[`generic object`] questions that work in a wide variety of
+circumstances because the questions can use the variable name itself
+when forming the text of the question to ask the user.
+
+<a name="DAObject.object_name"></a>If you refer to a `DAObject` in a
+[Mako] template (or reduce it to text with Python's [str() function]),
+this will have the effect of calling the [`object_name()`] method,
+which attempts to return a human-friendly name for the object.
+
+For example:
+
+{% include side-by-side.html demo="daobject" %}
+
+Although there is only one question for `x.color`, this question
+generates both "What is the color of the turnip?" and "What is the
+color of the front gate in the park?"  This is because [`object_name()`]
+is implicitly called and it turns `park.front_gate` into "front gate
+in the park."
+
+The [`object_name()`] method is multi-lingual-friendly.  By using
+`docassemble.base.util.update_word_collection()`, you can provide
+non-English translations for words that come from variable names, such
+as "turnip," "park," and "front gate."  By using
+[`docassemble.base.util.update_language_function()`], you can define a
+non-English version of the `a_in_the_b()` function, which
+[`object_name()`] uses to convert an attribute name like
+`park.front_gate` into "front gate in the park."  (It calls
+`a_in_the_b('front gate', 'park')`.)  So in a Spanish interview,
+`park.front_gate.object_name()` would return "puerta de entrada en el
+parque."  (The Spanish version of `a_in_the_b()` will be more
+complicated than the English version because it will need to determine
+the gender of the second argument.)
+
+<a name="DAObject.object_possessive"></a>A related method of
+`DAObject` is `object_possessive()`.  Calling
+`turnip.object_possessive('leaves')` will return `the turnip's
+leaves`.  Calling `park.front_gate.object_possessive('latch')` will
+return `the latch of the front gate in the park`.
+
+The `DAObject` is the most basic object, and all other **docassemble**
+objects inherit from it.  These objects will have different methods
+and behaviors.  For example, if `friend` is an [`Individual`], calling
+`${ friend }` in a [Mako] template will not return
+`friend.object_name()`; rather, it will return `friend.full_name()`,
+which may require asking the user for the `friend`'s name.
+
+<a name="DAObject.initializeAttribute"></a>A [`DAObject`] can have any
+attributes you want to give it.  When those attributes are objects
+themselves, you need to use the `initializeAttribute()` method.
+
+One way to initialize attributes of an object is to use [Python] code:
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+---
+code: |
+  fish.best_friend = DAObject()
+{% endhighlight %}
+
+Under many circumstances, this works, and the variable on the left
+will be assigned a correct `instanceName`.
+
+However, **docassemble**'s system for setting the `instanceName`
+in circumstances like this relies on hacking the internals of
+[Python].  It is not guaranteed to work in all circumstances.  A safe
+way to define attributes is as follows:
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+---
+sets: fish.best_friend
+code: |
+  fish.initializeAttribute('best_friend', DAObject)
+{% endhighlight %}
+
+The first argument to `initializeAttribute` is the attribute name, as
+quoted text.  The second argument is the name of the object the
+attribute should be (not quoted).
+
+It is necessary to modify the [`code`] block with [`sets`] because
+**docassemble** needs help figuring out that the code block
+offers to define `fish.best_friend`.
+
+The `initializeAttribute()` method returns the object it just
+initialized.
+
+<a name="DAObject.reInitializeAttribute"></a>The
+[`initializeAttribute()`] method will have no effect if the attribute
+is already defined.  If you want to force the setting of an attribute
+in situations when the attribute is already defined, use
+`reInitializeAttribute()` instead of [`initializeAttribute()`], and it
+will overwrite the attribute.  The `reInitializeAttribute()` method
+returns the object it just reinitialized.
+
+Another way to define object attributes is to use the [`objects`]
+block.
+
+{% highlight yaml %}
+objects:
+  - fish: DAObject
+  - fish.best_friend: DAObject
+{% endhighlight %}
+
+You can even use [`objects`] with the [`generic object`] modifier:
+
+{% highlight yaml %}
+generic object: Person
+objects: |
+  - x.principal_place_of_business: City
+{% endhighlight %}
+
+This will ensure that the `principal_place_of_business` of an
+[`Individual`] or [`Organization`] is always a [`City`].
+
+The [`DAObject`] provides some convenience functions for working with
+object attributes.
+
+<a name="DAObject.attribute_defined"></a>The `attribute_defined()`
+method will return `True` or `False` depending on whether the given
+attribute is defined.  The attribute name must be provided as quoted
+text.  For example:
+
+{% highlight yaml %}
+objects:
+  - client: Individual
+---
+mandatory: True
+question: |
+  % if client.address.attribute_defined('city'):
+  You live in ${ client.address.city }.
+  % else:
+  I don't know where you live.
+  % endif
+{% endhighlight %}
+
+<a name="DAObject.attr"></a>The `attr()` method will return the value
+of the given attribute.  The attribute must be provided as text.
+(E.g., `client.address.attr('city')`.)  If the attribute is not
+defined, `None` will be returned.  This can be useful if you have
+several attributes but you want to access them programmatically.  For
+example:
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  Your address.
+subquestion: |
+  % for part in ['address', 'city', 'state', 'zip']:
+  Your ${ part } is ${ client.address.attr(part) }.
+
+  % endfor
+{% endhighlight %}
+
+Note that because `None` is returned when the attribute is not
+defined, this method will not trigger a process of retrieving a
+definition for the attribute.  If you want to trigger this process,
+use the built-in [Python] function [`getattr()`].
+
+{% highlight yaml %}
+code: |
+  for characteristic in ['eye_color', 'hair_color', 'weight']:
+    getattr(client.child[i], characteristic)
+  client.child[i].complete = True
+{% endhighlight %}
+
+As discussed below, the [`Individual`] object has interesting methods
+related to pronouns.  These methods are universal, so you can use them
+on any [`DAObject`].
+
+<a name="DAObject.attr_name"></a>Sometimes, you need to refer to the
+name of an attribute, rather than the attribute itself.  For example,
+when passing variable names to `showif()` or `force_ask()`, you need
+to refer to the names of variables as a text string, because if you
+just referred to the variable itself, you would be passing its value
+and the variable would need to be defined, which isn't what you want.
+
+For example, if you do this:
+
+{% highlight yaml %}
+code: |
+  force_ask(person[i].attr_name('birthdate'))
+{% endhighlight %}
+
+it will have the effect of doing:
+
+{% highlight yaml %}
+code: |
+  force_ask(person[i].instanceName + '.birthdate')
+{% endhighlight %}
+
+In the case of the fourth `person` in the list, this has the effect of
+doing:
+
+{% highlight yaml %}
+code: |
+  force_ask('person[3].birthdate')
+{% endhighlight %}
+
+<a name="DAObject.delattr"></a>If you want to delete attributes of a
+[`DAObject`], where the attributes may or may not be defined, you can
+use the `delattr()` method.
+
+{% highlight python %}
+client.delattr('birthdate')
+{% endhighlight %}
+
+You can also give it multiple attribute names.
+
+{% highlight yaml %}
+client.delattr('birthdate', 'sibling_count')
+{% endhighlight %}
+
+<a name="DAObject.invalidate_attr"></a>The `invalidate_attr()` method
+is like the `delattr()` method, except it remembers the values of the
+attributes in order to present them as default values to the user when
+the [`question`] that defines the attribute is asked again.
+
+<a name="DAObject.pronoun"></a><a
+name="DAObject.pronoun_objective"></a><a
+name="DAObject.pronoun_subjective"></a><a
+name="DAObject.pronoun_possessive"></a>If the object is a generic
+[`DAObject`], or a subclass of [`DAObject`] that does not have any
+special pronoun behavior, then the `.pronoun()`,
+`.pronoun_subjective()`, and `.pronoun_objective()` methods all return
+`'it'`.  The `.pronoun_possessive()` method returns `'its'` followed
+by the argument.  For example, `thing.pronoun_possessive('reason')`
+returns `'its reason'`.
+
+<a name="DAObject.as_serializable"></a>The `.as_serializable()` method
+returns a representation of the object and its attributes.  Objects
+are converted to [Python dict]s, so that they can be serialized to
+[JSON].  The conversion is not reversible, and much information cannot
+be converted.  Nevertheless, this can be a useful way to access
+information in your objects in other systems.  See also the
+[`all_variables()`] function.
+
+<a name="DAObject.copy_shallow"></a>The `copy_shallow()` method
+creates a copy of the object and gives it a new intrinsic name.
+
+{% highlight python %}
+new_object = old_object.copy_shallow('new_object')
+{% endhighlight %}
+
+The copy is "shallow," which means that while `new_object` will be a
+new object with its own separate existence, sub-objects of the new
+object will simply be references to corresponding sub-objects of the
+original object.
+
+{% highlight python %}
+>>> new_object is old_object
+False
+>>> new_object.sub_object is old_object.sub_object
+True
+{% endhighlight %}
+
+{% include side-by-side.html demo="copy-shallow" %}
+
+<a name="DAObject.copy_deep"></a>The `copy_deep()` method creates a
+copy of the object its sub-objects and gives it, and all of its
+sub-objects, new intrinsic names.
+
+{% highlight python %}
+new_object = old_object.copy_deep('new_object')
+{% endhighlight %}
+
+Because the copy is "deep," each sub-object has a separate existence:
+
+{% highlight python %}
+>>> new_object is old_object
+False
+>>> new_object.sub_object is old_object.sub_object
+False
+{% endhighlight %}
+
+{% include side-by-side.html demo="copy-deep" %}
 
 ## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
 
@@ -2104,6 +2133,13 @@ It can also be useful to use the `DAEmpty` object if you have a
 template that refers to variables that you decide you don't actually
 want to use.  If your interview simply sets those variables to
 `DAEmpty`, your template will not trigger an error.
+
+The `DAEmpty` object is not a type of `DAObject`.
+
+Optionally, you can use a different textual representation than the
+empty string `''`.  If you initialize the object as `DAEmpty(str='not
+applicable')`, then `'not applicable'` will be used in place of the
+empty string.
 
 ## <a name="DACatchAll"></a>`DACatchAll`
 

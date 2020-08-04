@@ -1475,7 +1475,9 @@ The `send_email()` function sends an e-mail using [Flask-Mail].
 
 All of the arguments to `send_email()` are [keyword arguments]:
 
-* `to` expects a [list] of [`Individual`]s.
+* `to` expects a list of [`Individual`]s, or [`Person`]s,
+  [`DAEmailRecipient`]s, or plain e-mail addresses.  It also accepts a
+  single item of any of these.
 * `sender` expects a single [`Individual`].  If not set, the
   `default_sender` information from the [configuration] is used.
 * `cc` expects a [list] of [`Individual`]s, or `None`.
@@ -1516,6 +1518,10 @@ All of the arguments to `send_email()` are [keyword arguments]:
 * `mailgun_variables` expects a [dictionary] of [user variables] that
   should be passed to the [Mailgun API].  This is only applicable if
   you are using the [Mailgun API] for [e-mail sending].
+* `dry_run` can be set to `True` if you want to do a "dry run" of the
+  e-mail sending process.  You would use this if you wanted to make
+  sure that all of the variables `send_email()` needs are defined
+  before you actually send the e-mail.  The default is `False`.
 
 It uses the `name` and `email` attributes of the listed [`Individual`]s
 to form e-mail addresses.
@@ -5556,6 +5562,10 @@ send_sms(to=None, body=None, template=None, task=None, attachments=None, config=
   [Twilio] phone number, you do not need to set this parameter.  This
   will determine which [Twilio] phone number will be used to send the
   text.
+* `dry_run` can be set to `True` if you want to do a "dry run" of the
+  SMS sending process.  You would use this if you wanted to make
+  sure that all of the variables `send_sms()` needs are defined
+  before you actually send the SMS message.  The default is `False`.
 
 When the recipients are [`Individual`]s or [`Person`]s, the
 `mobile_number` attribute will be used, but only if it already exists.
@@ -7527,3 +7537,4 @@ $(document).on('daPageLoad', function(){
 [JSONB]: https://www.postgresql.org/docs/current/functions-json.html
 [`psycopg2`]: https://www.psycopg.org/docs/
 [`variables snapshot db`]: {{ site.baseurl }}/docs/config.html#variables snapshot db
+[`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient

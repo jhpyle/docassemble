@@ -373,7 +373,7 @@ subquestion: |
 
 This is an example of a multi-user interview where one person (e.g.,
 an attorney) writes a document that they want a second person (e.g, a
-client) to sign.  It is a multi-user interview (with `multi_user` set
+client) to sign.  It is a multi-user interview (with [`multi_user`] set
 to `True`).  The attorney inputs the attorney's e-mail address and
 uploads a DOCX file containing:
 
@@ -1148,14 +1148,239 @@ sticker in place of the signature.
 # <a name="multisignature"></a>Gathering multiple signatures on a document
 
 This interview sends a document out for signature to an arbitrary
-number of signers, and then e-mails the document to the original user
+number of signers, and then e-mails the document to the signers
 when all signatures have been provided.
 
-{% include demo-side-by-side.html demo="multi-signature" %}
+{% include demo-side-by-side.html demo="demo-multi-sign" %}
 
-This interview is somewhat complicated, but there are security reasons
-for the use of complicated features; otherwise signers could
-manipulate URLs and sign on behalf of other people.
+This interview uses [`include`] to bring in the contents of 
+[`docassemble.demo:data/questions/sign.yml`].  This [YAML] file
+disabled server-side encryption by setting [`multi_user`] to `True`,
+and loads the `SigningProcess` class from the
+[`docassemble.demo.sign`] module.  The object `sign`, and instance of
+`SigningProcess`, controls the gathering and display of signatures.
+Note the way signatures and the dates of signatures are included in
+the DOCX template file, [declaration_of_favorite_fruit.docx]:
+
+![Declaration of Favorite Fruit]({{ site.baseurl }}/img/examples/declaration-favorite-fruit.png){: .maybe-full-width }
+
+The template uses methods on the `sign` object to include the
+signature images and dates.  To include a signature of an `Individual`
+or `Person` called `the_person`, you would call
+`sign.signature_of(the_person)`.  To include the date when the person
+signed, you would call `sign.signature_date_of(the_person)`.
+
+Note also the way that a line is placed underneath the signature
+image: on the line following the reference to
+`sign.signature_of(user)`, there is an empty table with a top
+border and no other borders.
+
+The interview gathers the user's name, the user's e-mail address, and
+the names and e-mail addresses of one or more witnesses.
+
+When the interview logic calls `sign.out_for_signature()`, this
+triggers the following process:
+
+#. In a background process, e-mails are sent to the user and the
+   witnesses with a hyperlink they can click on to sign the document.
+#. The hyperlink was created by `interview_url_action()` using the
+   [action] name `sign.request_signature` and an [action] argument
+   called `code` that contains a special code that identifies who the
+   signer is.
+#. When the signer clicks the hyperlink, they join the interview
+   session and the [action] is run, and the [action] calls
+   `force_ask()` to set up a series of screens that signer should see.
+   First the signer agrees to sign, then the signer signs, and then
+   the signer sees a "thank you" screen on which the signer can
+   download the document containing their signature.
+#. When all of the signatures have been collected, e-mails are sent to
+   the signers attaching the final signed document.
+
+The `sign.signature_of(the_person)` method is smart; it will return the empty
+string `''` if `the_person` has not signed yet, and it will return the
+person's signature if `the_person` has signed.  Similarly,
+`sign.signature_date_of(the_person)` returns a line of underscores if
+the person has not signed yet, and otherwise returns a `DADateTime`
+object containing the date when the person signed.  Specifically, when
+the person has not signed yet, the methods return a [`DAEmpty`]
+object.  This means you can safely write
+`sign.signature_of(the_person).show(width='1in')` or
+`sign.signature_date_of(the_person).format('yyyy-MM-dd')` and the
+method will still return the empty string or a line of underscores.
+
+In this example, only one document, `statement`, is assembled.  When
+you initialize a `SigningProcess` object, you could specify more than
+one document.  For example, instead of `documents='statement'`, you
+could write `documents=['statement', 'certificate_of_service']`.  Then
+the system would send out two documents for signature.
+
+{% include demo-side-by-side.html demo="demo-multi-sign-2" %}
+
+Note that `documents` refers not to the actual variables `statement`
+and `certificate_of_service`, but to the variables as text:
+`'statement'` and `'certificate_of_service'`.  This is important; if
+you were to write `documents=statement` or `documents=[statement,
+certificate_of_service]`, you would get an error.  It is necessary to
+refer to the documents using text references because the document
+itself contains references to `sign`, and if `sign` could not be
+defined until `statement` was defined, that would be a Catch-22.
+
+The `SigningProcess` object knows who the signers are because of the
+calls to `sign.signature_of()` and `sign.signature_date_of()` that
+were made while the document was being assembled.  Therefore, you
+don't have to explicitly state who needs to sign the document; you can
+use logic in your document to determine who the signers are.
+
+Note that in the `attachment code` part of the final `question`, it
+refers to `sign.list_of_documents(refresh=True)` instead of
+`statement`.  This is important because the underlying document is
+constantly changing as the signatures are added.  Calling
+`sign.list_of_documents(refresh=True)` will re-assemble the document
+and then return `[statement]` (the `statement` document inside a
+Python list).  The `list_of_documents()` method simply returns a list of
+[`DAFileCollection`] objects.
+
+The signing process is customizable.  The [`sign.yml`] file, which is
+included at the top of the interview [YAML] file above, contains
+default [`template`] and [`question`] blocks that you can override in
+your own [YAML].  For example, the default content for the initial
+e-mail to a signer is:
+
+{% highlight yaml %}
+generic object: SigningProcess
+template: x.initial_notification_email[i]
+subject: |
+  Your signature needed on
+  ${ x.singular_or_plural('a document', 'documents') }:
+  ${ x.documents_name() }
+content: |
+  ${ x.signer(i) },
+
+  Your signature is requested on
+  % if x.number_of_documents() == 1:
+  a document called
+  ${ x.documents_name() }.
+  % else:
+  the following
+  ${ x.singular_or_plural('document', 'documents') }:
+
+  % for document in x.list_of_documents():
+  * ${ document.info['name'] }
+  % endfor
+  % endif
+
+  To sign, [click here].
+
+  If you are willing to sign this document, please do so
+  in the next ${ nice_number(x.deadline_days) } days.
+  If you do not sign by
+  ${ today().plus(days=x.deadline_days) }, the above link
+  will expire.
+
+  [click here]: ${ x.url(i) }
+{% endhighlight %}
+
+You can overwrite this by including the following rule in your own
+[YAML], which will take precedence over the above rule.
+
+{% highlight yaml %}
+template: sign.initial_notification_email[i]
+subject: |
+  Please sign the Declaration of Favorite Fruit for ${ user }.
+content: |
+  ${ sign.signer(i) },
+
+  I would greatly appreciate it if you would sign the
+  Declaration of Favorite Fruit for ${ user } by
+  [clicking here](${ sign.url(i) }).
+  
+  If you are not willing to sign, please 
+{% endhighlight %}
+
+For more information about what templates are used, see the
+[`sign.yml`] file.  Some of the blocks in this file define `action`s;
+do not try to modify these unless you are sure you know what you are
+doing.
+
+The methods of the `SigningProcess` object that you might use are as
+follows.
+
+`sign.out_for_signature()` initiates the signing process.  It is safe
+to run this more than once.  If the signing process has already been
+started, the method will not do anything.
+
+`sign.signer(i)` is usually invoked in a `template` in a context where
+`i` is a code that uniquely identifies the signer.  It returns the
+signer as an object.
+
+`sign.url(i)` is also used inside of `template` blocks.  It returns
+the link that a signer should click on in order to join the interview
+and sign the document or documents.
+
+`sign.list_of_documents()` returns the assembled documents as a list
+of [`DAFileCollection`] objects.  If the optional keyword parameter
+`refresh` is set to `True`, then the documents will be re-assembled
+before they are returned.
+
+`sign.number_of_documents()` returns the number of documents as an
+integer.
+
+`sign.singular_or_plural()` is useful when writing `template`s.  The
+first argument is what should be returned if there is one document.
+The second argument is what should be returned if there are multiple
+documents.
+
+`sign.documents_name()` will return a `comma_and_list()` of the names
+of the documents.
+
+`sign.has_signed(the_signer)` will return `True` if `the_signer` has
+signed the document yet, and otherwise will return `False`.
+
+`sign.all_signatures_in()` will return `True` if all of the signers
+have signed, and otherwise will return `False`.
+
+`sign.list_of_signers()` will return a `DAList()` of the signers.
+`sign.number_of_signers()` will return the number of signers as an
+integer.  `sign.signers_who_signed()` will return the subset who have
+signed, and `sign.signers_who_did_not_sign()` will return the subset
+who have not yet signed.
+
+The methods `sign.signature_of(the_signer)` and
+`sign.signature_date_of(the_signer)` are discussed above.  These are
+typically used inside of documents.
+
+There is also the method `sign.signature_datetime_of(the_signer)`,
+which returns a `DADateTime` object representing the exact time the
+signer's signature was recorded.  There is also the method
+`sign.signature_ip_address_of(the_signer)`, which returns the IP
+address the signer was using.  The IP address, along with the date and
+time, are widely used ingredients of digital signatures.
+
+`sign.sign_for(the_signer, the_signer.signature)` will insert a
+signature manually, where `the_signer` is a person whose signature is
+referenced in the document, using the `signature_of()` method, and
+`the_signer.signature` is a variable defined by a [`signature`] block
+(a `DAFile` object).  Note that if this method is called more than
+once, each new time the date of the signature will be updated.  You
+may want to avoid this by doing:
+
+{% highlight python %}
+if not sign.has_signed(the_signer):
+  sign.sign_for(the_signer, the_signer.signature)
+{% endhighlight %}
+
+Then this code can safely be called more than once without changing
+the date of the signature.
+
+Calling `sign.refresh_documents()` will generate fresh copies of the
+documents.  (It uses the [`reconsider()`] function.)
+
+Note that in the [`sign.yml`] file, the [`signature`] block uses
+`validation code` that calls `x.validate_signature(i)`.  This is
+important because it performs the additional tasks necessary to record
+the signature, such as recording the IP address.  You will probably
+not need to call `validate_signature()` outside of this context; the
+`sign_for()` method calls `validate_signature()` for you.
 
 # <a name="phonenumber"></a>Validating international phone numbers
 
@@ -1277,3 +1502,14 @@ conditions the questions should be asked.
 [generic-document.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/generic-document.docx
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [`force_ask()`]: {{ site.baseurl }}/docs/force_ask.html#force_ask
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`docassemble.demo:data/questions/sign.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/sign.yml
+[declaration_of_favorite_fruit.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/declaration_of_favorite_fruit.docx
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[`docassemble.demo.sign`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/sign.py
+[`DAEmpty`]: {{ site.baseurl }}/docs/objects.html#DAEmpty
+[`sign.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/sign.yml
+[`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
+[`signature`]: {{ site.baseurl }}/docs/fields.html#signature
+[`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
+[`template`]: {{ site.baseurl }}/docs/initial.html#template
