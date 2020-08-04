@@ -16,6 +16,7 @@ import docassemble.base.functions
 from docassemble.webapp.users.models import UserDictKeys, UserRoles
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
+from flask import session
 from flask_login import current_user
 from sqlalchemy import or_, and_
 import docassemble.base.config

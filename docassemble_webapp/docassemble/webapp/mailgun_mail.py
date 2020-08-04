@@ -29,6 +29,12 @@ class Connection(object):
                                  data=data,
                                  files={'message': ('mime_message', message.as_string())})
         if response.status_code >= 400:
+            sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
+            sys.stderr.write("SendGrid response headers: " + repr(response.headers) + "\n")
+            try:
+                sys.stderr.write(repr(response.body) + "\n")
+            except:
+                pass
             raise Exception("Failed to send e-mail message to " + self.mail.api_url)
         email_dispatched.send(message, app=current_app._get_current_object())
     def send_message(self, *args, **kwargs):

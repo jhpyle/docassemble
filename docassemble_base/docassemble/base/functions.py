@@ -746,6 +746,10 @@ def interview_url_action(action, **kwargs):
     if not do_local:
         args['_external'] = True
     url = url_of('interview', **args)
+    if 'temporary' in kwargs:
+        args['temporary'] = kwargs['temporary']
+    if 'once_temporary' in kwargs:
+        args['once_temporary'] = kwargs['once_temporary']
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)

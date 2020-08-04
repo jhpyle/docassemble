@@ -2279,7 +2279,7 @@ def send_sms_invite(to=None, body='question', config='default'):
     #logmessage("Sending message " + str(message) + " to " + str(phone_number))
     send_sms(to=phone_number, body=message, config=config)
 
-def send_sms(to=None, body=None, template=None, task=None, task_persistent=False, attachments=None, config='default'):
+def send_sms(to=None, body=None, template=None, task=None, task_persistent=False, attachments=None, config='default', dry_run=False):
     """Sends a text message and returns whether sending the text was successful."""
     if server.twilio_config is None:
         logmessage("send_sms: ignoring because Twilio not enabled")
@@ -2303,8 +2303,8 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
     if template is not None and body is None:
         body_html = '<html><body>'
         if template.subject is not None:
-            body_html += markdown_to_html(template.subject)
-        body_html += markdown_to_html(template.content) + '</body></html>'
+            body_html += markdown_to_html(template.subject, external=True)
+        body_html += markdown_to_html(template.content, external=True) + '</body></html>'
         body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")
@@ -2347,6 +2347,8 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
                     media.append(the_attachment)
     if len(media) > 10:
         logmessage("send_sms: more than 10 attachments were provided; not sending message")
+        success = False
+    if dry_run:
         success = False
     if success:
         twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
@@ -2418,7 +2420,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
         return FaxStatus(None)
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
 
-def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None):
+def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
@@ -2510,6 +2512,8 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                             success = False
                     else:
                         success = False
+    if dry_run:
+        success = False
     if success:
         try:
             logmessage("send_email: starting to send")
@@ -2552,7 +2556,7 @@ def map_of(*pargs, **kwargs):
                     if 'icon' in marker and not isinstance(marker['icon'], dict):
                         marker['icon'] = {'url': server.url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
-                        marker['info'] = markdown_to_html(marker['info'], trim=True)
+                        marker['info'] = markdown_to_html(marker['info'], trim=True, external=True)
                     the_map['markers'].append(marker)
     if 'center' in kwargs:
         the_center = kwargs['center']

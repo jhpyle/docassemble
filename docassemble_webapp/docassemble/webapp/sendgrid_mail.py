@@ -24,6 +24,8 @@ class Connection(object):
             raise BadHeaderError
         if message.date is None:
             message.date = time.time()
+        if not message.subject:
+            message.subject = word("(no subject)")
         sgmessage = SGMail(
             from_email=Email(message.sender),
             to_emails=[To(addressee) for addressee in sanitize_addresses(message.recipients)],
@@ -46,10 +48,13 @@ class Connection(object):
                 sgmessage.add_attachment(attachment)
         sg = SendGridAPIClient(self.mail.api_key)
         response = sg.send(sgmessage)
-        #sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
-        #sys.stderr.write(str(response.body) + "\n")
-        #sys.stderr.write("SendGrid response headers: " + str(response.headers) + "\n")
         if response.status_code >= 400:
+            sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
+            sys.stderr.write("SendGrid response headers: " + repr(response.headers) + "\n")
+            try:
+                sys.stderr.write(repr(response.body) + "\n")
+            except:
+                pass
             raise Exception("Failed to send e-mail message to SendGrid")
         email_dispatched.send(message, app=current_app._get_current_object())
     def send_message(self, *args, **kwargs):

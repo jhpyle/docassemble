@@ -64,13 +64,15 @@ def get_unique_name():
 
 class DAEmpty:
     """An object that does nothing except avoid triggering errors about missing information."""
+    def __init__(self, *pargs, **kwargs):
+        self.str = str(kwargs.get('str', ''))
     def __getattr__(self, thename):
         if thename.startswith('_'):
             return object.__getattribute__(self, thename)
         else:
             return DAEmpty()
     def __str__(self):
-        return ''
+        return self.str
     def __dir__(self):
         return list()
     def __contains__(self, item):
@@ -260,6 +262,9 @@ class DAObject:
         self.instanceName = get_unique_name()
         self.has_nonrandom_instance_name = False
         return self
+    def attr_name(self, attr):
+        """Returns a variable name for an attribute, suitable for use in force_ask() and other functions."""
+        return self.instanceName + '.' + attr
     def delattr(self, *pargs):
         """Deletes attributes."""
         for attr in pargs:
@@ -511,10 +516,11 @@ class DAObject:
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
         "client's fish." """
         language = kwargs.get('language', None)
+        capitalize = kwargs.get('capitalize', False)
         if len(self.instanceName.split(".")) > 1:
             return(possessify_long(self.object_name(), target, language=language))
         else:
-            return(possessify(the(self.object_name(), language=language), target, language=language))
+            return(possessify(the(self.object_name(), language=language), target, language=language, capitalize=capitalize))
     def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
@@ -1428,10 +1434,10 @@ class DAList(DAObject):
         if len(self.elements) == 0:
             return 0
         return len(self.elements) - 1
-    def number_as_word(self, language=None):
+    def number_as_word(self, language=None, capitalize=False):
         """Returns the number of elements in the list, spelling out the number if ten
         or below.  Forces the gathering of the elements if necessary."""
-        return nice_number(self.number(), language=language)
+        return nice_number(self.number(), language=language, capitalize=capitalize)
     def complete_elements(self, complete_attribute=None):
         """Returns a list of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):

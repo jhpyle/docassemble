@@ -1,0 +1,79 @@
+metadata:
+  title: Get multiple signatures by e-mail
+  short title: Signatures
+  documentation: "https://docassemble.org/docs/recipes.html#signmodule"
+  example start: 1
+  example end: 5
+---
+include:
+  - docassemble.demo:data/questions/sign.yml
+---
+objects:
+  - user: Person
+  - witnesses: DAList.using(object_type=Person, there_are_any=True)
+  - sign: SigningProcess.using(documents='statement')
+---
+mandatory: True
+code: |
+  user.name.text
+  user.favorite_fruit
+  witnesses.gather()
+  sign.out_for_signature()
+  final_screen
+---
+attachment:
+  name: |
+    ${ user.possessive('Declaration of Favorite Fruit') }
+  filename: |
+    fruit_declaration_${ space_to_underscore(user) }
+  docx template file: declaration_of_favorite_fruit.docx
+  variable name: statement
+---
+reload: 60
+event: final_screen
+question: |
+  % if sign.all_signatures_in():
+  Your document is ready.
+  % else:
+  Your document is out for signature.
+  % endif
+subquestion: |
+  % if not sign.all_signatures_in():
+  You will receive an e-mail
+  when your document has been
+  signed by all parties.
+  % endif
+attachment code: |
+  sign.list_of_documents(refresh=True)
+---
+question: |
+  What is your name and e-mail address?
+fields:
+  - Name: user.name.text
+  - E-mail: user.email
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+question: |
+  What is the name and e-mail
+  address
+  % if i == 0:
+  of a
+  % else:
+  of the ${ ordinal(i) }
+  % endif
+  witness who can attest that
+  you like
+  ${ user.favorite_fruit }?
+fields:
+  - Name: witnesses[i].name.text
+  - E-mail: witnesses[i].email
+---
+question: |
+  Besides ${ witnesses }, can anyone
+  else attest that you like
+  ${ user.favorite_fruit }?
+yesno: witnesses.there_is_another

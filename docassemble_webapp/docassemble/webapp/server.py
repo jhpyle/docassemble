@@ -14973,6 +14973,8 @@ def onedrive_callback():
         error = None
     elif 'error' in request.args:
         error = request.args['error']
+        if 'error_description' in request.args:
+            error += '; ' + str(request.args['error_description'])
     else:
         error = word("could not connect to OneDrive")
     if error:
@@ -18752,6 +18754,7 @@ $( document ).ready(function() {
     //event.preventDefault();
     return true;
   });
+  var thisWindow = window;
   $("#daRunSyncGD").click(function(event){
     daCodeMirror.save();
     $("#form").trigger("checkform.areYouSure");
@@ -18759,7 +18762,8 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
-    window.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    thisWindow.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    return true;
   });
   $("#daRunSyncOD").click(function(event){
     daCodeMirror.save();
@@ -18768,7 +18772,7 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
-    window.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    thisWindow.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
   });
   $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();
