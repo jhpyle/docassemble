@@ -47,7 +47,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot']
 
 # debug = False
 # default_dialect = 'us'
@@ -440,6 +440,10 @@ def user_info():
         user.last_name = word("User")
     user.session = get_uid()
     user.filename = this_thread.current_info.get('yaml_filename', None)
+    if user.filename:
+        user.package = re.sub(r':.*', '', user.filename)
+    else:
+        user.package = None
     return user
 
 def action_arguments():
@@ -1115,6 +1119,7 @@ server.server_sql_delete = null_func
 server.server_sql_get = null_func
 server.server_sql_keys = null_func
 server.server_sql_set = null_func
+server.create_session = null_func
 server.set_session_variables = null_func
 server.set_user_info = null_func
 server.sms_body = null_func
@@ -2793,7 +2798,7 @@ def store_variables_snapshot(data=None, include_internal=False, key=None, persis
         the_data = safe_json(data)
     server.write_answer_json(session, filename, the_data, tags=key, persistent=True if persistent else False)
 
-def all_variables(simplify=True, include_internal=False, special=False):
+def all_variables(simplify=True, include_internal=False, special=False, make_copy=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     if special == 'titles':
         return this_thread.interview.get_title(get_user_dict())
@@ -2804,6 +2809,8 @@ def all_variables(simplify=True, include_internal=False, special=False):
         return copy.deepcopy(this_thread.internal['tags'])
     if simplify:
         return serializable_dict(get_user_dict(), include_internal=include_internal)
+    if make_copy:
+        return copy.deepcopy(pickleable_objects(get_user_dict()))
     return pickleable_objects(get_user_dict())
 
 def command(*pargs, **kwargs):
@@ -4169,15 +4176,24 @@ def get_user_secret(username, password):
     """
     return server.get_secret(username, password)
 
+def create_session(yaml_filename, secret=None, url_args=None):
+    """Creates a new session in the given interview."""
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
+    (encrypted, session_id) = server.create_session(yaml_filename, secret, url_args=url_args)
+    if secret is None and encrypted:
+        raise Exception("create_session: the interview is encrypted but you did not provide a secret.")
+    return session_id
+
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     """Returns the interview dictionary for the given interview session."""
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot set variables in the current interview session")
-    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables, question_name=question_name)
+    server.set_session_variables(yaml_filename, session_id, variables, secret=secret, question_name=question_name, post_setting=False if overwrite else True)
 
 def get_question_data(yaml_filename, session_id, secret=None):
     """Returns data about the current question for the given interview session."""

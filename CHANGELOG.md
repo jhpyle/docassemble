@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.55] - 2020-08-06
+### Added
+- The `create_session()` function.
+- The `package` attribute of the output of `user_info()`.
+- The `make_copy` keyword parameter for `all_variables()`.
+- The `overwrite` keyword parameter for `set_session_variables()`.
+- The `overwrite` parameter for the `/api/session` POST endpoint.
+- The `persistent` option for the `/api/session/action` POST endpoint.
+- Recipe for passing variables from one session to a newly created
+  other session.
+
 ## [1.1.54] - 2020-08-04
 ### Added
 - The `attr_name()` method of the `DAObject` class.

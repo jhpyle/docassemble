@@ -22,6 +22,7 @@ the_method_type = types.FunctionType
 equals_byte = bytes('=', 'utf-8')
 
 TypeType = type(type(None))
+NoneType = type(None)
 
 from docassemble.base.config import daconfig, hostname, in_celery
 
@@ -10325,7 +10326,6 @@ def index(action_argument=None):
     # if next_action_to_set:
     #     interview_status.next_action.append(next_action_to_set)
     if next_action_to_set:
-        logmessage("Setting the next_action")
         if 'event_stack' not in user_dict['_internal']:
             user_dict['_internal']['event_stack'] = dict()
         session_uid = interview_status.current_info['user']['session_uid']
@@ -22617,6 +22617,7 @@ def api_session():
         question_name = post_data.get('question_name', None)
         treat_as_raw = true_or_false(post_data.get('raw', False))
         advance_progress_meter = true_or_false(post_data.get('advance_progress_meter', False))
+        post_setting = not true_or_false(post_data.get('overwrite', False))
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
@@ -22689,7 +22690,7 @@ def api_session():
             else:
                 literal_variables[file_field] = "None"
         try:
-            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list, advance_progress_meter=advance_progress_meter)
+            data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list, advance_progress_meter=advance_progress_meter, post_setting=post_setting)
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)
         if data is None:
@@ -22795,7 +22796,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     #release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True):
     #obtain_lock(session_id, yaml_filename)
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
@@ -22836,12 +22837,12 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         for key, val in variables.items():
             if illegal_variable_name(key):
                 raise Exception("Illegal value as variable name.")
-            if isinstance(val, (docassemble.base.util.DADateTime, docassemble.base.util.DAObject)):
-                user_dict['_internal']['_tempvar'] = val
+            if isinstance(val, (str, bool, int, float, NoneType)):
+                exec(str(key) + ' = ' + repr(val), user_dict)
+            else:
+                user_dict['_internal']['_tempvar'] = copy.deepcopy(val)
                 exec(str(key) + ' = _internal["_tempvar"]', user_dict)
                 del user_dict['_internal']['_tempvar']
-            else:
-                exec(str(key) + ' = ' + repr(val), user_dict)
             process_set_variable(str(key), user_dict, vars_set, old_values)
     except Exception as the_err:
         #release_lock(session_id, yaml_filename)
@@ -22897,17 +22898,18 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 pass
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack now: " + repr(user_dict['_internal']['event_stack']))
-    steps += 1
+    if post_setting:
+        steps += 1
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=True, advance_progress_meter=advance_progress_meter)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=post_setting, advance_progress_meter=advance_progress_meter)
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
     if not return_question:
-        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
         if 'multi_user' in vars_set:
             if user_dict.get('multi_user', False) is True and is_encrypted is True:
                 decrypt_session(secret, user_code=session_id, filename=yaml_filename)
@@ -22940,7 +22942,7 @@ def api_session_new():
         if re.match('[A-Za-z_][A-Za-z0-9_]*', argname):
             url_args[argname] = request.args[argname]
     try:
-        (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, request=request)
+        (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, req=request)
     except Exception as err:
         return jsonify_with_status(str(err), 400)
     if encrypted and new_secret:
@@ -22948,31 +22950,40 @@ def api_session_new():
     else:
         return jsonify(dict(session=session_id, i=yaml_filename, encrypted=encrypted))
 
-def create_new_interview(yaml_filename, secret, url_args=None, request=None):
+def create_new_interview(yaml_filename, secret, url_args=None, req=None):
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
         raise Exception('Insufficient permissions to run this interview.')
+    if req is None:
+        req = request
+    if secret is None:
+        secret = random_string(16)
     session_id, user_dict = reset_session(yaml_filename, secret)
     add_referer(user_dict)
     if url_args:
         for key, val in url_args.items():
-            exec("url_args['" + key + "'] = " + repr(val.encode('unicode_escape')), user_dict)
-    ci = current_info(yaml=yaml_filename, req=request, secret=secret)
+            if isinstance(val, str):
+                val = val.encode('unicode_escape').decode()
+            exec("url_args['" + key + "'] = " + repr(val), user_dict)
+    ci = current_info(yaml=yaml_filename, req=req, secret=secret)
     ci['session'] = session_id
     ci['encrypted'] = True
     ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
-    old_language = docassemble.base.functions.get_language()
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
         pass
     except Exception as e:
         release_lock(session_id, yaml_filename)
-        docassemble.base.functions.set_language(old_language)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("create_new_interview: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e))
-    docassemble.base.functions.set_language(old_language)
+    restore_session(sbackup)
+    docassemble.base.functions.restore_thread_variables(tbackup)
     if user_dict.get('multi_user', False) is True:
         encrypted = False
     else:
@@ -23156,6 +23167,7 @@ def api_session_action():
     session_id = post_data.get('session', None)
     secret = post_data.get('secret', None)
     action = post_data.get('action', None)
+    persistent = true_or_false(post_data.get('persistent', False))
     if yaml_filename is None or session_id is None or action is None:
         return jsonify_with_status("Parameters i, session, and action are required.", 400)
     secret = str(secret)
@@ -23183,7 +23195,8 @@ def api_session_action():
     ci['encrypted'] = is_encrypted
     ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
-    interview_status.checkin = True
+    if not persistent:
+        interview_status.checkin = True
     old_language = docassemble.base.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
@@ -24898,6 +24911,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          get_secret=get_secret,
                                          get_session_variables=get_session_variables,
                                          go_back_in_session=go_back_in_session,
+                                         create_session=create_new_interview,
                                          set_session_variables=set_session_variables,
                                          get_privileges_list=get_privileges_list,
                                          add_privilege=add_privilege,

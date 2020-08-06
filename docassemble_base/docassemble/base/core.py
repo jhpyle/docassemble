@@ -4251,8 +4251,13 @@ def selections(*pargs, **kwargs):
         if isinstance(arg, DAList):
             arg._trigger_gather()
             the_list = arg.elements
-        elif type(arg) is list:
+        elif isinstance(arg, DASet):
+            arg._trigger_gather()
+            the_list = list(arg.elements)
+        elif isinstance(arg, list):
             the_list = arg
+        elif isinstance(arg, set):
+            the_list = list(arg)
         else:
             the_list = [arg]
         for subarg in the_list:

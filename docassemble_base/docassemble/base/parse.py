@@ -7615,7 +7615,7 @@ def process_selections(data, manual=False, exclude=None):
     else:
         to_exclude = unpack_list(exclude)
     result = []
-    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, list)):
+    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, (list, set))):
         for entry in data:
             if isinstance(entry, dict) or (hasattr(entry, 'elements') and isinstance(entry.elements, dict)):
                 the_item = dict()

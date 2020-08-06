@@ -533,6 +533,7 @@ include_docx_template: "https://docassemble.org/docs/functions.html#include_docx
 pdf_concatenate: "https://docassemble.org/docs/functions.html#pdf_concatenate"
 get_chat_log: "https://docassemble.org/docs/livehelp.html#get_chat_log"
 go_back_in_session: "https://docassemble.org/docs/functions.html#go_back_in_session"
+create_session: "https://docassemble.org/docs/functions.html#create_session"
 set_session_variables: "https://docassemble.org/docs/functions.html#set_session_variables"
 get_session_variables: "https://docassemble.org/docs/functions.html#get_session_variables"
 get_user_secret: "https://docassemble.org/docs/functions.html#get_user_secret"
