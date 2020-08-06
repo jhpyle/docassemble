@@ -1181,19 +1181,19 @@ the names and e-mail addresses of one or more witnesses.
 When the interview logic calls `sign.out_for_signature()`, this
 triggers the following process:
 
-#. In a background process, e-mails are sent to the user and the
+1. In a background process, e-mails are sent to the user and the
    witnesses with a hyperlink they can click on to sign the document.
-#. The hyperlink was created by `interview_url_action()` using the
+2. The hyperlink was created by `interview_url_action()` using the
    [action] name `sign.request_signature` and an [action] argument
    called `code` that contains a special code that identifies who the
    signer is.
-#. When the signer clicks the hyperlink, they join the interview
+3. When the signer clicks the hyperlink, they join the interview
    session and the [action] is run, and the [action] calls
    `force_ask()` to set up a series of screens that signer should see.
    First the signer agrees to sign, then the signer signs, and then
    the signer sees a "thank you" screen on which the signer can
    download the document containing their signature.
-#. When all of the signatures have been collected, e-mails are sent to
+4. When all of the signatures have been collected, e-mails are sent to
    the signers attaching the final signed document.
 
 The `sign.signature_of(the_person)` method is smart; it will return the empty
@@ -1438,6 +1438,23 @@ then [`force_ask()`] will ignore that variable.  The call to
 process, and the [`if`] modifiers are used to indicate under what
 conditions the questions should be asked.
 
+# <a name="passing"></a>Passing variables from one interview session to another
+
+Using [`create_session()`], [`set_session_variables()`], and
+[`interview_url()`], you can start a user in one session, collect
+information, and then initiate a new session, write variables into the
+interview answers of that session, and direct the user to that session.
+
+{% include demo-side-by-side.html demo="stage-one" %}
+
+The interview that the user is directed to is the following.
+
+{% include demo-side-by-side.html demo="stage-two" %}
+
+Note that when the user starts the session in the second interview,
+the interview already knows the object `user` and already knows the
+value of `favorite_fruit`.
+
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
@@ -1514,3 +1531,5 @@ conditions the questions should be asked.
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
 [`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
 [`template`]: {{ site.baseurl }}/docs/initial.html#template
+[`create_session()`]: {{ site.baseurl }}/docs/functions.html#create_session
+[`set_session_variables()`]: {{ site.baseurl }}/docs/functions.html#set_session_variables

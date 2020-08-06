@@ -1421,6 +1421,10 @@ Data:
    progress meter will be advanced.  The default is not to advance the
    progress meter.  The `advance_progress_meter` parameter is not
    effective if `question` is `0`.
+ - `overwrite` (optional): if set to `1`, then when the interview
+   answers are saved, they will overwrite the previous interview
+   answers instead of creating a new step in the session.  The default
+   behavior is to create a new step in the session.
  - `delete_variables` (optional): a [JSON] array in which the items
    are names of variables to be deleted with [`del`].  The deletion of
    these variables happens after the `variables` are assigned.  (If
@@ -1620,6 +1624,10 @@ Data:
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
  - `action`: the name of the action you want to run.
+ - `persistent` (optional): set this to `1` if you indent the action
+   to show a `question`, as opposed to merely execute some code.  The
+   default behavior is for the action to run in a non-persistent
+   fashion.
  - `arguments` (optional): a [JSON] object in which the keys are
    argument names and the values are argument values.  (If your
    request has the `application/json` content type, you do not need to

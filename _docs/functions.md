@@ -462,10 +462,18 @@ or other formats.  Each [object] is converted to a [Python
 dictionary].  Each [`datetime`] or [`DADateTime`] object is converted
 to its `isoformat()`.  Other objects are converted to `None`.
 
-If you want the raw [Python] dictionary, you can call
-`all_variables(simplify=False)`.  However, you should never save the
-result of this function as a variable in the interview session,
-because then the interview answers will double in size.
+If you want the raw [Python] dictionary representing the variables
+defined in the interview session, you can call
+`all_variables(simplify=False)`.  The result is not suitable for
+conversion to [JSON].  This raw [Python] dictionary will be linked to
+the current interview answers, so that if you use the [Python] `is`
+operator to test for equivalence between objects, you will see that
+they are equivalent.  Therefore, if you try to edit the output of
+`all_variables(simplify=False)`, you may be affecting the interview
+variables in unwanted ways.  If you want the result of
+`all_variables(simplify=False)` to be a distinct copy of the interview
+answers, call it using `all_variables(simplify=False,
+make_copy=True)`.
 
 **docassemble** keeps a dictionary called `_internal` in the interview
 variables and uses it for a variety of internal purposes.  By default,
@@ -2126,6 +2134,7 @@ attributes describing the current user:
 * `organization` (e.g., company or non-profit organization)
 * `session` the session ID of the current interview session
 * `filename` the filename of the current interview session
+* `package` the package of the current filename
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
@@ -4239,6 +4248,43 @@ vars = get_session_variables(filename, session_id, secret, simplify=False)
 
 For an [API] version of this function, see the [GET method of `/api/session`].
 
+## <a name="create_session"></a>create_session()
+
+The [`create_session()`] function allows you to initiate a session in
+an interview.
+
+{% highlight python %}
+yaml_filename = 'docassemble.demo:data/questions/questions.yml'
+secret = get_user_secret(username, password)
+session_id = create_session(yaml_filename, secret=secret, url_args={'foo': 'bar'})
+{% endhighlight %}
+
+The `session_id` that is returned can then be passed to functions like
+[`set_session_variables()`].
+
+The first and only required parameter is the file name of the YAML
+interview for which you want to create a session.
+
+The optional keyword parameter `secret` can be set to the output of
+`get_user_secret()`.  If the target interview does not use server-side
+encryption ([`multi_user`] is set to `False`), then the `secret`
+parameter is not important.  If you do not provide a `secret`
+parameter and the target interview uses server-side encryption, then
+the current user's decryption key will be used, and only the current
+user will be able to access the session.
+
+The optional keyword parameter `url_args` can be set to a [Python
+dictionary] representing the [`url_args`] you want to be present in
+the session when it starts.
+
+After setting the `url_args` (if any), `create_session()` will
+evaluate the interview logic in the session and save the interview
+answers for the session.  Thus, if `mandatory` or `initial` blocks in
+the interview cause side effects, these side effects will be triggered
+by the call to `create_session()`.  Also, note that when this code
+executes, the user for purposes of this code execution will be the
+same as the user who ran `create_session()`.
+
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
@@ -4246,17 +4292,13 @@ to any [interview session dictionary].  It has three required
 parameters: an interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
-dictionary] containing the variables you want to set.  In addition, it
-can take a fourth parameter, an encryption key for decrypting the
-interview answers.  (The fourth parameter can also be specified as the
-keyword argument `secret`).  If the interview is encrypted, the fourth
-parameter is required.
+dictionary] containing the variables you want to set.
 
-For example, if you run this:
+If you run this:
 
 {% highlight python %}
 vars = {"defense['latches']": False, "client.phone_number": "202-555-3434"}
-set_session_variables(filename, session_id, vars, secret)
+set_session_variables(filename, session_id, vars)
 {% endhighlight %}
 
 Then the following statements will be executed in the interview
@@ -4264,7 +4306,7 @@ session dictionary:
 
 {% highlight python %}
 defense['latches'] = False
-client.phone_number = u'202-555-3434'
+client.phone_number = '202-555-3434'
 {% endhighlight %}
 
 Note that if you pass [`DAFile`], [`DAFileList`], or
@@ -4288,16 +4330,22 @@ a variable for purposes of answering a [`mandatory`] question.  You
 can tell if a question is [`mandatory`] by checking for the presence
 of the attribute `mandatory` in the question data.
 
-There is also an optional keyword parameter `event_list`.  This should
-be set to a list of variable names.  Typically, you will take the
-`question_name` and `event_list` values from [`get_question_data()`]
-or the [`/api/session/question`] API method and pass them directly to
-`set_session_variables()`.  The `event_list` is marks certain variable
-names as having been "handled" (though not necessarily answered),
-which is necessary for indicating that a question has been posed to
-the user and the user has gone through the screen.  Passing the
-`event_list` is not necessary in most cases, but is sometimes
-necessary to get past logic triggered by [`force_ask()`].
+The [`set_session_variables()`] function accepts the optional keyword
+parameter `secret`, an encryption key for decrypting the interview
+answers.  If no `secret` is provided, the encryption key of the
+current user is used.
+
+It also accepts the optional keyword parameter `question_name`, which
+you can set to the name of a question, if you are calling the function
+to answer a specific question.  Typically, you would take the
+`question_name` value from [`get_question_data()`] and pass it to
+[`set_session_variables()`].  Using this parameter is necessary in
+order to ensure that the interview logic moves past [`mandatory`]
+questions when the variables are defined.
+
+It also accepts the optional keyword parameter `overwrite`, which can
+be set to `True` if you do not want to create a new step in the
+interview when the function runs.
 
 For an [API] version of this function, see the [POST method of
 `/api/session`].
@@ -7430,6 +7478,7 @@ $(document).on('daPageLoad', function(){
 [DELETE method of `/api/user/<user_id>/privileges`]: {{ site.baseurl }}/docs/api.html#user_privilege_remove
 [`get_user_list()`]: #get_user_list
 [`get_user_secret()`]: #get_user_secret
+[`create_session()`]: #create_session
 [`get_session_variables()`]: #get_session_variables
 [`get_question_data()`]: #get_question_data
 [`set_session_variables()`]: #set_session_variables
