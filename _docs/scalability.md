@@ -475,8 +475,8 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
       "memory": 1800,
       "portMappings": [
         {
-          "containerPort": 8080,
-          "hostPort": 8080
+          "containerPort": 8082,
+          "hostPort": 8082
         },
         {
           "containerPort": 25,
@@ -889,14 +889,14 @@ messages to port 514 on the central server rather than appending to
 `/usr/share/docassemble/log/docassemble.log`.
 
 When [`log server`] is set, the "Logs" page of the web interface will
-call http://log.example.local:8080/ to get a list of available log
+call http://log.example.local:8082/ to get a list of available log
 files, and will retrieve the content of files by accessing URLs like
-http://log.example.local:8080/docassemble.log.
+http://log.example.local:8082/docassemble.log.
 
 The following files make this possible:
 
 * [`Docker/config/nginx-log.dist`] - template for an [NGINX] site
-  configuration file that listens to port 8080.
+  configuration file that listens to port 8082.
 * [`Docker/docassemble-syslog-ng.conf`] - on application servers, this
   is copied into `/etc/syslog-ng/conf.d/docassemble`.  It depends on
   an environment variable `LOGSERVER` which should be set to the
