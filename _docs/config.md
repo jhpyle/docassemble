@@ -4000,7 +4000,7 @@ global level in your system, you can include use the `loop limit` and
 
 {% highlight yaml %}
 loop limit: 600
-recursion limit 600
+recursion limit: 600
 {% endhighlight %}
 
 It is important that some reasonable limit be in place, because if the

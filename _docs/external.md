@@ -177,11 +177,16 @@ deletion).
 
 If you want to save information in SQL in a way that will persist
 indefinitely and that will not be encrypted, you can use the
-[`write_record()`], [`delete_record()`] and [`read_records()`]
-functions to store data (including Python objects) in SQL records.
+[`store_variables_snapshot()`] function to store the interview answers
+to a special SQL table in a [JSON] format that allows you to write SQL
+queries that access individual variables inside the data structure.
+You can also use [`write_record()`], [`delete_record()`] and
+[`read_records()`] functions to store data (including Python objects)
+in SQL records.  These methods do not preserve server-side encryption,
+however.
 
-You can save information in encrypted form using a [Redis]-like system
-using a [`DAStore`] object.
+You can save information in encrypted form in SQL in a [Redis]-like
+fashion using a [`DAStore`] object.
 
 It is also possible for [`DAObject`]s to "mirror" rows in a SQL
 database.  To do this, you need to write custom classes that are
@@ -277,3 +282,5 @@ a [Google Sheet].
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
 [Redis]: https://redis.io/
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
