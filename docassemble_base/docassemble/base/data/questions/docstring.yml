@@ -21,6 +21,28 @@ url_args:
   type: dict
   iterable: True
   show: True
+session_local:
+  doc: |
+    This is a special variable that can be used to store data that is
+    specific to a particular session of the browser within the interview
+    session.
+  type: DASessionLocal
+  iterable: False
+  show: True
+device_local:
+  doc: |
+    This is a special variable that can be used to store data that is
+    specific to a particular web browser within the interview session.
+  type: DADeviceLocal
+  iterable: False
+  show: True
+user_local:
+  doc: |
+    This is a special variable that can be used to store data that is
+    specific to a particular user within the interview session.
+  type: DAUserLocal
+  iterable: False
+  show: True
 nav:
   doc: |
     This is a special variable used by docassemble to store 

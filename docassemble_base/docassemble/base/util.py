@@ -1757,14 +1757,14 @@ class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
-            self.name = Name()
+            self.initializeAttribute('name', Name)
         if 'address' not in kwargs:
             self.initializeAttribute('address', Address)
         if 'location' not in kwargs:
             self.initializeAttribute('location', LatitudeLongitude)
         if 'name' in kwargs and isinstance(kwargs['name'], str):
             if not hasattr(self, 'name'):
-                self.name = Name()
+                self.initializeAttribute('name', Name)
             self.name.text = kwargs['name']
             del kwargs['name']
         # if 'roles' not in kwargs:
@@ -1952,7 +1952,7 @@ class Individual(Person):
     """Represents a natural person."""
     def init(self, *pargs, **kwargs):
         if 'name' not in kwargs and not hasattr(self, 'name'):
-            self.name = IndividualName()
+            self.initializeAttribute('name', IndividualName)
         # if 'child' not in kwargs and not hasattr(self, 'child'):
         #     self.child = ChildList()
         # if 'income' not in kwargs and not hasattr(self, 'income'):
@@ -1962,7 +1962,7 @@ class Individual(Person):
         # if 'expense' not in kwargs and not hasattr(self, 'expense'):
         #     self.expense = Expense()
         if (not hasattr(self, 'name')) and 'name' in kwargs and isinstance(kwargs['name'], str):
-            self.name = IndividualName()
+            self.initializeAttribute('name', IndividualName)
             self.name.uses_parts = False
             self.name.text = kwargs['name']
         return super().init(*pargs, **kwargs)

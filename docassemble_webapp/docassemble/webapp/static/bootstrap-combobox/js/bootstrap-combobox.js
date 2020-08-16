@@ -31,6 +31,9 @@
     this.$container = this.setup();
     this.$element = this.$container.find('input[type=text]');
     this.$target = this.$container.find('input[type=hidden]');
+    if (this.$source.attr('disabled') !== undefined){
+      this.$target.prop('disabled', true);
+    }
     this.$button = this.$container.find('.dacomboboxtoggle');
     this.$menu = $(this.options.menu).appendTo('body');
     this.matcher = this.options.matcher || this.matcher;

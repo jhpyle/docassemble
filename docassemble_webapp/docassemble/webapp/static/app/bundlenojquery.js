@@ -8129,7 +8129,14 @@ function daAddMarker(map, marker_info, show_marker){
     return marker;
 }
 
-function daFillInAddress(id) {
+function daFillInAddress(origId) {
+    var id;
+    if (daVarLookupRev[origId]){
+      id = daVarLookupRev[origId];
+    }
+    else {
+      id = origId;
+    }
     var base_varname = atob(id).replace(/.address$/, '');
     base_varname = base_varname.replace(/[\[\]]/g, '.');
     var re = new RegExp('^' + base_varname + '\\.(.*)');
@@ -8168,7 +8175,7 @@ function daFillInAddress(id) {
 	    }
 	}
     });
-    var place = daAutocomplete[id].getPlace();
+    var place = daAutocomplete[origId].getPlace();
     if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
 	document.getElementById(id_for_part['address']).value = '';
     }
@@ -8623,6 +8630,9 @@ this.secure=null!=r.secure?r.secure:e.location&&"https:"===location.protocol,r.h
     this.$container = this.setup();
     this.$element = this.$container.find('input[type=text]');
     this.$target = this.$container.find('input[type=hidden]');
+    if (this.$source.attr('disabled') !== undefined){
+      this.$target.prop('disabled', true);
+    }
     this.$button = this.$container.find('.dacomboboxtoggle');
     this.$menu = $(this.options.menu).appendTo('body');
     this.matcher = this.options.matcher || this.matcher;

@@ -421,7 +421,14 @@ function daAddMarker(map, marker_info, show_marker){
     return marker;
 }
 
-function daFillInAddress(id) {
+function daFillInAddress(origId) {
+    var id;
+    if (daVarLookupRev[origId]){
+      id = daVarLookupRev[origId];
+    }
+    else {
+      id = origId;
+    }
     var base_varname = atob(id).replace(/.address$/, '');
     base_varname = base_varname.replace(/[\[\]]/g, '.');
     var re = new RegExp('^' + base_varname + '\\.(.*)');
@@ -460,7 +467,7 @@ function daFillInAddress(id) {
 	    }
 	}
     });
-    var place = daAutocomplete[id].getPlace();
+    var place = daAutocomplete[origId].getPlace();
     if (typeof(id_for_part['address']) != "undefined" && document.getElementById(id_for_part['address']) != null){
 	document.getElementById(id_for_part['address']).value = '';
     }

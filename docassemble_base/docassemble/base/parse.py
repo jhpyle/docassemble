@@ -112,7 +112,7 @@ def textify(data, the_user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(session_local=dict(), device_local=dict(), user_local=dict(), dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -4472,6 +4472,10 @@ class Question:
                                 break
                     if failed:
                         continue
+                if hasattr(field, 'action'):
+                    if 'action' not in extras:
+                        extras['action'] = dict()
+                    extras['action'][field.number] = substitute_vars(json.dumps(field.action), self.is_generic, the_x, iterators)
                 if hasattr(field, 'extras'):
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
@@ -6136,6 +6140,13 @@ class Interview:
                 return False
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
+        if is_anonymous:
+            require_login = False
+            for metadata in self.metadata:
+                if 'require login' in metadata:
+                    require_login = True if metadata['require login'] else False
+            if require_login:
+                return False
         return True
     def allowed_to_see_listed(self, is_anonymous=False, has_roles=None):
         if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
@@ -6158,6 +6169,13 @@ class Interview:
                 return False
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
+        if is_anonymous:
+            require_login = False
+            for metadata in self.metadata:
+                if 'require login' in metadata:
+                    require_login = True if metadata['require login'] else False
+            if require_login:
+                return False
         return True
     def is_unlisted(self):
         unlisted = False
@@ -6440,6 +6458,24 @@ class Interview:
                     pass
             elif var in user_dict:
                 del user_dict[var]
+        session_uid = interview_status.current_info['user']['session_uid']
+        device_id = interview_status.current_info['user']['device_id']
+        user_id = str(interview_status.current_info['user']['the_user_id'])
+        if 'session_local' not in user_dict['_internal']: ### take out after a time
+            user_dict['_internal']['session_local'] = dict()
+            user_dict['_internal']['device_local'] = dict()
+            user_dict['_internal']['user_local'] = dict()
+        if session_uid not in user_dict['_internal']['session_local'] or device_id not in user_dict['_internal']['device_local'] or user_id not in user_dict['_internal']['user_local']:
+            exec('import docassemble.base.core')
+            if session_uid not in user_dict['_internal']['session_local']:
+                user_dict['_internal']['session_local'][session_uid] = eval("docassemble.base.core.DASessionLocal()")
+            if device_id not in user_dict['_internal']['device_local']:
+                user_dict['_internal']['device_local'][device_id] = eval("docassemble.base.core.DADeviceLocal()")
+            if user_id not in user_dict['_internal']['user_local']:
+                user_dict['_internal']['user_local'][user_id] = eval("docassemble.base.core.DAUserLocal()")
+        user_dict['session_local'] = user_dict['_internal']['session_local'][session_uid]
+        user_dict['device_local'] = user_dict['_internal']['device_local'][device_id]
+        user_dict['user_local'] = user_dict['_internal']['user_local'][user_id]
         number_loops = 0
         variables_sought = set()
         try:
@@ -6606,7 +6642,6 @@ class Interview:
                         if the_exception.next_action is not None and not interview_status.checkin:
                             if 'event_stack' not in user_dict['_internal']:
                                 user_dict['_internal']['event_stack'] = dict()
-                            session_uid = interview_status.current_info['user']['session_uid']
                             if session_uid not in user_dict['_internal']['event_stack']:
                                 user_dict['_internal']['event_stack'][session_uid] = list()
                             new_items = list()

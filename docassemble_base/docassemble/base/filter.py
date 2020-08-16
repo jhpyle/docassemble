@@ -759,7 +759,7 @@ def image_as_rtf(match, question=None):
     if 'path' not in file_info:
         return ''
     #logmessage('image_as_rtf: path is ' + file_info['path'])
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
@@ -926,7 +926,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
 
 def image_url(file_reference, alt_text, width, emoji=False, question=None, playground=False, external=False):
     file_info = server.file_finder(file_reference, question=question)
-    if 'mimetype' in file_info and file_info['mimetype'] is not None:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^audio', file_info['mimetype']):
             urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}], question=question)
             if len(urls):
@@ -1033,7 +1033,7 @@ def image_include_string(match, emoji=False, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps', 'gif': 'png'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
@@ -1066,7 +1066,7 @@ def image_include_docx(match, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
@@ -1618,11 +1618,11 @@ def image_include_docx_template(match, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
-        if 'mimetype' in file_info:
+        if 'mimetype' in file_info and file_info['mimetype']:
             if file_info['mimetype'] in ('text/markdown', 'text/plain'):
                 with open(file_info['fullpath'], 'rU', encoding='utf-8') as f:
                     contents = f.read()

@@ -4511,3 +4511,15 @@ def objects_from_structure(target, root=None):
         return target
     else:
         raise DAError("objects_from_structure: expected a standard type, but found a " + str(type(target)))
+
+class DASessionLocal(DAObject):
+    def __init__(self, *pargs, **kwargs):
+        super().__init__('session_local')
+
+class DADeviceLocal(DAObject):
+    def __init__(self, *pargs, **kwargs):
+        super().__init__('device_local')
+
+class DAUserLocal(DAObject):
+    def __init__(self, *pargs, **kwargs):
+        super().__init__('user_local')

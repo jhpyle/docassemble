@@ -115,7 +115,7 @@ lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 extraneous_var = re.compile(r'^x\.|^x\[')
-key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
+key_requires_preassembly = re.compile('^(session_local\.|device_local\.|user_local\.|x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 #match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 #match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[[BR]?\'[^\]]*\'\]$')
@@ -1430,6 +1430,7 @@ def encrypt_session(secret, user_code=None, filename=None):
 def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     if user is None:
         user = current_user
+    temp_user = session.get('tempuser', None)
     #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
     if oldsecret == 'None' or oldsecret == newsecret:
         #logmessage("substitute_secret: returning new secret without doing anything")
@@ -1448,9 +1449,9 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         if 'sessions' in session:
             for filename, info in session['sessions'].items():
                 to_do.add((filename, info['uid']))
-        for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id, encrypted=True).group_by(UserDict.filename, UserDict.key).all():
+        for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id).group_by(UserDict.filename, UserDict.key).all():
             to_do.add((the_record.filename, the_record.key))
-        for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id, UserDict.encrypted == True)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
+        for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
             to_do.add((the_record.filename, the_record.key))
     else:
         to_do = set(to_convert)
@@ -1481,7 +1482,32 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             if type(the_dict) is not dict:
                 logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
                 continue
+            if temp_user:
+                try:
+                    old_entry = the_dict['_internal']['user_local']['t' + str(temp_user)]
+                    del the_dict['_internal']['user_local']['t' + str(temp_user)]
+                    the_dict['_internal']['user_local'][str(user.id)] = old_entry
+                except:
+                    pass
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
+        db.session.commit()
+        if temp_user:
+            for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update().all():
+                try:
+                    the_dict = unpack_dictionary(record.dictionary)
+                except Exception as e:
+                    logmessage("substitute_secret: error unpacking dictionary for filename " + filename + " and uid " + user_code)
+                    continue
+                if type(the_dict) is not dict:
+                    logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
+                    continue
+                try:
+                    old_entry = the_dict['_internal']['user_local']['t' + str(temp_user)]
+                    del the_dict['_internal']['user_local']['t' + str(temp_user)]
+                    the_dict['_internal']['user_local'][str(user.id)] = old_entry
+                except:
+                    pass
+                record.dictionary = pack_dictionary(the_dict)
         db.session.commit()
         for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
             try:
@@ -2130,6 +2156,12 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
             if var_name in user_dict:
                 del user_dict[var_name]
         user_dict['_internal']['objselections'] = dict()
+    if 'session_local' in user_dict:
+        del user_dict['session_local']
+    if 'device_local' in user_dict:
+        del user_dict['device_local']
+    if 'user_local' in user_dict:
+        del user_dict['user_local']
     nowtime = datetime.datetime.utcnow()
     if steps is not None:
         user_dict['_internal']['steps'] = steps
@@ -3700,7 +3732,7 @@ def restart_others():
                 restart_on(host)
     return
 
-def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None):
+def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None, device_id=None, session_uid=None):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
@@ -3712,7 +3744,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         url = url_root + 'interview'
         clientip = None
         method = None
-        unique_id = '0'
+        session_uid = '0'
     else:
         url_root = url_for('rootindex', _external=True)
         url = url_root + 'interview'
@@ -3722,16 +3754,16 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             headers[key] = value
         clientip = req.remote_addr
         method = req.method
-        if 'session' in req.cookies:
-            unique_id = str(req.cookies.get('session'))[5:15]
-        else:
-            unique_id = ''
-        if unique_id == '':
-            if current_user.is_authenticated and not current_user.is_anonymous and current_user.email:
-                unique_id = str(current_user.email)
+        if session_uid is None:
+            if 'session' in req.cookies:
+                session_uid = str(req.cookies.get('session'))[5:15]
             else:
-                unique_id = app.session_interface.manual_save_session(app, session).decode()[5:15]
-        #logmessage("unique id is " + unique_id)
+                session_uid = ''
+            if session_uid == '':
+                session_uid = app.session_interface.manual_save_session(app, session).decode()[5:15]
+        #logmessage("unique id is " + session_uid)
+    if device_id is None:
+        device_id = random_string(16)
     if secret is not None:
         secret = str(secret)
     if session_info is None and yaml is not None:
@@ -3742,7 +3774,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
     else:
         user_code = None
         encrypted = True
-    return_val = {'session': user_code, 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': encrypted, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': unique_id}, 'headers': headers, 'clientip': clientip, 'method': method}
+    return_val = {'session': user_code, 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': encrypted, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': session_uid, 'device_id': device_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
         #logmessage("current_info: setting an action " + repr(action))
         return_val.update(action)
@@ -5093,7 +5125,7 @@ def checkin():
             #sys.stderr.write("checkin: fetch_user_dict2\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters), session_info=session_info, secret=secret))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters), session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None)))
             interview_status.checkin = True
             interview.assemble(user_dict, interview_status=interview_status)
             if interview_status.question.question_type == "backgroundresponse":
@@ -5443,7 +5475,7 @@ def test_embed():
     yaml_filename = request.args.get('i', final_default_yaml_filename)
     user_dict = fresh_dictionary()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web'))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web', device_id=request.cookies.get('ds', None)))
     try:
         interview.assemble(user_dict, interview_status)
     except:
@@ -5507,12 +5539,14 @@ def tidy_action(action):
         result['arguments'] = action['arguments']
     return result
 
-def make_response_wrapper(set_cookie, secret, expire_visitor_secret):
+def make_response_wrapper(set_cookie, secret, set_device_id, device_id, expire_visitor_secret):
     def the_wrapper(response):
         if set_cookie:
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         if expire_visitor_secret:
             response.set_cookie('visitor_secret', '', expires=0)
+        if set_device_id:
+            response.set_cookie('ds', device_id, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'], expires=datetime.datetime.now() + datetime.timedelta(weeks=520))
     return the_wrapper
 
 def populate_social(social, metadata):
@@ -5582,9 +5616,15 @@ def index(action_argument=None):
     if secret is None:
         secret = random_string(16)
         set_cookie = True
+        set_device_id = True
     else:
         secret = str(secret)
         set_cookie = False
+        set_device_id = False
+    device_id = request.cookies.get('ds', None)
+    if device_id is None:
+        device_id = random_string(16)
+        set_device_id = True
     steps = 1
     need_to_reset = False
     if 'i' not in request.args and 'state' in request.args:
@@ -5761,10 +5801,10 @@ def index(action_argument=None):
         for argname in request.args:
             if argname in ('utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'):
                 index_params[argname] = request.args[argname]
-    if need_to_reset:
+    if need_to_reset or set_device_id:
         if use_cache == 0:
             docassemble.base.parse.interview_source_from_string(yaml_filename).update_index()
-        response_wrapper = make_response_wrapper(set_cookie, secret, expire_visitor_secret)
+        response_wrapper = make_response_wrapper(set_cookie, secret, set_device_id, device_id, expire_visitor_secret)
     else:
         response_wrapper = None
     if request.method == 'POST' and not no_defs:
@@ -5784,7 +5824,7 @@ def index(action_argument=None):
     else:
         the_location = None
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info, secret=secret), tracker=user_dict['_internal']['tracker'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id), tracker=user_dict['_internal']['tracker'])
     old_user_dict = None
     if '_back_one' in post_data and steps > 1:
         ok_to_go_back = True
@@ -5799,7 +5839,7 @@ def index(action_argument=None):
                 encrypted = is_encrypted
                 update_session(yaml_filename, encrypted=encrypted)
             action = None
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info, secret=secret), tracker=user_dict['_internal']['tracker'])
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id), tracker=user_dict['_internal']['tracker'])
             post_data = dict()
             disregard_input = True
     known_varnames = dict()
@@ -6997,7 +7037,7 @@ def index(action_argument=None):
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id))
         reset_user_dict(user_code, yaml_filename)
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
@@ -7009,7 +7049,7 @@ def index(action_argument=None):
         manual_checkout(manual_filename=yaml_filename)
         url_args = user_dict['url_args']
         referer = user_dict['_internal'].get('referer', None)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id))
         release_lock(user_code, yaml_filename)
         user_code, user_dict = reset_session(yaml_filename, secret)
         user_dict['url_args'] = url_args
@@ -8195,7 +8235,7 @@ def index(action_argument=None):
                 }
               }
             }
-            if (hasImages || daJsEmbed){
+            if (hasImages || (daJsEmbed && the_file_input.files.length > 0)){
               for (var j = 0; j < the_file_input.files.length; j++){
                 var the_file = the_file_input.files[j];
                 filesToRead++;
@@ -8303,7 +8343,6 @@ def index(action_argument=None):
                 tempFunc(a_file, max_size, this_has_images);
               }
             }
-            return;
           }
           if (newFileList.length == 0){
             //$('input[name="_files"]').remove();
@@ -9039,7 +9078,17 @@ def index(action_argument=None):
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif, .dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            $(this).prop("disabled", value);
+            if ($(this).hasClass('combobox')){
+              if (value){
+                daComboBoxes[$(this).attr('id')].disable();
+              }
+              else {
+                daComboBoxes[$(this).attr('id')].enable();
+              }
+            }
+            else {
+              $(this).prop("disabled", value);
+            }
           }
         });
       }
@@ -9263,6 +9312,9 @@ def index(action_argument=None):
           return false;
         });
         $(".dacollectextra").find('input, textarea, select').prop("disabled", true);
+        $(".dacollectextra").find('input.combobox').each(function(){
+          daComboBoxes[$(this).attr('id')].disable();
+        });
         $("#da-extra-collect").on('click', function(){
           $("<input>").attr({
             type: 'hidden',
@@ -9279,6 +9331,9 @@ def index(action_argument=None):
             var num = $(this).parent().parent().data('collectnum');
             $('div[data-collectnum="' + num + '"]').show('fast');
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+            $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+               daComboBoxes[$(this).attr('id')].enable();
+            });
             $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
             $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
             $(this).addClass("dainvisible");
@@ -9294,6 +9349,9 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+            daComboBoxes[$(this).attr('id')].disable();
+          });
           $(this).parent().find("button.dacollectadd").removeClass("dainvisible");
           $(this).parent().find("span.dacollectnum").addClass("dainvisible");
           $(this).addClass("dainvisible");
@@ -9305,6 +9363,9 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+            daComboBoxes[$(this).attr('id')].disable();
+          });
           $(this).parent().find("button.dacollectunremove").removeClass("dainvisible");
           $(this).parent().find("span.dacollectremoved").removeClass("dainvisible");
           $(this).addClass("dainvisible");
@@ -9316,6 +9377,9 @@ def index(action_argument=None):
           var num = $(this).parent().parent().data('collectnum');
           $('div[data-collectnum="' + num + '"]').show('fast');
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+            daComboBoxes[$(this).attr('id')].enable();
+          });
           $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
           $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
           $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
@@ -9756,11 +9820,17 @@ def index(action_argument=None):
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].enable();
+                  });
                 }
                 else{
                   $(showIfDiv).hide(speed);
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].disable();
+                  });
                 }
               }
               else{
@@ -9768,11 +9838,17 @@ def index(action_argument=None):
                   $(showIfDiv).hide(speed);
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].disable();
+                  });
                 }
                 else{
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].enable();
+                  });
                 }
               }
               var daThis = this;
@@ -9854,11 +9930,17 @@ def index(action_argument=None):
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].enable();
+                });
               }
               else{
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].disable();
+                });
               }
             }
             else{
@@ -9866,11 +9948,17 @@ def index(action_argument=None):
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].disable();
+                });
               }
               else{
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].enable();
+                });
               }
             }
             var daThis = this;
@@ -11277,7 +11365,17 @@ def observer():
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif, .dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            $(this).prop("disabled", value);
+            if ($(this).hasClass('combobox')){
+              if (value){
+                daComboBoxes[$(this).attr('id')].disable();
+              }
+              else {
+                daComboBoxes[$(this).attr('id')].enable();
+              }
+            }
+            else {
+              $(this).prop("disabled", value);
+            }
           }
         });
       }
@@ -11868,11 +11966,17 @@ def observer():
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].enable();
+                  });
                 }
                 else{
                   $(showIfDiv).hide(speed);
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].disable();
+                  });
                 }
               }
               else{
@@ -11880,11 +11984,17 @@ def observer():
                   $(showIfDiv).hide(speed);
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].disable();
+                  });
                 }
                 else{
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                  $(showIfDiv).find('input.combobox').each(function(){
+                    daComboBoxes[$(this).attr('id')].enable();
+                  });
                 }
               }
               var daThis = this;
@@ -11965,11 +12075,17 @@ def observer():
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].enable();
+                });
               }
               else{
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].disable();
+                });
               }
             }
             else{
@@ -11977,11 +12093,17 @@ def observer():
                 $(showIfDiv).hide(speed);
                 $(showIfDiv).data('isVisible', '0');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].disable();
+                });
               }
               else{
                 $(showIfDiv).show(speed);
                 $(showIfDiv).data('isVisible', '1');
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                $(showIfDiv).find('input.combobox').each(function(){
+                  daComboBoxes[$(this).attr('id')].enable();
+                });
               }
             }
             var daThis = this;
@@ -16003,7 +16125,7 @@ def playground_office_addin():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + pg_var_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, pg_var_file, current_project)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
         if use_html:
             variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=current_project)
             return jsonify({'success': True, 'current_project': current_project, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
@@ -17981,7 +18103,7 @@ def variables_report():
     interview = interview_source.get_interview()
     ensure_ml_file_exists(interview, the_file, current_project)
     yaml_file = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
     results = list()
     result_dict = dict()
@@ -18049,7 +18171,7 @@ def playground_variables():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file, current_project)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
         variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list, current_project=current_project)
     return jsonify(success=False, reason=2)
@@ -18483,7 +18605,7 @@ def playground_page():
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 ensure_ml_file_exists(interview, active_file, current_project)
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
                 variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
@@ -18527,7 +18649,7 @@ def playground_page():
     interview = interview_source.get_interview()
     if hasattr(interview, 'mandatory_id_issue') and interview.mandatory_id_issue:
         console_messages.append(word("Note: it is a best practice to tag every mandatory block with an id."))
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
     pulldown_files = [x['name'] for x in files]
     define_examples()
@@ -19381,7 +19503,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
     if output_format == 'json':
         if input_format == 'pdf':
             default_text = word("something")
-            output = dict(fields=list(), default_values=dict(), types=dict(), locations=dict())
+            output = dict(fields=list(), default_values=dict(), types=dict(), locations=dict(), export_values=dict())
             fields = docassemble.base.pdftk.read_fields(filename)
             if fields is not None:
                 fields_seen = set()
@@ -21532,6 +21654,7 @@ def api_verify(req, roles=None):
         if not ok_role:
             logmessage("api_verify: user did not have correct privileges for resource")
             return False
+    docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', device_id=request.cookies.get('ds', None), session_uid=current_user.email)
     return True
 
 def jsonify_with_status(data, code):
@@ -22798,6 +22921,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True):
     #obtain_lock(session_id, yaml_filename)
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
@@ -22827,7 +22951,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 break
     if pre_assembly_necessary:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        ci = current_info(yaml=yaml_filename, req=request, secret=secret)
+        ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id)
         ci['session'] = session_id
         ci['encrypted'] = is_encrypted
         ci['secret'] = secret
@@ -22869,7 +22993,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         except Exception as the_err:
             #release_lock(session_id, yaml_filename)
             raise Exception("Problem deleting variables: " + str(the_err))
-    session_uid = current_user.email
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
     #if 'event_stack' in user_dict['_internal']:
     #    logmessage("Event stack starting as: " + repr(user_dict['_internal']['event_stack']))
     #else:
@@ -22944,7 +23068,7 @@ def api_session_new():
     try:
         (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, req=request)
     except Exception as err:
-        return jsonify_with_status(str(err), 400)
+        return jsonify_with_status(err.__class__.__name__ + ': ' + str(err), 400)
     if encrypted and new_secret:
         return jsonify(dict(session=session_id, i=yaml_filename, secret=secret, encrypted=encrypted))
     else:
@@ -22952,8 +23076,12 @@ def api_session_new():
 
 def create_new_interview(yaml_filename, secret, url_args=None, req=None):
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
-        raise Exception('Insufficient permissions to run this interview.')
+    if current_user.is_anonymous:
+        if not interview.allowed_to_access(is_anonymous=True):
+            raise Exception('Insufficient permissions to run this interview.')
+    else:
+        if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+            raise Exception('Insufficient permissions to run this interview.')
     if req is None:
         req = request
     if secret is None:
@@ -22965,7 +23093,8 @@ def create_new_interview(yaml_filename, secret, url_args=None, req=None):
             if isinstance(val, str):
                 val = val.encode('unicode_escape').decode()
             exec("url_args['" + key + "'] = " + repr(val), user_dict)
-    ci = current_info(yaml=yaml_filename, req=req, secret=secret)
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    ci = current_info(yaml=yaml_filename, req=req, secret=secret, device_id=device_id)
     ci['session'] = session_id
     ci['encrypted'] = True
     ci['secret'] = secret
@@ -23024,7 +23153,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                 release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary: " + str(err))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    ci = current_info(yaml=yaml_filename, req=request, secret=secret)
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id)
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     ci['secret'] = secret
@@ -23190,7 +23320,8 @@ def api_session_action():
         release_lock(session_id, yaml_filename)
         return jsonify_with_status("Unable to obtain interview dictionary.", 400)
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret)
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id)
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     ci['secret'] = secret
@@ -24055,7 +24186,8 @@ def api_interview_data():
         interview = interview_source.get_interview()
     except Exception as err:
         return jsonify_with_status("Error finding interview: " + str(err), 400)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=filename, req=request, action=None))
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=filename, req=request, action=None, device_id=device_id))
     m = re.search('docassemble.playground([0-9]+)([^:]*):', filename)
     if m:
         if current_user.id == int(m.group(1)):
@@ -25036,6 +25168,8 @@ else:
 
 class AdminInterview(object):
     def can_use(self):
+        if self.require_login and current_user.is_anonymous:
+            return False
         if self.roles is None:
             return True
         if current_user.is_anonymous:
@@ -25124,6 +25258,10 @@ def set_admin_interviews():
                                 admin_interview.roles = item['required privileges']
                         else:
                             admin_interview.roles = None
+                        admin_interview.require_login = False
+                        for metadata in interview.metadata:
+                            if 'require login' in metadata:
+                                admin_interview.require_login = True if metadata['require login'] else False
                         admin_interviews.append(admin_interview)
                     else:
                         sys.stderr.write("item in administrative interviews must contain a valid interview name" + "\n")

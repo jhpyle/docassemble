@@ -377,7 +377,7 @@ def states_list(country_code=None):
     return mapping
 
 def interface():
-    """Returns web, json, sms, cron, or worker, depending on how the interview is being accessed."""
+    """Returns web, json, api, sms, cron, or worker, depending on how the interview is being accessed."""
     return this_thread.current_info.get('interface', None)
 
 def user_privileges():
