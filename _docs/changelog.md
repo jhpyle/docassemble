@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.56](https://github.com/jhpyle/docassemble/releases/tag/v1.1.56) - 2020-08-16
+
+### Added
+- The `session_local`, `device_local`, and `user_local` objects in the
+  interview answers.
+- The `require login` `metadata` directive.
+
+### Changed
+- When the API is in use, `interface()` will return `'api'`.
+
+### Fixed
+- `review` blocks were not compatible with iterator variables.
+- `combobox` fields not working right in `list collect` mode.
+- `address autocomplete` did not initialize when the address was
+  hidden by a `show if`.
+- Submission blocked when an empty non-required file upload field was
+  present in an embedded interview.
+
 ## [1.1.55](https://github.com/jhpyle/docassemble/releases/tag/v1.1.55) - 2020-08-06
 
 ### Added

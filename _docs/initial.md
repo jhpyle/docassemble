@@ -186,6 +186,11 @@ specifier also controls whether the interview will be listed.  For
 more information about the `/list` page, see the documentation for the
 [`dispatch`] configuration directive.
 
+<a name="require login"></a>If you set `require login` to `True`, then
+a non-logged-in user will be denied access to the interview.  However,
+if `anonymous` is one of the `required privileges`, a non-logged-in
+user will be able to access the interview regardless of this setting.
+
 <a name="error action"></a>You can set an `error action` if you want
 your interview to do something substantive in the event that your
 interview encounters an error that it would otherwise show to the

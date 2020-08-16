@@ -909,22 +909,104 @@ number.
 
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
+Normally, when **docassemble** figures out what [`question`] to ask,
+it simply evaluates the [interview logic]: it goes through the [YAML]
+from top to bottom, and runs anything marked as [`initial`] or
+[`mandatory`] (skipping over [`mandatory`] blocks that have already
+been processed), and if it encounters an undefined variable, it seeks
+a definition of that undefined variable by running blocks that offer
+definitions of those variables.
+
+Sometimes, however, you may want to direct **docassemble** to perform
+a specific task other than evaluating the current state of the
+[interview logic].  The mechanism for doing that is called the
+"actions" mechanism.
+
+An "action" is similar to a function call in computer programming.
+When you call a function, you might call `cancel_application()` or
+`submit_application(user, details)`.  Running `cancel_application()`
+just runs a function called `cancel_application`.  Running
+`submit_application(user, details)` runs a function called
+`submit_application`, and passes `user` and `details` to the function;
+these are referred to as the "arguments" of the function.
+
+Here is some made-up code that illustrates how traditional functions work:
+
+{% highlight python %}
+
+def cancel_application():
+  central_authority = CentralAuth(hostname='central-authority.example.com')
+  payload = {'type': 'cancel'}
+  send(payload, central_authority)
+
+def submit_application(user, details):
+  central_authority = CentralAuth(hostname='central-authority.example.com')
+  payload = {'type': 'submit', 'user': user, 'details': details}
+  send(payload, central_authority)
+{% endhighlight %}
+
+In **docassemble**, an "action" consists of an action name and an
+optional [dictionary] of arguments.  When you call the action
+`cancel_application`, **docassemble** will seek out a block in your
+[YAML] that offers to define `cancel_application`, and will run that
+`block`.  To locate this block, it uses the same process that it uses
+when it seeks a block that defines an undefined variable.
+
+Here is how you would implement the functions above as "actions" in
+your interview [YAML]:
+
+{% highlight yaml %}
+event: cancel_application
+code: |
+  send({'type': 'cancel'}, CentralAuth(hostname='central-authority.example.com'))
+---
+event: submit_application
+code: |
+  send({'type': 'submit', 'user': action_argument('user'), 'details': action_argument('details')}, CentralAuth(hostname='central-authority.example.com'))
+{% endhighlight %}
+
+Writing `event: cancel_application` means "this block advertises that
+it defines `cancel_application`.  You may have seen [`event`] used
+before in a context like this:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  intro_screen
+  favorite_fruit
+  final_screen
+---
+event: final_screen
+question: Thank you for answering my questions today.
+subquestion: |
+  I like ${ favorite_fruit } as well.
+{% endhighlight %}
+
+When a variable name is referenced, its definition will be sought if
+the variable is undefined, but if the variable is defined, it will
+continue running the Python code.  The `final_screen` [`question`] is
+different, though, because it is a dead end; `final_screen` is a
+variable name that will never actually get defined.
+
+
+The arguments to the action
+
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
 
 The `url_action()` function allows users to interact with
 **docassemble** using hyperlinks embedded in questions.
 
 `url_action()` returns a URL that, when clicked, will perform an
-action within **docassemble**, such as running some code or asking a
+"action" within **docassemble**, such as running some code or asking a
 question.  Typically the URL will be part of a [Markdown] link inside
 of a [question], or in a `note` within a set of [fields].
 
 The [`process_action()`] function triggers the processing of the
-action.  It is typically called for you, behind-the-scenes, but you
+"action."  It is typically called for you, behind-the-scenes, but you
 can call it explicitly if you want to control exactly when (and if) it
 is called.  For more information about calling [`process_action()`]
-explicitly, see the section on the
-[interaction of user roles and actions].
+explicitly, see the section on the [interaction of user roles and
+actions].
 
 Here is an example:
 
@@ -2042,7 +2124,8 @@ If the item was never set, `get_info()` will return `None`.
 The `interface()` function returns `'web'` if the user is accessing
 the interview through a web browser and `'sms'` if the user is using
 [SMS].  If the web interface is used, but `&json=1` is added to the
-URL, then `interface()` will return `'json'`.
+URL, then `interface()` will return `'json'`.  If the API is being
+used, `interface()` will return `'api'`.
 
 {% include side-by-side.html demo="interface" %}
 
@@ -2422,6 +2505,28 @@ the [special variable `speak_text`].)
 
 For more information about languages in **docassemble**, see
 [language support].
+
+If your interview uses [actions], and your [actions] need to know what
+language to use, you will need to manually include
+[`process_action()`] in an [`initial`] block, as follows:
+
+{% highlight yaml %}
+initial: True
+code: |
+  set_language(user_language)
+  process_action()
+{% endhighlight %}
+
+By default, [`process_action()`] is called automatically, prior to the
+execution of any [`mandatory`] or [`initial`] blocks.  However, in
+cases where your [actions] have a prerequisite, you need to indicate
+exactly where in the interview logic [actions] should be executed.
+
+Note that in the above example, [actions] will not be able to be run
+until `user_language` is defined, so if your interview uses [actions]
+very early on in the interview, you may need to set a default value
+for `user_language` before asking the user what `user_language` should
+be.
 
 ## <a name="get_dialect"></a>get_dialect()
 

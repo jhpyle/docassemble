@@ -2401,6 +2401,45 @@
     Your IP address is
     ${ device(ip=True) }.
   mandatory: True
+"device-local": |-
+  mandatory: True
+  code: |
+    multi_user = True
+  ---
+  mandatory: True
+  code: |
+    device_local.how_doing
+    final_screen
+  ---
+  question: |
+    How are you doing today?
+  field: device_local.how_doing
+  choices:
+    - Well: well
+    - Poorly: poor
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Favorite fruit: favorite_fruit
+  ---
+  event: final_screen
+  question: |
+    Your favorite fruit is ${ favorite_fruit }
+  subquestion: |
+    % if device_local.how_doing == 'well':
+    I am glad you are doing well.
+    % else:
+    I am sorry you are poorly today.
+    % endif
+
+    Try re-joining this interview by
+    using a different web browser, an
+    incognito tab, or by closing your
+    browser application and opening it
+    again, and visiting this URL:
+
+    [${ interview_url() }](${ interview_url() })
 "dialog-box": |-
   mandatory: True
   code: |
@@ -9872,6 +9911,45 @@
       for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml')[0]:
         response(url=interview_url(i=interview['filename'], session=interview['session'], local=True))
       response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))
+"session-local": |-
+  mandatory: True
+  code: |
+    multi_user = True
+  ---
+  mandatory: True
+  code: |
+    session_local.how_doing
+    final_screen
+  ---
+  question: |
+    How are you doing today?
+  field: session_local.how_doing
+  choices:
+    - Well: well
+    - Poorly: poor
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Favorite fruit: favorite_fruit
+  ---
+  event: final_screen
+  question: |
+    Your favorite fruit is ${ favorite_fruit }
+  subquestion: |
+    % if session_local.how_doing == 'well':
+    I am glad you are doing well.
+    % else:
+    I am sorry you are poorly today.
+    % endif
+
+    Try re-joining this interview by
+    using a different web browser, an
+    incognito tab, or by closing your
+    browser application and opening it
+    again, and visiting this URL:
+
+    [${ interview_url() }](${ interview_url() })
 "set-language": "initial: True\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es"
@@ -13384,6 +13462,7 @@
   code: |
     multi_user = True
     signature = '(Your signature will go here)'
+"sign-here": ""
 "signature-diversion": |-
   question: |
     Sign your name

@@ -3250,15 +3250,25 @@ Set the `behind https load balancer` directive to `True` if you are
 running **docassemble** in a configuration where **docassemble**
 itself is running [HTTP], but requests are being forwarded to it by a
 server running HTTPS.  This might be your configuration if you are
-using a [load balancer] or you are running [Docker] on machine that
-[forwards] HTTPS requests to [Docker] on a non-standard [HTTP] port.
+using a [load balancer] or you are running [Docker] in a context where
+a web server or web service [forwards] HTTPS requests to [Docker] on
+port 80 or a non-standard [HTTP] port.
 
 This variable is typically set using the [Docker] environment variable
 [`BEHINDHTTPSLOADBALANCER`].
 
-Make sure that the load balancer you are using sets the
+Make sure that the proxy server you are using sets the
 `X-Forwarded-*` headers.  **docassemble** needs these headers in
-certain circumstances in order to form correct URLs.
+certain circumstances in order to form correct URLs.  Specifically,
+the proxy server should set the following headers:
+
+* `X-Forwarded-For`
+* `X-Forwarded-Host`
+* `X-Forwarded-Port`
+* `X-Forwarded-Proto`
+
+You can test whether your proxy server is sending these headers to
+your **docassemble** server by visiting `/headers` on your site.
 
 ## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
 

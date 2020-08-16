@@ -21,6 +21,115 @@ interview.  This is relevant if you are using the [navigation bar]
 feature.  For information about how to use it, see the documentation
 for the [`nav` functions].
 
+## <a name="session_local"></a>session_local
+
+`session_local` is a type of `DAObject` that can be used to store
+information that is specific to the current browser session.  The
+"current browser session" is distinct from the "session."
+
+In **docassemble**, a "session" is a particular instance of a person
+going through an interview.  The interview is identified by an
+interview filename, like
+`docassemble.example_inc:data/questions/survey.yml`, and the set of
+interview answers for the session in that interview is identified by a
+session id like `bBWTFcny09FugpRhdvfxZJKu3iPMeVtf`.
+
+The "browser session" is a different concept; it refers to a "session
+within a session."  If the user starts up their web browser, and
+enters a **docassemble** session, that is one "browser session."  If
+the user closes their web browser, then re-enters the same
+**docassemble** session, that is another "browser session."  Or, if
+the user uses a different device, or a different web browser
+application, and enters the **docassemble** session with it, that
+constitutes a separate "browser session."
+
+The special variable `session_local` is a type of `DAObject`, and you
+can treat it as a `DAObject`, but its attributes will always be
+dependent on the "browser session."  If the user switches to a
+different browser session, the attributes of `session_local` that were
+defined during the first browser session will not be present during
+the second browser session.
+
+{% include side-by-side.html demo="session-local" %}
+
+The `session_local` variable works using a browser cookie that is
+deleted ("expires") when the user closes the web browser application
+or logs out of **docassemble**.
+
+## <a name="device_local"></a>device_local
+
+The `device_local` variable is similar to `session_local`, except that
+it is tied not to a browser session, but to a device (a web browser).
+If the user closes the browser application and then opens the same
+browser application and enters the session again, the `device_local`
+object will be the same as before.  However, if the user connects with
+a different browser application, or switches from using a laptop to
+using a smartphone, the `device_local` object will be different.
+Also, if the user opens an incognito tab, this will also appear as
+different device.
+
+{% include side-by-side.html demo="device-local" %}
+
+The `device_local` variable works using a browser cookie that is not
+deleted when the when the user closes the web browser application
+or logs out of **docassemble**.
+
+## <a name="user_local"></a>user_local
+
+The `user_local` variable is similar to `session_local` and
+`device_local`, except that the variable is tied to a specific user.
+It works when the user is not logged in, but when the user is
+not logged in, it functions much like `session_local` because the
+identity of an anonymous user only lasts as long as a session.
+
+The `user_local` object can be useful in situations where you have a
+multi-user interview with logged-in users.  For example:
+
+{% highlight yaml %}
+metadata:
+  require login: True
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+objects:
+  - client: Individual
+  - adverse_party: Individual
+  - user_local.person: Individual
+---
+code: |
+  if not hasattr(client.name, 'first'):
+    user_local.person = client
+  elif hasattr(adverse_party, 'email') and user_info().email.lower() == adverse_party.email.lower():
+    user_local.person = adverse_party
+---
+question: |
+  What is your name?
+fields:
+  - First name: user_local.person.name.first
+  - Last name: user_local.person.name.last
+---
+code: |
+  if user_info().first_name:
+    user_local.person.name.first = user_info().first_name
+---
+code: |
+  if user_info().last_name:
+    user_local.person.name.last = user_info().last_name
+---
+mandatory: True
+code: |
+  user_local.person
+  client.name.first
+  final_screen
+{% endhighlight %}
+
+Any time you want to refer to the user, you can refer to
+`user_local.person`.  This may be an alias for `client` or
+`adverse_party`, or it may have the intrisic name of
+`user_local.person`.
+
 ## <a name="url_args"></a>url_args
 
 `url_args` is a [Python dictionary] that is used to access parameters

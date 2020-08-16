@@ -777,9 +777,10 @@ your container for the new configuration to take effect.
 * <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
   like **docassemble** to communicate with the browser using
   encryption.  Read the [HTTPS] section for more information.
-  Defaults to `false`.  See the [`use https`] configuration
-  directive.  Do not set this to `true` if you are using a load
-  balancer that forwards non-encrypted [HTTP] to your server.
+  Defaults to `false`.  See the [`use https`] configuration directive.
+  Do not set this to `true` if you are using a proxy server that
+  forwards non-encrypted [HTTP] to your server; in that case, see the
+  [`BEHINDHTTPSLOADBALANCER`] variable below.
 * <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by
   which web browsers can find **docassemble**.  This is necessary for
   [HTTPS] to function. See the [`external hostname`] configuration
@@ -826,12 +827,14 @@ your container for the new configuration to take effect.
   this.  The default value is `/`.  See the [`root`] configuration
   directive.
 * <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
-  this to `true` if a load balancer is in use and the load balancer
-  accepts connections in HTTPS but forwards them to web servers as
-  HTTP.  This lets **docassemble** know that when it forms URLs, it
-  should use the `https` scheme even though requests appear to be
-  coming in as HTTP requests.  See the [`behind https load balancer`]
-  configuration directive.
+  this to `true` if you are using a load balancer or proxy server that
+  accepts connections in HTTPS and forwards them to your server or
+  servers as HTTP.  This lets **docassemble** know that when it forms
+  URLs, it should use the `https` scheme even though requests appear
+  to be coming in as HTTP requests.  You also need to make sure that
+  your proxy server is setting the `X-Forwarded-*` HTTP headers when
+  it passes HTTP requests to your server or servers.  See the [`behind
+  https load balancer`] configuration directive for more information.
 * <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
   X-Sendfile header is not functional in your configuration for
   whatever reason.  See the [`xsendfile`] configuration directive.
@@ -2220,3 +2223,4 @@ line), as the containers depend on the images.
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`nginx ssl protocols`]: {{ site.baseurl }}/docs/config.html#nginx ssl protocols
 [Helm]: https://helm.sh/
+[`BEHINDHTTPSLOADBALANCER`]: #BEHINDHTTPSLOADBALANCER
