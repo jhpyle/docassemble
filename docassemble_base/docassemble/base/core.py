@@ -72,7 +72,10 @@ class DAEmpty:
         else:
             return DAEmpty()
     def __str__(self):
-        return self.str
+        if hasattr(self, 'str'):
+            return self.str
+        else:
+            return ''
     def __dir__(self):
         return list()
     def __contains__(self, item):

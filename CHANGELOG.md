@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.57] - 2020-08-16
+### Fixed
+- Backwards-compatibility issue related to `DAEmpty` introduced in 1.1.54.
+
 ## [1.1.56] - 2020-08-16
 ### Added
 - The `session_local`, `device_local`, and `user_local` objects in the
