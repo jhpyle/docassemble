@@ -67,14 +67,14 @@ class DAEmpty:
     def __init__(self, *pargs, **kwargs):
         self.str = str(kwargs.get('str', ''))
     def __getattr__(self, thename):
-        if thename.startswith('_'):
+        if thename.startswith('_') or thename == 'str':
             return object.__getattribute__(self, thename)
         else:
             return DAEmpty()
     def __str__(self):
-        if hasattr(self, 'str'):
-            return self.str
-        else:
+        try:
+            return object.__getattribute__(self, 'str')
+        except:
             return ''
     def __dir__(self):
         return list()
