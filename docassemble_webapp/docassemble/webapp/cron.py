@@ -173,7 +173,7 @@ def run_cron(cron_type):
         cron_types.append(str(cron_type) + "_background")
     cron_user = get_cron_user()
     cron_user_id = cron_user.id
-    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
+    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron')
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
     with app.app_context():
@@ -219,7 +219,7 @@ def run_cron(cron_type):
                                 try:
                                     docassemble.base.functions.reset_local_variables()
                                     obtain_lock_patiently(key, filename)
-                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
+                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
                                     interview.assemble(the_dict, interview_status)
                                     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                                     if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
