@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.59](https://github.com/jhpyle/docassemble/releases/tag/v1.1.59) - 2020-08-18
+
+### Fixed
+- Cron problem introduced in 1.1.56.
+
+## [1.1.58](https://github.com/jhpyle/docassemble/releases/tag/v1.1.58) - 2020-08-16
+
+### Fixed
+- Backwards-compatibility issue related to `DAEmpty` introduced in 1.1.54.
+
+## [1.1.57](https://github.com/jhpyle/docassemble/releases/tag/v1.1.57) - 2020-08-16
+
+### Fixed
+- Backwards-compatibility issue related to `DAEmpty` introduced in 1.1.54.
+
 ## [1.1.56](https://github.com/jhpyle/docassemble/releases/tag/v1.1.56) - 2020-08-16
 
 ### Added

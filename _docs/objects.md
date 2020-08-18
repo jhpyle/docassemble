@@ -2141,7 +2141,7 @@ empty string `''`.  If you initialize the object as `DAEmpty(str='not
 applicable')`, then `'not applicable'` will be used in place of the
 empty string.
 
-## <a name="DACatchAll"></a>`DACatchAll`
+## <a name="DACatchAll"></a>DACatchAll
 
 The `DACatchAll` is a special class used internally by the [catchall
 questions] feature.  If the definition of an undefined variable is
