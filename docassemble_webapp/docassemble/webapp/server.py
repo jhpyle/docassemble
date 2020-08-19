@@ -5849,22 +5849,15 @@ def index(action_argument=None):
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
         visible_field_names = list()
+    known_varnames_visible = dict()
+    for key, val in known_varnames.items():
+        if key in visible_field_names:
+            known_varnames_visible[key] = val
     all_field_numbers = dict()
     field_numbers = dict()
     numbered_fields = dict()
-    for kv_key, kv_var in known_varnames.items():
-        try:
-            field_identifier = myb64unquote(kv_key)
-            m = re.search(r'_field_([0-9]+)', field_identifier)
-            if m:
-                numbered_fields[kv_var] = kv_key
-                field_numbers[kv_var] = int(m.group(1))
-                if kv_var not in all_field_numbers:
-                    all_field_numbers[kv_var] = set()
-                all_field_numbers[kv_var].add(int(m.group(1)))
-        except:
-            logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
     visible_fields = set()
+    raw_visible_fields = set()
     for field_name in visible_field_names:
         try:
             m = re.search(r'(.*)(\[[^\]]+\])$', from_safeid(field_name))
@@ -5873,10 +5866,24 @@ def index(action_argument=None):
                     visible_fields.add(safeid(from_safeid(known_varnames[safeid(m.group(1))]) + m.group(2)))
         except Exception as the_err:
             pass
+        raw_visible_fields.add(field_name)
         if field_name in known_varnames:
             visible_fields.add(known_varnames[field_name])
         else:
             visible_fields.add(field_name)
+    for kv_key, kv_var in known_varnames.items():
+        try:
+            field_identifier = myb64unquote(kv_key)
+            m = re.search(r'_field_([0-9]+)', field_identifier)
+            if m:
+                numbered_fields[kv_var] = kv_key
+                if kv_key in raw_visible_fields or kv_var in raw_visible_fields:
+                    field_numbers[kv_var] = int(m.group(1))
+                if kv_var not in all_field_numbers:
+                    all_field_numbers[kv_var] = set()
+                all_field_numbers[kv_var].add(int(m.group(1)))
+        except:
+            logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
     list_collect_list = None
     if not STRICT_MODE:
         if '_list_collect_list' in post_data:
@@ -6696,7 +6703,7 @@ def index(action_argument=None):
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if orig_file_field not in fileDict['values'] and len(known_varnames):
-                        for key, val in known_varnames.items():
+                        for key, val in known_varnames_visible.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
@@ -6810,6 +6817,8 @@ def index(action_argument=None):
             should_assemble_now = False
             empty_file_vars = set()
             for orig_file_field in file_fields:
+                if orig_file_field not in raw_visible_fields:
+                   continue
                 if orig_file_field in known_varnames:
                     orig_file_field = known_varnames[orig_file_field]
                 if orig_file_field not in visible_fields:
@@ -6837,6 +6846,8 @@ def index(action_argument=None):
                 if not already_assembled:
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
+                    if orig_file_field_raw not in raw_visible_fields:
+                       continue
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
                     if orig_file_field_raw not in visible_fields:
@@ -6846,7 +6857,7 @@ def index(action_argument=None):
                     orig_file_field = orig_file_field_raw
                     var_to_store = orig_file_field_raw
                     if (orig_file_field not in request.files or request.files[orig_file_field].filename == "") and len(known_varnames):
-                        for key, val in known_varnames.items():
+                        for key, val in known_varnames_visible.items():
                             if val == orig_file_field_raw:
                                 orig_file_field = key
                                 var_to_store = val
@@ -17665,8 +17676,13 @@ def playground_packages():
         if os.path.isfile(current_commit_file):
             with open(current_commit_file, 'rU', encoding='utf-8') as fp:
                 commit_code = fp.read().strip()
+            if current_user.timezone:
+                the_timezone = pytz.timezone(current_user.timezone)
+            else:
+                the_timezone = pytz.timezone(get_default_timezone())
+            commit_code_date = datetime.datetime.utcfromtimestamp(os.path.getmtime(current_commit_file)).replace(tzinfo=pytz.utc).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
         if commit_code:
-            github_message += '  ' + word('The current branch is %s and the current commit is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>', '<a target="_blank" href="' + html_url + '/commit/' + commit_code + '"><code>' + commit_code[0:7] + '</code></a>')
+            github_message += '  ' + word('The current branch is %s and the current commit is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>', '<a target="_blank" href="' + html_url + '/commit/' + commit_code + '"><code>' + commit_code[0:7] + '</code></a>') + '  ' + word('The commit was saved locally at %s.') % commit_code_date
         else:
             github_message += '  ' + word('The current branch is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>',)
     if github_message is not None:

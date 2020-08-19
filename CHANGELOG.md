@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.60] - 2020-08-19
+### Changed
+- Playground Packages page now reports local date and time of a commit.
+### Fixed
+- Issue with two file fields or two fields with a `validate` that have
+  the same variable name and one is hidden by `show if`.
+
 ## [1.1.59] - 2020-08-18
 ### Fixed
 - Cron problem introduced in 1.1.56.
