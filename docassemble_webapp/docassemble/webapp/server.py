@@ -7397,9 +7397,9 @@ def index(action_argument=None):
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
       var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list'];
-      var daVarLookup;
-      var daVarLookupRev;
-      var daValLookup;
+      var daVarLookup = Object();
+      var daVarLookupRev = Object();
+      var daValLookup = Object();
       var daTargetDiv;
       var daComboBoxes = Object();
       var globalEval = eval;

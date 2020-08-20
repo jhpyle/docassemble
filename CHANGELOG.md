@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.61] - 2020-08-20
+### Fixed
+- JavaScript error with `getField()`.
+
 ## [1.1.60] - 2020-08-19
 ### Changed
 - Playground Packages page now reports local date and time of a commit.

@@ -723,6 +723,7 @@
 "That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
 "The author is": Null
+"The commit was saved locally at %s.": Null
 "The configuration file was saved.": Null
 "The current branch is %s and the current commit is %s.": Null
 "The current branch is %s.": Null
