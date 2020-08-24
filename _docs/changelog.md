@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.62](https://github.com/jhpyle/docassemble/releases/tag/v1.1.62) - 2020-08-23
+
+### Added
+- The modifiers `include attachment notice`, `include download tab`,
+  and `manual attachment list` for tweaking the display of attached
+  documents.
+
+### Fixed
+- Step advanced when session started with URL parameters.
+- The signature screen scrolled at submission.
+- The `next` parameter was forgotten when using social login methods.
+- The `reconsider` modifier did not work with iterator variables.
+
+## [1.1.61](https://github.com/jhpyle/docassemble/releases/tag/v1.1.61) - 2020-08-20
+
+### Fixed
+- JavaScript error with `getField()`.
+
 ## [1.1.60](https://github.com/jhpyle/docassemble/releases/tag/v1.1.60) - 2020-08-19
 
 ### Changed

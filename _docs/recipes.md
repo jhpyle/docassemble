@@ -369,6 +369,115 @@ subquestion: |
   You can now resume the interview on your computer.
 {% endhighlight %}
 
+The above interview requires setting `multi_user = True`.  To avoid
+this you can use the following pair of interviews.
+
+First interview:
+
+{% highlight yaml %}
+objects:
+  - r: DARedis
+---
+mandatory: True
+code: |
+  email_sent
+  reconsider('signature_obtained')
+  if signature_obtained:
+    final_screen
+  elif r.get_data(redis_key) is None:
+    timeout_screen
+  else:
+    waiting_screen
+---
+code: |
+  send_email(to=email_address, template=email_template)
+  email_sent = True
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail address: email_address
+    datatype: email
+---
+template: email_template
+subject: |
+  Your signature needed
+content: |
+  [Click here](${ interview_url(i=user_info().package + ':second-interview.yml', c=redis_key, new_session=1) })
+  to sign your name with a touchscreen device.
+---
+code: |
+  need(r)
+  import random
+  import string
+  redis_key = ''.join(random.choice(string.ascii_lowercase) for i in range(15))
+  r.set_data(redis_key, 'waiting', expire=60*60*24)
+---
+event: final_screen
+question: Your signature
+subquestion: |
+  ${ signature }
+---
+event: timeout_screen
+question: |
+  Sorry, you didn't sign in time.
+buttons:
+  - Restart: restart
+---
+prevent going back: True
+event: waiting_screen
+question: |
+  Waiting for signature
+subquestion: |
+  Open your e-mail on a touchscreen device.
+  
+  You should get an e-mail soon asking you 
+  to provide a signature.  Click the link
+  in the e-mail.
+reload: 5
+---
+code: |
+  if r.get_data(redis_key) not in ('waiting', None):
+    signature = DAFile('signature')
+    signature.initialize(filename="signature.png")
+    signature.write(r.get_data(redis_key), binary=True)
+    signature.commit()
+    r.delete(redis_key)
+    signature_obtained = True
+  else:
+    signature_obtained = False
+{% endhighlight %}
+
+Second interview (referenced in the first as `second-interview.yml`):
+
+{% highlight yaml %}
+objects:
+  - r: DARedis
+---
+mandatory: True
+code: |
+  signature_saved
+  final_screen
+---
+code: |
+  if 'c' not in url_args or r.get_data(url_args['c']) != 'waiting':
+    message('Unauthorized', show_restart=False, show_exit=False)
+  r.set_data(url_args['c'], signature.slurp(auto_decode=False), expire=600)
+  signature_saved = True
+---
+question: Sign your name
+signature: signature
+---
+prevent going back: True
+event: final_screen
+question: |
+  Thanks!
+subquestion: |
+  You can now resume your interview.
+{% endhighlight %}
+
+
+
 # <a name="document signing"></a>Multi-user interview for getting a client's signature
 
 This is an example of a multi-user interview where one person (e.g.,
@@ -846,8 +955,8 @@ example) that can be set are:
   settlement currencies] for information about which currencies are
   available.
 * `payment.payor`: this contains information about the person who is
-  paying.  You can set this to an `Individual` or `Person` with a
-  `.billing_address` (an `Address`), a name, a `.phone_number`, and an
+  paying.  You can set this to an [`Individual`] or [`Person`] with a
+  `.billing_address` (an [`Address`]), a name, a `.phone_number`, and an
   `.email`.  This information will not be sought through dependency
   satisfaction; it will only be used if it exists.  Thus, if you want
   to send this information (which may be required for the payment to
@@ -1165,8 +1274,8 @@ the DOCX template file, [declaration_of_favorite_fruit.docx]:
 ![Declaration of Favorite Fruit]({{ site.baseurl }}/img/examples/declaration-favorite-fruit.png){: .maybe-full-width }
 
 The template uses methods on the `sign` object to include the
-signature images and dates.  To include a signature of an `Individual`
-or `Person` called `the_person`, you would call
+signature images and dates.  To include a signature of an [`Individual`]
+or [`Person`] called `the_person`, you would call
 `sign.signature_of(the_person)`.  To include the date when the person
 signed, you would call `sign.signature_date_of(the_person)`.
 
@@ -1533,3 +1642,6 @@ value of `favorite_fruit`.
 [`template`]: {{ site.baseurl }}/docs/initial.html#template
 [`create_session()`]: {{ site.baseurl }}/docs/functions.html#create_session
 [`set_session_variables()`]: {{ site.baseurl }}/docs/functions.html#set_session_variables
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`Person`]: {{ site.baseurl }}/docs/objects.html#Person
+[`Address`]: {{ site.baseurl }}/docs/objects.html#Address

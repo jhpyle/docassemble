@@ -1697,6 +1697,24 @@ filename`:
 
 {% include side-by-side.html demo="allow-downloading-true-zip-filename" %}
 
+## <a name="include download tab"></a><a name="include attachment notice"></a>Omitting parts of the display
+
+By default, when an attachment is available, a message appears saying
+"The following document has been created for you."  To omit this, set
+`include attachment notice` to `False`.
+
+By default, the download links appear under a tab called "Download."
+Sometimes there is a "Preview" tab or a "Markdown" tab.  To omit this
+tab bar, set `include download tab` to `False`.
+
+{% include side-by-side.html demo="attachment-notice" %}
+
+To omit all of the attachment display except for the "Email these
+documents" and/or the "Download all documents as a ZIP file" boxes,
+set `manual attachment list` to `True`.
+
+{% include side-by-side.html demo="manual-attachment-list" %}
+
 ## <a name="display"></a>Alternative ways of displaying documents
 
 There are alternatives to using [`attachment`] or [`attachment code`]
@@ -1722,6 +1740,13 @@ types created, only the specified file types will be inserted.  For
 example:
 
 {% include side-by-side.html demo="document-links-limited" %}
+
+If you want to include the "Email these documents" and/or the
+"Download all documents as a ZIP file" boxes after your list of
+documents, you can use `attachment code` in combination with `manual
+attachment list: True`.
+
+{% include side-by-side.html demo="manual-attachment-list" %}
 
 # <a name="caching"></a>Document caching and regeneration
 

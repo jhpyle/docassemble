@@ -7060,7 +7060,7 @@ conflict.
 
 ## <a name="js_val"></a>val() JavaScript function
 
-If you need the value of one of the variables on the screen, you can
+If you need the value of one of the HTML inputs on the screen, you can
 call `val()`, passing as the sole parameter the variable name of the
 field as a string.  The variable name must be written exactly as it
 appears in the underlying [`question`].
@@ -7069,8 +7069,10 @@ appears in the underlying [`question`].
 
 This function is essential for using the [`js show if`] feature.
 
-Note that `val()` only works with variables that exist on the screen;
-The [JavaScript] environment is not aware of the Python environment.
+Note that `val()` only works with fields that exist on the screen; the
+[JavaScript] environment is not aware of the Python environment.  If
+you want to pass variable values from Python to JavaScript, see the
+[recipe on the topic].
 
 You can also access this function under the name `da_val()`, which can
 be useful if you are embedding **docassemble** and there is a name
@@ -7692,3 +7694,4 @@ $(document).on('daPageLoad', function(){
 [`psycopg2`]: https://www.psycopg.org/docs/
 [`variables snapshot db`]: {{ site.baseurl }}/docs/config.html#variables snapshot db
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
+[recipe on the topic]: {{ site.baseurl }}/docs/recipes.html#python to javascript

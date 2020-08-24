@@ -688,6 +688,16 @@
     variable name: doc_three
     content: |
       Hello, world number three!
+"attachment-notice": |-
+  question: Here is your document.
+  attachments:
+    - name: Praecipe to discontinue
+      docx template file: praecipe_discontinue.docx
+      valid formats:
+        - pdf
+  include attachment notice: False
+  include download tab: False
+  mandatory: True
 "attachment-simple": |-
   mandatory: True
   question: Your document is ready.
@@ -6645,6 +6655,13 @@
     What is your favorite food?
   fields:
     - no label: favorite_food
+"manual-attachment-list": |-
+  mandatory: True
+  question: Here is your document.
+  subquestion: |
+    [:file: Praecipe to Discontinue](${ praecipe.url_for(attachment=True) })
+  attachment code: praecipe
+  manual attachment list: True
 "markdown": "question: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown allows\
   \ you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n  Write\
   \ in *italic text* or even\n  **bold text**.\n\n  ## I am a subheading\n\n  ###\
@@ -13462,7 +13479,6 @@
   code: |
     multi_user = True
     signature = '(Your signature will go here)'
-"sign-here": ""
 "signature-diversion": |-
   question: |
     Sign your name
