@@ -659,7 +659,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <div class="d-none d-md-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-md-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         output += """
-              <div class="form-actions d-none d-md-block dasigbuttons">""" + back_button + additional_buttons_before + """
+              <div class="form-actions d-none d-md-block dasigbuttons mt-3">""" + back_button + additional_buttons_before + """
                 <a href="#" role="button" class="btn """ + BUTTON_STYLE + """primary """ + BUTTON_CLASS + """ dasigsave">""" + continue_label + """</a>
                 <a href="#" role="button" class="btn """ + BUTTON_STYLE + """warning """ + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>""" + additional_buttons_after + help_button + """
               </div>
@@ -1548,35 +1548,36 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += tracker_tag(status)
         output += '            </form>\n'
     if len(status.attachments) > 0:
-        output += '            <br/>\n'
-        if len(status.attachments) > 1:
-            output += '            <h2 class="sr-only">' + word('Attachments') + "</h2>\n"
-            output += '            <div class="da-attachment-alert da-attachment-alert-multiple alert alert-success" role="alert">' + word('The following documents have been created for you.') + '</div>\n'
-        else:
-            output += '            <h2 class="sr-only">' + word('Attachment') + "</h2>\n"
-            output += '            <div class="da-attachment-alert da-attachment-alert-single alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
+        if not status.extras.get('manual_attachment_list', False):
+            output += '            <br/>\n'
+            if len(status.attachments) > 1:
+                output += '            <h2 class="sr-only">' + word('Attachments') + "</h2>\n"
+                if status.extras.get('attachment_notice', True):
+                    output += '            <div class="da-attachment-alert da-attachment-alert-multiple alert alert-success" role="alert">' + word('The following documents have been created for you.') + '</div>\n'
+            else:
+                output += '            <h2 class="sr-only">' + word('Attachment') + "</h2>\n"
+                if status.extras.get('attachment_notice', True):
+                    output += '            <div class="da-attachment-alert da-attachment-alert-single alert alert-success" role="alert">' + word('The following document has been created for you.') + '</div>\n'
         attachment_index = 0
         editable_included = False
         if status.extras.get('always_include_editable_files', False):
             automatically_include_editable = True
         else:
             automatically_include_editable = False
-        if len(status.attachments) > 1:
-            file_word = 'files'
-        else:
-            file_word = 'file'
-        editable_name = ''
+        editable_options = set()
+        total_editable = 0
         for attachment in status.attachments:
             if 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     editable_included = True
-                    if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        if 'docx' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats']:
-                            editable_name = 'RTF and DOCX files'
-                        else:
-                            editable_name = 'RTF ' + file_word
-                    elif 'docx' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats']:
-                        editable_name = 'DOCX ' + file_word
+                if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                    total_editable += 1
+                    editable_options.add('RTF')
+                elif 'docx' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats']:
+                    total_editable += 1
+                    editable_options.add('DOCX')
+            if status.extras.get('manual_attachment_list', False):
+                continue
             if debug and len(attachment['markdown']):
                 if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     md_format = 'html'
@@ -1608,11 +1609,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 show_markdown = False
                 show_download = True
                 multiple_formats = False
+            if not status.extras.get('download_tab', True):
+                show_preview = False
+                show_markdown = False
             output += '            <div class="da-attachment-title-wrapper"><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
             if attachment['description']:
                 output += '            <div class="da-attachment-title-description">' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
             output += '            <div class="da-attachment-download-wrapper">\n'
-            if True or show_preview or show_markdown:
+            if status.extras.get('download_tab', True) or show_preview or show_markdown:
                 output += '              <ul role="tablist" class="nav nav-tabs da-attachment-tablist">\n'
                 if show_download:
                     output += '                <li class="nav-item da-attachment-tab-download-header"><a class="nav-link active" id="dadownload-tab' + str(attachment_index) + '" href="#dadownload' + str(attachment_index) + '" data-toggle="tab" role="tab" aria-controls="dadownload' + str(attachment_index) + '" aria-selected="true">' + word('Download') + '</a></li>\n'
@@ -1623,7 +1627,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '              </ul>\n'
             output += '              <div class="tab-content" id="databcontent' + str(attachment_index) + '">\n'
             if show_download:
-                output += '                <div class="tab-pane show active da-attachment-tab-download" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
+                if status.extras.get('download_tab', True) or show_preview or show_markdown:
+                    output += '                <div class="tab-pane show active da-attachment-tab-download" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
+                else:
+                    output += '                <div>\n'
                 if multiple_formats:
                     output += '                  <p class="da-attachment-tab-download-intro">' + word('The document is available in the following formats:') + '</p>\n'
                 if attachment.get('raw', False):
@@ -1650,6 +1657,21 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 output += '                </div>\n'
             output += '              </div>\n            </div>\n'
             attachment_index += 1
+        if editable_included:
+            if 'RTF' in editable_options and 'DOCX' in editable_options:
+                editable_name = word('Include RTF and DOCX files for editing')
+            elif 'RTF' in editable_options:
+                if total_editable > 1:
+                    editable_name = word('Include RTF files for editing')
+                else:
+                    editable_name = word('Include RTF file for editing')
+            elif 'DOCX' in editable_options:
+                if total_editable > 1:
+                    editable_name = word('Include DOCX files for editing')
+                else:
+                    editable_name = word('Include DOCX file for editing')
+            else:
+                editable_name = ''
         if status.extras.get('allow_emailing', True) or status.extras.get('allow_downloading', False):
             if len(status.attachments) > 1:
                 email_header = word("E-mail these documents")
@@ -1679,7 +1701,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                       <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
                     else:
                         output += """
-                      <div class="form-group row"><div class="col-md-4 col-form-label da-form-label datext-right"></div><div class="col-md-8"><input alt=""" + fix_double_quote(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                      <div class="form-group row"><div class="col-md-4 col-form-label da-form-label datext-right"></div><div class="col-md-8"><input alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + editable_name + '</label></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Send') + '</span></button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
@@ -1707,7 +1729,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                       <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
                     else:
                         output += """
-                      <div class="form-group row"><div class="col-md-12"><input alt=""" + fix_double_quote(word("Check box") + ", " + word('Include ' + editable_name + ' for editing')) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
+                      <div class="form-group row"><div class="col-md-12"><input alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + editable_name + '</label></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Download All') + '</span></button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """

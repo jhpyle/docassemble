@@ -1,0 +1,20 @@
+metadata:
+  title: Manual Attachment List
+  short: Manual
+  documentation: "https://docassemble.org/docs/documents.html#manual attachment list"
+  example start: 2
+  example end: 2
+---
+attachment:
+  name: Praecipe to discontinue
+  variable name: praecipe
+  docx template file: praecipe_discontinue.docx
+  valid formats:
+    - pdf
+---
+mandatory: True
+question: Here is your document.
+subquestion: |
+  [:file: Praecipe to Discontinue](${ praecipe.url_for(attachment=True) })
+attachment code: praecipe
+manual attachment list: True

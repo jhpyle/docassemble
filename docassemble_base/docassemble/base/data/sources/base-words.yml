@@ -315,6 +315,11 @@
 "Import method": Null
 "Import": Null
 "Import training data from a JSON file": Null
+"Include DOCX file for editing": Null
+"Include DOCX files for editing": Null
+"Include RTF and DOCX files for editing": Null
+"Include RTF file for editing": Null
+"Include RTF files for editing": Null
 "Incorrect Email and/or Password": Null
 "Incorrect Password": Null
 "Incorrect %(username_or_email)s and/or Password": Null

@@ -4181,6 +4181,9 @@ def oauth_authorize(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list', from_login='1'))
     oauth = OAuthSignIn.get_provider(provider)
+    next_url = request.args.get('next', '')
+    if next_url:
+        session['next'] = next_url
     return oauth.authorize()
 
 @app.route('/callback/<provider>')
@@ -4227,7 +4230,12 @@ def oauth_callback(provider):
     #logmessage("oauth_callback: calling substitute_secret")
     secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
     sub_temp_other(user)
-    response = redirect(url_for('interview_list', from_login='1'))
+    if 'next' in session:
+        the_url = session['next']
+        del session['next']
+        response = redirect(the_url)
+    else:
+        response = redirect(url_for('interview_list', from_login='1'))
     response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
     return response
 
@@ -5646,6 +5654,7 @@ def index(action_argument=None):
     session_info = get_session(yaml_filename)
     session_parameter = request.args.get('session', None)
     if session_info is None or reset_interview or new_interview:
+        was_new = True
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
@@ -5722,6 +5731,7 @@ def index(action_argument=None):
         if show_flash:
             flash(word(message), 'info')
     else:
+        was_new = False
         if session_parameter is not None and not need_to_reset:
             session_info = update_session(yaml_filename, uid=session_parameter)
             need_to_reset = True
@@ -7039,6 +7049,8 @@ def index(action_argument=None):
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     if not changed and url_args_changed:
+        if was_new:
+            docassemble.base.functions.this_thread.misc['save_status'] = 'overwrite'
         changed = True
         validated = True
     if interview_status.question.question_type == "restart":

@@ -19,7 +19,7 @@ function onSignIn(googleUser) {
   if (profile.getId()){
     $.ajax({
       type: 'POST',
-      url: '{{ url_for('oauth_authorize', provider='google') }}',
+      url: '{{ url_for('oauth_authorize', provider='google', next=request.args.get('next', '')) }}',
       contentType: 'application/octet-stream; charset=utf-8',
       success: function(result) {
         //console.log(result);
