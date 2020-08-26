@@ -27,13 +27,14 @@
         msgNoFilesSelected: 'No files selected',
         msgPaused: 'Paused',
         msgCancelled: 'Cancelled',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Detailed Preview',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Fail "{name}" (<b>{size} KB</b>) ületab lubatu suuruse <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'You must select at least <b>{n}</b> {files} to upload.',
         msgFilesTooMany: 'Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'File "{name}" not found!',
         msgFileSecured: 'Security restrictions prevent reading the file "{name}".',
         msgFileNotReadable: 'File "{name}" is not readable.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'The file upload was aborted',
-        msgUploadThreshold: 'Processing...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Processing &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -96,7 +97,7 @@
             indicatorSuccessTitle: 'Uploaded',
             indicatorErrorTitle: 'Salvestamise viga',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Salvestan ...'
+            indicatorLoadingTitle:  'Salvestan &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'View previous file',

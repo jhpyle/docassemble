@@ -1398,6 +1398,7 @@ class Question:
         self.reload_after = None
         self.continuelabel = None
         self.backbuttonlabel = None
+        self.cornerbackbuttonlabel = None
         self.helplabel = None
         self.progress = None
         self.section = None
@@ -1427,7 +1428,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -1688,6 +1689,8 @@ class Question:
             self.continuelabel = TextObject(definitions + str(data['resume button label']), question=self)
         if 'back button label' in data:
             self.backbuttonlabel = TextObject(definitions + str(data['back button label']), question=self)
+        if 'corner back button label' in data:
+            self.cornerbackbuttonlabel = TextObject(definitions + str(data['corner back button label']), question=self)
         if 'skip undefined' in data:
             if 'review' not in data:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
@@ -2371,11 +2374,14 @@ class Question:
         #     else:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
-            try:
-                self.progress = int(data['progress'])
-                self.interview.progress_points.add(self.progress)
-            except:
-                logmessage("Invalid progress number " + repr(data['progress']))
+            if data['progress'] is None:
+                self.progress = -1
+            else:
+                try:
+                    self.progress = int(data['progress'])
+                    self.interview.progress_points.add(self.progress)
+                except:
+                    logmessage("Invalid progress number " + repr(data['progress']))
         if 'zip filename' in data:
             self.zip_filename = TextObject(definitions + str(data['zip filename']), question=self)
         if 'action' in data:
@@ -3781,6 +3787,8 @@ class Question:
         return word("I don't know")
     def back(self):
         return word("Back")
+    def cornerback(self):
+        return word("Back")
     def help(self):
         return word("Help")
     def process_attachment_code(self, sourcecode):
@@ -4335,6 +4343,16 @@ class Question:
             extras['back button label text'] = the_default_titles['back button label']
         else:
             extras['back button label text'] = None
+        if self.cornerbackbuttonlabel is not None:
+            extras['corner back button label text'] = self.cornerbackbuttonlabel.text(user_dict)
+        elif 'corner back button label' in user_dict['_internal'] and user_dict['_internal']['corner back button label'] is not None:
+            extras['corner back button label text'] = user_dict['_internal']['corner back button label']
+        elif self.language in self.interview.default_screen_parts and 'corner back button label' in self.interview.default_screen_parts[self.language]:
+            extras['corner back button label text'] = self.interview.default_screen_parts[self.language]['corner back button label'].text(user_dict)
+        elif 'corner back button label' in the_default_titles:
+            extras['corner back button label text'] = the_default_titles['corner back button label']
+        else:
+            extras['corner back button label text'] = None
         if self.helptext is not None:
             if self.helplabel is not None:
                 helplabel = self.helplabel.text(user_dict)
@@ -6119,7 +6137,7 @@ class Interview:
     def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
@@ -6335,7 +6353,7 @@ class Interview:
                     recursive_update(self.consolidated_metadata[key], val)
                 else:
                     self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:
@@ -6354,7 +6372,7 @@ class Interview:
                 if title_abb in self.default_title[lang]:
                     continue
                 if parts.get('main page ' + title_name, '') != '':
-                    self.default_title[lang][title_abb] = parts['main page ' + title_name]
+                    self.default_title[lang][title_abb] = parts['main page ' + title_name].strip()
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K:

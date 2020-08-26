@@ -1024,7 +1024,7 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
 
 main_page_parts = dict()
 lang_list = set()
-for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page resume button label'):
+for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page corner back button label', 'main page resume button label'):
     if key in daconfig and type(daconfig[key]) is dict:
         for lang in daconfig[key]:
             lang_list.add(lang)
@@ -1032,7 +1032,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
+for key in ('main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page corner back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -2523,7 +2523,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + word('Back') + """</span></span></button></span></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></span></form>
 """
         else:
             navbar += """\
@@ -2560,8 +2560,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     source_message = word("How this question came to be asked")
     if debug_mode:
         source_button = '<li class="nav-item d-none d-md-block"><a class="da-no-outline nav-link" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
+        source_menu_item = '<a class="dropdown-item d-block d-md-none" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
+        source_menu_item = ''
     navbar += '        <ul class="nav navbar-nav damynavbar-right">' + source_button + '<li class="nav-item dainvisible"><a class="nav-link" id="daquestionlabel" href="#daquestion" data-target="#daquestion">' + word('Question') + '</a></li>'
     if len(status.helpText):
         if status.question.helptext is None or status.question.interview.question_help_button:
@@ -2616,10 +2618,12 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 if custom_menu:
                     navbar += custom_menu
                 if not status.question.interview.options.get('hide standard menu', False):
+                    if current_user.has_role('admin', 'developer'):
+                        navbar += source_menu_item
                     if current_user.has_role('admin', 'advocate'):
-                        navbar +='<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
+                        navbar += '<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
                     if current_user.has_role('admin', 'developer', 'trainer'):
-                        navbar +='<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
+                        navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                     if current_user.has_role('admin', 'developer'):
                         if app.config['ALLOW_UPDATES']:
                             navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
@@ -5471,7 +5475,7 @@ def rootindex():
 def title_converter(content, part, status):
     if part in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
         return content
-    if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo'):
+    if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo', 'back button label', 'corner back button label'):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
     return docassemble.base.util.markdown_to_html(content, status=status)
 
@@ -7162,8 +7166,11 @@ def index(action_argument=None):
         if response_wrapper:
             response_wrapper(response)
         return response
-    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
-        user_dict['_internal']['progress'] = interview_status.question.progress
+    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None:
+        if interview_status.question.progress == -1:
+            user_dict['_internal']['progress'] = None
+        elif user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']:
+            user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
         user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "response":
@@ -10374,6 +10381,8 @@ def index(action_argument=None):
         if interview_status.footer == 'off':
             interview_status.footer = ''
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
+    interview_status.back = title_info.get('back button label', the_main_page_parts['main page back button label'] or interview_status.question.back())
+    interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.back())
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if not is_ajax:
         social = copy.deepcopy(daconfig['social'])
@@ -10449,7 +10458,7 @@ def index(action_argument=None):
                 break
         if not already_there:
             user_dict['_internal']['event_stack'][session_uid].insert(0, next_action_to_set)
-    if interview_status.question.interview.use_progress_bar:
+    if interview_status.question.interview.use_progress_bar and (interview_status.question.progress is None or interview_status.question.progress >= 0):
         the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview_status.question.interview)
     else:
         the_progress_bar = None
@@ -19254,7 +19263,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19264,7 +19273,7 @@ def js_bundle():
 def playground_js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['codemirror', 'lib', 'codemirror.js'], ['codemirror', 'addon', 'search', 'searchcursor.js'], ['codemirror', 'addon', 'scroll', 'annotatescrollbar.js'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.js'], ['codemirror', 'addon', 'display', 'fullscreen.js'], ['codemirror', 'addon', 'edit', 'matchbrackets.js'], ['codemirror', 'addon', 'hint', 'show-hint.js'], ['codemirror', 'mode', 'yaml', 'yaml.js'], ['codemirror', 'mode', 'python', 'python.js'], ['yamlmixed', 'yamlmixed.js'], ['codemirror', 'mode', 'markdown', 'markdown.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
+    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['codemirror', 'lib', 'codemirror.js'], ['codemirror', 'addon', 'search', 'searchcursor.js'], ['codemirror', 'addon', 'scroll', 'annotatescrollbar.js'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.js'], ['codemirror', 'addon', 'display', 'fullscreen.js'], ['codemirror', 'addon', 'edit', 'matchbrackets.js'], ['codemirror', 'addon', 'hint', 'show-hint.js'], ['codemirror', 'mode', 'yaml', 'yaml.js'], ['codemirror', 'mode', 'python', 'python.js'], ['yamlmixed', 'yamlmixed.js'], ['codemirror', 'mode', 'markdown', 'markdown.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19284,7 +19293,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19295,7 +19304,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23219,7 +23228,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if advance_progress_meter:
         if interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
-        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
+        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']):
             user_dict['_internal']['progress'] = interview_status.question.progress
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
@@ -23282,6 +23291,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         if interview_status.footer == 'off':
             interview_status.footer = ''
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
+    interview_status.back = title_info.get('back button label', the_main_page_parts['main page back button label'] or interview_status.question.back())
+    interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.cornerback())
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if steps is None:
         steps = user_dict['_internal']['steps']

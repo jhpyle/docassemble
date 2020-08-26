@@ -1,11 +1,11 @@
 /*!
- * bootstrap-fileinput v5.0.5
+ * bootstrap-fileinput v5.1.3
  * http://plugins.krajee.com/file-input
  *
  * Krajee default styling for bootstrap-fileinput.
  *
  * Author: Kartik Visweswaran
- * Copyright: 2014 - 2019, Kartik Visweswaran, Krajee.com
+ * Copyright: 2014 - 2020, Kartik Visweswaran, Krajee.com
  *
  * Licensed under the BSD-3-Clause
  * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
@@ -21,6 +21,7 @@ $celeste: #ccc !default;
 $green: #008000 !default;
 $mine-shaft: #333 !default;
 $boston-blue: #428bca !default;
+$pelorous: #17a2b8 !default;
 $tapa: #777 !default;
 $black: #000 !default;
 $black-20: rgba(0, 0, 0, 0.2) !default;
@@ -381,6 +382,15 @@ input[type=file].file-loading {
         margin: -10px 0 5px;
     }
 }
+.file-thumb-progress {
+    .progress {
+        background-color: #ccc;
+    }
+    .progress-bar {
+        font-size: 0.7rem;
+        font-family: Verdana, Helvetica, sans-serif;
+    }
+}
 .file-zoom-dialog {
     .file-other-icon {
         //noinspection CssOverwrittenProperties
@@ -406,13 +416,13 @@ input[type=file].file-loading {
     .btn-navigate {
         @extend %set-absolute;
         padding: 0;
-        margin: 0;
+        margin: -60px 0 0;
+        font-size: 60px;
         background: transparent;
         text-decoration: none;
         outline: none;
         opacity: 0.7;
-        top: 45%;
-        font-size: 4em;
+        top: 50%;
         color: $curious-blue;
         &:not([disabled]):hover {
             outline: none;
@@ -495,7 +505,7 @@ input[type=file].file-loading {
 .file-drop-zone {
     border: $border dashed $silver-chalice;
     border-radius: $radius;
-    height: 100%;
+    min-height: multiply($pad, 52);
     text-align: center;
     vertical-align: middle;
     margin: multiply($pad, 2.4) multiply($pad, 3) multiply($pad, 2.4) multiply($pad, 2.4);
@@ -551,7 +561,7 @@ input[type=file].file-loading {
     margin-left: multiply($pad, 0.6);
 }
 .file-zoom-content {
-    height: multiply($pad, 96);
+    min-height: 300px;
     text-align: center;
     .file-preview-image {
         max-height: 100%;
@@ -625,16 +635,24 @@ input[type=file].file-loading {
     padding-left: 0;
     padding-right: multiply($pad, 4);
 }
+.clickable .file-drop-zone-title {
+    cursor: pointer;
+}
 .file-sortable .file-drag-handle {
-    cursor: move;
+    cursor: grab;
     opacity: 1;
     &:hover {
         opacity: 0.7;
     }
 }
-.clickable .file-drop-zone-title {
-    cursor: pointer;
+.file-grabbing, .file-grabbing * {
+    cursor: not-allowed !important;
+}
+.file-grabbing .file-preview-thumbnails * {
+    cursor: grabbing !important;
 }
 .file-preview-initial.sortable-chosen {
     background-color: $link-water;
+    border-color: $pelorous;
+    box-shadow: none;
 }

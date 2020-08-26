@@ -604,6 +604,8 @@ def fetch_previous_user_dict(user_code, filename, secret):
     return fetch_user_dict(user_code, filename, secret=secret)
 
 def advance_progress(user_dict, interview):
+    if user_dict['_internal']['progress'] is None:
+        return
     if hasattr(interview, 'progress_bar_multiplier'):
         multiplier = interview.progress_bar_multiplier
     else:

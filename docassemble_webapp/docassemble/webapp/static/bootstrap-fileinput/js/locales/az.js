@@ -28,13 +28,14 @@
         msgNoFilesSelected: 'Heç bir fayl seçilməmişdir',
         msgPaused: 'Paused',
         msgCancelled: 'İmtina edildi',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'İlkin baxış',
         msgFileRequired: 'Yükləmə üçün fayl seçməlisiniz.',
         msgSizeTooSmall: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size} KB</b>)-dır,  minimum <b>{minSize} KB</b> olmalıdır.',
         msgSizeTooLarge: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size} KB</b>)-dır,  maksimum <b>{maxSize} KB</b> olmalıdır.',
         msgFilesTooLess: 'Yükləmə üçün minimum <b>{n}</b> {files} seçməlisiniz.',
         msgFilesTooMany: 'Seçilmiş fayl sayı <b>({n})</b>. Maksimum <b>{m}</b> fayl seçmək mümkündür.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Fayl "{name}" tapılmadı!',
         msgFileSecured: '"{name}" faylının istifadəsinə yetginiz yoxdur.',
         msgFileNotReadable: '"{name}" faylının istifadəsi mümkün deyil.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Yükləmə dayandırılmışdır',
-        msgUploadThreshold: 'Yükləmə...',
-        msgUploadBegin: 'Yoxlama...',
+        msgUploadThreshold: 'Yükləmə &hellip;',
+        msgUploadBegin: 'Yoxlama &hellip;',
         msgUploadEnd: 'Fayl(lar) yükləndi',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Yükləmə üçün verilmiş məlumatlar yanlışdır',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'Tamamlandı',
             indicatorErrorTitle: 'Yükləmə xətası',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Yükləmə ...'
+            indicatorLoadingTitle:  'Yükləmə &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Əvvəlki fayla bax',

@@ -1,46 +1,29 @@
 /*!
- * bootstrap-fileinput v5.0.5
+ * bootstrap-fileinput v5.1.3
  * http://plugins.krajee.com/file-input
  *
  * Krajee Explorer theme configuration for bootstrap-fileinput. Load this theme file after loading `fileinput.js`.
  *
  * Author: Kartik Visweswaran
- * Copyright: 2014 - 2019, Kartik Visweswaran, Krajee.com
+ * Copyright: 2014 - 2020, Kartik Visweswaran, Krajee.com
  *
  * Licensed under the BSD-3-Clause
  * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
  */
 (function ($) {
     "use strict";
-    var teTagBef = '<tr class="file-preview-frame {frameClass}" id="{previewId}" data-fileindex="{fileindex}" data-fileid="{fileid}"' +
-        ' data-template="{template}"', teContent = '<td class="kv-file-content">\n';
     $.fn.fileinputThemes.explorer = {
         layoutTemplates: {
-            preview: '<div class="file-preview {class}">\n' +
-            '    {close}' +
-            '    <div class="{dropClass}">\n' +
-            '    <table class="table table-bordered table-hover"><tbody class="file-preview-thumbnails">\n' +
-            '    </tbody></table>\n' +
-            '    <div class="clearfix"></div>' +
-            '    <div class="file-preview-status text-center text-success"></div>\n' +
-            '    <div class="kv-fileinput-error"></div>\n' +
-            '    </div>\n' +
-            '</div>',
-            footer: '<td class="file-details-cell"><div class="explorer-caption" title="{caption}">{caption}</div> ' +
-            '{size}{progress}</td><td class="file-actions-cell">{indicator} {actions}</td>',
+            footer: '<div class="file-details-cell">' +
+                '<div class="explorer-caption" title="{caption}">{caption}</div> ' + '{size}{progress}' +
+                '</div>' +
+                '<div class="file-actions-cell">{indicator} {actions}</div>',
             actions: '{drag}\n' +
-            '<div class="file-actions">\n' +
-            '    <div class="file-footer-buttons">\n' +
-            '        {upload} {download} {delete} {zoom} {other} ' +
-            '    </div>\n' +
-            '</div>',
-            zoomCache: '<tr style="display:none" class="kv-zoom-cache-theme"><td>' +
-            '<table class="kv-zoom-cache">{zoomContent}</table></td></tr>'
-        },
-        previewMarkupTags: {
-            tagBefore1: teTagBef + '>' + teContent,
-            tagBefore2: teTagBef + ' title="{caption}">' + teContent,
-            tagAfter: '</td>\n{footer}</tr>\n'
+                '<div class="file-actions">\n' +
+                '    <div class="file-footer-buttons">\n' +
+                '        {upload} {download} {delete} {zoom} {other} ' +
+                '    </div>\n' +
+                '</div>',
         },
         previewSettings: {
             html: {width: "100px", height: "60px"},

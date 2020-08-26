@@ -542,10 +542,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
         back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'link ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
-        if status.extras['back button label text'] is not None:
-            back_button += status.extras['back button label text']
-        else:
-            back_button += status.question.back()
+        back_button += status.back
         back_button += '</span></button>'
     else:
         back_button = ''
