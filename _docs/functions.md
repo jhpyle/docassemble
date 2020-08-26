@@ -1281,9 +1281,9 @@ and you want to know the name of the action itself before you call
 the action itself.  If the result is `None`, then no action was called
 for the current request (and `process_action()` will not do anything).
 
-You can only retrieve the action name with `process_action()` before
+You can only retrieve the action name with `action_argument()` before
 you call `process_action()`.  During the processing of the action, and
-after `process_action()` returns, `process_action()` will always
+after `process_action()` returns, `action_argument()` will always
 return `None`.
 
 ## <a name="url_of"></a>url_of()
