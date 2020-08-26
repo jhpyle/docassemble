@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.64](https://github.com/jhpyle/docassemble/releases/tag/v1.1.64) - 2020-08-26
+
+### Fixed
+- Issue with relative image URLs when embedding in a `<div>`.
+
 ## [1.1.63](https://github.com/jhpyle/docassemble/releases/tag/v1.1.63) - 2020-08-25
 
 ### Added
