@@ -476,8 +476,6 @@ subquestion: |
   You can now resume your interview.
 {% endhighlight %}
 
-
-
 # <a name="document signing"></a>Multi-user interview for getting a client's signature
 
 This is an example of a multi-user interview where one person (e.g.,
@@ -497,6 +495,12 @@ signed document.  After the client signs the document, it is e-mailed
 to the attorney's e-mail address.
 
 {% include demo-side-by-side.html demo="sign" %}
+
+[Here](https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/signdoc.yml) 
+is a more complex version that handles multiple documents in Word
+or PDF format and integrates with the Legal Server case management
+system.  It requires login and expects the [Configuration] to contain
+the Legal Server domain name in the directive `legal server domain`.
 
 # <a name="upload validation"></a>Validating uploaded files
 

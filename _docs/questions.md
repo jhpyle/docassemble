@@ -436,7 +436,10 @@ results with different screen sizes.
   If the `question` is a [`review`] question, this is called the
   `resume button label`.
 * The `back button label` is the label for the back button that
-  appears within the question itself (not the upper-left corner).
+  appears within the question itself when [`question back button`] is
+  enabled.
+* The `corner back button label` is the label for the back button that
+  appears in the upper-left corner.
 
 There are a variety of ways that you can specify what content should
 appear in these areas.  These ways range from question-specific
@@ -446,10 +449,10 @@ should pick whatever method works best for your purposes.
 You can customize many of the screen parts as part of a `question`
 block.  As explained above, there are specifiers for the [`question`],
 [`subquestion`], [`under`], and [`right`] parts.  There are also
-modifiers for [`continue button label`], [`resume button label`], and
-[`back button label`].  When you set question-specific [`help`], you
-can indicate a `label` that will be used as a label for the help tab
-or the help button.
+modifiers for [`continue button label`], [`resume button label`],
+[`back button label`], and [`corner back button label`].  When you set
+question-specific [`help`], you can indicate a `label` that will be
+used as a label for the help tab or the help button.
 
 There are three methods for specifying interview-wide default values for
 parts of the screen:
@@ -545,6 +548,7 @@ For more information about each method, see its documentation.
 [`help`]: {{ site.baseurl }}/docs/modifiers.html#help
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
 [`back button label`]: {{ site.baseurl }}/docs/modifiers.html#back button label
+[`corner back button label`]: {{ site.baseurl }}/docs/modifiers.html#back button label
 [`resume button label`]: {{ site.baseurl }}/docs/fields.html#resume button label
 [`question help button`]: {{ site.baseurl }}/docs/initial.html#question help button
 [`message()` function]: {{ site.baseurl }}/docs/functions.html#message

@@ -336,7 +336,7 @@ to a true value, then the button will be shown.
 You can configure this on an interview-wide basis by setting the
 [`question back button`] feature.
 
-# <a name="back button label"></a>Changing the text of the back button
+# <a name="back button label"></a><a name="corner back button label"></a>Changing the text of the back button
 
 When you add a "Back" button to the buttons at the bottom of the
 screen by setting the [`back button`] modifier or the [`question back
@@ -347,8 +347,11 @@ button`] feature, you can change the text of the button using the
 
 The text of the label can include [Mako] templating.
 
-For information about other ways to set a default value for the
-Continue button label, see the [screen parts] section.
+You can change the back button in the upper-left corner by using the
+`corner back button label` modifier.
+
+For information about other ways to set a default value for back
+button labels, see the [screen parts] section.
 
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 

@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.63](https://github.com/jhpyle/docassemble/releases/tag/v1.1.63) - 2020-08-25
+
+### Added
+- The `corner back button label` screen part.
+
+### Changed
+- Upgraded bootstrap-fileupload.
+
+### Fixed
+- The `progress` modifier did not behave as described in the documentation.
+
 ## [1.1.62](https://github.com/jhpyle/docassemble/releases/tag/v1.1.62) - 2020-08-23
 
 ### Added
