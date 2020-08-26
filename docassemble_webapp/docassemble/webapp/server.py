@@ -1157,6 +1157,8 @@ def remove_question_package(args):
         del args['_package']
 
 def get_url_from_file_reference(file_reference, **kwargs):
+    if 'jsembed' in docassemble.base.functions.this_thread.misc:
+        kwargs['_external'] = True
     if 'privileged' in kwargs:
         privileged = kwargs['privileged']
     else:
@@ -1315,10 +1317,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
         parts[1] = re.sub(r'^data/[^/]+/', '', parts[1])
-        the_kwargs = copy.copy(kwargs)
-        if 'jsembed' in docassemble.base.functions.this_thread.misc:
-            the_kwargs['_external'] = True
-        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **the_kwargs)
+        url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **kwargs)
     return(url)
 
 def user_id_dict():

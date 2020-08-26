@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.64] - 2020-08-26
+### Fixed
+- Issue with relative image URLs when embedding in a `<div>`.
+
 ## [1.1.63] - 2020-08-25
 ### Added
 - The `corner back button label` screen part.
