@@ -97,7 +97,7 @@
     {{ render_submit_field(form.delete, id='daDelete', class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], tabindex="110") }}
 
     {% if interview_path %}
-    <a tabindex="120" title="Right-click to copy link" class="badge badge-secondary da-example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
+    <a tabindex="120" title="Right-click to copy link" id="share-link" class="badge badge-secondary da-example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
     {% endif %}
     {% endif %}
   </div>

@@ -556,7 +556,44 @@ def interview_url(**kwargs):
         args['session'] = this_thread.current_info['session']
     if not do_local:
         args['_external'] = True
-    url = url_of('interview', **args)
+    try:
+        if int(args['new_session']):
+            del args['session']
+    except:
+        pass
+    if 'style' in args and args['style'] in ('short', 'short_package'):
+        the_style = args['style']
+        del args['style']
+        url = None
+        try:
+            if int(args['new_session']):
+                is_new = True
+                del args['new_session']
+        except:
+            is_new = False
+        if the_style == 'short':
+            for k, v in server.daconfig.get('dispatch').items():
+                if v == args['i']:
+                    args['dispatch'] = k
+                    del args['i']
+                    if is_new:
+                        url = url_of('run_new_dispatch', **args)
+                    else:
+                        url = url_of('run_dispatch', **args)
+        if url is None:
+            package, filename = re.split(r':', args['i'])
+            package = re.sub(r'^docassemble\.', '', package)
+            filename = re.sub(r'^data/questions/', '', filename)
+            filename = re.sub(r'.yml$', '', filename)
+            args['package'] = package
+            args['filename'] = filename
+            del args['i']
+            if is_new:
+                url = url_of('run_new', **args)
+            else:
+                url = url_of('run', **args)
+    else:
+        url = url_of('flex_interview', **args)
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -746,10 +783,50 @@ def interview_url_action(action, **kwargs):
         args['session'] = this_thread.current_info['session']
     if contains_volatile.search(action):
         raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")
+    if 'style' in kwargs and kwargs['style'] in ('short', 'short_package'):
+        args['style'] = kwargs['style']
+        del kwargs['style']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if not do_local:
         args['_external'] = True
-    url = url_of('interview', **args)
+    try:
+        if int(args['new_session']):
+            del args['session']
+    except:
+        pass
+    if 'style' in args and args['style'] in ('short', 'short_package'):
+        the_style = args['style']
+        del args['style']
+        try:
+            if int(args['new_session']):
+                is_new = True
+                del args['new_session']
+        except:
+            is_new = False
+        url = None
+        if the_style == 'short':
+            for k, v in server.daconfig.get('dispatch').items():
+                if v == args['i']:
+                    args['dispatch'] = k
+                    del args['i']
+                    if is_new:
+                        url = url_of('run_new_dispatch', **args)
+                    else:
+                        url = url_of('run_dispatch', **args)
+        if url is None:
+            package, filename = re.split(r':', args['i'])
+            package = re.sub(r'^docassemble\.', '', package)
+            filename = re.sub(r'^data/questions/', '', filename)
+            filename = re.sub(r'.yml$', '', filename)
+            args['package'] = package
+            args['filename'] = filename
+            del args['i']
+            if is_new:
+                url = url_of('run_new', **args)
+            else:
+                url = url_of('run', **args)
+    else:
+        url = url_of('flex_interview', **args)
     if 'temporary' in kwargs:
         args['temporary'] = kwargs['temporary']
     if 'once_temporary' in kwargs:
@@ -3341,7 +3418,7 @@ def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
     if contains_volatile.search(action):
         raise DAError("url_action cannot be used with a generic object or a variable iterator")
-    return '?action=' + urllibquote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
+    return url_of('flex_interview', action=myb64quote(json.dumps({'action': action, 'arguments': kwargs})), i=this_thread.current_info['yaml_filename'])
 
 def myb64quote(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())

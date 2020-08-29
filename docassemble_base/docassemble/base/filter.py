@@ -1180,18 +1180,20 @@ def emoji_insert(text, status=None, images=None):
         return(":" + str(text) + ":")
 
 def link_rewriter(m, status):
-    if re.search(r'^(\?|javascript:)', m.group(1)):
+    if re.search(r'^[/\?]', m.group(1)) or ('jsembed' in docassemble.base.functions.this_thread.misc and 'url_root' in docassemble.base.functions.this_thread.misc and m.group(1).startswith(docassemble.base.functions.this_thread.current_info['url_root'])):
         target = ''
     else:
         target = 'target="_blank" '
-    action_search = re.search(r'^\?action=([^\&]+)', m.group(1))
+    action_search = re.search(r'\?action=([^\&]+)', m.group(1))
     if action_search:
         action_data = 'data-embaction="' + action_search.group(1) + '" '
+        target = ''
     else:
         action_data = ''
     js_search = re.search(r'^javascript:(.*)', m.group(1))
     if js_search:
         js_data = 'data-js="' + js_search.group(1) + '" '
+        target = ''
     else:
         js_data = ''
     if status is None:

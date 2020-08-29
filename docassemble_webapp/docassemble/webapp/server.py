@@ -1234,6 +1234,46 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'interview':
         remove_question_package(kwargs)
         return(url_for('index', **kwargs))
+    elif file_reference == 'flex_interview':
+        remove_question_package(kwargs)
+        how_called = docassemble.base.functions.this_thread.misc.get('call', None)
+        try:
+            if int(kwargs.get('new_session')):
+                is_new = True
+                del kwargs['new_session']
+            else:
+                is_new = False
+        except:
+            is_new = False
+        if how_called is None:
+            return(url_for('index', **kwargs))
+        elif how_called[0] in ('start', 'run'):
+            del kwargs['i']
+            kwargs['package'] = how_called[1]
+            kwargs['filename'] = how_called[2]
+            if is_new:
+                return(url_for('redirect_to_interview_in_package', **kwargs))
+            else:
+                return(url_for('run_interview_in_package', **kwargs))
+            return(url_for('run_interview_in_package', **kwargs))
+        elif how_called[0] in ('start_dispatch', 'run_dispatch'):
+            del kwargs['i']
+            kwargs['dispatch'] = how_called[1]
+            if is_new:
+                return(url_for('redirect_to_interview', **kwargs))
+            else:
+                return(url_for('run_interview', **kwargs))
+        elif how_called[0] in ('start_directory', 'run_directory'):
+            del kwargs['i']
+            kwargs['package'] = how_called[1]
+            kwargs['directory'] = how_called[2]
+            kwargs['filename'] = how_called[3]
+            if is_new:
+                return(url_for('redirect_to_interview_in_package_directory', **kwargs))
+            else:
+                return(url_for('run_interview_in_package_directory', **kwargs))
+        else:
+            return(url_for('index', **kwargs))
     elif file_reference == 'interviews':
         remove_question_package(kwargs)
         return(url_for('interview_list', **kwargs))
@@ -1286,6 +1326,18 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'root':
         remove_question_package(kwargs)
         return(url_for('rootindex', **kwargs))
+    elif file_reference == 'run':
+        remove_question_package(kwargs)
+        return(url_for('run_interview_in_package', **kwargs))
+    elif file_reference == 'run_dispatch':
+        remove_question_package(kwargs)
+        return(url_for('run_interview', **kwargs))
+    elif file_reference == 'run_new':
+        remove_question_package(kwargs)
+        return(url_for('redirect_to_interview_in_package', **kwargs))
+    elif file_reference == 'run_new_dispatch':
+        remove_question_package(kwargs)
+        return(url_for('redirect_to_interview', **kwargs))
     if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference
@@ -5469,7 +5521,7 @@ def rootindex():
         the_args[key] = val
     the_args['i'] = yaml_filename
     request.args = the_args
-    return index()
+    return index(refer=['root'])
 
 def title_converter(content, part, status):
     if part in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
@@ -5521,7 +5573,7 @@ def launch():
     else:
         args['new_session'] = '1'
     request.args = args
-    return index()
+    return index(refer=['launch'])
 
 @app.route("/resume", methods=['POST'])
 @csrf.exempt
@@ -5578,11 +5630,12 @@ def populate_social(social, metadata):
                     social[key][subkey] = val.replace('\n', ' ').replace('"', '&quot;').strip()
 
 @app.route("/interview", methods=['POST', 'GET'])
-def index(action_argument=None):
+def index(action_argument=None, refer=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
     else:
         is_ajax = False
+    docassemble.base.functions.this_thread.misc['call'] = refer
     return_fake_html = False
     if (request.method == 'POST' and 'json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         the_interface = 'json'
@@ -7051,9 +7104,9 @@ def index(action_argument=None):
     session['language'] = current_language
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
+    if was_new:
+        docassemble.base.functions.this_thread.misc['save_status'] = 'overwrite'
     if not changed and url_args_changed:
-        if was_new:
-            docassemble.base.functions.this_thread.misc['save_status'] = 'overwrite'
         changed = True
         validated = True
     if interview_status.question.question_type == "restart":
@@ -7370,6 +7423,27 @@ def index(action_argument=None):
         else:
             ga_id = None
             segment_id = None
+        page_sep = "#page"
+        if refer is None:
+            location_bar = url_for('index', **index_params)
+        elif refer[0] in ('start', 'run'):
+            location_bar = url_for('run_interview_in_package', package=refer[1], filename=refer[2])
+            page_sep = "#/"
+        elif refer[0] in ('start_dispatch', 'run_dispatch'):
+            location_bar = url_for('run_interview', dispatch=refer[1])
+            page_sep = "#/"
+        elif refer[0] in ('start_directory', 'run_directory'):
+            location_bar = url_for('run_interview_in_package_directory', package=refer[1], directory=refer[2], filename=refer[3])
+            page_sep = "#/"
+        else:
+            location_bar = None
+            for k, v in daconfig['dispatch'].items():
+                if v == yaml_filename:
+                    location_bar = url_for('run_interview', dispatch=k)
+                    page_sep = "#/"
+                    break
+            if location_bar is None:
+                location_bar = url_for('index', **index_params)
         index_params_external = copy.copy(index_params)
         index_params_external['_external'] = True
         the_js = """\
@@ -7420,8 +7494,9 @@ def index(action_argument=None):
       var daValLookup = Object();
       var daTargetDiv;
       var daComboBoxes = Object();
-      var globalEval = eval;
-      var locationBar = """ + json.dumps(url_for('index', **index_params)) + """;
+      var daGlobalEval = eval;
+      var daInterviewUrl = """ + json.dumps(url_for('index', **index_params)) + """;
+      var daLocationBar = """ + json.dumps(location_bar) + """;
       var daPostURL = """ + json.dumps(url_for('index', **index_params_external)) + """;
       var daYamlFilename = """ + json.dumps(yaml_filename) + """;
       var daFetchAcceptIncoming = false;
@@ -7627,7 +7702,12 @@ def index(action_argument=None):
           url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          if (daLocationBar.indexOf('?') !== -1){
+            url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          }
+          else {
+            url = daLocationBar + "?action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          }
         }
         return url;
       }
@@ -7645,7 +7725,7 @@ def index(action_argument=None):
           url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daInterviewUrl + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         $.ajax({
           type: "GET",
@@ -7672,7 +7752,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daInterviewUrl,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -7702,7 +7782,7 @@ def index(action_argument=None):
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daInterviewUrl,
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
@@ -8400,7 +8480,7 @@ def index(action_argument=None):
         else{
           $.ajax({
             type: "POST",
-            url: locationBar,
+            url: daInterviewUrl,
             data: $(form).serialize(),
             beforeSend: addCsrfHeader,
             xhrFields: {
@@ -8424,7 +8504,7 @@ def index(action_argument=None):
         $(this).find("input[name='ajax']").val(1);
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daInterviewUrl,
           data: $(this).serialize(),
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8477,7 +8557,7 @@ def index(action_argument=None):
         else{
           $.ajax({
             type: "POST",
-            url: locationBar,
+            url: daInterviewUrl,
             data: $(form).serialize(),
             beforeSend: addCsrfHeader,
             xhrFields: {
@@ -8583,10 +8663,10 @@ def index(action_argument=None):
           //console.log("daProcessAjax: pushing " + daSteps);
           if (!daJsEmbed && !daIframeEmbed){
             if (history.state != null && daSteps > history.state.steps){
-              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, locationBar + "#page" + daSteps);
+              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
             }
             else{
-              history.replaceState({steps: daSteps}, "", locationBar + "#page" + daSteps);
+              history.replaceState({steps: daSteps}, "", daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
             }
           }
           daAllowGoingBack = data.allow_going_back;
@@ -8603,7 +8683,7 @@ def index(action_argument=None):
               daAddScriptToHead(scripts[i].src);
             }
             else{
-              globalEval(scripts[i].innerHTML);
+              daGlobalEval(scripts[i].innerHTML);
             }
           }
           $(".da-group-has-error").each(function(){
@@ -8662,7 +8742,7 @@ def index(action_argument=None):
       function daEmbeddedJs(e){
         //console.log("using embedded js");
         var data = decodeURIComponent($(this).data('js'));
-        globalEval(data);
+        daGlobalEval(data);
         e.preventDefault();
         return false;
       }
@@ -8678,7 +8758,7 @@ def index(action_argument=None):
         var data = decodeURIComponent($(this).data('embaction'));
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daInterviewUrl,
           data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8819,7 +8899,7 @@ def index(action_argument=None):
       function daRefreshSubmit(){
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daInterviewUrl,
           data: 'csrf_token=' + daCsrf + '&ajax=1',
           beforeSend: addCsrfHeader,
           xhrFields: {
@@ -8866,7 +8946,7 @@ def index(action_argument=None):
               }
               else if (command.extra == 'javascript'){
                 //console.log("I should eval" + command.value);
-                globalEval(command.value);
+                daGlobalEval(command.value);
               }
               else if (command.extra == 'fields'){
                 for (var key in command.value){
@@ -9082,7 +9162,7 @@ def index(action_argument=None):
             console.log(message.message);
           }
           else if (message.priority == 'javascript'){
-            globalEval(message.message);
+            daGlobalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             da_flash(message.message, message.priority);
@@ -10131,7 +10211,7 @@ def index(action_argument=None):
         daInitialize(1);
         //console.log("ready: replaceState " + daSteps);
         if (!daJsEmbed && !daIframeEmbed){
-          history.replaceState({steps: daSteps}, "", locationBar + "#page" + daSteps);
+          history.replaceState({steps: daSteps}, "", daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
         }
         var daReloadAfter = """ + str(int(reload_after)) + """;
         if (daReloadAfter > 0){
@@ -11048,7 +11128,32 @@ def interview_start():
         resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
-@app.route('/start/<dispatch>', methods=['GET'])
+@app.route('/start/<package>/<directory>/<filename>/', methods=['GET'])
+def redirect_to_interview_in_package_directory(package, directory, filename):
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
+    if 'session' not in arguments:
+        arguments['new_session'] = '1'
+    request.args = arguments
+    return index(refer=['start_directory', package, directory, filename])
+
+@app.route('/start/<package>/<filename>/', methods=['GET'])
+def redirect_to_interview_in_package(package, filename):
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    if re.search(r'playground[0-9]', package):
+        arguments['i'] = 'docassemble.' + package + ':' + filename + '.yml'
+    else:
+        arguments['i'] = 'docassemble.' + package + ':data/questions/' + filename + '.yml'
+    if 'session' not in arguments:
+        arguments['new_session'] = '1'
+    request.args = arguments
+    return index(refer=['start', package, filename])
+
+@app.route('/start/<dispatch>/', methods=['GET'])
 def redirect_to_interview(dispatch):
     #logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
@@ -11061,7 +11166,40 @@ def redirect_to_interview(dispatch):
     if 'session' not in arguments:
         arguments['new_session'] = '1'
     request.args = arguments
-    return index()
+    return index(refer=['start_dispatch', dispatch])
+
+@app.route('/run/<package>/<directory>/<filename>/', methods=['GET'])
+def run_interview_in_package_directory(package, directory, filename):
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
+    request.args = arguments
+    return index(refer=['run_direcory', package, directory, filename])
+
+@app.route('/run/<package>/<filename>/', methods=['GET'])
+def run_interview_in_package(package, filename):
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    if re.search(r'playground[0-9]', package):
+        arguments['i'] = 'docassemble.' + package + ':' + filename + '.yml'
+    else:
+        arguments['i'] = 'docassemble.' + package + ':data/questions/' + filename + '.yml'
+    request.args = arguments
+    return index(refer=['run', package, filename])
+
+@app.route('/run/<dispatch>/', methods=['GET'])
+def run_interview(dispatch):
+    yaml_filename = daconfig['dispatch'].get(dispatch, None)
+    if yaml_filename is None:
+        return ('File not found', 404)
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    arguments['i'] = yaml_filename
+    request.args = arguments
+    return index(refer=['run_dispatch', dispatch])
 
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
 def serve_stored_file(uid, number, filename, extension):
@@ -11368,10 +11506,10 @@ def observer():
       var daVarLookupRev;
       var daValLookup;
       var daTargetDiv = "#dabody";
-      var locationBar = """ + json.dumps(url_for('index', i=i)) + """;
+      var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
       var daYamlFilename = """ + json.dumps(i) + """;
-      var globalEval = eval;
+      var daGlobalEval = eval;
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
           $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
@@ -11731,7 +11869,7 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
         if (embeddedJs != null){
           //console.log("Running the embedded js");
-          globalEval(decodeURIComponent(embeddedJs));
+          daGlobalEval(decodeURIComponent(embeddedJs));
         }
         if (theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
           event.preventDefault();
@@ -11796,7 +11934,7 @@ def observer():
           url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         return url;
       }
@@ -11815,7 +11953,7 @@ def observer():
           url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         else{
-          url = locationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
         $.ajax({
           type: "GET",
@@ -11839,7 +11977,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daLocationBar,
           data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -11866,7 +12004,7 @@ def observer():
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         $.ajax({
           type: "POST",
-          url: locationBar,
+          url: daLocationBar,
           data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
@@ -12242,7 +12380,7 @@ def observer():
                     daAddScriptToHead(scripts[i].src);
                   }
                   else{
-                    globalEval(scripts[i].innerHTML);
+                    daGlobalEval(scripts[i].innerHTML);
                   }
                 }
                 for (var i = 0; i < data.extra_css.length; i++){
@@ -18655,7 +18793,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file)
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file, active_interview_url=url_for('index', i=active_interview_string))
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -18854,6 +18992,7 @@ function saveCallback(data){
   }
   history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
   $("#daVariables").val(data.active_file);
+  $("#share-link").attr('href', data.active_interview_url);
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);
     activateVariables();
@@ -19170,7 +19309,7 @@ def server_error(the_error):
         errmess = '<blockquote class="blockquote">' + errmess + '</blockquote>'
     script = """
     <script>
-      var globalEval = eval;
+      var daGlobalEval = eval;
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function flash(message, priority){
         if (priority == null){
@@ -19197,7 +19336,7 @@ def server_error(the_error):
             console.log(message.message);
           }
           else if (message.priority == 'javascript'){
-            globalEval(message.message);
+            daGlobalEval(message.message);
           }
           else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             da_flash(message.message, message.priority);
@@ -19220,7 +19359,7 @@ def server_error(the_error):
     if request.path.endswith('/interview') and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
         session['in error'] = True
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
-        return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)})
+        return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
     if (not DEBUG) and isinstance(the_error, DAError):
         show_debug = False
     else:
