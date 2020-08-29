@@ -1152,6 +1152,20 @@ underlying URL is relative.  However, **docassemble** treats URLs
 differently if they begin with `http:`/`https:` or `?`: links that
 begin with `http` will open in another tab.
 
+The keyword argument `style` is also special: set this to `'short'` if
+you want the URL to begin with `/run` instead of `/interview`.  This
+will use `/run/shortcutname` format if the interview is listed in
+[`dispatch`], and otherwise will use `/run/packagename/filename`
+format.  In the absence of a `style` argument, the URL returned by
+`interview_url()` in the context of the web application will use the
+style of the URL that is in the location bar of the web browser.  If
+the URL in the location bar is `/run/packagename/filename`, the URL
+returned by `interview_url()` will be `/run/packagename/filename`.
+However, if `interview_url()` is called by a background process or a
+call to the API, `interview_url()` will return
+`/interview?i=docassemble.packagename:data/questions/filename.yml` by
+default, unless a `style` is specified.
+
 There are security risks with URLs created using `interview_url()`.
 The URLs contain a `session` key, and if `multi_user` is `True`,
 anyone with that `session` key can access the interview session.  If

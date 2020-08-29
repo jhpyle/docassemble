@@ -363,7 +363,7 @@ fields:
   ? Where were you born?
   : place_of_birth
   ? |
-    What were the last words of the 
+    What were the last words of the
     first President to fly in a Zeppelin?
   : words
 {% endhighlight %}
@@ -435,6 +435,23 @@ customize the way that interviews are invoked.  This is a fairly
 advanced topic, so if you are new, feel free to skip to the section on
 [how answers are stored].
 
+URLs to `/interview` with an `i` parameter are not meant to be
+understood by users; they are primarily meant to make clear to the
+developer where the interview file is located in the Python package.
+If you want a more readable URL, you can use:
+
+> https://interview.example.com/start/mypackage/myinterview
+
+which launches the same interview as
+
+> https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
+
+Once the user visits a URL like `/start/mypackage/myinterview`, the
+URL in the location bar will change to `/run/mypackage/myinterview`.
+This is because `/start` will cause a new session to be created,
+whereas `/run` will continue an existing session that is operating in
+the user's browser.
+
 If you want to use **docassemble** to give users a list of interviews
 from which to choose, there is a special page of the site, located at
 `/list`, which displays a [list of interviews] available on your site.
@@ -451,10 +468,13 @@ configuration directive.  Within that interview, you can use the
 list of interviews in whatever way you want.
 
 The [`dispatch`] configuration directive also allows your users to
-access specific interviews at human-readable URLs like:
+start new sessions in specific interviews at human-readable URLs like:
 
 > https://interview.example.com/start/eviction<br>
 > https://interview.example.com/start/namechange
+
+Once the user visits a URL like `/start/eviction`, the URL in the
+location bar will change to `/run/eviction`.
 
 If the user visits the main (or "root") URL for the site, e.g.,
 `https://interview.example.com`, the user will be redirected to the
@@ -673,7 +693,7 @@ server with the URL `https://interview.example.com`:
     <div>
       <p>Here is some content after the interview.
     </div>
-    
+
     <script src="https://interview.example.com/static/app/bundle.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=egsdSdgER344tuTYUgsdDErEdx34res2e44sdrg&libraries=places"></script>
     <script src="https://interview.example.com/interview?js_target=dablock&i=docassemble.base%3Adata%2Fquestions%2Fdefault-interview.yml"></script>

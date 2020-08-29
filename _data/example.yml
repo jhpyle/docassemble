@@ -13582,6 +13582,9 @@
   \  lover\n  % else:\n  hater\n  % endif\n  \n  Dated: ${ today() }\n---\nmandatory:\
   \ True\nquestion: |\n  Here is your document.\nattachment:\n  docx template file:\
   \ signature_template.docx"
+"signdoc": |-
+  translations:
+    - signdoc_es.xlsx
 "single-code": |-
   mandatory: True
   code: |

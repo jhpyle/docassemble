@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.65](https://github.com/jhpyle/docassemble/releases/tag/v1.1.65) - 2020-08-28
+
+### Added
+- The `style` keyword parameter for `interview_url()`.
+
+### Changed
+- The `/start/` path for starting an interview now transforms into
+  `/run` instead of `/interview`.  It also has a second form for
+  referring to the package name and filename (without using
+  `dispatch`).
+
+### Fixed
+- The Playground "Share" link did not update correctly based on the
+  interview being run.
+
 ## [1.1.64](https://github.com/jhpyle/docassemble/releases/tag/v1.1.64) - 2020-08-26
 
 ### Fixed
