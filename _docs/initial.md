@@ -1689,14 +1689,38 @@ function can be used to change the current section.
 
 {% include side-by-side.html demo="sections" %}
 
-Note that the section list is not shown on small devices, such as
-smartphones.  To show a smartphone user a list of sections, you can
-use the [`nav.show_sections()`] function.
-
-If you want the navigation bar to be horizontal across the top of the
-page, set `navigation` to `horizontal`:
+If you want the navigation bar to be horizontal across the top
+of the page, set `navigation` to `horizontal`:
 
 {% include side-by-side.html demo="sections-horizontal" %}
+
+On small screens, it is not possible for the vertical navigation bar
+to display, so it is hidden, and the horizontal navigation bar is
+shown in its place.
+
+The horizontal navigation bar functions differently than the vertical
+navigation.  Subsections are shown if the user is inside a subsection,
+but otherwise they are not visible.  There is no caret symbol for
+opening and closing subsections.
+
+On smaller screens, the horizontal navigation bar uses less padding
+and a smaller font.  This works well if there are only a few sections,
+but if there are too many sections, it may be impossible to fit them
+on the screen.
+
+If you want the navigation bar to be hidden on small screens, set
+`small screen navigation: False` in your `features`:
+
+{% include side-by-side.html demo="sections-small-screen-false" %}
+
+If you want the navigation bar to be converted into a dropdown on
+small screens, set `small screen navigation: dropdown` in your
+`features`:
+
+{% include side-by-side.html demo="sections-small-screen-dropdown" %}
+
+The dropdown version shows all of the sections, including subsections
+that are not active.
 
 ## <a name="question back button"></a><a name="navigation back button"></a>Back button style
 

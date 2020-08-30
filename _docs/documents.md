@@ -1656,6 +1656,49 @@ enable e-mailing is to use the [Mailgun API] (which is free), but you
 can also use an [external SMTP server] hosted by [Mailgun] or another
 provider.
 
+## <a name="email template"></a><a name="email subject"></a><a name="email body"></a><a name="email address default"></a>Customizing e-mailing
+
+When the user e-mails a document to an e-mail address using the
+`attachment` interface, the subject of the email consists of the names
+of the document (defaulting to "Document") and the body consists of
+the message "Your document, (document name), is attached."  This
+phrase can be translated or customized on a server-wide basis using
+the [`words`] feature by providing translations of the following
+phrases:
+
+* `Your document, %s, is attached.`
+* `Your documents, %s, are attached.`
+
+If you want to customize the subject and body of the e-mail, you can
+use the `email template` modifier:
+
+{% include side-by-side.html demo="document-email-custom" %}
+
+The `email template` modifier needs to refer to a [Python] expression
+referring to a [`template`].
+
+Instead of setting `email template`, you can use the modifiers `email
+subject` and `email body`.  You can set these to text that you want to
+appear in the subject and/or body of the e-mail.  You can use [Mako]
+and [Markdown] in these modifiers.  Whether you use a [`template`] or `email
+subject` and `email body`, [Markdown] will be converted to HTML for
+purposes of creating the HTML version of the e-mail message.  The `email
+subject` and `email body` modifiers take precedence over the parts of
+the [`template`] indicated by `email template`.
+
+The e-mail address field in the `attachment` interface is blank by
+default if the user is not logged in, and if the user is logged in, it
+is set to the user's e-mail address.  If you would like to set another
+default value, you can use the `email address default` modifier.
+[Mako] and [Markdown] can be used.  If the result does not look like
+an e-mail address, it will be ignored.
+
+For greater customization of the sending of e-mails attaching
+documents, use the [`send_email()`] function in custom code.  The
+`attachment` interface is simple and exists only to allow an end user
+to e-mail a document to an address of their own choosing.  More
+complex workflows should be created using [`send_email()`].
+
 ## <a name="always include editable files"></a>Always include editable files
 
 By default, if an attachment includes a [PDF] version along with an
@@ -1881,3 +1924,5 @@ interview, see the [`cache documents` feature].
 [`.privilege_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.privilege_access
 [privileges]: {{ site.baseurl }}/docs/users.html
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
+[`words`]: {{ site.baseurl }}/docs/config.html#words
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
