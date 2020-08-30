@@ -638,6 +638,7 @@
 "Second subdivision": Null
 "Second Subdivision": Null
 "Section": Null
+"Sections": Null
 "Security Method": Null
 "Select a package": Null
 "Select a value between": Null
@@ -1000,7 +1001,9 @@
 "Your document is attached.": Null
 "Your document, ": Null
 "Your documents are attached.": Null
+"Your document, %s, is attached.": Null
 "Your documents, ": Null
+"Your documents, %s, are attached.": Null
 "Your documents will be e-mailed to": Null
 'Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.': Null
 "Your e-mail address": Null

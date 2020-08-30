@@ -1885,6 +1885,28 @@ div.danavnested-horiz {
     font-size: 80%;
 }
 
+@media (max-width: 767px) {
+    div.danav-horiz > .danavlink {
+	border-width: 0 0 0.1rem 0;
+	margin: 0px 3px 0px 0px;
+	padding: 0.5rem 0.25rem 0.4rem 0.25rem;
+    }
+
+    div.danav-horiz > a.danotavailableyet {
+	border-width: 0;
+    }
+
+    div.danav-horiz > a.inactive {
+	border-width: 0;
+    }
+}
+
+@media (max-width: 575px) {
+    div.danav-horiz > .danavlink {
+	font-size: 11px;
+    }
+}
+
 /* .danav > a.inactive:hover, */
 /* .danav > a.inactive:focus { */
 /*     color: #337ab7; */

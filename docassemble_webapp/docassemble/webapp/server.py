@@ -2282,9 +2282,11 @@ def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
         raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
 
-def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False):
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False):
     if inner_div_class is None:
         inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
+    if inner_div_extra is None:
+        inner_div_extra = ''
     if a_class is None:
         a_class = 'nav-link danavlink'
     #logmessage("navigation_bar: starting: " + str(section))
@@ -2293,7 +2295,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
         non_progressive = True
     else:
         non_progressive = False
-    if hasattr(nav, 'auto_open') and nav.auto_open:
+    if always_open or (hasattr(nav, 'auto_open') and nav.auto_open):
         auto_open = True
     else:
         auto_open = False
@@ -2458,9 +2460,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, show_link
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within or auto_open:
-                    suboutput = '<div class="' + inner_div_class + '">' + suboutput
+                    suboutput = '<div class="' + inner_div_class + '"' + inner_div_extra + '>' + suboutput
                 else:
-                    suboutput = '<div style="display: none;" class="danotshowing ' + inner_div_class + '">' + suboutput
+                    suboutput = '<div style="display: none;" class="danotshowing ' + inner_div_class + '"' + inner_div_extra + '>' + suboutput
                 suboutput += "</div>"
                 output += suboutput
             else:
@@ -6105,7 +6107,7 @@ def index(action_argument=None, refer=None):
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             for email_address in re.split(r' *[,;] *', attachment_email_address):
                 try:
-                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language())
+                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language(), subject=interview_status.extras.get('email_subject', None), body=interview_status.extras.get('email_body', None), html=interview_status.extras.get('email_html', None))
                     r.rpush(worker_key, result.id)
                     success = True
                 except Exception as errmess:
@@ -10542,11 +10544,32 @@ def index(action_argument=None, refer=None):
     else:
         the_progress_bar = None
     if interview_status.question.interview.use_navigation and user_dict['nav'].visible():
+        if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
+            dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True)
+            if dropdown_nav_bar != '':
+                dropdown_nav_bar = '        <div class="col d-md-none text-right">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + word("Sections") + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
+        else:
+            dropdown_nav_bar = ''
         if interview_status.question.interview.use_navigation == 'horizontal':
+            if interview_status.question.interview.use_navigation_on_small_screens is not True:
+                nav_class = ' d-none d-md-block'
+            else:
+                nav_class = ''
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
-                the_nav_bar = '        <div class="col d-none d-md-block">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+                the_nav_bar = dropdown_nav_bar + '        <div class="col' + nav_class + '">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
         else:
+            if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
+                if dropdown_nav_bar:
+                    horiz_nav_bar = dropdown_nav_bar + '\n      </div>\n      <div class="row tab-content">\n'
+                else:
+                    horiz_nav_bar = ''
+            elif interview_status.question.interview.use_navigation_on_small_screens:
+                horiz_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
+                if horiz_nav_bar != '':
+                    horiz_nav_bar = dropdown_nav_bar + '        <div class="col d-md-none">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + horiz_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+            else:
+                horiz_nav_bar = ''
             the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
         if the_nav_bar != '':
             if interview_status.question.interview.use_navigation == 'horizontal':
@@ -10633,6 +10656,8 @@ def index(action_argument=None, refer=None):
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
+        if interview_status.using_navigation == 'vertical':
+            output += horiz_nav_bar
         output += the_nav_bar
     output += content
     if 'rightText' in interview_status.extras:

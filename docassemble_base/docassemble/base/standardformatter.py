@@ -1677,7 +1677,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 email_header = word("E-mail this document")
                 download_header = word("Download this document as a ZIP file")
             if status.extras.get('allow_emailing', True):
-                if status.current_info['user']['is_authenticated'] and status.current_info['user']['email']:
+                if status.extras.get('email_default', None):
+                    default_email = status.extras['email_default']
+                elif status.current_info['user']['is_authenticated'] and status.current_info['user']['email']:
                     default_email = status.current_info['user']['email']
                 else:
                     default_email = ''

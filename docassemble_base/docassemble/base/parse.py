@@ -46,6 +46,7 @@ from types import CodeType
 import pandas
 import dateutil.parser
 import pytz
+from bs4 import BeautifulSoup
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -745,6 +746,7 @@ class InterviewStatus:
                         result['decoration_name'] = decoration['image']
                         break
         if len(self.attachments) > 0:
+            #PPP
             result['attachments'] = list()
             if self.current_info['user']['is_authenticated'] and self.current_info['user']['email']:
                 result['default_email'] = self.current_info['user']['email']
@@ -1428,7 +1430,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -1460,6 +1462,12 @@ class Question:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = data['features']['navigation']
+            if 'small screen navigation' in data['features']:
+                if data['features']['small screen navigation'] == 'dropdown':
+                    self.interview.use_navigation_on_small_screens = 'dropdown'
+                else:
+                    if not data['features']['small screen navigation']:
+                        self.interview.use_navigation_on_small_screens = False
             if 'centered' in data['features'] and not data['features']['centered']:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
@@ -2356,6 +2364,15 @@ class Question:
             self.allow_emailing = data['allow emailing']
         if 'allow downloading' in data:
             self.allow_downloading = data['allow downloading']
+        if 'email subject' in data:
+            self.email_subject = TextObject(definitions + str(data['email subject']), question=self)
+        if 'email body' in data:
+            self.email_body = TextObject(definitions + str(data['email body']), question=self)
+        if 'email template' in data:
+            self.email_template = compile(data['email template'], '<email template>', 'eval')
+            self.find_fields_in(data['email template'])
+        if 'email address default' in data:
+            self.email_default = TextObject(definitions + str(data['email address default']), question=self)
         if 'always include editable files' in data:
             self.always_include_editable_files = data['always include editable files']
         if 'include attachment notice' in data:
@@ -5075,6 +5092,24 @@ class Question:
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
+            if hasattr(self, 'email_default'):
+                the_email_address = self.email_default.text(user_dict).strip()
+                if '@' in the_email_address and not re.search(r'\s', the_email_address):
+                    extras['email_default'] = the_email_address
+            if hasattr(self, 'email_subject'):
+                extras['email_subject'] = re.sub(r'[\n\r]+', ' ', self.email_subject.text(user_dict).strip())
+            if hasattr(self, 'email_body'):
+                extras['email_html'] = '<html><body>' + docassemble.base.filter.markdown_to_html(self.email_body.text(user_dict), status=docassemble.base.functions.this_thread.interview_status, question=self, external=True) + '</body></html>'
+                extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
+            if hasattr(self, 'email_template') and ('email_subject' not in extras or 'email_html' not in extras):
+                template = eval(self.email_template, user_dict)
+                if 'email_subject' not in extras:
+                    the_subject = re.sub(r'[\n\r]+', ' ', template.subject.strip())
+                    if the_subject:
+                        extras['email_subject'] = the_subject
+                if 'email_html' not in extras:
+                    extras['email_html'] = '<html><body>' + template.content_as_html(external=True) + '</body></html>'
+                    extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
@@ -6034,6 +6069,7 @@ class Interview:
         self.recursion_limit = get_config('recursion limit', 500)
         self.cache_documents = True
         self.use_navigation = False
+        self.use_navigation_on_small_screens = True
         self.flush_left = False
         self.max_image_size = get_config('maximum image size', None)
         self.image_type = get_config('image upload type', None)

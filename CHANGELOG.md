@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.1.66] - 2020-08-30
+### Added
+- The `small screen navigation` option under `features`.
+- The `email template`, `email subject`, `email body`, and `email
+  address default` options for customizing the functionality of the
+  `attachment`/`attachment code` interface.
+### Changed
+- The horizontal section interface is no longer hidden on small
+  screens.
+- The vertical section interface becomes the horizontal section
+  interface on small screens.
+- The default body of the e-mail that the user can send from an
+  `attachment`/`attachment code` interface is now translated using the
+  phrases `Your document, %s, is attached.` and `Your documents, %s, are
+  attached.`.
+
 ## [1.1.65] - 2020-08-28
 ### Added
 - The `style` keyword parameter for `interview_url()`.

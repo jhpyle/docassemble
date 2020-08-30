@@ -896,7 +896,7 @@ def update_packages():
     return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end")
 
 @workerapp.task
-def email_attachments(user_code, email_address, attachment_info, language):
+def email_attachments(user_code, email_address, attachment_info, language, subject=None, body=None, html=None):
     success = False
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
@@ -913,12 +913,15 @@ def email_attachments(user_code, email_address, attachment_info, language):
             for attach_info in attachment_info:
                 if attach_info['attachment']['name'] not in doc_names:
                     doc_names.append(attach_info['attachment']['name'])
-            subject = worker_controller.functions.comma_and_list(doc_names)
-            if len(doc_names) > 1:
-                body = worker_controller.functions.word("Your documents, ") + " " + subject + worker_controller.functions.word(", are attached") + "."
-            else:
-                body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
-            html = "<p>" + body + "</p>"
+            if subject is None:
+                subject = worker_controller.functions.comma_and_list(doc_names)
+            if body is None:
+                if len(doc_names) > 1:
+                    body = worker_controller.functions.word("Your documents, %s, are attached.") % (worker_controller.functions.comma_and_list(doc_names),)
+                else:
+                    body = worker_controller.functions.word("Your document, %s, is attached.") % (worker_controller.functions.comma_and_list(doc_names),)
+            if html is None:
+                html = "<p>" + body + "</p>"
             msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
             success_attach = True
             for attach_info in attachment_info:

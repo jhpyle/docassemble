@@ -32,7 +32,9 @@ do
          "$file" = "help" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 650x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
-    elif [ "$file" = "radio-list-mobile" ]
+    elif [ "$file" = "radio-list-mobile" -o \
+	   "$file" = "sections-small-screen-dropdown" -o \
+	   "$file" = "sections-small-screen-false" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 385x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
     elif [ "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-mako" -o "$file" = "table-reorder" ]
@@ -155,7 +157,9 @@ do
          "$file" = "set-parts" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png
-    elif [ "$file" = "radio-list-mobile" ]
+    elif [ "$file" = "radio-list-mobile" -o \
+           "$file" = "sections-small-screen-dropdown" -o \
+	   "$file" = "sections-small-screen-false" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" -o "$file" = "allow-downloading-true" ]
