@@ -8324,6 +8324,7 @@ def index(action_argument=None, refer=None):
         }).appendTo($(form));
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
         var do_iframe_upload = false;
+        inline_succeeded = false;
         if ($('input[name="_files"]').length){
           var filesToRead = 0;
           var filesRead = 0;
@@ -8452,6 +8453,7 @@ def index(action_argument=None, refer=None):
                   reader.readAsDataURL(the_file);
                 };
                 tempFunc(a_file, max_size, this_has_images);
+                inline_succeeded = true;
               }
             }
           }
@@ -8461,6 +8463,9 @@ def index(action_argument=None, refer=None):
           else{
             do_iframe_upload = true;
           }
+        }
+        if (inline_succeeded){
+          return(false);
         }
         if (do_iframe_upload){
           $("#dauploadiframe").remove();
@@ -11093,14 +11098,14 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
             continue
         if absolute_urls:
             if start_new:
-                url = url_for('index', i=yaml_filename, _external=True, reset='1')
+                url = url_for('run_interview', dispatch=key, _external=True, reset='1')
             else:
-                url = url_for('index', i=yaml_filename, new_session='1', _external=True)
+                url = url_for('redirect_to_interview', dispatch=key, _external=True)
         else:
             if start_new:
-                url = url_for('index', i=yaml_filename, reset='1')
+                url = url_for('run_interview', dispatch=key, reset='1')
             else:
-                url = url_for('index', i=yaml_filename, new_session='1')
+                url = url_for('redirect_to_interview', dispatch=key)
         interview_info.append(dict(link=url, title=interview_title, status_class=status_class, subtitle=subtitle, subtitle_class=subtitle_class, filename=yaml_filename, package=package, tags=sorted(tags), metadata=metadata))
     return interview_info
 

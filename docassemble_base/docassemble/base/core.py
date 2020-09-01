@@ -3613,7 +3613,7 @@ class DAFileCollection(DAObject):
         return the_file.path()
     def get_docx_variables(self):
         """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
-        return the_file.docx.get_docx_fields()
+        return the_file.docx.get_docx_variables()
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
         return the_file.pdf.get_pdf_fields()
