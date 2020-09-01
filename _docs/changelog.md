@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.67](https://github.com/jhpyle/docassemble/releases/tag/v1.1.67) - 2020-09-01
+
+### Fixed
+- Issue with two POST requests being sent during inline file uploads.
+
 ## [1.1.66](https://github.com/jhpyle/docassemble/releases/tag/v1.1.66) - 2020-08-30
 
 ### Added
