@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.68](https://github.com/jhpyle/docassemble/releases/tag/v1.1.68) - 2020-09-02
+
+### Fixed
+- Improper verb conjugation for non-English languages.
+
 ## [1.1.67](https://github.com/jhpyle/docassemble/releases/tag/v1.1.67) - 2020-09-01
 
 ### Fixed
