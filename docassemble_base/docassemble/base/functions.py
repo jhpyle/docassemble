@@ -2304,6 +2304,8 @@ def verb_present_es(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2317,6 +2319,8 @@ def verb_past_es(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2359,6 +2363,8 @@ def verb_present_de(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2372,6 +2378,8 @@ def verb_past_de(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2414,6 +2422,8 @@ def verb_present_fr(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2427,6 +2437,8 @@ def verb_past_fr(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2469,6 +2481,8 @@ def verb_present_it(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2482,6 +2496,8 @@ def verb_past_it(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2524,6 +2540,8 @@ def verb_present_nl(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2537,6 +2555,8 @@ def verb_past_nl(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))

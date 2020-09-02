@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.68] - 2020-09-02
+### Fixed
+- Improper verb conjugation for non-English languages.
+
 ## [1.1.67] - 2020-09-01
 ### Fixed
 - Issue with two POST requests being sent during inline file uploads.
