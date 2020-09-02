@@ -4595,7 +4595,7 @@ The keys are:
 ## <a name="referring_url"></a>referring_url()
 
 Returns the URL that the user was visiting when the user clicked on a
-link to go to the interview.
+link to go to the interview (if that click initiated the interview).
 
 Under some circumstances, this URL cannot be obtained.  For example,
 if the user started the interview by typing a URL directly into the
@@ -4628,6 +4628,9 @@ code: |
   if referring_url(default=False) is not False:
     how_user_heard_of_us = referring_url()
 {% endhighlight %}
+
+If you set the optional keyword parameter `current` to `True`, it will
+return the `Referer` of the current request, if available.
 
 ## <a name="static_image"></a>static_image()
 
@@ -6476,6 +6479,11 @@ def some_function(id, thing):
 This assumes the [`db`] configuration refers to a [PostgreSQL]
 database.  If you connect to the database with the credentials from
 [`db`], you have the power to create and drop tables.
+
+# <a name="stash_data"></a><a name="retrieve_stashed_data"></a>Temporarily stashing encrypted data
+
+The `stash_data()` and `retrieve_stashed_data()` functions can be used
+to store encrypted data in [Redis] for a period of time.  
 
 # <a name="docx"></a>Functions for working with DOCX templates
 

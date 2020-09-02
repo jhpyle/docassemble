@@ -1403,8 +1403,8 @@ Data:
    (If your request has the `application/json` content type, you do
    not need to convert the object to [JSON].)
  - `raw` (optional): if set to `0`, then no attempt will be made to
-   identify and convert dates that appear in the `variables` (see note
-   below).
+   identify and convert dates and `DAObject`s that appear in the
+   `variables` (see note below).
  - `question_name` (optional): if set to the name of a question (which
    you can obtain from the `questionName` attribute of a question), it
    will mark the question as having been answered.  This is necessary
@@ -2465,6 +2465,79 @@ are included:
 
 The `vocabulary` key refers to a simple list of names used.  This can
 be used for an "autocomplete" feature.
+
+## <a name="stash_data"></a>Temporarily stash encrypted data
+
+Description: Accepts data, encrypts it, stores it, and returns a key
+identifying the stored data and a decryption secret.
+
+Path: `/api/stash_data`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `data`: a [JSON] object where the keys are variable names and the
+   values are the values those variables should have.  If you are
+   sending a POST request with an `application/json` content type
+   (which is recommended), do not convert `data` to [JSON]; just make
+   `data` a reference to the data you want to store.
+ - `expire` (optional): the number of seconds the data should be kept
+   in temporary storage.  The default is 7,776,000 seconds (90 days).
+ - `raw` (optional): if set to `0`, then no attempt will be made to
+   identify and convert dates and `DAObject`s that appear in the
+   `data`.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Data must be provided." if the `data` are missing.
+ - [400] "Malformed data" if the `data` could not be converted from
+   JSON.
+
+Response on success: [200]
+
+Body of response: a [JSON] dictionary containing the
+following keys:
+
+- `stash_key`: The identifier for the data.
+- `secret`: The decryption secret.
+
+## <a name="retrieve_stashed_data"></a>Retrieve temporarily stashed data
+
+Description: Retrieves data stored with `/api/stash_data`.
+
+Path: `/api/retrieve_stashed_data`
+
+Method: [GET]
+
+Parameters:
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+ - `stash_key`: the identifier for the data, as returned by the
+   `/api/stash_data` endpoint.
+ - `secret`: the decryption secret, as returned by the
+   `/api/stash_data` endpoint.
+ - `delete` (optional): if set to `1`, the data will be deleted from
+   storage after being retrieved.
+ - `refresh` (optional): if set to an integer, the expiration of the
+   data will be updated to this number of seconds.
+
+Required privileges: None
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "The stash key and secret parameters are required." if the
+   `stash_key` and/or the `secret` are missing.
+ - [400] "The stashed data could not be retrieved." if the information
+   is expired, the stash key is wrong, or the secret is wrong.
+
+Response on success: [200]
+
+Body of response: the stashed data in [JSON] format.
 
 # <a name="questionless"></a>Example of usage: questionless interview
 
