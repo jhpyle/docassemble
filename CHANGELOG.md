@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.69] - 2020-09-02
+### Added
+- The `/api/stash_data` and `/api/retrieve_stashed_data` endpoints.
+- The `stash_data()` and `retrieve_stashed_data()` functions.
+- The `current` option for `referring_url()`.
+
 ## [1.1.68] - 2020-09-02
 ### Fixed
 - Improper verb conjugation for non-English languages.

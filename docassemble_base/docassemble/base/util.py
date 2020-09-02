@@ -27,6 +27,7 @@ from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
 from docassemble.base.filter import markdown_to_html, to_text, ensure_valid_filename
+from docassemble.base.generate_key import random_alphanumeric
 
 #file_finder, url_finder, da_send_mail
 
@@ -296,7 +297,9 @@ __all__ = [
     'iso_country',
     'assemble_docx',
     'docx_concatenate',
-    'store_variables_snapshot'
+    'store_variables_snapshot',
+    'stash_data',
+    'retrieve_stashed_data'
 ]
 
 #knn_machine_learner = DummyObject
@@ -3338,3 +3341,20 @@ def set_task_counter(task, times, persistent=False):
         store.set('tasks', tasks)
         return
     this_thread.internal['tasks'][task] = times
+
+def stash_data(data, expire=None):
+    """Stores data in an encrypted form and returns a key and a decryption secret."""
+    if expire is None:
+        expire = 60*60*24*90
+    try:
+        expire = int(expire)
+        assert expire > 0
+    except:
+        raise DAError("Invalid expire value")
+    return server.stash_data(data, expire)
+
+def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
+    """Retrieves data stored with stash_data()."""
+    if refresh and not (isinstance(refresh, int) and refresh > 0):
+        refresh = 60*60*24*90
+    return server.retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)

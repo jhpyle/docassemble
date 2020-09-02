@@ -10936,6 +10936,9 @@ def is_mobile_or_tablet():
             return True
     return False
 
+def get_referer():
+    return request.referrer or None
+
 def add_referer(user_dict):
     if request.referrer:
         user_dict['_internal']['referer'] = request.referrer
@@ -24411,6 +24414,61 @@ def api_interview_data():
     variables_json, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, use_playground=use_playground, current_project=current_project)
     return jsonify({'names': variables_json, 'vocabulary': list(vocab_list)})
 
+@app.route('/api/stash_data', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_stash_data():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+        if 'data' not in post_data:
+            return jsonify_with_status("Data must be provided.", 400)
+        try:
+            data = json.loads(post_data['data'])
+        except Exception as err:
+            return jsonify_with_status("Malformed data.", 400)
+    else:
+        data = post_data['data']
+    if not true_or_false(post_data.get('raw', False)):
+        data = transform_json_variables(data)
+    expire = post_data.get('expire', None)
+    if expire is None:
+        expire = 60*60*24*90
+    try:
+        expire = int(expire)
+        assert expire > 0
+    except:
+        expire = 60*60*24*90
+    (key, secret) = stash_data(data, expire)
+    return jsonify({'stash_key': key, 'secret': secret})
+
+@app.route('/api/retrieve_stashed_data', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def api_retrieve_stashed_data():
+    if not api_verify(request):
+        return jsonify_with_status("Access denied.", 403)
+    delete = true_or_false(request.args.get('delete', False))
+    refresh = request.args.get('refresh', None)
+    if refresh:
+        try:
+            refresh = int(refresh)
+            assert refresh > 0
+        except:
+            refresh = False
+    stash_key = request.args.get('stash_key', None)
+    secret = request.args.get('secret', None)
+    if stash_key is None or secret is None:
+        return jsonify_with_status("The stash key and secret parameters are required.", 400)
+    try:
+        data = retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)
+        assert data is not None
+    except Exception as err:
+        return jsonify_with_status("The stashed data could not be retrieved: " + err.__class__.__name__ + " " + str(err) + ".", 400)
+    return jsonify(docassemble.base.functions.safe_json(data))
+
 @app.route('/manage_api', methods=['GET', 'POST'])
 @login_required
 def manage_api():
@@ -25206,6 +25264,33 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     except:
         pass
 
+def stash_data(data, expire):
+    while True:
+        key = random_alphanumeric(16)
+        if r.get(key) is None:
+            break
+    secret = random_string(16)
+    packed_data = encrypt_dictionary(data, secret)
+    pipe = r.pipeline()
+    pipe.set('da:stash:' + key, packed_data)
+    pipe.expire('da:stash:' + key, expire)
+    pipe.execute()
+    return (key, secret)
+
+def retrieve_stashed_data(key, secret, delete=False, refresh=False):
+    packed_data = r.get('da:stash:' + key)
+    if packed_data is None:
+        return None
+    try:
+        data = decrypt_dictionary(packed_data.decode(), secret)
+    except:
+        return None
+    if delete:
+        r.delete('da:stash:' + key)
+    elif refresh and isinstance(refresh, int) and refresh > 0:
+        r.expire('da:stash:' + key, refresh)
+    return data
+
 for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:
@@ -25273,7 +25358,10 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          write_answer_json=write_answer_json,
                                          read_answer_json=read_answer_json,
                                          delete_answer_json=delete_answer_json,
-                                         variables_snapshot_connection=variables_snapshot_connection)
+                                         variables_snapshot_connection=variables_snapshot_connection,
+                                         get_referer=get_referer,
+                                         stash_data=stash_data,
+                                         retrieve_stashed_data=retrieve_stashed_data)
 
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)

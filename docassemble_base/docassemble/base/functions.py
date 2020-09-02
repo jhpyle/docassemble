@@ -3978,10 +3978,12 @@ def safe_json(the_object, level=0, is_key=False):
         return 'None' if is_key else None
     return the_object
 
-def referring_url(default=None):
-    """Returns the URL that the user was visiting when the user clicked on
-    a link to go to the interview."""
-    url = this_thread.internal.get('referer', None)
+def referring_url(default=None, current=False):
+    """Returns the URL that the user was visiting when the session was created."""
+    if current:
+        url = server.get_referer()
+    else:
+        url = this_thread.internal.get('referer', None)
     if url is None:
         if default is None:
             default = server.daconfig.get('exitpage', 'https://docassemble.org')

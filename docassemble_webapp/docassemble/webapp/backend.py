@@ -394,7 +394,7 @@ def can_access_file_number(file_number, uids=None):
             return True
     elif session and 'tempuser' in session:
         temp_user_id = int(session['tempuser'])
-        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id).first():
             return True
     return False
 
