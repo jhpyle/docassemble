@@ -273,6 +273,7 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
         kwargs['uids'] = get_session_uids()
     return get_info_from_file_number(*pargs, **kwargs)
 
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,

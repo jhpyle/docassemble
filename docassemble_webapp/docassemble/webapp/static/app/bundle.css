@@ -2347,7 +2347,7 @@ div.daconstraintlist div + div {
     text-align: center;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 575px) {
     body.dasignature {
 	position: fixed;
 	top: 0px;
@@ -2470,7 +2470,7 @@ div.daconstraintlist div + div {
     display: block;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 576px) {
     /* .dasignature section { */
     /* 	padding: 70px 0px 0px 0px; */
     /* } */
