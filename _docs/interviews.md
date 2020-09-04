@@ -440,14 +440,14 @@ understood by users; they are primarily meant to make clear to the
 developer where the interview file is located in the Python package.
 If you want a more readable URL, you can use:
 
-> https://interview.example.com/start/mypackage/myinterview
+> https://interview.example.com/start/mypackage/myinterview/
 
 which launches the same interview as
 
 > https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
-Once the user visits a URL like `/start/mypackage/myinterview`, the
-URL in the location bar will change to `/run/mypackage/myinterview`.
+Once the user visits a URL like `/start/mypackage/myinterview/`, the
+URL in the location bar will change to `/run/mypackage/myinterview/`.
 This is because `/start` will cause a new session to be created,
 whereas `/run` will continue an existing session that is operating in
 the user's browser.
@@ -470,11 +470,11 @@ list of interviews in whatever way you want.
 The [`dispatch`] configuration directive also allows your users to
 start new sessions in specific interviews at human-readable URLs like:
 
-> https://interview.example.com/start/eviction<br>
-> https://interview.example.com/start/namechange
+> https://interview.example.com/start/eviction/<br>
+> https://interview.example.com/start/namechange/
 
-Once the user visits a URL like `/start/eviction`, the URL in the
-location bar will change to `/run/eviction`.
+Once the user visits a URL like `/start/eviction/`, the URL in the
+location bar will change to `/run/eviction/`.
 
 If the user visits the main (or "root") URL for the site, e.g.,
 `https://interview.example.com`, the user will be redirected to the

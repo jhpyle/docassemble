@@ -9825,37 +9825,10 @@
   ---
   features:
     navigation: True
-"sections-small-screen-dropdown": "sections:\n  - Introduction\n  - About you:\n \
-  \   - Contact info\n    - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n\
-  \  navigation: True\n  small screen navigation: dropdown\n  progress bar: True\n\
-  ---\nmandatory: True\ncode: |\n  menu_items = [ action_menu_item('Roadmap', 'road_map')\
-  \ ]\n---\ninitial: True\ncode: |\n  if returning_user(minutes=0.5):\n    welcome_back\n\
-  ---\nmandatory: True\nquestion: |\n  Welcome to the interview\nfield: sees_nav_bar\n\
-  ---\nmandatory: True\nquestion: |\n  I am going to ask you some\n  questions about\
-  \ yourself.\nfield: intro_to_about_you\nsection: About you\n---\nmandatory: True\n\
-  question: |\n  What is your name?\nfields:\n  - First Name: first_name\n  - Last\
-  \ Name: last_name\nsection: Contact info\n---\nmandatory: True\nquestion: |\n  What\
-  \ is your e-mail address?\nfields:\n  - E-mail: email_address\n    datatype: email\n\
-  ---\nmandatory: True\nquestion: |\n  What is your gender?\nfield: gender\nchoices:\n\
-  \  - Male\n  - Female\n  - Something else\nsection: Demographics\n---\nmandatory:\
-  \ True\nquestion: |\n  What kind of belly button\n  do you have?\nsubquestion: |\n\
-  \  To see what a user would\n  see after returning to\n  the interview after a period\n\
-  \  of absence, try waiting\n  thirty seconds, then\n  [click into the\n  interview](${\
-  \ interview_url(local=True) }).\n\n  In addition, there is a similar\n  screen available\
-  \ on the Menu in the\n  upper-right, under \"Roadmap.\"\nfield: belly_button\nchoices:\n\
-  \  - Innie\n  - Outie\n---\nmandatory: True\nquestion: |\n  What is your favorite\
-  \ fruit?\nfields:\n  - Favorite fruit: favorite_fruit\nsection: Preferences\n---\n\
-  mandatory: True\nquestion: |\n  What is your favorite vegetable?\nfields:\n  - Favorite\
-  \ vegetable: favorite_vegetable\n---\nprogress: 100\nmandatory: True\nquestion:\
-  \ Thank you.\nsubquestion: |\n  ${ first_name },\n\n  Your answers mean a lot to\
-  \ me.\n  \n  I am going to go eat some\n  ${ favorite_vegetable }\n  now.\nsection:\
-  \ Conclusion\n---\nevent: welcome_back\nquestion: |\n  Welcome back!\nsubquestion:\
-  \ |\n  You are currently in the\n  **${ nav.get_section(display=True) }**\n  section.\n\
-  \n  ${ nav }\n\n  Press \"Continue\" to pick up\n  where you left off.\nbuttons:\n\
-  \  Continue: continue\n---\nevent: road_map\nquestion: |\n  Roadmap\nsubquestion:\
-  \ |\n  You are currently in the\n  **${ nav.get_section(display=True) }**\n  section.\n\
-  \n  ${ nav }\n\n  Press \"Continue\" to resume the\n  interview.\nbuttons:\n  Continue:\
-  \ continue"
+"sections-small-screen-dropdown": |-
+  features:
+    navigation: True
+    small screen navigation: dropdown
 "sections-small-screen-false": "sections:\n  - Introduction\n  - About you:\n    -\
   \ Contact info\n    - Demographics\n  - Preferences\n  - Conclusion\n---\nfeatures:\n\
   \  navigation: True\n  small screen navigation: False\n  progress bar: True\n---\n\
