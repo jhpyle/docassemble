@@ -1584,6 +1584,9 @@ All of the arguments to `send_email()` are [keyword arguments]:
   single item of any of these.
 * `sender` expects a single [`Individual`].  If not set, the
   `default_sender` information from the [configuration] is used.
+* `reply_to` expects a single [`Individual`], or `None`.  This sets
+  the (optional) `Reply-To` header of the e-mail, which determines the
+  e-mail address to which replies are directed.
 * `cc` expects a [list] of [`Individual`]s, or `None`.
 * `bcc` expects a [list] of [`Individual`]s, or `None`.
 * `body` expects text, or `None`.  Will set the plain text content of
@@ -4597,10 +4600,11 @@ The keys are:
 Returns the URL that the user was visiting when the user clicked on a
 link to go to the interview (if that click initiated the interview).
 
-Under some circumstances, this URL cannot be obtained.  For example,
-if the user started the interview by typing a URL directly into the
-location bar of the browser, or if the user has a browser setting that
-blocks the [referer header], then the URL will not be available.
+Under some circumstances, this URL (which comes from the [referer
+header]) cannot be obtained.  For example, if the user started the
+interview by typing a URL directly into the location bar of the
+browser, or if the user has a browser setting that blocks the [referer
+header], then the URL will not be available.
 
 If the URL cannot be obtained, then the URL indicated by the optional
 keyword parameter `default` will be returned.  If no `default` URL is
