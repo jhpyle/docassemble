@@ -33,7 +33,7 @@ class Connection(object):
             plain_text_content=message.body,
             html_content=message.html)
         if message.reply_to:
-            sgmessage.add_reply_to(ReplyTo(message.reply_to))
+            sgmessage.reply_to(ReplyTo(message.reply_to))
         if message.cc:
             for recipient in list(sanitize_addresses(message.cc)):
                 sgmessage.add_cc(recipient)
