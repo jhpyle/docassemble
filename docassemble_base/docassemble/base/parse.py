@@ -447,6 +447,8 @@ class InterviewStatus:
                     saveas_to_use[field.saveas] = the_saveas
                     saveas_by_number[field.number] = the_saveas
             for field in the_field_list:
+                if not self.extras['ok'][field.number]:
+                    continue
                 if self.is_empty_mc(field):
                     if hasattr(field, 'datatype'):
                         hiddens[field.saveas] = field.datatype
@@ -456,8 +458,6 @@ class InterviewStatus:
                         datatypes[field.saveas] = field.datatype
                         if field.datatype == 'object_checkboxes':
                             datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
-                    continue
-                if not self.extras['ok'][field.number]:
                     continue
                 if hasattr(field, 'extras'):
                     if 'ml_group' in field.extras or 'ml_train' in field.extras:
@@ -3126,7 +3126,10 @@ class Question:
                                         if 'js show if' in field or 'js hide if' in field:
                                             raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
-                                        field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        if isinstance(field[key]['is'], str):
+                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        else:
+                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
                                         showif_valid = True
                                     if 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')

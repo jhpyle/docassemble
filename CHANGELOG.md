@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.1.70] - 2020-09-05
+### Added
+- The `reply_to` option for `send_email()`.
+### Changed
+- The current section name is now the label of the `small screen
+  navigation: dropdown` button.
+- The breakpoint for the mobile signature view is now Bootstrap `xs`.
+### Fixed
+- Multiple choice fields with empty choices were being set to `None`
+  despite `code`-based `show if` deselecting the field.
+
 ## [1.1.69] - 2020-09-02
 ### Added
 - The `/api/stash_data` and `/api/retrieve_stashed_data` endpoints.

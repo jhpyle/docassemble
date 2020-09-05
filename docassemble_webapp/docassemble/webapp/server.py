@@ -2282,7 +2282,7 @@ def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
         raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
 
-def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False):
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None):
     if inner_div_class is None:
         inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
     if inner_div_extra is None:
@@ -2369,6 +2369,11 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             section_reached = True
             currently_active = True
             active_class = ' active'
+            if return_dict is not None:
+                return_dict['parent_key'] = the_key
+                return_dict['parent_title'] = the_title
+                return_dict['key'] = the_key
+                return_dict['title'] = the_title
         else:
             active_class = ''
             #output += '<li class="' + li_class + '" role="presentation">'
@@ -2431,6 +2436,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                     current_is_within = True
                     sub_currently_active = True
                     sub_active_class = ' active'
+                    if return_dict is not None:
+                        return_dict['key'] = sub_key
+                        return_dict['title'] = sub_title
                 else:
                     sub_active_class = ''
                     #suboutput += '<li class="' + li_class + '" role="presentation">'
@@ -5498,6 +5506,7 @@ def get_variables():
     #sys.stderr.write("get_variables: fetch_user_dict\n")
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        assert user_dict is not None
     except:
         return jsonify(success=False)
     if (not DEBUG) and '_internal' in user_dict and 'misc' in user_dict['_internal'] and 'variable_access' in user_dict['_internal']['misc'] and user_dict['_internal']['misc']['variable_access'] is False:
@@ -7082,7 +7091,7 @@ def index(action_argument=None, refer=None):
                 exec(the_question.validation_code, user_dict)
             except Exception as validation_error:
                 the_error_message = str(validation_error)
-                logmessage(the_error_message)
+                logmessage("index: exception during validation: " + the_error_message)
                 if the_error_message == '':
                     the_error_message = word("Please enter a valid value.")
                 if isinstance(validation_error, DAValidationError) and isinstance(validation_error.field, str) and validation_error.field in key_to_orig_key:
@@ -8478,7 +8487,12 @@ def index(action_argument=None, refer=None):
                 daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#dauploadiframe").contents().text())), form, 1);
               }
               catch (e){
-                daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML, e);
+                try {
+                  daProcessAjax($.parseJSON($("#dauploadiframe").contents().text()), form, 1);
+                }
+                catch (f){
+                  daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML, f);
+                }
               }
             }, 0);
           });
@@ -10550,9 +10564,10 @@ def index(action_argument=None, refer=None):
         the_progress_bar = None
     if interview_status.question.interview.use_navigation and user_dict['nav'].visible():
         if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
-            dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True)
+            current_dict = dict()
+            dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
-                dropdown_nav_bar = '        <div class="col d-md-none text-right">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + word("Sections") + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
+                dropdown_nav_bar = '        <div class="col d-md-none text-right">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
         else:
             dropdown_nav_bar = ''
         if interview_status.question.interview.use_navigation == 'horizontal':

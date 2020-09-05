@@ -65,9 +65,18 @@ def login(step, username, password):
 
 @step(r'I upload the file "([^"]*)"')
 def do_upload(step, value):
-    elem = world.browser.find_element_by_xpath("//input[@type='file']")
+    time.sleep(2)
+    div = world.browser.find_element_by_css_selector('div.file-caption');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', div)
+    div = world.browser.find_element_by_css_selector('div.btn-file');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.position = "inherit";', div)
+    span = world.browser.find_element_by_css_selector('span.hidden-xs');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', span)
+    elem = world.browser.find_element_by_css_selector('input[type="file"]');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "block"; arguments[0].style.visibility = "visible"; arguments[0].style.opacity = "100";', elem)
     elem.clear()
-    elem.send_keys(os.getcwd() + "/" + value)
+    elem.send_keys(value)
+    time.sleep(2)
 
 @step(r'I set the text area to "([^"]*)"')
 def set_text_area(step, value):

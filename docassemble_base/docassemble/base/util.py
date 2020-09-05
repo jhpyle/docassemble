@@ -2424,7 +2424,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
         return FaxStatus(None)
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
 
-def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
+def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
@@ -2447,11 +2447,12 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         body = ""
     subject = re.sub(r'[\n\r]+', ' ', subject)
     sender_string = email_stringer(sender, first=True, include_name=True)
+    reply_to_string = email_stringer(reply_to, first=True, include_name=True)
     to_string = email_stringer(to)
     cc_string = email_stringer(cc)
     bcc_string = email_stringer(bcc)
     #logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
-    msg = Message(subject, sender=sender_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
+    msg = Message(subject, sender=sender_string, reply_to=reply_to_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
     if mailgun_variables is not None:
         if isinstance(mailgun_variables, dict):
             msg.mailgun_variables = mailgun_variables

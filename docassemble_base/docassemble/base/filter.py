@@ -156,7 +156,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     #sys.stderr.write(text + "\n")
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', r'\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
-        after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
+        after_space_multiplier = convert_length(metadata['fontsize'], 'twips')
     else:
         after_space_multiplier = 240
     if 'IndentationAmount' in metadata:
