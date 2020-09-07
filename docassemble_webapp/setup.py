@@ -115,7 +115,7 @@ install_requires = [
     "Pattern==3.6",
     "pdfminer.six==20200517",
     "phonenumbers==8.10.21",
-    "Pillow==6.2.1",
+    "Pillow==7.1.0",
     "pkginfo==1.5.0.1",
     "pluggy==0.13.0",
     "ply==3.11",

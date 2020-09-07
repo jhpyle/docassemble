@@ -42,6 +42,7 @@ import random
 from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
+from collections.abc import Iterable
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
@@ -1909,7 +1910,7 @@ def comma_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:
@@ -1951,7 +1952,7 @@ def comma_and_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:
@@ -1986,7 +1987,7 @@ def add_separators_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg.rstrip())
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg).rstrip())
         else:

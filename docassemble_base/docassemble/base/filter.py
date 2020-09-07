@@ -1261,6 +1261,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             # Try again because sometimes it fails randomly and maybe trying again will work.
             result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
+    result = re.sub(r'<(t[dh]) align="(right|left|center)">', r'<\1 class="text-\2">', result)
     result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub(r'<a href="(.*?)"', lambda x: link_rewriter(x, status), result)

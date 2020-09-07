@@ -439,7 +439,9 @@ class DAWeb(DAObject):
         on_failure = self._get_on_failure(on_failure)
         on_success = self._get_on_success(on_success)
         success_code = self._get_success_code(success_code)
-        if isinstance(success_code, (list, set, tuple, DASet, DAList)):
+        if isinstance(success_code, str):
+            success_code = [int(success_code.strip())]
+        elif isinstance(success_code, (abc.Iterable, DASet, DAList)):
             new_success_code = list()
             for code in success_code:
                 if not isinstance(code, int):
@@ -2428,7 +2430,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
-    if not isinstance(attachments, (list, DAList, set, DASet, tuple)):
+    if (not isinstance(attachments, (DAList, DASet, abc.Iterable))) or isinstance(attachments, str):
         attachments = [attachments]
     from flask_mail import Message
     if type(to) is not list:
@@ -2873,7 +2875,7 @@ def docx_concatenate(*pargs, **kwargs):
 def get_docx_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'docx'):
         paths.append(target.docx.path())
-    elif isinstance(target, DAFileList) or isinstance(target, DAList) or isinstance(target, list):
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
         for the_file in target:
             get_docx_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
@@ -2901,7 +2903,7 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or isinstance(target, DAList) or isinstance(target, list):
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
         for the_file in target:
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):

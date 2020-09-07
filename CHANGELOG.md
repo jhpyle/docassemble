@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.71] - 2020-09-07
+### Fixed
+- Better support for iterables in `comma_list()` and other places.
+- Markdown table alignment in Bootstrap.
+- Upgraded Pillow.
+
 ## [1.1.70] - 2020-09-05
 ### Added
 - The `reply_to` option for `send_email()`.

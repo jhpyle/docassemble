@@ -278,7 +278,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None, uids
                 has_access = True
         elif session and 'tempuser' in session:
             temp_user_id = int(session['tempuser'])
-            if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+            if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id).first():
                 has_access = True
         if not has_access:
             upload = None

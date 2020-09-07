@@ -3975,7 +3975,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
     if table_info.is_editable and not editable:
         header_output.pop()
     the_iterable = eval(table_info.row, user_dict_copy)
-    if not isinstance(the_iterable, (list, dict, DAList, DADict)):
+    if (not isinstance(the_iterable, (DAList, DADict, abc.Iterable))) or isinstance(the_iterable, str):
         raise DAError("Error in processing table " + table_info.saveas + ": row value is not iterable")
     if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
         if not table_info.require_gathered:
@@ -4191,7 +4191,7 @@ class DALazyTableTemplate(DALazyTemplate):
         if self.table_info.is_editable:
             header_output.pop()
         the_iterable = eval(self.table_info.row, user_dict_copy)
-        if not isinstance(the_iterable, (list, dict, DAList, DADict)):
+        if (not isinstance(the_iterable, (DAList, DADict, abc.Iterable))) or isinstance(the_iterable, str):
             raise DAError("Error in processing table " + self.table_info.saveas + ": row value is not iterable")
         if hasattr(the_iterable, 'instanceName') and hasattr(the_iterable, 'elements') and isinstance(the_iterable.elements, (list, dict)):
             if not self.table_info.require_gathered:
