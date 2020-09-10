@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.72] - 2020-09-10
+### Fixed
+- Removal of `new_session` from URLs formed with `interview_url()`.
+
 ## [1.1.71] - 2020-09-07
 ### Fixed
 - Better support for iterables in `comma_list()` and other places.

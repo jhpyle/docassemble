@@ -1237,6 +1237,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'flex_interview':
         remove_question_package(kwargs)
         how_called = docassemble.base.functions.this_thread.misc.get('call', None)
+        if how_called is None:
+            return(url_for('index', **kwargs))
         try:
             if int(kwargs.get('new_session')):
                 is_new = True
@@ -1245,9 +1247,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 is_new = False
         except:
             is_new = False
-        if how_called is None:
-            return(url_for('index', **kwargs))
-        elif how_called[0] in ('start', 'run'):
+        if how_called[0] in ('start', 'run'):
             del kwargs['i']
             kwargs['package'] = how_called[1]
             kwargs['filename'] = how_called[2]
@@ -1273,6 +1273,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
             else:
                 return(url_for('run_interview_in_package_directory', **kwargs))
         else:
+            if is_new:
+                kwargs['new_session'] = 1
             return(url_for('index', **kwargs))
     elif file_reference == 'interviews':
         remove_question_package(kwargs)
