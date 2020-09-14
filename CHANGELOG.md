@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.73] - 2020-09-13
+### Changed
+- The `use_word` keyword attribute to `nice_number()` and `ordinal()`
+  can be used to force a textual representation of any number.
+
 ## [1.1.72] - 2020-09-10
 ### Fixed
 - Removal of `new_session` from URLs formed with `interview_url()`.

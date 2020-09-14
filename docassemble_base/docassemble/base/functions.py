@@ -42,6 +42,7 @@ import random
 from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
+import num2words
 from collections.abc import Iterable
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
@@ -1074,48 +1075,9 @@ word_collection = {
 }
 
 ordinal_numbers = {
-    'en': {
-        '0': 'zeroth',
-        '1': 'first',
-        '2': 'second',
-        '3': 'third',
-        '4': 'fourth',
-        '5': 'fifth',
-        '6': 'sixth',
-        '7': 'seventh',
-        '8': 'eighth',
-        '9': 'ninth',
-        '10': 'tenth'
-    },
 }
 
 nice_numbers = {
-    'en': {
-        '0': 'zero',
-        '1': 'one',
-        '2': 'two',
-        '3': 'three',
-        '4': 'four',
-        '5': 'five',
-        '6': 'six',
-        '7': 'seven',
-        '8': 'eight',
-        '9': 'nine',
-        '10': 'ten'
-    },
-    'es': {
-        '0': 'cero',
-        '1': 'uno',
-        '2': 'dos',
-        '3': 'tres',
-        '4': 'cuatro',
-        '5': 'cinco',
-        '6': 'seis',
-        '7': 'siete',
-        '8': 'ocho',
-        '9': 'nueve',
-        '10': 'diez'
-    }
 }
 
 class WebFunc:
@@ -1539,17 +1501,17 @@ def worker_caller(func, ui_notification, action):
 #     server_redis = target
 
 def ordinal_function_en(i, **kwargs):
-    num = str(i)
-    if 10 <= i % 100 <= 20:
-        return num + 'th'
-    elif i % 10 == 3:
-        return num + 'rd'
-    elif i % 10 == 1:
-        return num + 'st'
-    elif i % 10 == 2:
-        return num + 'nd'
+    use_word = kwargs.get('use_word', None)
+    if use_word is True:
+        kwargs['function'] = 'ordinal'
+    elif use_word is False:
+        kwargs['function'] = 'ordinal_num'
     else:
-        return num + 'th'
+        if i < 11:
+            kwargs['function'] = 'ordinal'
+        else:
+            kwargs['function'] = 'ordinal_num'
+    return number_to_word(i, **kwargs)
 
 ordinal_functions = {
     'en': ordinal_function_en,
@@ -2029,14 +1991,10 @@ def ordinal_number_default(the_number, **kwargs):
     on index numbers that start with zero, see ordinal()."""
     num = str(the_number)
     if kwargs.get('use_word', True):
-        if this_thread.language in ordinal_numbers:
-            language_to_use = this_thread.language
-        elif '*' in ordinal_numbers:
-            language_to_use = '*'
-        else:
-            language_to_use = 'en'
-        if num in ordinal_numbers[language_to_use]:
+        if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_language]:
             return ordinal_numbers[language_to_use][num]
+        if '*' in ordinal_numbers and num in ordinal_numbers['*']:
+            return ordinal_numbers['*'][num]
     if this_thread.language in ordinal_functions:
         language_to_use = this_thread.language
     elif '*' in ordinal_functions:
@@ -2082,6 +2040,30 @@ def salutation_default(indiv, **kwargs):
             return salut_and_name
     return salut
 
+def number_to_word(number, **kwargs):
+    language = kwargs.get('language', None)
+    capitalize = kwargs.get('capitalize', False)
+    function = kwargs.get('function', None)
+    raise_on_error = kwargs.get('raise_on_error', False)
+    if function not in ('ordinal', 'ordinal_num'):
+        function = 'cardinal'
+    if language is None:
+        language = get_language()
+    for lang, loc in (('en', 'en_GB'), ('en', 'en_IN'), ('es', 'es_CO'), ('es', 'es_VE'), ('fr', 'fr_CH'), ('fr', 'fr_BE'), ('fr', 'fr_DZ'), ('pt', 'pt_BR')):
+        if language == lang and this_thread.locale.startswith(loc):
+            language = loc
+            break
+    if raise_on_error:
+        the_word = num2words.num2words(number, lang=language, to=function)
+    else:
+        try:
+            the_word = num2words.num2words(number, lang=language, to=function)
+        except NotImplementedError:
+            the_word = str(number)
+    if capitalize:
+        return capitalize_function(the_word)
+    return the_word
+
 def ordinal_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
@@ -2095,6 +2077,7 @@ def nice_number_default(the_number, **kwargs):
     """Returns the number as a word in the current language."""
     capitalize = kwargs.get('capitalize', False)
     language = kwargs.get('language', None)
+    use_word = kwargs.get('use_word', None)
     ensure_definition(the_number, capitalize, language)
     if language is None:
         language = this_thread.language
@@ -2106,13 +2089,21 @@ def nice_number_default(the_number, **kwargs):
         language_to_use = 'en'
     if int(float(the_number)) == float(the_number):
         the_number = int(float(the_number))
-    if str(the_number) in nice_numbers[language_to_use]:
+        is_integer = True
+    else:
+        is_integer = False
+    if language_to_use in nice_numbers and str(the_number) in nice_numbers[language_to_use]:
         the_word = nice_numbers[language_to_use][str(the_number)]
         if capitalize:
             return capitalize_function(the_word)
         else:
             return the_word
-    elif type(the_number) is int:
+    if use_word or (is_integer and the_number >= 0 and the_number < 11 and use_word is not False):
+        try:
+            return number_to_word(the_number, **kwargs)
+        except:
+            pass
+    if type(the_number) is int:
         return str(locale.format_string("%d", the_number, grouping=True))
     else:
         return str(locale.format_string("%.2f", float(the_number), grouping=True)).rstrip('0')
