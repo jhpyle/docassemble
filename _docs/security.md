@@ -35,7 +35,7 @@ server retrieves the file from [S3] and serves it.
 
 When a user clicks an "Exit" button (or the `/exit` path is visited,
 or the `/exit_logout` path is visited, or `command('exit')` is run, or
-`command('exit_logout') is run), **docassemble** will delete all of
+`command('exit_logout')` is run), **docassemble** will delete all of
 the information related to the interview from the server, including
 the database, uploaded documents, and assembled documents.  See
 [deleting user information] for more information.
