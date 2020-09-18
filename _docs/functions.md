@@ -3533,19 +3533,29 @@ function of [pattern.en].
 
 * `nice_number(4)` returns `four`
 * `nice_number(10)` returns `ten`
+* `nice_number(10, capitalize=True)` returns `Ten`
+* `nice_number(10, language='es')` returns `diez`
 * `nice_number(11)` returns `11`
-* `nice_number(-1)` returns `-1`
 * `nice_number(5.0)` returns `five`
-* `nice_number(5.1)` returns `5.1`
 * `nice_number(23423)` returns `23,423` (this depends on the [locale])
 * `nice_number(12873818.27774)` returns `12,873,818.28` (this depends on the [locale])
+* `nice_number(501)` returns `501`
+* `nice_number(501, use_word=True)` returns `five hundred and one`
+* `nice_number(5.1)` returns `5.1`
+* `nice_number(5.1, use_word=True)` returns `five point one`
+* `nice_number(-1)` returns `-1`
+* `nice_number(-1, use_word=True)` returns `minus one`
+
+This function uses the [`num2words`] package, which supports several
+languages by default, but not all languages.
 
 This function can be customized by calling
 `docassemble.base.util.update_nice_numbers()` with a [language] as the
 first parameter and a [dictionary] as the second parameter, where the
-dictionary maps numbers to their textual representation. Since this
-function is not thread-safe, you should only run it from a [Python
-module] in code that runs when the module loads.
+dictionary maps numbers to their textual representation. Since
+`docassemble.base.util.update_nice_numbers()` is not thread-safe, you
+should only run it from a [Python module] in code that runs when the
+module loads.
 
 ## <a name="noun_plural"></a>noun_plural()
 
@@ -3600,12 +3610,18 @@ untouched.
 
 * `ordinal_number(8)` returns `eighth`.
 * `ordinal_number(8, capitalize=True)` returns `Eighth`.
-* `ordinal_number(11)` returns `11th`.
 * `ordinal_number(8, use_word=False)` returns `8th`.
+* `ordinal_number(10)` returns `tenth`.
+* `ordinal_number(11)` returns `11th`.
+* `ordinal_number(11, use_word=True)` returns `eleventh`.
+* `ordinal_number(523, use_word=True)` returns `five hundred and twenty-third`.
 
 {% include side-by-side.html demo="ordinal-number" %}
 
-This function can be customized with
+By default, the [`num2words`] package is used to produce the word  supports several
+languages by default, but not all languages.
+
+`ordinal_number()` can be customized with
 `docassemble.base.util.update_ordinal_numbers()` and
 `docassemble.base.util.update_ordinal_function()`.
 
@@ -3630,8 +3646,9 @@ docassemble.base.util.update_ordinal_numbers('es', es_ordinal_nums)
 docassemble.base.util.update_ordinal_function()
 {% endhighlight %}
 
-Since these functions are not thread-safe, you should only run them
-from a [Python module] in code that runs when the module loads.
+Since `update_ordinal_numbers()` and `update_ordinal_function()` are
+not thread-safe, you should only run them from a [Python module] in
+code that runs when the module loads.
 
 ## <a name="ordinal"></a>ordinal()
 
@@ -7721,3 +7738,4 @@ $(document).on('daPageLoad', function(){
 [`variables snapshot db`]: {{ site.baseurl }}/docs/config.html#variables snapshot db
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
 [recipe on the topic]: {{ site.baseurl }}/docs/recipes.html#python to javascript
+[`num2words`]: https://github.com/savoirfairelinux/num2words

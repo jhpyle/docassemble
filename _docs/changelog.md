@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.74](https://github.com/jhpyle/docassemble/releases/tag/v1.1.74) - 2020-09-18
+
+### Changed
+- Setting `url_args` without causing a change to the `url_args` does
+  not cause a new step to be created.
+
+### Fixed
+- An empty string `min` or `max` was not being ignored.
+- Issue with `generic object`.
+
+## [1.1.73](https://github.com/jhpyle/docassemble/releases/tag/v1.1.73) - 2020-09-13
+
+### Changed
+- The `use_word` keyword attribute to `nice_number()` and `ordinal()`
+  can be used to force a textual representation of any number.
+
 ## [1.1.72](https://github.com/jhpyle/docassemble/releases/tag/v1.1.72) - 2020-09-10
 
 ### Fixed
