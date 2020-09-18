@@ -4560,7 +4560,7 @@ class Question:
                                 extras[key] = dict()
                             if skip_undefined:
                                 try:
-                                    extras[key][field.number] = field.extras[key].text(user_dict)
+                                    extras[key][field.number] = field.extras[key].text(user_dict).strip()
                                 except LazyNameError:
                                     raise
                                 except Exception as err:
@@ -4571,6 +4571,8 @@ class Question:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
                             if isinstance(extras[key][field.number], str):
                                 extras[key][field.number] = extras[key][field.number].strip()
+                                if extras[key][field.number] == '':
+                                    del extras[key][field.number]
                 if hasattr(field, 'helptext'):
                     if skip_undefined:
                         try:
@@ -5049,6 +5051,8 @@ class Question:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
                                 if isinstance(extras[key][field.number], str):
                                     extras[key][field.number] = extras[key][field.number].strip()
+                                    if extras[key][field.number] == '':
+                                        del extras[key][field.number]
                         for key in ('ml_train',):
                             if key in field.extras:
                                 if key not in extras:
@@ -7693,8 +7697,8 @@ class Interview:
 
 def substitute_vars(var, is_generic, the_x, iterators, last_only=False):
     if is_generic:
-        if the_x != 'None' and hasattr(the_x, 'instanceName'):
-            var = re.sub(r'^x\b', the_x.instanceName, var)
+        if the_x != 'None':
+            var = re.sub(r'^x\b', the_x, var)
     if len(iterators):
         if last_only:
             indexno = len(iterators) - 1

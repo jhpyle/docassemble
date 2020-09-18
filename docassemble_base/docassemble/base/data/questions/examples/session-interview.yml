@@ -12,7 +12,15 @@ code: |
 reconsider: True
 code: |
   current_info = user_info()
-  list_of_interviews = [info for info in interview_list() if info['filename'] != current_info.filename]
+  list_of_interviews = list()
+  next_id = None
+  while True:
+    (items, next_id) = interview_list(next_id=next_id)
+    for info in items:
+      if info['filename'] != current_info.filename:
+        list_of_interviews.append(info)
+    if not next_id:
+        break
   if len(list_of_interviews) > 0:
     list_of_interviews += [dict()]
 ---

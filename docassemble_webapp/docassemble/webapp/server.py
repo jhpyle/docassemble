@@ -5873,8 +5873,13 @@ def index(action_argument=None, refer=None):
         for argname in request.args:
             if argname in reserved_argnames:
                 continue
+            if not url_args_changed:
+                old_url_args = copy.deepcopy(user_dict['url_args'])
+                url_args_changed = True
             exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
-            url_args_changed = True
+        if url_args_changed:
+            if old_url_args == user_dict['url_args']:
+                url_args_changed = False
     index_params = dict(i=yaml_filename)
     if analytics_configured:
         for argname in request.args:

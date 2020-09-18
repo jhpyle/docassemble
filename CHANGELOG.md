@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.74] - 2020-09-18
+### Changed
+- Setting `url_args` without causing a change to the `url_args` does
+  not cause a new step to be created.
+### Fixed
+- An empty string `min` or `max` was not being ignored.
+- Issue with `generic object`.
+
 ## [1.1.73] - 2020-09-13
 ### Changed
 - The `use_word` keyword attribute to `nice_number()` and `ordinal()`

@@ -2,6 +2,14 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Back button inside question"
+    Given I start the interview "docassemble.base:data/questions/examples/question-back-button.yml"
+    Then I should see the phrase "Are you doing well?"
+    And I click the button "Yes"
+    Then I should see the phrase "Is the sky blue?"
+    And I click the question back button
+    Then I should see the phrase "Are you doing well?"
+
   Scenario: Test the interview "Flash message"
     Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
     Then I should see the phrase "What is your favorite food?"

@@ -5984,14 +5984,6 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/define.yml"
     Then I should see the phrase "Your favorite fruit is apple."
 
-  Scenario: Test the interview "Back button inside question"
-    Given I start the interview "docassemble.base:data/questions/examples/question-back-button.yml"
-    Then I should see the phrase "Are you doing well?"
-    And I click the button "Yes"
-    Then I should see the phrase "Is the sky blue?"
-    And I click the question back button
-    Then I should see the phrase "Are you doing well?"
-
   Scenario: Test the interview "Help with question"
     Given I start the interview "docassemble.base:data/questions/examples/help-damages-label.yml"
     Then I should see the phrase "How much money do you wish to seek in damages?"
