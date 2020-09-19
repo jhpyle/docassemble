@@ -2670,7 +2670,7 @@ screen is shown.
 By default, when a `review` screen encounters and undefined variable,
 it does not seek out its definition.  This is so you can have a single
 `review` screen that is used throughout an interview (or a section of
-an interview), where the user only sees that fields that have already
+an interview), where the user only sees the fields that have already
 been asked about.
 
 If you would like to use the functionality of a `review` screen, but
