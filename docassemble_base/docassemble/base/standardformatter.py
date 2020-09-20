@@ -1992,6 +1992,13 @@ def input_for(status, field, wide=False, embedded=False):
                 defaultvalue = None
         elif isinstance(status.defaults[field.number], (str, int, float)):
             defaultvalue = str(status.defaults[field.number])
+        elif isinstance(status.defaults[field.number], list):
+            defaultvalue = []
+            for item in status.defaults[field.number]:
+                if hasattr(item, 'instanceName'):
+                    defaultvalue.append(safeid(item.instanceName))
+                else:
+                    defaultvalue.append(item)
         else:
             defaultvalue = status.defaults[field.number]
     else:
@@ -2083,7 +2090,10 @@ def input_for(status, field, wide=False, embedded=False):
                         inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
                     #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if 'default' in pair and pair['default']:
+                    def_key = from_safeid(saveas_string) + "[" + repr(pair['key']) + "]"
+                    if def_key in status.other_defaults and status.other_defaults[def_key]:
+                        ischecked = ' checked'
+                    elif 'default' in pair and pair['default']:
                         ischecked = ' checked'
                     elif defaultvalue is None:
                         ischecked = ''

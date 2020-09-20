@@ -639,6 +639,7 @@ class InterviewStatus:
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
+        self.other_defaults = dict()
         #self.defined = question_result['defined']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']

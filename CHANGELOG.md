@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.75] - 2020-09-20
+### Fixed
+- Issues with `show if` and `js show if` when multiple fields with the
+  same name are on the screen.
+- Issues with server-side validation not recreating values on the
+  screen on error.
+
 ## [1.1.74] - 2020-09-18
 ### Changed
 - Setting `url_args` without causing a change to the `url_args` does

@@ -6042,6 +6042,7 @@ def index(action_argument=None, refer=None):
     debug_mode = interview.debug
     vars_set = set()
     old_values = dict()
+    new_values = dict()
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     error_messages = list()
@@ -6272,6 +6273,7 @@ def index(action_argument=None, refer=None):
                         docassemble.base.parse.ensure_object_exists(objname, 'checkboxes', user_dict)
     field_error = dict()
     validated = True
+    pre_user_dict = user_dict
     imported_core = False
     special_question = None
     for orig_key in post_data:
@@ -6672,9 +6674,13 @@ def index(action_argument=None, refer=None):
                 the_string = 'if ' + data + ' in ' + key_to_use + '.elements:\n    ' + key_to_use + '.remove(' + data + ')'
             else:
                 the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
+                if key_to_use not in new_values:
+                    new_values[key_to_use] = []
+                new_values[key_to_use].append(data)
         else:
             process_set_variable(key, user_dict, vars_set, old_values)
             the_string = key + ' = ' + data
+            new_values[key] = data
             if orig_key in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_key] and hasattr(the_question.fields[field_numbers[orig_key]], 'validate'):
                 field_name = safeid('_field_' + str(field_numbers[orig_key]))
                 if field_name in post_data:
@@ -6725,6 +6731,7 @@ def index(action_argument=None, refer=None):
                     eval(key, user_dict)
                 except:
                     exec(key + ' = None' , user_dict)
+                    new_values[key] = 'None'
     if validated and special_question is None:
         if '_order_changes' in post_data:
             orderChanges = json.loads(post_data['_order_changes'])
@@ -7509,7 +7516,8 @@ def index(action_argument=None, refer=None):
       var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list'];
       var daVarLookup = Object();
       var daVarLookupRev = Object();
-      var daValLookup = Object();
+      var daVarLookupMulti = Object();
+      var daVarLookupRevMulti = Object();
       var daTargetDiv;
       var daComboBoxes = Object();
       var daGlobalEval = eval;
@@ -7529,11 +7537,6 @@ def index(action_argument=None, refer=None):
       }
       function getFields(){
         var allFields = [];
-        for (var fieldName in daValLookup){
-          if (daValLookup.hasOwnProperty(fieldName)){
-            allFields.push(fieldName);
-          }
-        }
         for (var rawFieldName in daVarLookup){
           if (daVarLookup.hasOwnProperty(rawFieldName)){
             var fieldName = atob(rawFieldName);
@@ -7545,31 +7548,36 @@ def index(action_argument=None, refer=None):
         return allFields;
       }
       var daGetFields = getFields;
+      function daAppendIfExists(fieldName, theArray){
+        var elem = $("[name='" + fieldName + "']");
+        if (elem.length > 0){
+          for (var i = 0; i < theArray.length; ++i){
+            if (theArray[i] == elem[0]){
+              return;
+            }
+          }
+          theArray.push(elem[0]);
+        }
+      }
       function getField(fieldName){
-        if (typeof daValLookup[fieldName] == "undefined"){
-          var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
-            fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
-            fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          }
-          var varList = $("[name='" + fieldNameEscaped + "']");
-          if (varList.length == 0){
-            varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
-          }
-          if (varList.length == 0){
-            varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
-          }
-          if (varList.length > 0){
-            elem = varList[0];
-          }
-          else{
-            return null;
+        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
+        var possibleElements = [];
+        daAppendIfExists(fieldNameEscaped, possibleElements);
+        if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){
+          for (var i = 0; i < daVarLookupMulti[fieldNameEscaped].length; ++i){
+            daAppendIfExists(daVarLookupMulti[fieldNameEscaped][i], possibleElements);
           }
         }
-        else {
-          elem = daValLookup[fieldName];
+        var returnVal = null;
+        for (var i = 0; i < possibleElements.length; ++i){
+          if (!$(possibleElements[i]).prop('disabled')){
+            var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
+            if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+              returnVal = possibleElements[i];
+            }
+          }
         }
-        return elem;
+        return returnVal;
       }
       var daGetField = getField;
       function setField(fieldName, val){
@@ -7622,11 +7630,7 @@ def index(action_argument=None, refer=None):
         if (elem == null){
           return null;
         }
-        var showifParents = $(elem).parents(".dajsshowif");
-        if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-          theVal = null;
-        }
-        else if ($(elem).attr('type') == "checkbox"){
+        if ($(elem).attr('type') == "checkbox"){
           if ($(elem).prop('checked')){
             theVal = true;
           }
@@ -9213,7 +9217,7 @@ def index(action_argument=None, refer=None):
       }
       function daDisableIfNotHidden(query, value){
         $(query).each(function(){
-          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
+          var showIfParent = $(this).parents('.dashowif,.dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
             if ($(this).hasClass('combobox')){
               if (value){
@@ -9865,12 +9869,22 @@ def index(action_argument=None, refer=None):
         });
         daVarLookup = Object();
         daVarLookupRev = Object();
+        daVarLookupMulti = Object();
+        daVarLookupRevMulti = Object();
         if ($("input[name='_varnames']").length){
           the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               daVarLookup[the_hash[key]] = key;
               daVarLookupRev[key] = the_hash[key];
+              if (!daVarLookupMulti.hasOwnProperty(the_hash[key])){
+                daVarLookupMulti[the_hash[key]] = [];
+              }
+              daVarLookupMulti[the_hash[key]].push(key);
+              if (!daVarLookupRevMulti.hasOwnProperty(key)){
+                daVarLookupRevMulti[key] = [];
+              }
+              daVarLookupRevMulti[key].push(the_hash[key]);
             }
           }
         }
@@ -9888,7 +9902,7 @@ def index(action_argument=None, refer=None):
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
                 if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                   transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
+                  transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
                 }
                 var convertedName;
                 try {
@@ -9897,9 +9911,24 @@ def index(action_argument=None, refer=None):
                 catch (e) {
                   continue;
                 }
-                daVarLookupRev[btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '')] = btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
-                daVarLookup[btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                daVarLookup[btoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameOne = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameTwo = btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
+                var daNameThree = btoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
+                daVarLookupRev[daNameOne] = daNameTwo;
+                daVarLookup[daNameTwo] = daNameOne;
+                daVarLookup[daNameThree] = daNameOne;
+                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
+                  daVarLookupRevMulti[daNameOne] = [];
+                }
+                daVarLookupRevMulti[daNameOne].push(daNameTwo);
+                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
+                  daVarLookupMulti[daNameTwo] = [];
+                }
+                daVarLookupMulti[daNameTwo].push(daNameOne);
+                if (!daVarLookupMulti.hasOwnProperty(daNameThree)){
+                  daVarLookupMulti[daNameThree] = [];
+                }
+                daVarLookupMulti[daNameThree].push(daNameOne);
               }
               else if (pattRaw.test(baseName)){
                 bracketPart = checkboxName.replace(/^.*(\[R?['"][^\]]*['"]\])$/, "$1");
@@ -9907,7 +9936,7 @@ def index(action_argument=None, refer=None):
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
                 if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                   transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
+                  transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
                 }
                 var convertedName;
                 try {
@@ -9916,14 +9945,23 @@ def index(action_argument=None, refer=None):
                 catch (e) {
                   continue;
                 }
-                daVarLookupRev[btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '')] = btoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '');
-                daVarLookup[btoa(baseName + '[' + convertedName + ']').replace(/[\\n=]/g, '')] = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameOne = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameTwo = btoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '')
+                daVarLookupRev[daNameOne] = daNameTwo;
+                daVarLookup[daNameTwo] = daNameOne;
+                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
+                  daVarLookupRevMulti[daNameOne] = [];
+                }
+                daVarLookupRevMulti[daNameOne].push(daNameTwo);
+                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
+                  daVarLookupMulti[daNameTwo] = [];
+                }
+                daVarLookupMulti[daNameTwo].push(daNameOne);
               }
             }
           }
         }
         daShowIfInProcess = true;
-        daValLookup = Object();
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
@@ -9931,28 +9969,168 @@ def index(action_argument=None, refer=None):
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
-            var showIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
-            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
-              showIfVar = daVarLookup[showIfVar];
-              showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            var showIfVars = [];
+            var initShowIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            var elem = $("[name='" + initShowIfVarEscaped + "']");
+            if (elem.length > 0){
+              showIfVars.push(initShowIfVar);
             }
-            var varList = $("[name='" + showIfVarEscaped + "']");
-            if (varList.length == 0){
-              varList = $("input[type='radio'][name='" + showIfVarEscaped + "']");
+            if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
+              for (var j = 0; j < daVarLookupMulti[initShowIfVar].length; j++){
+                var altShowIfVar = daVarLookupMulti[initShowIfVar][j];
+                var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+                var altElem = $("[name='" + altShowIfVarEscaped + "']");
+                if (altElem.length > 0 && !$.contains(this, altElem[0])){
+                  showIfVars.push(altShowIfVar);
+                }
+              }
             }
-            if (varList.length == 0){
-              varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-            }
-            if (varList.length > 0){
-              daValLookup[jsInfo['vars'][i]] = varList[0];
-            }
-            else{
+            if (showIfVars.length == 0){
               console.log("ERROR: could not set " + jsInfo['vars'][i]);
             }
+            for (var j = 0; j < showIfVars.length; ++j){
+              var showIfVar = showIfVars[j];
+              var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var showHideDiv = function(speed){
+                var elem = daGetField(jsInfo['vars'][i]);
+                if (elem != null && !$(elem).parent().is($(this).parent())){
+                  return;
+                }
+                var resultt = eval(jsExpression);
+                if(resultt){
+                  if (showIfSign){
+                    $(showIfDiv).show(speed);
+                    $(showIfDiv).data('isVisible', '1');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
+                  else{
+                    $(showIfDiv).hide(speed);
+                    $(showIfDiv).data('isVisible', '0');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].disable();
+                    });
+                  }
+                }
+                else{
+                  if (showIfSign){
+                    $(showIfDiv).hide(speed);
+                    $(showIfDiv).data('isVisible', '0');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].disable();
+                    });
+                  }
+                  else{
+                    $(showIfDiv).show(speed);
+                    $(showIfDiv).data('isVisible', '1');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
+                }
+                var daThis = this;
+                if (!daShowIfInProcess){
+                  daShowIfInProcess = true;
+                  $(":input").not("[type='file']").each(function(){
+                    if (this != daThis){
+                      $(this).trigger('change');
+                    }
+                  });
+                  daShowIfInProcess = false;
+                }
+              };
+              var showHideDivImmediate = function(){
+                showHideDiv.apply(this, [null]);
+              }
+              var showHideDivFast = function(){
+                showHideDiv.apply(this, ['fast']);
+              }
+              $("#" + showIfVarEscaped).each(showHideDivImmediate);
+              $("#" + showIfVarEscaped).change(showHideDivFast);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+            }
+          }
+        });
+        $(".dashowif").each(function(){
+          var showIfVars = [];
+          var showIfSign = $(this).data('showif-sign');
+          var initShowIfVar = $(this).data('showif-var');
+          var varName = atob(initShowIfVar);
+          var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          var elem = $("[name='" + initShowIfVarEscaped + "']");
+          if (elem.length > 0){
+            showIfVars.push(initShowIfVar);
+          }
+          if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
+            var n = daVarLookupMulti[initShowIfVar].length;
+            for (var i = 0; i < n; i++){
+              var altShowIfVar = daVarLookupMulti[initShowIfVar][i];
+              var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var altElem = $("[name='" + altShowIfVarEscaped + "']");
+              if (altElem.length > 0 && !$.contains(this, altElem[0])){
+                showIfVars.push(altShowIfVar);
+              }
+            }
+          }
+          var showIfVal = $(this).data('showif-val');
+          var saveAs = $(this).data('saveas');
+          var showIfDiv = this;
+          var n = showIfVars.length;
+          for (var i = 0; i < n; ++i){
+            var showIfVar = showIfVars[i];
+            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
-              var resultt = eval(jsExpression);
-              if(resultt){
+              var elem = daGetField(varName);
+              if (elem != null && !$(elem).parent().is($(this).parent())){
+                return;
+              }
+              var theVal;
+              var showifParents = $(this).parents(".dashowif");
+              if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
+                theVal = '';
+                //console.log("Setting theVal to blank.");
+              }
+              else if ($(this).attr('type') == "checkbox"){
+                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+                if (typeof(theVal) == 'undefined'){
+                  //console.log('manually setting checkbox value to False');
+                  theVal = 'False';
+                }
+              }
+              else if ($(this).attr('type') == "radio"){
+                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+                if (typeof(theVal) == 'undefined'){
+                  theVal = '';
+                }
+                else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
+                  try{
+                    theVal = atob(theVal);
+                  }
+                  catch(e){
+                  }
+                }
+              }
+              else{
+                theVal = $(this).val();
+                if (theVal != '' && $(this).hasClass("daobject")){
+                  try{
+                    theVal = atob(theVal);
+                  }
+                  catch(e){
+                  }
+                }
+              }
+              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+              if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
@@ -10012,115 +10190,6 @@ def index(action_argument=None, refer=None):
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
           }
-        });
-        $(".dashowif").each(function(){
-          var showIfSign = $(this).data('showif-sign');
-          var showIfVar = $(this).data('showif-var');
-          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
-            showIfVar = daVarLookup[showIfVar];
-            showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          }
-          var showIfVal = $(this).data('showif-val');
-          var saveAs = $(this).data('saveas');
-          var showIfDiv = this;
-          var showHideDiv = function(speed){
-            var theVal;
-            var showifParents = $(this).parents(".dashowif");
-            if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-              theVal = '';
-              //console.log("Setting theVal to blank.");
-            }
-            else if ($(this).attr('type') == "checkbox"){
-              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-              if (typeof(theVal) == 'undefined'){
-                //console.log('manually setting checkbox value to False');
-                theVal = 'False';
-              }
-            }
-            else if ($(this).attr('type') == "radio"){
-              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-              if (typeof(theVal) == 'undefined'){
-                theVal = '';
-              }
-              else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
-                try{
-                  theVal = atob(theVal);
-                }
-                catch(e){
-                }
-              }
-            }
-            else{
-              theVal = $(this).val();
-              if (theVal != '' && $(this).hasClass("daobject")){
-                try{
-                  theVal = atob(theVal);
-                }
-                catch(e){
-                }
-              }
-            }
-            //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
-            if(daShowIfCompare(theVal, showIfVal)){
-              if (showIfSign){
-                $(showIfDiv).show(speed);
-                $(showIfDiv).data('isVisible', '1');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].enable();
-                });
-              }
-              else{
-                $(showIfDiv).hide(speed);
-                $(showIfDiv).data('isVisible', '0');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].disable();
-                });
-              }
-            }
-            else{
-              if (showIfSign){
-                $(showIfDiv).hide(speed);
-                $(showIfDiv).data('isVisible', '0');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].disable();
-                });
-              }
-              else{
-                $(showIfDiv).show(speed);
-                $(showIfDiv).data('isVisible', '1');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].enable();
-                });
-              }
-            }
-            var daThis = this;
-            if (!daShowIfInProcess){
-              daShowIfInProcess = true;
-              $(":input").not("[type='file']").each(function(){
-                if (this != daThis){
-                  $(this).trigger('change');
-                }
-              });
-              daShowIfInProcess = false;
-            }
-          };
-          var showHideDivImmediate = function(){
-            showHideDiv.apply(this, [null]);
-          }
-          var showHideDivFast = function(){
-            showHideDiv.apply(this, ['fast']);
-          }
-          $("#" + showIfVarEscaped).each(showHideDivImmediate);
-          $("#" + showIfVarEscaped).change(showHideDivFast);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
         $("a.danavlink").last().addClass('thelast');
         $("a.danavlink").each(function(){
@@ -10542,10 +10611,21 @@ def index(action_argument=None, refer=None):
             for audio_format in ('mp3', 'ogg'):
                 interview_status.screen_reader_links[question_type].append([url_for('speak_file', i=yaml_filename, question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
-        for def_key, def_val in post_data.items():
-            if def_key in all_field_numbers:
-                for number in all_field_numbers[def_key]:
-                    interview_status.defaults[number] = def_val
+        for def_key, def_val in new_values.items():
+            safe_def_key = safeid(def_key)
+            if isinstance(def_val, list):
+                def_val = '[' + ','.join(def_val) + ']'
+            if safe_def_key in all_field_numbers:
+                for number in all_field_numbers[safe_def_key]:
+                    try:
+                        interview_status.defaults[number] = eval(def_val, pre_user_dict)
+                    except:
+                        pass
+            else:
+                try:
+                    interview_status.other_defaults[def_key] = eval(def_val, pre_user_dict)
+                except:
+                    pass
         the_field_errors = field_error
     else:
         the_field_errors = None
@@ -11557,9 +11637,10 @@ def observer():
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
       var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
-      var daVarLookup;
-      var daVarLookupRev;
-      var daValLookup;
+      var daVarLookup = Object();
+      var daVarLookupRev = Object();
+      var daVarLookupMulti = Object();
+      var daVarLookupRevMulti = Object();
       var daTargetDiv = "#dabody";
       var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
@@ -11658,11 +11739,6 @@ def observer():
       }
       function getFields(){
         var allFields = [];
-        for (var fieldName in daValLookup){
-          if (daValLookup.hasOwnProperty(fieldName)){
-            allFields.push(fieldName);
-          }
-        }
         for (var rawFieldName in daVarLookup){
           if (daVarLookup.hasOwnProperty(rawFieldName)){
             var fieldName = atob(rawFieldName);
@@ -11675,28 +11751,23 @@ def observer():
       }
       var daGetFields = getFields;
       function getField(fieldName){
-        if (typeof daValLookup[fieldName] == "undefined"){
-          var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
-            fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
-            fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          }
-          var varList = $("[name='" + fieldNameEscaped + "']");
-          if (varList.length == 0){
-            varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
-          }
-          if (varList.length == 0){
-            varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
-          }
-          if (varList.length > 0){
-            elem = varList[0];
-          }
-          else{
-            return null;
-          }
+        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+        if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
+          fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
+          fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
         }
-        else {
-          elem = daValLookup[fieldName];
+        var varList = $("[name='" + fieldNameEscaped + "']");
+        if (varList.length == 0){
+          varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
+        }
+        if (varList.length == 0){
+          varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
+        }
+        if (varList.length > 0){
+          elem = varList[0];
+        }
+        else{
+          return null;
         }
         return elem;
       }
@@ -12156,7 +12227,6 @@ def observer():
           $('#daquestionlabel').tab('show');
         });
         daShowIfInProcess = true;
-        daValLookup = Object();
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
@@ -12164,28 +12234,168 @@ def observer():
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
-            var showIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
-            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
-              showIfVar = daVarLookup[showIfVar];
-              showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            var showIfVars = [];
+            var initShowIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            var elem = $("[name='" + initShowIfVarEscaped + "']");
+            if (elem.length > 0){
+              showIfVars.push(initShowIfVar);
             }
-            var varList = $("[name='" + showIfVarEscaped + "']");
-            if (varList.length == 0){
-              varList = $("input[type='radio'][name='" + showIfVarEscaped + "']");
+            if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
+              for (var j = 0; j < daVarLookupMulti[initShowIfVar].length; j++){
+                var altShowIfVar = daVarLookupMulti[initShowIfVar][j];
+                var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+                var altElem = $("[name='" + altShowIfVarEscaped + "']");
+                if (altElem.length > 0 && !$.contains(this, altElem[0])){
+                  showIfVars.push(altShowIfVar);
+                }
+              }
             }
-            if (varList.length == 0){
-              varList = $("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-            }
-            if (varList.length > 0){
-              daValLookup[jsInfo['vars'][i]] = varList[0];
-            }
-            else{
+            if (showIfVars.length == 0){
               console.log("ERROR: could not set " + jsInfo['vars'][i]);
             }
+            for (var j = 0; j < showIfVars.length; ++j){
+              var showIfVar = showIfVars[j];
+              var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var showHideDiv = function(speed){
+                var elem = daGetField(jsInfo['vars'][i]);
+                if (elem != null && !$(elem).parent().is($(this).parent())){
+                  return;
+                }
+                var resultt = eval(jsExpression);
+                if(resultt){
+                  if (showIfSign){
+                    $(showIfDiv).show(speed);
+                    $(showIfDiv).data('isVisible', '1');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
+                  else{
+                    $(showIfDiv).hide(speed);
+                    $(showIfDiv).data('isVisible', '0');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].disable();
+                    });
+                  }
+                }
+                else{
+                  if (showIfSign){
+                    $(showIfDiv).hide(speed);
+                    $(showIfDiv).data('isVisible', '0');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].disable();
+                    });
+                  }
+                  else{
+                    $(showIfDiv).show(speed);
+                    $(showIfDiv).data('isVisible', '1');
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
+                }
+                var daThis = this;
+                if (!daShowIfInProcess){
+                  daShowIfInProcess = true;
+                  $(":input").not("[type='file']").each(function(){
+                    if (this != daThis){
+                      $(this).trigger('change');
+                    }
+                  });
+                  daShowIfInProcess = false;
+                }
+              };
+              var showHideDivImmediate = function(){
+                showHideDiv.apply(this, [null]);
+              }
+              var showHideDivFast = function(){
+                showHideDiv.apply(this, ['fast']);
+              }
+              $("#" + showIfVarEscaped).each(showHideDivImmediate);
+              $("#" + showIfVarEscaped).change(showHideDivFast);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+            }
+          }
+        });
+        $(".dashowif").each(function(){
+          var showIfVars = [];
+          var showIfSign = $(this).data('showif-sign');
+          var initShowIfVar = $(this).data('showif-var');
+          var varName = atob(initShowIfVar);
+          var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+          var elem = $("[name='" + initShowIfVarEscaped + "']");
+          if (elem.length > 0){
+            showIfVars.push(initShowIfVar);
+          }
+          if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
+            var n = daVarLookupMulti[initShowIfVar].length;
+            for (var i = 0; i < n; i++){
+              var altShowIfVar = daVarLookupMulti[initShowIfVar][i];
+              var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var altElem = $("[name='" + altShowIfVarEscaped + "']");
+              if (altElem.length > 0 && !$.contains(this, altElem[0])){
+                showIfVars.push(altShowIfVar);
+              }
+            }
+          }
+          var showIfVal = $(this).data('showif-val');
+          var saveAs = $(this).data('saveas');
+          var showIfDiv = this;
+          var n = showIfVars.length;
+          for (var i = 0; i < n; ++i){
+            var showIfVar = showIfVars[i];
+            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
-              var resultt = eval(jsExpression);
-              if(resultt){
+              var elem = daGetField(varName);
+              if (elem != null && !$(elem).parent().is($(this).parent())){
+                return;
+              }
+              var theVal;
+              var showifParents = $(this).parents(".dashowif");
+              if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
+                theVal = '';
+                //console.log("Setting theVal to blank.");
+              }
+              else if ($(this).attr('type') == "checkbox"){
+                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+                if (typeof(theVal) == 'undefined'){
+                  //console.log('manually setting checkbox value to False');
+                  theVal = 'False';
+                }
+              }
+              else if ($(this).attr('type') == "radio"){
+                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+                if (typeof(theVal) == 'undefined'){
+                  theVal = '';
+                }
+                else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
+                  try{
+                    theVal = atob(theVal);
+                  }
+                  catch(e){
+                  }
+                }
+              }
+              else{
+                theVal = $(this).val();
+                if (theVal != '' && $(this).hasClass("daobject")){
+                  try{
+                    theVal = atob(theVal);
+                  }
+                  catch(e){
+                  }
+                }
+              }
+              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+              if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
                   $(showIfDiv).show(speed);
                   $(showIfDiv).data('isVisible', '1');
@@ -12245,114 +12455,6 @@ def observer():
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
           }
-        });
-        $(".dashowif").each(function(){
-          var showIfSign = $(this).data('showif-sign');
-          var showIfVar = $(this).data('showif-var');
-          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          if ($("[name='" + showIfVarEscaped + "']").length == 0 && typeof daVarLookup[showIfVar] != "undefined"){
-            showIfVar = daVarLookup[showIfVar];
-            showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          }
-          var showIfVal = $(this).data('showif-val');
-          var saveAs = $(this).data('saveas');
-          var showIfDiv = this;
-          var showHideDiv = function(speed){
-            var theVal;
-            var showifParents = $(this).parents(".dashowif");
-            if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-              theVal = '';
-              //console.log("Setting theVal to blank.");
-            }
-            else if ($(this).attr('type') == "checkbox"){
-              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-              if (typeof(theVal) == 'undefined'){
-                //console.log('manually setting checkbox value to False');
-                theVal = 'False';
-              }
-            }
-            else if ($(this).attr('type') == "radio"){
-              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-              if (typeof(theVal) == 'undefined'){
-                theVal = '';
-              }
-              else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
-                try{
-                  theVal = atob(theVal);
-                }
-                catch(e){
-                }
-              }
-            }
-            else{
-              theVal = $(this).val();
-              if (theVal != '' && $(this).hasClass("daobject")){
-                try{
-                  theVal = atob(theVal);
-                }
-                catch(e){
-                }
-              }
-            }
-            if(daShowIfCompare(theVal, showIfVal)){
-              if (showIfSign){
-                $(showIfDiv).show(speed);
-                $(showIfDiv).data('isVisible', '1');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].enable();
-                });
-              }
-              else{
-                $(showIfDiv).hide(speed);
-                $(showIfDiv).data('isVisible', '0');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].disable();
-                });
-              }
-            }
-            else{
-              if (showIfSign){
-                $(showIfDiv).hide(speed);
-                $(showIfDiv).data('isVisible', '0');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].disable();
-                });
-              }
-              else{
-                $(showIfDiv).show(speed);
-                $(showIfDiv).data('isVisible', '1');
-                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                $(showIfDiv).find('input.combobox').each(function(){
-                  daComboBoxes[$(this).attr('id')].enable();
-                });
-              }
-            }
-            var daThis = this;
-            if (!daShowIfInProcess){
-              daShowIfInProcess = true;
-              $(":input").not("[type='file']").each(function(){
-                if (this != daThis){
-                  $(this).trigger('change');
-                }
-              });
-              daShowIfInProcess = false;
-            }
-          };
-          var showHideDivImmediate = function(){
-            showHideDiv.apply(this, [null]);
-          }
-          var showHideDivFast = function(){
-            showHideDiv.apply(this, ['fast']);
-          }
-          $("#" + showIfVarEscaped).each(showHideDivImmediate);
-          $("#" + showIfVarEscaped).change(showHideDivFast);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
-          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
-          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
         });
         // daDisable = setTimeout(function(){
         //   $("#daform").find('button[type="submit"]').prop("disabled", true);
