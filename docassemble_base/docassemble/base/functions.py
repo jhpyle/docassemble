@@ -446,6 +446,10 @@ def user_info():
         user.package = re.sub(r':.*', '', user.filename)
     else:
         user.package = None
+    try:
+        user.question_id = this_thread.current_question.id
+    except:
+        user.question_id = None
     return user
 
 def action_arguments():

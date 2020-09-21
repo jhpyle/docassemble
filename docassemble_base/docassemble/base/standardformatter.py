@@ -2489,6 +2489,8 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '</span>'
         elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
+                if field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(status.extras['step'][field.number]) == float(status.extras['step'][field.number]):
+                    defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
                 default_val = defaultvalue
             elif isinstance(defaultvalue, datetime.datetime):
@@ -2514,6 +2516,7 @@ def input_for(status, field, wide=False, embedded=False):
                     output += '</span>'
         else:
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
+                logmessage("Got here where datatype is " + field.datatype + " and defaultvalue is " + repr(defaultvalue))
                 if field.datatype == 'date':
                     the_date = format_date(defaultvalue, format='yyyy-MM-dd')
                     if the_date != word("Bad date"):
@@ -2526,6 +2529,8 @@ def input_for(status, field, wide=False, embedded=False):
                     the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
                     if the_date != word("Bad date"):
                         defaultvalue = the_date
+                elif field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(status.extras['step'][field.number]) == float(status.extras['step'][field.number]):
+                    defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
             elif isinstance(defaultvalue, datetime.datetime):
                 if field.datatype == 'datetime':

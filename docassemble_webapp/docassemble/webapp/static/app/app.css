@@ -1640,7 +1640,7 @@ div.danavbar {
 }
 
 .dayesnospacing + .dayesnospacing {
-    margin-top: -15px;
+    margin-top: -1.0rem;
 }
 
 .dainterviewhaserror {
