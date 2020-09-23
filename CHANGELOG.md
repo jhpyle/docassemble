@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.76] - 2020-09-22
+### Added
+- The `question_id` attribute of `user_info()`.
+### Fixed
+- Issue with group-level file permissions.
+
 ## [1.1.75] - 2020-09-20
 ### Fixed
 - Issues with `show if` and `js show if` when multiple fields with the

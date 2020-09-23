@@ -3627,7 +3627,7 @@ class DAFileCollection(DAObject):
         """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
         for ext in self._extension_list():
             if hasattr(self, ext):
-                return getattr(self, ext).set_attributes(**kwargs)
+                getattr(self, ext).set_attributes(**kwargs)
     def user_access(self, *pargs, **kwargs):
         """Allows or disallows access to the file(s) for a given user."""
         for ext in self._extension_list():

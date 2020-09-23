@@ -1897,7 +1897,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       function daPageview(){
-        var idToUse = daQuestionID['id']
+        var idToUse = daQuestionID['id'];
         if (daQuestionID['ga'] != undefined && daQuestionID['ga'] != null){
           idToUse = daQuestionID['ga'];
         }

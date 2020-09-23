@@ -18,6 +18,7 @@ from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRole
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask import session
 from flask_login import current_user
+from docassemble.webapp.db_object import db
 from sqlalchemy import or_, and_
 import docassemble.base.config
 import sys
