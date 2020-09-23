@@ -391,7 +391,7 @@ def can_access_file_number(file_number, uids=None):
     if upload.key in uids:
         return True
     if current_user and current_user.is_authenticated:
-        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).filter(UploadsRoleAuth.uploads_indexno == file_number).first():
             return True
     elif session and 'tempuser' in session:
         temp_user_id = int(session['tempuser'])

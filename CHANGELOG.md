@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.77] - 2020-09-22
+### Fixed
+- Issue with fix in the previous version regarding group-level file permissions.
+
 ## [1.1.76] - 2020-09-22
 ### Added
 - The `question_id` attribute of `user_info()`.
