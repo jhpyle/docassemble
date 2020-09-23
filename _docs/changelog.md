@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.77](https://github.com/jhpyle/docassemble/releases/tag/v1.1.77) - 2020-09-22
+
+### Fixed
+- Issue with fix in the previous version regarding group-level file permissions.
+
 ## [1.1.76](https://github.com/jhpyle/docassemble/releases/tag/v1.1.76) - 2020-09-22
 
 ### Added
