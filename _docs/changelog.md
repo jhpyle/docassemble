@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.76](https://github.com/jhpyle/docassemble/releases/tag/v1.1.76) - 2020-09-22
+
+### Added
+- The `question_id` attribute of `user_info()`.
+
+### Fixed
+- Issue with group-level file permissions.
+
 ## [1.1.75](https://github.com/jhpyle/docassemble/releases/tag/v1.1.75) - 2020-09-20
 
 ### Fixed

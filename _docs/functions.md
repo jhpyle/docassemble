@@ -2235,6 +2235,8 @@ attributes describing the current user:
 * `session` the session ID of the current interview session
 * `filename` the filename of the current interview session
 * `package` the package of the current filename
+* `question_id` the `id` of the current `question`, or `None` if there is
+  no current `question` or the `question` does not have an `id`.
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
