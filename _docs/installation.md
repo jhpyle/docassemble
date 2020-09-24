@@ -919,7 +919,9 @@ To enable the [OneDrive synchronization] feature, you need to sign in
 to the [Azure Portal], go to "App registrations," and register an App.
 Give it a name (e.g. "Docassemble OneDrive") and set the Redirect URI
 to `https://example.com/onedrive_callback`, substituting your own
-server URL for `https://example.com`.
+server URL for `https://example.com`.  If you are asked, "Who can use
+this application or access this API?" select one of the "multi-tenant"
+options.
 
 Make a note of your "Application (client) ID."
 
