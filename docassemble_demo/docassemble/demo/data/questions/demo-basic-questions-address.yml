@@ -21,7 +21,14 @@ question: |
 subquestion: |
   ${ x.ask_address_template.content }
 fields:
-  - "I am experiencing homelessness.": x.address.homeless
+  - label: |
+      % if get_info('user') is x:
+      I am
+      % else:
+      ${ x } is
+      % endif
+      experiencing homelessness.
+    field: x.address.homeless
     datatype: yesno
   - "Street address": x.address.address
     address autocomplete: True
@@ -45,10 +52,6 @@ subject: |
   What is the address of ${ x }?
   % endif
 content: ""
----
-generic object: Individual
-code: |
-  x.address_zip_code_required = True
 ---
 generic object: Individual
 code: |

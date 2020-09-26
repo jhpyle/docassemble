@@ -51,7 +51,7 @@ generic object: Individual
 if: x.ask_email_with_name
 template: x.ask_name_template
 subject: |
-  % if get_info('user') is x:
+  % if x is get_info('user'):
   What is your name and e-mail address?
   % else:
   What is the name and e-mail address of ${ x.description }?
@@ -61,7 +61,7 @@ content: ""
 generic object: Individual
 template: x.ask_email_template
 subject: |
-  % if get_info('user') is x:
+  % if x is get_info('user'):
   What is your e-mail address?
   % else:
   What is the e-mail address of ${ x.description }?
